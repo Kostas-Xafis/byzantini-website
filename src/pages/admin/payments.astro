@@ -1,0 +1,10 @@
+---
+import AdminNav from "../../components/admin/AdminNav.astro";
+import PaymentsTable from "../../components/admin/PaymentsTable.solid";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Διαχείρηση">
+	<AdminNav />
+	<PaymentsTable client:only="solid" />
+</AdminLayout>

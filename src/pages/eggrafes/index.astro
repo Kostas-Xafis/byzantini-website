@@ -1,0 +1,10 @@
+---
+import Navbar from "../../components/Navbar.astro";
+import { RegistrationForm } from "../../components/registrations/RegistrationForm.solid";
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Εγγραφές">
+	<Navbar />
+	<RegistrationForm client:only="solid" />
+</Layout>

@@ -1,0 +1,86 @@
+---
+export interface Props {
+	type: "checkbox" | "date" | "email" | "hidden" | "select" | "number" | "password" | "radio" | "tel" | "text" | "time" | "url";
+	name: string;
+	label: string;
+	placeholder?: string;
+	value?: string | number;
+	required?: boolean;
+	iconClasses?: string;
+	disabled?: boolean;
+	selectList?: string[];
+}
+
+const { type, name, label, placeholder, value, required, disabled, iconClasses, selectList } = Astro.props;
+---
+
+<label for={name} class={"relative h-min max-w-[30ch] grid text-xl rounded-md font-didact z-10 "}>
+	{
+		type !== "select" ? (
+			<>
+				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
+				<input
+					class="formInputs peer m-2 px-12 py-3 pt-2 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					type={type}
+					name={name}
+					placeholder={placeholder || ""}
+					value={value || ""}
+					disabled={disabled || false}
+				/>
+			</>
+			/*--------------------------------SELECT INPUT---------------------------------------- */
+		) : (
+			<>
+				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
+				<select
+					class="peer m-2 px-12 py-3 pt-2 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					name={name}
+					required={required || false}
+					disabled={disabled || false}
+				>
+					{selectList?.forEach((selectItem, index) => (
+						<option selected={index === value} value={index}>
+							{selectItem}
+						</option>
+					))}
+				</select>
+			</>
+		)
+	}
+	<p
+		class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400"
+	>
+		{label}
+		{required ? <i class="absolute bg-white left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : ""}
+	</p>
+	<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400 -z-10">
+	</div>
+</label>
+<style>
+	label {
+		text-shadow: -1px 1px 2px rgba(0 0 0/0.15);
+	}
+	input[type="number"] {
+		appearance: textfield;
+		-moz-appearance: textfield;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+		display: none;
+	}
+</style>
+
+<script>
+	document.querySelectorAll(".formInputs").forEach(inp => {
+		(inp as HTMLElement).addEventListener("focus", (e: FocusEvent) => {
+			(e.currentTarget as HTMLElement).removeAttribute("required");
+		});
+	});
+	document.querySelectorAll(".formInputs").forEach(inp => {
+		(inp as HTMLElement).addEventListener("blur", (e: FocusEvent) => {
+			(e.currentTarget as HTMLElement).setAttribute("required", "");
+		});
+	});
+	//@ts-ignore
+	document.querySelector("input[type='date']").valueAsDate = new Date();
+</script>

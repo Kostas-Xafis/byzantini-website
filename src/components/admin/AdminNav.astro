@@ -1,0 +1,27 @@
+---
+const links = [
+	{ name: "Βιβλία", url: "/admin/books" },
+	{ name: "Πληρωμές", url: "/admin/payments" },
+	{ name: "Οφειλές", url: "/admin/payoffs" },
+	{ name: "Καθηγητές", url: "/admin/teachers" },
+	{ name: "Παραρτήματα", url: "/admin/locations" }
+];
+---
+
+<nav class="grid grid-rows-[80px_1fr] grid-cols-1 bg-red-900">
+	<div class="grid justify-center content-center">
+		<a href="/"> <img class="h-[60px] aspect-[0.99/1]" src="/logo.webp" alt="Λογότυπο Σχολής" /></a>
+	</div>
+	<div class={`grid auto-rows-min grid-cols-1 grid-flow-row self-start py-2 gap-y-1`}>
+		{
+			links.map(link => (
+				<a
+					class="group relative py-8 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
+					href={link.url}
+				>
+					<div class="group px-8 font-bold font-anaktoria text-2xl text-red-50 whitespace-nowrap">{link.name}</div>
+				</a>
+			))
+		}
+	</div>
+</nav>

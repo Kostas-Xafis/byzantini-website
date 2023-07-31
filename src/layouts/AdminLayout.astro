@@ -1,0 +1,65 @@
+---
+export interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Astro description" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
+		<!-- <link href="/fa/\/css/brands.css" rel="stylesheet" /> -->
+		<link href="/fa/css/solid.css" rel="stylesheet" />
+		<link href="/fa/css/regular.css" rel="stylesheet" />
+	</head>
+	<body class="box-border p-0 grid">
+		<a id="redirect" href="/login" class="hidden absolute"></a>
+		<slot />
+	</body>
+</html>
+<style is:global>
+	@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+	@import url("https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap");
+
+	@font-face {
+		font-weight: bold;
+		font-family: "Thomadaki";
+		src: url("/fonts/3-2-2003_THOMADAKIANNA2003.TTF");
+	}
+
+	@font-face {
+		font-family: "Anaktoria";
+		src: url("/fonts/ANAKTORIA.OTF");
+	}
+
+	:root {
+		--accent: 124, 58, 237;
+		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), #da62c4 30%, white 60%);
+	}
+	html {
+		font-family: system-ui, sans-serif;
+		background-color: #f6f6f6;
+	}
+	code {
+		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+	}
+	body {
+		grid-template-columns: max-content 1fr;
+		grid-template-rows: 100%;
+		height: 100vh;
+		background: white;
+	}
+</style>
+<script>
+	import { API, useAPI } from "../../lib/hooks/useAPI.astro";
+	const res = await useAPI(API.Authentication.authenticateSession, {});
+	if (!("data" in res && res.data.isValid)) (document.getElementById("redirect") as HTMLElement).click();
+</script>

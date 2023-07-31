@@ -1,0 +1,10 @@
+---
+import AdminNav from "../../components/admin/AdminNav.astro";
+import BooksTable from "../../components/admin/BooksTable.solid";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Διαχείρηση">
+	<AdminNav />
+	<BooksTable client:only="solid" />
+</AdminLayout>
