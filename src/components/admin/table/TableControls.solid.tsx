@@ -33,8 +33,8 @@ export default function TableControls(props: Props) {
 	const [open, setOpen] = createSignal(false, { equals: false });
 	const [cleanup, setCleanup] = createSignal(() => {}, { equals: false });
 	const [store, setStore] = createStore<{ inputs: [Record<string, InputProps>] }>({ inputs: [{}] });
-	const [submitText, setSubmitText] = createSignal("");
-	const [headerText, setHeaderText] = createSignal("");
+	const [submitText, setSubmitText] = createSignal("", { equals: false });
+	const [headerText, setHeaderText] = createSignal("", { equals: false });
 
 	createEffect(
 		on(pressedAction, action => {
@@ -50,9 +50,7 @@ export default function TableControls(props: Props) {
 		batch(() => {
 			if (!action) return;
 			setOpen(true);
-			if (action.type === ActionEnum.DELETE) {
-				setStore("inputs", [{}]);
-			} else setStore("inputs", [action.inputs]);
+			setStore("inputs", [action.inputs]);
 			setSubmitText(action.submitText);
 			setHeaderText(action.headerText);
 			setCleanup(prev => action.onCleanup);
@@ -110,7 +108,7 @@ export default function TableControls(props: Props) {
 					</button>
 				</Show>
 				{/*---------------------EDIT BUTTON-------------------- */}
-				<Show when={!["wholesalers", "classtype"].includes(prefix)}>
+				<Show when={!["wholesalers", "classtype", "sysusers"].includes(prefix)}>
 					<Show
 						when={onEdit && onEdit?.call([]) !== undefined}
 						fallback={

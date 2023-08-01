@@ -33,7 +33,7 @@ export default function Table(props: Props) {
 			{props.children}
 			<div
 				id="tableContainer"
-				class="relative z-[1000] min-w-[40%] max-w-[80%] h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-inter"
+				class="relative z-[1000] min-w-[40%] max-w-[80%] h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
 				<Row data={columns} columnWidths={columnWidths} rows={data.length} header />
 				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto auto grid-flow-row rounded-b-lg overflow-y-auto">

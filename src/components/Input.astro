@@ -81,6 +81,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 			(e.currentTarget as HTMLElement).setAttribute("required", "");
 		});
 	});
+	
 	//@ts-ignore
-	document.querySelector("input[type='date']").valueAsDate = new Date();
+	document.querySelectorAll("input[type='date']").forEach(d => d.valueAsDate = new Date());
 </script>

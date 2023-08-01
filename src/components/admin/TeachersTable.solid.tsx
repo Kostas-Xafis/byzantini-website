@@ -293,7 +293,7 @@ export default function TeachersTable() {
 					name: "name",
 					label: "Μάθημα",
 					type: "select",
-					iconClasses: "fas fa-chalkboard-teacher",
+					iconClasses: "fa-solid fa-chalkboard-teacher",
 					selectList: classtypes.map(c => c.name)
 				} as InputProps
 			},

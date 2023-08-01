@@ -38,11 +38,6 @@ const { title } = Astro.props;
 		font-family: "Anaktoria";
 		src: url("/fonts/ANAKTORIA.OTF");
 	}
-
-	:root {
-		--accent: 124, 58, 237;
-		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), #da62c4 30%, white 60%);
-	}
 	html {
 		font-family: system-ui, sans-serif;
 		height: 100vh;
@@ -50,7 +45,20 @@ const { title } = Astro.props;
 	code {
 		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
 	}
-	p {
+	p,
+	a,
+	button {
 		color: #393939;
+	}
+	select {
+		background-color: white;
+	}
+	input[type="number"] {
+		appearance: textfield;
+		-moz-appearance: textfield;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+		display: none;
 	}
 </style>

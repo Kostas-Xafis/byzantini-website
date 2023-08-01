@@ -1,0 +1,10 @@
+---
+import AdminNav from "../../components/admin/AdminNav.astro";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import SysUserTable from "../../components/admin/SysUsersTable.solid";
+---
+
+<AdminLayout title="Διαχείρηση">
+	<AdminNav />
+	<SysUserTable client:only="solid" />
+</AdminLayout>

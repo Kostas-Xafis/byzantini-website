@@ -10,7 +10,7 @@ export type DefaultEndpointResponse = { res: "error"; error: any } | { res: "mes
 
 export type EndpointResponse<T> = { res: "data"; data: T };
 
-export type EndpointRoute<URL extends string, Req, Res = DefaultEndpointResponse> = (IsAny<URL> extends false
+export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL> extends false
 	? {
 			authentication: boolean;
 			method: GetURLMethod<URL>;
@@ -22,12 +22,12 @@ export type EndpointRoute<URL extends string, Req, Res = DefaultEndpointResponse
 							? Request
 							: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
 						slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-				  ) => Promise<DefaultEndpointResponse | EndpointResponse<Res>>
+				  ) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 				: (
 						req: Req extends null
 							? Request
 							: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> }
-				  ) => Promise<DefaultEndpointResponse | EndpointResponse<Res>>;
+				  ) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 	  } & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})
 	: {
 			// For default use case
@@ -40,7 +40,7 @@ export type EndpointRoute<URL extends string, Req, Res = DefaultEndpointResponse
 					? Request
 					: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
 				slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-			) => Promise<DefaultEndpointResponse | EndpointResponse<Res>>;
+			) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 	  } & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})) & {
 	middleware?: ((req: Request) => Promise<Response | undefined>)[];
 };

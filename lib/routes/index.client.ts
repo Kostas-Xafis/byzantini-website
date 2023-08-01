@@ -8,6 +8,7 @@ import { APIWholesalers, APIWholesalersArgs, APIWholesalersEndpoints, APIWholesa
 import { APITeachers, APITeachersArgs, APITeachersEndpoints, APITeachersResponse } from "./teachers.client";
 import { APILocations, APILocationsArgs, APILocationsEndpoints, APILocationsResponse } from "./locations.client";
 import { APIClassType, APIClassTypeArgs, APIClassTypeEndpoints, APIClassTypeResponse } from "./classtype.client";
+import { APISysUsers, APISysUsersArgs, APISysUsersEndpoints, APISysUsersResponse } from "./sysusers.client";
 
 export const API = {
 	...APIBooks,
@@ -17,7 +18,8 @@ export const API = {
 	...APIWholesalers,
 	...APITeachers,
 	...APILocations,
-	...APIClassType
+	...APIClassType,
+	...APISysUsers,
 };
 
 export const APIEndpoints = {
@@ -28,7 +30,8 @@ export const APIEndpoints = {
 	...APIWholesalersEndpoints,
 	...APITeachersEndpoints,
 	...APILocationsEndpoints,
-	...APIClassTypeEndpoints
+	...APIClassTypeEndpoints,
+	...APISysUsersEndpoints,
 };
 export type APIArgs = APIBooksArgs &
 	APIAuthenticationArgs &
@@ -37,7 +40,8 @@ export type APIArgs = APIBooksArgs &
 	APIWholesalersArgs &
 	APITeachersArgs &
 	APILocationsArgs &
-	APIClassTypeArgs;
+	APIClassTypeArgs &
+	APISysUsersArgs;
 
 export type APIRes = APIBooksResponse &
 	APIAuthenticationResponse &
@@ -46,4 +50,5 @@ export type APIRes = APIBooksResponse &
 	APIWholesalersResponse &
 	APITeachersResponse &
 	APILocationsResponse &
-	APIClassTypeResponse;
+	APIClassTypeResponse & 
+	APISysUsersResponse;

@@ -1,25 +1,24 @@
 -- DROP TABLES
 
-
 ALTER TABLE `books` DROP CONSTRAINT `FK_book_wholesaler`;
--- ALTER TABLE `payments` DROP CONSTRAINT `FK_payment_book`;
--- ALTER TABLE `school_payoffs` DROP CONSTRAINT `FK_school_wholesaler`;
--- ALTER TABLE `classes` DROP CONSTRAINT `FK_class_teacher`;
--- ALTER TABLE `classes` DROP CONSTRAINT `FK_class_type`;
--- ALTER TABLE `registrations` DROP CONSTRAINT `FK_registration_class`;
+ALTER TABLE `payments` DROP CONSTRAINT `FK_payment_book`;
+ALTER TABLE `school_payoffs` DROP CONSTRAINT `FK_school_wholesaler`;
+ALTER TABLE `classes` DROP CONSTRAINT `FK_class_teacher`;
+ALTER TABLE `classes` DROP CONSTRAINT `FK_class_type`;
+ALTER TABLE `registrations` DROP CONSTRAINT `FK_registration_class`;
 
+DROP TABLE IF EXISTS `registrations`;
 DROP TABLE IF EXISTS `books`;
 DROP TABLE IF EXISTS `wholesalers`;
 DROP TABLE IF EXISTS `payments`;
 DROP TABLE IF EXISTS `school_payoffs`;
-DROP TABLE IF EXISTS `sys_users`;
-DROP TABLE IF EXISTS `sys_user_register_links`;
 DROP TABLE IF EXISTS `locations`;
 DROP TABLE IF EXISTS `teachers`;
 DROP TABLE IF EXISTS `class_type`;
 DROP TABLE IF EXISTS `classes`;
 DROP TABLE IF EXISTS `files`;
--- DROP TABLE IF EXISTS `registrations`;
+DROP TABLE IF EXISTS `sys_users`;
+DROP TABLE IF EXISTS `sys_user_register_links`;
 
 -- DB SCHEMA;
 CREATE TABLE `wholesalers` (
@@ -105,23 +104,6 @@ INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (7, 900);
 INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (8, 165);
 INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (9, 300);
 
-CREATE TABLE `sys_users` (
-    `id` int NOT NULL AUTO_INCREMENT,
-    `email` varchar(80) NOT NULL,
-    `password` varchar(80) NOT NULL,
-    `session_id` varchar(40),
-    `session_exp_date` bigint,
-PRIMARY KEY (`id`, `email`))
-AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-INSERT INTO sys_users (email, password) VALUES ('koxafis@gmail.com', 'Whereiswaldo!09');
-
-CREATE TABLE `sys_user_register_links` (
-    `link` varchar(80) NOT NULL,
-    `exp_date` bigint NOT NULL,
-    PRIMARY KEY (`link`))
-DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE `locations` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(80) NOT NULL,
@@ -141,6 +123,7 @@ CREATE TABLE `teachers` (
     `cellphone` varchar(20) NOT NULL,
     `picture` varchar(20),
     `cv` varchar(20),
+    `priority` int NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -194,10 +177,35 @@ CREATE TABLE `registrations`(
     `email` varchar(40) NOT NULL,
     `registration_year` varchar(40) NOT NULL,
     `class_year` varchar(40) NOT NULL,
-    `teacher_id` varchar(80) NOT NULL,
+    `teacher_id` INT NOT NULL,
     `class_id` int NOT NULL,
     `date` bigint NOT NULL,
     CONSTRAINT FK_registration_class FOREIGN KEY (class_id) REFERENCES class_type(id),
     CONSTRAINT FK_registration_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id),
     PRIMARY KEY (`cellphone`, `am`, `class_id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- 0 - simple admin - 1 - super admin - 2 - root admin;
+
+CREATE TABLE `sys_users` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `email` varchar(80) NOT NULL,
+    `password` varchar(80) NOT NULL,
+    `session_id` varchar(40),
+    `session_exp_date` bigint,
+    `privilege` int NOT NULL DEFAULT 0,
+    `last_reg_check_id` int NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`, `email`)
+)AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO sys_users (email, password, privilege) VALUES ('koxafis@gmail.com', 'Whereiswaldo!09', 2);
+INSERT INTO sys_users (email, password, privilege) VALUES ('dummy@user.com', 'dummyuser', 1);
+INSERT INTO sys_users (email, password) VALUES ('dummy2@user.com', 'dummyuser2');
+
+CREATE TABLE `sys_user_register_links` (
+    `link` varchar(80) NOT NULL,
+    `exp_date` bigint NOT NULL,
+    `privilege` int NOT NULL,
+    PRIMARY KEY (`link`))
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

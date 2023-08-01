@@ -9,11 +9,6 @@ serverRoutes.get.func = async _req => {
 	return await execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
 };
 
-serverRoutes.getById.func = async (_req, slug) => {
-	const id = slug.id;
-	return await execTryCatch(() => executeQuery<Books>("SELECT * FROM books WHERE id = ?", [id]));
-};
-
 serverRoutes.post.func = async function (req) {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();

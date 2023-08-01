@@ -1,0 +1,76 @@
+---
+export const prerender = false;
+import { useAPI } from "../../../lib/hooks/useAPI.astro";
+import type { Teachers } from "../../../types/entities";
+import Navbar from "../../components/Navbar.astro";
+import Layout from "../../layouts/Layout.astro";
+
+const teachers = (await useAPI("Teachers.get", {})).data as Teachers[];
+const enum MusicType {
+	Byzantine = "byz",
+	Traditional = "par",
+	European = "eur",
+	None = ""
+}
+
+const music = [
+	["Βυζαντινή Μουσική", MusicType.Byzantine],
+	["Παραδοσιακή Μουσική", MusicType.Traditional],
+	["Ευρωπαϊκή Μουσική", MusicType.European]
+] as const;
+---
+
+<Layout title="Καθηγητές">
+	<Navbar />
+	<div class="w-full h-full grid grid-cols-[max-content_1fr] font-didact">
+		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-800">
+			{
+				music.map(([str, type]) => (
+					<div class="group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-800 border-b-2 border-red-800">
+						<button
+							class="p-6 text-2xl group-hover/btn:text-white transition-colors duration-500 ease-in-out"
+							data-type={type}
+						>
+							{str}
+						</button>
+						<i class="fa-solid fa-angle-right mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white transition-colors duration-500 ease-in-out" />
+					</div>
+				))
+			}
+		</div>
+		<div class="w-max grid auto-rows-auto grid-flow-row pt-10">
+			{
+				teachers.map(teacher => (
+					<div class="grid grid-cols-[max-content_1fr] pl-6 gap-x-6">
+						{teacher.picture ? (
+							<img src={"/kathigites/images/" + teacher.picture} class="max-w-[300px] object-cover rounded-2xl shadow-md shadow-gray-500" />
+						) : (
+							<div class="w-[300px]" />
+						)}
+						<div class="w-max grid auto-rows-max gap-y-2">
+							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-sm">{teacher.fullname}</p>
+							<p class="text-xl"> 
+								Επικοινωνία: <i class="fa-regular fa-envelope pl-2 place-self-center" />
+								{teacher.email}
+								<span class="pl-1 text-lg font-serif">•</span>
+								<i class="fa-solid fa-mobile-screen pl-2" />
+								{teacher.cellphone}
+							</p>
+							{teacher.cv ? 
+								<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="text-xl hover:underline">
+									Βιογραφικό<i class="fa-solid fa-file-lines pl-2"></i>
+								</a>
+								: 
+								<></>}
+						</div>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</Layout>
+<style>
+	button:is(.selected) {
+		background-color: rgb(153, 27, 27);
+	}
+</style>

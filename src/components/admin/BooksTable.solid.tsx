@@ -217,6 +217,7 @@ export default function BooksTable() {
 				setActionPressed(ActionEnum.DELETE);
 			});
 		};
+		console.log(wholesalers.map(w => w.name));
 		return {
 			inputs: {
 				name: {

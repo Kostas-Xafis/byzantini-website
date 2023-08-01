@@ -42,14 +42,17 @@ export const z_SysUsers = z.object({
 	email: z.string().email(),
 	password: z.string().nonempty(),
 	session_id: z.string().nonempty(),
-	session_exp_date: z.bigint().nonnegative()
+	session_exp_date: z.bigint().nonnegative(),
+	privilege: z.number().int().nonnegative(),
+	last_reg_check_id: z.number().int().nonnegative(),
 });
 
-export type SysUser = z.infer<typeof z_SysUsers>;
+export type SysUsers = z.infer<typeof z_SysUsers>;
 
 export const z_SysUserRegisterLink = z.object({
 	link: z.string().nonempty(),
-	exp_date: z.bigint().nonnegative()
+	exp_date: z.bigint().nonnegative(),
+	privilege: z.number().int().nonnegative()
 });
 
 export type SysUserRegisterLink = z.infer<typeof z_SysUserRegisterLink>;

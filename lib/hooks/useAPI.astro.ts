@@ -17,7 +17,9 @@ export const useAPI = async <T extends keyof Endpoint>(endpoint: T, req: APIArgs
 			body: RequestObject ? JSON.stringify(RequestObject) : null
 		});
 		const json = (await res.json()) as APIRes[T];
-		return json;
+		if ("error" in json) return { error: json.error };
+		if ("message" in json) return { message: json.message };
+		return { data: json.data as any };
 	} catch (error) {
 		return { error };
 	}

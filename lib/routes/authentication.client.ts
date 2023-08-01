@@ -1,5 +1,4 @@
 import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import type { SysUser } from "../../types/entities";
 import { z } from "zod";
 
 const z_LoginCredentials = z.object({
@@ -23,34 +22,17 @@ const userLogin: EndpointRoute<"POST:/auth/login", typeof z_LoginCredentials, { 
 	validation: () => z_LoginCredentials,
 	func: async req => null as any
 };
-const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof z_LoginCredentials, Pick<SysUser, "session_id">> = {
-	authentication: true,
-	method: "POST",
-	path: "/sys/register/[link:string]",
-	hasUrlParams: true,
-	validation: () => z_LoginCredentials,
-	func: async req => null as any
-};
-const createRegisterLink: EndpointRoute<"POST:/sys/register", null, string> = {
-	authentication: true,
-	method: "POST",
-	path: "/sys/register",
-	hasUrlParams: false,
-	func: async req => null as any
-};
 
-export const routes = {
+export const AuthenticationRoutes = {
 	authenticateSession,
 	userLogin,
-	registerSysUser,
-	createRegisterLink
 };
 
-export type APIAuthenticationArgs = APIArguments<"Authentication", typeof routes>;
+export type APIAuthenticationArgs = APIArguments<"Authentication", typeof AuthenticationRoutes>;
 
-export type APIAuthenticationResponse = APIResponse<"Authentication", typeof routes>;
+export type APIAuthenticationResponse = APIResponse<"Authentication", typeof AuthenticationRoutes>;
 
-export const APIAuthenticationEndpoints: APIEndpointsBuilder<"Authentication", typeof routes> = {
+export const APIAuthenticationEndpoints: APIEndpointsBuilder<"Authentication", typeof AuthenticationRoutes> = {
 	"Authentication.authenticateSession": {
 		method: "POST",
 		path: "/auth/session",
@@ -61,25 +43,12 @@ export const APIAuthenticationEndpoints: APIEndpointsBuilder<"Authentication", t
 		path: "/auth/login",
 		endpoint: "Authentication.userLogin",
 		validation: z_LoginCredentials
-	},
-	"Authentication.createRegisterLink": {
-		method: "POST",
-		path: "/sys/register",
-		endpoint: "Authentication.createRegisterLink"
-	},
-	"Authentication.registerSysUser": {
-		method: "POST",
-		path: "/sys/register/[link:string]",
-		endpoint: "Authentication.registerSysUser",
-		validation: z_LoginCredentials
 	}
 };
 
-export const APIAuthentication: APIBuilder<"Authentication", typeof routes> = {
+export const APIAuthentication: APIBuilder<"Authentication", typeof AuthenticationRoutes> = {
 	Authentication: {
 		authenticateSession: "Authentication.authenticateSession",
-		createRegisterLink: "Authentication.createRegisterLink",
-		registerSysUser: "Authentication.registerSysUser",
 		userLogin: "Authentication.userLogin"
 	}
 };

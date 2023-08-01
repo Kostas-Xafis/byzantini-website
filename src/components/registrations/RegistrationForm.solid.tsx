@@ -108,7 +108,49 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Α' Ετος Διπλώματος"]
+			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"]
+		},
+		teacher_id: {
+			label: "Καθηγητής",
+			name: "teacher_id",
+			type: "select",
+			required: true,
+			iconClasses: "fa-solid fa-user",
+			selectList: teachers.map(teacher => teacher.fullname)
+		}
+	};
+};
+
+const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
+	return {
+		class_year: {
+			label: "Έτος Φοίτησης",
+			name: "class_year",
+			type: "select",
+			required: true,
+			iconClasses: "fa-solid fa-graduation-cap",
+			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"]
+		},
+		teacher_id: {
+			label: "Καθηγητής",
+			name: "teacher_id",
+			type: "select",
+			required: true,
+			iconClasses: "fa-solid fa-user",
+			selectList: teachers.map(teacher => teacher.fullname)
+		}
+	};
+};
+
+const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
+	return {
+		class_year: {
+			label: "Έτος Φοίτησης",
+			name: "class_year",
+			type: "select",
+			required: true,
+			iconClasses: "fa-solid fa-graduation-cap",
+			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"]
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -185,16 +227,20 @@ export function RegistrationForm() {
 					<div id="registrationContainer" class="w-full h-full grid grid-rows-1 grid-cols-1 place-items-center font-dicact">
 						<div id="firstSelect" class="h-full w-full grid grid-cols-3 place-items-center overflow-hidden">
 							{btns.map(([str, type]) => (
-								<div class="relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-40%,_black)] hover:before:scale-125 overflow-hidden">
-									<div class="group/btn w-max place-self-center grid grid-cols-1 bg-white border-solid border-2 border-red-800 rounded-md shadow-md shadow-red-400 transition-colors duration-500 ease-in-out hover:bg-red-800">
+								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 overflow-hidden">
+									<div class="w-max place-self-center grid grid-cols-1 border-solid border-2 border-transparent rounded-md shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:border-red-800  group-hover/select:bg-red-800 group-hover/select:shadow-lg">
 										<button
-											class="p-6 text-3xl font-didact group-hover/btn:text-white transition-colors duration-500 ease-in-out"
+											class="p-6 text-5xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
 											onClick={onSelectClick(type)}
 										>
 											{str}
 										</button>
 									</div>
-									<img src={`/${type}.jpg`} alt=" " class="absolute inset-0 h-full aspect-auto -z-50 blur-[3px]" />
+									<img
+										src={`/${type}.jpg`}
+										alt=" "
+										class="absolute inset-0 h-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105"
+									/>
 								</div>
 							))}
 						</div>
@@ -234,7 +280,9 @@ export function RegistrationForm() {
 						))}
 						{formSelected() === MusicType.Byzantine
 							? Object.values(byzantineInputs(TeachersByType())).map(input => <Input {...input} />)
-							: null}
+							: formSelected() === MusicType.Traditional
+							? Object.values(traditionalInputs(TeachersByType())).map(input => <Input {...input} />)
+							: Object.values(europeanInputs(TeachersByType())).map(input => <Input {...input} />)}
 						<button
 							class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group/form-[:is(.animate-shake)]:bg-red-500"
 							type="submit"
@@ -245,17 +293,7 @@ export function RegistrationForm() {
 				</div>
 			</Show>
 			<style>
-				{`label, button {
-		text-shadow: -1px 1px 2px rgba(0 0 0/0.15);
-	}
-	input[type="number"] {
-		appearance: textfield;
-		-moz-appearance: textfield;
-	}
-	input::-webkit-outer-spin-button,
-	input::-webkit-inner-spin-button {
-		display: none;
-	}
+				{`
     @keyframes fadeIn {
 		0%{
 			opacity: 0.0001;
