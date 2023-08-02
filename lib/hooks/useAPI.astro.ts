@@ -6,6 +6,11 @@ export const API = api;
 
 // Astro version
 export const useAPI = async <T extends keyof Endpoint>(endpoint: T, req: APIArgs[T]) => {
+	const Route = APIEndpoints[endpoint];
+	if ("validation" in Route && Route.validation && req.RequestObject) {
+		const result = Route.validation.safeParse(req.RequestObject);
+		if (!result.success) return { error: result.error };
+	}
 	let route = APIEndpoints[endpoint];
 	const url = "http://localhost:3000/api" + (req.UrlArgs ? convertUrlFromArgs(route.path, req.UrlArgs) : route.path);
 	const { RequestObject } = req;

@@ -43,7 +43,7 @@ const music = [
 				teachers.map(teacher => (
 					<div class="grid grid-cols-[max-content_1fr] pl-6 gap-x-6">
 						{teacher.picture ? (
-							<img src={"/kathigites/images/" + teacher.picture} class="max-w-[300px] object-cover rounded-2xl shadow-md shadow-gray-500" />
+							<img src={"/kathigites/images/" + teacher.picture} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="max-w-[300px] object-cover rounded-2xl shadow-md shadow-gray-500" />
 						) : (
 							<div class="w-[300px]" />
 						)}

@@ -93,7 +93,7 @@ export default function Input(props: Props) {
 			<Show when={type !== "select" && type !== "file"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
 				<input
-					class="peer m-2 px-12 py-3 pt-2 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -112,7 +112,7 @@ export default function Input(props: Props) {
 			<Show when={type === "select"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
 				<select
-					class="peer m-2 px-12 py-3 pt-2 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
 					name={name}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
@@ -132,7 +132,7 @@ export default function Input(props: Props) {
 				<div
 					data-name={name}
 					class={
-						"peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-2 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden " +
+						"peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-3 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden " +
 						(value ? "show" : "")
 					}
 				>
@@ -142,7 +142,7 @@ export default function Input(props: Props) {
 				<div
 					data-name={name}
 					onclick={onFileClick}
-					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-min my-3 py-2 justify-self-center self-center flex flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600"
+					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-min my-3 py-3 justify-self-center self-center flex flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600"
 				>
 					<i class={"text-4xl text-gray-400 group-hover/file:text-gray-50 " + (iconClasses || "")}></i>
 					<p class="text-xl text-gray-400  group-hover/file:text-gray-50">Drag&Drop</p>

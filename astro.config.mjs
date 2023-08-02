@@ -1,12 +1,22 @@
 import { defineConfig } from "astro/config";
 import tailwind from "@astrojs/tailwind";
 import node from "@astrojs/node";
-
 import solidJs from "@astrojs/solid-js";
+import prefetch from "@astrojs/prefetch";
+
+import sitemap from "@astrojs/sitemap";
+
+const unmappedRoutes = page => page.includes("admin");
 
 // https://astro.build/config
 export default defineConfig({
-	integrations: [tailwind(), solidJs()],
+	site: "https://astrojs.org",
+	integrations: [
+		tailwind(),
+		solidJs(),
+		prefetch(),
+		sitemap({ filter: unmappedRoutes, changefreq: "monthly", priority: 1, lastmod: new Date() })
+	],
 	output: "hybrid",
 	adapter: node({
 		mode: "standalone"
@@ -18,7 +28,7 @@ export default defineConfig({
 			}
 		}
 	},
-	experimental:{
+	experimental: {
 		redirects: true
 	}
 });

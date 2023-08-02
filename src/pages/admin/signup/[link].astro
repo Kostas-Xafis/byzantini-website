@@ -5,16 +5,15 @@ import Layout from "../../../layouts/Layout.astro";
 
 export const prerender = false;
 
-const {link} = Astro.params;
+const { link } = Astro.params;
 if (!link) {
 	return Astro.redirect("/");
 }
 const res = await useAPI(API.SysUsers.validateRegisterLink, { UrlArgs: { link } });
 
-if(!("data" in res) || !res.data?.isValid) {
+if (!("data" in res) || !res.data?.isValid) {
 	return Astro.redirect("/");
 }
-
 ---
 
 <Layout title="Διαχείρηση">
@@ -22,11 +21,11 @@ if(!("data" in res) || !res.data?.isValid) {
 		class="p-12 h-max justify-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 justify-center"
 	>
 		<div class="grid justify-center content-center">
-			<a href="/"> <img class="h-[100px] aspect-[0.99/1]" src="/logo.webp" alt="Λογότυπο Σχολής" /></a>
+			<a href="/"> <img class="h-[100px] aspect-[0.99/1]" src="/logo.jpg" alt="Λογότυπο Σχολής" /></a>
 		</div>
 		<h2 class="text-3xl font-didact text-center">Εγγραφή Διαχειρηστή</h2>
 		<form id="signupForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
-			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" required/>
+			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" required />
 			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
 			<button
 				class="text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]:bg-red-500"

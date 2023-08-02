@@ -228,7 +228,7 @@ export function RegistrationForm() {
 						<div id="firstSelect" class="h-full w-full grid grid-cols-3 place-items-center overflow-hidden">
 							{btns.map(([str, type]) => (
 								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 overflow-hidden">
-									<div class="w-max place-self-center grid grid-cols-1 border-solid border-2 border-transparent rounded-md shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:border-red-800  group-hover/select:bg-red-800 group-hover/select:shadow-lg">
+									<div class="w-max place-self-center grid grid-cols-1 border-solid border-2 border-transparent rounded-md shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:border-red-800  group-hover/select:bg-red-800 group-hover/select:shadow-md">
 										<button
 											class="p-6 text-5xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
 											onClick={onSelectClick(type)}
@@ -238,7 +238,7 @@ export function RegistrationForm() {
 									</div>
 									<img
 										src={`/${type}.jpg`}
-										alt=" "
+										alt="Φόντο εισόδου εγγραφής"
 										class="absolute inset-0 h-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105"
 									/>
 								</div>
@@ -297,9 +297,8 @@ export function RegistrationForm() {
     @keyframes fadeIn {
 		0%{
 			opacity: 0.0001;
-			display: none;
 		}
-		1%{
+		10%{
 			opacity: 0.0001;
 		}
         100%{
@@ -315,7 +314,6 @@ export function RegistrationForm() {
 		}
         100%{
 			opacity: 0.0001;
-			display: none;
         }
     }
 	#registrationSelect,

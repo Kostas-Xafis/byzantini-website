@@ -20,7 +20,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 			<>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
 				<input
-					class="formInputs peer m-2 px-12 py-3 pt-2 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="formInputs peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -33,7 +33,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 			<>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
 				<select
-					class="peer m-2 px-12 py-3 pt-2 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
 					name={name}
 					required={required || false}
 					disabled={disabled || false}
@@ -81,7 +81,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 			(e.currentTarget as HTMLElement).setAttribute("required", "");
 		});
 	});
-	
+
 	//@ts-ignore
-	document.querySelectorAll("input[type='date']").forEach(d => d.valueAsDate = new Date());
+	document.querySelectorAll("input[type='date']").forEach(d => (d.valueAsDate = new Date()));
 </script>
