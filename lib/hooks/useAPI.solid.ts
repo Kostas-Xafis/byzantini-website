@@ -18,7 +18,7 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 			return { error: result.error };
 		}
 	}
-	const url = "http://localhost:3000/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
+	const url = "/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
 	const { RequestObject } = req;
 	const body = RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null;
 	try {

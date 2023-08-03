@@ -12,7 +12,7 @@ export const useAPI = async <T extends keyof Endpoint>(endpoint: T, req: APIArgs
 		if (!result.success) return { error: result.error };
 	}
 	let route = APIEndpoints[endpoint];
-	const url = "http://localhost:3000/api" + (req.UrlArgs ? convertUrlFromArgs(route.path, req.UrlArgs) : route.path);
+	const url = "/api" + (req.UrlArgs ? convertUrlFromArgs(route.path, req.UrlArgs) : route.path);
 	const { RequestObject } = req;
 	delete req.UrlArgs;
 	delete req.RequestObject;
