@@ -15,10 +15,10 @@ const { title } = Astro.props;
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-		<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
+		<script src="https://kit.fontawesome.com/cd86c02df9.js" crossorigin="anonymous"></script>
 		<!-- <link href="/fa/\/css/brands.css" rel="stylesheet" /> -->
-		<link href="/fa/css/solid.css" rel="stylesheet" />
-		<link href="/fa/css/regular.css" rel="stylesheet" />
+		<!-- <link href="/fa/css/solid.css" rel="stylesheet" />
+		<link href="/fa/css/regular.css" rel="stylesheet" /> -->
 	</head>
 	<body class="box-border p-0 grid">
 		<a id="redirect" href="/login" style="width: 0px; height: 0px; position: absolute;" class="hidden"></a>
@@ -50,7 +50,8 @@ const { title } = Astro.props;
 		height: 100vh;
 		background: white;
 	}
-	label, button {
+	label,
+	button {
 		text-shadow: -1px 1px 2px rgba(0 0 0/0.15);
 	}
 	p,

@@ -1,6 +1,5 @@
 import { defineConfig } from "astro/config";
 import tailwind from "@astrojs/tailwind";
-import node from "@astrojs/node";
 import solidJs from "@astrojs/solid-js";
 import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
