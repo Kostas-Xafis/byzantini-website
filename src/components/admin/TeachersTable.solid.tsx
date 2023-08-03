@@ -1,5 +1,12 @@
 import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
-import type { SimpleTeacher as Teachers, Teachers as FullTeachers, ClassType } from "../../../types/entities";
+import type {
+	SimpleTeacher as Teachers,
+	Teachers as FullTeachers,
+	ClassType,
+	Classes,
+	Locations,
+	TeacherLocations
+} from "../../../types/entities";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -11,9 +18,26 @@ import { formListener } from "./table/formSubmit";
 const PREFIX = "teachers";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type TeachersTable = FullTeachers; // & classes
+type TeachersTable = FullTeachers;
 
-const TeachersInputs = (teacher?: FullTeachers): Record<keyof FullTeachers, InputProps> => {
+const TeachersInputs = (
+	class_types: ClassType[],
+	locations: Locations[],
+	teacher?: FullTeachers,
+	classList?: Classes[],
+	locationsList?: TeacherLocations[]
+): Record<keyof FullTeachers | "classes" | "locations", InputProps> => {
+	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];
+	const multiselectClasses = class_types?.map(ct => {
+		let c = teacherClasses && teacherClasses.find(t => t.class_id === ct.id);
+		return { value: ct.id, label: ct.name, selected: !!c };
+	});
+
+	const teacherLocations = locationsList?.filter(l => l.teacher_id === teacher?.id) || [];
+	const multiselectLocations = locations?.map(l => {
+		let c = teacherLocations && teacherLocations.find(t => t.location_id === l.id);
+		return { value: l.id, label: l.name, selected: !!c };
+	});
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
@@ -39,6 +63,27 @@ const TeachersInputs = (teacher?: FullTeachers): Record<keyof FullTeachers, Inpu
 			iconClasses: "fa-solid fa-file-pdf",
 			fileExtension: ".pdf",
 			value: teacher?.cv
+		},
+		priority: {
+			name: "priority",
+			label: "Προτεραιότητα",
+			type: "number",
+			iconClasses: "fa-solid fa-arrow-up-9-1",
+			minmax: [1, 9]
+		},
+		classes: {
+			name: "classes",
+			label: "Μαθήματα",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-chalkboard-teacher",
+			multiselectList: multiselectClasses
+		},
+		locations: {
+			name: "locations",
+			label: "Τοποθεσίες",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-map-marker",
+			multiselectList: multiselectLocations
 		}
 	};
 };
@@ -74,6 +119,9 @@ export default function TeachersTable() {
 		console.log("Hydrating table data");
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.ClassType.get, {});
+		useAPI(setStore, API.Teachers.getClasses, {});
+		useAPI(setStore, API.Locations.get, {});
+		useAPI(setStore, API.Teachers.getLocations, {});
 	});
 
 	createEffect(
@@ -105,7 +153,8 @@ export default function TeachersTable() {
 		email: { name: "Email", size: () => 20 },
 		cellphone: "Κινητό Τηλέφωνο",
 		picture: "Φωτογραφία",
-		cv: "Βιογραφικό"
+		cv: "Βιογραφικό",
+		priority: "Προτεραιότητα"
 	};
 
 	const shapedData = createMemo(() => {
@@ -113,14 +162,26 @@ export default function TeachersTable() {
 		return teachers ? teachersToTable(teachers) : [];
 	});
 	const onAdd = createMemo(() => {
+		const class_types = store[API.ClassType.get];
+		const classList = store[API.Teachers.getClasses];
+		const locations = store[API.Locations.get];
+		const locationsList = store[API.Teachers.getLocations];
+		if (!class_types || !classList || !locations || !locationsList) return;
 		const submit = function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<Teachers, "id"> = {
+			const data: Omit<Teachers & { classes: number[] }, "id"> = {
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
-				cellphone: formData.get("cellphone") as string
+				cellphone: formData.get("cellphone") as string,
+				priority: Number(formData.get("priority") as string),
+				classes: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='classes']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
+						return id;
+					})
+					.filter(Boolean) as number[]
 			};
 			useAPI(setStore, API.Teachers.post, { RequestObject: data }).then(async res => {
 				if (!res.data) return;
@@ -139,7 +200,7 @@ export default function TeachersTable() {
 			});
 		};
 		return {
-			inputs: Omit(TeachersInputs(), "id"),
+			inputs: Omit(TeachersInputs(class_types, locations), "id"),
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
@@ -151,7 +212,11 @@ export default function TeachersTable() {
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length !== 1) return undefined;
 		const teacher = teachers.find(p => p.id === selectedItems[0]);
-		if (!teacher) return undefined;
+		const class_types = store[API.ClassType.get];
+		const classList = store[API.Teachers.getClasses];
+		const locations = store[API.Locations.get];
+		const locationsList = store[API.Teachers.getLocations];
+		if (!teacher || !class_types || !classList || !locations || !locationsList) return;
 
 		let pictureRemoved = false;
 		let cvRemoved = false;
@@ -159,11 +224,18 @@ export default function TeachersTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Teachers = {
+			const data: Teachers & { classes: number[] } = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
-				cellphone: formData.get("cellphone") as string
+				cellphone: formData.get("cellphone") as string,
+				priority: Number(formData.get("priority") as string),
+				classes: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='classes']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
+						return id;
+					})
+					.filter(Boolean) as number[]
 			};
 			useAPI(setStore, API.Teachers.update, { RequestObject: data }).then(async res => {
 				if (!res.data && !res.message) return;
@@ -209,7 +281,7 @@ export default function TeachersTable() {
 		// @ts-ignore
 		delete simpleTeacher.cv;
 		return {
-			inputs: Omit(Fill(TeachersInputs(teacher), simpleTeacher), "id"),
+			inputs: Omit(Fill(TeachersInputs(class_types, locations, teacher, classList, locationsList), simpleTeacher), "id"),
 			onMount: () => {
 				//@ts-ignore
 				document.addEventListener("emptyFileRemove", emptyFileRemove);

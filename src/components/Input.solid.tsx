@@ -32,7 +32,21 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 }
 
 export type Props = {
-	type: "checkbox" | "date" | "email" | "file" | "hidden" | "select" | "number" | "password" | "radio" | "tel" | "text" | "time" | "url";
+	type:
+		| "checkbox"
+		| "date"
+		| "email"
+		| "file"
+		| "hidden"
+		| "select"
+		| "multiselect"
+		| "number"
+		| "password"
+		| "radio"
+		| "tel"
+		| "text"
+		| "time"
+		| "url";
 	name: string;
 	label: string;
 	placeholder?: string;
@@ -41,11 +55,14 @@ export type Props = {
 	iconClasses?: string;
 	disabled?: boolean;
 	selectList?: string[];
+	multiselectList?: { value: number; label: string; selected: boolean }[];
 	fileExtension?: string;
+	minmax?: [number, number];
 };
 
 export default function Input(props: Props) {
-	const { type, name, label, placeholder, value, required, iconClasses, disabled, selectList, fileExtension } = props;
+	const { type, name, label, placeholder, value, required, iconClasses, disabled, selectList, multiselectList, fileExtension, minmax } =
+		props;
 
 	if (type === "date") {
 		onMount(() => {
@@ -88,9 +105,24 @@ export default function Input(props: Props) {
 			(e.currentTarget as HTMLElement).setAttribute("required", "");
 		});
 	});
+
+	let multiselectOnChange;
+	if (type === "multiselect") {
+		multiselectOnChange = (e: Event) => {
+			const select = e.currentTarget as HTMLSelectElement;
+			const option = select.selectedOptions[0];
+			const value = option.value;
+			const item = option.innerText;
+			const input = document.querySelector(`input[name='${name}']`) as HTMLInputElement;
+
+			input.value = input.value.concat(item + "\n");
+			input.setAttribute("selectList", input.getAttribute("selectList") + "" + value + ",");
+		};
+	}
+	console.log(multiselectList);
 	return (
 		<label for={name} class={"relative h-min max-w-[30ch] grid text-xl rounded-md font-didact z-10"}>
-			<Show when={type !== "select" && type !== "file"}>
+			<Show when={type !== "select" && type !== "file" && type !== "multiselect"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
 				<input
 					class="peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
@@ -99,13 +131,14 @@ export default function Input(props: Props) {
 					placeholder={placeholder || ""}
 					value={value || ""}
 					disabled={disabled || false}
+					min={minmax?.[0] || ""}
+					max={minmax?.[1] || ""}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onblur={(e: FocusEvent) =>
 						required &&
 						(e.currentTarget as HTMLInputElement).value === "" &&
 						(e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
-					accept={fileExtension || undefined}
 				/>
 			</Show>
 			{/*--------------------------------SELECT INPUT---------------------------------------- */}
@@ -126,6 +159,54 @@ export default function Input(props: Props) {
 						)}
 					</For>
 				</select>
+			</Show>
+			{/*--------------------------------MULTISELECT INPUT---------------------------------------- */}
+			<Show when={type === "multiselect"}>
+				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
+				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-auto">
+					<For each={multiselectList}>
+						{(selectItem, index) => (
+							<button
+								data-specifier={name}
+								data-selected={selectItem.selected}
+								data-value={selectItem.value}
+								class="group ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
+								onClick={(e: MouseEvent) => {
+									const button = e.currentTarget as HTMLButtonElement;
+									console.log("pressingbutton");
+									button.setAttribute(
+										"data-selected",
+										button.getAttribute("data-selected") === "true" ? "false" : "true"
+									);
+								}}
+								type="button"
+							>
+								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]:hidden"></i>
+								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]:hidden"></i>
+								<p class="p-2 font-didact" style={{ "grid-column": "2 / 3" }}>
+									{selectItem.label}
+								</p>
+							</button>
+						)}
+					</For>
+				</div>
+				{/* <input
+					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					type="text"
+					name={name}
+					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
+					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
+					disabled={disabled || false}
+				/> */}
+				{/* <select class="peer-focus-within:block" size={selectList?.length} onChange={multiselectOnChange}>
+					<For each={selectList}>
+						{(selectItem, index) => (
+							<option selected={index() === value} value={index()}>
+								{selectItem}
+							</option>
+						)}
+					</For>
+				</select> */}
 			</Show>
 			{/*--------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>

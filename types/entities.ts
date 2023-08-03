@@ -63,7 +63,8 @@ export const z_Teachers = z.object({
 	email: z.string().email(),
 	cellphone: z.string().nonempty(),
 	picture: z.string(), // Unique picture id
-	cv: z.string() // Unique id for the pdf or whatever file
+	cv: z.string(), // Unique id for the pdf or whatever file
+	priority: z.number().int().nonnegative().max(9).min(1),
 });
 
 export type Teachers = z.infer<typeof z_Teachers>;
@@ -71,6 +72,15 @@ export type Teachers = z.infer<typeof z_Teachers>;
 export const z_SimpleTeacher = z_Teachers.omit({ picture: true, cv: true });
 
 export type SimpleTeacher = z.infer<typeof z_SimpleTeacher>;
+
+
+export const z_TeacherLocations = z.object({
+	teacher_id: z.number().int().nonnegative(),
+	location_id: z.number().int().nonnegative()
+});
+
+export type TeacherLocations = z.infer<typeof z_TeacherLocations>;
+
 
 export const z_Classes = z.object({
 	teacher_id: z.number().int().nonnegative(),

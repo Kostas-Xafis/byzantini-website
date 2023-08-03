@@ -5,6 +5,8 @@ ALTER TABLE `payments` DROP CONSTRAINT `FK_payment_book`;
 ALTER TABLE `school_payoffs` DROP CONSTRAINT `FK_school_wholesaler`;
 ALTER TABLE `classes` DROP CONSTRAINT `FK_class_teacher`;
 ALTER TABLE `classes` DROP CONSTRAINT `FK_class_type`;
+ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_teacher_id`;
+ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_location_id`;
 ALTER TABLE `registrations` DROP CONSTRAINT `FK_registration_class`;
 
 DROP TABLE IF EXISTS `registrations`;
@@ -116,6 +118,11 @@ CREATE TABLE `locations` (
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Μεταμορφώσεως", "Χλόης 1", 123, 1234, "Μεταμόρφωσης", "https://maps.google.com");
+INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Πέυκης", "Παπανδρέου 28", 123, 1234, "Πέυκης", "https://maps.google.com");
+INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Εκάλης", "Αγίου Ιωάννου 17", 123, 1234, "Εκάλης", "https://maps.google.com");
+INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Κηφισιάς", "Λεωφόρος Κηφισίας 12", 123, 1234, "Κηφισιάς", "https://maps.google.com");
+
 CREATE TABLE `teachers` (
     `id` int NOT NULL AUTO_INCREMENT,
     `fullname` varchar(80) NOT NULL,
@@ -133,6 +140,14 @@ CREATE TABLE `class_type` (
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `teacher_locations` (
+    `teacher_id` int NOT NULL,
+    `location_id` int NOT NULL,
+    CONSTRAINT FK_teacher_locations_teacher_id FOREIGN KEY (teacher_id) REFERENCES teachers(id),
+    CONSTRAINT FK_teacher_locations_location_id FOREIGN KEY (location_id) REFERENCES locations(id),
+    PRIMARY KEY (`teacher_id`, `location_id`)
+);
+
 CREATE TABLE `classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
@@ -140,7 +155,6 @@ CREATE TABLE `classes` (
     CONSTRAINT FK_class_type FOREIGN KEY (class_id) REFERENCES class_type(id),
     PRIMARY KEY (`teacher_id`, `class_id`)
 );
-
 
 INSERT INTO class_type (name) VALUES ('Βυζαντινή Μουσική');
 INSERT INTO class_type (name) VALUES ('Παραδοσιακή Μουσική');
@@ -160,6 +174,15 @@ INSERT INTO classes (teacher_id, class_id) VALUES (3, 3);
 INSERT INTO classes (teacher_id, class_id) VALUES (4, 1);
 INSERT INTO classes (teacher_id, class_id) VALUES (4, 2);
 INSERT INTO classes (teacher_id, class_id) VALUES (4, 3);
+
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (1, 1);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (1, 2);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (2, 3);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (2, 4);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (3, 1);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (3, 3);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 2);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 4);
 
 CREATE TABLE `registrations`(
     `id` int NOT NULL,

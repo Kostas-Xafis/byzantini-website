@@ -9,9 +9,10 @@ export interface Props {
 	iconClasses?: string;
 	disabled?: boolean;
 	selectList?: string[];
+	minmax?: [number, number];
 }
 
-const { type, name, label, placeholder, value, required, disabled, iconClasses, selectList } = Astro.props;
+const { type, name, label, placeholder, value, required, disabled, iconClasses, selectList, minmax } = Astro.props;
 ---
 
 <label for={name} class={"relative h-min max-w-[30ch] grid text-xl rounded-md font-didact z-10 "}>
@@ -26,11 +27,12 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 					placeholder={placeholder || ""}
 					value={value || ""}
 					disabled={disabled || false}
+					min={minmax ? minmax[0] : ""}
+					max={minmax ? minmax[1] : ""}
 				/>
 			</>
-			/*--------------------------------SELECT INPUT---------------------------------------- */
 		) : (
-			<>
+			/*--------------------------------SELECT INPUT---------------------------------------- */ <>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
 				<select
 					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"

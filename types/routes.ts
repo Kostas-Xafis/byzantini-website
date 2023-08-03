@@ -12,38 +12,38 @@ export type EndpointResponse<T> = { res: "data"; data: T };
 
 export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL> extends false
 	? {
-			authentication: boolean;
-			method: GetURLMethod<URL>;
-			path: ExtractURLMethod<URL>;
-			hasUrlParams: HasUrlParams<URL>;
-			func: HasUrlParams<URL> extends true
-				? (
-						req: Req extends null
-							? Request
-							: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
-						slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-				  ) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
-				: (
-						req: Req extends null
-							? Request
-							: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> }
-				  ) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
-	  } & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})
+		authentication: boolean;
+		method: GetURLMethod<URL>;
+		path: ExtractURLMethod<URL>;
+		hasUrlParams: HasUrlParams<URL>;
+		func: HasUrlParams<URL> extends true
+		? (
+			req: Req extends null
+				? Request
+				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
+			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
+		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
+		: (
+			req: Req extends null
+				? Request
+				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> }
+		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
+	} & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})
 	: {
-			// For default use case
-			authentication: boolean;
-			method: HTTPMethods;
-			path: string;
-			hasUrlParams: boolean;
-			func: (
-				req: Req extends null
-					? Request
-					: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
-				slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-			) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
-	  } & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})) & {
-	middleware?: ((req: Request) => Promise<Response | undefined>)[];
-};
+		// For default use case
+		authentication: boolean;
+		method: HTTPMethods;
+		path: string;
+		hasUrlParams: boolean;
+		func: (
+			req: Req extends null
+				? Request
+				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
+			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
+		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
+	} & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})) & {
+		middleware?: ((req: Request) => Promise<Response | undefined>)[];
+	};
 
 export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
 
@@ -54,17 +54,17 @@ type A = EndpointRoute<any, AnyZodObject, any>;
 // Use for an type of routes, accessible in the frontend
 export type APIEndpointsBuilder<Mount extends string, Routes extends { [k: string]: EndpointRoute<any, any, any> }> = {
 	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : never]: Routes[K] extends { validation: () => AnyZodObject }
-		? {
-				method: Routes[K]["method"];
-				path: Routes[K]["path"];
-				endpoint: K extends `${infer k}` ? `${Mount}.${k}` : never;
-				validation: ReturnType<Routes[K]["validation"]>;
-		  }
-		: {
-				method: Routes[K]["method"];
-				path: Routes[K]["path"];
-				endpoint: K extends `${infer k}` ? `${Mount}.${k}` : never;
-		  };
+	? {
+		method: Routes[K]["method"];
+		path: Routes[K]["path"];
+		endpoint: K extends `${infer k}` ? `${Mount}.${k}` : never;
+		validation: ReturnType<Routes[K]["validation"]>;
+	}
+	: {
+		method: Routes[K]["method"];
+		path: Routes[K]["path"];
+		endpoint: K extends `${infer k}` ? `${Mount}.${k}` : never;
+	};
 };
 
 // Use for an object of routes, accessible in the frontend
@@ -91,6 +91,6 @@ export type APIArguments<Mount extends string, Routes extends { [k: string]: End
 // Use for typing API Response in frontend
 export type APIResponse<Mount extends string, Routes extends { [k: string]: EndpointRoute<any, any, any> }> = {
 	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : ""]: Routes[K]["func"] extends (...args: any[]) => Promise<infer T>
-		? T
-		: undefined;
+	? T
+	: undefined;
 };

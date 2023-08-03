@@ -1,5 +1,6 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { type Teachers, z_SimpleTeacher } from "../../types/entities";
+import { type Teachers, z_SimpleTeacher, Classes, TeacherLocations } from "../../types/entities";
+import { z } from "zod";
 
 const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	authentication: false,
@@ -9,7 +10,23 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	func: async req => null as any
 };
 
-let postReq = z_SimpleTeacher.omit({ id: true });
+const getClasses: EndpointRoute<"GET:/teachers/classes", null, Classes[]> = {
+	authentication: false,
+	method: "GET",
+	path: "/teachers/classes",
+	hasUrlParams: false,
+	func: async req => null as any
+}
+
+const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocations[]> = {
+	authentication: false,
+	method: "GET",
+	path: "/teachers/locations",
+	hasUrlParams: false,
+	func: async req => null as any
+}
+
+let postReq = z_SimpleTeacher.omit({ id: true }).merge(z.object({ classes: z.array(z.number()) }));
 const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }> = {
 	authentication: true,
 	method: "POST",
@@ -19,12 +36,13 @@ const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }
 	func: async req => null as any
 };
 
-const update: EndpointRoute<"PUT:/teachers", typeof z_SimpleTeacher> = {
+let updateReq = z_SimpleTeacher.merge(z.object({ classes: z.array(z.number()) }));
+const update: EndpointRoute<"PUT:/teachers", typeof updateReq> = {
 	authentication: true,
 	method: "PUT",
 	path: "/teachers",
 	hasUrlParams: false,
-	validation: () => z_SimpleTeacher,
+	validation: () => updateReq,
 	func: async req => null as any
 };
 
@@ -54,6 +72,8 @@ const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
 
 export const TeachersRoutes = {
 	get,
+	getClasses,
+	getLocations,
 	post,
 	update,
 	fileUpload,
@@ -71,6 +91,16 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		path: "/teachers",
 		endpoint: "Teachers.get"
 	},
+	"Teachers.getClasses": {
+		method: "GET",
+		path: "/teachers/classes",
+		endpoint: "Teachers.getClasses"
+	},
+	"Teachers.getLocations": {
+		method: "GET",
+		path: "/teachers/locations",
+		endpoint: "Teachers.getLocations"
+	},
 	"Teachers.post": {
 		method: "POST",
 		path: "/teachers",
@@ -81,7 +111,7 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		method: "PUT",
 		path: "/teachers",
 		endpoint: "Teachers.update",
-		validation: z_SimpleTeacher
+		validation: updateReq
 	},
 	"Teachers.fileUpload": {
 		method: "PUT",
@@ -103,6 +133,8 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 	Teachers: {
 		get: "Teachers.get",
+		getClasses: "Teachers.getClasses",
+		getLocations: "Teachers.getLocations",
 		post: "Teachers.post",
 		update: "Teachers.update",
 		fileUpload: "Teachers.fileUpload",

@@ -1,8 +1,10 @@
-import type { Teachers } from "../../types/entities";
+import type { Classes, Locations, TeacherLocations, Teachers } from "../../types/entities";
 import { TeachersRoutes } from "./teachers.client";
 import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils";
 import { bucketFileUpload } from "../bucket/fileUpload";
 import { bucketFileDelete } from "../bucket/fileDelete";
+
+// TODO: REFACTOR INSERT/UPDATE/DELETE to account for the teachers_locations table
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(TeachersRoutes)) as typeof TeachersRoutes; // Copy the routes object to split it into client and server routes
@@ -11,20 +13,35 @@ serverRoutes.get.func = async _req => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
 };
 
+serverRoutes.getClasses.func = async _req => {
+	return await execTryCatch(() => executeQuery<Classes>("SELECT * FROM classes"));
+}
+
+serverRoutes.getLocations.func = async _req => {
+	return await execTryCatch(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations"));
+}
+
 serverRoutes.post.func = async req => {
-	return await execTryCatch(async () => {
+	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const args = Object.values(body);
-		const id = await executeQuery(`INSERT INTO teachers (fullname, email, cellphone) VALUES (${questionMarks(args.length)})`, args);
+		const args = [body.fullname, body.email, body.cellphone, body.priority]
+		const id = await T.execute(`INSERT INTO teachers (fullname, email, cellphone, priority) VALUES (?, ?, ?, ?)`, args);
+		for (const class_id of body.classes) {
+			await T.execute(`INSERT INTO classes (teacher_id, class_id) VALUES (?, ?)`, [id.insertId, class_id]);
+		}
 		return { insertId: id.insertId };
 	});
 };
 
 serverRoutes.update.func = async req => {
-	return await execTryCatch(async () => {
+	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const args = Object.values(body);
-		await executeQuery(`UPDATE teachers SET fullname=?, email=?, cellphone=? WHERE id=?`, [...args.slice(1), body.id]);
+		const args = [body.fullname, body.email, body.cellphone, body.priority, body.id];
+		await T.execute(`UPDATE teachers SET fullname=?, email=?, cellphone=?, priority=? WHERE id=?`, args);
+		await T.execute("DELETE FROM classes WHERE teacher_id=?", [body.id]);
+		for (const class_id of body.classes) {
+			await T.execute(`INSERT INTO classes (teacher_id, class_id) VALUES (?, ?)`, [body.id, class_id]);
+		}
 		return "Teacher added successfully";
 	});
 };
