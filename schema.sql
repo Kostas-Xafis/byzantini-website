@@ -1,14 +1,5 @@
 -- DROP TABLES
 
--- ALTER TABLE `books` DROP CONSTRAINT `FK_book_wholesaler`;
--- ALTER TABLE `payments` DROP CONSTRAINT `FK_payment_book`;
--- ALTER TABLE `school_payoffs` DROP CONSTRAINT `FK_school_wholesaler`;
--- ALTER TABLE `teacher_classes` DROP CONSTRAINT `FK_class_teacher`;
--- ALTER TABLE `teacher_classes` DROP CONSTRAINT `FK_class_type`;
--- ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_teacher_id`;
--- ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_location_id`;
--- ALTER TABLE `registrations` DROP CONSTRAINT `FK_registration_class`;
-
 DROP TABLE IF EXISTS `registrations`;
 DROP TABLE IF EXISTS `books`;
 DROP TABLE IF EXISTS `wholesalers`;
@@ -49,8 +40,7 @@ CREATE TABLE `books`(
     `price` int NOT NULL,
     `quantity` int NOT NULL,
     `sold` int NOT NULL,
-PRIMARY KEY (`id`),
-CONSTRAINT `FK_book_wholesaler` FOREIGN KEY (wholesaler_id) REFERENCES wholesalers(id))
+PRIMARY KEY (`id`))
 AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("1984", 1, 13, 15, 30, 10);
@@ -73,8 +63,7 @@ CREATE TABLE `payments`(
     `book_id` int NOT NULL,
     `amount` int NOT NULL,
     `date` bigint NOT NULL,
-PRIMARY KEY (`id`),
-CONSTRAINT `FK_payment_book` FOREIGN KEY (book_id) REFERENCES books(id))
+PRIMARY KEY (`id`))
 CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Generate 10 payments
@@ -93,8 +82,7 @@ CREATE TABLE `school_payoffs` (
     `id` int NOT NULL AUTO_INCREMENT,
     `wholesaler_id` int NOT NULL,
     `amount` int NOT NULL,
-    PRIMARY KEY (`id`),
-    CONSTRAINT `FK_school_wholesaler` FOREIGN KEY (wholesaler_id) REFERENCES wholesalers(id))
+    PRIMARY KEY (`id`))
 AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (1, 390);
@@ -144,16 +132,12 @@ CREATE TABLE `class_type` (
 CREATE TABLE `teacher_locations` (
     `teacher_id` int NOT NULL,
     `location_id` int NOT NULL,
-    CONSTRAINT FK_teacher_locations_teacher_id FOREIGN KEY (teacher_id) REFERENCES teachers(id),
-    CONSTRAINT FK_teacher_locations_location_id FOREIGN KEY (location_id) REFERENCES locations(id),
     PRIMARY KEY (`teacher_id`, `location_id`)
 );
 
 CREATE TABLE `teacher_classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
-    CONSTRAINT FK_class_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id),
-    CONSTRAINT FK_class_type FOREIGN KEY (class_id) REFERENCES class_type(id),
     PRIMARY KEY (`teacher_id`, `class_id`)
 );
 
@@ -204,8 +188,6 @@ CREATE TABLE `registrations`(
     `teacher_id` INT NOT NULL,
     `class_id` int NOT NULL,
     `date` bigint NOT NULL,
-    CONSTRAINT FK_registration_class FOREIGN KEY (class_id) REFERENCES class_type(id),
-    CONSTRAINT FK_registration_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id),
     PRIMARY KEY (`cellphone`, `am`, `class_id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -231,5 +213,5 @@ CREATE TABLE `sys_user_register_links` (
     `link` varchar(80) NOT NULL,
     `exp_date` bigint NOT NULL,
     `privilege` int NOT NULL,
-    PRIMARY KEY (`link`))
-DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    PRIMARY KEY (`link`)
+)DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

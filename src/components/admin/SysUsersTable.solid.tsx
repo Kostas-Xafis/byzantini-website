@@ -17,12 +17,11 @@ type SysUsersTable = SysUsers; // & classes
 const sysuserToTableSysuser = (sysuser: SysUsers): SysUsersTable => {
 	const columns = Object.values(sysuser);
 
-    columns[2] = columns[2] === 2 ? "Super Admin" : columns[2] === 1 ? "Διαχειριστής Συστήματος" : "Διαχειριστής";
+	columns[2] = columns[2] === 2 ? "Super Admin" : columns[2] === 1 ? "Διαχειριστής Συστήματος" : "Διαχειριστής";
 	return columns as unknown as SysUsersTable;
 };
 
 const sysusersToTable = (sysusers: SysUsers[]): SysUsersTable[] => {
-    console.log(sysusers);
 	return sysusers.map(u => sysuserToTableSysuser(u));
 };
 
@@ -60,8 +59,8 @@ export default function SysUsersTable() {
 	] as const;
 	const columnNames: ColumnType<SysUsersTable> = {
 		id: "Id",
-		email: { name: "Email", size: () => 20},
-        privilege: { name: "Privilege", size: () => 15},
+		email: { name: "Email", size: () => 20 },
+		privilege: { name: "Privilege", size: () => 15 }
 	};
 
 	const shapedData = createMemo(() => {
@@ -69,33 +68,34 @@ export default function SysUsersTable() {
 		return sysusers ? sysusersToTable(sysusers) : [];
 	});
 	const onAdd = createMemo(() => {
-        const link = store[API.SysUsers.createRegisterLink]?.link;
-        console.log(link);
+		const link = store[API.SysUsers.createRegisterLink]?.link;
+		console.log(link);
 		const submit = async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-            if (!link) await useAPI(setStore, API.SysUsers.createRegisterLink, {});
-            setTimeout(() => {
-                //@ts-ignore
-                document.querySelector("div[data-prefix='sysusers'] button:first-child").click();
-            }, 200);
-            setActionPressed(ActionEnum.ADD);
+			if (!link) await useAPI(setStore, API.SysUsers.createRegisterLink, {});
+			setTimeout(() => {
+				//@ts-ignore
+				document.querySelector("div[data-prefix='sysusers'] button:first-child").click();
+			}, 200);
+			setActionPressed(ActionEnum.ADD);
 		};
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
-			submitText:  !link ? "Δημιουργία" : "Ολοκλήρωση",
-			headerText: !link ? "Δημιουργία link εγγραφής" : "Link εγγραφής:\n http://localhost:3000/admin/signup/" + link,
+			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
+			headerText: !link ? "Δημιουργία link εγγραφής" : "Link εγγραφής:\n /admin/signup/" + link,
 			type: ActionEnum.ADD
 		};
 	});
 	const onDelete = createMemo(() => {
 		const sysusers = store[API.SysUsers.get];
-        const self = store[API.SysUsers.getBySid];
+		const self = store[API.SysUsers.getBySid];
 		if (!sysusers || selectedItems.length < 1 || !self) return undefined;
-        const selectedSysUsers = selectedItems.map(i => sysusers.find(p => p.id === i) as SysUsers);
-        if (!selectedSysUsers.find(s => (s.privilege < self.privilege) || (s.privilege === self.privilege && s.id === self.id))) return undefined;
+		const selectedSysUsers = selectedItems.map(i => sysusers.find(p => p.id === i) as SysUsers);
+		if (!selectedSysUsers.find(s => s.privilege < self.privilege || (s.privilege === self.privilege && s.id === self.id)))
+			return undefined;
 		const submit = function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -115,9 +115,9 @@ export default function SysUsersTable() {
 	});
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.SysUsers.get]} >
+			<Show when={store[API.SysUsers.get]}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onAdd={onAdd}  onDelete={onDelete} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onAdd={onAdd} onDelete={onDelete} prefix={PREFIX} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

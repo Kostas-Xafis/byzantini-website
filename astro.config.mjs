@@ -3,6 +3,7 @@ import tailwind from "@astrojs/tailwind";
 import solidJs from "@astrojs/solid-js";
 import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
+import node from "@astrojs/node";
 import vercel from "@astrojs/vercel/serverless";
 const unmappedRoutes = page => page.includes("admin");
 

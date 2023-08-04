@@ -1,5 +1,3 @@
-"use client";
-
 import { APIBooks, APIBooksArgs, APIBooksEndpoints, APIBooksResponse } from "./books.client";
 import { APIAuthentication, APIAuthenticationArgs, APIAuthenticationEndpoints, APIAuthenticationResponse } from "./authentication.client";
 import { APIPayments, APIPaymentsArgs, APIPaymentsEndpoints, APIPaymentsResponse } from "./payments.client";
@@ -50,5 +48,5 @@ export type APIRes = APIBooksResponse &
 	APIWholesalersResponse &
 	APITeachersResponse &
 	APILocationsResponse &
-	APIClassTypeResponse & 
+	APIClassTypeResponse &
 	APISysUsersResponse;

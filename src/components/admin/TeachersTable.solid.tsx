@@ -26,7 +26,7 @@ const TeachersInputs = (
 	teacher?: FullTeachers,
 	classList?: TeacherClasses[],
 	locationsList?: TeacherLocations[]
-): Record<keyof FullTeachers | "classes" | "locations", InputProps> => {
+): Record<keyof FullTeachers | "teacherClasses" | "locations", InputProps> => {
 	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];
 	const multiselectClasses = class_types?.map(ct => {
 		let c = teacherClasses && teacherClasses.find(t => t.class_id === ct.id);
@@ -71,8 +71,8 @@ const TeachersInputs = (
 			iconClasses: "fa-solid fa-arrow-up-9-1",
 			minmax: [1, 9]
 		},
-		classes: {
-			name: "classes",
+		teacherClasses: {
+			name: "teacherClasses",
 			label: "Μαθήματα",
 			type: "multiselect",
 			iconClasses: "fa-solid fa-chalkboard-teacher",
@@ -171,12 +171,12 @@ export default function TeachersTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<Teachers & { classes: number[] }, "id"> = {
+			const data: Omit<Teachers & { teacherClasses: number[] }, "id"> = {
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
 				cellphone: formData.get("cellphone") as string,
 				priority: Number(formData.get("priority") as string),
-				classes: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='classes']`)]
+				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
@@ -224,13 +224,13 @@ export default function TeachersTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Teachers & { classes: number[] } = {
+			const data: Teachers & { teacherClasses: number[] } = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
 				cellphone: formData.get("cellphone") as string,
 				priority: Number(formData.get("priority") as string),
-				classes: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='classes']`)]
+				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
