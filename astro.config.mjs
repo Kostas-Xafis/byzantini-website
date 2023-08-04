@@ -20,12 +20,12 @@ export default defineConfig({
 			lastmod: new Date()
 		})
 	],
-	output: "hybrid",
 	adapter: vercel(),
+	output: "hybrid",
 	vite: {
 		server: {
 			watch: {
-				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**"]
+				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**"]
 			}
 		}
 	}

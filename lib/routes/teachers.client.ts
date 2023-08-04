@@ -1,5 +1,5 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { type Teachers, z_SimpleTeacher, Classes, TeacherLocations } from "../../types/entities";
+import { type Teachers, z_SimpleTeacher, TeacherClasses, TeacherLocations } from "../../types/entities";
 import { z } from "zod";
 
 const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
@@ -10,10 +10,10 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	func: async req => null as any
 };
 
-const getClasses: EndpointRoute<"GET:/teachers/classes", null, Classes[]> = {
+const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherClasses[]> = {
 	authentication: false,
 	method: "GET",
-	path: "/teachers/classes",
+	path: "/teachers/teacherClasses",
 	hasUrlParams: false,
 	func: async req => null as any
 }
@@ -26,7 +26,7 @@ const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocati
 	func: async req => null as any
 }
 
-let postReq = z_SimpleTeacher.omit({ id: true }).merge(z.object({ classes: z.array(z.number()) }));
+let postReq = z_SimpleTeacher.omit({ id: true }).merge(z.object({ teacherClasses: z.array(z.number()) }));
 const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }> = {
 	authentication: true,
 	method: "POST",
@@ -36,7 +36,7 @@ const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }
 	func: async req => null as any
 };
 
-let updateReq = z_SimpleTeacher.merge(z.object({ classes: z.array(z.number()) }));
+let updateReq = z_SimpleTeacher.merge(z.object({ teacherClasses: z.array(z.number()) }));
 const update: EndpointRoute<"PUT:/teachers", typeof updateReq> = {
 	authentication: true,
 	method: "PUT",
@@ -93,7 +93,7 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 	},
 	"Teachers.getClasses": {
 		method: "GET",
-		path: "/teachers/classes",
+		path: "/teachers/teacherClasses",
 		endpoint: "Teachers.getClasses"
 	},
 	"Teachers.getLocations": {

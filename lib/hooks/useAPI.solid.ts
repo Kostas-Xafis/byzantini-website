@@ -8,6 +8,10 @@ export type APIStore = {
 
 export const API = api;
 
+// IMPORTANT: The useAPI can be called from the server or the client.
+// To accurately determine the URL, I prepend the website url to the request when called from the server.
+const URL = (await import.meta.env.URL) ?? "";
+
 // Astro version
 export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetStoreFunction<APIStore>, endpoint: T, req: APIArgs[T]) => {
 	const Route = APIEndpoints[endpoint];
@@ -18,7 +22,7 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 			return { error: result.error };
 		}
 	}
-	const url = "/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
+	const url = URL + "/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
 	const { RequestObject } = req;
 	const body = RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null;
 	try {

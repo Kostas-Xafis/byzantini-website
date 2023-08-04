@@ -1,4 +1,4 @@
-import type { Classes, Locations, TeacherLocations, Teachers } from "../../types/entities";
+import type { TeacherClasses, Locations, TeacherLocations, Teachers } from "../../types/entities";
 import { TeachersRoutes } from "./teachers.client";
 import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils";
 import { bucketFileUpload } from "../bucket/fileUpload";
@@ -14,7 +14,7 @@ serverRoutes.get.func = async _req => {
 };
 
 serverRoutes.getClasses.func = async _req => {
-	return await execTryCatch(() => executeQuery<Classes>("SELECT * FROM classes"));
+	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
 }
 
 serverRoutes.getLocations.func = async _req => {
@@ -26,8 +26,8 @@ serverRoutes.post.func = async req => {
 		const body = await req.json();
 		const args = [body.fullname, body.email, body.cellphone, body.priority]
 		const id = await T.execute(`INSERT INTO teachers (fullname, email, cellphone, priority) VALUES (?, ?, ?, ?)`, args);
-		for (const class_id of body.classes) {
-			await T.execute(`INSERT INTO classes (teacher_id, class_id) VALUES (?, ?)`, [id.insertId, class_id]);
+		for (const class_id of body.teacherClasses) {
+			await T.execute(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [id.insertId, class_id]);
 		}
 		return { insertId: id.insertId };
 	});
@@ -38,9 +38,9 @@ serverRoutes.update.func = async req => {
 		const body = await req.json();
 		const args = [body.fullname, body.email, body.cellphone, body.priority, body.id];
 		await T.execute(`UPDATE teachers SET fullname=?, email=?, cellphone=?, priority=? WHERE id=?`, args);
-		await T.execute("DELETE FROM classes WHERE teacher_id=?", [body.id]);
-		for (const class_id of body.classes) {
-			await T.execute(`INSERT INTO classes (teacher_id, class_id) VALUES (?, ?)`, [body.id, class_id]);
+		await T.execute("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
+		for (const class_id of body.teacherClasses) {
+			await T.execute(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [body.id, class_id]);
 		}
 		return "Teacher added successfully";
 	});
@@ -92,7 +92,7 @@ serverRoutes.fileDelete.func = async req => {
 serverRoutes.delete.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		await T.execute(`DELETE FROM classes WHERE teacher_id IN (${questionMarks(body.length)})`, body);
+		await T.execute(`DELETE FROM TeacherClasses WHERE teacher_id IN (${questionMarks(body.length)})`, body);
 		const files = await T.execute<Pick<Teachers, "cv" | "picture">>(
 			`SELECT cv, picture FROM teachers WHERE id IN (${questionMarks(body.length)})`,
 			body

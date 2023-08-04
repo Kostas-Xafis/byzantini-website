@@ -3,7 +3,7 @@ import type {
 	SimpleTeacher as Teachers,
 	Teachers as FullTeachers,
 	ClassType,
-	Classes,
+	TeacherClasses,
 	Locations,
 	TeacherLocations
 } from "../../../types/entities";
@@ -24,7 +24,7 @@ const TeachersInputs = (
 	class_types: ClassType[],
 	locations: Locations[],
 	teacher?: FullTeachers,
-	classList?: Classes[],
+	classList?: TeacherClasses[],
 	locationsList?: TeacherLocations[]
 ): Record<keyof FullTeachers | "classes" | "locations", InputProps> => {
 	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];

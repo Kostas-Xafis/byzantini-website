@@ -22,7 +22,6 @@ serverRoutes.post.func = async function (req) {
 			body.wholesale_price * body.quantity,
 			body.wholesaler_id
 		]);
-		await T.commit();
 		return "Book added successfully";
 	});
 };
@@ -41,7 +40,6 @@ serverRoutes.updateQuantity.func = async function (req) {
 				book.wholesaler_id
 			])
 		]);
-		await T.commit();
 		return "Quantity updated successfully";
 	});
 };

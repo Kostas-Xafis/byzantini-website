@@ -1,13 +1,13 @@
 -- DROP TABLES
 
-ALTER TABLE `books` DROP CONSTRAINT `FK_book_wholesaler`;
-ALTER TABLE `payments` DROP CONSTRAINT `FK_payment_book`;
-ALTER TABLE `school_payoffs` DROP CONSTRAINT `FK_school_wholesaler`;
-ALTER TABLE `classes` DROP CONSTRAINT `FK_class_teacher`;
-ALTER TABLE `classes` DROP CONSTRAINT `FK_class_type`;
-ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_teacher_id`;
-ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_location_id`;
-ALTER TABLE `registrations` DROP CONSTRAINT `FK_registration_class`;
+-- ALTER TABLE `books` DROP CONSTRAINT `FK_book_wholesaler`;
+-- ALTER TABLE `payments` DROP CONSTRAINT `FK_payment_book`;
+-- ALTER TABLE `school_payoffs` DROP CONSTRAINT `FK_school_wholesaler`;
+-- ALTER TABLE `teacher_classes` DROP CONSTRAINT `FK_class_teacher`;
+-- ALTER TABLE `teacher_classes` DROP CONSTRAINT `FK_class_type`;
+-- ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_teacher_id`;
+-- ALTER TABLE `teacher_locations` DROP CONSTRAINT `FK_teacher_locations_location_id`;
+-- ALTER TABLE `registrations` DROP CONSTRAINT `FK_registration_class`;
 
 DROP TABLE IF EXISTS `registrations`;
 DROP TABLE IF EXISTS `books`;
@@ -17,7 +17,8 @@ DROP TABLE IF EXISTS `school_payoffs`;
 DROP TABLE IF EXISTS `locations`;
 DROP TABLE IF EXISTS `teachers`;
 DROP TABLE IF EXISTS `class_type`;
-DROP TABLE IF EXISTS `classes`;
+DROP TABLE IF EXISTS `teacher_classes`;
+DROP TABLE IF EXISTS `teacher_locations`;
 DROP TABLE IF EXISTS `files`;
 DROP TABLE IF EXISTS `sys_users`;
 DROP TABLE IF EXISTS `sys_user_register_links`;
@@ -148,7 +149,7 @@ CREATE TABLE `teacher_locations` (
     PRIMARY KEY (`teacher_id`, `location_id`)
 );
 
-CREATE TABLE `classes` (
+CREATE TABLE `teacher_classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
     CONSTRAINT FK_class_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id),
@@ -165,15 +166,15 @@ INSERT INTO teachers (fullname, email, cellphone) VALUES ('Jane Doe', 'jane@doe.
 INSERT INTO teachers (fullname, email, cellphone) VALUES ('Michael Johnson', 'john@son.com', '6987654323');
 INSERT INTO teachers (fullname, email, cellphone) VALUES ('Emily Davis', 'davis@emy.com', '6987654324');
 
-INSERT INTO classes (teacher_id, class_id) VALUES (1, 1);
-INSERT INTO classes (teacher_id, class_id) VALUES (1, 2);
-INSERT INTO classes (teacher_id, class_id) VALUES (2, 1);
-INSERT INTO classes (teacher_id, class_id) VALUES (2, 3);
-INSERT INTO classes (teacher_id, class_id) VALUES (3, 2);
-INSERT INTO classes (teacher_id, class_id) VALUES (3, 3);
-INSERT INTO classes (teacher_id, class_id) VALUES (4, 1);
-INSERT INTO classes (teacher_id, class_id) VALUES (4, 2);
-INSERT INTO classes (teacher_id, class_id) VALUES (4, 3);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 1);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 2);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (2, 1);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (2, 3);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (3, 2);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (3, 3);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (4, 1);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (4, 2);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (4, 3);
 
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (1, 1);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (1, 2);

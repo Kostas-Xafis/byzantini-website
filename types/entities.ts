@@ -82,12 +82,12 @@ export const z_TeacherLocations = z.object({
 export type TeacherLocations = z.infer<typeof z_TeacherLocations>;
 
 
-export const z_Classes = z.object({
+export const z_TeacherClasses = z.object({
 	teacher_id: z.number().int().nonnegative(),
 	class_id: z.number().int().nonnegative()
 });
 
-export type Classes = z.infer<typeof z_Classes>;
+export type TeacherClasses = z.infer<typeof z_TeacherClasses>;
 
 export const z_ClassType = z.object({
 	id: z.number().int().nonnegative(),

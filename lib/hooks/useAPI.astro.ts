@@ -2,6 +2,9 @@ import { API as api, APIArgs, APIEndpoints, APIRes } from "../routes/index.clien
 
 type Endpoint = typeof APIEndpoints;
 
+const URL = (await import.meta.env.URL as string) ?? "";
+
+
 export const API = api;
 
 // Astro version
@@ -12,7 +15,7 @@ export const useAPI = async <T extends keyof Endpoint>(endpoint: T, req: APIArgs
 		if (!result.success) return { error: result.error };
 	}
 	let route = APIEndpoints[endpoint];
-	const url = "/api" + (req.UrlArgs ? convertUrlFromArgs(route.path, req.UrlArgs) : route.path);
+	const url = URL + "/api" + (req.UrlArgs ? convertUrlFromArgs(route.path, req.UrlArgs) : route.path);
 	const { RequestObject } = req;
 	delete req.UrlArgs;
 	delete req.RequestObject;
