@@ -69,14 +69,14 @@ serverRoutes.fileDelete.func = async req => {
 serverRoutes.delete.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const files = await T.execute<Pick<Locations, "image">>(
+		const files = await T.executeQuery<Pick<Locations, "image">>(
 			`SELECT image FROM locations WHERE id IN (${questionMarks(body.length)})`,
 			body
 		);
 		for (const file of files) {
 			if (file.image) await bucketFileDelete(file.image);
 		}
-		await T.execute(`DELETE FROM locations WHERE id IN (${questionMarks(body.length)})`, body);
+		await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(body.length)})`, body);
 		return "Locations deleted successfully";
 	});
 };

@@ -13,22 +13,22 @@ serverRoutes.get.func = async req => {
 serverRoutes.post.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const { book_id, student_name } = await req.json();
-		const books = await T.execute<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]);
+		const books = await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]);
 		if (books.length === 0) throw Error("Book not found");
 		const book = books[0];
 		if (book.quantity - book.sold === 0) throw Error("Book is out of stock");
 
 		const [result1, result2] = await Promise.allSettled([
-			await T.execute(`INSERT INTO payments (student_name, amount, date) VALUES (${questionMarks(3)})`, [
+			await T.executeQuery(`INSERT INTO payments (student_name, amount, date) VALUES (${questionMarks(3)})`, [
 				student_name,
 				book.price,
 				Date.now()
 			]),
-			await T.execute("UPDATE books SET sold = sold + 1 WHERE id = ? AND sold < quantity LIMIT 1", [book_id])
+			await T.executeQuery("UPDATE books SET sold = sold + 1 WHERE id = ? AND sold < quantity LIMIT 1", [book_id])
 		]);
 		if (result1.status === "rejected" || result2.status === "rejected") throw Error("Failed database insertion and/or update");
 		// get inserted payment from database
-		const [payment] = await T.execute<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [result1.value.insertId]);
+		const [payment] = await T.executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [result1.value.insertId]);
 		return payment;
 	});
 };

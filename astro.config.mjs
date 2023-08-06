@@ -3,8 +3,7 @@ import tailwind from "@astrojs/tailwind";
 import solidJs from "@astrojs/solid-js";
 import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
-import node from "@astrojs/node";
-import vercel from "@astrojs/vercel/serverless";
+import cloudflare from "@astrojs/cloudflare";
 const unmappedRoutes = page => page.includes("admin");
 
 // https://astro.build/config
@@ -21,13 +20,16 @@ export default defineConfig({
 			lastmod: new Date()
 		})
 	],
-	adapter: vercel(),
-	output: "hybrid",
+	output: "server",
+	adapter: cloudflare(),
 	vite: {
 		server: {
 			watch: {
 				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**"]
 			}
+		},
+		build: {
+			minify: false
 		}
 	}
 });

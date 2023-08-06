@@ -10,7 +10,7 @@ export const API = api;
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
-const URL = (await import.meta.env.URL) ?? "";
+const URL = "";
 
 // Astro version
 export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetStoreFunction<APIStore>, endpoint: T, req: APIArgs[T]) => {

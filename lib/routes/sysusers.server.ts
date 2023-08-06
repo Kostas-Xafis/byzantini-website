@@ -52,17 +52,17 @@ serverRoutes.delete.func = async function (req) {
 serverRoutes.registerSysUser.func = async function (req, slug) {
     const { link } = slug;
     return await execTryCatch(async (T: Transaction) => {
-        const linkCheck = await T.execute<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ?", [link]);
+        const linkCheck = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ?", [link]);
         if (linkCheck.length === 0) {
             throw new Error("Invalid Link");
         } else if (linkCheck[0].exp_date < Date.now()) {
-            await T.execute("DELETE FROM sys_user_register_links WHERE link = ?", [link]);
+            await T.executeQuery("DELETE FROM sys_user_register_links WHERE link = ?", [link]);
             throw new Error("Invalid Link");
         }
         const args = Object.values(await req.json()) as any[];
         const { session_id, session_exp_date } = createSessionId();
         args.push(linkCheck[0].privilege, session_id, session_exp_date); 5
-        await T.execute(`INSERT INTO sys_users (email, password, privilege, session_id, session_exp_date) VALUES (${questionMarks(args.length)})`, args);
+        await T.executeQuery(`INSERT INTO sys_users (email, password, privilege, session_id, session_exp_date) VALUES (${questionMarks(args.length)})`, args);
         return { session_id };
     });
 };

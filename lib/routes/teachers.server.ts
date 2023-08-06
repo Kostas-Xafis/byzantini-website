@@ -25,9 +25,9 @@ serverRoutes.post.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
 		const args = [body.fullname, body.email, body.cellphone, body.priority]
-		const id = await T.execute(`INSERT INTO teachers (fullname, email, cellphone, priority) VALUES (?, ?, ?, ?)`, args);
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, cellphone, priority) VALUES (?, ?, ?, ?)`, args);
 		for (const class_id of body.teacherClasses) {
-			await T.execute(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [id.insertId, class_id]);
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [id.insertId, class_id]);
 		}
 		return { insertId: id.insertId };
 	});
@@ -37,10 +37,10 @@ serverRoutes.update.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
 		const args = [body.fullname, body.email, body.cellphone, body.priority, body.id];
-		await T.execute(`UPDATE teachers SET fullname=?, email=?, cellphone=?, priority=? WHERE id=?`, args);
-		await T.execute("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
+		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, cellphone=?, priority=? WHERE id=?`, args);
+		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
-			await T.execute(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [body.id, class_id]);
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [body.id, class_id]);
 		}
 		return "Teacher added successfully";
 	});
@@ -92,8 +92,8 @@ serverRoutes.fileDelete.func = async req => {
 serverRoutes.delete.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		await T.execute(`DELETE FROM TeacherClasses WHERE teacher_id IN (${questionMarks(body.length)})`, body);
-		const files = await T.execute<Pick<Teachers, "cv" | "picture">>(
+		await T.executeQuery(`DELETE FROM TeacherClasses WHERE teacher_id IN (${questionMarks(body.length)})`, body);
+		const files = await T.executeQuery<Pick<Teachers, "cv" | "picture">>(
 			`SELECT cv, picture FROM teachers WHERE id IN (${questionMarks(body.length)})`,
 			body
 		);
@@ -101,7 +101,7 @@ serverRoutes.delete.func = async req => {
 			if (file.cv) await bucketFileDelete(file.cv);
 			if (file.picture) await bucketFileDelete(file.picture);
 		}
-		await T.execute(`DELETE FROM teachers WHERE id IN (${questionMarks(body.length)})`, body);
+		await T.executeQuery(`DELETE FROM teachers WHERE id IN (${questionMarks(body.length)})`, body);
 		return "Teacher/s deleted successfully";
 	});
 };

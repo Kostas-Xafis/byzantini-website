@@ -14,8 +14,8 @@ serverRoutes.get.func = async function (_req) {
 serverRoutes.post.func = async function (req) {
 	return await execTryCatch(async (T: Transaction) => {
 		const args = Object.values(await req.json());
-		const result = await T.execute(`INSERT INTO wholesalers (name) VALUES (?)`, args);
-		await T.execute("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
+		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
+		await T.executeQuery("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
 		return "Wholesaler added successfully";
 	});
 };

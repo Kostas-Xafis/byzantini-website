@@ -1,13 +1,13 @@
 ---
 export const prerender = false;
 import { useAPI } from "../../../lib/hooks/useAPI.astro";
-import type { Classes, Teachers } from "../../../types/entities";
+import type { TeacherClasses, Teachers } from "../../../types/entities";
 import Navbar from "../../components/Navbar.astro";
 import Layout from "../../layouts/Layout.astro";
 
 
 const teachers = (await useAPI("Teachers.get", {})).data as Teachers[];
-const classes = (await useAPI("Teachers.getClasses", {})).data as Classes[];
+const classes = (await useAPI("Teachers.getClasses", {})).data as TeacherClasses[];
 
 const enum MusicType {
 	Byzantine = "byz",
@@ -61,7 +61,7 @@ const music = [
 							</p>
 							{teacher.cv ? 
 								<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="text-xl hover:underline">
-									Βιογραφικό<i class="fa-solid fa-file-lines pl-2"></i>
+									Βιογραφικό <i class="fa-solid fa-file-lines pl-2"></i>
 								</a>
 								: <></>}
 							

@@ -2,7 +2,7 @@ import { API as api, APIArgs, APIEndpoints, APIRes } from "../routes/index.clien
 
 type Endpoint = typeof APIEndpoints;
 
-const URL = (await import.meta.env.URL as string) ?? "";
+const URL = (import.meta.env.URL as string) ?? "";
 
 
 export const API = api;
