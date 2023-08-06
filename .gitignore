@@ -24,4 +24,8 @@ public/fa/
 test.exe
 *.txt
 /assets
+
 /getData
+
+/functions
+package-lock.json
