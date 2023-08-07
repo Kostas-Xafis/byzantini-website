@@ -12,6 +12,10 @@ serverRoutes.get.func = async _req => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
 };
 
+serverRoutes.getByPriority.func = async _req => {
+	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY priority ASC, fullname ASC"));
+};
+
 serverRoutes.getClasses.func = async _req => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
 }

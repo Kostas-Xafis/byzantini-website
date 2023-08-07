@@ -10,6 +10,14 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	func: async req => null as any
 };
 
+const getByPriority: EndpointRoute<"GET:/teachers/priority", null, Teachers[]> = {
+	authentication: false,
+	method: "GET",
+	path: "/teachers/priority",
+	hasUrlParams: false,
+	func: async req => null as any
+};
+
 const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherClasses[]> = {
 	authentication: false,
 	method: "GET",
@@ -72,6 +80,7 @@ const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
 
 export const TeachersRoutes = {
 	get,
+	getByPriority,
 	getClasses,
 	getLocations,
 	post,
@@ -90,6 +99,11 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		method: "GET",
 		path: "/teachers",
 		endpoint: "Teachers.get"
+	},
+	"Teachers.getByPriority": {
+		method: "GET",
+		path: "/teachers/priority",
+		endpoint: "Teachers.getByPriority"
 	},
 	"Teachers.getClasses": {
 		method: "GET",
@@ -133,6 +147,7 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 	Teachers: {
 		get: "Teachers.get",
+		getByPriority: "Teachers.getByPriority",
 		getClasses: "Teachers.getClasses",
 		getLocations: "Teachers.getLocations",
 		post: "Teachers.post",

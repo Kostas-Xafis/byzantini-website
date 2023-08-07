@@ -65,6 +65,7 @@ export const z_Teachers = z.object({
 	picture: z.string(), // Unique picture id
 	cv: z.string(), // Unique id for the pdf or whatever file
 	priority: z.number().int().nonnegative().max(9).min(1),
+	instruments: z.string().max(400),
 });
 
 export type Teachers = z.infer<typeof z_Teachers>;

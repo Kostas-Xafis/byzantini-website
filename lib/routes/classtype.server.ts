@@ -6,7 +6,6 @@ import { execTryCatch, executeQuery, questionMarks } from "../utils";
 let serverRoutes = JSON.parse(JSON.stringify(ClassTypeRoutes)) as typeof ClassTypeRoutes; // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = async _req => {
-	console.log(await executeQuery<ClassType>("SELECT * FROM class_type"));
 	return await execTryCatch(() => executeQuery<ClassType>("SELECT * FROM class_type"));
 };
 

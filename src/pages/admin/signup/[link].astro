@@ -3,8 +3,6 @@ import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
 import Input from "../../../components/Input.astro";
 import Layout from "../../../layouts/Layout.astro";
 
-export const prerender = false;
-
 const { link } = Astro.params;
 if (!link) {
 	return Astro.redirect("/");

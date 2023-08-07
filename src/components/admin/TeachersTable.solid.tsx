@@ -18,7 +18,7 @@ import { formListener } from "./table/formSubmit";
 const PREFIX = "teachers";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type TeachersTable = FullTeachers;
+type TeachersTable = Omit<FullTeachers, "instruments">;
 
 const TeachersInputs = (
 	class_types: ClassType[],
@@ -84,6 +84,12 @@ const TeachersInputs = (
 			type: "multiselect",
 			iconClasses: "fa-solid fa-map-marker",
 			multiselectList: multiselectLocations
+		},
+		instruments: {
+			name: "instruments",
+			label: "Όργανα",
+			type: "text",
+			iconClasses: "fa-solid fa-guitar"
 		}
 	};
 };
@@ -105,6 +111,7 @@ const teacherToTableTeacher = (teacher: FullTeachers): TeachersTable => {
 
 	columns[4] = (teacher.picture && "/kathigites/images/" + teacher.picture) || "";
 	columns[5] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
+	columns.pop(); //remove instruments
 	return columns as unknown as TeachersTable;
 };
 
@@ -181,7 +188,8 @@ export default function TeachersTable() {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
-					.filter(Boolean) as number[]
+					.filter(Boolean) as number[],
+				instruments: formData.get("instruments") as string
 			};
 			useAPI(setStore, API.Teachers.post, { RequestObject: data }).then(async res => {
 				if (!res.data) return;
@@ -235,7 +243,8 @@ export default function TeachersTable() {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
-					.filter(Boolean) as number[]
+					.filter(Boolean) as number[],
+				instruments: formData.get("instruments") as string
 			};
 			useAPI(setStore, API.Teachers.update, { RequestObject: data }).then(async res => {
 				if (!res.data && !res.message) return;

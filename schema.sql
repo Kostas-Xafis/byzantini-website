@@ -1,4 +1,4 @@
--- DROP TABLES
+-- DROP TABLES;
 
 DROP TABLE IF EXISTS `registrations`;
 DROP TABLE IF EXISTS `books`;
@@ -66,7 +66,7 @@ CREATE TABLE `payments`(
 PRIMARY KEY (`id`))
 CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Generate 10 payments
+-- Generate 10 payments;
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Jane Smith", 1, 15, 1686580312656);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("John Doe", 2, 12, 1686580312655);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Michael Johnson", 3, 25, 1686580312657);
@@ -120,7 +120,7 @@ CREATE TABLE `teachers` (
     `picture` varchar(20),
     `cv` varchar(20),
     `priority` int NOT NULL DEFAULT 0,
-    `organs` varchar(400) NOT NULL,
+    `instruments` varchar(400) NOT NULL,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -146,10 +146,10 @@ INSERT INTO class_type (name) VALUES ('Βυζαντινή Μουσική');
 INSERT INTO class_type (name) VALUES ('Παραδοσιακή Μουσική');
 INSERT INTO class_type (name) VALUES ('Ευρωπαϊκή Μουσική');
 
-INSERT INTO teachers (fullname, email, cellphone) VALUES ('John Doe', 'john@doe.com', '6987654321');
-INSERT INTO teachers (fullname, email, cellphone) VALUES ('Jane Doe', 'jane@doe.com', '6987654322');
-INSERT INTO teachers (fullname, email, cellphone) VALUES ('Michael Johnson', 'john@son.com', '6987654323');
-INSERT INTO teachers (fullname, email, cellphone) VALUES ('Emily Davis', 'davis@emy.com', '6987654324');
+INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('John Doe', 'john@doe.com', '6987654321', "Κανονάκι,Ούτι");
+INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('Jane Doe', 'jane@doe.com', '6987654322', "Βιολί,Κιθάρα");
+INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('Michael Johnson', 'john@son.com', '6987654323', "Κανονάκι,Πιάνο,Τρομπέτα");
+INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('Emily Davis', 'davis@emy.com', '6987654324', "Τρομπέτα,Φλάουτο,Κλαρίνο,Νέι");
 
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 1);
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 2);
