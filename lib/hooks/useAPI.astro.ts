@@ -4,7 +4,6 @@ type Endpoint = typeof APIEndpoints;
 
 const URL = (import.meta.env.URL as string) ?? "";
 
-
 export const API = api;
 
 // Astro version

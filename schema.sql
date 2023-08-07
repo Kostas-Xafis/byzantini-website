@@ -120,6 +120,7 @@ CREATE TABLE `teachers` (
     `picture` varchar(20),
     `cv` varchar(20),
     `priority` int NOT NULL DEFAULT 0,
+    `organs` varchar(400) NOT NULL,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -191,9 +192,7 @@ CREATE TABLE `registrations`(
     PRIMARY KEY (`cellphone`, `am`, `class_id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
 -- 0 - simple admin - 1 - super admin - 2 - root admin;
-
 CREATE TABLE `sys_users` (
     `id` int NOT NULL AUTO_INCREMENT,
     `email` varchar(80) NOT NULL,
@@ -206,6 +205,7 @@ CREATE TABLE `sys_users` (
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO sys_users (email, password, privilege) VALUES ('koxafis@gmail.com', 'Whereiswaldo!09', 2);
+INSERT INTO sys_users (email, password, privilege) VALUES ('sotiris_ale@hotmail.com', '1234', 1);
 INSERT INTO sys_users (email, password, privilege) VALUES ('dummy@user.com', 'dummyuser', 1);
 INSERT INTO sys_users (email, password) VALUES ('dummy2@user.com', 'dummyuser2');
 

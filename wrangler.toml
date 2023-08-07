@@ -1,0 +1,10 @@
+account_id = '6b75328f1167f45e0a0028b85aaa4191'
+workers_dev = false
+compatibility_flags = [ "nodejs_compat" ]
+node_compat = true
+
+
+[[r2_buckets]]
+binding = "S3_BUCKET"
+bucket_name = "byzantini-bucket"
+preview_bucket_name = "bucket-dev"

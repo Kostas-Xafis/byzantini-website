@@ -1,8 +1,7 @@
 import type { Locations } from "../../types/entities";
 import { LocationsRoutes } from "./locations.client";
 import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils";
-import { bucketFileUpload } from "../bucket/fileUpload";
-import { bucketFileDelete } from "../bucket/fileDelete";
+import { Bucket } from "../bucket";
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(LocationsRoutes)) as typeof LocationsRoutes; // Copy the routes object to split it into client and server routes
@@ -46,8 +45,8 @@ serverRoutes.fileUpload.func = async (req, slug) => {
 		const body = await blob.arrayBuffer();
 		const link = generateLink(12) + "." + filetype.split("/")[1];
 		if (imageMIMEType.includes(filetype)) {
-			if (location.image) await bucketFileDelete(location.image);
-			await bucketFileUpload(Buffer.from(body), link, filetype);
+			if (location.image) await Bucket.delete(req, location.image);
+			await Bucket.put(req, body, link, filetype);
 			await executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [link, id]);
 			return "Image uploaded successfully";
 		}
@@ -60,7 +59,7 @@ serverRoutes.fileDelete.func = async req => {
 		const body = await req.json();
 		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [body.id]);
 		if (!location) throw Error("Teacher not found");
-		if (location.image) await bucketFileDelete(location.image);
+		if (location.image) await Bucket.delete(req, location.image);
 		await executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [body.id]);
 		return "Image deleted successfully";
 	});
@@ -74,7 +73,7 @@ serverRoutes.delete.func = async req => {
 			body
 		);
 		for (const file of files) {
-			if (file.image) await bucketFileDelete(file.image);
+			if (file.image) await Bucket.delete(req, file.image);
 		}
 		await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(body.length)})`, body);
 		return "Locations deleted successfully";

@@ -4,6 +4,7 @@ import solidJs from "@astrojs/solid-js";
 import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
+
 const unmappedRoutes = page => page.includes("admin");
 
 // https://astro.build/config
