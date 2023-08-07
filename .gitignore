@@ -29,3 +29,5 @@ test.exe
 
 /functions
 package-lock.json
+
+/.wrangler
