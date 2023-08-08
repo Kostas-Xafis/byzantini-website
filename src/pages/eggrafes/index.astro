@@ -1,12 +1,9 @@
 ---
-export const prerender = true;
-
-import Navbar from "../../components/Navbar.astro";
 import { RegistrationForm } from "../../components/registrations/RegistrationForm.solid";
 import Layout from "../../layouts/Layout.astro";
+export const prerender = true;
 ---
 
 <Layout title="Εγγραφές">
-	<Navbar />
 	<RegistrationForm client:only="solid" />
 </Layout>

@@ -237,7 +237,7 @@ export default function TeachersTable() {
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
 				cellphone: formData.get("cellphone") as string,
-				priority: Number(formData.get("priority") as string),
+				priority: Number(formData.get("priority") as string) || 0,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;

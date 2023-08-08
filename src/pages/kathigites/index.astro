@@ -1,12 +1,12 @@
 ---
 import { useAPI } from "../../../lib/hooks/useAPI.astro";
-import type { TeacherClasses, Teachers, ClassType } from "../../../types/entities";
-import Navbar from "../../components/Navbar.astro";
+import type { Locations, TeacherClasses, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
-
 
 const teachers = (await useAPI("Teachers.getByPriority", {})).data as Teachers[];
 const teacher_classes = (await useAPI("Teachers.getClasses", {})).data as TeacherClasses[];
+const teacher_locations = (await useAPI("Teachers.getLocations", {})).data as TeacherLocations[];
+const locations = (await useAPI("Locations.get", {})).data as Locations[];
 const enum MusicType {
 	Byzantine = "byz",
 	Traditional = "par",
@@ -22,9 +22,8 @@ const music = [
 ---
 
 <Layout title="Καθηγητές">
-	<Navbar />
 	<div class="group/type w-full h-full grid grid-cols-[max-content_1fr] font-didact">
-		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-900">
+		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-900 cursor-pointer">
 			{
 				music.map(([str, type], ind) => (
 					<div id={type + "btn"} data-show={ind === 0} data-type={type} class="group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900">
@@ -39,33 +38,32 @@ const music = [
 				))
 			}
 		</div>
-		<div id="teachersContainer" class="w-full grid auto-rows-[max-content] grid-flow-row pt-10 gap-y-6 overflow-auto">
-			<h1 id="teachersHead" class="text-4xl justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
+		<div id="teachersContainer" class="w-full grid auto-rows-[max-content] grid-flow-row p-14 gap-y-10 overflow-auto">
+			<h1 id="teachersHead" class="text-4xl pb-8 justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
 				teachers.map(teacher => {
 					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][1]);
 					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][0]);
+					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations[l.location_id - 1].name);
 					return (
-					<div class={"hidden grid-cols-[max-content_1fr] pl-6 gap-x-6 "
-						+ (t_classes_type.includes(MusicType.Byzantine) ? "group-[:has(#byzbtn[data-show])]/type:grid " : "") 
-						+ (t_classes_type.includes(MusicType.Traditional) ? "group-[:has(#parbtn[data-show])]/type:grid " : "") 
-						+ (t_classes_type.includes(MusicType.European) ? "group-[:has(#eurbtn[data-show])]/type:grid " : "")}>
+					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500"
+						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid " : "") 
+						+ (t_classes_type.includes(MusicType.Traditional) ? " group-[:has(#parbtn[data-show])]/type:grid " : "") 
+						+ (t_classes_type.includes(MusicType.European) ? " group-[:has(#eurbtn[data-show])]/type:grid " : "")}>
 						{teacher.picture ? (
-							<img src={"/kathigites/images/" + teacher.picture} width="200" height="250" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-[250px] object-cover rounded-2xl shadow-md shadow-gray-500" />
+							<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-2xl" />
 						) : (
 							<div class="w-[200px] h-[250px]"/>
 						)}
-						<div class="w-max grid auto-rows-max gap-y-2">
+						<div class="w-max grid auto-rows-max gap-y-2 p-4">
 							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-sm">{teacher.fullname}</p>
 							<p class="text-xl"> 
-								Επικοινωνία: <i class="fa-regular fa-envelope pl-2 place-self-center" />
-								{teacher.email}
-								<span class="pl-1 text-lg font-serif">•</span>
-								<i class="fa-solid fa-mobile-screen pl-2"/>
-								{teacher.cellphone}
+								Επικοινωνία: <i class="fa-regular fa-envelope px-2 place-self-center" />
+								{teacher.email}•<i class="fa-solid fa-mobile-screen pr-2"/>{teacher.cellphone}
 							</p>
-							<p class="text-xl">{t_classes_str.join(' • ')}</p>
-							<p class="text-xl">{teacher.instruments.replaceAll(",", " • ")}</p>
+							<p class="text-xl">Παραρτήματα: {t_locations.join("•")}</p>
+							<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_classes_str.join('•')}</p>
+							{teacher.instruments ? <p class="text-xl">Όργανα: {teacher.instruments.replaceAll(",", "•")}</p> : <></>}
 							{teacher.cv ? 
 								<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
 									<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό
@@ -114,12 +112,21 @@ const music = [
 	}
 	
 </style>
+
 <script>
+
 	enum MusicType {
 		byz = "Βυζαντινής Μουσικής",
 		par = "Παραδοσιακής Μουσικής",
 		eur = "Ευρωπαϊκής Μουσικής"
 	}
+
+	// wrap all • characters in a span tag like this <span class="px-2 text-lg font-serif">•</span>
+	document.querySelectorAll("#teachersContainer p").forEach(p => {
+		const text = p.innerHTML;
+		p.innerHTML = text.replaceAll("•", '<span class="px-2 text-lg font-serif">•</span>');
+	});	
+
 	document.querySelectorAll("div:has(> button[data-type])").forEach(btn => {
 		const type = btn.getAttribute("data-type") as "byz" | "par" | "eur";
 		btn.addEventListener("click", () => {

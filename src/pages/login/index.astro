@@ -1,13 +1,11 @@
 ---
 import Input from "../../components/Input.astro";
-import Layout from "../../layouts/Layout.astro";
+import SigninLayout from "../../layouts/SigninLayout.astro";
 export const prerender = true;
 ---
 
-<Layout title="Διαχείρηση">
-	<div
-		class="p-12 h-max justify-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 justify-center"
-	>
+<SigninLayout title="Είσοδος Διαχειριστή">
+	<div class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
 		<div class="grid justify-center content-center">
 			<a href="/"> <img class="h-[100px] aspect-[0.99/1]" src="/logo.jpg" alt="Λογότυπο Σχολής" /></a>
 		</div>
@@ -21,7 +19,7 @@ export const prerender = true;
 			>
 		</form>
 	</div>
-</Layout>
+</SigninLayout>
 <style>
 	@keyframes ShakeAnimation {
 		0% {

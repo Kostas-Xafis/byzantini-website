@@ -1,6 +1,5 @@
 ---
 import { SEO } from "astro-seo";
-import Navbar from "../components/Navbar.astro";
 export interface Props {
 	title: string;
 }
@@ -32,49 +31,14 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 					locale: "el_GR"
 				}
 			}}
-			extend={{
-				link: [
-					{ rel: "icon", href: "/favicon.ico" },
-					{ rel: "sitemap", href: "/sitemap-index.xml" },
-					{ rel: "robots", href: "/sitemap-index.xml" }
-				],
-				meta: [
-					{
-						name: "facebook:image",
-						content: logoUrl
-					},
-					{
-						name: "messenger:image",
-						content: logoUrl
-					},
-					{
-						name: "viber:image",
-						content: logoUrl
-					}
-				]
-			}}
 		/>
 		<script src="https://kit.fontawesome.com/cd86c02df9.js" crossorigin="anonymous"></script>
 	</head>
-	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
-		<Navbar />
-		<div class="w-full h-full grid pt-[70px] grid-rows-[100%]">
-			<slot />
-		</div>
+	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100%] overflow-hidden">
+		<slot />
 		<style is:global>
-			@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
 			@import url("https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap");
 
-			@font-face {
-				font-weight: bold;
-				font-family: "Thomadaki";
-				src: url("/fonts/3-2-2003_THOMADAKIANNA2003.TTF");
-				font-display: swap;
-			}
-			@font-face {
-				font-family: "Anaktoria";
-				src: url("/fonts/ANAKTORIA.OTF");
-			}
 			html {
 				font-family: system-ui, sans-serif;
 				height: 100vh;
@@ -86,17 +50,6 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 			h2,
 			h3 {
 				color: #282828;
-			}
-			select {
-				background-color: white;
-			}
-			input[type="number"] {
-				-moz-appearance: textfield;
-				appearance: textfield;
-			}
-			input::-webkit-outer-spin-button,
-			input::-webkit-inner-spin-button {
-				display: none;
 			}
 		</style>
 	</body>

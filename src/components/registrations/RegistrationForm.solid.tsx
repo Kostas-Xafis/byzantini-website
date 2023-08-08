@@ -170,29 +170,39 @@ const enum MusicType {
 	None = ""
 }
 
+const heading = {
+	[MusicType.Byzantine]: "Φόρμα Βυζαντινής Μουσικής",
+	[MusicType.Traditional]: "Φόρμα Παραδοσιακής Μουσικής",
+	[MusicType.European]: "Φόρμα Ευρωπαϊκής Μουσικής"
+} as { [key in MusicType]: string };
+
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
 	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
 	const hydrate = createHydration(() => {
 		console.log("Hydrating table data");
 		useAPI(setStore, API.Teachers.get, {});
+		useAPI(setStore, API.Teachers.getClasses, {});
 	});
 
 	createEffect(() => hydrate(true));
-
-	const TeachersByType = createMemo(() => {
-		const teachers = store[API.Teachers.get];
-		if (!teachers) return [];
-		// Not yet implemented
-		// return teachers.filter((teacher) => teacher.type === formSelected());
-		return teachers;
-	});
 
 	const btns = [
 		["Βυζαντινή Μουσική", MusicType.Byzantine],
 		["Παραδοσιακή Μουσική", MusicType.Traditional],
 		["Ευρωπαϊκή Μουσική", MusicType.European]
 	] as const;
+
+	const TeachersByType = createMemo(() => {
+		const teachers = store[API.Teachers.get];
+		const teacher_classes = store[API.Teachers.getClasses];
+		if (!teachers || !teacher_classes) return [];
+		// Not yet implemented
+		const id = btns.findIndex(btn => btn[1] === formSelected()) + 1;
+		return teachers.filter(teacher =>
+			teacher_classes.find(teacher_class => teacher_class.teacher_id === teacher.id && teacher_class.class_id === id)
+		);
+	});
 
 	const onSelectClick = (type: MusicType) => () => {
 		const curType = formSelected();
@@ -249,7 +259,7 @@ export function RegistrationForm() {
 			>
 				<div
 					id="registrationContainer"
-					class="w-full h-full overflow-y-auto pb-20 grid grid-rows-[max-content_1fr] grid-cols-1 gap-y-4 place-items-center font-dicact"
+					class="w-full h-full overflow-y-auto pb-20 grid grid-rows-[max-content_max-content_1fr] grid-cols-1 gap-y-4 place-items-center font-dicact"
 				>
 					<div id="registrationSelect" class="py-6 grid grid-cols-3 gap-x-16 place-items-center">
 						{btns.map(([str, type]) => (
@@ -273,8 +283,11 @@ export function RegistrationForm() {
 					</div>
 					<form
 						id="registrationForm"
-						class="group/form px-20 py-10 grid grid-cols-2 auto-rows-auto gap-20 shadow-lg shadow-gray-600 rounded-md"
+						class="group/form px-20 py-10 grid grid-cols-2 auto-rows-auto gap-20 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
 					>
+						<h1 class="col-span-full text-5xl text-red-900 font-anaktoria font-bold w-full text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+							{heading[formSelected()]}
+						</h1>
 						{Object.values(genericInputs).map(input => (
 							<Input {...input} />
 						))}

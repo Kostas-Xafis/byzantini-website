@@ -64,7 +64,7 @@ export const z_Teachers = z.object({
 	cellphone: z.string().nonempty(),
 	picture: z.string(), // Unique picture id
 	cv: z.string(), // Unique id for the pdf or whatever file
-	priority: z.number().int().nonnegative().max(9).min(1),
+	priority: z.number().int().nonnegative().max(9).min(0),
 	instruments: z.string().max(400),
 });
 
