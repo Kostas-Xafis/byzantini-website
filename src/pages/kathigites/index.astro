@@ -26,14 +26,16 @@ const music = [
 		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-900 cursor-pointer">
 			{
 				music.map(([str, type], ind) => (
-					<div id={type + "btn"} data-show={ind === 0} data-type={type} class="group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900">
+					<div id={type + "btn"} data-show={ind === 0} data-type={type} class={
+						"group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out "
+						+" hover:bg-red-900 border-b-2 border-red-900 data-[show]:bg-red-900  data-[show]:text-white"}>
 						<button
-							class="p-6 text-2xl group-hover/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+							class="p-6 text-2xl group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
 							data-type={type}
 						>
 							{str}
 						</button>
-						<i class="fa-solid fa-angle-right mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white transition-colors duration-500 ease-in-out" />
+						<i class="fa-solid fa-angle-right mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out" />
 					</div>
 				))
 			}
@@ -46,17 +48,17 @@ const music = [
 					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][0]);
 					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations[l.location_id - 1].name);
 					return (
-					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500"
-						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid " : "") 
-						+ (t_classes_type.includes(MusicType.Traditional) ? " group-[:has(#parbtn[data-show])]/type:grid " : "") 
-						+ (t_classes_type.includes(MusicType.European) ? " group-[:has(#eurbtn[data-show])]/type:grid " : "")}>
+					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
+						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 
+						+ (t_classes_type.includes(MusicType.Traditional) ? " group-[:has(#parbtn[data-show])]/type:grid" : "") 
+						+ (t_classes_type.includes(MusicType.European) ? " group-[:has(#eurbtn[data-show])]/type:grid" : "")}>
 						{teacher.picture ? (
-							<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-2xl" />
+							<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-[15px]" />
 						) : (
-							<div class="w-[200px] h-[250px]"/>
+							<div />
 						)}
 						<div class="w-max grid auto-rows-max gap-y-2 p-4">
-							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-sm">{teacher.fullname}</p>
+							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
 							<p class="text-xl"> 
 								Επικοινωνία: <i class="fa-regular fa-envelope px-2 place-self-center" />
 								{teacher.email}•<i class="fa-solid fa-mobile-screen pr-2"/>{teacher.cellphone}
@@ -110,11 +112,12 @@ const music = [
 		opacity: 0.0001;
 		animation: fadeIn 0.6s ease-in-out forwards;
 	}
-	
+	#btsContainer div[data-show] {
+
+	}
 </style>
 
 <script>
-
 	enum MusicType {
 		byz = "Βυζαντινής Μουσικής",
 		par = "Παραδοσιακής Μουσικής",

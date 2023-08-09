@@ -69,7 +69,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			minmax: [1, 9]
+			minmax: [0, 100]
 		},
 		teacherClasses: {
 			name: "teacherClasses",

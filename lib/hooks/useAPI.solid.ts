@@ -19,6 +19,7 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 		const result = Route.validation.safeParse(req.RequestObject);
 		if (!result.success) {
 			setStore(endpoint, result.error as any);
+			console.log(result.error);
 			return { error: result.error };
 		}
 	}

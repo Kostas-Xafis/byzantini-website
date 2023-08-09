@@ -64,7 +64,7 @@ export const z_Teachers = z.object({
 	cellphone: z.string().nonempty(),
 	picture: z.string(), // Unique picture id
 	cv: z.string(), // Unique id for the pdf or whatever file
-	priority: z.number().int().nonnegative().max(9).min(0),
+	priority: z.number().int().nonnegative(),
 	instruments: z.string().max(400),
 });
 
@@ -101,9 +101,11 @@ export const z_Locations = z.object({
 	id: z.number().int().nonnegative(),
 	name: z.string(),
 	address: z.string(),
-	number: z.number().int().nonnegative(),
 	areacode: z.number().int().nonnegative(),
 	municipality: z.string(),
+	email: z.string().email(),
+	telephones: z.string(),
+	priority: z.number().int().nonnegative(),
 	image: z.string(),
 	link: z.string()
 });

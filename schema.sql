@@ -99,18 +99,20 @@ CREATE TABLE `locations` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(80) NOT NULL,
     `address` varchar(80) NOT NULL,
-    `number` int NOT NULL,
     `areacode` int NOT NULL,
     `municipality` varchar(80) NOT NULL,
+    `email` varchar(80) NOT NULL,
+    `telephones` varchar(80) NOT NULL,
+    `priority` int NOT NULL DEFAULT 0,
     `image` varchar(80),
     `link` varchar(400) NOT NULL,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Μεταμορφώσεως", "Χλόης 1", 123, 1234, "Μεταμόρφωσης", "https://maps.google.com");
-INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Πέυκης", "Παπανδρέου 28", 123, 1234, "Πέυκης", "https://maps.google.com");
-INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Εκάλης", "Αγίου Ιωάννου 17", 123, 1234, "Εκάλης", "https://maps.google.com");
-INSERT INTO locations (name, address, number, areacode, municipality, link) VALUES ("Κηφισιάς", "Λεωφόρος Κηφισίας 12", 123, 1234, "Κηφισιάς", "https://maps.google.com");
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, link) VALUES ("Μεταμορφώσεως", "Χλόης 1", 1234, "Μεταμόρφωσης", "mail@mail.com", "2108765431", 'pb=!1m18!1m12!1m3!1d6282.442718526081!2d23.76381077894797!3d38.06522564082543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a1a2005430a9cd%3A0xb0ae73d2ed83fee2!2sChurch%20of%20the%20Transfiguration%20of%20the%20Savior!5e0!3m2!1sen!2sgr!4v1691527109068!5m2!1sen!2sgr');
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, link) VALUES ("Πέυκης", "Παπανδρέου 28", 1234, "Πέυκης", "mail@mail.com", "2108765432", "Athens,Greece");
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, link) VALUES ("Εκάλης", "Αγίου Ιωάννου 17", 1234, "Εκάλης", "mail@mail.com", "2108765433", "Athens,Greece");
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, link) VALUES ("Κηφισιάς", "Λεωφόρος Κηφισίας 12", 1234, "Κηφισιάς", "mail@mail.com", "2108765434", "Athens,Greece");
 
 CREATE TABLE `teachers` (
     `id` int NOT NULL AUTO_INCREMENT,

@@ -1,0 +1,15 @@
+---
+export type Props = {
+	link: string;
+};
+const { link } = Astro.props;
+---
+
+<iframe
+	class="w-[900px] h-[400px] shadow-md shadow-gray-400 rounded-md border-2 border-solid border-red-900"
+	referrerpolicy="no-referrer-when-downgrade"
+	src=`https://www.google.com/maps/embed/v1/place?key=AIzaSyCMuTLCMTgQVjZ2AUkNoBzom6elMy1Dlvo&zoom=14&q=${link}`
+	allowfullscreen
+	loading="lazy"
+>
+</iframe>

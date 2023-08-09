@@ -1,0 +1,155 @@
+---
+import { useAPI } from "../../../lib/hooks/useAPI.astro";
+import type { Locations } from "../../../types/entities";
+import Layout from "../../layouts/Layout.astro";
+import GMap from "../../components/GMap.astro";
+const locations = (await useAPI("Locations.get", {})).data as Locations[];
+---
+
+<Layout title="Παραρτήματα">
+	<div class="group/type w-full h-full grid font-didact" style={{ "grid-template-columns": "max-content 1fr" }}>
+		<div id="btsContainer" class="w-max h-full grid auto-rows-max border-r-2 border-red-900 cursor-pointer">
+			{
+				locations.map((l, ind) => (
+					<div
+						id={"l_" + l.name}
+						data-show={ind === 0}
+						data-name={l.name}
+						class="group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+					>
+						<button class="p-6 text-2xl group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+							{l.name}
+						</button>
+						<i class="fa-solid fa-angle-right mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out" />
+					</div>
+				))
+			}
+		</div>
+		<div id="teachersContainer" class="w-full h-full grid auto-rows-[max-content] grid-flow-row place-content-center overflow-auto">
+			{
+				locations.map((l, i) => {
+					return (
+						<div
+							data-name={l.name}
+							class="w-max grid-cols-[max-content_min-content] rounded-2xl shadow-md shadow-gray-400 border-solid border-2 border-red-900"
+							class:list={[i === 0 ? "show" : ""]}
+						>
+							{l.image ? (
+								<img
+									src={"/locations/" + l.image}
+									alt={"Φωτογραφία Παραρτήματος " + l.name}
+									class="w-[400px] h-full object-cover rounded-l-[14px]"
+								/>
+							) : (
+								<div />
+							)}
+							<div class="w-max grid auto-rows-max gap-y-6 p-12">
+								<h1
+									id="teachersHead"
+									class="text-3xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+								>
+									{"Παράρτημα " + l.name}
+								</h1>
+								<p class="text-xl">
+									<i class="fa-solid fa-map-location-dot px-2 place-self-center" />
+									Διεύθυνση: {l.address + ", " + l.areacode + " - " + l.municipality}
+								</p>
+								<p class="text-xl">
+									<i class="fa-regular fa-envelope px-2 place-self-center" />
+									Επικοινωνία: {l.email ?? ""}•{l.telephones.replaceAll(",", "")}
+								</p>
+								<GMap link={l.link} />
+							</div>
+						</div>
+					);
+				})
+			}
+		</div>
+	</div>
+</Layout>
+<style>
+	button:is(.selected) {
+		background-color: rgb(153, 27, 27);
+	}
+	@keyframes fadeIn {
+		0% {
+			opacity: 0.0001;
+		}
+		10% {
+			opacity: 0.0001;
+		}
+		100% {
+			opacity: 1;
+		}
+	}
+	@keyframes fadeOut {
+		0% {
+			opacity: 1;
+		}
+		99% {
+			opacity: 0.0001;
+		}
+		100% {
+			opacity: 0.0001;
+		}
+	}
+	.remove {
+		opacity: 1;
+		animation: fadeOut 0.4s ease-in-out forwards;
+	}
+	#teachersContainer:is(:not(.remove)),
+	#btsContainer {
+		opacity: 0.0001;
+		animation: fadeIn 0.6s ease-in-out forwards;
+	}
+	#teachersContainer > div:is(:not(.show)) {
+		display: none;
+	}
+	#teachersContainer > div {
+		display: grid;
+	}
+</style>
+
+<script>
+	import { useAPI } from "../../../lib/hooks/useAPI.astro";
+	import type { Locations } from "../../../types/entities";
+
+	// wrap all • characters in a span tag like this <span class="px-2 text-lg font-serif">•</span>
+	document.querySelectorAll("#teachersContainer > div > div > p").forEach(p => {
+		const text = p.innerHTML;
+		p.innerHTML = text.replaceAll("•", '<span class="px-2 text-lg font-serif">•</span>');
+	});
+	(async function () {
+		const locations = (await useAPI("Locations.get", {})).data as Locations[];
+		locations.forEach(l => {
+			const btn = document.querySelector(`#btsContainer div[data-name='${l.name}']`) as HTMLElement;
+			btn.addEventListener("click", () => {
+				const shown = document.querySelector("[data-show]") as HTMLElement | null;
+				const location_name = shown?.dataset.name;
+				if (shown === btn) return;
+				if (location_name) {
+					document.querySelector(`#teachersContainer div[data-name='${location_name}']`)?.classList.remove("show");
+				}
+
+				const container = document.querySelector("#teachersContainer") as HTMLElement;
+				const heading = document.querySelector("#teachersHead") as HTMLElement;
+				if (shown) {
+					container.classList.add("remove");
+					void container.offsetWidth;
+					setTimeout(() => {
+						shown.removeAttribute("data-show");
+
+						container.classList.remove("remove");
+						container.querySelector(`div[data-name='${l.name}']`)?.classList.add("show");
+
+						heading.innerText = "Παράρτημα " + l.name;
+						btn.setAttribute("data-show", "");
+					}, 300);
+				} else {
+					heading.innerText = "Παράρτημα " + l.name;
+					btn.setAttribute("data-show", "");
+				}
+			});
+		});
+	})();
+</script>

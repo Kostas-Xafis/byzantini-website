@@ -11,16 +11,18 @@ import { formListener } from "./table/formSubmit";
 const PREFIX = "locations";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type LocationsTable = Locations;
+type LocationsTable = Omit<Locations, "telephones" | "link">;
 
 const LocationsInputs = (location?: Locations): Record<keyof Locations, InputProps> => {
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		name: { name: "name", label: "Όνομα Παραρτήματος", type: "text", iconClasses: "fa-solid fa-school" },
 		address: { name: "address", label: "Διεύθυνση", type: "text", iconClasses: "fa-solid fa-location-dot" },
-		number: { name: "number", label: "Αριθμός", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		areacode: { name: "areacode", label: "Ταχ. Κώδικας", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		municipality: { name: "municipality", label: "Δήμος", type: "text", iconClasses: "fa-solid fa-tree-city" },
+		email: { name: "email", label: "Email", type: "email", iconClasses: "fa-solid fa-envelope" },
+		telephones: { name: "telephones", label: "Τηλέφωνο", type: "text", iconClasses: "fa-solid fa-phone" },
+		priority: { name: "priority", label: "Προτεραιότητα", type: "number", iconClasses: "fa-solid fa-arrow-up-9-1", minmax: [0, 100] },
 		image: {
 			name: "image",
 			label: "Εικόνα",
@@ -34,14 +36,18 @@ const LocationsInputs = (location?: Locations): Record<keyof Locations, InputPro
 };
 
 const locationToTableLocation = (location: Locations): LocationsTable => {
+	// @ts-ignore
+	delete location?.telephones;
+	// @ts-ignore
+	delete location?.link;
 	const columns = Object.values(location);
 	//@ts-ignore
-	columns[6] = (location.image && "/locations/" + location.image) || "";
+	columns[7] = (location.image && "/locations/" + location.image) || "";
 	return columns as unknown as LocationsTable;
 };
 
 const locationsToTable = (locations: Locations[]): LocationsTable[] => {
-	return locations.map(p => locationToTableLocation(p));
+	return locations.map(p => locationToTableLocation(JSON.parse(JSON.stringify(p))));
 };
 
 const fileToBlob = async (file: File): Promise<Blob | null> => {
@@ -92,11 +98,11 @@ export default function LocationsTable() {
 		id: "Id",
 		name: { name: "Παραρτήματος", size: () => 20 },
 		address: { name: "Οδός", size: () => 25 },
-		number: "Αριθμός",
 		areacode: "Ταχ. Κώδικας",
 		municipality: { name: "Δήμος", size: () => 20 },
-		image: "Φωτογραφία",
-		link: "Google Maps"
+		email: { name: "Email", size: () => 20 },
+		priority: "Προτεραιότητα",
+		image: "Φωτογραφία"
 	};
 
 	let shapedData = createMemo(() => {
@@ -112,9 +118,11 @@ export default function LocationsTable() {
 			const data: Omit<Locations, "id" | "image"> = {
 				name: formData.get("name") as string,
 				address: formData.get("address") as string,
-				number: Number(formData.get("number")),
 				areacode: Number(formData.get("areacode")),
 				municipality: formData.get("municipality") as string,
+				email: formData.get("email") as string,
+				telephones: formData.get("telephones") as string,
+				priority: Number(formData.get("priority")),
 				link: formData.get("link") as string
 			};
 			useAPI(setStore, API.Locations.post, { RequestObject: data }).then(async res => {
@@ -155,9 +163,11 @@ export default function LocationsTable() {
 				id: location.id,
 				name: formData.get("name") as string,
 				address: formData.get("address") as string,
-				number: Number(formData.get("number")),
 				areacode: Number(formData.get("areacode")),
 				municipality: formData.get("municipality") as string,
+				email: formData.get("email") as string,
+				telephones: formData.get("telephones") as string,
+				priority: Number(formData.get("priority")),
 				link: formData.get("link") as string
 			};
 			useAPI(setStore, API.Locations.update, { RequestObject: data }).then(async res => {
