@@ -1,17 +1,22 @@
 ---
 const links = [
-	{ name: "Η Σχολή", url: "/sxoli" },
+	{ name: "Η Σχολή μας", url: "/sxoli" },
 	{ name: "Εγγραφές", url: "/eggrafes" },
 	{ name: "Καθηγητές", url: "/kathigites" },
 	{ name: "Παραρτήματα", url: "/parartimata" }
 ];
 ---
 
-<nav class="fixed top-0 left-0 w-full h-[70px] grid grid-rows-[70px] grid-cols-[80px_1fr] bg-red-900 z-[10000]">
-	<div class="grid justify-center content-center">
-		<a href="/"> <img class="h-[60px] aspect-[0.99/1]" src="/logo.jpg" alt="Λογότυπο Σχολής" /></a>
+<nav class="fixed top-0 left-0 w-full h-[80px] grid grid-rows-[80px] grid-cols-[80px_1fr] bg-red-900 bg-red z-[10000]">
+	<div class="pl-4 grid place-center grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
+		<a id="logoImg" href="/" class="w-[80px] row-span-full aspect-square">
+			<div class="w-full h-full bg-red-50"></div>
+			<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
+		</a>
+		<p class="text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">Σχολή Βυζαντινής &</p>
+		<p class="pl-[5rem] text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">Παραδοσιακής Μουσικής</p>
 	</div>
-	<div class={`w-min grid auto-cols-auto grid-rows-[70px] grid-flow-col justify-self-end px-12 gap-x-4`}>
+	<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-12 gap-x-4`}>
 		{
 			links.map(link => (
 				<a
@@ -28,3 +33,11 @@ const links = [
 		}
 	</div>
 </nav>
+<style>
+	#logoImg {
+		mask-image: url("/logo.png");
+		-webkit-mask-image: url("/logo.png");
+		mask-size: contain;
+		-webkit-mask-size: contain;
+	}
+</style>

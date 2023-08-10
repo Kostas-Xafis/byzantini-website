@@ -11,7 +11,7 @@ import { formListener } from "./table/formSubmit";
 const PREFIX = "locations";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type LocationsTable = Omit<Locations, "telephones" | "link">;
+type LocationsTable = Omit<Locations, "telephones" | "link" | "map">;
 
 const LocationsInputs = (location?: Locations): Record<keyof Locations, InputProps> => {
 	return {
@@ -31,15 +31,18 @@ const LocationsInputs = (location?: Locations): Record<keyof Locations, InputPro
 			fileExtension: "image/*",
 			value: location?.image
 		},
-		link: { name: "link", label: "Google Maps", type: "text", iconClasses: "fa-solid fa-map-location-dot", value: location?.link }
+		map: { name: "map", label: "Google Maps", type: "text", iconClasses: "fa-solid fa-map-location-dot", value: location?.map },
+		link: { name: "link", label: "Ιστοσελίδα", type: "text", iconClasses: "fa-solid fa-link", value: location?.link }
 	};
 };
 
 const locationToTableLocation = (location: Locations): LocationsTable => {
 	// @ts-ignore
-	delete location?.telephones;
+	delete location.telephones;
 	// @ts-ignore
 	delete location?.link;
+	// @ts-ignore
+	delete location.map;
 	const columns = Object.values(location);
 	//@ts-ignore
 	columns[7] = (location.image && "/locations/" + location.image) || "";
@@ -123,6 +126,7 @@ export default function LocationsTable() {
 				email: formData.get("email") as string,
 				telephones: formData.get("telephones") as string,
 				priority: Number(formData.get("priority")),
+				map: formData.get("map") as string,
 				link: formData.get("link") as string
 			};
 			useAPI(setStore, API.Locations.post, { RequestObject: data }).then(async res => {
@@ -168,6 +172,7 @@ export default function LocationsTable() {
 				email: formData.get("email") as string,
 				telephones: formData.get("telephones") as string,
 				priority: Number(formData.get("priority")),
+				map: formData.get("map") as string,
 				link: formData.get("link") as string
 			};
 			useAPI(setStore, API.Locations.update, { RequestObject: data }).then(async res => {

@@ -55,7 +55,6 @@ export default function Table(props: Props) {
 			</style>
 			<style>
 				{`
-	@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
 	@import url("https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap");
 	@keyframes ShakeAnimation {
 		0% {

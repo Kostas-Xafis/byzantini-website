@@ -6,7 +6,6 @@ module.exports = {
 			fontFamily: {
 				thomadaki: ["Thomadaki", "sans-serif"],
 				anaktoria: ["Anaktoria", "sans-serif"],
-				inter: ["Inter", "sans-serif"],
 				didact: ["Didact Gothic", "sans-serif"]
 			},
 			fontSize: {

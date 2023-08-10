@@ -107,7 +107,8 @@ export const z_Locations = z.object({
 	telephones: z.string(),
 	priority: z.number().int().nonnegative(),
 	image: z.string(),
-	link: z.string()
+	map: z.string(),
+	link: z.string().optional()
 });
 
 export type Locations = z.infer<typeof z_Locations>;

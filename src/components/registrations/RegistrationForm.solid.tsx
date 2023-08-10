@@ -171,9 +171,9 @@ const enum MusicType {
 }
 
 const heading = {
-	[MusicType.Byzantine]: "Φόρμα Βυζαντινής Μουσικής",
-	[MusicType.Traditional]: "Φόρμα Παραδοσιακής Μουσικής",
-	[MusicType.European]: "Φόρμα Ευρωπαϊκής Μουσικής"
+	[MusicType.Byzantine]: "Φόρμα Εγγραφής Βυζαντινής Μουσικής",
+	[MusicType.Traditional]: "Φόρμα Εγγραφής Παραδοσιακής Μουσικής",
+	[MusicType.European]: "Φόρμα Εγγραφής Ευρωπαϊκής Μουσικής"
 } as { [key in MusicType]: string };
 
 export function RegistrationForm() {
@@ -285,7 +285,7 @@ export function RegistrationForm() {
 						id="registrationForm"
 						class="group/form px-20 py-10 grid grid-cols-2 auto-rows-auto gap-20 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
 					>
-						<h1 class="col-span-full text-5xl text-red-900 font-anaktoria font-bold w-full text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+						<h1 class="col-span-full text-5xl text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 							{heading[formSelected()]}
 						</h1>
 						{Object.values(genericInputs).map(input => (

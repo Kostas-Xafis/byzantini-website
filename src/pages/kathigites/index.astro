@@ -19,23 +19,31 @@ const music = [
 	["Παραδοσιακή Μουσική", MusicType.Traditional],
 	["Ευρωπαϊκή Μουσική", MusicType.European]
 ] as const;
+
+const musicEnd = [
+	["Βυζαντινής Μουσικής", MusicType.Byzantine],
+	["Παραδοσιακής Μουσικής", MusicType.Traditional],
+	["Ευρωπαϊκής Μουσικής", MusicType.European]
+] as const;
 ---
 
 <Layout title="Καθηγητές">
 	<div class="group/type w-full h-full grid grid-cols-[max-content_1fr] font-didact">
-		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-900 cursor-pointer">
+		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-900">
 			{
 				music.map(([str, type], ind) => (
 					<div id={type + "btn"} data-show={ind === 0} data-type={type} class={
-						"group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out "
-						+" hover:bg-red-900 border-b-2 border-red-900 data-[show]:bg-red-900  data-[show]:text-white"}>
+						"group/btn relative cursor-pointer w-full h-max py-6 place-self-center red-300 grid grid-cols-[1fr_max-content] bg-white border-red-900 border-b-2"
+						+" after:transition-opacity after:duration-500 after:ease-in-out after:inset-0 after:w-full after:h-full after:absolute after:opacity-[0.001%]"
+						+" after:bg-gradient-to-r after:from-[#ff9387] after:from-[-200%] after:to-red-900" 
+						+" hover:after:opacity-100 data-[show]:after:opacity-100"}>
 						<button
-							class="p-6 text-2xl group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+							class="p-6 text-2xl z-10 group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
 							data-type={type}
 						>
 							{str}
 						</button>
-						<i class="fa-solid fa-angle-right mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out" />
+						<i class="fa-solid fa-angle-right z-10 mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out" />
 					</div>
 				))
 			}
@@ -44,8 +52,8 @@ const music = [
 			<h1 id="teachersHead" class="text-4xl pb-8 justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
 				teachers.map(teacher => {
-					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][1]);
-					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][0]);
+					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][1]);
+					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][0]);
 					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations[l.location_id - 1].name);
 					return (
 					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
@@ -63,10 +71,10 @@ const music = [
 								Επικοινωνία: <i class="fa-regular fa-envelope px-2 place-self-center" />
 								{teacher.email}•<i class="fa-solid fa-mobile-screen pr-2"/>{teacher.cellphone}
 							</p>
-							<p class="text-xl">Παραρτήματα: {t_locations.join("•")}</p>
-							<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_classes_str.join('•')}</p>
+							<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_locations.join("•")}</p>
+							<p class="text-xl">Διδάσκων: {t_classes_str.join('•')}</p>
 							{teacher.instruments ? <p class="text-xl">Όργανα: {teacher.instruments.replaceAll(",", "•")}</p> : <></>}
-							{teacher.cv ? 
+							{teacher.cv ?
 								<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
 									<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό
 								</a>
