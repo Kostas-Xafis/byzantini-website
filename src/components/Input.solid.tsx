@@ -33,6 +33,7 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 
 export type Props = {
 	type:
+		| null
 		| "checkbox"
 		| "date"
 		| "email"
@@ -63,7 +64,7 @@ export type Props = {
 export default function Input(props: Props) {
 	const { type, name, label, placeholder, value, required, iconClasses, disabled, selectList, multiselectList, fileExtension, minmax } =
 		props;
-
+	if (type === null) return <></>;
 	if (type === "date") {
 		onMount(() => {
 			//@ts-ignore

@@ -31,6 +31,12 @@ const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
 			type: "date",
 			value: Date.now(),
 			iconClasses: "fa-regular fa-calendar-days"
+		},
+		payment_date: {
+			name: "payment_date",
+			label: "Ημερομηνία Πληρωμής",
+			type: "date",
+			iconClasses: "fa-regular fa-calendar-days"
 		}
 	};
 };
@@ -39,10 +45,18 @@ const paymentToTablePayment = (payment: Payments, books: Books[]): PaymentsTable
 	const columns = Object.values(payment);
 	//@ts-ignore
 	columns[2] = books.find(b => b.id === payment.book_id).title;
-	const d = new Date(columns[4]);
+	let d = new Date(columns[4]);
 	columns[3] = columns[3] + "€";
 	//@ts-ignore
 	columns[4] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+	if (columns.length === 5) columns.push("-");
+	else if (columns[5] === 0) {
+		columns[5] = "-";
+	} else {
+		d = new Date(columns[5]);
+		//@ts-ignore
+		columns[5] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+	}
 	return columns as unknown as PaymentsTable;
 };
 
@@ -87,7 +101,8 @@ export default function PaymentsTable() {
 		student_name: { name: "Μαθητής", size: () => 15 },
 		title: { name: "Τίτλος", size: () => 25 },
 		amount: "Οφειλή",
-		date: "Ημερομηνία"
+		date: "Ημερομηνία",
+		payment_date: "Ημερομηνία Πληρωμής"
 	};
 
 	let shapedData = createMemo(() => {
@@ -103,16 +118,18 @@ export default function PaymentsTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Pick<Payments, "student_name" | "book_id"> = {
+			const data: Omit<Payments, "id" | "amount"> = {
 				student_name: formData.get("student_name") as string,
-				book_id: Number(formData.get("book_id") as string) + 1
+				book_id: Number(formData.get("book_id") as string) + 1,
+				date: new Date(formData.get("date") as string).getTime() / 1000,
+				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() / 1000 : undefined
 			};
 			useAPI(setStore, API.Payments.post, { RequestObject: data }).then(() => {
 				setActionPressed(ActionEnum.ADD);
 			});
 		};
 		return {
-			inputs: Pick(PaymentsInputs(books), "book_id", "student_name"),
+			inputs: Pick(PaymentsInputs(books), "book_id", "student_name", "date"),
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",

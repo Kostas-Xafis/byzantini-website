@@ -49,10 +49,11 @@ serverRoutes.updatePayment.func = async req => {
 serverRoutes.complete.func = async req => {
 	return await execTryCatch(async () => {
 		const ids = await req.json();
+
 		//check if payment exists
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) `, ids);
 		if (payments.length === 0) throw Error("Payment not found");
-		await executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids.length)}) `, ids);
+		await executeQuery(`UPDATE payments SET payment_date=?, amount=(SELECT price FROM books WHERE books.id=payments.book_id) WHERE id IN (${questionMarks(ids.length)})`, [Date.now(), ...ids]);
 		return "Deleted payment successfully";
 	});
 };

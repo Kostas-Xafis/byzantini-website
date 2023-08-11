@@ -65,6 +65,7 @@ CREATE TABLE `payments`(
     `book_id` int NOT NULL,
     `amount` int NOT NULL,
     `date` bigint NOT NULL,
+    `payment_date` bigint,
 PRIMARY KEY (`id`))
 CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -112,7 +113,7 @@ CREATE TABLE `locations` (
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO locations (name, address, areacode, municipality, email, telephones, map, link) VALUES ("Έδρα Μεταμόρφωσης", "Χλόης 1", 1234, "Δήμου Μεταμορφώσεως", "mail@mail.com", "2108765431", 'Church+of+the+Transfiguration+of+Christ+Metamorfosi', "https://inmm.gr/");
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, map, link) VALUES ("Έδρα Μεταμόρφωσης", "Χλόης 1", 1234, "Δήμου Μεταμορφώσεως", "mail@mail.com", "2108765431", 'Church+of+the+Transfiguration+of+Christ+Metamorfosi+Municipality', "https://inmm.gr/");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Πεύκης", "Παπανδρέου 28", 1234, "Πεύκης", "mail@mail.com", "2108765432", "Athens,Greece");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Εκάλης", "Αγίου Ιωάννου 17", 1234, "Εκάλης", "mail@mail.com", "2108765433", "Athens,Greece");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Κηφισιάς", "Λεωφόρος Κηφισίας 12", 1234, "Κηφισιάς", "mail@mail.com", "2108765434", "Athens,Greece");

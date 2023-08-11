@@ -17,7 +17,8 @@ export const z_Payments = z.object({
 	student_name: z.string().nonempty(),
 	book_id: z.number().int().nonnegative(),
 	amount: z.number().int().nonnegative(),
-	date: z.number().int().nonnegative()
+	date: z.number().int().nonnegative(),
+	payment_date: z.number().int().nonnegative().optional()
 });
 
 export type Payments = z.infer<typeof z_Payments>;

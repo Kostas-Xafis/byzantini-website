@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store";
 import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
-import type { Registrations, Teachers } from "../../../types/entities";
+import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
@@ -121,7 +121,17 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 	};
 };
 
-const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
+const traditionalInputs = (
+	teachers: Teachers[],
+	selectedTeacher?: Teachers,
+	instruments?: Instruments[],
+	instrumentsList?: TeacherInstruments[]
+): Record<keyof Pick<Registrations, "class_year" | "teacher_id"> | "instruments", InputProps> => {
+	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === selectedTeacher?.id) || [];
+	const multiselectInstruments = instruments?.map(i => {
+		let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
+		return { value: i.id, label: i.name, selected: !!c };
+	});
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -138,7 +148,16 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			required: true,
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map(teacher => teacher.fullname)
-		}
+		},
+		instruments: multiselectInstruments
+			? {
+					label: "Όργανα",
+					name: "instruments",
+					iconClasses: "fa-solid fa-guitar",
+					type: "multiselect",
+					required: true
+			  }
+			: { type: null, name: "null", label: "null" }
 	};
 };
 
@@ -226,6 +245,15 @@ export function RegistrationForm() {
 				setFormSelected(type);
 			}, 500);
 		}
+	};
+
+	const onTeacherSelect = (e: Event) => {
+		const target = e.target as HTMLSelectElement;
+		const teacher = TeachersByType()[target.selectedIndex];
+		if (!teacher) return;
+		const teacherId = teacher.id;
+		const input = document.querySelector("#teacher_id") as HTMLInputElement;
+		input.value = teacherId.toString();
 	};
 
 	return (
