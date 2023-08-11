@@ -9,10 +9,13 @@ const links = [
 
 <nav class="fixed top-0 left-0 w-full h-[80px] grid grid-rows-[80px] grid-cols-[80px_1fr] bg-red-900 bg-red z-[10000]">
 	<div class="pl-4 grid place-center grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
-		<a id="logoImg" href="/" class="w-[80px] row-span-full aspect-square">
+		<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
 			<div class="w-full h-full bg-red-50"></div>
 			<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 		</a>
+		<div class="logoImg w-[80px] aspect-square absolute top-[1px] left-[calc(1rem_-_2px)] blur-2xl -z-10">
+			<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]"></div>
+		</div>
 		<p class="text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">Σχολή Βυζαντινής &</p>
 		<p class="pl-[5rem] text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">Παραδοσιακής Μουσικής</p>
 	</div>
@@ -34,7 +37,7 @@ const links = [
 	</div>
 </nav>
 <style>
-	#logoImg {
+	.logoImg {
 		mask-image: url("/logo.png");
 		-webkit-mask-image: url("/logo.png");
 		mask-size: contain;

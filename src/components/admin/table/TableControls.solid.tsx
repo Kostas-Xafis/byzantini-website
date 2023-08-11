@@ -108,7 +108,7 @@ export default function TableControls(props: Props) {
 					</button>
 				</Show>
 				{/*---------------------EDIT BUTTON-------------------- */}
-				<Show when={!["wholesalers", "classtype", "sysusers"].includes(prefix)}>
+				<Show when={!["wholesalers", "instrument", "sysusers"].includes(prefix)}>
 					<Show
 						when={onEdit && onEdit?.call([]) !== undefined}
 						fallback={

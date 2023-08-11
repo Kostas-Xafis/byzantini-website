@@ -7,9 +7,11 @@ DROP TABLE IF EXISTS `payments`;
 DROP TABLE IF EXISTS `school_payoffs`;
 DROP TABLE IF EXISTS `locations`;
 DROP TABLE IF EXISTS `teachers`;
+DROP TABLE IF EXISTS `instruments`;
 DROP TABLE IF EXISTS `class_type`;
 DROP TABLE IF EXISTS `teacher_classes`;
 DROP TABLE IF EXISTS `teacher_locations`;
+DROP TABLE IF EXISTS `teacher_instruments`;
 DROP TABLE IF EXISTS `files`;
 DROP TABLE IF EXISTS `sys_users`;
 DROP TABLE IF EXISTS `sys_user_register_links`;
@@ -110,7 +112,7 @@ CREATE TABLE `locations` (
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO locations (name, address, areacode, municipality, email, telephones, map, link) VALUES ("Έδρα Μεταμόρφωσης", "Χλόης 1", 1234, "Δήμου Μεταμορφώσεως", "mail@mail.com", "2108765431", 'pb=!1m18!1m12!1m3!1d6282.442718526081!2d23.76381077894797!3d38.06522564082543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a1a2005430a9cd%3A0xb0ae73d2ed83fee2!2sChurch%20of%20the%20Transfiguration%20of%20the%20Savior!5e0!3m2!1sen!2sgr!4v1691527109068!5m2!1sen!2sgr', "https://inmm.gr/");
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, map, link) VALUES ("Έδρα Μεταμόρφωσης", "Χλόης 1", 1234, "Δήμου Μεταμορφώσεως", "mail@mail.com", "2108765431", 'Church+of+the+Transfiguration+of+Christ+Metamorfosi', "https://inmm.gr/");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Πεύκης", "Παπανδρέου 28", 1234, "Πεύκης", "mail@mail.com", "2108765432", "Athens,Greece");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Εκάλης", "Αγίου Ιωάννου 17", 1234, "Εκάλης", "mail@mail.com", "2108765433", "Athens,Greece");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Κηφισιάς", "Λεωφόρος Κηφισίας 12", 1234, "Κηφισιάς", "mail@mail.com", "2108765434", "Athens,Greece");
@@ -121,7 +123,6 @@ CREATE TABLE `teachers` (
     `picture` varchar(20),
     `cv` varchar(20),
     `priority` int NOT NULL DEFAULT 0,
-    `instruments` varchar(400) NOT NULL,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -130,6 +131,18 @@ CREATE TABLE `class_type` (
     `name` varchar(80) NOT NULL,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `instruments` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `name` varchar(80) NOT NULL,
+    PRIMARY KEY (`id`)
+)AUTO_INCREMENT=0;
+
+CREATE TABLE `teacher_instruments`(
+    `teacher_id` int NOT NULL,
+    `instrument_id` int NOT NULL,
+    PRIMARY KEY (`teacher_id`, `instrument_id`)
+);
 
 CREATE TABLE `teacher_locations` (
     `teacher_id` int NOT NULL,
@@ -147,10 +160,10 @@ INSERT INTO class_type (name) VALUES ('Βυζαντινή Μουσική');
 INSERT INTO class_type (name) VALUES ('Παραδοσιακή Μουσική');
 INSERT INTO class_type (name) VALUES ('Ευρωπαϊκή Μουσική');
 
-INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('John Doe', 'john@doe.com', '6987654321', "Κανονάκι,Ούτι");
-INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('Jane Doe', 'jane@doe.com', '6987654322', "Βιολί,Κιθάρα");
-INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('Michael Johnson', 'john@son.com', '6987654323', "Κανονάκι,Πιάνο,Τρομπέτα");
-INSERT INTO teachers (fullname, email, cellphone, instruments) VALUES ('Emily Davis', 'davis@emy.com', '6987654324', "Τρομπέτα,Φλάουτο,Κλαρίνο,Νέι");
+INSERT INTO teachers (fullname) VALUES ('John Doe');
+INSERT INTO teachers (fullname) VALUES ('Jane Doe');
+INSERT INTO teachers (fullname) VALUES ('Michael Johnson');
+INSERT INTO teachers (fullname) VALUES ('Emily Davis');
 
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 1);
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 2);
@@ -216,3 +229,29 @@ CREATE TABLE `sys_user_register_links` (
     `privilege` int NOT NULL,
     PRIMARY KEY (`link`)
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+INSERT INTO instruments (name) VALUES ('Ούτι');
+INSERT INTO instruments (name) VALUES ('Λαούτο');
+INSERT INTO instruments (name) VALUES ('Πολίτικο Λαούτο');
+INSERT INTO instruments (name) VALUES ('Πανδουρίδα - Ταμπούρ');
+INSERT INTO instruments (name) VALUES ('Πανδουρίδα - Ταμπουράς');
+INSERT INTO instruments (name) VALUES ('Μαντολίνο');
+INSERT INTO instruments (name) VALUES ('Σαντούρι');
+INSERT INTO instruments (name) VALUES ('Τσίμπαλο');
+INSERT INTO instruments (name) VALUES ('Κανονάκι');
+INSERT INTO instruments (name) VALUES ('Πολίτικη Λύρα');
+INSERT INTO instruments (name) VALUES ('Βιολοντσέλο');
+INSERT INTO instruments (name) VALUES ('Βιολί');
+INSERT INTO instruments (name) VALUES ('Νέι');
+INSERT INTO instruments (name) VALUES ('Κλαρίνο');
+INSERT INTO instruments (name) VALUES ('Φλογέρα - Σουραύλι');
+INSERT INTO instruments (name) VALUES ('Σύριγγα Πανός (μουσκάλι)');
+INSERT INTO instruments (name) VALUES ('Τρομπέτα');
+INSERT INTO instruments (name) VALUES ('Σαξόφωνο');
+INSERT INTO instruments (name) VALUES ('Τρομπόνι');
+INSERT INTO instruments (name) VALUES ('Παραδοσιακά μεμβρανόφωνα κρουστά');
+INSERT INTO instruments (name) VALUES ('Κρητική λύρα');
+INSERT INTO instruments (name) VALUES ('Ποντιακή λύρα');
+INSERT INTO instruments (name) VALUES ('Λύρα Ανατολικού Αιγαίου');
+INSERT INTO instruments (name) VALUES ('Λύρα Θράκης και Μακεδονίας');

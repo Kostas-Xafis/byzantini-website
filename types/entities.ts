@@ -60,12 +60,9 @@ export type SysUserRegisterLink = z.infer<typeof z_SysUserRegisterLink>;
 export const z_Teachers = z.object({
 	id: z.number().int().nonnegative(),
 	fullname: z.string().nonempty(),
-	email: z.string().email(),
-	cellphone: z.string().nonempty(),
 	picture: z.string(), // Unique picture id
 	cv: z.string(), // Unique id for the pdf or whatever file
 	priority: z.number().int().nonnegative(),
-	instruments: z.string().max(400),
 });
 
 export type Teachers = z.infer<typeof z_Teachers>;
@@ -113,6 +110,19 @@ export const z_Locations = z.object({
 
 export type Locations = z.infer<typeof z_Locations>;
 
+export const z_Instruments = z.object({
+	id: z.number().int().nonnegative(),
+	name: z.string().nonempty()
+});
+export type Instruments = z.infer<typeof z_Instruments>;
+
+export const z_TeacherInstruments = z.object({
+	teacher_id: z.number().int().nonnegative(),
+	instrument_id: z.number().int().nonnegative()
+});
+export type TeacherInstruments = z.infer<typeof z_TeacherInstruments>;
+
+
 export const z_Registrations = z.object({
 	id: z.number().int().nonnegative(),
 	last_name: z.string(),
@@ -133,5 +143,4 @@ export const z_Registrations = z.object({
 	class_id: z.number().int().nonnegative(),
 	date: z.number().int().nonnegative()
 });
-
 export type Registrations = z.infer<typeof z_Registrations>;

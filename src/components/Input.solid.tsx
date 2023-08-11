@@ -119,9 +119,8 @@ export default function Input(props: Props) {
 			input.setAttribute("selectList", input.getAttribute("selectList") + "" + value + ",");
 		};
 	}
-	console.log(multiselectList);
 	return (
-		<label for={name} class={"relative h-min max-w-[30ch] grid text-xl rounded-md font-didact z-10"}>
+		<label for={name} class={"relative h-min max-h-[200px] max-w-[30ch] grid grid-rows-[1fr] text-xl rounded-md font-didact z-10"}>
 			<Show when={type !== "select" && type !== "file" && type !== "multiselect"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
 				<input
@@ -129,7 +128,7 @@ export default function Input(props: Props) {
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
-					value={value || ""}
+					value={value === 0 ? "0" : value || ""}
 					disabled={disabled || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
@@ -173,7 +172,6 @@ export default function Input(props: Props) {
 								class="group ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 								onClick={(e: MouseEvent) => {
 									const button = e.currentTarget as HTMLButtonElement;
-									console.log("pressingbutton");
 									button.setAttribute(
 										"data-selected",
 										button.getAttribute("data-selected") === "true" ? "false" : "true"
@@ -190,23 +188,6 @@ export default function Input(props: Props) {
 						)}
 					</For>
 				</div>
-				{/* <input
-					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
-					type="text"
-					name={name}
-					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
-					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
-					disabled={disabled || false}
-				/> */}
-				{/* <select class="peer-focus-within:block" size={selectList?.length} onChange={multiselectOnChange}>
-					<For each={selectList}>
-						{(selectItem, index) => (
-							<option selected={index() === value} value={index()}>
-								{selectItem}
-							</option>
-						)}
-					</For>
-				</select> */}
 			</Show>
 			{/*--------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>

@@ -5,7 +5,9 @@ import type {
 	ClassType,
 	TeacherClasses,
 	Locations,
-	TeacherLocations
+	TeacherLocations,
+	Instruments,
+	TeacherInstruments
 } from "../../../types/entities";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
@@ -19,14 +21,17 @@ const PREFIX = "teachers";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type TeachersTable = Omit<FullTeachers, "instruments">;
+type TeacherJoins = { teacherClasses: number[]; teacherInstruments: number[]; teacherLocations: number[] };
 
 const TeachersInputs = (
 	class_types: ClassType[],
 	locations: Locations[],
+	instruments: Instruments[],
 	teacher?: FullTeachers,
 	classList?: TeacherClasses[],
-	locationsList?: TeacherLocations[]
-): Record<keyof FullTeachers | "teacherClasses" | "locations", InputProps> => {
+	locationsList?: TeacherLocations[],
+	instrumentsList?: TeacherInstruments[]
+): Record<keyof FullTeachers | "teacherClasses" | "teacherLocations" | "teacherInstruments", InputProps> => {
 	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];
 	const multiselectClasses = class_types?.map(ct => {
 		let c = teacherClasses && teacherClasses.find(t => t.class_id === ct.id);
@@ -38,16 +43,17 @@ const TeachersInputs = (
 		let c = teacherLocations && teacherLocations.find(t => t.location_id === l.id);
 		return { value: l.id, label: l.name, selected: !!c };
 	});
+
+	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === teacher?.id) || [];
+	const multiselectInstruments = instruments?.map(i => {
+		let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
+		return { value: i.id, label: i.name, selected: !!c };
+	});
+	console.log(multiselectInstruments, teacherInstruments, instruments);
+	console.log(multiselectLocations, teacherLocations, locations);
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
-		email: { name: "email", label: "Email", type: "email", iconClasses: "fa-solid fa-envelope" },
-		cellphone: {
-			name: "cellphone",
-			label: "Κινητό Τηλέφωνο",
-			type: "text",
-			iconClasses: "fa-solid fa-phone"
-		},
 		picture: {
 			name: "picture",
 			label: "Φωτογραφία",
@@ -78,18 +84,19 @@ const TeachersInputs = (
 			iconClasses: "fa-solid fa-chalkboard-teacher",
 			multiselectList: multiselectClasses
 		},
-		locations: {
-			name: "locations",
+		teacherLocations: {
+			name: "teacherLocations",
 			label: "Τοποθεσίες",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-map-marker",
+			iconClasses: "fa-solid fa-map-dot",
 			multiselectList: multiselectLocations
 		},
-		instruments: {
-			name: "instruments",
+		teacherInstruments: {
+			name: "teacherInstruments",
 			label: "Όργανα",
-			type: "text",
-			iconClasses: "fa-solid fa-guitar"
+			type: "multiselect",
+			iconClasses: "fa-solid fa-guitar",
+			multiselectList: multiselectInstruments
 		}
 	};
 };
@@ -109,9 +116,8 @@ const fileToBlob = async (file: File): Promise<Blob | null> => {
 const teacherToTableTeacher = (teacher: FullTeachers): TeachersTable => {
 	const columns = Object.values(teacher);
 
-	columns[4] = (teacher.picture && "/kathigites/images/" + teacher.picture) || "";
-	columns[5] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
-	columns.pop(); //remove instruments
+	columns[2] = (teacher.picture && "/kathigites/images/" + teacher.picture) || "";
+	columns[3] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
 	return columns as unknown as TeachersTable;
 };
 
@@ -120,15 +126,23 @@ const teachersToTable = (teachers: FullTeachers[]): TeachersTable[] => {
 };
 
 export default function TeachersTable() {
+	const class_types = [
+		{ id: 1, name: "Βυζαντινή Μουσική" },
+		{ id: 2, name: "Παραδοσιακή Μουσική" },
+		{ id: 3, name: "Ευρωπαϊκή Μουσική" }
+	];
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
 		console.log("Hydrating table data");
 		useAPI(setStore, API.Teachers.get, {});
-		useAPI(setStore, API.ClassType.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
+
 		useAPI(setStore, API.Locations.get, {});
 		useAPI(setStore, API.Teachers.getLocations, {});
+
+		useAPI(setStore, API.Instruments.get, {});
+		useAPI(setStore, API.Teachers.getInstruments, {});
 	});
 
 	createEffect(
@@ -157,8 +171,6 @@ export default function TeachersTable() {
 	const columnNames: ColumnType<TeachersTable> = {
 		id: "Id",
 		fullname: { name: "Ονοματεπώνυμο", size: () => 25 },
-		email: { name: "Email", size: () => 20 },
-		cellphone: "Κινητό Τηλέφωνο",
 		picture: "Φωτογραφία",
 		cv: "Βιογραφικό",
 		priority: "Προτεραιότητα"
@@ -169,19 +181,17 @@ export default function TeachersTable() {
 		return teachers ? teachersToTable(teachers) : [];
 	});
 	const onAdd = createMemo(() => {
-		const class_types = store[API.ClassType.get];
 		const classList = store[API.Teachers.getClasses];
 		const locations = store[API.Locations.get];
 		const locationsList = store[API.Teachers.getLocations];
-		if (!class_types || !classList || !locations || !locationsList) return;
+		const instruments = store[API.Instruments.get];
+		if (!classList || !locations || !locationsList || !instruments) return;
 		const submit = function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<Teachers & { teacherClasses: number[] }, "id"> = {
+			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
-				email: formData.get("email") as string,
-				cellphone: formData.get("cellphone") as string,
 				priority: Number(formData.get("priority") as string),
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
@@ -189,7 +199,18 @@ export default function TeachersTable() {
 						return id;
 					})
 					.filter(Boolean) as number[],
-				instruments: formData.get("instruments") as string
+				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherInstruments']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
+						return id;
+					})
+					.filter(Boolean) as number[],
+				teacherLocations: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherLocations']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
+						return id;
+					})
+					.filter(Boolean) as number[]
 			};
 			useAPI(setStore, API.Teachers.post, { RequestObject: data }).then(async res => {
 				if (!res.data) return;
@@ -208,7 +229,7 @@ export default function TeachersTable() {
 			});
 		};
 		return {
-			inputs: Omit(TeachersInputs(class_types, locations), "id"),
+			inputs: Omit(TeachersInputs(class_types, locations, instruments), "id"),
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
@@ -220,11 +241,12 @@ export default function TeachersTable() {
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length !== 1) return undefined;
 		const teacher = teachers.find(p => p.id === selectedItems[0]);
-		const class_types = store[API.ClassType.get];
 		const classList = store[API.Teachers.getClasses];
 		const locations = store[API.Locations.get];
 		const locationsList = store[API.Teachers.getLocations];
-		if (!teacher || !class_types || !classList || !locations || !locationsList) return;
+		const instruments = store[API.Instruments.get];
+		const teacherInstruments = store[API.Teachers.getInstruments];
+		if (!teacher || !classList || !locations || !locationsList || !instruments || !teacherInstruments) return;
 
 		let pictureRemoved = false;
 		let cvRemoved = false;
@@ -232,11 +254,9 @@ export default function TeachersTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Teachers & { teacherClasses: number[] } = {
+			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
-				email: formData.get("email") as string,
-				cellphone: formData.get("cellphone") as string,
 				priority: Number(formData.get("priority") as string) || 0,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
@@ -244,7 +264,18 @@ export default function TeachersTable() {
 						return id;
 					})
 					.filter(Boolean) as number[],
-				instruments: formData.get("instruments") as string
+				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherInstruments']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
+						return id;
+					})
+					.filter(Boolean) as number[],
+				teacherLocations: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherLocations']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
+						return id;
+					})
+					.filter(Boolean) as number[]
 			};
 			useAPI(setStore, API.Teachers.update, { RequestObject: data }).then(async res => {
 				if (!res.data && !res.message) return;
@@ -290,7 +321,13 @@ export default function TeachersTable() {
 		// @ts-ignore
 		delete simpleTeacher.cv;
 		return {
-			inputs: Omit(Fill(TeachersInputs(class_types, locations, teacher, classList, locationsList), simpleTeacher), "id"),
+			inputs: Omit(
+				Fill(
+					TeachersInputs(class_types, locations, instruments, teacher, classList, locationsList, teacherInstruments),
+					simpleTeacher
+				),
+				"id"
+			),
 			onMount: () => {
 				//@ts-ignore
 				document.addEventListener("emptyFileRemove", emptyFileRemove);
@@ -327,15 +364,15 @@ export default function TeachersTable() {
 		};
 	});
 
-	const onAddClass = createMemo(() => {
+	const onAddInstrument = createMemo(() => {
 		const submit = function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<ClassType, "id"> = {
+			const data: Omit<Instruments, "id"> = {
 				name: formData.get("name") as string
 			};
-			useAPI(setStore, API.ClassType.post, { RequestObject: data }).then(async res => {
+			useAPI(setStore, API.Instruments.post, { RequestObject: data }).then(async res => {
 				setActionPressed(ActionEnum.ADD);
 			});
 		};
@@ -344,19 +381,19 @@ export default function TeachersTable() {
 				name: {
 					type: "text",
 					name: "name",
-					label: "Μάθημα",
+					label: "Όργανο",
 					iconClasses: "fas fa-chalkboard-teacher"
 				} as InputProps
 			},
-			onMount: () => formListener(submit, true, "classtype"),
-			onCleanup: () => formListener(submit, false, "classtype"),
+			onMount: () => formListener(submit, true, "instrument"),
+			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Προσθήκη",
-			headerText: "Εισαγωγή Mαθήματος",
+			headerText: "Εισαγωγή Οργάνου",
 			type: ActionEnum.ADD
 		};
 	});
-	const onDeleteClass = createMemo(() => {
-		const classtypes = store[API.ClassType.get];
+	const onDeleteInstrument = createMemo(() => {
+		const classtypes = store[API.Instruments.get];
 		if (!classtypes) return undefined;
 		const submit = function (e: Event) {
 			e.preventDefault();
@@ -364,25 +401,25 @@ export default function TeachersTable() {
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data = [classtypes[parseInt(formData.get("name") as string)]?.id || -1];
 
-			useAPI(setStore, API.ClassType.delete, { RequestObject: data }).then(async res => {
-				setActionPressed(ActionEnum.ADD);
+			useAPI(setStore, API.Instruments.delete, { RequestObject: data }).then(async res => {
+				setActionPressed(ActionEnum.DELETE);
 			});
 		};
 		return {
 			inputs: {
 				name: {
 					name: "name",
-					label: "Μάθημα",
+					label: "Όργανο",
 					type: "select",
 					iconClasses: "fa-solid fa-chalkboard-teacher",
 					selectList: classtypes.map(c => c.name)
 				} as InputProps
 			},
-			onMount: () => formListener(submit, true, "classtype"),
-			onCleanup: () => formListener(submit, false, "classtype"),
+			onMount: () => formListener(submit, true, "instrument"),
+			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Διαγραφή",
-			headerText: "Διαγραφή Mαθήματος",
-			type: ActionEnum.ADD
+			headerText: "Διαγραφή Οργάνου",
+			type: ActionEnum.DELETE
 		};
 	});
 	return (
@@ -390,7 +427,12 @@ export default function TeachersTable() {
 			<Show when={store[API.Teachers.get]} fallback={<div>Loading...</div>}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
-					<TableControls pressedAction={actionPressed} onAdd={onAddClass} onDelete={onDeleteClass} prefix={"classtype"} />
+					<TableControls
+						pressedAction={actionPressed}
+						onAdd={onAddInstrument}
+						onDelete={onDeleteInstrument}
+						prefix={"instrument"}
+					/>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

@@ -1,12 +1,27 @@
 ---
 import { useAPI } from "../../../lib/hooks/useAPI.astro";
-import type { Locations, TeacherClasses, TeacherLocations, Teachers } from "../../../types/entities";
+import type { Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
-const teachers = (await useAPI("Teachers.getByPriority", {})).data as Teachers[];
-const teacher_classes = (await useAPI("Teachers.getClasses", {})).data as TeacherClasses[];
-const teacher_locations = (await useAPI("Teachers.getLocations", {})).data as TeacherLocations[];
-const locations = (await useAPI("Locations.get", {})).data as Locations[];
+const [teachers_res, teacher_classes_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
+	useAPI("Teachers.getByPriority", {}),
+	useAPI("Teachers.getClasses", {}),
+	useAPI("Teachers.getLocations", {}),
+	useAPI("Locations.get", {}),
+	useAPI("Teachers.getInstruments", {}),
+	useAPI("Instruments.get", {}),
+
+]);
+
+const [teachers, teacher_classes, teacher_locations, locations, teacher_instruments, instruments] = [
+	teachers_res.data as Teachers[], 
+	teacher_classes_res.data as TeacherClasses[], 
+	teacher_locations_res.data as TeacherLocations[], 
+	locations_res.data as Locations[],
+	teacher_instruments_res.data as TeacherInstruments[],
+	instruments_res.data as Instruments[]
+]
+
 const enum MusicType {
 	Byzantine = "byz",
 	Traditional = "par",
@@ -52,9 +67,11 @@ const musicEnd = [
 			<h1 id="teachersHead" class="text-4xl pb-8 justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
 				teachers.map(teacher => {
+					console.log(JSON.stringify(teacher));
 					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][1]);
 					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][0]);
 					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations[l.location_id - 1].name);
+					const t_instruments = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments[i.instrument_id - 1].name);
 					return (
 					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
 						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 
@@ -67,13 +84,13 @@ const musicEnd = [
 						)}
 						<div class="w-max grid auto-rows-max gap-y-2 p-4">
 							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
-							<p class="text-xl"> 
-								Επικοινωνία: <i class="fa-regular fa-envelope px-2 place-self-center" />
-								{teacher.email}•<i class="fa-solid fa-mobile-screen pr-2"/>{teacher.cellphone}
-							</p>
 							<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_locations.join("•")}</p>
 							<p class="text-xl">Διδάσκων: {t_classes_str.join('•')}</p>
-							{teacher.instruments ? <p class="text-xl">Όργανα: {teacher.instruments.replaceAll(",", "•")}</p> : <></>}
+							{t_instruments && t_instruments.length > 0 ? (
+								<p class="text-xl">Όργανα: {t_instruments.join('•')}</p>
+							) : (
+								<></>
+							)}
 							{teacher.cv ?
 								<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
 									<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό

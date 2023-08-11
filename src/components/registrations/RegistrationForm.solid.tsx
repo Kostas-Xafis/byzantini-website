@@ -129,7 +129,7 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"]
+			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"]
 		},
 		teacher_id: {
 			label: "Καθηγητής",

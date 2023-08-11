@@ -9,7 +9,7 @@ import { TeachersServerRoutes } from "./teachers.server";
 import { LocationsServerRoutes } from "./locations.server";
 import { authentication } from "../middleware/authentication";
 import { requestValidation } from "../middleware/requestValidation";
-import { ClassTypeServerRoutes } from "./classtype.server";
+import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
 
 const routes = (function () {

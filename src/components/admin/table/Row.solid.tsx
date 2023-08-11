@@ -64,7 +64,7 @@ export default function Row(props: Props) {
 								<i class="fa-solid fa-up-right-from-square"></i>
 							</a>
 						);
-					return <div>{item}</div>;
+					return <div>{item === 0 ? "0" : item}</div>;
 				})}
 			</div>
 		</>

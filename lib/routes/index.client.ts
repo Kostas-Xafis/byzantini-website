@@ -5,7 +5,7 @@ import { APIPayoffs, APIPayoffsArgs, APIPayoffsEndpoints, APIPayoffsResponse } f
 import { APIWholesalers, APIWholesalersArgs, APIWholesalersEndpoints, APIWholesalersResponse } from "./wholesalers.client";
 import { APITeachers, APITeachersArgs, APITeachersEndpoints, APITeachersResponse } from "./teachers.client";
 import { APILocations, APILocationsArgs, APILocationsEndpoints, APILocationsResponse } from "./locations.client";
-import { APIClassType, APIClassTypeArgs, APIClassTypeEndpoints, APIClassTypeResponse } from "./classtype.client";
+import { APIInstruments, APIInstrumentsArgs, APIInstrumentsEndpoints, APIInstrumentsResponse } from "./instruments.client";
 import { APISysUsers, APISysUsersArgs, APISysUsersEndpoints, APISysUsersResponse } from "./sysusers.client";
 
 export const API = {
@@ -16,7 +16,7 @@ export const API = {
 	...APIWholesalers,
 	...APITeachers,
 	...APILocations,
-	...APIClassType,
+	...APIInstruments,
 	...APISysUsers,
 };
 
@@ -28,7 +28,7 @@ export const APIEndpoints = {
 	...APIWholesalersEndpoints,
 	...APITeachersEndpoints,
 	...APILocationsEndpoints,
-	...APIClassTypeEndpoints,
+	...APIInstrumentsEndpoints,
 	...APISysUsersEndpoints,
 };
 export type APIArgs = APIBooksArgs &
@@ -38,7 +38,7 @@ export type APIArgs = APIBooksArgs &
 	APIWholesalersArgs &
 	APITeachersArgs &
 	APILocationsArgs &
-	APIClassTypeArgs &
+	APIInstrumentsArgs &
 	APISysUsersArgs;
 
 export type APIRes = APIBooksResponse &
@@ -48,5 +48,5 @@ export type APIRes = APIBooksResponse &
 	APIWholesalersResponse &
 	APITeachersResponse &
 	APILocationsResponse &
-	APIClassTypeResponse &
+	APIInstrumentsResponse &
 	APISysUsersResponse;
