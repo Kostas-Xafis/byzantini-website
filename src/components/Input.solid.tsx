@@ -55,6 +55,7 @@ export type Props = {
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
+	blurDisabled?: boolean;
 	selectList?: string[];
 	multiselectList?: { value: number; label: string; selected: boolean }[];
 	fileExtension?: string;
@@ -62,8 +63,21 @@ export type Props = {
 };
 
 export default function Input(props: Props) {
-	const { type, name, label, placeholder, value, required, iconClasses, disabled, selectList, multiselectList, fileExtension, minmax } =
-		props;
+	const {
+		type,
+		name,
+		label,
+		placeholder,
+		value,
+		required,
+		iconClasses,
+		disabled,
+		blurDisabled = true,
+		selectList,
+		multiselectList,
+		fileExtension,
+		minmax
+	} = props;
 	if (type === null) return <></>;
 	if (type === "date") {
 		onMount(() => {
@@ -107,25 +121,15 @@ export default function Input(props: Props) {
 		});
 	});
 
-	let multiselectOnChange;
-	if (type === "multiselect") {
-		multiselectOnChange = (e: Event) => {
-			const select = e.currentTarget as HTMLSelectElement;
-			const option = select.selectedOptions[0];
-			const value = option.value;
-			const item = option.innerText;
-			const input = document.querySelector(`input[name='${name}']`) as HTMLInputElement;
-
-			input.value = input.value.concat(item + "\n");
-			input.setAttribute("selectList", input.getAttribute("selectList") + "" + value + ",");
-		};
-	}
 	return (
 		<label for={name} class={"relative h-min max-h-[200px] max-w-[30ch] grid grid-rows-[1fr] text-xl rounded-md font-didact z-10"}>
 			<Show when={type !== "select" && type !== "file" && type !== "multiselect"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
 				<input
-					class="peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class={
+						"peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none" +
+						(disabled && blurDisabled ? " blur-[1px]" : "")
+					}
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -145,7 +149,10 @@ export default function Input(props: Props) {
 			<Show when={type === "select"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
 				<select
-					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class={
+						"peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none" +
+						(disabled && blurDisabled ? " blur-[1px]" : "")
+					}
 					name={name}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}

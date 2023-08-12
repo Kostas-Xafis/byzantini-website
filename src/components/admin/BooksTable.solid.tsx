@@ -8,6 +8,7 @@ import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { Omit, type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener } from "./table/formSubmit";
+import Spinner from "../Spinner.solid";
 
 const PREFIX = "books";
 
@@ -238,7 +239,7 @@ export default function BooksTable() {
 
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Books.get] && store[API.Wholesalers.get]} fallback={<div>Loading...</div>}>
+			<Show when={store[API.Books.get] && store[API.Wholesalers.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
 					<TableControls

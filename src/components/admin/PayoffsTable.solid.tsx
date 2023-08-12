@@ -8,6 +8,7 @@ import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener } from "./table/formSubmit";
+import Spinner from "../Spinner.solid";
 
 const PREFIX = "payoffs";
 
@@ -144,7 +145,7 @@ export default function PayoffsTable() {
 
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Wholesalers.get] && store[API.Payoffs.get]} fallback={<div>Loading...</div>}>
+			<Show when={store[API.Wholesalers.get] && store[API.Payoffs.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} complete />
 				</Table>

@@ -7,6 +7,7 @@ import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener } from "./table/formSubmit";
+import Spinner from "../Spinner.solid";
 
 const PREFIX = "locations";
 
@@ -247,7 +248,7 @@ export default function LocationsTable() {
 
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Locations.get]} fallback={<div>Loading...</div>}>
+			<Show when={store[API.Locations.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
 				</Table>

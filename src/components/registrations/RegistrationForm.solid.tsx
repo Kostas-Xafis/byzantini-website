@@ -96,6 +96,7 @@ const genericInputs: Record<keyof Omit<Registrations, "id" | "date" | "class_id"
 		required: true,
 		iconClasses: "fa-solid fa-calendar",
 		disabled: true,
+		blurDisabled: false,
 		value: "2023-2024"
 	}
 };

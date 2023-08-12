@@ -16,6 +16,7 @@ import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener } from "./table/formSubmit";
+import Spinner from "../Spinner.solid";
 
 const PREFIX = "teachers";
 
@@ -49,11 +50,16 @@ const TeachersInputs = (
 		let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
 		return { value: i.id, label: i.name, selected: !!c };
 	});
-	console.log(multiselectInstruments, teacherInstruments, instruments);
-	console.log(multiselectLocations, teacherLocations, locations);
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
+		priority: {
+			name: "priority",
+			label: "Προτεραιότητα",
+			type: "number",
+			iconClasses: "fa-solid fa-arrow-up-9-1",
+			minmax: [0, 100]
+		},
 		picture: {
 			name: "picture",
 			label: "Φωτογραφία",
@@ -70,12 +76,12 @@ const TeachersInputs = (
 			fileExtension: ".pdf",
 			value: teacher?.cv
 		},
-		priority: {
-			name: "priority",
-			label: "Προτεραιότητα",
-			type: "number",
-			iconClasses: "fa-solid fa-arrow-up-9-1",
-			minmax: [0, 100]
+		teacherLocations: {
+			name: "teacherLocations",
+			label: "Τοποθεσίες",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-map-location-dot",
+			multiselectList: multiselectLocations
 		},
 		teacherClasses: {
 			name: "teacherClasses",
@@ -83,13 +89,6 @@ const TeachersInputs = (
 			type: "multiselect",
 			iconClasses: "fa-solid fa-chalkboard-teacher",
 			multiselectList: multiselectClasses
-		},
-		teacherLocations: {
-			name: "teacherLocations",
-			label: "Τοποθεσίες",
-			type: "multiselect",
-			iconClasses: "fa-solid fa-map-dot",
-			multiselectList: multiselectLocations
 		},
 		teacherInstruments: {
 			name: "teacherInstruments",
@@ -424,7 +423,7 @@ export default function TeachersTable() {
 	});
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Teachers.get]} fallback={<div>Loading...</div>}>
+			<Show when={store[API.Teachers.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
 					<TableControls

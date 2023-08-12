@@ -1,7 +1,7 @@
 ---
 import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
 import Input from "../../../components/Input.astro";
-import Layout from "../../../layouts/Layout.astro";
+import SigninLayout from "../../../layouts/SigninLayout.astro";
 
 const { link } = Astro.params;
 if (!link) {
@@ -14,12 +14,17 @@ if (!("data" in res) || !res.data?.isValid) {
 }
 ---
 
-<Layout title="Διαχείρηση">
-	<div
-		class="p-12 h-max justify-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 justify-center"
-	>
+<SigninLayout title="Διαχείρηση">
+	<div class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
 		<div class="grid justify-center content-center">
-			<a href="/"> <img class="h-[100px] aspect-[0.99/1]" src="/logo.jpg" alt="Λογότυπο Σχολής" /></a>
+			<a href="/" class="relative">
+				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
+				<img
+					class="h-[100px] absolute brightness-150 blur-[1px] opacity-40 top-[1px] left-[-2px]"
+					src="/logo.png"
+					alt="Λογότυπο Σχολής"
+				/>
+			</a>
 		</div>
 		<h2 class="text-3xl font-didact text-center">Εγγραφή Διαχειρηστή</h2>
 		<form id="signupForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
@@ -31,7 +36,7 @@ if (!("data" in res) || !res.data?.isValid) {
 			>
 		</form>
 	</div>
-</Layout>
+</SigninLayout>
 <style>
 	@keyframes ShakeAnimation {
 		0% {

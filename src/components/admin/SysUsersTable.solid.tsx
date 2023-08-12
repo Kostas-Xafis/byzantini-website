@@ -6,6 +6,7 @@ import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener } from "./table/formSubmit";
+import Spinner from "../Spinner.solid";
 
 const PREFIX = "sysusers";
 
@@ -115,7 +116,7 @@ export default function SysUsersTable() {
 	});
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.SysUsers.get]}>
+			<Show when={store[API.SysUsers.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onDelete={onDelete} prefix={PREFIX} />
 				</Table>
