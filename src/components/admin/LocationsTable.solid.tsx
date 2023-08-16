@@ -6,7 +6,7 @@ import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener } from "./table/formSubmit";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
 const PREFIX = "locations";
@@ -115,7 +115,7 @@ export default function LocationsTable() {
 		return locations ? locationsToTable(locations) : [];
 	});
 	const onAdd = createMemo(() => {
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -130,20 +130,19 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string
 			};
-			useAPI(setStore, API.Locations.post, { RequestObject: data }).then(async res => {
-				if (!res.data) return;
-				const id = res.data.insertId;
-				const files = {
-					image: await fileToBlob(formData.get("image") as File)
-				};
-				if (files.image)
-					await useAPI(setStore, API.Locations.fileUpload, {
-						RequestObject: files.image,
-						UrlArgs: { id }
-					});
-				setActionPressed(ActionEnum.ADD);
-			});
-		};
+			const res = await useAPI(setStore, API.Locations.post, { RequestObject: data });
+			if (!res.data) return;
+			const id = res.data.insertId;
+			const files = {
+				image: await fileToBlob(formData.get("image") as File)
+			};
+			if (files.image)
+				await useAPI(setStore, API.Locations.fileUpload, {
+					RequestObject: files.image,
+					UrlArgs: { id }
+				});
+			setActionPressed(ActionEnum.ADD);
+		});
 		return {
 			inputs: Omit(LocationsInputs(), "id"),
 			onMount: () => formListener(submit, true, PREFIX),
@@ -160,7 +159,7 @@ export default function LocationsTable() {
 		if (!location) return undefined;
 
 		let imageRemoved = false;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -176,26 +175,25 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string
 			};
-			useAPI(setStore, API.Locations.update, { RequestObject: data }).then(async res => {
-				if (!res.data && !res.message) return;
-				const file = {
-					image: await fileToBlob(formData.get("image") as File)
-				};
-				if (imageRemoved) {
-					await useAPI(setStore, API.Locations.fileDelete, {
-						RequestObject: {
-							id: location.id
-						}
-					});
-				}
-				if (file.image)
-					await useAPI(setStore, API.Locations.fileUpload, {
-						RequestObject: file.image,
-						UrlArgs: { id: location.id }
-					});
-				setActionPressed(ActionEnum.EDIT);
-			});
-		};
+			const res = await useAPI(setStore, API.Locations.update, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			const file = {
+				image: await fileToBlob(formData.get("image") as File)
+			};
+			if (imageRemoved) {
+				await useAPI(setStore, API.Locations.fileDelete, {
+					RequestObject: {
+						id: location.id
+					}
+				});
+			}
+			if (file.image)
+				await useAPI(setStore, API.Locations.fileUpload, {
+					RequestObject: file.image,
+					UrlArgs: { id: location.id }
+				});
+			setActionPressed(ActionEnum.EDIT);
+		});
 		const emptyFileRemove = (e: CustomEvent) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -228,14 +226,14 @@ export default function LocationsTable() {
 	const onDelete = createMemo(() => {
 		const locations = store[API.Locations.get];
 		if (!locations || selectedItems.length < 1) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(i => (locations.find(p => p.id === i) as Locations).id);
-			useAPI(setStore, API.Locations.delete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.Locations.delete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),

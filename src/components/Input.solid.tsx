@@ -1,5 +1,7 @@
 import { For, Show, onMount } from "solid-js";
 import { CloseButton } from "./admin/table/CloseButton.solid";
+import type { TooltipProps } from "./Tooltip.solid";
+import Tooltip from "./Tooltip.solid";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -60,6 +62,7 @@ export type Props = {
 	multiselectList?: { value: number; label: string; selected: boolean }[];
 	fileExtension?: string;
 	minmax?: [number, number];
+	tooltip?: TooltipProps;
 };
 
 export default function Input(props: Props) {
@@ -76,7 +79,8 @@ export default function Input(props: Props) {
 		selectList,
 		multiselectList,
 		fileExtension,
-		minmax
+		minmax,
+		tooltip
 	} = props;
 	if (type === null) return <></>;
 	if (type === "date") {
@@ -122,12 +126,15 @@ export default function Input(props: Props) {
 	});
 
 	return (
-		<label for={name} class={"relative h-min max-h-[200px] max-w-[30ch] grid grid-rows-[1fr] text-xl rounded-md font-didact z-10"}>
+		<label
+			for={name}
+			class={"group/tooltip relative h-min max-h-[200px] max-w-[30ch] grid grid-rows-[1fr] text-xl rounded-md font-didact"}
+		>
 			<Show when={type !== "select" && type !== "file" && type !== "multiselect"}>
-				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
+				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
 				<input
 					class={
-						"peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none" +
+						"peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
 						(disabled && blurDisabled ? " blur-[1px]" : "")
 					}
 					type={type}
@@ -147,10 +154,10 @@ export default function Input(props: Props) {
 			</Show>
 			{/*--------------------------------SELECT INPUT---------------------------------------- */}
 			<Show when={type === "select"}>
-				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
+				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
 				<select
 					class={
-						"peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none" +
+						"peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
 						(disabled && blurDisabled ? " blur-[1px]" : "")
 					}
 					name={name}
@@ -169,15 +176,15 @@ export default function Input(props: Props) {
 			</Show>
 			{/*--------------------------------MULTISELECT INPUT---------------------------------------- */}
 			<Show when={type === "multiselect"}>
-				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")}></i>
-				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-auto">
+				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
+				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-auto z-10">
 					<For each={multiselectList}>
 						{(selectItem, index) => (
 							<button
 								data-specifier={name}
 								data-selected={selectItem.selected}
 								data-value={selectItem.value}
-								class="group ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
+								class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 								onClick={(e: MouseEvent) => {
 									const button = e.currentTarget as HTMLButtonElement;
 									button.setAttribute(
@@ -187,8 +194,8 @@ export default function Input(props: Props) {
 								}}
 								type="button"
 							>
-								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]:hidden"></i>
-								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]:hidden"></i>
+								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
+								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
 								<p class="p-2 font-didact" style={{ "grid-column": "2 / 3" }}>
 									{selectItem.label}
 								</p>
@@ -202,8 +209,8 @@ export default function Input(props: Props) {
 				<div
 					data-name={name}
 					class={
-						"peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-3 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden " +
-						(value ? "show" : "")
+						"peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-3 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden z-10" +
+						(value ? " show" : "")
 					}
 				>
 					<CloseButton onClick={onFileRemove} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
@@ -212,7 +219,7 @@ export default function Input(props: Props) {
 				<div
 					data-name={name}
 					onclick={onFileClick}
-					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-min my-3 py-3 justify-self-center self-center flex flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600"
+					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-min my-3 py-3 justify-self-center self-center flex flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600 z-10"
 				>
 					<i class={"text-4xl text-gray-400 group-hover/file:text-gray-50 " + (iconClasses || "")}></i>
 					<p class="text-xl text-gray-400  group-hover/file:text-gray-50">Drag&Drop</p>
@@ -232,11 +239,12 @@ export default function Input(props: Props) {
 					}`}
 				</style>
 			</Show>
-			<p class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
+			<p class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10">
 				{label}
-				{required ? <i class="absolute bg-white left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : ""}
+				{required ? <i class="absolute bg-transparent left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : ""}
 			</p>
-			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 peer-[:not(:focus-within):invalid]:border-red-400 -z-10"></div>
+			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 peer-[:not(:focus-within):invalid]:border-red-400"></div>
+			{tooltip ? <Tooltip {...tooltip} /> : <></>}
 		</label>
 	);
 }

@@ -69,7 +69,6 @@ CREATE TABLE `payments`(
 PRIMARY KEY (`id`))
 CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Generate 10 payments;
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Jane Smith", 1, 15, 1686580312656);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("John Doe", 2, 12, 1686580312655);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Michael Johnson", 3, 25, 1686580312657);
@@ -136,6 +135,7 @@ CREATE TABLE `class_type` (
 CREATE TABLE `instruments` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(80) NOT NULL,
+    `type` varchar(4) NOT NULL, 
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0;
 
@@ -232,27 +232,27 @@ CREATE TABLE `sys_user_register_links` (
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
-INSERT INTO instruments (name) VALUES ('Ούτι');
-INSERT INTO instruments (name) VALUES ('Λαούτο');
-INSERT INTO instruments (name) VALUES ('Πολίτικο Λαούτο');
-INSERT INTO instruments (name) VALUES ('Πανδουρίδα - Ταμπούρ');
-INSERT INTO instruments (name) VALUES ('Πανδουρίδα - Ταμπουράς');
-INSERT INTO instruments (name) VALUES ('Μαντολίνο');
-INSERT INTO instruments (name) VALUES ('Σαντούρι');
-INSERT INTO instruments (name) VALUES ('Τσίμπαλο');
-INSERT INTO instruments (name) VALUES ('Κανονάκι');
-INSERT INTO instruments (name) VALUES ('Πολίτικη Λύρα');
-INSERT INTO instruments (name) VALUES ('Βιολοντσέλο');
-INSERT INTO instruments (name) VALUES ('Βιολί');
-INSERT INTO instruments (name) VALUES ('Νέι');
-INSERT INTO instruments (name) VALUES ('Κλαρίνο');
-INSERT INTO instruments (name) VALUES ('Φλογέρα - Σουραύλι');
-INSERT INTO instruments (name) VALUES ('Σύριγγα Πανός (μουσκάλι)');
-INSERT INTO instruments (name) VALUES ('Τρομπέτα');
-INSERT INTO instruments (name) VALUES ('Σαξόφωνο');
-INSERT INTO instruments (name) VALUES ('Τρομπόνι');
-INSERT INTO instruments (name) VALUES ('Παραδοσιακά μεμβρανόφωνα κρουστά');
-INSERT INTO instruments (name) VALUES ('Κρητική λύρα');
-INSERT INTO instruments (name) VALUES ('Ποντιακή λύρα');
-INSERT INTO instruments (name) VALUES ('Λύρα Ανατολικού Αιγαίου');
-INSERT INTO instruments (name) VALUES ('Λύρα Θράκης και Μακεδονίας');
+INSERT INTO instruments (name, type) VALUES ('Ούτι', "par");
+INSERT INTO instruments (name, type) VALUES ('Λαούτο', "par");
+INSERT INTO instruments (name, type) VALUES ('Πολίτικο Λαούτο', "par");
+INSERT INTO instruments (name, type) VALUES ('Πανδουρίδα - Ταμπούρ', "par");
+INSERT INTO instruments (name, type) VALUES ('Πανδουρίδα - Ταμπουράς', "par");
+INSERT INTO instruments (name, type) VALUES ('Μαντολίνο', "par");
+INSERT INTO instruments (name, type) VALUES ('Σαντούρι', "par");
+INSERT INTO instruments (name, type) VALUES ('Τσίμπαλο', "par");
+INSERT INTO instruments (name, type) VALUES ('Κανονάκι', "par");
+INSERT INTO instruments (name, type) VALUES ('Πολίτικη Λύρα', "par");
+INSERT INTO instruments (name, type) VALUES ('Βιολοντσέλο', "par");
+INSERT INTO instruments (name, type) VALUES ('Βιολί', "par");
+INSERT INTO instruments (name, type) VALUES ('Νέι', "par");
+INSERT INTO instruments (name, type) VALUES ('Κλαρίνο', "par");
+INSERT INTO instruments (name, type) VALUES ('Φλογέρα - Σουραύλι', "par");
+INSERT INTO instruments (name, type) VALUES ('Σύριγγα Πανός (μουσκάλι)', "par");
+INSERT INTO instruments (name, type) VALUES ('Τρομπέτα', "par");
+INSERT INTO instruments (name, type) VALUES ('Σαξόφωνο', "par");
+INSERT INTO instruments (name, type) VALUES ('Τρομπόνι', "par");
+INSERT INTO instruments (name, type) VALUES ('Παραδοσιακά μεμβρανόφωνα κρουστά', "par");
+INSERT INTO instruments (name, type) VALUES ('Κρητική λύρα', "par");
+INSERT INTO instruments (name, type) VALUES ('Ποντιακή λύρα', "par");
+INSERT INTO instruments (name, type) VALUES ('Λύρα Ανατολικού Αιγαίου', "par");
+INSERT INTO instruments (name, type) VALUES ('Λύρα Θράκης και Μακεδονίας, "par"');

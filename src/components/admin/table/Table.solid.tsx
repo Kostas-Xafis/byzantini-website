@@ -51,11 +51,7 @@ export default function Table(props: Props) {
 	}
 	.row:is(.selectedRow):hover {
 		--tw-shadow-color: #1f2937 !important;
-	}`}
-			</style>
-			<style>
-				{`
-	@import url("https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap");
+	}
 	@keyframes ShakeAnimation {
 		0% {
 			transform: translateX(0);
@@ -83,8 +79,8 @@ export default function Table(props: Props) {
 		}
 	}
 
-	.animate-shake button {
-		animation: ShakeAnimation 0.6s ease-in-out;
+	.animate-shake button[type='submit'] {
+		animation: ShakeAnimation 0.5s ease-in-out;
 	}`}
 			</style>
 		</div>

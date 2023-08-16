@@ -7,7 +7,7 @@ import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener } from "./table/formSubmit";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
 const PREFIX = "payments";
@@ -115,7 +115,7 @@ export default function PaymentsTable() {
 	const onAdd = createMemo(() => {
 		const books = store[API.Books.get];
 		if (!books) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -125,10 +125,11 @@ export default function PaymentsTable() {
 				date: new Date(formData.get("date") as string).getTime() / 1000,
 				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() / 1000 : undefined
 			};
-			useAPI(setStore, API.Payments.post, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.ADD);
-			});
-		};
+
+			const res = await useAPI(setStore, API.Payments.post, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.ADD);
+		});
 		return {
 			inputs: Pick(PaymentsInputs(books), "book_id", "student_name", "date"),
 			onMount: () => formListener(submit, true, PREFIX),
@@ -143,7 +144,7 @@ export default function PaymentsTable() {
 		const payments = store[API.Payments.get];
 		if (!payments || !books || selectedItems.length !== 1) return undefined;
 		const payment = payments.find(p => p.id === selectedItems[0]) as Payments;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -151,11 +152,11 @@ export default function PaymentsTable() {
 				id: payment.id,
 				amount: Number(formData.get("amount") as string)
 			};
-			if (data.amount > payment.amount || data.amount === 0) return setActionPressed(ActionEnum.EDIT);
-			useAPI(setStore, API.Payments.updatePayment, { RequestObject: data }).then(res => {
-				setActionPressed(ActionEnum.EDIT);
-			});
-		};
+			if (data.amount > payment.amount || data.amount === 0) throw Error("Invalid amount");
+			const res = await useAPI(setStore, API.Payments.updatePayment, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.EDIT);
+		});
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
 			inputs: Pick(filledInputs, "amount"),
@@ -170,14 +171,14 @@ export default function PaymentsTable() {
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
 		if (!payments || !books || selectedItems.length < 1) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(i => (payments.find(p => p.id === i) as Payments).id);
-			useAPI(setStore, API.Payments.complete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.Payments.complete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),

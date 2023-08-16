@@ -1,6 +1,6 @@
 {
 	"extends": "astro/tsconfigs/strict",
-	"exclude": ["./.vscode"],
+	"exclude": ["./.vscode", "./dist", "./.wrangler"],
 	"compilerOptions": {
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js"

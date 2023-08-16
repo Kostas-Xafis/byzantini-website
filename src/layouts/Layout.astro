@@ -54,7 +54,18 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 				]
 			}}
 		/>
-		<script src="https://kit.fontawesome.com/cd86c02df9.js" crossorigin="anonymous"></script>
+		<style>
+			@font-face {
+				font-family: "Anaktoria";
+				src: url("/fonts/ANAKTORIA.OTF");
+			}
+		</style>
+		<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
+		<link href="/fa/css/solid.min.css" rel="stylesheet" />
+		<link href="/fa/css/regular.min.css" rel="stylesheet" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />
 	</head>
 	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
 		<Navbar />
@@ -62,17 +73,6 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 			<slot />
 		</div>
 		<style is:global>
-			@import url("https://fonts.googleapis.com/css2?family=Didact+Gothic");
-
-			@font-face {
-				font-weight: bold;
-				font-family: "Thomadaki";
-				src: url("/fonts/3-2-2003_THOMADAKIANNA2003.TTF");
-			}
-			@font-face {
-				font-family: "Anaktoria";
-				src: url("/fonts/ANAKTORIA.OTF");
-			}
 			html {
 				font-family: system-ui, sans-serif;
 				height: 100vh;
@@ -82,7 +82,8 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 			button,
 			h1,
 			h2,
-			h3 {
+			h3,
+			li {
 				color: #282828;
 			}
 			select {

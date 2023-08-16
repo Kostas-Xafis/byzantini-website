@@ -2,7 +2,7 @@ import { createStore } from "solid-js/store";
 import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
-import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
 
 const genericInputs: Record<keyof Omit<Registrations, "id" | "date" | "class_id" | "class_year" | "teacher_id">, InputProps> = {
 	am: {
@@ -11,28 +11,56 @@ const genericInputs: Record<keyof Omit<Registrations, "id" | "date" | "class_id"
 		type: "text",
 		value: "000",
 		required: true,
-		iconClasses: "fa-solid fa-id-card"
+		iconClasses: "fa-solid fa-id-card",
+		tooltip: {
+			message: [
+				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
+				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
+			],
+			position: "left"
+		}
 	},
 	last_name: {
 		label: "Επώνυμο",
 		name: "last_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user"
+		iconClasses: "fa-solid fa-user",
+		tooltip: {
+			message: [
+				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
+				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
+			],
+			position: "top"
+		}
 	},
 	first_name: {
 		label: "Όνομα",
 		name: "first_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user"
+		iconClasses: "fa-solid fa-user",
+		tooltip: {
+			message: [
+				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
+				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
+			],
+			position: "bottom"
+		}
 	},
 	father_name: {
 		label: "Πατρώνυμο",
 		name: "father_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user"
+		iconClasses: "fa-solid fa-user",
+		tooltip: {
+			message: [
+				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
+				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
+			],
+			position: "right"
+		}
 	},
 	telephone: {
 		label: "Τηλέφωνο",
@@ -122,17 +150,7 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 	};
 };
 
-const traditionalInputs = (
-	teachers: Teachers[],
-	selectedTeacher?: Teachers,
-	instruments?: Instruments[],
-	instrumentsList?: TeacherInstruments[]
-): Record<keyof Pick<Registrations, "class_year" | "teacher_id"> | "instruments", InputProps> => {
-	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === selectedTeacher?.id) || [];
-	const multiselectInstruments = instruments?.map(i => {
-		let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
-		return { value: i.id, label: i.name, selected: !!c };
-	});
+const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -149,16 +167,7 @@ const traditionalInputs = (
 			required: true,
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map(teacher => teacher.fullname)
-		},
-		instruments: multiselectInstruments
-			? {
-					label: "Όργανα",
-					name: "instruments",
-					iconClasses: "fa-solid fa-guitar",
-					type: "multiselect",
-					required: true
-			  }
-			: { type: null, name: "null", label: "null" }
+		}
 	};
 };
 
@@ -183,6 +192,34 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 	};
 };
 
+const instrumentsInput = ({
+	teacher,
+	instruments,
+	instrumentsList
+}: {
+	teacher?: Teachers;
+	instruments?: Instruments[];
+	instrumentsList?: TeacherInstruments[];
+}): { instruments: InputProps } => {
+	if (!teacher || !instruments || !instrumentsList || instruments.length === 0)
+		return { instruments: { type: null, label: "", name: "" } };
+	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === teacher?.id) || [];
+	const multiselectInstruments = teacherInstruments?.map(ti => {
+		const i = instruments.find(i => i.id === ti.instrument_id) as Instruments;
+		return { value: i.id, label: i.name, selected: false };
+	});
+	return {
+		instruments: {
+			label: "Όργανα",
+			name: "instruments",
+			iconClasses: "fa-solid fa-guitar",
+			type: "multiselect",
+			required: true,
+			multiselectList: multiselectInstruments
+		}
+	};
+};
+
 const enum MusicType {
 	Byzantine = "byz",
 	Traditional = "par",
@@ -199,10 +236,14 @@ const heading = {
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
 	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
+	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
+
 	const hydrate = createHydration(() => {
 		console.log("Hydrating table data");
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
+		useAPI(setStore, API.Teachers.getInstruments, {});
+		useAPI(setStore, API.Instruments.get, {});
 	});
 
 	createEffect(() => hydrate(true));
@@ -217,12 +258,31 @@ export function RegistrationForm() {
 		const teachers = store[API.Teachers.get];
 		const teacher_classes = store[API.Teachers.getClasses];
 		if (!teachers || !teacher_classes) return [];
-		// Not yet implemented
 		const id = btns.findIndex(btn => btn[1] === formSelected()) + 1;
 		return teachers.filter(teacher =>
 			teacher_classes.find(teacher_class => teacher_class.teacher_id === teacher.id && teacher_class.class_id === id)
 		);
 	});
+	const InstrumentsByTeacher = createMemo(() => {
+		const instruments = store[API.Instruments.get];
+		const teacher_instruments = store[API.Teachers.getInstruments];
+		const teacher = selectedTeacher() || TeachersByType()[0];
+		if (!instruments || !teacher_instruments || !teacher) return {};
+		return { teacher, instruments: instruments.filter(i => i.type === formSelected()), instrumentsList: teacher_instruments };
+	}) as () => { teacher: Teachers; instruments: Instruments[]; instrumentsList: TeacherInstruments[] };
+
+	const onTeacherSelect = () => {
+		const teachers = store[API.Teachers.get];
+		const instruments = store[API.Instruments.get];
+		if (!teachers || !instruments) return;
+		const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
+		select.addEventListener("change", (e: Event) => {
+			const target = e.target as HTMLSelectElement;
+			const teacher_id = Number((target[target.selectedIndex] as HTMLOptionElement).value);
+			setSelectedTeacher(TeachersByType()[teacher_id]);
+		});
+		setSelectedTeacher(TeachersByType()[0]);
+	};
 
 	const onSelectClick = (type: MusicType) => () => {
 		const curType = formSelected();
@@ -235,6 +295,7 @@ export function RegistrationForm() {
 				regContainer.classList.remove("remove");
 				void regContainer.offsetWidth;
 				setFormSelected(type);
+				onTeacherSelect();
 			}, 500);
 		} else {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
@@ -244,17 +305,9 @@ export function RegistrationForm() {
 				form.classList.remove("remove");
 				void form.offsetWidth;
 				setFormSelected(type);
+				onTeacherSelect();
 			}, 500);
 		}
-	};
-
-	const onTeacherSelect = (e: Event) => {
-		const target = e.target as HTMLSelectElement;
-		const teacher = TeachersByType()[target.selectedIndex];
-		if (!teacher) return;
-		const teacherId = teacher.id;
-		const input = document.querySelector("#teacher_id") as HTMLInputElement;
-		input.value = teacherId.toString();
 	};
 
 	return (
@@ -325,8 +378,12 @@ export function RegistrationForm() {
 							: formSelected() === MusicType.Traditional
 							? Object.values(traditionalInputs(TeachersByType())).map(input => <Input {...input} />)
 							: Object.values(europeanInputs(TeachersByType())).map(input => <Input {...input} />)}
+						{formSelected() === MusicType.Traditional || formSelected() === MusicType.European
+							? // @ts-ignore
+							  Object.values(instrumentsInput(InstrumentsByTeacher())).map(input => <Input {...input} />)
+							: ""}
 						<button
-							class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group/form-[:is(.animate-shake)]:bg-red-500"
+							class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
 							type="submit"
 						>
 							Εγγραφή

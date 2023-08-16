@@ -5,7 +5,7 @@ import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener } from "./table/formSubmit";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
 const PREFIX = "sysusers";
@@ -68,10 +68,10 @@ export default function SysUsersTable() {
 		const sysusers = store[API.SysUsers.get];
 		return sysusers ? sysusersToTable(sysusers) : [];
 	});
+
 	const onAdd = createMemo(() => {
 		const link = store[API.SysUsers.createRegisterLink]?.link;
-		console.log(link);
-		const submit = async function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			if (!link) await useAPI(setStore, API.SysUsers.createRegisterLink, {});
@@ -80,7 +80,7 @@ export default function SysUsersTable() {
 				document.querySelector("div[data-prefix='sysusers'] button:first-child").click();
 			}, 200);
 			setActionPressed(ActionEnum.ADD);
-		};
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),
@@ -90,21 +90,24 @@ export default function SysUsersTable() {
 			type: ActionEnum.ADD
 		};
 	});
+
 	const onDelete = createMemo(() => {
 		const sysusers = store[API.SysUsers.get];
 		const self = store[API.SysUsers.getBySid];
 		if (!sysusers || selectedItems.length < 1 || !self) return undefined;
+
 		const selectedSysUsers = selectedItems.map(i => sysusers.find(p => p.id === i) as SysUsers);
 		if (!selectedSysUsers.find(s => s.privilege < self.privilege || (s.privilege === self.privilege && s.id === self.id)))
 			return undefined;
-		const submit = function (e: Event) {
+
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(i => (sysusers.find(p => p.id === i) as SysUsers).id);
-			useAPI(setStore, API.SysUsers.delete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.SysUsers.delete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),
@@ -114,6 +117,7 @@ export default function SysUsersTable() {
 			type: ActionEnum.DELETE
 		};
 	});
+
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.SysUsers.get]} fallback={<Spinner />}>

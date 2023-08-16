@@ -8,4 +8,5 @@ export type ContextType = {
 	submitText: string;
 	headerText: string;
 };
-export const SelectedItemsContext = createContext<ContextType>();
+
+export const ModalContext = createContext<ContextType>();

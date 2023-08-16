@@ -30,3 +30,5 @@ test.exe
 package-lock.json
 
 .wrangler/
+
+/public/fa

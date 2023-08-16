@@ -1,5 +1,5 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { z_SysUsers, type SysUsers } from "../../types/entities";
+import type { SysUsers } from "../../types/entities";
 import { z } from "zod";
 
 const z_LoginCredentials = z.object({
@@ -21,16 +21,6 @@ const getBySid: EndpointRoute<"GET:/sys/sid", null, SysUsers> = {
 	method: "GET",
 	path: "/sys/sid",
 	hasUrlParams: false,
-	func: async req => null as any
-};
-
-const postReq = z_SysUsers.omit({ id: true, session_id: true, session_exp_date: true });
-const post: EndpointRoute<"POST:/sys", typeof postReq, { session_id: string }> = {
-	authentication: true,
-	method: "POST",
-	path: "/sys",
-	hasUrlParams: false,
-	validation: () => postReq,
 	func: async req => null as any
 };
 
@@ -71,7 +61,6 @@ const validateRegisterLink: EndpointRoute<"POST:/sys/register/validate/[link:str
 export const SysUsersRoutes = {
 	get,
 	getBySid,
-	post,
 	delete: del,
 	registerSysUser,
 	createRegisterLink,
@@ -92,12 +81,6 @@ export const APISysUsersEndpoints: APIEndpointsBuilder<"SysUsers", typeof SysUse
 		method: "GET",
 		path: "/sys/sid",
 		endpoint: "SysUsers.getBySid"
-	},
-	"SysUsers.post": {
-		method: "POST",
-		path: "/sys",
-		endpoint: "SysUsers.post",
-		validation: postReq
 	},
 	"SysUsers.delete": {
 		method: "DELETE",
@@ -126,7 +109,6 @@ export const APISysUsers: APIBuilder<"SysUsers", typeof SysUsersRoutes> = {
 	SysUsers: {
 		get: "SysUsers.get",
 		getBySid: "SysUsers.getBySid",
-		post: "SysUsers.post",
 		delete: "SysUsers.delete",
 		registerSysUser: "SysUsers.registerSysUser",
 		createRegisterLink: "SysUsers.createRegisterLink",

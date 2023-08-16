@@ -19,8 +19,7 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 		const result = Route.validation.safeParse(req.RequestObject);
 		if (!result.success) {
 			setStore(endpoint, result.error as any);
-			console.log(result.error);
-			return { error: result.error };
+			throw new Error(result.error.toString());
 		}
 	}
 	const url = URL + "/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
@@ -47,9 +46,8 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 		setStore(endpoint, json.data as any);
 		return { data: json.data as any };
 	} catch (err) {
-		console.error(err);
 		setStore(endpoint, err as any);
-		return { error: err };
+		throw new Error(JSON.stringify(err as {}));
 	}
 };
 

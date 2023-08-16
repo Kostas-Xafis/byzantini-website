@@ -15,7 +15,7 @@ import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener } from "./table/formSubmit";
+import { formListener, formErrorWrap } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
 const PREFIX = "teachers";
@@ -185,7 +185,7 @@ export default function TeachersTable() {
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
 		if (!classList || !locations || !locationsList || !instruments) return;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -211,22 +211,21 @@ export default function TeachersTable() {
 					})
 					.filter(Boolean) as number[]
 			};
-			useAPI(setStore, API.Teachers.post, { RequestObject: data }).then(async res => {
-				if (!res.data) return;
-				const id = res.data.insertId;
-				const files = {
-					picture: await fileToBlob(formData.get("picture") as File),
-					cv: await fileToBlob(formData.get("cv") as File)
-				};
-				if (files.picture)
-					await useAPI(setStore, API.Teachers.fileUpload, {
-						RequestObject: files.picture,
-						UrlArgs: { id }
-					});
-				if (files.cv) await useAPI(setStore, API.Teachers.fileUpload, { RequestObject: files.cv, UrlArgs: { id } });
-				setActionPressed(ActionEnum.ADD);
-			});
-		};
+			const res = await useAPI(setStore, API.Teachers.post, { RequestObject: data });
+			if (!res.data) return;
+			const id = res.data.insertId as number;
+			const files = {
+				picture: await fileToBlob(formData.get("picture") as File),
+				cv: await fileToBlob(formData.get("cv") as File)
+			};
+			if (files.picture)
+				await useAPI(setStore, API.Teachers.fileUpload, {
+					RequestObject: files.picture,
+					UrlArgs: { id }
+				});
+			if (files.cv) await useAPI(setStore, API.Teachers.fileUpload, { RequestObject: files.cv, UrlArgs: { id } });
+			setActionPressed(ActionEnum.ADD);
+		});
 		return {
 			inputs: Omit(TeachersInputs(class_types, locations, instruments), "id"),
 			onMount: () => formListener(submit, true, PREFIX),
@@ -249,7 +248,7 @@ export default function TeachersTable() {
 
 		let pictureRemoved = false;
 		let cvRemoved = false;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -276,36 +275,35 @@ export default function TeachersTable() {
 					})
 					.filter(Boolean) as number[]
 			};
-			useAPI(setStore, API.Teachers.update, { RequestObject: data }).then(async res => {
-				if (!res.data && !res.message) return;
-				const file = {
-					picture: await fileToBlob(formData.get("picture") as File),
-					cv: await fileToBlob(formData.get("cv") as File)
-				};
-				if (pictureRemoved) {
-					await useAPI(setStore, API.Teachers.fileDelete, {
-						RequestObject: {
-							id: teacher.id,
-							type: "picture"
-						}
-					});
-				}
-				if (cvRemoved) {
-					await useAPI(setStore, API.Teachers.fileDelete, { RequestObject: { id: teacher.id, type: "cv" } });
-				}
-				if (file.picture)
-					await useAPI(setStore, API.Teachers.fileUpload, {
-						RequestObject: file.picture,
-						UrlArgs: { id: teacher.id }
-					});
-				if (file.cv)
-					await useAPI(setStore, API.Teachers.fileUpload, {
-						RequestObject: file.cv,
-						UrlArgs: { id: teacher.id }
-					});
-				setActionPressed(ActionEnum.EDIT);
-			});
-		};
+			const res = await useAPI(setStore, API.Teachers.update, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			const file = {
+				picture: await fileToBlob(formData.get("picture") as File),
+				cv: await fileToBlob(formData.get("cv") as File)
+			};
+			if (pictureRemoved) {
+				await useAPI(setStore, API.Teachers.fileDelete, {
+					RequestObject: {
+						id: teacher.id,
+						type: "picture"
+					}
+				});
+			}
+			if (cvRemoved) {
+				await useAPI(setStore, API.Teachers.fileDelete, { RequestObject: { id: teacher.id, type: "cv" } });
+			}
+			if (file.picture)
+				await useAPI(setStore, API.Teachers.fileUpload, {
+					RequestObject: file.picture,
+					UrlArgs: { id: teacher.id }
+				});
+			if (file.cv)
+				await useAPI(setStore, API.Teachers.fileUpload, {
+					RequestObject: file.cv,
+					UrlArgs: { id: teacher.id }
+				});
+			setActionPressed(ActionEnum.EDIT);
+		});
 		const emptyFileRemove = (e: CustomEvent) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -345,14 +343,14 @@ export default function TeachersTable() {
 	const onDelete = createMemo(() => {
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length < 1) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(i => (teachers.find(p => p.id === i) as Teachers).id);
-			useAPI(setStore, API.Teachers.delete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.Teachers.delete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),
@@ -364,17 +362,18 @@ export default function TeachersTable() {
 	});
 
 	const onAddInstrument = createMemo(() => {
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Instruments, "id"> = {
-				name: formData.get("name") as string
+				name: formData.get("name") as string,
+				type: (formData.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur"
 			};
-			useAPI(setStore, API.Instruments.post, { RequestObject: data }).then(async res => {
-				setActionPressed(ActionEnum.ADD);
-			});
-		};
+			const res = await useAPI(setStore, API.Instruments.post, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.ADD);
+		});
 		return {
 			inputs: {
 				name: {
@@ -382,6 +381,13 @@ export default function TeachersTable() {
 					name: "name",
 					label: "Όργανο",
 					iconClasses: "fas fa-chalkboard-teacher"
+				} as InputProps,
+				type: {
+					type: "select",
+					name: "type",
+					label: "Τύπος Μαθήματος",
+					iconClasses: "fas fa-chalkboard-teacher",
+					selectList: ["Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"]
 				} as InputProps
 			},
 			onMount: () => formListener(submit, true, "instrument"),
@@ -394,16 +400,16 @@ export default function TeachersTable() {
 	const onDeleteInstrument = createMemo(() => {
 		const classtypes = store[API.Instruments.get];
 		if (!classtypes) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data = [classtypes[parseInt(formData.get("name") as string)]?.id || -1];
 
-			useAPI(setStore, API.Instruments.delete, { RequestObject: data }).then(async res => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.Instruments.delete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {
 				name: {

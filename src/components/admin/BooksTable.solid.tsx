@@ -7,7 +7,7 @@ import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { Omit, type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener } from "./table/formSubmit";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
 const PREFIX = "books";
@@ -105,7 +105,7 @@ export default function BooksTable() {
 	const onAdd = createMemo(() => {
 		const wholesalers = store["Wholesalers.get"];
 		if (!wholesalers) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -118,10 +118,10 @@ export default function BooksTable() {
 				sold: parseInt(formData.get("sold") as string)
 			};
 			if (data.wholesale_price >= data.price) return;
-			useAPI(setStore, API.Books.post, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.ADD);
-			});
-		};
+			const res = await useAPI(setStore, API.Books.post, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.ADD);
+		});
 		return {
 			inputs: Omit(BooksInputs(wholesalers), "id"),
 			onMount: () => formListener(submit, true, PREFIX),
@@ -137,7 +137,7 @@ export default function BooksTable() {
 		if (!wholesalers || !books) return undefined;
 		if (selectedItems.length !== 1) return undefined;
 		const book = books.find(b => b.id === selectedItems[0]) as Books;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -145,10 +145,10 @@ export default function BooksTable() {
 				id: book.id,
 				quantity: parseInt(formData.get("quantity") as string)
 			};
-			useAPI(setStore, API.Books.updateQuantity, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.EDIT);
-			});
-		};
+			const res = await useAPI(setStore, API.Books.updateQuantity, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.EDIT);
+		});
 		const filledInputs = Fill(BooksInputs(wholesalers), book);
 		filledInputs.wholesaler_id.value = (filledInputs.wholesaler_id.value as number) - 1;
 		return {
@@ -165,14 +165,14 @@ export default function BooksTable() {
 		const wholesalers = store[API.Wholesalers.get];
 		if (!wholesalers || !books) return undefined;
 		if (selectedItems.length < 1) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(i => books[i].id);
-			useAPI(setStore, API.Books.delete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.Books.delete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),
@@ -184,17 +184,17 @@ export default function BooksTable() {
 	});
 
 	const onAddWholesaler = createMemo(() => {
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Wholesalers, "id"> = {
 				name: formData.get("name") as string
 			};
-			useAPI(setStore, API.Wholesalers.post, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.ADD);
-			});
-		};
+			const res = await useAPI(setStore, API.Wholesalers.post, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.ADD);
+		});
 		return {
 			inputs: {
 				name: { name: "name", label: "Όνομα", type: "text", iconClasses: "fa-solid fa-feather" } as InputProps
@@ -209,16 +209,15 @@ export default function BooksTable() {
 	const onDeleteWholesaler = createMemo(() => {
 		const wholesalers = store[API.Wholesalers.get];
 		if (!wholesalers) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data = [wholesalers[parseInt(formData.get("name") as string)]?.id || -1];
-			useAPI(setStore, API.Wholesalers.delete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
-		console.log(wholesalers.map(w => w.name));
+			const res = await useAPI(setStore, API.Wholesalers.delete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {
 				name: {

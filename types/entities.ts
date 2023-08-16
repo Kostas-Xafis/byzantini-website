@@ -113,7 +113,8 @@ export type Locations = z.infer<typeof z_Locations>;
 
 export const z_Instruments = z.object({
 	id: z.number().int().nonnegative(),
-	name: z.string().nonempty()
+	name: z.string().nonempty(),
+	type: z.union([z.literal("par"), z.literal("eur")])
 });
 export type Instruments = z.infer<typeof z_Instruments>;
 

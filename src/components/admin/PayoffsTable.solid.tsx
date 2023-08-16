@@ -7,7 +7,7 @@ import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener } from "./table/formSubmit";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
 const PREFIX = "payoffs";
@@ -98,7 +98,7 @@ export default function PayoffsTable() {
 		const payoffs = store[API.Payoffs.get];
 		if (!payoffs || !wholesalers || selectedItems.length !== 1) return undefined;
 		const payoff = payoffs.find(p => p.id === selectedItems[0]) as SchoolPayoffs;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
@@ -106,11 +106,11 @@ export default function PayoffsTable() {
 				id: payoff.id,
 				amount: Number(formData.get("amount") as string)
 			};
-			if (data.amount > payoff.amount || data.amount === 0) return setActionPressed(ActionEnum.EDIT);
-			useAPI(setStore, API.Payoffs.updateAmount, { RequestObject: data }).then(res => {
-				setActionPressed(ActionEnum.EDIT);
-			});
-		};
+			if (data.amount > payoff.amount || data.amount === 0) throw Error("Invalid amount");
+			const res = await useAPI(setStore, API.Payoffs.updateAmount, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.EDIT);
+		});
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 		return {
 			inputs: Pick(filledInputs, "amount"),
@@ -125,14 +125,14 @@ export default function PayoffsTable() {
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
 		if (!payoffs || !wholesalers || selectedItems.length < 1) return undefined;
-		const submit = function (e: Event) {
+		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(i => (payoffs.find(p => p.id === i) as SchoolPayoffs).id);
-			useAPI(setStore, API.Payoffs.complete, { RequestObject: data }).then(() => {
-				setActionPressed(ActionEnum.DELETE);
-			});
-		};
+			const res = await useAPI(setStore, API.Payoffs.complete, { RequestObject: data });
+			if (!res.data && !res.message) return;
+			setActionPressed(ActionEnum.DELETE);
+		});
 		return {
 			inputs: {},
 			onMount: () => formListener(submit, true, PREFIX),

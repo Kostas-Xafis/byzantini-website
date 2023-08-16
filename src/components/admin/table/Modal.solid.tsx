@@ -24,10 +24,11 @@ export default function Modal(props: Props) {
 		setSubmitText(props.submitText);
 		setHeaderText(props.headerText);
 	});
+
 	return (
-		<dialog
+		<div
 			class={
-				"fixed z-[10000] inset-0 w-full h-full bg-[rgb(190_190_190_/_0.15)] backdrop-blur-sm grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)]" +
+				"modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.2)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)]" +
 				(!open() ? " hidden" : "")
 			}
 		>
@@ -42,7 +43,7 @@ export default function Modal(props: Props) {
 						)}
 					</For>
 					<button
-						class="col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-400 focus:bg-green-400 group/form-[:is(.animate-shake)]:bg-red-500"
+						class="col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
 						type="submit"
 					>
 						{submitText()}
@@ -50,6 +51,6 @@ export default function Modal(props: Props) {
 				</form>
 				<CloseButton classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl" onClick={() => close()}></CloseButton>
 			</div>
-		</dialog>
+		</div>
 	);
 }
