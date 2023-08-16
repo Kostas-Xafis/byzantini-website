@@ -14,7 +14,7 @@ serverRoutes.post.func = async function (req) {
         const body = await req.json();
         const args = Object.values(body);
         await T.executeQuery(
-            `INSERT INTO registrations (last_name, first_name, am, father_name, birth_year, road, number, tk, region, telephone, cellphone, email, registration_year, class_year, teacher_id, class_id, date) VALUES (${questionMarks(args.length)})`,
+            `INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_year, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
             args
         );
         return "Registrated successfully";

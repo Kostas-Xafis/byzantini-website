@@ -186,25 +186,25 @@ INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 2);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 4);
 
 CREATE TABLE `registrations`(
-    `id` int NOT NULL,
-    `lastName` varchar(80) NOT NULL,
-    `firstName` varchar(40) NOT NULL,
     `am` varchar(4) NOT NULL,
+    `last_name` varchar(80) NOT NULL,
+    `first_name` varchar(40) NOT NULL,
     `fathers_name` varchar(40) NOT NULL,
     `birth_year` int NOT NULL,
     `road` varchar(80) NOT NULL,
     `number` int NOT NULL,
     `tk` int NOT NULL,
     `region` varchar(80) NOT NULL,
-    `telephone` varchar(20) NOT NULL,
+    `telephone` varchar(20) DEFAULT "-",
     `cellphone` varchar(20) NOT NULL,
     `email` varchar(40) NOT NULL,
     `registration_year` varchar(40) NOT NULL,
     `class_year` varchar(40) NOT NULL,
     `teacher_id` INT NOT NULL,
     `class_id` int NOT NULL,
+    `instrument_id` int DEFAULT 0,
     `date` bigint NOT NULL,
-    PRIMARY KEY (`cellphone`, `am`, `class_id`)
+    PRIMARY KEY (`am`, `instrument_id`, `first_name`, `cellphone`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 0 - simple admin - 1 - super admin - 2 - root admin;
@@ -255,4 +255,10 @@ INSERT INTO instruments (name, type) VALUES ('Παραδοσιακά μεμβρ�
 INSERT INTO instruments (name, type) VALUES ('Κρητική λύρα', "par");
 INSERT INTO instruments (name, type) VALUES ('Ποντιακή λύρα', "par");
 INSERT INTO instruments (name, type) VALUES ('Λύρα Ανατολικού Αιγαίου', "par");
-INSERT INTO instruments (name, type) VALUES ('Λύρα Θράκης και Μακεδονίας, "par"');
+INSERT INTO instruments (name, type) VALUES ('Λύρα Θράκης και Μακεδονίας', "par");
+INSERT INTO instruments (name, type) VALUES ('Άσκαυλος', "par");
+INSERT INTO instruments (name, type) VALUES ('Ζουρνάς', "par");
+INSERT INTO instruments (name, type) VALUES ('Μπουζούκι', "par");
+INSERT INTO instruments (name, type) VALUES ('Λαϊκή κιθάρα', "par");
+INSERT INTO instruments (name, type) VALUES ('Ακκορντεόν', "par");
+

@@ -126,11 +126,10 @@ export type TeacherInstruments = z.infer<typeof z_TeacherInstruments>;
 
 
 export const z_Registrations = z.object({
-	id: z.number().int().nonnegative(),
 	last_name: z.string(),
 	first_name: z.string(),
 	am: z.string(),
-	father_name: z.string(),
+	fathers_name: z.string(),
 	birth_year: z.number(),
 	road: z.string(),
 	number: z.number().int().nonnegative(),
@@ -143,6 +142,7 @@ export const z_Registrations = z.object({
 	class_year: z.string(),
 	teacher_id: z.number().int().nonnegative(),
 	class_id: z.number().int().nonnegative(),
+	instrument_id: z.number().int().nonnegative(),
 	date: z.number().int().nonnegative()
 });
 export type Registrations = z.infer<typeof z_Registrations>;

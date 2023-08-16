@@ -11,6 +11,8 @@ import { authentication } from "../middleware/authentication";
 import { requestValidation } from "../middleware/requestValidation";
 import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
+import { RegistrationsRoutes } from "./registrations.client";
+import { RegistrationsServerRoutes } from "./registrations.server";
 
 const routes = (function () {
 	const allRoutes = (function (...routesArr) {
@@ -24,7 +26,8 @@ const routes = (function () {
 		TeachersServerRoutes,
 		LocationsServerRoutes,
 		ClassTypeServerRoutes,
-		SysUsersServerRoutes
+		SysUsersServerRoutes,
+		RegistrationsServerRoutes
 	).flat() as (EndpointRoute<any, AnyZodObject, any> | EndpointRoute<any, any, any>)[];
 
 	allRoutes.forEach(route => {

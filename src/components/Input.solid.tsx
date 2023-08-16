@@ -60,6 +60,7 @@ export type Props = {
 	blurDisabled?: boolean;
 	selectList?: string[];
 	multiselectList?: { value: number; label: string; selected: boolean }[];
+	multiselectOnce?: boolean;
 	fileExtension?: string;
 	minmax?: [number, number];
 	tooltip?: TooltipProps;
@@ -78,6 +79,7 @@ export default function Input(props: Props) {
 		blurDisabled = true,
 		selectList,
 		multiselectList,
+		multiselectOnce,
 		fileExtension,
 		minmax,
 		tooltip
@@ -141,7 +143,7 @@ export default function Input(props: Props) {
 					name={name}
 					placeholder={placeholder || ""}
 					value={value === 0 ? "0" : value || ""}
-					disabled={disabled || false}
+					readOnly={disabled || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
@@ -186,6 +188,12 @@ export default function Input(props: Props) {
 								data-value={selectItem.value}
 								class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 								onClick={(e: MouseEvent) => {
+									if (multiselectOnce) {
+										const buttons = document.querySelectorAll(`button[data-selected='true']`);
+										buttons.forEach(button => {
+											button.setAttribute("data-selected", "false");
+										});
+									}
 									const button = e.currentTarget as HTMLButtonElement;
 									button.setAttribute(
 										"data-selected",
@@ -229,7 +237,7 @@ export default function Input(props: Props) {
 					type={type}
 					name={name}
 					required={required || false}
-					disabled={disabled || false}
+					readOnly={disabled || false}
 					onchange={onFileChange}
 					accept={fileExtension || undefined}
 				/>
@@ -241,7 +249,7 @@ export default function Input(props: Props) {
 			</Show>
 			<p class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10">
 				{label}
-				{required ? <i class="absolute bg-transparent left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : ""}
+				{required ? <i class="absolute bg-transparent left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : <></>}
 			</p>
 			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 peer-[:not(:focus-within):invalid]:border-red-400"></div>
 			{tooltip ? <Tooltip {...tooltip} /> : <></>}

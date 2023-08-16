@@ -12,8 +12,8 @@ export default function Tooltip(props: TooltipProps) {
 	return props.position === "left" ? (
 		<ul
 			class={
-				"absolute w-[25ch] p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md left-[calc(-25ch_-_2rem)] top-8 translate-y-[-50%] grid auto-rows-max gap-y-2 z-[5000]" +
-				" opacity-[0.0001] transition-opacity duration-300 group-focus-within/tooltip:opacity-100"
+				"absolute w-[25ch] p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md left-[calc(-25ch_-_2rem)] top-8 translate-y-[-50%] grid auto-rows-max gap-y-2" +
+				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}
 		>
 			<li class="justify-self-center">
@@ -36,8 +36,8 @@ export default function Tooltip(props: TooltipProps) {
 	) : props.position === "right" ? (
 		<ul
 			class={
-				"absolute w-[25ch] p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md right-[calc(-25ch_-_2rem)] top-8 translate-y-[-50%] grid auto-rows-max gap-y-2 z-[5000]" +
-				" opacity-[0.0001] transition-opacity duration-300 group-focus-within/tooltip:opacity-100"
+				"absolute w-[25ch] p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md right-[calc(-25ch_-_2rem)] top-8 translate-y-[-50%] grid auto-rows-max gap-y-2" +
+				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}
 		>
 			<li class="justify-self-center">
@@ -60,8 +60,8 @@ export default function Tooltip(props: TooltipProps) {
 	) : props.position === "top" ? (
 		<ul
 			class={
-				"absolute h-max p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md -top-8 translate-y-[-100%] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4 z-[5000]" +
-				" opacity-[0.0001] transition-opacity duration-300 group-focus-within/tooltip:opacity-100"
+				"absolute h-max p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md -top-8 translate-y-[-100%] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4 " +
+				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}
 		>
 			<li class="justify-self-center" style={{ "grid-column": "1 / 3" }}>
@@ -84,8 +84,8 @@ export default function Tooltip(props: TooltipProps) {
 	) : (
 		<ul
 			class={
-				"absolute h-max p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md top-[calc(100%_+_2rem)] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4 z-[5000]" +
-				" opacity-[0.0001] transition-opacity duration-300 group-focus-within/tooltip:opacity-100"
+				"absolute h-max p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md top-[calc(100%_+_2rem)] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4" +
+				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}
 		>
 			<li class="justify-self-center" style={{ "grid-column": "1 / 3" }}>

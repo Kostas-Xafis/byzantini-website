@@ -33,7 +33,6 @@ const RequestTemplate = async function ({ params, request }: APIContext) {
 	const slug = params.slug?.split("/") ?? [];
 	const route = matchRoute(slug, request.method.toUpperCase() as HTTPMethods);
 	if (!route) return { status: 404, body: "Not Found" };
-	console.log("API Route: ", route.path);
 	return await ResponseWrap(request, route, slug);
 };
 

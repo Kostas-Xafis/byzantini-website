@@ -2,9 +2,12 @@ import { createStore } from "solid-js/store";
 import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
-import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
-const genericInputs: Record<keyof Omit<Registrations, "id" | "date" | "class_id" | "class_year" | "teacher_id">, InputProps> = {
+const genericInputs: Record<
+	keyof Omit<Registrations, "id" | "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id">,
+	InputProps
+> = {
 	am: {
 		label: "Αριθμός Μητρώου",
 		name: "am",
@@ -48,9 +51,9 @@ const genericInputs: Record<keyof Omit<Registrations, "id" | "date" | "class_id"
 			position: "bottom"
 		}
 	},
-	father_name: {
+	fathers_name: {
 		label: "Πατρώνυμο",
-		name: "father_name",
+		name: "fathers_name",
 		type: "text",
 		required: true,
 		iconClasses: "fa-solid fa-user",
@@ -215,7 +218,8 @@ const instrumentsInput = ({
 			iconClasses: "fa-solid fa-guitar",
 			type: "multiselect",
 			required: true,
-			multiselectList: multiselectInstruments
+			multiselectList: multiselectInstruments,
+			multiselectOnce: true
 		}
 	};
 };
@@ -310,6 +314,38 @@ export function RegistrationForm() {
 		}
 	};
 
+	const onSubmit = async function (e: Event) {
+		e.preventDefault();
+		const form = e.target as HTMLFormElement;
+		const formData = new FormData(form);
+		const data: Registrations = {
+			last_name: formData.get("last_name") as string,
+			first_name: formData.get("first_name") as string,
+			am: formData.get("am") as string,
+			fathers_name: formData.get("fathers_name") as string,
+			telephone: (formData.get("telephone") as string) || "-",
+			cellphone: formData.get("cellphone") as string,
+			email: formData.get("email") as string,
+			birth_year: Number(formData.get("birth_year") as string),
+			road: formData.get("road") as string,
+			number: Number(formData.get("number") as string),
+			tk: Number(formData.get("tk") as string),
+			region: formData.get("region") as string,
+			registration_year: formData.get("registration_year") as string,
+			class_year: formData.get("class_year") as string,
+			teacher_id: Number(formData.get("teacher_id") as string),
+			class_id: btns.findIndex(btn => btn[1] === formSelected()) + 1,
+			instrument_id:
+				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][selected='true']`)].map(btn => {
+					const id = Number(btn.dataset.value) || null;
+					return id;
+				})[0] || 0,
+			date: Date.now()
+		};
+		const res = await useAPI(setStore, API.Registrations.post, { RequestObject: data });
+		// TODO: Show success/error message
+	};
+
 	return (
 		<>
 			<Show
@@ -366,6 +402,7 @@ export function RegistrationForm() {
 					<form
 						id="registrationForm"
 						class="group/form px-20 py-10 grid grid-cols-2 auto-rows-auto gap-20 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
+						onSubmit={onSubmit}
 					>
 						<h1 class="col-span-full text-5xl text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 							{heading[formSelected()]}
