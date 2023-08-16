@@ -1,5 +1,6 @@
 -- DROP TABLES;
 
+DROP TABLE IF EXISTS `total_registrations`;
 DROP TABLE IF EXISTS `registrations`;
 DROP TABLE IF EXISTS `books`;
 DROP TABLE IF EXISTS `wholesalers`;
@@ -185,11 +186,19 @@ INSERT INTO teacher_locations (teacher_id, location_id) VALUES (3, 3);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 2);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 4);
 
+CREATE TABLE `total_registrations` (
+    `amount` int DEFAULT 0,
+    `year` int NOT NULL
+);
+
+INSERT INTO total_registrations (amount, year) VALUES (0, 2023);
+
 CREATE TABLE `registrations`(
+    `id` int DEFAULT 0,
     `am` varchar(4) NOT NULL,
     `last_name` varchar(80) NOT NULL,
-    `first_name` varchar(40) NOT NULL,
-    `fathers_name` varchar(40) NOT NULL,
+    `first_name` varchar(80) NOT NULL,
+    `fathers_name` varchar(80) NOT NULL,
     `birth_year` int NOT NULL,
     `road` varchar(80) NOT NULL,
     `number` int NOT NULL,
@@ -197,13 +206,15 @@ CREATE TABLE `registrations`(
     `region` varchar(80) NOT NULL,
     `telephone` varchar(20) DEFAULT "-",
     `cellphone` varchar(20) NOT NULL,
-    `email` varchar(40) NOT NULL,
-    `registration_year` varchar(40) NOT NULL,
+    `email` varchar(80) NOT NULL,
+    `registration_year` varchar(12) NOT NULL,
     `class_year` varchar(40) NOT NULL,
-    `teacher_id` INT NOT NULL,
+    `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
     `instrument_id` int DEFAULT 0,
     `date` bigint NOT NULL,
+    `payment_amount` int DEFAULT 0,
+    `payment_date` bigint DEFAULT 0,
     PRIMARY KEY (`am`, `instrument_id`, `first_name`, `cellphone`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -262,3 +273,19 @@ INSERT INTO instruments (name, type) VALUES ('Μπουζούκι', "par");
 INSERT INTO instruments (name, type) VALUES ('Λαϊκή κιθάρα', "par");
 INSERT INTO instruments (name, type) VALUES ('Ακκορντεόν', "par");
 
+
+INSERT INTO teacher_instruments SET instrument_id = 1, teacher_id = 1;
+INSERT INTO teacher_instruments SET instrument_id = 2, teacher_id = 1;
+INSERT INTO teacher_instruments SET instrument_id = 3, teacher_id = 1;
+INSERT INTO teacher_instruments SET instrument_id = 6, teacher_id = 2;
+INSERT INTO teacher_instruments SET instrument_id = 7, teacher_id = 2;
+INSERT INTO teacher_instruments SET instrument_id = 8, teacher_id = 2;
+INSERT INTO teacher_instruments SET instrument_id = 9, teacher_id = 2;
+INSERT INTO teacher_instruments SET instrument_id = 12, teacher_id = 3;
+INSERT INTO teacher_instruments SET instrument_id = 13, teacher_id = 3;
+INSERT INTO teacher_instruments SET instrument_id = 14, teacher_id = 3;
+INSERT INTO teacher_instruments SET instrument_id = 15, teacher_id = 3;
+INSERT INTO teacher_instruments SET instrument_id = 16, teacher_id = 4;
+INSERT INTO teacher_instruments SET instrument_id = 17, teacher_id = 4;
+INSERT INTO teacher_instruments SET instrument_id = 18, teacher_id = 4;
+INSERT INTO teacher_instruments SET instrument_id = 19, teacher_id = 4;

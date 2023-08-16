@@ -3,9 +3,13 @@ import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAP
 import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import { CloseButton } from "../admin/table/CloseButton.solid";
 
 const genericInputs: Record<
-	keyof Omit<Registrations, "id" | "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id">,
+	keyof Omit<
+		Registrations,
+		"id" | "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id" | "payment_date" | "payment_amount"
+	>,
 	InputProps
 > = {
 	am: {
@@ -318,7 +322,7 @@ export function RegistrationForm() {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
-		const data: Registrations = {
+		const data: Omit<Registrations, "id"> = {
 			last_name: formData.get("last_name") as string,
 			first_name: formData.get("first_name") as string,
 			am: formData.get("am") as string,
@@ -332,11 +336,11 @@ export function RegistrationForm() {
 			tk: Number(formData.get("tk") as string),
 			region: formData.get("region") as string,
 			registration_year: formData.get("registration_year") as string,
-			class_year: formData.get("class_year") as string,
-			teacher_id: Number(formData.get("teacher_id") as string),
-			class_id: btns.findIndex(btn => btn[1] === formSelected()) + 1,
+			class_year: (document.querySelector("select[name='class_year']") as HTMLSelectElement).selectedOptions[0].innerText,
+			teacher_id: Number(formData.get("teacher_id") as string) + 1,
+			class_id: btns.findIndex(btn => btn[1] === formSelected()),
 			instrument_id:
-				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][selected='true']`)].map(btn => {
+				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][data-selected='true']`)].map(btn => {
 					const id = Number(btn.dataset.value) || null;
 					return id;
 				})[0] || 0,
@@ -344,6 +348,11 @@ export function RegistrationForm() {
 		};
 		const res = await useAPI(setStore, API.Registrations.post, { RequestObject: data });
 		// TODO: Show success/error message
+		if (res.message) {
+			const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
+			messageDialog.classList.remove("hidden");
+			messageDialog.classList.add("grid");
+		}
 	};
 
 	return (
@@ -375,58 +384,80 @@ export function RegistrationForm() {
 					</div>
 				}
 			>
-				<div
-					id="registrationContainer"
-					class="w-full h-full overflow-y-auto pb-20 grid grid-rows-[max-content_max-content_1fr] grid-cols-1 gap-y-4 place-items-center font-dicact"
-				>
-					<div id="registrationSelect" class="py-6 grid grid-cols-3 gap-x-16 place-items-center">
-						{btns.map(([str, type]) => (
-							<div
-								class={
-									"group self-center grid grid-cols-1 border-solid border-2 border-red-800 rounded-md shadow-md shadow-gray-400 transition-colors ease-in-out " +
-									(type === formSelected() ? "bg-red-800" : "hover:bg-red-800")
-								}
-							>
-								<button
-									class={
-										"p-6 text-2xl font-didact font-medium bg-transparent group-hover:text-white transition-colors ease-in-out " +
-										(type === formSelected() ? "text-white" : "group-hover:text-white")
-									}
-									onClick={onSelectClick(type)}
-								>
-									{str}
-								</button>
-							</div>
-						))}
-					</div>
-					<form
-						id="registrationForm"
-						class="group/form px-20 py-10 grid grid-cols-2 auto-rows-auto gap-20 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
-						onSubmit={onSubmit}
+				<>
+					<div
+						id="registrationContainer"
+						class="w-full h-full overflow-y-auto pb-20 grid grid-rows-[max-content_max-content_1fr] grid-cols-1 gap-y-4 place-items-center font-dicact"
 					>
-						<h1 class="col-span-full text-5xl text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
-							{heading[formSelected()]}
-						</h1>
-						{Object.values(genericInputs).map(input => (
-							<Input {...input} />
-						))}
-						{formSelected() === MusicType.Byzantine
-							? Object.values(byzantineInputs(TeachersByType())).map(input => <Input {...input} />)
-							: formSelected() === MusicType.Traditional
-							? Object.values(traditionalInputs(TeachersByType())).map(input => <Input {...input} />)
-							: Object.values(europeanInputs(TeachersByType())).map(input => <Input {...input} />)}
-						{formSelected() === MusicType.Traditional || formSelected() === MusicType.European
-							? // @ts-ignore
-							  Object.values(instrumentsInput(InstrumentsByTeacher())).map(input => <Input {...input} />)
-							: ""}
-						<button
-							class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
-							type="submit"
+						<div id="registrationSelect" class="py-6 grid grid-cols-3 gap-x-16 place-items-center">
+							{btns.map(([str, type]) => (
+								<div
+									class={
+										"group self-center grid grid-cols-1 border-solid border-2 border-red-800 rounded-md shadow-md shadow-gray-400 transition-colors ease-in-out " +
+										(type === formSelected() ? "bg-red-800" : "hover:bg-red-800")
+									}
+								>
+									<button
+										class={
+											"p-6 text-2xl font-didact font-medium bg-transparent group-hover:text-white transition-colors ease-in-out " +
+											(type === formSelected() ? "text-white" : "group-hover:text-white")
+										}
+										onClick={onSelectClick(type)}
+									>
+										{str}
+									</button>
+								</div>
+							))}
+						</div>
+						<form
+							id="registrationForm"
+							class="group/form px-20 py-10 grid grid-cols-2 auto-rows-auto gap-20 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
+							onSubmit={onSubmit}
 						>
-							Εγγραφή
-						</button>
-					</form>
-				</div>
+							<h1 class="col-span-full text-5xl text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+								{heading[formSelected()]}
+							</h1>
+							{Object.values(genericInputs).map(input => (
+								<Input {...input} />
+							))}
+							{formSelected() === MusicType.Byzantine
+								? Object.values(byzantineInputs(TeachersByType())).map(input => <Input {...input} />)
+								: formSelected() === MusicType.Traditional
+								? Object.values(traditionalInputs(TeachersByType())).map(input => <Input {...input} />)
+								: Object.values(europeanInputs(TeachersByType())).map(input => <Input {...input} />)}
+							{formSelected() === MusicType.Traditional || formSelected() === MusicType.European
+								? // @ts-ignore
+								  Object.values(instrumentsInput(InstrumentsByTeacher())).map(input => <Input {...input} />)
+								: ""}
+							<button
+								class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
+								type="submit"
+							>
+								Εγγραφή
+							</button>
+						</form>
+					</div>
+					<div
+						id="submitMessage"
+						class="grid opacity-[0.0001] absolute w-full h-full grid-rows-[100%] place-items-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
+					>
+						<div
+							id="messageBox"
+							class="relative p-16 w-[500px] h-max rounded-xl shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100"
+						>
+							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">Επιτυχής Εγγραφή</p>
+							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">Μήνυμα Επιτυχής εγγραφής</p>
+							<CloseButton
+								classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl"
+								onClick={() => {
+									const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
+									messageDialog.classList.add("hidden");
+									messageDialog.classList.remove("grid");
+								}}
+							></CloseButton>
+						</div>
+					</div>
+				</>
 			</Show>
 			<style>
 				{`
@@ -457,7 +488,8 @@ export function RegistrationForm() {
 		opacity: 0.0001;
         animation: fadeIn 0.3s ease-in-out forwards;
     }
-	#registrationContainer:is(:not(.remove)) {
+	#registrationContainer:is(:not(.remove)),
+	#submitMessage:is(:not(.hidden)) {
 		opacity: 0.0001;
         animation: fadeIn 0.7s ease-in-out 0.3s forwards;
     }

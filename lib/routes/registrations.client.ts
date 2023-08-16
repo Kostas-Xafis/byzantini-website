@@ -9,12 +9,14 @@ const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
     func: async req => null as any
 };
 
-const post: DefaultEndpointRoute<"POST:/registrations", typeof z_Registrations> = {
+
+const postReq = z_Registrations.omit({ id: true, "payment_amount": true, payment_date: true });
+const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
     authentication: false,
     method: "POST",
     path: "/registrations",
     hasUrlParams: false,
-    validation: () => z_Registrations,
+    validation: () => postReq,
     func: async req => null as any
 };
 
@@ -46,7 +48,7 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         method: "POST",
         path: "/registrations",
         endpoint: "Registrations.post",
-        validation: z_Registrations
+        validation: postReq
     },
     "Registrations.delete": {
         method: "DELETE",

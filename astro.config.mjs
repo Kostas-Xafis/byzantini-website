@@ -28,10 +28,6 @@ export default defineConfig({
 			watch: {
 				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**"]
 			}
-		},
-		build: {
-			modulePreload: { polyfill: true },
-			minify: false
 		}
 	}
 });

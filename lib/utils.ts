@@ -31,11 +31,11 @@ export const generateLink = (size = 16) => {
 // FOR FUTURE ME: the return value of async connection.execute is always an array of arrays of objects (i.e. Thing[][])
 export const executeQuery = async <T = { insertId: number }>(query: string, args: any[] = [], trans?: Tx) => {
 	const conn = trans ?? await CreateDbConnection();
-	const { rows, insertId } = await conn.execute(query, args, { as: "object" });
-	return (insertId === '0' ? rows : { insertId: Number(insertId) }) as unknown as Promise<T extends { insertId: number } ? { insertId: number } : T[]>;
+	const res = await conn.execute(query, args, { as: "object" });
+	return (res.insertId === '0' ? res.rows : { insertId: Number(res.insertId) }) as unknown as Promise<T extends { insertId: number } ? { insertId: number } : T[]>;
 };
 
-export type Transaction = Tx & { executeQuery: <T = { insertId: number }>(query: string, args: any[]) => ReturnType<typeof executeQuery<T>> };
+export type Transaction = Tx & { executeQuery: <T = { insertId: number }>(query: string, args?: any[]) => ReturnType<typeof executeQuery<T>> };
 
 export const execTryCatch = async <T>(
 	func: (() => Promise<T>) | ((t: Transaction) => Promise<T>)
@@ -49,7 +49,7 @@ export const execTryCatch = async <T>(
 		if (hasTransaction) {
 			let conn = await CreateDbConnection();
 			response = await conn.transaction(async (tx) => {
-				(tx as Transaction).executeQuery = (query: string, args: any[] = []) => executeQuery(query, args, tx);
+				(tx as Transaction).executeQuery = (query: string, args?: any[]) => executeQuery(query, args, tx);
 				return await func(tx as Transaction)
 			});
 		} else {
