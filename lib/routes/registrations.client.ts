@@ -1,5 +1,6 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { z_Registrations, type Registrations } from "../../types/entities";
+import { v_Registrations, type Registrations } from "../../types/entities";
+import { omit } from "valibot";
 
 const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
     authentication: true,
@@ -10,7 +11,7 @@ const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
 };
 
 
-const postReq = z_Registrations.omit({ id: true, "payment_amount": true, payment_date: true });
+const postReq = omit(v_Registrations, ["id", "payment_amount", "payment_date"]);
 const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
     authentication: false,
     method: "POST",

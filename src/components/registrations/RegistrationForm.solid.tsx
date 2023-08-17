@@ -439,7 +439,7 @@ export function RegistrationForm() {
 					</div>
 					<div
 						id="submitMessage"
-						class="grid opacity-[0.0001] absolute w-full h-full grid-rows-[100%] place-items-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
+						class="hidden opacity-[0.0001] absolute w-full h-full grid-rows-[100%] place-items-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
 					>
 						<div
 							id="messageBox"

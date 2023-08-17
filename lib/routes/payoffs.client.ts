@@ -1,5 +1,6 @@
-import { z_SchoolPayoffs, type SchoolPayoffs, type Wholesalers } from "../../types/entities";
+import { v_SchoolPayoffs, type SchoolPayoffs, type Wholesalers } from "../../types/entities";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
+import { pick } from "valibot";
 
 export type PayoffGetResponse = Pick<SchoolPayoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
 
@@ -11,7 +12,7 @@ const get: EndpointRoute<"GET:/payoffs", null, PayoffGetResponse[]> = {
 	func: async req => null as any
 };
 
-let updateAmountReq = z_SchoolPayoffs.pick({ id: true, amount: true });
+let updateAmountReq = pick(v_SchoolPayoffs, ["id", "amount"]);
 const updateAmount: EndpointRoute<"PUT:/payoffs", typeof updateAmountReq> = {
 	authentication: true,
 	method: "PUT",

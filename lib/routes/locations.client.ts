@@ -1,5 +1,6 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { z_Locations, type Locations } from "../../types/entities";
+import { v_Locations, type Locations } from "../../types/entities";
+import { omit } from "valibot";
 
 const get: EndpointRoute<"GET:/locations", null, Locations[]> = {
 	authentication: false,
@@ -9,7 +10,7 @@ const get: EndpointRoute<"GET:/locations", null, Locations[]> = {
 	func: async req => null as any
 };
 
-const postReq = z_Locations.omit({ id: true, image: true });
+const postReq = omit(v_Locations, ["id", "image"]);
 const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number }> = {
 	authentication: true,
 	method: "POST",
@@ -19,7 +20,7 @@ const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number 
 	func: async req => null as any
 };
 
-const quantityReq = z_Locations.omit({ image: true });
+const quantityReq = omit(v_Locations, ["image"]);
 const update: EndpointRoute<"PUT:/locations", typeof quantityReq> = {
 	authentication: true,
 	method: "PUT",

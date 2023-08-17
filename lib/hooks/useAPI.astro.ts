@@ -1,4 +1,5 @@
 import { API as api, APIArgs, APIEndpoints, APIRes } from "../routes/index.client";
+import { parse } from "valibot";
 
 type Endpoint = typeof APIEndpoints;
 
@@ -10,8 +11,7 @@ export const API = api;
 export const useAPI = async <T extends keyof Endpoint>(endpoint: T, req: APIArgs[T]) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
-		const result = Route.validation.safeParse(req.RequestObject);
-		if (!result.success) return { error: result.error };
+		parse(Route.validation, req.RequestObject);
 	}
 	let route = APIEndpoints[endpoint];
 	const url = URL + "/api" + (req.UrlArgs ? convertUrlFromArgs(route.path, req.UrlArgs) : route.path);

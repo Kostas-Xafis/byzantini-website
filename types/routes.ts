@@ -1,8 +1,10 @@
 import type { IsAny, OptionalBy } from "./helpers";
 import type { ArgumentParts, ExpectedArguments, ExtractURLMethod, GetURLMethod, HasUrlParams, Parts } from "./path";
-import type { AnyZodObject, z } from "zod";
+import type { Output, ObjectSchema, ObjectShape } from "valibot"
 
-type IsZodObject<T> = T extends (infer K)[] ? IsZodObject<K> : T extends AnyZodObject ? true : false;
+export type AnyObjectSchema = ObjectSchema<ObjectShape, any>;
+
+type IsValibotSchema<T> = T extends (infer K)[] ? IsValibotSchema<K> : T extends AnyObjectSchema ? true : false;
 
 export type HTTPMethods = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -20,15 +22,15 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 		? (
 			req: Req extends null
 				? Request
-				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
+				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req> },
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
 		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 		: (
 			req: Req extends null
 				? Request
-				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> }
+				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req> }
 		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
-	} & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})
+	} & (IsValibotSchema<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})
 	: {
 		// For default use case
 		authentication: boolean;
@@ -38,22 +40,18 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 		func: (
 			req: Req extends null
 				? Request
-				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyZodObject ? z.infer<Req> : Req> },
+				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req> },
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
 		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
-	} & (IsZodObject<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})) & {
+	} & (IsValibotSchema<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})) & {
 		middleware?: ((req: Request) => Promise<Response | undefined>)[];
 	};
 
 export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
 
-// Use for frontend types
-
-type A = EndpointRoute<any, AnyZodObject, any>;
-
 // Use for an type of routes, accessible in the frontend
 export type APIEndpointsBuilder<Mount extends string, Routes extends { [k: string]: EndpointRoute<any, any, any> }> = {
-	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : never]: Routes[K] extends { validation: () => AnyZodObject }
+	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : never]: Routes[K] extends { validation: () => AnyObjectSchema }
 	? {
 		method: Routes[K]["method"];
 		path: Routes[K]["path"];

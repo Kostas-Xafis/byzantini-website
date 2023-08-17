@@ -1,5 +1,4 @@
-import type { AnyZodObject } from "zod";
-import type { EndpointRoute, HTTPMethods } from "../../types/routes";
+import type { AnyObjectSchema, EndpointRoute, HTTPMethods } from "../../types/routes";
 import { AuthenticationServerRoutes } from "./authentication.server";
 import { BooksServerRoutes } from "./books.server";
 import { PaymentsServerRoutes } from "./payments.server";
@@ -27,8 +26,9 @@ const routes = (function () {
 		LocationsServerRoutes,
 		ClassTypeServerRoutes,
 		SysUsersServerRoutes,
-		RegistrationsServerRoutes
-	).flat() as (EndpointRoute<any, AnyZodObject, any> | EndpointRoute<any, any, any>)[];
+		RegistrationsServerRoutes,
+		RegistrationsRoutes
+	).flat() as (EndpointRoute<any, AnyObjectSchema, any> | EndpointRoute<any, any, any>)[];
 
 	allRoutes.forEach(route => {
 		route.middleware = [];

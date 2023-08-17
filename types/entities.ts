@@ -1,151 +1,161 @@
-import { z } from "zod";
+import {
+	object,
+	number,
+	integer,
+	minValue,
+	string,
+	minLength,
+	maxValue,
+	optional,
+	email,
+	omit,
+	literal,
+	union,
+	pick,
+	merge,
+	array,
+	type Output
+} from "valibot";
 
-export const z_Books = z.object({
-	id: z.number().int().nonnegative(),
-	title: z.string().nonempty(),
-	wholesaler_id: z.number().nonnegative(),
-	wholesale_price: z.number().int().nonnegative(),
-	price: z.number().int().nonnegative(),
-	quantity: z.number().int().nonnegative(),
-	sold: z.number().int().nonnegative()
+export const v_Books = object({
+	id: number([integer(), minValue(0)]),
+	title: string([minLength(1)]),
+	wholesaler_id: number([integer(), minValue(0)]),
+	wholesale_price: number([integer(), minValue(0)]),
+	price: number([integer(), minValue(0)]),
+	quantity: number([integer(), minValue(0)]),
+	sold: number([integer(), minValue(0)])
 });
+export type Books = Output<typeof v_Books>;
 
-export type Books = z.infer<typeof z_Books>;
-
-export const z_Payments = z.object({
-	id: z.number().int().nonnegative(),
-	student_name: z.string().nonempty(),
-	book_id: z.number().int().nonnegative(),
-	amount: z.number().int().nonnegative(),
-	date: z.number().int().nonnegative(),
-	payment_date: z.number().int().nonnegative().optional()
+export const v_Payments = object({
+	id: number([integer(), minValue(0)]),
+	student_name: string([minLength(1)]),
+	book_id: number([integer(), minValue(0)]),
+	amount: number([integer(), minValue(0)]),
+	date: number([integer(), minValue(0)]),
+	payment_date: optional(number([integer(), minValue(0)]))
 });
+export type Payments = Output<typeof v_Payments>;
 
-export type Payments = z.infer<typeof z_Payments>;
-
-export const z_SchoolPayoffs = z.object({
-	id: z.number().int().nonnegative(),
-	wholesaler_id: z.number().int().nonnegative(),
-	amount: z.number().int().nonnegative()
+export const v_SchoolPayoffs = object({
+	id: number([integer(), minValue(0)]),
+	wholesaler_id: number([integer(), minValue(0)]),
+	amount: number([integer(), minValue(0)])
 });
+export type SchoolPayoffs = Output<typeof v_SchoolPayoffs>;
 
-export type SchoolPayoffs = z.infer<typeof z_SchoolPayoffs>;
-
-export const z_Wholesalers = z.object({
-	id: z.number().int().nonnegative(),
-	name: z.string().nonempty()
+export const v_Wholesalers = object({
+	id: number([integer(), minValue(0)]),
+	name: string([minLength(1)])
 });
+export type Wholesalers = Output<typeof v_Wholesalers>;
 
-export type Wholesalers = z.infer<typeof z_Wholesalers>;
-
-export const z_SysUsers = z.object({
-	id: z.number().int().nonnegative(),
-	email: z.string().email(),
-	password: z.string().nonempty(),
-	session_id: z.string().nonempty(),
-	session_exp_date: z.bigint().nonnegative(),
-	privilege: z.number().int().nonnegative(),
-	last_reg_check_id: z.number().int().nonnegative(),
+export const v_SysUsers = object({
+	id: number([integer(), minValue(0)]),
+	email: string([email()]),
+	password: string([minLength(1)]),
+	session_id: string([minLength(1)]),
+	session_exp_date: number([integer(), minValue(0)]),
+	privilege: number([integer(), minValue(0)]),
+	last_reg_check_id: number([integer(), minValue(0)])
 });
+export type SysUsers = Output<typeof v_SysUsers>;
 
-export type SysUsers = z.infer<typeof z_SysUsers>;
-
-export const z_SysUserRegisterLink = z.object({
-	link: z.string().nonempty(),
-	exp_date: z.bigint().nonnegative(),
-	privilege: z.number().int().nonnegative()
+export const v_SysUserRegisterLink = object({
+	link: string([minLength(1)]),
+	exp_date: number([integer(), minValue(0)]),
+	privilege: number([integer(), minValue(0)])
 });
+export type SysUserRegisterLink = Output<typeof v_SysUserRegisterLink>;
 
-export type SysUserRegisterLink = z.infer<typeof z_SysUserRegisterLink>;
-
-export const z_Teachers = z.object({
-	id: z.number().int().nonnegative(),
-	fullname: z.string().nonempty(),
-	picture: z.string(), // Unique picture id
-	cv: z.string(), // Unique id for the pdf or whatever file
-	priority: z.number().int().nonnegative(),
+export const v_LoginCredentials = object({
+	email: string([email()]),
+	password: string()
 });
+export type LoginCredentials = Output<typeof v_LoginCredentials>;
 
-export type Teachers = z.infer<typeof z_Teachers>;
-
-export const z_SimpleTeacher = z_Teachers.omit({ picture: true, cv: true });
-
-export type SimpleTeacher = z.infer<typeof z_SimpleTeacher>;
-
-
-export const z_TeacherLocations = z.object({
-	teacher_id: z.number().int().nonnegative(),
-	location_id: z.number().int().nonnegative()
+export const v_Teachers = object({
+	id: number([integer(), minValue(0)]),
+	fullname: string([minLength(1)]),
+	picture: string(),
+	cv: string(),
+	priority: number([integer(), minValue(0)])
 });
+export type Teachers = Output<typeof v_Teachers>;
 
-export type TeacherLocations = z.infer<typeof z_TeacherLocations>;
+export const v_SimpleTeacher = omit(v_Teachers, ["picture", "cv"]);
+export type SimpleTeacher = Output<typeof v_SimpleTeacher>;
 
-
-export const z_TeacherClasses = z.object({
-	teacher_id: z.number().int().nonnegative(),
-	class_id: z.number().int().nonnegative()
+export const v_TeacherLocations = object({
+	teacher_id: number([integer(), minValue(0)]),
+	location_id: number([integer(), minValue(0)])
 });
+export type TeacherLocations = Output<typeof v_TeacherLocations>;
 
-export type TeacherClasses = z.infer<typeof z_TeacherClasses>;
-
-export const z_ClassType = z.object({
-	id: z.number().int().nonnegative(),
-	name: z.string().nonempty()
+export const v_TeacherClasses = object({
+	teacher_id: number([integer(), minValue(0)]),
+	class_id: number([integer(), minValue(0)])
 });
+export type TeacherClasses = Output<typeof v_TeacherClasses>;
 
-export type ClassType = z.infer<typeof z_ClassType>;
 
-export const z_Locations = z.object({
-	id: z.number().int().nonnegative(),
-	name: z.string(),
-	address: z.string(),
-	areacode: z.number().int().nonnegative(),
-	municipality: z.string(),
-	email: z.string().email(),
-	telephones: z.string(),
-	priority: z.number().int().nonnegative(),
-	image: z.string(),
-	map: z.string(),
-	link: z.string().optional()
+export const v_ClassType = object({
+	id: number([integer(), minValue(0)]),
+	name: string([minLength(1)])
 });
+export type ClassType = Output<typeof v_ClassType>;
 
-export type Locations = z.infer<typeof z_Locations>;
 
-export const z_Instruments = z.object({
-	id: z.number().int().nonnegative(),
-	name: z.string().nonempty(),
-	type: z.union([z.literal("par"), z.literal("eur")])
+export const v_Locations = object({
+	id: number([integer(), minValue(0)]),
+	name: string(),
+	address: string(),
+	areacode: number([integer(), minValue(0)]),
+	municipality: string(),
+	email: string([email()]),
+	telephones: string(),
+	priority: number([integer(), minValue(0)]),
+	image: string(),
+	map: string(),
+	link: optional(string())
 });
-export type Instruments = z.infer<typeof z_Instruments>;
+export type Locations = Output<typeof v_Locations>;
 
-export const z_TeacherInstruments = z.object({
-	teacher_id: z.number().int().nonnegative(),
-	instrument_id: z.number().int().nonnegative()
+export const v_Instruments = object({
+	id: number([integer(), minValue(0)]),
+	name: string([minLength(1)]),
+	type: union([literal("par"), literal("eur")])
 });
-export type TeacherInstruments = z.infer<typeof z_TeacherInstruments>;
+export type Instruments = Output<typeof v_Instruments>;
 
-
-export const z_Registrations = z.object({
-	id: z.number().int().nonnegative(),
-	last_name: z.string(),
-	first_name: z.string(),
-	am: z.string(),
-	fathers_name: z.string(),
-	birth_year: z.number(),
-	road: z.string(),
-	number: z.number().int().nonnegative(),
-	tk: z.number().int().nonnegative(),
-	region: z.string(),
-	telephone: z.string(),
-	cellphone: z.string(),
-	email: z.string(),
-	registration_year: z.string(),
-	class_year: z.string(),
-	teacher_id: z.number().int().nonnegative(),
-	class_id: z.number().int().nonnegative(),
-	instrument_id: z.number().int().nonnegative(),
-	date: z.number().int().nonnegative(),
-	payment_amount: z.number().int().nonnegative().optional(),
-	payment_date: z.number().int().nonnegative().optional(),
+export const v_TeacherInstruments = object({
+	teacher_id: number([integer(), minValue(0)]),
+	instrument_id: number([integer(), minValue(0)])
 });
-export type Registrations = z.infer<typeof z_Registrations>;
+export type TeacherInstruments = Output<typeof v_TeacherInstruments>;
+
+export const v_Registrations = object({
+	id: number([integer(), minValue(0)]),
+	last_name: string(),
+	first_name: string(),
+	am: string(),
+	fathers_name: string(),
+	birth_year: number([integer(), minValue(1923), maxValue(2023)]),
+	road: string(),
+	number: number([integer(), minValue(0)]),
+	tk: number([integer(), minValue(0)]),
+	region: string(),
+	telephone: string(),
+	cellphone: string(),
+	email: string([email()]),
+	registration_year: string(),
+	class_year: string(),
+	teacher_id: number([integer(), minValue(0)]),
+	class_id: number([integer(), minValue(0)]),
+	instrument_id: number([integer(), minValue(0)]),
+	date: number([integer(), minValue(0)]),
+	payment_amount: optional(number([integer(), minValue(0)])),
+	payment_date: optional(number([integer(), minValue(0)]))
+});
+export type Registrations = Output<typeof v_Registrations>;

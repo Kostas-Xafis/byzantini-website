@@ -1,10 +1,5 @@
 import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { z } from "zod";
-
-const z_LoginCredentials = z.object({
-	email: z.string().email(),
-	password: z.string()
-});
+import { v_LoginCredentials } from "../../types/entities";
 
 const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: boolean }> = {
 	authentication: true,
@@ -14,12 +9,12 @@ const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: 
 	func: async req => null as any
 };
 
-const userLogin: EndpointRoute<"POST:/auth/login", typeof z_LoginCredentials, { isValid: boolean; session_id?: string }> = {
+const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string }> = {
 	authentication: false,
 	method: "POST",
 	path: "/auth/login",
 	hasUrlParams: false,
-	validation: () => z_LoginCredentials,
+	validation: () => v_LoginCredentials,
 	func: async req => null as any
 };
 
@@ -42,7 +37,7 @@ export const APIAuthenticationEndpoints: APIEndpointsBuilder<"Authentication", t
 		method: "POST",
 		path: "/auth/login",
 		endpoint: "Authentication.userLogin",
-		validation: z_LoginCredentials
+		validation: v_LoginCredentials
 	}
 };
 

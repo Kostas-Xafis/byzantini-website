@@ -1,11 +1,10 @@
 import type { APIContext } from "astro";
-import type { EndpointRoute, HTTPMethods } from "../../../types/routes";
+import type { AnyObjectSchema, EndpointRoute, HTTPMethods } from "../../../types/routes";
 import { matchRoute } from "../../../lib/routes/index.server";
-import type { AnyZodObject } from "zod";
 
 export const prerender = false;
 
-const generateResponse = async (request: Request, route: EndpointRoute<any, any | AnyZodObject, any>, urlSlug: string[]) => {
+const generateResponse = async (request: Request, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
 	let { func, path } = route;
 	if (route.hasUrlParams === false) return await func(request, {});
 	const slugData = {} as any;
@@ -20,7 +19,7 @@ const generateResponse = async (request: Request, route: EndpointRoute<any, any 
 	return await func(request, slugData);
 };
 
-const ResponseWrap = async (request: Request, route: EndpointRoute<any, any | AnyZodObject, any>, urlSlug: string[]) => {
+const ResponseWrap = async (request: Request, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
 	for (const middleware of route.middleware ?? []) {
 		const response = await middleware(request);
 		if (response) return response;

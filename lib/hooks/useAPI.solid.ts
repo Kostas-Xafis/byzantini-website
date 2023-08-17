@@ -1,7 +1,7 @@
 import { batch, createEffect, createSignal, untrack } from "solid-js";
 import { API as api, APIArgs, APIEndpoints, APIRes } from "../routes/index.client";
 import type { SetStoreFunction } from "solid-js/store/types/index";
-
+import { parse } from "valibot";
 export type APIStore = {
 	[K in keyof typeof APIEndpoints]?: Extract<APIRes[K], { res: "data" }>["data"];
 };
@@ -16,11 +16,7 @@ const URL = "";
 export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetStoreFunction<APIStore>, endpoint: T, req: APIArgs[T]) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
-		const result = Route.validation.safeParse(req.RequestObject);
-		if (!result.success) {
-			setStore(endpoint, result.error as any);
-			throw new Error(result.error.toString());
-		}
+		parse(Route.validation, req.RequestObject);
 	}
 	const url = URL + "/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
 	const { RequestObject } = req;

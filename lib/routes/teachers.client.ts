@@ -1,6 +1,8 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { type Teachers, z_SimpleTeacher, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
-import { z } from "zod";
+import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
+import { v_SimpleTeacher } from "../../types/entities";
+import { merge, array, number, integer, object, omit } from "valibot"
+
 
 const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	authentication: false,
@@ -43,9 +45,14 @@ const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherIn
 	func: async req => null as any
 }
 
-const JoinedTeacher = z_SimpleTeacher.merge(z.object({ teacherClasses: z.array(z.number()), teacherLocations: z.array(z.number()), teacherInstruments: z.array(z.number()) }));
+const teacherJoins = object({
+	teacherClasses: array(number([integer()])),
+	teacherLocations: array(number([integer()])),
+	teacherInstruments: array(number([integer()]))
+})
 
-let postReq = JoinedTeacher.omit({ id: true });
+const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);
+let postReq = omit(JoinedTeacher, ["id"]);
 const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }> = {
 	authentication: true,
 	method: "POST",

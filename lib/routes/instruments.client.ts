@@ -1,5 +1,6 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { z_Instruments, type Instruments } from "../../types/entities";
+import { v_Instruments, type Instruments } from "../../types/entities";
+import { omit } from "valibot";
 
 const get: EndpointRoute<"GET:/instruments", null, Instruments[]> = {
 	authentication: false,
@@ -9,7 +10,7 @@ const get: EndpointRoute<"GET:/instruments", null, Instruments[]> = {
 	func: async req => null as any
 };
 
-let postReq = z_Instruments.omit({ id: true });
+let postReq = omit(v_Instruments, ["id"]);
 const post: EndpointRoute<"POST:/instruments", typeof postReq, { insertId: number }> = {
 	authentication: true,
 	method: "POST",

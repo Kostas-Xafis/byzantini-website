@@ -1,5 +1,6 @@
-import { Wholesalers, z_Wholesalers } from "../../types/entities";
+import { Wholesalers, v_Wholesalers } from "../../types/entities";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
+import { omit } from "valibot";
 
 const get: EndpointRoute<"GET:/wholesalers", null, Wholesalers[]> = {
 	authentication: true,
@@ -8,7 +9,7 @@ const get: EndpointRoute<"GET:/wholesalers", null, Wholesalers[]> = {
 	hasUrlParams: false,
 	func: async req => null as any
 };
-const postReq = z_Wholesalers.omit({ id: true });
+const postReq = omit(v_Wholesalers, ["id"]);
 const post: EndpointRoute<"POST:/wholesalers", typeof postReq> = {
 	authentication: true,
 	method: "POST",

@@ -1,12 +1,6 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import type { SysUsers } from "../../types/entities";
-import { z } from "zod";
-
-const z_LoginCredentials = z.object({
-	email: z.string().email(),
-	password: z.string()
-});
-
+import { v_LoginCredentials, type SysUsers } from "../../types/entities";
+import { string, email, object } from "valibot";
 
 const get: EndpointRoute<"GET:/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
 	authentication: true,
@@ -32,12 +26,12 @@ const del: DefaultEndpointRoute<"DELETE:/sys", number[]> = {
 	func: async req => null as any
 };
 
-const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof z_LoginCredentials, { session_id: string }> = {
+const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/[link:string]",
 	hasUrlParams: true,
-	validation: () => z_LoginCredentials,
+	validation: () => v_LoginCredentials,
 	func: async req => null as any
 };
 
@@ -91,7 +85,7 @@ export const APISysUsersEndpoints: APIEndpointsBuilder<"SysUsers", typeof SysUse
 		method: "POST",
 		path: "/sys/register/[link:string]",
 		endpoint: "SysUsers.registerSysUser",
-		validation: z_LoginCredentials
+		validation: v_LoginCredentials
 	},
 	"SysUsers.createRegisterLink": {
 		method: "POST",

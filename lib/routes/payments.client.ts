@@ -1,4 +1,5 @@
-import { z_Payments, type Payments } from "../../types/entities";
+import { v_Payments, type Payments } from "../../types/entities";
+import { omit, pick } from "valibot";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
@@ -9,7 +10,7 @@ const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
 	func: async req => null as any
 };
 
-let postReq = z_Payments.omit({ id: true, amount: true, date: true });
+let postReq = omit(v_Payments, ["id", "amount", "date"]);
 const post: EndpointRoute<"POST:/payments", typeof postReq, Payments> = {
 	authentication: true,
 	method: "POST",
@@ -19,7 +20,7 @@ const post: EndpointRoute<"POST:/payments", typeof postReq, Payments> = {
 	func: async req => null as any
 };
 
-let updatePaymentReq = z_Payments.pick({ id: true, amount: true });
+let updatePaymentReq = pick(v_Payments, ["id", "amount"]);
 const updatePayment: EndpointRoute<"PUT:/payments", typeof updatePaymentReq> = {
 	authentication: true,
 	method: "PUT",

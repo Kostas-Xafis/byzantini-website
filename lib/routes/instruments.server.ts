@@ -1,4 +1,4 @@
-import type { ClassType } from "../../types/entities";
+import type { Instruments } from "../../types/entities";
 import { InstrumentsRoutes } from "./instruments.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils";
 
@@ -6,7 +6,7 @@ import { execTryCatch, executeQuery, questionMarks } from "../utils";
 let serverRoutes = JSON.parse(JSON.stringify(InstrumentsRoutes)) as typeof InstrumentsRoutes; // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = async _req => {
-	return await execTryCatch(() => executeQuery<ClassType>("SELECT * FROM instruments ORDER BY name ASC"));
+	return await execTryCatch(() => executeQuery<Instruments>("SELECT * FROM instruments ORDER BY name ASC"));
 };
 
 serverRoutes.post.func = async req => {

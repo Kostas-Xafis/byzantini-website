@@ -1,5 +1,6 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { z_Books, type Books } from "../../types/entities";
+import { v_Books, type Books } from "../../types/entities";
+import { omit, pick } from "valibot";
 
 const get: EndpointRoute<"GET:/books", null, Books[]> = {
 	authentication: true,
@@ -8,7 +9,7 @@ const get: EndpointRoute<"GET:/books", null, Books[]> = {
 	hasUrlParams: false,
 	func: async req => null as any
 };
-const postReq = z_Books.omit({ id: true });
+const postReq = omit(v_Books, ["id"]);
 const post: EndpointRoute<"POST:/books", typeof postReq> = {
 	authentication: true,
 	method: "POST",
@@ -18,7 +19,7 @@ const post: EndpointRoute<"POST:/books", typeof postReq> = {
 	func: async req => null as any
 };
 
-const quantityReq = z_Books.pick({ id: true, quantity: true });
+const quantityReq = pick(v_Books, ["id", "quantity"]);
 const updateQuantity: EndpointRoute<"PUT:/books/updateQuantity", typeof quantityReq> = {
 	authentication: true,
 	method: "PUT",
