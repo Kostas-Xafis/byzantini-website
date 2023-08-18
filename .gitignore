@@ -28,7 +28,7 @@ test.exe
 /functions
 package-lock.json
 
-.wrangler/
+./public/*-.jpg
+./public/*-.png
 
-/public/*-.jpg
-/public/*-.png
+.wrangler/
