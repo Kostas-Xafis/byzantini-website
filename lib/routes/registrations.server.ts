@@ -20,7 +20,6 @@ serverRoutes.post.func = async function (req) {
         ]);
         if (!student) {
             const args = Object.values(body);
-            console.log(JSON.stringify(args));
             await T.executeQuery(
                 `INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_year, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
                 args
@@ -36,12 +35,21 @@ serverRoutes.post.func = async function (req) {
     });
 };
 
-serverRoutes.delete.func = async function (req) {
+serverRoutes.update.func = async function (req) {
+    return await execTryCatch(async (T: Transaction) => {
+        const body = await req.json();
+        const args = Object.values(body);
+        args.shift(); // Remove the id from the arguments
+        await T.executeQuery(`UPDATE registrations SET last_name = ?, first_name = ?, am = ?, fathers_name = ?, telephone = ?, cellphone = ?, email = ?, birth_year = ?, road = ?, number = ?, tk = ?, region = ?, registration_year = ?, class_year = ?, date = ?, payment_amount = ? WHERE id = ?`, [...args, body.id]);
+        return "Registration updated successfully";
+    });
+};
+serverRoutes.complete.func = async function (req) {
     return await execTryCatch(async () => {
         const body = await req.json();
         if (body.length === 1) await executeQuery(`DELETE FROM registrations WHERE id = ?`, body);
         else await executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body.length)})`, body);
-        return "Book deleted successfully";
+        return "Registration completed successfully";
     });
 };
 

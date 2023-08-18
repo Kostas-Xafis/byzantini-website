@@ -11,9 +11,6 @@ import {
 	omit,
 	literal,
 	union,
-	pick,
-	merge,
-	array,
 	type Output
 } from "valibot";
 
@@ -137,22 +134,22 @@ export type TeacherInstruments = Output<typeof v_TeacherInstruments>;
 
 export const v_Registrations = object({
 	id: number([integer(), minValue(0)]),
-	last_name: string(),
-	first_name: string(),
 	am: string(),
+	first_name: string(),
+	last_name: string(),
 	fathers_name: string(),
+	telephone: string(),
+	cellphone: string(),
+	email: string([email()]),
 	birth_year: number([integer(), minValue(1923), maxValue(2023)]),
 	road: string(),
 	number: number([integer(), minValue(0)]),
 	tk: number([integer(), minValue(0)]),
 	region: string(),
-	telephone: string(),
-	cellphone: string(),
-	email: string([email()]),
 	registration_year: string(),
 	class_year: string(),
-	teacher_id: number([integer(), minValue(0)]),
 	class_id: number([integer(), minValue(0)]),
+	teacher_id: number([integer(), minValue(0)]),
 	instrument_id: number([integer(), minValue(0)]),
 	date: number([integer(), minValue(0)]),
 	payment_amount: optional(number([integer(), minValue(0)])),

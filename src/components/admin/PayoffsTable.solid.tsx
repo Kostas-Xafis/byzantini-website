@@ -44,7 +44,6 @@ const payoffToTablePayoff = (payoff: SchoolPayoffs, wholesalers: Wholesalers[]):
 };
 
 const payoffsToTable = (payoffs: SchoolPayoffs[], wholesalers: Wholesalers[]): SchoolPayoffsTable[] => {
-	console.log(payoffs, wholesalers);
 	return payoffs.map(p => payoffToTablePayoff(p, wholesalers));
 };
 

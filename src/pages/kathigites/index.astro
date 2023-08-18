@@ -67,7 +67,6 @@ const musicEnd = [
 			<h1 id="teachersHead" class="text-4xl pb-8 justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
 				teachers.map(teacher => {
-					console.log(JSON.stringify(teacher));
 					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][1]);
 					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][0]);
 					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations[l.location_id - 1].name);

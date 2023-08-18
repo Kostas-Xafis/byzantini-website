@@ -166,6 +166,7 @@ INSERT INTO teachers (fullname) VALUES ('John Doe');
 INSERT INTO teachers (fullname) VALUES ('Jane Doe');
 INSERT INTO teachers (fullname) VALUES ('Michael Johnson');
 INSERT INTO teachers (fullname) VALUES ('Emily Davis');
+INSERT INTO teachers (fullname) VALUES ('Patrick Miller');
 
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 1);
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 2);
@@ -209,8 +210,8 @@ CREATE TABLE `registrations`(
     `email` varchar(80) NOT NULL,
     `registration_year` varchar(12) NOT NULL,
     `class_year` varchar(40) NOT NULL,
-    `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
+    `teacher_id` int NOT NULL,
     `instrument_id` int DEFAULT 0,
     `date` bigint NOT NULL,
     `payment_amount` int DEFAULT 0,
@@ -232,8 +233,6 @@ CREATE TABLE `sys_users` (
 
 INSERT INTO sys_users (email, password, privilege) VALUES ('koxafis@gmail.com', 'Whereiswaldo!09', 2);
 INSERT INTO sys_users (email, password, privilege) VALUES ('sotiris_ale@hotmail.com', '1234', 1);
-INSERT INTO sys_users (email, password, privilege) VALUES ('dummy@user.com', 'dummyuser', 1);
-INSERT INTO sys_users (email, password) VALUES ('dummy2@user.com', 'dummyuser2');
 
 CREATE TABLE `sys_user_register_links` (
     `link` varchar(80) NOT NULL,
@@ -272,7 +271,11 @@ INSERT INTO instruments (name, type) VALUES ('Ζουρνάς', "par");
 INSERT INTO instruments (name, type) VALUES ('Μπουζούκι', "par");
 INSERT INTO instruments (name, type) VALUES ('Λαϊκή κιθάρα', "par");
 INSERT INTO instruments (name, type) VALUES ('Ακκορντεόν', "par");
-
+INSERT INTO instruments (name, type) VALUES ('Σολφέζ', "eur");
+INSERT INTO instruments (name, type) VALUES ('Φωνητική - Ορθοφωνία', "eur");
+INSERT INTO instruments (name, type) VALUES ('Θεωρία Ευρωπαϊκής Μουσικής', "eur");
+INSERT INTO instruments (name, type) VALUES ('Πιάνο', "eur");
+INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 
 INSERT INTO teacher_instruments SET instrument_id = 1, teacher_id = 1;
 INSERT INTO teacher_instruments SET instrument_id = 2, teacher_id = 1;
@@ -289,3 +292,6 @@ INSERT INTO teacher_instruments SET instrument_id = 16, teacher_id = 4;
 INSERT INTO teacher_instruments SET instrument_id = 17, teacher_id = 4;
 INSERT INTO teacher_instruments SET instrument_id = 18, teacher_id = 4;
 INSERT INTO teacher_instruments SET instrument_id = 19, teacher_id = 4;
+INSERT INTO teacher_instruments SET instrument_id = 30, teacher_id = 5;
+INSERT INTO teacher_instruments SET instrument_id = 31, teacher_id = 5;
+INSERT INTO teacher_instruments SET instrument_id = 33, teacher_id = 5;

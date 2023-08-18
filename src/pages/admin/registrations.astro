@@ -1,0 +1,11 @@
+---
+import AdminNav from "../../components/admin/AdminNav.astro";
+import RegistrationsTable from "../../components/admin/RegistrationsTable.solid";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+export const prerender = true;
+---
+
+<AdminLayout title="Διαχείρηση">
+	<AdminNav />
+	<RegistrationsTable client:only="solid-js" />
+</AdminLayout>

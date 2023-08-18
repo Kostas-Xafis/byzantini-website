@@ -96,7 +96,6 @@ export default function BooksTable() {
 	};
 
 	let shapedData = createMemo(() => {
-		console.log("Calling shapedData");
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
 		if (!books || !wholesalers) return [];

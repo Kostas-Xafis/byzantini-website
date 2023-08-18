@@ -6,7 +6,7 @@ export interface Props {
 }
 
 const { title } = Astro.props;
-const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
+const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 ---
 
 <!DOCTYPE html>
@@ -16,7 +16,7 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 		<meta name="generator" content={Astro.generator} />
 		<SEO
 			charset="utf-8"
-			title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως"
+			title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"
 			description="Σχολή Βυζαντινής & Παραδοσιακής & Ευρωπαικής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως"
 			openGraph={{
 				basic: {
@@ -34,7 +34,7 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 			}}
 			extend={{
 				link: [
-					{ rel: "icon", href: "/favicon.ico" },
+					{ rel: "icon", href: "/logo_small.png" },
 					{ rel: "sitemap", href: "/sitemap-index.xml" },
 					{ rel: "robots", href: "/sitemap-index.xml" }
 				],
@@ -65,7 +65,7 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 		<link href="/fa/css/regular.min.css" rel="stylesheet" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />
 		<script
 			defer
 			src="https://static.cloudflareinsights.com/beacon.min.js"

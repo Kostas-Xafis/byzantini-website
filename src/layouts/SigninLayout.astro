@@ -5,7 +5,7 @@ export interface Props {
 }
 
 const { title } = Astro.props;
-const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
+const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 ---
 
 <!DOCTYPE html>
@@ -15,7 +15,7 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 		<meta name="generator" content={Astro.generator} />
 		<SEO
 			charset="utf-8"
-			title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως"
+			title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"
 			description="Σχολή Βυζαντινής & Παραδοσιακής & Ευρωπαικής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως"
 			openGraph={{
 				basic: {
@@ -32,6 +32,7 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.jpg";
 				}
 			}}
 		/>
+		<link rel="icon" href="/logo_small.png" />
 		<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
 		<link href="/fa/css/solid.min.css" rel="stylesheet" />
 		<link href="/fa/css/regular.min.css" rel="stylesheet" />

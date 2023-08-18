@@ -21,7 +21,17 @@ const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
     func: async req => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
+const updateReq = omit(v_Registrations, ["class_id", "teacher_id", "instrument_id"]);
+const update: DefaultEndpointRoute<"PUT:/registrations", typeof updateReq> = {
+    authentication: true,
+    method: "PUT",
+    path: "/registrations",
+    hasUrlParams: false,
+    validation: () => updateReq,
+    func: async req => null as any
+};
+
+const complete: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
     authentication: true,
     method: "DELETE",
     path: "/registrations",
@@ -32,7 +42,8 @@ const del: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
 export const RegistrationsRoutes = {
     get,
     post,
-    delete: del
+    update,
+    complete
 };
 
 export type APIRegistrationsArgs = APIArguments<"Registrations", typeof RegistrationsRoutes>;
@@ -51,10 +62,16 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         endpoint: "Registrations.post",
         validation: postReq
     },
-    "Registrations.delete": {
+    "Registrations.update": {
+        method: "PUT",
+        path: "/registrations",
+        endpoint: "Registrations.update",
+        validation: updateReq
+    },
+    "Registrations.complete": {
         method: "DELETE",
         path: "/registrations",
-        endpoint: "Registrations.delete"
+        endpoint: "Registrations.complete"
     }
 };
 
@@ -62,6 +79,7 @@ export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsR
     Registrations: {
         get: "Registrations.get",
         post: "Registrations.post",
-        delete: "Registrations.delete"
+        update: "Registrations.update",
+        complete: "Registrations.complete"
     }
 };

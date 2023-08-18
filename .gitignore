@@ -22,7 +22,6 @@ pnpm-debug.log*
 .vscode/
 test.exe
 *.txt
-/assets
 
 /getData
 
@@ -30,3 +29,6 @@ test.exe
 package-lock.json
 
 .wrangler/
+
+/public/*-.jpg
+/public/*-.png
