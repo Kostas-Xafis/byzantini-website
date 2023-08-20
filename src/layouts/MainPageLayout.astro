@@ -1,5 +1,6 @@
 ---
 import { SEO } from "astro-seo";
+import Navbar from "../components/Navbar.astro";
 import Links from "../components/Links.astro";
 export interface Props {
 	title: string;
@@ -32,11 +33,35 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 					locale: "el_GR"
 				}
 			}}
+			extend={{
+				link: [
+					{ rel: "icon", href: "/logo_small.png" },
+					{ rel: "sitemap", href: "/sitemap-index.xml" },
+					{ rel: "robots", href: "/sitemap-index.xml" }
+				],
+				meta: [
+					{
+						name: "facebook:image",
+						content: logoUrl
+					},
+					{
+						name: "messenger:image",
+						content: logoUrl
+					},
+					{
+						name: "viber:image",
+						content: logoUrl
+					}
+				]
+			}}
 		/>
 		<Links />
 	</head>
-	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100%] overflow-hidden">
-		<slot />
+	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
+		<Navbar obsv />
+		<div class="relative w-full h-full grid grid-rows-[100%]">
+			<slot />
+		</div>
 		<style is:global>
 			html {
 				font-family: system-ui, sans-serif;
@@ -47,8 +72,26 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 			button,
 			h1,
 			h2,
-			h3 {
+			h3,
+			li {
 				color: #282828;
+			}
+			select {
+				background-color: white;
+			}
+			input[type="number"] {
+				-moz-appearance: textfield;
+				appearance: textfield;
+			}
+			input::-webkit-outer-spin-button,
+			input::-webkit-inner-spin-button {
+				display: none;
+			}
+			.glass {
+				--tw-bg-opacity: 0.45;
+				background: rgb(127 29 29 / var(--tw-bg-opacity));
+				backdrop-filter: blur(4px);
+				border: 1px solid rgb(153 27 27 / 0.3);
 			}
 		</style>
 	</body>

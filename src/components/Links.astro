@@ -1,0 +1,26 @@
+---
+const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
+---
+
+<>
+	<style>
+		@font-face {
+			font-family: "Anaktoria";
+			src: url("/fonts/ANAKTORIA.OTF");
+		}
+	</style>
+    <link rel="icon" href="/logo_small.png" />
+	<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
+	<link href="/fa/css/solid.min.css" rel="stylesheet" />
+	<link href="/fa/css/regular.min.css" rel="stylesheet" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />
+	{
+        !isDev ? 
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}'>
+        </script>
+        : <></>
+    }
+    
+</>

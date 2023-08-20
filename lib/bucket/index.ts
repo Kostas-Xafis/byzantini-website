@@ -18,5 +18,4 @@ export class Bucket {
         const { S3_BUCKET } = (getRuntime(request).env as { S3_BUCKET: R2Bucket });
         await S3_BUCKET.delete(filename);
     };
-
 }

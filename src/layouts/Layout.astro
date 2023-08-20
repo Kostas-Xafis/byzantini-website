@@ -1,6 +1,7 @@
 ---
 import { SEO } from "astro-seo";
 import Navbar from "../components/Navbar.astro";
+import Links from "../components/Links.astro";
 export interface Props {
 	title: string;
 }
@@ -54,26 +55,11 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 				]
 			}}
 		/>
-		<style>
-			@font-face {
-				font-family: "Anaktoria";
-				src: url("/fonts/ANAKTORIA.OTF");
-			}
-		</style>
-		<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
-		<link href="/fa/css/solid.min.css" rel="stylesheet" />
-		<link href="/fa/css/regular.min.css" rel="stylesheet" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />
-		<script
-			defer
-			src="https://static.cloudflareinsights.com/beacon.min.js"
-			data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}'></script>
+		<Links />
 	</head>
 	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
 		<Navbar />
-		<div class="relative w-full h-full grid pt-[80px] grid-rows-[100%]">
+		<div class="relative w-full h-full grid grid-rows-[100%] pt-[80px]">
 			<slot />
 		</div>
 		<style is:global>
@@ -100,6 +86,12 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 			input::-webkit-outer-spin-button,
 			input::-webkit-inner-spin-button {
 				display: none;
+			}
+			.glass {
+				--tw-bg-opacity: 0.45;
+				background: rgb(127 29 29 / var(--tw-bg-opacity));
+				backdrop-filter: blur(4px);
+				border: 1px solid rgb(153 27 27 / 0.3);
 			}
 		</style>
 	</body>

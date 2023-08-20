@@ -1,43 +1,104 @@
 ---
+export interface Props {
+	obsv?: boolean;
+}
+
+const { obsv } = Astro.props;
+
 const links = [
-	{ name: "Η Σχολή μας", url: "/sxoli" },
+	{ name: "Η Σχολή μας", url: "/" },
 	{ name: "Εγγραφές", url: "/eggrafes" },
 	{ name: "Καθηγητές", url: "/kathigites" },
 	{ name: "Παραρτήματα", url: "/parartimata" }
 ];
+
+const highlight = (url: string) => {
+	const path = Astro.url.pathname;
+	return path === url;
+};
 ---
 
-<nav class="fixed top-0 left-0 w-full h-[80px] grid grid-rows-[80px] grid-cols-[80px_1fr] bg-red-900 bg-red z-[10000]">
-	<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
-		<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
-			<div class="w-full h-full bg-red-50"></div>
-			<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
-		</a>
-		<div class="absolute top-[1px] left-[calc(1rem_-_2px)] blur-[2px] -z-10">
-			<div class="logoImg w-[80px] aspect-square">
-				<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]"></div>
-			</div>
-		</div>
-		<p class="text-3xl mt-1 drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">Σχολή Βυζαντινής & Παραδοσιακής Μουσικής</p>
-		<p class="pl-[5rem] text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">Ι.Ν. Μεταμορφώσεως Δήμου Μεταμορφώσεως</p>
-	</div>
-	<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-12 gap-x-4`}>
-		{
-			links.map(link => (
-				<a
-					class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950"
-					href={link.url}
-					rel="prefetch"
-				>
-					<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.25)]">
-						{link.name}
-					</div>
-					<div class="absolute left-0 right-0 bottom-0 h-[4px] group-hover:bg-red-200" />
+{
+	!obsv ? (
+		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] bg-red-900 z-[10000]">
+			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
+				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
+					<div class="w-full h-full bg-red-50" />
+					<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 				</a>
-			))
-		}
-	</div>
-</nav>
+				<div class="absolute top-[1px] left-[calc(1rem_-_2px)] blur-[2px] -z-10">
+					<div class="logoImg w-[80px] aspect-square">
+						<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]" />
+					</div>
+				</div>
+				<p class="text-3xl mt-1 drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+				</p>
+				<p class="pl-[5rem] text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+					Ι.Ν. Μεταμορφώσεως Δήμου Μεταμορφώσεως
+				</p>
+			</div>
+			<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-12">
+				{links.map(link => (
+					<a
+						class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center"
+						href={link.url}
+						rel="prefetch"
+					>
+						<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.25)]">
+							{link.name}
+						</div>
+						<div
+							class={
+								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-md " +
+								(highlight(link.url) ? "bg-red-200" : "group-hover:bg-red-200")
+							}
+						/>
+					</a>
+				))}
+			</div>
+		</nav>
+	) : (
+		<nav class="glass fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] z-[10000] backdrop-blur-[4px]">
+			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
+				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
+					<div class="w-full h-full bg-red-50" />
+					<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
+				</a>
+				<div class="absolute top-[1px] left-[calc(1rem_-_1px)] -z-10">
+					<div class="logoImg w-[80px] aspect-square">
+						<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]" />
+					</div>
+				</div>
+				<p class="text-3xl mt-1 font-bold drop-shadow-[-1px_1px_1px_rgba(0_0_0_/_0.15)] text-red-50">
+					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+				</p>
+				<p class="pl-[5rem] text-3xl font-bold drop-shadow-[-1px_1px_1px_rgba(0_0_0_/_0.15)] text-red-50">
+					Ι.Ν. Μεταμορφώσεως Δήμου Μεταμορφώσεως
+				</p>
+			</div>
+			<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-12 `}>
+				{links.map(link => (
+					<a
+						class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center"
+						href={link.url}
+						rel="prefetch"
+					>
+						<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+							{link.name}
+						</div>
+						<div
+							class={
+								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-md " +
+								(highlight(link.url) ? "bg-red-200" : "group-hover:bg-red-200")
+							}
+						/>
+					</a>
+				))}
+			</div>
+		</nav>
+	)
+}
 <style>
 	.logoImg {
 		mask-image: url("/logo.png");

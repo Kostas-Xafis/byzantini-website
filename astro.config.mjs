@@ -9,7 +9,7 @@ const unmappedRoutes = page => page.includes("admin");
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://astrojs.org",
+	site: "https://musicschool-metamorfosi.gr",
 	integrations: [
 		tailwind(),
 		solidJs(),
@@ -26,8 +26,12 @@ export default defineConfig({
 	vite: {
 		server: {
 			watch: {
-				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**"]
+				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**", "**/lib/bucket/**"]
 			}
+		},
+		build: {
+			cssMinify: true,
+			minify: true
 		}
 	}
 });
