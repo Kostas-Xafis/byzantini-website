@@ -72,7 +72,6 @@ export default function LocationsTable() {
 	const hydrate = createHydration(() => {
 		console.log("Hydrating table data");
 		useAPI(setStore, API.Locations.get, {});
-		useAPI(setStore, API.Books.get, {});
 	});
 
 	createEffect(

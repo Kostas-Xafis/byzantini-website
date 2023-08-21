@@ -3,12 +3,12 @@ import { Accessor, For, JSX } from "solid-js";
 export type Props = {
 	columnNames: Record<string, string | { name: string; size: () => number }>;
 	data: Accessor<any[]>;
-	prefix: string;
+	prefix?: string;
 	children?: JSX.Element | JSX.Element[];
 };
 
 export default function Table(props: Props) {
-	const { columnNames, prefix, data } = props;
+	const { columnNames, prefix = "", data } = props;
 
 	let columnWidths = "grid-template-columns: ";
 	const columns = [] as string[];
@@ -45,9 +45,10 @@ export default function Table(props: Props) {
 				</div>
 			</div>
 			<style>
-				{`.row:is(.selectedRow):nth-child(odd)::before,
+				{`
+	.row:is(.selectedRow):nth-child(odd)::before,
 	.row:is(.selectedRow)::before {
-		background-color: #50ef80;
+		background-color: rgb(254,202,202);
 	}
 	.row:is(.selectedRow):hover {
 		--tw-shadow-color: #1f2937 !important;

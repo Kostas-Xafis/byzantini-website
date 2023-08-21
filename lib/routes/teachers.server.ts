@@ -24,7 +24,7 @@ serverRoutes.getLocations.func = async _req => {
 	return await execTryCatch(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations"));
 }
 
-serverRoutes.getInstruments.func = async _req => {
+serverRoutes.getInstruments.func = async req => {
 	return await execTryCatch(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments"));
 }
 

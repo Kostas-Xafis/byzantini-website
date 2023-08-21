@@ -10,6 +10,14 @@ const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
 	func: async req => null as any
 };
 
+const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number }> = {
+	authentication: true,
+	method: "GET",
+	path: "/payments/total",
+	hasUrlParams: false,
+	func: async req => null as any
+};
+
 let postReq = omit(v_Payments, ["id", "amount", "date"]);
 const post: EndpointRoute<"POST:/payments", typeof postReq, Payments> = {
 	authentication: true,
@@ -39,6 +47,7 @@ const complete: EndpointRoute<"DELETE:/payments", number[]> = {
 
 export const PaymentsRoutes = {
 	get,
+	getTotal,
 	post,
 	updatePayment,
 	complete
@@ -53,6 +62,11 @@ export const APIPaymentsEndpoints: APIEndpointsBuilder<"Payments", typeof Paymen
 		method: "GET",
 		path: "/payments",
 		endpoint: "Payments.get"
+	},
+	"Payments.getTotal": {
+		method: "GET",
+		path: "/payments/total",
+		endpoint: "Payments.getTotal"
 	},
 	"Payments.post": {
 		method: "POST",
@@ -76,6 +90,7 @@ export const APIPaymentsEndpoints: APIEndpointsBuilder<"Payments", typeof Paymen
 export const APIPayments: APIBuilder<"Payments", typeof PaymentsRoutes> = {
 	Payments: {
 		get: "Payments.get",
+		getTotal: "Payments.getTotal",
 		post: "Payments.post",
 		updatePayment: "Payments.updatePayment",
 		complete: "Payments.complete"

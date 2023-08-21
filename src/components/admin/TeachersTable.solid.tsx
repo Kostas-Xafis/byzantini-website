@@ -429,7 +429,17 @@ export default function TeachersTable() {
 	});
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Teachers.get]} fallback={<Spinner />}>
+			<Show
+				when={
+					store[API.Teachers.get] &&
+					store[API.Teachers.getClasses] &&
+					store[API.Locations.get] &&
+					store[API.Teachers.getLocations] &&
+					store[API.Instruments.get] &&
+					store[API.Teachers.getInstruments]
+				}
+				fallback={<Spinner />}
+			>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
 					<TableControls

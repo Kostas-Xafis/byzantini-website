@@ -87,8 +87,10 @@ export default function Input(props: Props) {
 	if (type === null) return <></>;
 	if (type === "date") {
 		onMount(() => {
-			//@ts-ignore
-			document.querySelector(`input[name='${name}']`).valueAsDate = new Date();
+			if (value !== 0) {
+				//@ts-ignore
+				document.querySelector(`input[name='${name}']`).valueAsDate = new Date(value);
+			}
 		});
 	}
 	let onFileClick;
@@ -181,34 +183,38 @@ export default function Input(props: Props) {
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
 				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-auto z-10">
 					<For each={multiselectList}>
-						{(selectItem, index) => (
-							<button
-								data-specifier={name}
-								data-selected={selectItem.selected}
-								data-value={selectItem.value}
-								class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
-								onClick={(e: MouseEvent) => {
-									if (multiselectOnce) {
-										const buttons = document.querySelectorAll(`button[data-selected='true']`);
-										buttons.forEach(button => {
-											button.setAttribute("data-selected", "false");
-										});
-									}
-									const button = e.currentTarget as HTMLButtonElement;
-									button.setAttribute(
-										"data-selected",
-										button.getAttribute("data-selected") === "true" ? "false" : "true"
-									);
-								}}
-								type="button"
-							>
-								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
-								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
-								<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
-									{selectItem.label}
-								</p>
-							</button>
-						)}
+						{(selectItem, index) =>
+							selectItem.value ? (
+								<button
+									data-specifier={name}
+									data-selected={selectItem.selected}
+									data-value={selectItem.value}
+									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
+									onClick={(e: MouseEvent) => {
+										if (multiselectOnce) {
+											const buttons = document.querySelectorAll(`button[data-selected='true']`);
+											buttons.forEach(button => {
+												button.setAttribute("data-selected", "false");
+											});
+										}
+										const button = e.currentTarget as HTMLButtonElement;
+										button.setAttribute(
+											"data-selected",
+											button.getAttribute("data-selected") === "true" ? "false" : "true"
+										);
+									}}
+									type="button"
+								>
+									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
+									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
+									<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
+										{selectItem.label}
+									</p>
+								</button>
+							) : (
+								<></>
+							)
+						}
 					</For>
 				</div>
 			</Show>

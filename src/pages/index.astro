@@ -2,13 +2,15 @@
 import MainPageLayout from "../layouts/MainPageLayout.astro";
 import Landing from "../components/mainpage/Landing.astro";
 import Lessons from "../components/mainpage/Lessons.astro";
+import Teachers from "../components/mainpage/Teachers.astro";
 export const prerender = true;
 ---
 
 <MainPageLayout title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής">
-	<div id="landing-page" class="w-full h-full grid auto-rows-max grid-flow-row grid-cols-1 overflow-y-scroll">
+	<div id="landing-page" class="w-full h-full grid auto-rows-max grid-flow-row grid-cols-1 overflow-y-auto">
 		<Landing />
 		<Lessons />
+		<!-- <Teachers /> -->
 	</div>
 </MainPageLayout>
 <style is:global>

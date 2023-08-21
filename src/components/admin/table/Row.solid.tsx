@@ -12,6 +12,7 @@ interface Props {
 export default function Row(props: Props) {
 	const [selectedItems, { add, remove }] = useContext(SelectedItemsContext) as ContextType;
 	const { data, columnWidths, index = -1, rows } = props;
+
 	const onClick = (e: MouseEvent) => {
 		const i = Number((e.currentTarget as HTMLElement).dataset.id as string);
 		const isSelected = selectedItems.includes(i);

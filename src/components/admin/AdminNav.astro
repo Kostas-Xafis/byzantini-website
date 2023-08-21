@@ -1,9 +1,10 @@
 ---
 const links = [
+	{ name: "Αρχική", url: "/admin" },
 	{ name: "Εγγραφές", url: "/admin/registrations" },
 	{ name: "Βιβλία", url: "/admin/books" },
-	{ name: "Πληρωμές", url: "/admin/payments" },
-	{ name: "Οφειλές", url: "/admin/payoffs" },
+	{ name: "Οφειλές Μαθητών", url: "/admin/payments" },
+	{ name: "Οφειλές Σχολής", url: "/admin/payoffs" },
 	{ name: "Καθηγητές", url: "/admin/teachers" },
 	{ name: "Παραρτήματα", url: "/admin/locations" },
 	{ name: "Διαχειριστές", url: "/admin/sysusers" }
@@ -25,11 +26,11 @@ const links = [
 		{
 			links.map(link => (
 				<a
-					class="group relative py-8 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
+					class="group relative py-6 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
 					href={link.url}
 					rel="prefetch-intent"
 				>
-					<div class="group px-8 font-bold font-anaktoria text-2xl text-red-50 whitespace-nowrap">{link.name}</div>
+					<div class="group px-8 font-bold font-anaktoria text-2xl text-red-50 text-center">{link.name}</div>
 				</a>
 			))
 		}

@@ -69,7 +69,8 @@ const musicEnd = [
 					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][1]);
 					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => musicEnd[c.class_id - 1][0]);
 					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations[l.location_id - 1].name);
-					const t_instruments = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments[i.instrument_id - 1].name);
+					const t_instruments = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments.find((inst) => inst.id === i.instrument_id)?.name || "");
+					t_instruments?.sort();
 					return (
 					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
 						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 

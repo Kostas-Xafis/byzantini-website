@@ -148,7 +148,6 @@ const registrationToTableRegistration = (
 	teachers: Teachers[],
 	instruments: Instruments[]
 ): RegistrationsTable => {
-	console.log(registration);
 	const columns = Object.values(registration);
 	columns[15] = class_types[columns[15] as number];
 	columns[16] = teachers.find(t => t.id === columns[16])?.fullname || "";
@@ -263,7 +262,10 @@ export default function RegistrationsTable() {
 				registration_year: formData.get("registration_year") as string,
 				class_year: formData.get("class_year") as string,
 				date: Date.now(),
-				payment_amount: Number(formData.get("payment_amount") as string)
+				payment_amount: Number(formData.get("payment_amount") as string),
+				payment_date: formData.get("payment_date")
+					? Number(new Date(formData.get("payment_date") as string).getDate() / 1000)
+					: undefined
 			};
 			const res = await useAPI(setStore, API.Registrations.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
@@ -276,7 +278,7 @@ export default function RegistrationsTable() {
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
-			headerText: "Ενημέρωση Ποσότητας",
+			headerText: "Ενημέρωση Εγγραφής",
 			type: ActionEnum.EDIT
 		};
 	});
@@ -299,13 +301,13 @@ export default function RegistrationsTable() {
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
-			headerText: "Διαγραφή Βιβλίων",
+			headerText: "Διαγραφή Εγγραφής",
 			type: ActionEnum.DELETE
 		};
 	});
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Registrations.get] && store[API.Teachers.get]} fallback={<Spinner />}>
+			<Show when={store[API.Registrations.get] && store[API.Teachers.get] && store[API.Instruments.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
 				</Table>

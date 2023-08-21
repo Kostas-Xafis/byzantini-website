@@ -43,6 +43,7 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 		return { data: json.data as any };
 	} catch (err) {
 		setStore(endpoint, err as any);
+		console.error(err);
 		throw new Error(JSON.stringify(err as {}));
 	}
 };

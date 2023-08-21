@@ -93,6 +93,15 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 				backdrop-filter: blur(4px);
 				border: 1px solid rgb(153 27 27 / 0.3);
 			}
+			.heading::after {
+				content: "";
+				position: absolute;
+				bottom: 0;
+				height: 4px;
+				transform: translateX(-120%);
+				transition: transform 0.5s ease-in-out;
+				border-radius: 3px;
+			}
 		</style>
 	</body>
 </html>

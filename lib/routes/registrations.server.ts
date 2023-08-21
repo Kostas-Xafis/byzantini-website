@@ -9,6 +9,10 @@ serverRoutes.get.func = async _req => {
     return await execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
 };
 
+serverRoutes.getTotal.func = async _req => {
+    return await execTryCatch(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_registrations"))[0]);
+};
+
 serverRoutes.post.func = async function (req) {
     return await execTryCatch(async (T: Transaction) => {
         const body = await req.json();

@@ -120,7 +120,7 @@ export default function SysUsersTable() {
 
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.SysUsers.get]} fallback={<Spinner />}>
+			<Show when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onAdd={onAdd} onDelete={onDelete} prefix={PREFIX} />
 				</Table>

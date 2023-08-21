@@ -122,8 +122,7 @@ export default function PaymentsTable() {
 			const data: Omit<Payments, "id" | "amount"> = {
 				student_name: formData.get("student_name") as string,
 				book_id: Number(formData.get("book_id") as string) + 1,
-				date: new Date(formData.get("date") as string).getTime() / 1000,
-				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() / 1000 : undefined
+				date: new Date(formData.get("date") as string).getTime() / 1000
 			};
 
 			const res = await useAPI(setStore, API.Payments.post, { RequestObject: data });

@@ -32,42 +32,21 @@ const genericInputs: Record<
 		name: "last_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
-		tooltip: {
-			message: [
-				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
-				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
-			],
-			position: "top"
-		}
+		iconClasses: "fa-solid fa-user"
 	},
 	first_name: {
 		label: "Όνομα",
 		name: "first_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
-		tooltip: {
-			message: [
-				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
-				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
-			],
-			position: "bottom"
-		}
+		iconClasses: "fa-solid fa-user"
 	},
 	fathers_name: {
 		label: "Πατρώνυμο",
 		name: "fathers_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
-		tooltip: {
-			message: [
-				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
-				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
-			],
-			position: "right"
-		}
+		iconClasses: "fa-solid fa-user"
 	},
 	telephone: {
 		label: "Τηλέφωνο",
@@ -200,15 +179,17 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 };
 
 const instrumentsInput = ({
+	type,
 	teacher,
 	instruments,
 	instrumentsList
 }: {
+	type?: MusicType;
 	teacher?: Teachers;
 	instruments?: Instruments[];
 	instrumentsList?: TeacherInstruments[];
 }): { instruments: InputProps } => {
-	if (!teacher || !instruments || !instrumentsList || instruments.length === 0)
+	if (!type || !teacher || !instruments || !instrumentsList || instruments.length === 0)
 		return { instruments: { type: null, label: "", name: "" } };
 	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === teacher?.id) || [];
 	const multiselectInstruments = teacherInstruments?.map(ti => {
@@ -216,6 +197,12 @@ const instrumentsInput = ({
 		if (!i) return { value: 0, label: "", selected: false };
 		return { value: i.id, label: i.name, selected: false };
 	});
+	multiselectInstruments?.sort((a, b) => {
+		if (a.label < b.label) return -1;
+		if (a.label > b.label) return 1;
+		return 0;
+	});
+
 	return {
 		instruments: {
 			label: "Όργανα",
@@ -287,7 +274,12 @@ export function RegistrationForm() {
 		const teacher_instruments = store[API.Teachers.getInstruments];
 		const teacher = selectedTeacher() || TeachersByType()[0];
 		if (!instruments || !teacher_instruments || !teacher) return {};
-		return { teacher, instruments: instruments.filter(i => i.type === formSelected()), instrumentsList: teacher_instruments };
+		return {
+			type: formSelected(),
+			teacher,
+			instruments: instruments.filter(i => i.type === formSelected()),
+			instrumentsList: teacher_instruments
+		};
 	}) as () => { teacher: Teachers; instruments: Instruments[]; instrumentsList: TeacherInstruments[] };
 
 	const onSelectClick = (type: MusicType) => () => {

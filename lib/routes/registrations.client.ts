@@ -10,6 +10,13 @@ const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
     func: async req => null as any
 };
 
+const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number }> = {
+    authentication: true,
+    method: "GET",
+    path: "/registrations/total",
+    hasUrlParams: false,
+    func: async req => null as any
+};
 
 const postReq = omit(v_Registrations, ["id", "payment_amount", "payment_date"]);
 const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
@@ -41,6 +48,7 @@ const complete: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
 
 export const RegistrationsRoutes = {
     get,
+    getTotal,
     post,
     update,
     complete
@@ -55,6 +63,11 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         method: "GET",
         path: "/registrations",
         endpoint: "Registrations.get"
+    },
+    "Registrations.getTotal": {
+        method: "GET",
+        path: "/registrations/total",
+        endpoint: "Registrations.getTotal"
     },
     "Registrations.post": {
         method: "POST",
@@ -78,6 +91,7 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
 export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsRoutes> = {
     Registrations: {
         get: "Registrations.get",
+        getTotal: "Registrations.getTotal",
         post: "Registrations.post",
         update: "Registrations.update",
         complete: "Registrations.complete"

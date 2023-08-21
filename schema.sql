@@ -5,7 +5,9 @@ DROP TABLE IF EXISTS `registrations`;
 DROP TABLE IF EXISTS `books`;
 DROP TABLE IF EXISTS `wholesalers`;
 DROP TABLE IF EXISTS `payments`;
+DROP TABLE IF EXISTS `total_payments`;
 DROP TABLE IF EXISTS `school_payoffs`;
+DROP TABLE IF EXISTS `total_school_payoffs`;
 DROP TABLE IF EXISTS `locations`;
 DROP TABLE IF EXISTS `teachers`;
 DROP TABLE IF EXISTS `instruments`;
@@ -61,16 +63,21 @@ INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold)
 INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Rock of the Rings", 7, 20, 25, 45, 23);
 
 CREATE TABLE `payments`(
-    `id` int NOT NULL AUTO_INCREMENT,
+    `id` int AUTO_INCREMENT,
     `student_name` varchar(80) NOT NULL,
     `book_id` int NOT NULL,
     `amount` int NOT NULL,
     `date` bigint NOT NULL,
     `payment_date` bigint,
-PRIMARY KEY (`id`))
-CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    PRIMARY KEY (`id`)
+) CHARSET=utf8mb4 AUTO_INCREMENT=0 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Jane Smith", 1, 15, 1686580312656);
+
+CREATE TABLE `total_payments` (
+    `amount` int DEFAULT 0
+)CHARSET=utf8mb4;
+
+INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Jane Smith", 1, 15, 1686580302600);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("John Doe", 2, 12, 1686580312655);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Michael Johnson", 3, 25, 1686580312657);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Emily Davis", 4, 20, 1686580312658);
@@ -81,6 +88,8 @@ INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Sophia Ander
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("James Taylor", 10, 15, 1686580312663);
 INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Emma Hernandez", 10, 15, 1686580312664);
 
+INSERT INTO total_payments (amount) SELECT SUM(amount) FROM payments;
+
 CREATE TABLE `school_payoffs` (
     `id` int NOT NULL AUTO_INCREMENT,
     `wholesaler_id` int NOT NULL,
@@ -88,15 +97,13 @@ CREATE TABLE `school_payoffs` (
     PRIMARY KEY (`id`))
 AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (1, 390);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (2, 360);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (3, 800);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (4, 200);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (5, 900);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (6, 200);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (7, 900);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (8, 165);
-INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (9, 300);
+CREATE TABLE `total_school_payoffs` (
+    `amount` int DEFAULT 0
+)CHARSET=utf8mb4;
+
+INSERT INTO school_payoffs (wholesaler_id, amount) SELECT wholesaler_id, SUM((quantity-sold)*wholesale_price) FROM books GROUP BY wholesaler_id;
+
+INSERT INTO total_school_payoffs (amount) SELECT SUM(amount) FROM school_payoffs;
 
 CREATE TABLE `locations` (
     `id` int NOT NULL AUTO_INCREMENT,
