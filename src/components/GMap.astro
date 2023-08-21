@@ -3,13 +3,12 @@ export type Props = {
 	link: string;
 };
 const { link } = Astro.props;
-const { GOOGLE_MAPS_KEY } = await import.meta.env;
 ---
 
 <iframe
 	class="w-[900px] h-[400px] shadow-md shadow-gray-400 rounded-md border-2 border-solid border-red-900"
 	referrerpolicy="same-origin"
-	src=`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_KEY}&zoom=14&q=${link}`
+	src=`https://www.google.com/maps/embed?${link}`
 	allowfullscreen
 	loading="lazy"
 >

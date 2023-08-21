@@ -1,0 +1,63 @@
+---
+const lessons = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"];
+const imgUrl = ["/byz.jpg", "/par.jpg", "/eur.jpg"];
+const text = Array(3).fill(
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quod, tenetur et. Odit nostrum suscipit illum corrupti maxime,adipisci beatae reiciendis laborum blanditiis nisi explicabo dolore reprehenderit, repellat quidem omnis deserunt facere quaenam quo sapiente amet at rerum incidunt fugiat."
+);
+---
+
+<div id="lessons" class="h-max w-full grid grid-rows-[max-content_1fr] grid-cols-3 gap-16 p-16 py-24">
+	<h1
+		id="lessonsHead"
+		class="relative p-2 text-center w-[9ch] place-self-center text-7xl font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:absolute after:left-[calc(50%_-_4ch)] after:bottom-0 after:rounded-[2px] after:h-[4px] after:w-[8ch] after:shadow-md after:shadow-gray-500 after:bg-red-900 after:transition-transform after:duration-500 after:-translate-x-[9ch] !after:translate-x-0"
+	>
+		Μαθήματα
+	</h1>
+	{
+		lessons.map((l, i) => (
+			<div
+				class="group/lesson relative h-[600px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:absolute after:inset-0 after:-z-10 after:bg-[url(var(--imgUrl))] after:bg-cover"
+				class:list={`after:bg-[url(${imgUrl[i]})]`}
+			>
+				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform translate-y-[calc(300px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
+					{l}
+				</h2>
+				<p class="text-2xl font-didact text-red-50 place-self-center pt-4 transition-opacity duration-150 opacity-[0.0001] group-hover/lesson:opacity-100 group-hover/lesson:duration-500">
+					{text[i]}
+				</p>
+			</div>
+		))
+	}
+</div>
+<style>
+	#lessons > div {
+		background: linear-gradient(to right, transparent, rgb(28, 28, 28, 0.85) 85%);
+		background-size: 300% 300%;
+		transition: background-position 0.25s ease-in-out;
+	}
+	#lessons h1,
+	#lessons h2 {
+		text-shadow: -2px 1px 2px rgb(14, 14, 14, 0.5);
+	}
+	#lessons > div:hover {
+		background-position: 100%;
+	}
+</style>
+<script>
+	window.addEventListener("load", () => {
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				if (entry.intersectionRatio >= 0.4) {
+					(document.querySelector("#lessonsHead") as HTMLElement).classList.add("after:translate-x-0");
+				} else {
+					(document.querySelector("#lessonsHead") as HTMLElement).classList.remove("after:translate-x-0");
+				}
+			},
+			{
+				threshold: [0.4]
+			}
+		);
+		obsv.observe(document.querySelector("#lessons") as HTMLElement);
+	});
+</script>

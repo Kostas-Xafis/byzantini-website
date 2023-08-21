@@ -2,7 +2,7 @@ import { createStore } from "solid-js/store";
 import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
-import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 const genericInputs: Record<
@@ -212,7 +212,8 @@ const instrumentsInput = ({
 		return { instruments: { type: null, label: "", name: "" } };
 	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === teacher?.id) || [];
 	const multiselectInstruments = teacherInstruments?.map(ti => {
-		const i = instruments.find(i => i.id === ti.instrument_id) as Instruments;
+		const i = instruments.find(i => i.id === ti.instrument_id);
+		if (!i) return { value: 0, label: "", selected: false };
 		return { value: i.id, label: i.name, selected: false };
 	});
 	return {
@@ -255,7 +256,17 @@ export function RegistrationForm() {
 	});
 
 	createEffect(() => hydrate(true));
-
+	createEffect(
+		on(formSelected, type => {
+			const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
+			select.addEventListener("change", (e: Event) => {
+				const target = e.target as HTMLSelectElement;
+				const teacher_id = Number((target[target.selectedIndex] as HTMLOptionElement).value);
+				setSelectedTeacher(TeachersByType()[teacher_id]);
+			});
+			setSelectedTeacher(TeachersByType()[0]);
+		})
+	);
 	const btns = [
 		["Βυζαντινή Μουσική", MusicType.Byzantine],
 		["Παραδοσιακή Μουσική", MusicType.Traditional],
@@ -279,19 +290,6 @@ export function RegistrationForm() {
 		return { teacher, instruments: instruments.filter(i => i.type === formSelected()), instrumentsList: teacher_instruments };
 	}) as () => { teacher: Teachers; instruments: Instruments[]; instrumentsList: TeacherInstruments[] };
 
-	const onTeacherSelect = () => {
-		const teachers = store[API.Teachers.get];
-		const instruments = store[API.Instruments.get];
-		if (!teachers || !instruments) return;
-		const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
-		select.addEventListener("change", (e: Event) => {
-			const target = e.target as HTMLSelectElement;
-			const teacher_id = Number((target[target.selectedIndex] as HTMLOptionElement).value);
-			setSelectedTeacher(TeachersByType()[teacher_id]);
-		});
-		setSelectedTeacher(TeachersByType()[0]);
-	};
-
 	const onSelectClick = (type: MusicType) => () => {
 		const curType = formSelected();
 		if (curType === type) return;
@@ -303,7 +301,6 @@ export function RegistrationForm() {
 				regContainer.classList.remove("remove");
 				void regContainer.offsetWidth;
 				setFormSelected(type);
-				onTeacherSelect();
 			}, 500);
 		} else {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
@@ -313,7 +310,6 @@ export function RegistrationForm() {
 				form.classList.remove("remove");
 				void form.offsetWidth;
 				setFormSelected(type);
-				onTeacherSelect();
 			}, 500);
 		}
 	};
@@ -347,7 +343,6 @@ export function RegistrationForm() {
 			date: Date.now()
 		};
 		const res = await useAPI(setStore, API.Registrations.post, { RequestObject: data });
-		// TODO: Show success/error message
 		if (res.message) {
 			const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 			messageDialog.classList.remove("hidden");

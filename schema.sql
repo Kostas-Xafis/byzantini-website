@@ -113,7 +113,7 @@ CREATE TABLE `locations` (
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO locations (name, address, areacode, municipality, email, telephones, map, link) VALUES ("Έδρα Μεταμόρφωσης", "Χλόης 1", 1234, "Δήμου Μεταμορφώσεως", "mail@mail.com", "2108765431", 'Church+of+the+Transfiguration+of+Christ+Metamorfosi+Municipality', "https://inmm.gr/");
+INSERT INTO locations (name, address, areacode, municipality, email, telephones, map, link) VALUES ("Έδρα Μεταμόρφωσης", "Χλόης 1", 1234, "Δήμου Μεταμορφώσεως", "mail@mail.com", "2108765431", 'pb=!1m14!1m8!1m3!1d1570.624418393948!2d23.76043140013884!3d38.06458564642159!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a1a2005430a9cd%3A0xb0ae73d2ed83fee2!2zzpnOtc-Bz4zPgiDOnc6xz4zPgiDOnM61z4TOsc68zr_Pgc-Gz47Pg863z4Igz4TOv8-FIM6jz4nPhM6uz4HOv8-C!5e0!3m2!1sel!2sgr!4v1692552004173!5m2!1sel!2sgr', "https://inmm.gr/");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Πεύκης", "Παπανδρέου 28", 1234, "Πεύκης", "mail@mail.com", "2108765432", "Athens,Greece");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Εκάλης", "Αγίου Ιωάννου 17", 1234, "Εκάλης", "mail@mail.com", "2108765433", "Athens,Greece");
 INSERT INTO locations (name, address, areacode, municipality, email, telephones, map) VALUES ("Παράρτημα Κηφισιάς", "Λεωφόρος Κηφισίας 12", 1234, "Κηφισιάς", "mail@mail.com", "2108765434", "Athens,Greece");
@@ -170,13 +170,12 @@ INSERT INTO teachers (fullname) VALUES ('Patrick Miller');
 
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 1);
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (1, 2);
-INSERT INTO teacher_classes (teacher_id, class_id) VALUES (2, 1);
-INSERT INTO teacher_classes (teacher_id, class_id) VALUES (2, 3);
-INSERT INTO teacher_classes (teacher_id, class_id) VALUES (3, 2);
-INSERT INTO teacher_classes (teacher_id, class_id) VALUES (3, 3);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (2, 2);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (3, 1);
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (4, 1);
 INSERT INTO teacher_classes (teacher_id, class_id) VALUES (4, 2);
-INSERT INTO teacher_classes (teacher_id, class_id) VALUES (4, 3);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (5, 1);
+INSERT INTO teacher_classes (teacher_id, class_id) VALUES (5, 3);
 
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (1, 1);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (1, 2);
@@ -186,6 +185,8 @@ INSERT INTO teacher_locations (teacher_id, location_id) VALUES (3, 1);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (3, 3);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 2);
 INSERT INTO teacher_locations (teacher_id, location_id) VALUES (4, 4);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (5, 4);
+INSERT INTO teacher_locations (teacher_id, location_id) VALUES (5, 2);
 
 CREATE TABLE `total_registrations` (
     `amount` int DEFAULT 0,
@@ -240,7 +241,6 @@ CREATE TABLE `sys_user_register_links` (
     `privilege` int NOT NULL,
     PRIMARY KEY (`link`)
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 
 INSERT INTO instruments (name, type) VALUES ('Ούτι', "par");
 INSERT INTO instruments (name, type) VALUES ('Λαούτο', "par");

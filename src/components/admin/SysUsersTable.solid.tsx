@@ -86,7 +86,7 @@ export default function SysUsersTable() {
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
-			headerText: !link ? "Δημιουργία link εγγραφής" : "Link εγγραφής:\n /admin/signup/" + link,
+			headerText: !link ? "Δημιουργία link εγγραφής" : "Link εγγραφής:\n https://musicschool-metamorfosi/admin/signup/" + link,
 			type: ActionEnum.ADD
 		};
 	});

@@ -1,0 +1,104 @@
+<div id="welcome-page" class="h-screen p-20 content-end grid grid-rows-[1fr_repeat(5,_max-content)] grid-cols-2 grid-flow-col">
+	<div></div>
+	<p class="w-[20ch] text-7xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">Σχολή Βυζαντινής &</p>
+	<p class="w-[20ch] ml-[0.75ch] text-7xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">Παραδοσιακής Μουσικής</p>
+	<p class="w-[20ch] ml-[1.5ch] text-7xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">Ι.Ν. Μεταμορφώσεως</p>
+	<p class="w-[20ch] ml-[2.25ch] text-7xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">Δήμου Μεταμορφώσεως</p>
+	<div id="fek" class="mt-[6rem] w-max p-6 grid auto-cols-max grid-flow-col gap-x-4 glass rounded-lg">
+		<p class="text-4xl font-anaktoria font-bold text-red-50 self-center">
+			<i class="fa-solid fa-chevron-right pr-4 text-2xl self-center"></i>Αναγνωρισμένη υπό του Κράτους
+		</p>
+		<a
+			target="_blank"
+			href="/fek-byzantini.pdf"
+			class="px-3 h-max place-self-center text-2xl font-didact font-bold text-red-50 outline-none outline-red-50 rounded-md hover:bg-red-50 hover:text-red-900"
+			>1</a
+		>
+		<a
+			target="_blank"
+			href="/fek-paradosiaki.pdf"
+			class="px-3 h-max place-self-center text-2xl font-didact font-bold text-red-50 outline-none outline-red-50 rounded-md hover:bg-red-50 hover:text-red-900"
+			>2</a
+		>
+	</div>
+	<div
+		id="eggrafesLink"
+		class={"glass place-self-center w-max h-max rounded-lg " +
+			"shadow-lg shadow-stone-800 px-12 py-8 grid auto-cols-max place-items-center gap-y-4 row-span-full"}
+	>
+		<p class="text-5xl font-anaktoria font-bold text-red-50 self-center">Εγγραφές ξεκίνησαν!</p>
+		<p class="text-5xl font-anaktoria font-bold text-red-50 self-center">1/9 έως 30/10</p>
+		<a
+			class="group/regbtn px-8 py-4 mt-8 text-5xl font-anaktoria font-bold text-red-50 self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors hover:bg-red-50 hover:text-red-900"
+			href="/eggrafes"
+		>
+			Εγγραφές <i
+				class="w-0 pl-2 fa-solid fa-chevron-right font-bold text-2xl self-center opacity-0 -translate-x-8 transition-[150ms_opacity_ease-in,150ms_transform_ease-in] group-hover/regbtn:opacity-100 group-hover/regbtn:-translate-x-2"
+			></i>
+		</a>
+	</div>
+</div>
+<style is:global>
+	#welcome-page {
+		background: linear-gradient(to bottom left, rgba(12 10 9 / 0.5), rgba(12 10 9 / 0.9)), url("/church.jpg");
+		background-size: cover;
+	}
+	#welcome-page > p {
+		transform: translateY(25px);
+		opacity: 0.0001;
+	}
+	#welcome-page p span {
+		text-shadow: -1px 6px 6px rgba(12 10 9 / 0.6);
+	}
+	#welcome-page > p > span:hover + span {
+		text-shadow: none;
+		background: linear-gradient(to right, rgb(127 29 29 / 1) 10%, rgb(254, 202, 202));
+		background-clip: text;
+		-webkit-background-clip: text;
+		color: transparent;
+	}
+
+	#welcome-page > p > span:has(+ span:hover) {
+		text-shadow: none;
+		background: linear-gradient(to right, rgb(254, 202, 202), rgb(127 29 29 / 1) 90%);
+		background-clip: text;
+		-webkit-background-clip: text;
+		color: transparent;
+	}
+
+	#fek:is(.glass) {
+		opacity: 0.0001;
+		animation: fadeIn 0.5s ease-in-out forwards 1s;
+		text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
+	}
+
+	#eggrafesLink:is(.glass) {
+		opacity: 0.0001;
+		animation: fadeIn 0.5s ease-in-out forwards 1.25s;
+		text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
+	}
+	#fek:hover i {
+		animation: fadeIn2 0.3s ease-in-out forwards;
+	}
+</style>
+<script>
+	window.addEventListener("load", () => {
+		const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
+		heads.forEach((head, i) => {
+			let txt = head.innerText;
+			const txtArr = txt.split("");
+			txtArr.forEach((char, j) => {
+				if (char === " ") {
+					txtArr[j] = "&nbsp;";
+				}
+				txtArr[j] = `<span class="hover:text-red-900" style="opacity:0.0001; animation: fadeIn 0.5s ease-in-out forwards ${
+					(j + i * 10) * 12
+				}ms">${txtArr[j]}</span>`;
+			});
+			txt = txtArr.join("");
+			head.innerHTML = txt;
+			head.style.opacity = "1";
+			head.style.setProperty("animation", `fadeInParent 0.5s ease-in forwards ${i * 50}ms`);
+		});
+	});
+</script>

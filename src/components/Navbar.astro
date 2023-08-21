@@ -20,7 +20,7 @@ const highlight = (url: string) => {
 
 {
 	!obsv ? (
-		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] bg-red-900 z-[10000]">
+		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[80px] grid-cols-[80px_1fr] bg-red-900 z-[10000]">
 			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
 				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
 					<div class="w-full h-full bg-red-50" />
@@ -59,7 +59,7 @@ const highlight = (url: string) => {
 			</div>
 		</nav>
 	) : (
-		<nav class="glass fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] z-[10000] backdrop-blur-[4px]">
+		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[80px] grid-cols-[80px_1fr] z-[10000] transition-colors glass border-none ">
 			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
 				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
 					<div class="w-full h-full bg-red-50" />
@@ -77,12 +77,12 @@ const highlight = (url: string) => {
 					Ι.Ν. Μεταμορφώσεως Δήμου Μεταμορφώσεως
 				</p>
 			</div>
-			<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-12 `}>
+			<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 `}>
 				{links.map(link => (
 					<a
 						class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center"
 						href={link.url}
-						rel="prefetch"
+						rel={false ? "prefetch" : ""}
 					>
 						<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 							{link.name}
@@ -107,3 +107,23 @@ const highlight = (url: string) => {
 		-webkit-mask-size: contain;
 	}
 </style>
+<script>
+	window.addEventListener("load", () => {
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				if (entry.intersectionRatio >= 0.9) {
+					(document.querySelector("nav") as HTMLElement).classList.remove("bg-red-900");
+					(document.querySelector("nav") as HTMLElement).classList.add("glass");
+				} else {
+					(document.querySelector("nav") as HTMLElement).classList.remove("glass");
+					(document.querySelector("nav") as HTMLElement).classList.add("bg-red-900");
+				}
+			},
+			{
+				threshold: [0.9]
+			}
+		);
+		obsv.observe(document.querySelector("#welcome-page") as HTMLElement);
+	});
+</script>

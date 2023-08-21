@@ -204,7 +204,7 @@ export default function Input(props: Props) {
 							>
 								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
 								<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
-								<p class="p-2 font-didact" style={{ "grid-column": "2 / 3" }}>
+								<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
 									{selectItem.label}
 								</p>
 							</button>
