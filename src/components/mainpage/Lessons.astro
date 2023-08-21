@@ -15,10 +15,7 @@ const text = Array(3).fill(
 	</h1>
 	{
 		lessons.map((l, i) => (
-			<div
-				class="group/lesson relative h-[600px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:absolute after:inset-0 after:-z-10 after:bg-[url(var(--imgUrl))] after:bg-cover"
-				class:list={`after:bg-[url(${imgUrl[i]})]`}
-			>
+			<div class="group/lesson relative h-[600px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
 				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform translate-y-[calc(300px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
 					{l}
 				</h2>
@@ -30,6 +27,16 @@ const text = Array(3).fill(
 	}
 </div>
 <style>
+	#lessons > div:nth-of-type(1)::after {
+		background-image: url("/byz.jpg");
+	}
+	#lessons > div:nth-of-type(2)::after {
+		background-image: url("/par.jpg");
+	}
+	#lessons > div:nth-of-type(3)::after {
+		background-image: url("/eur.jpg");
+	}
+
 	#lessons > div {
 		background: linear-gradient(to right, transparent, rgb(28, 28, 28, 0.85) 85%);
 		background-size: 300% 300%;
