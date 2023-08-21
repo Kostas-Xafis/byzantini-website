@@ -1,6 +1,5 @@
 ---
 const lessons = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"];
-const imgUrl = ["/byz.jpg", "/par.jpg", "/eur.jpg"];
 const text = Array(3).fill(
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quod, tenetur et. Odit nostrum suscipit illum corrupti maxime,adipisci beatae reiciendis laborum blanditiis nisi explicabo dolore reprehenderit, repellat quidem omnis deserunt facere quaenam quo sapiente amet at rerum incidunt fugiat."
 );
@@ -26,7 +25,7 @@ const text = Array(3).fill(
 		))
 	}
 </div>
-<style>
+<style is:inline>
 	#lessons > div:nth-of-type(1)::after {
 		background-image: url("/byz.jpg");
 	}
@@ -51,20 +50,21 @@ const text = Array(3).fill(
 	}
 </style>
 <script>
-	window.addEventListener("load", () => {
-		const obsv = new IntersectionObserver(
-			entries => {
-				const entry = entries[0];
-				if (entry.intersectionRatio >= 0.4) {
-					(document.querySelector("#lessonsHead") as HTMLElement).classList.add("after:translate-x-0");
-				} else {
-					(document.querySelector("#lessonsHead") as HTMLElement).classList.remove("after:translate-x-0");
-				}
-			},
-			{
-				threshold: [0.4]
+	import { onElementMount } from "../../../lib/utils.js";
+	const obsv = new IntersectionObserver(
+		entries => {
+			const entry = entries[0];
+			if (entry.intersectionRatio >= 0.4) {
+				(document.querySelector("#lessonsHead") as HTMLElement).classList.add("after:translate-x-0");
+			} else {
+				(document.querySelector("#lessonsHead") as HTMLElement).classList.remove("after:translate-x-0");
 			}
-		);
+		},
+		{
+			threshold: [0.4]
+		}
+	);
+	onElementMount("#lessons", () => {
 		obsv.observe(document.querySelector("#lessons") as HTMLElement);
 	});
 </script>

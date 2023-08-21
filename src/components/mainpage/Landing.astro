@@ -42,7 +42,7 @@
 		</a>
 	</div>
 </div>
-<style is:global>
+<style is:inline>
 	#welcome-page {
 		background: linear-gradient(to bottom left, rgba(12 10 9 / 0.5), rgba(12 10 9 / 0.9)), url("/church.jpg");
 		background-size: cover;
@@ -86,7 +86,8 @@
 	}
 </style>
 <script>
-	window.addEventListener("load", () => {
+	import { onElementMount } from "../../../lib/utils.js";
+	onElementMount("#welcome-page > p", () => {
 		const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
 		heads.forEach((head, i) => {
 			let txt = head.innerText;

@@ -110,22 +110,27 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 	}
 </style>
 <script>
-	window.addEventListener("load", () => {
-		const obsv = new IntersectionObserver(
-			entries => {
-				const entry = entries[0];
-				if (entry.intersectionRatio >= 0.9) {
-					(document.querySelector("nav") as HTMLElement).classList.remove("bg-red-900");
-					(document.querySelector("nav") as HTMLElement).classList.add("glass");
-				} else {
-					(document.querySelector("nav") as HTMLElement).classList.remove("glass");
-					(document.querySelector("nav") as HTMLElement).classList.add("bg-red-900");
-				}
-			},
-			{
-				threshold: [0.9]
+	import { onElementMount } from "../../lib/utils.js";
+	const obsv = new IntersectionObserver(
+		entries => {
+			const entry = entries[0];
+			if (entry.intersectionRatio >= 0.9) {
+				//@ts-ignore
+				document.querySelector("nav").classList.remove("bg-red-900");
+				//@ts-ignore
+				document.querySelector("nav").classList.add("glass");
+			} else {
+				//@ts-ignore
+				document.querySelector("nav").classList.remove("glass");
+				//@ts-ignore
+				document.querySelector("nav").classList.add("bg-red-900");
 			}
-		);
+		},
+		{
+			threshold: [0.9]
+		}
+	);
+	onElementMount("#welcome-page", () => {
 		obsv.observe(document.querySelector("#welcome-page") as HTMLElement);
 	});
 </script>
