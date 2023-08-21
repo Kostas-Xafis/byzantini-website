@@ -72,7 +72,7 @@ const locations = (await useAPI("Locations.get", {})).data as Locations[];
 		</div>
 	</div>
 </Layout>
-<style>
+<style is:inline>
 	button:is(.selected) {
 		background-color: rgb(153, 27, 27);
 	}

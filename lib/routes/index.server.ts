@@ -29,7 +29,7 @@ const routes = (function () {
 		RegistrationsServerRoutes,
 		RegistrationsRoutes
 	).flat() as (EndpointRoute<any, AnyObjectSchema, any> | EndpointRoute<any, any, any>)[];
-
+	console.log(allRoutes.length);
 	allRoutes.forEach(route => {
 		route.middleware = [];
 		if (route.authentication) route.middleware?.push(authentication);

@@ -16,7 +16,7 @@ export default defineConfig({
 		prefetch(),
 		sitemap({
 			filter: unmappedRoutes,
-			changefreq: "monthly",
+			changefreq: "weekly",
 			priority: 1,
 			lastmod: new Date()
 		})
@@ -26,7 +26,15 @@ export default defineConfig({
 	vite: {
 		server: {
 			watch: {
-				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**", "**/lib/bucket/**"]
+				ignored: [
+					"**/node_modules/**",
+					"**/.git/**",
+					"**/.vscode/**",
+					"./schema.sql",
+					"**/getData/**",
+					"**/lib/bucket/**",
+					"**/notAssets/**"
+				]
 			}
 		},
 		build: {
