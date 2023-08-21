@@ -16,6 +16,8 @@ const highlight = (url: string) => {
 	const path = Astro.url.pathname;
 	return path === url;
 };
+
+const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
 ---
 
 {
@@ -82,7 +84,7 @@ const highlight = (url: string) => {
 					<a
 						class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center"
 						href={link.url}
-						rel={false ? "prefetch" : ""}
+						rel={!isDev ? "prefetch" : ""}
 					>
 						<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 							{link.name}
