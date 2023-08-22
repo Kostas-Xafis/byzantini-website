@@ -36,8 +36,8 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 				<p class="text-3xl mt-1 drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
 					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 				</p>
-				<p class="pl-[5rem] text-3xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-					Ι.Ν. Μεταμορφώσεως Δήμου Μεταμορφώσεως
+				<p class="pl-[5rem] text-xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+					Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
 				</p>
 			</div>
 			<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4">
@@ -62,7 +62,7 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 		</nav>
 	) : (
 		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] z-[10000] transition-colors glass border-none">
-			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
+			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria">
 				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
 					<div class="w-full h-full bg-red-50" />
 					<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
@@ -72,11 +72,11 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 						<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]" />
 					</div>
 				</div>
-				<p class="text-3xl mt-1 font-bold drop-shadow-[-1px_1px_1px_rgba(0_0_0_/_0.15)] text-red-50">
+				<p class="text-3xl mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
 					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 				</p>
-				<p class="pl-[5rem] text-3xl font-bold drop-shadow-[-1px_1px_1px_rgba(0_0_0_/_0.15)] text-red-50">
-					Ι.Ν. Μεταμορφώσεως Δήμου Μεταμορφώσεως
+				<p class="pl-[5rem] text-xl font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+					Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
 				</p>
 			</div>
 			<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 `}>
@@ -101,7 +101,7 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 		</nav>
 	)
 }
-<style>
+<style is:inline>
 	.logoImg {
 		mask-image: url("/logo.png");
 		-webkit-mask-image: url("/logo.png");
@@ -111,26 +111,26 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 </style>
 <script>
 	import { onElementMount } from "../../lib/utils.js";
-	const obsv = new IntersectionObserver(
-		entries => {
-			const entry = entries[0];
-			if (entry.intersectionRatio >= 0.9) {
-				//@ts-ignore
-				document.querySelector("nav").classList.remove("bg-red-900");
-				//@ts-ignore
-				document.querySelector("nav").classList.add("glass");
-			} else {
-				//@ts-ignore
-				document.querySelector("nav").classList.remove("glass");
-				//@ts-ignore
-				document.querySelector("nav").classList.add("bg-red-900");
-			}
-		},
-		{
-			threshold: [0.9]
-		}
-	);
 	onElementMount("#welcome-page", () => {
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				if (entry.intersectionRatio >= 0.9) {
+					//@ts-ignore
+					document.querySelector("nav").classList.remove("bg-red-900");
+					//@ts-ignore
+					document.querySelector("nav").classList.add("glass");
+				} else {
+					//@ts-ignore
+					document.querySelector("nav").classList.remove("glass");
+					//@ts-ignore
+					document.querySelector("nav").classList.add("bg-red-900");
+				}
+			},
+			{
+				threshold: [0.9]
+			}
+		);
 		obsv.observe(document.querySelector("#welcome-page") as HTMLElement);
 	});
 </script>

@@ -8,17 +8,17 @@ const text = Array(3).fill(
 <div id="lessons" class="h-max w-full grid grid-rows-[max-content_1fr] grid-cols-3 gap-16 p-16 py-24">
 	<h1
 		id="lessonsHead"
-		class="heading relative p-2 text-center w-[9ch] place-self-center text-7xl font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] !after:translate-x-0 after:bg-red-900"
+		class="heading relative p-2 text-center w-[9ch] place-self-center text-7xl font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900"
 	>
 		Μαθήματα
 	</h1>
 	{
 		lessons.map((l, i) => (
 			<div class="group/lesson relative h-[600px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
-				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform translate-y-[calc(300px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
+				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(300px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
 					{l}
 				</h2>
-				<p class="text-2xl font-didact text-red-50 place-self-center pt-8 transition-opacity duration-150 opacity-[0.0001] group-hover/lesson:opacity-100 group-hover/lesson:duration-500">
+				<p class="text-2xl font-didact text-red-50 place-self-center pt-8 transition-opacity duration-100 opacity-[0.0001] group-hover/lesson:opacity-100 group-hover/lesson:duration-500">
 					{text[i]}
 				</p>
 			</div>
@@ -50,21 +50,23 @@ const text = Array(3).fill(
 	}
 </style>
 <script>
-	import { onElementMount } from "../../../lib/utils.js";
-	const obsv = new IntersectionObserver(
-		entries => {
-			const entry = entries[0];
-			if (entry.intersectionRatio >= 0.4) {
-				(document.querySelector("#lessonsHead") as HTMLElement).classList.add("after:translate-x-0");
-			} else {
-				(document.querySelector("#lessonsHead") as HTMLElement).classList.remove("after:translate-x-0");
-			}
-		},
-		{
-			threshold: [0.4]
-		}
-	);
+	import { onElementMount } from "../../../lib/utils";
 	onElementMount("#lessons", () => {
-		obsv.observe(document.querySelector("#lessons") as HTMLElement);
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				// @ts-ignore
+				if (entry.intersectionRatio >= 0.4) document.querySelector("#lessonsHead").classList.add("emphasis");
+				// @ts-ignore
+				else document.querySelector("#lessonsHead").classList.remove("emphasis");
+			},
+			{
+				root: null,
+				rootMargin: "0px",
+				threshold: [0.4]
+			}
+		);
+		// @ts-ignore
+		obsv.observe(document.querySelector("#lessons"));
 	});
 </script>

@@ -75,7 +75,8 @@ export const DataWrapper = <T = object>(data: T) => {
 };
 
 export const onElementMount = async (target: string, callback: () => any) => {
-	while (document.querySelector(target) === null) {
+	while (!document.querySelector(target)) {
+		console.log("waiting for element to mount: " + target)
 		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 	callback()
