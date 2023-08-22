@@ -66,11 +66,14 @@ const musicEnd = [
 			<h1 id="teachersHead" class="text-4xl pb-8 justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
 				teachers.map(teacher => {
-					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][1]);
-					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id).map(c => music[c.class_id - 1][0]);
-					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id).map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
-					const t_instruments = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments.find((inst) => inst.id === i.instrument_id)?.name || "");
+					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => music[c.class_id - 1][1]);
+					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => music[c.class_id - 1][0]);
+					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
+					const t_instrument_list = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments.find((inst) => inst.id === i.instrument_id) as Instruments);
+					const t_instruments = t_instrument_list.filter(i => i.isInstrument)?.map(i => i.name);
+					const t_nonInstruments = t_instrument_list.filter(i => !i.isInstrument)?.map(i => i.name);
 					t_instruments?.sort();
+					t_nonInstruments?.sort();
 					return (
 					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
 						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 
@@ -87,6 +90,11 @@ const musicEnd = [
 							<p class="text-xl">Διδάσκων: {t_classes_str.join('•')}</p>
 							{t_instruments && t_instruments.length > 0 ? (
 								<p class="text-xl">Όργανα: {t_instruments.join('•')}</p>
+							) : (
+								<></>
+							)}
+							{t_nonInstruments && t_nonInstruments.length > 0 ? (
+								<p class="text-xl">Μαθήματα: {t_nonInstruments.join('•')}</p>
 							) : (
 								<></>
 							)}

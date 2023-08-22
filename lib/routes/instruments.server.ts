@@ -12,7 +12,8 @@ serverRoutes.get.func = async _req => {
 serverRoutes.post.func = async req => {
 	return await execTryCatch(async () => {
 		const body = await req.json();
-		const id = await executeQuery(`INSERT INTO instruments (name) VALUES (?)`, [body.name]);
+		const args = Object.values(body);
+		const id = await executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
 		return { insertId: id.insertId };
 	});
 };

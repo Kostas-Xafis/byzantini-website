@@ -26,15 +26,7 @@ export default defineConfig({
 	vite: {
 		server: {
 			watch: {
-				ignored: [
-					"**/node_modules/**",
-					"**/.git/**",
-					"**/.vscode/**",
-					"./schema.sql",
-					"**/getData/**",
-					"**/lib/bucket/**",
-					"**/notAssets/**"
-				]
+				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**", "**/notAssets/**"]
 			}
 		},
 		build: {

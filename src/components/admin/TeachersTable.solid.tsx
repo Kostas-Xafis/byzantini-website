@@ -368,7 +368,12 @@ export default function TeachersTable() {
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Instruments, "id"> = {
 				name: formData.get("name") as string,
-				type: (formData.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur"
+				type: (formData.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur",
+				isInstrument: (Number(
+					[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='isInstrument']`)].filter(
+						i => i.dataset.selected === "true"
+					)[0].dataset.value as string
+				) - 1) as 0 | 1
 			};
 			const res = await useAPI(setStore, API.Instruments.post, { RequestObject: data });
 			if (!res.data && !res.message) return;
@@ -387,7 +392,19 @@ export default function TeachersTable() {
 					name: "type",
 					label: "Τύπος Μαθήματος",
 					iconClasses: "fas fa-chalkboard-teacher",
-					selectList: ["Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"]
+					selectList: ["Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
+					valueLiteral: true
+				} as InputProps,
+				isInstrument: {
+					type: "multiselect",
+					name: "isInstrument",
+					label: "",
+					iconClasses: "fas fa-guitar",
+					multiselectList: [
+						{ label: "Όργανο", value: 2, selected: true },
+						{ label: "Μαθήμα", value: 1, selected: false }
+					],
+					multiselectOnce: true
 				} as InputProps
 			},
 			onMount: () => formListener(submit, true, "instrument"),
@@ -398,15 +415,17 @@ export default function TeachersTable() {
 		};
 	});
 	const onDeleteInstrument = createMemo(() => {
-		const classtypes = store[API.Instruments.get];
-		if (!classtypes) return undefined;
+		const instruments = store[API.Instruments.get];
+		if (!instruments) return undefined;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data = [classtypes[parseInt(formData.get("name") as string)]?.id || -1];
-
-			const res = await useAPI(setStore, API.Instruments.delete, { RequestObject: data });
+			const name = formData.get("name") as string;
+			console.log(name);
+			const instrument = instruments.find(i => i.name === name);
+			if (!instrument) return;
+			const res = await useAPI(setStore, API.Instruments.delete, { RequestObject: [instrument.id] });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
 		});
@@ -417,7 +436,8 @@ export default function TeachersTable() {
 					label: "Όργανο",
 					type: "select",
 					iconClasses: "fa-solid fa-chalkboard-teacher",
-					selectList: classtypes.map(c => c.name)
+					selectList: instruments.map(c => c.name),
+					valueLiteral: true
 				} as InputProps
 			},
 			onMount: () => formListener(submit, true, "instrument"),

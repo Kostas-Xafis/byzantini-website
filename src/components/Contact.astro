@@ -1,5 +1,5 @@
-<div id="contacts" class="fixed bottom-0 right-[7.5%] w-max grid translate-y-full">
-	<div class="relative p-6 grid grid-rows-2 glass gap-y-2 rounded-t-lg font-didact bg-opacity-60">
+<div id="contacts" class="fixed bottom-0 right-[2.5%] w-max grid translate-y-full">
+	<div class="relative p-6 grid grid-rows-2 glass gap-y-2 rounded-t-lg font-didact bg-opacity-75">
 		<p class="text-2xl text-red-50">
 			<i class="text-xl pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
 				class="text-red-50 underline underline-offset-2 pl-2"
@@ -18,15 +18,19 @@
 		</p>
 		<button
 			id="showContacts"
-			class="group/btn px-4 py-1 rounded-t-lg border-b-0 absolute -top-[1px] left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] bg-opacity-90"
+			class="group/btn px-4 pb-1 rounded-t-lg border-b-0 absolute -top-[1px] left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] bg-opacity-90"
 		>
-			<i class="text-red-50 fa-solid fa-chevron-up font-bold text-2xl place-self-center"></i>
+			<i class="text-red-50 h-0 pb-4 fa-solid fa-chevron-up font-bold text-lg place-self-center"></i>
 			<p class="text-3xl text-red-50 font-anaktoria">Επικοινωνία</p>
 		</button>
 	</div>
 	<style is:inline>
 		#contacts {
 			transition: transform 0.2s ease-in-out;
+		}
+		#contacts i,
+		#contacts p {
+			text-shadow: -1px 1px 2px rgb(24, 24, 24, 0.75);
 		}
 		#contacts:is(.clickedContacts) {
 			transform: translateY(0%);
@@ -35,7 +39,7 @@
 			transition: transform 0.2s ease-in-out;
 		}
 		#contacts:is(.clickedContacts) #showContacts i {
-			transform: rotateZ(180deg);
+			transform: rotateZ(180deg) translateY(calc(-1rem * 0.75));
 		}
 	</style>
 </div>

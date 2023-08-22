@@ -123,7 +123,8 @@ export type Locations = Output<typeof v_Locations>;
 export const v_Instruments = object({
 	id: number([integer(), minValue(0)]),
 	name: string([minLength(1)]),
-	type: union([literal("par"), literal("eur")])
+	type: union([literal("par"), literal("eur")]),
+	isInstrument: union([literal(1), literal(0)])
 });
 export type Instruments = Output<typeof v_Instruments>;
 

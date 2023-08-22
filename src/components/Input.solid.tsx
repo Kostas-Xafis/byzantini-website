@@ -59,6 +59,7 @@ export type Props = {
 	disabled?: boolean;
 	blurDisabled?: boolean;
 	selectList?: string[];
+	valueLiteral?: boolean;
 	multiselectList?: { value: number; label: string; selected: boolean }[];
 	multiselectOnce?: boolean;
 	fileExtension?: string;
@@ -78,6 +79,7 @@ export default function Input(props: Props) {
 		disabled,
 		blurDisabled = true,
 		selectList,
+		valueLiteral = false,
 		multiselectList,
 		multiselectOnce,
 		fileExtension,
@@ -171,7 +173,7 @@ export default function Input(props: Props) {
 				>
 					<For each={selectList}>
 						{(selectItem, index) => (
-							<option selected={index() === value} value={index()}>
+							<option selected={index() === value} value={valueLiteral ? selectItem : index()}>
 								{selectItem}
 							</option>
 						)}
