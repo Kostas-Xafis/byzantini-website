@@ -111,6 +111,7 @@ export const v_Locations = object({
 	areacode: number([integer(), minValue(0)]),
 	municipality: string(),
 	email: string([email()]),
+	manager: string(),
 	telephones: string(),
 	priority: number([integer(), minValue(0)]),
 	image: string(),

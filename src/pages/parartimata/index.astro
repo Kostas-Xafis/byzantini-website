@@ -15,12 +15,13 @@ const locations = (await useAPI("Locations.get", {})).data as Locations[];
 						id={"l_" + l.name}
 						data-show={ind === 0}
 						data-name={l.name}
-						class="group/btn w-full h-max py-6 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+						class="group/btn w-max h-max py-4 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+					
 					>
-						<button class="p-6 text-2xl group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+						<button class="p-4 w-[20ch] text-2xl group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
 							{l.name}
 						</button>
-						<i class="fa-solid fa-angle-right mt-2 pr-6 text-xl place-self-center group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out" />
+						<i class="mt-2 pr-6 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center opacity-0 -translate-x-8 transition-[400ms_opacity_ease-in,500ms_transform_ease-in] group-hover/btn:opacity-100 group-hover/btn:-translate-x-2 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"></i>
 					</div>
 				))
 			}
@@ -53,6 +54,10 @@ const locations = (await useAPI("Locations.get", {})).data as Locations[];
 								<p class="text-xl">
 									<i class="fa-solid fa-map-location-dot px-2 place-self-center" />
 									Διεύθυνση: {l.address + ", " + l.areacode + " - " + l.municipality}
+								</p>
+								<p class="text-xl">
+									<i class="fa-solid fa-user px-2 place-self-center" />
+									Υπεύθυνος: {l.manager}
 								</p>
 								<p class="text-xl">
 									<i class="fa-regular fa-envelope px-2 place-self-center" />

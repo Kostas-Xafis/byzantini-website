@@ -73,11 +73,3 @@ export const MessageWrapper = (msg: string) => {
 export const DataWrapper = <T = object>(data: T) => {
 	return { res: "data", data } as EndpointResponse<T>;
 };
-
-export const onElementMount = async (target: string, callback: () => any) => {
-	while (!document.querySelector(target)) {
-		console.log("waiting for element to mount: " + target)
-		await new Promise((resolve) => setTimeout(resolve, 100));
-	}
-	callback()
-}

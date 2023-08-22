@@ -111,6 +111,7 @@ CREATE TABLE `locations` (
     `address` varchar(80) NOT NULL,
     `areacode` int NOT NULL,
     `municipality` varchar(80) NOT NULL,
+    `manager` varchar(80),
     `email` varchar(80) NOT NULL,
     `telephones` varchar(80) NOT NULL,
     `priority` int NOT NULL DEFAULT 0,
@@ -302,3 +303,6 @@ INSERT INTO teacher_instruments SET instrument_id = 19, teacher_id = 4;
 INSERT INTO teacher_instruments SET instrument_id = 30, teacher_id = 5;
 INSERT INTO teacher_instruments SET instrument_id = 31, teacher_id = 5;
 INSERT INTO teacher_instruments SET instrument_id = 33, teacher_id = 5;
+
+
+-- ALTER TABLE `locations` ADD COLUMN `manager` varchar(80) AFTER `municipality`;

@@ -21,6 +21,7 @@ const LocationsInputs = (location?: Locations): Record<keyof Locations, InputPro
 		address: { name: "address", label: "Διεύθυνση", type: "text", iconClasses: "fa-solid fa-location-dot" },
 		areacode: { name: "areacode", label: "Ταχ. Κώδικας", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		municipality: { name: "municipality", label: "Δήμος", type: "text", iconClasses: "fa-solid fa-tree-city" },
+		manager: { name: "manager", label: "Υπεύθυνος", type: "text", iconClasses: "fa-solid fa-user" },
 		email: { name: "email", label: "Email", type: "email", iconClasses: "fa-solid fa-envelope" },
 		telephones: { name: "telephones", label: "Τηλέφωνο", type: "text", iconClasses: "fa-solid fa-phone" },
 		priority: { name: "priority", label: "Προτεραιότητα", type: "number", iconClasses: "fa-solid fa-arrow-up-9-1", minmax: [0, 100] },
@@ -45,8 +46,9 @@ const locationToTableLocation = (location: Locations): LocationsTable => {
 	// @ts-ignore
 	delete location.map;
 	const columns = Object.values(location);
+	console.log(location, columns);
 	//@ts-ignore
-	columns[7] = (location.image && "/locations/" + location.image) || "";
+	columns[8] = (location.image && "/locations/" + location.image) || "";
 	return columns as unknown as LocationsTable;
 };
 
@@ -103,6 +105,7 @@ export default function LocationsTable() {
 		address: { name: "Οδός", size: () => 25 },
 		areacode: "Ταχ. Κώδικας",
 		municipality: { name: "Δήμος", size: () => 20 },
+		manager: { name: "Υπεύθυνος", size: () => 20 },
 		email: { name: "Email", size: () => 20 },
 		priority: "Προτεραιότητα",
 		image: "Φωτογραφία"
@@ -123,6 +126,7 @@ export default function LocationsTable() {
 				address: formData.get("address") as string,
 				areacode: Number(formData.get("areacode")),
 				municipality: formData.get("municipality") as string,
+				manager: formData.get("manager") as string,
 				email: formData.get("email") as string,
 				telephones: formData.get("telephones") as string,
 				priority: Number(formData.get("priority")),
@@ -168,6 +172,7 @@ export default function LocationsTable() {
 				address: formData.get("address") as string,
 				areacode: Number(formData.get("areacode")),
 				municipality: formData.get("municipality") as string,
+				manager: formData.get("manager") as string,
 				email: formData.get("email") as string,
 				telephones: formData.get("telephones") as string,
 				priority: Number(formData.get("priority")),

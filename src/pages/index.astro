@@ -2,7 +2,7 @@
 import MainPageLayout from "../layouts/MainPageLayout.astro";
 import Landing from "../components/mainpage/Landing.astro";
 import Lessons from "../components/mainpage/Lessons.astro";
-// import Teachers from "../components/mainpage/Teachers.astro";
+import Teachers from "../components/mainpage/Teachers.astro";
 export const prerender = true;
 ---
 
@@ -10,34 +10,34 @@ export const prerender = true;
 	<div id="landing-page" class="w-full h-full grid auto-rows-max grid-flow-row grid-cols-1 overflow-y-auto">
 		<Landing />
 		<Lessons />
-		<!-- <Teachers /> -->
+		<Teachers />
 	</div>
+	<style is:inline>
+		@keyframes fadeIn {
+			0% {
+				opacity: 0.0001;
+			}
+			100% {
+				opacity: 1;
+			}
+		}
+		@keyframes fadeInParent {
+			0% {
+				transform: translateY(25px);
+			}
+			100% {
+				transform: translateY(0px);
+			}
+		}
+		@keyframes fadeIn2 {
+			0% {
+				opacity: 0.0001;
+				transform: translateX(-1rem);
+			}
+			100% {
+				opacity: 1;
+				transform: translateX(0px);
+			}
+		}
+	</style>
 </MainPageLayout>
-<style is:inline>
-	@keyframes fadeIn {
-		0% {
-			opacity: 0.0001;
-		}
-		100% {
-			opacity: 1;
-		}
-	}
-	@keyframes fadeInParent {
-		0% {
-			transform: translateY(25px);
-		}
-		100% {
-			transform: translateY(0px);
-		}
-	}
-	@keyframes fadeIn2 {
-		0% {
-			opacity: 0.0001;
-			transform: translateX(-1rem);
-		}
-		100% {
-			opacity: 1;
-			transform: translateX(0px);
-		}
-	}
-</style>

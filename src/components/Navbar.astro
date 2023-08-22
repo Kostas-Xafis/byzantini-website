@@ -20,117 +20,130 @@ const highlight = (url: string) => {
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
 ---
 
-{
-	!obsv ? (
-		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] bg-red-900 z-[10000]">
-			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-2 gap-x-4 font-anaktoria">
-				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
-					<div class="w-full h-full bg-red-50" />
-					<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
-				</a>
-				<div class="absolute top-[1px] left-[calc(1rem_-_2px)] blur-[2px] -z-10">
-					<div class="logoImg w-[80px] aspect-square">
-						<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]" />
-					</div>
-				</div>
-				<p class="text-3xl mt-1 drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
-				</p>
-				<p class="pl-[5rem] text-xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-					Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
-				</p>
-			</div>
-			<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4">
-				{links.map(link => (
-					<a
-						class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center"
-						href={link.url}
-						rel="prefetch"
-					>
-						<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.25)]">
-							{link.name}
-						</div>
-						<div
-							class={
-								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px] " +
-								(highlight(link.url) ? "bg-red-200" : "group-hover:bg-red-200")
-							}
-						/>
+<>
+	{
+		!obsv ? (
+			<nav class="fixed top-0 left-0 w-full h-[75px] grid grid-rows-[75px] grid-cols-[max-content_1fr] bg-red-900 z-[10000]">
+				<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center">
+					<a href="/" class="logoImg w-[70px] row-span-full aspect-square">
+						<div class="w-full h-full bg-red-50" />
+						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 					</a>
-				))}
-			</div>
-		</nav>
-	) : (
-		<nav class="fixed top-0 left-0 w-full h-[82px] grid grid-rows-[82px] grid-cols-[80px_1fr] z-[10000] transition-colors glass border-none">
-			<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria">
-				<a href="/" class="logoImg w-[80px] row-span-full aspect-square">
-					<div class="w-full h-full bg-red-50" />
-					<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
-				</a>
-				<div class="absolute top-[1px] left-[calc(1rem_-_1px)] -z-10">
-					<div class="logoImg w-[80px] aspect-square">
-						<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]" />
-					</div>
-				</div>
-				<p class="text-3xl mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
-				</p>
-				<p class="pl-[5rem] text-xl font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-					Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
-				</p>
-			</div>
-			<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 `}>
-				{links.map(link => (
-					<a
-						class="group relative px-10 grid grid-rows-[minmax(min-content, 70px)] place-content-center"
-						href={link.url}
-						rel={!isDev ? "prefetch" : ""}
-					>
-						<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-							{link.name}
+					<div class="absolute top-[1px] left-[calc(1rem_-_2px)] blur-[2px] -z-10">
+						<div class="logoImg w-[70px] aspect-square">
+							<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]" />
 						</div>
-						<div
-							class={
-								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px]" +
-								(highlight(link.url) ? " bg-red-200" : " group-hover:bg-red-200")
-							}
-						/>
+					</div>
+					<p class="text-3xl mt-1 drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+						Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+					</p>
+					<p class="pl-[5rem] text-xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+						Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
+					</p>
+				</div>
+				<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4">
+					{links.map(link => (
+						<a
+							class="group relative px-10 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
+							href={link.url}
+							rel="prefetch"
+						>
+							<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.25)]">
+								{link.name}
+							</div>
+							<div
+								class={
+									"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px] " +
+									(highlight(link.url) ? "bg-red-200" : "group-hover:bg-red-200")
+								}
+							/>
+						</a>
+					))}
+				</div>
+			</nav>
+		) : (
+			<nav class="fixed top-0 left-0 w-full h-[75px] grid grid-rows-[73px] grid-cols-[max-content_1fr] z-[10000] transition-colors glass border-t-[0px]">
+				<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center">
+					<a href="/" class="logoImg w-[70px] row-span-full aspect-square">
+						<div class="w-full h-full bg-red-50" />
+						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 					</a>
-				))}
-			</div>
-		</nav>
-	)
-}
-<style is:inline>
-	.logoImg {
-		mask-image: url("/logo.png");
-		-webkit-mask-image: url("/logo.png");
-		mask-size: contain;
-		-webkit-mask-size: contain;
+					<div class="absolute top-[1px] left-[calc(1rem_-_1px)] -z-10">
+						<div class="logoImg w-[70px] aspect-square">
+							<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]" />
+						</div>
+					</div>
+					<p class="text-3xl mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+						Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+					</p>
+					<p class="pl-[5rem] text-xl font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
+						Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
+					</p>
+				</div>
+				<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 `}>
+					{links.map(link => (
+						<a
+							class="group relative px-10 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
+							href={link.url}
+							rel={!isDev ? "prefetch" : ""}
+						>
+							<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+								{link.name}
+							</div>
+							<div
+								class={
+									"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px]" +
+									(highlight(link.url) ? " bg-red-200" : " group-hover:bg-red-200")
+								}
+							/>
+						</a>
+					))}
+				</div>
+			</nav>
+		)
 	}
-</style>
-<script>
-	import { onElementMount } from "../../lib/utils.js";
-	onElementMount("#welcome-page", () => {
-		const obsv = new IntersectionObserver(
-			entries => {
-				const entry = entries[0];
-				if (entry.intersectionRatio >= 0.9) {
-					//@ts-ignore
-					document.querySelector("nav").classList.remove("bg-red-900");
-					//@ts-ignore
-					document.querySelector("nav").classList.add("glass");
-				} else {
-					//@ts-ignore
-					document.querySelector("nav").classList.remove("glass");
-					//@ts-ignore
-					document.querySelector("nav").classList.add("bg-red-900");
-				}
-			},
-			{
-				threshold: [0.9]
+	<style is:inline>
+		.logoImg {
+			mask-image: url("/logo.png");
+			-webkit-mask-image: url("/logo.png");
+			mask-size: contain;
+			-webkit-mask-size: contain;
+		}
+	</style>
+	<script is:inline>
+		const onElementMount = async (target, callback) => {
+			let counter = 0;
+			while (!document.querySelector(target) && counter++ < 20) {
+				console.log("waiting for element to mount: " + target);
+				await new Promise(resolve => setTimeout(resolve, 200));
 			}
-		);
-		obsv.observe(document.querySelector("#welcome-page") as HTMLElement);
-	});
-</script>
+			if (counter >= 50) {
+				console.error("element mount timed out: " + target);
+				return;
+			}
+			callback();
+		};
+		onElementMount("#welcome-page", () => {
+			const obsv = new IntersectionObserver(
+				entries => {
+					const entry = entries[0];
+					if (entry.intersectionRatio >= 0.9) {
+						//@ts-ignore
+						document.querySelector("nav").classList.remove("bg-red-900");
+						//@ts-ignore
+						document.querySelector("nav").classList.add("glass");
+					} else {
+						//@ts-ignore
+						document.querySelector("nav").classList.remove("glass");
+						//@ts-ignore
+						document.querySelector("nav").classList.add("bg-red-900");
+					}
+				},
+				{
+					threshold: [0.9]
+				}
+			);
+			obsv.observe(document.querySelector("#welcome-page"));
+		});
+	</script>
+</>

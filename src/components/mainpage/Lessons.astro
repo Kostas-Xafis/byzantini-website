@@ -5,7 +5,7 @@ const text = Array(3).fill(
 );
 ---
 
-<div id="lessons" class="h-max w-full grid grid-rows-[max-content_1fr] grid-cols-3 gap-16 p-16 py-24">
+<div id="lessons" class="h-max w-full grid grid-rows-[max-content_1fr] grid-cols-3 gap-16 p-16 py-20">
 	<h1
 		id="lessonsHead"
 		class="heading relative p-2 text-center w-[9ch] place-self-center text-7xl font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900"
@@ -14,8 +14,8 @@ const text = Array(3).fill(
 	</h1>
 	{
 		lessons.map((l, i) => (
-			<div class="group/lesson relative h-[600px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
-				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(300px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
+			<div class="group/lesson relative h-[500px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
+				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(250px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
 					{l}
 				</h2>
 				<p class="text-2xl font-didact text-red-50 place-self-center pt-8 transition-opacity duration-100 opacity-[0.0001] group-hover/lesson:opacity-100 group-hover/lesson:duration-500">
@@ -24,33 +24,43 @@ const text = Array(3).fill(
 			</div>
 		))
 	}
-</div>
-<style is:inline>
-	#lessons > div:nth-of-type(1)::after {
-		background-image: url("/byz.jpg");
-	}
-	#lessons > div:nth-of-type(2)::after {
-		background-image: url("/par.jpg");
-	}
-	#lessons > div:nth-of-type(3)::after {
-		background-image: url("/eur.jpg");
-	}
+	<style is:inline>
+		#lessons > div:nth-of-type(1)::after {
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/byz2.jpg");
+			background-size: cover;
+			background-position: center;
+		}
+		#lessons > div:nth-of-type(2)::after {
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/par.jpg");
+			background-size: cover;
+			background-position: center;
+		}
+		#lessons > div:nth-of-type(3)::after {
+			background-image: url("/eur.jpg");
+		}
 
-	#lessons > div {
-		background: linear-gradient(to right, transparent, rgb(28, 28, 28, 0.85) 85%);
-		background-size: 300% 300%;
-		transition: background-position 0.25s ease-in-out;
-	}
-	#lessons h1,
-	#lessons h2 {
-		text-shadow: -2px 1px 2px rgb(14, 14, 14, 0.5);
-	}
-	#lessons > div:hover {
-		background-position: 100%;
-	}
-</style>
+		#lessons > div {
+			background: linear-gradient(to right, transparent, rgb(28, 28, 28, 0.85) 85%);
+			background-size: 300% 300%;
+			transition: background-position 0.25s ease-in-out;
+		}
+		#lessons h1,
+		#lessons h2 {
+			text-shadow: -2px 1px 2px rgb(14, 14, 14, 0.5);
+		}
+		#lessons > div:hover {
+			background-position: 100%;
+		}
+	</style>
+</div>
 <script>
-	import { onElementMount } from "../../../lib/utils";
+	const onElementMount = async (target: string, callback: () => any) => {
+		while (!document.querySelector(target)) {
+			console.log("waiting for element to mount: " + target);
+			await new Promise(resolve => setTimeout(resolve, 100));
+		}
+		callback();
+	};
 	onElementMount("#lessons", () => {
 		const obsv = new IntersectionObserver(
 			entries => {
@@ -67,6 +77,6 @@ const text = Array(3).fill(
 			}
 		);
 		// @ts-ignore
-		obsv.observe(document.querySelector("#lessons"));
+		obsv.observe(document.querySelector("#lessons") as HTMLElement);
 	});
 </script>
