@@ -29,6 +29,7 @@ test.exe
 package-lock.json
 
 /public/images
+/public/fek-*.pdf
 
 /notAssets
 
