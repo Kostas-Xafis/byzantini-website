@@ -2,6 +2,7 @@
 import { SEO } from "astro-seo";
 import Navbar from "../components/Navbar.astro";
 import Links from "../components/Links.astro";
+import Contact from "../components/Contact.astro";
 export interface Props {
 	title: string;
 }
@@ -56,12 +57,6 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 			}}
 		/>
 		<Links />
-	</head>
-	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
-		<Navbar />
-		<div class="relative w-full h-full grid grid-rows-[100%] pt-[75px]">
-			<slot />
-		</div>
 		<style is:inline>
 			html {
 				font-family: system-ui, sans-serif;
@@ -93,6 +88,50 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 				backdrop-filter: blur(4px);
 				border: 1px solid rgb(153 27 27 / 0.3);
 			}
+			@keyframes fadeIn {
+				0% {
+					opacity: 0.0001;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+			@keyframes fadeOut {
+				0% {
+					opacity: 1;
+				}
+				100% {
+					opacity: 0.0001;
+				}
+			}
+			@keyframes fadeInParent {
+				0% {
+					transform: translateY(25px);
+				}
+				100% {
+					transform: translateY(0px);
+				}
+			}
+			@keyframes fadeInLeft {
+				0% {
+					opacity: 0.0001;
+					transform: translateX(-2rem);
+				}
+				80% {
+					opacity: 1;
+				}
+				100% {
+					opacity: 1;
+					transform: translateX(0px);
+				}
+			}
 		</style>
+	</head>
+	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
+		<Navbar />
+		<div class="relative w-full h-full grid grid-rows-[100%] pt-[75px]">
+			<slot />
+		</div>
+		<Contact />
 	</body>
 </html>

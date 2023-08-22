@@ -73,3 +73,7 @@ export const MessageWrapper = (msg: string) => {
 export const DataWrapper = <T = object>(data: T) => {
 	return { res: "data", data } as EndpointResponse<T>;
 };
+
+export const isDevFromURL = (url: URL) => {
+	return url.hostname.includes("localhost") || url.hostname.includes("127.0.0.1");
+} 

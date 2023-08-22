@@ -38,9 +38,7 @@
 			class="group/regbtn px-8 py-4 mt-8 text-5xl font-anaktoria font-bold text-red-50 self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors hover:bg-red-50 hover:text-red-900"
 			href="/eggrafes"
 		>
-			Εγγραφές <i
-				class="w-0 pl-2 fa-solid fa-chevron-right font-bold text-2xl self-center opacity-0 -translate-x-8 transition-[150ms_opacity_ease-in,150ms_transform_ease-in] group-hover/regbtn:opacity-100 group-hover/regbtn:-translate-x-2"
-			></i>
+			Εγγραφές <i class="w-0 fa-solid fa-chevron-right font-bold text-2xl self-center opacity-0"></i>
 		</a>
 	</div>
 	<style is:inline>
@@ -83,7 +81,10 @@
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
 		}
 		#fek:hover i {
-			animation: fadeIn2 0.3s ease-in-out forwards;
+			animation: fadeInLeft 0.3s ease-in forwards;
+		}
+		#eggrafesLink > a:hover > i {
+			animation: fadeInLeft 0.3s ease-in-out forwards;
 		}
 	</style>
 </div>

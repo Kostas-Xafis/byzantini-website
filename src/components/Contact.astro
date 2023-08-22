@@ -1,0 +1,58 @@
+<div id="contacts" class="fixed bottom-0 right-[7.5%] w-max grid translate-y-full">
+	<div class="relative p-6 grid grid-rows-2 glass gap-y-2 rounded-t-lg font-didact bg-opacity-60">
+		<p class="text-2xl text-red-50">
+			<i class="text-xl pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
+				class="text-red-50 underline underline-offset-2 pl-2"
+				href="tel:6983380631">6983380631</a
+			>
+		</p>
+		<p class="text-2xl text-red-50">
+			<i class="text-xl pr-3 fa-solid fa-envelope"></i>Email: <span class="pl-2">byzscholemousikhs@gmail.com</span>
+		</p>
+		<p class="text-2xl text-red-50">
+			<i class="text-xl pr-1 fa-solid fa-map-location-dot"></i>
+			Τοποθεσία:
+			<a class="text-red-50 underline underline-offset-2 pl-2" href="/parartimata#Έδρα%20Σχολής%20-%20Μεταμόρφωση"
+				>Έδρα Μεταμόρφωσης</a
+			>
+		</p>
+		<button
+			id="showContacts"
+			class="group/btn px-4 py-1 rounded-t-lg border-b-0 absolute -top-[1px] left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] bg-opacity-80"
+		>
+			<i class="text-red-50 fa-solid fa-chevron-up font-bold text-2xl place-self-center"></i>
+			<p class="text-3xl text-red-50 font-anaktoria">Επικοινωνία</p>
+		</button>
+	</div>
+	<style is:inline>
+		#contacts {
+			transition: transform 0.2s ease-in-out;
+		}
+		#contacts:is(.clickedContacts) {
+			transform: translateY(0%);
+		}
+		#showContacts i {
+			transition: transform 0.2s ease-in-out;
+		}
+		#contacts:is(.clickedContacts) #showContacts i {
+			transform: rotateZ(180deg);
+		}
+	</style>
+</div>
+<script>
+	const onElementMount = async (target: string, callback: () => any) => {
+		while (!document.querySelector(target)) {
+			console.log("waiting for element to mount: " + target);
+			await new Promise(resolve => setTimeout(resolve, 100));
+		}
+		callback();
+	};
+
+	onElementMount("#showContacts", () => {
+		const btn = document.querySelector("#showContacts") as HTMLButtonElement;
+		const contacts = document.querySelector("#contacts") as HTMLElement;
+		btn.addEventListener("click", () => {
+			contacts.classList.toggle("clickedContacts");
+		});
+	});
+</script>

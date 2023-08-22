@@ -6,7 +6,8 @@ export interface Props {
 const { obsv } = Astro.props;
 
 const links = [
-	{ name: "Η Σχολή μας", url: "/" },
+	{ name: "Αρχική", url: "/" },
+	{ name: "Η Σχολή μας", url: "/sxoli" },
 	{ name: "Εγγραφές", url: "/eggrafes" },
 	{ name: "Καθηγητές", url: "/kathigites" },
 	{ name: "Παραρτήματα", url: "/parartimata" }
@@ -44,7 +45,7 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 				<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4">
 					{links.map(link => (
 						<a
-							class="group relative px-10 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
+							class="group relative px-4 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
 							href={link.url}
 							rel="prefetch"
 						>
@@ -83,7 +84,7 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 				<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 `}>
 					{links.map(link => (
 						<a
-							class="group relative px-10 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
+							class="group relative px-4 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
 							href={link.url}
 							rel={!isDev ? "prefetch" : ""}
 						>

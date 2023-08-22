@@ -10,6 +10,15 @@ const get: EndpointRoute<"GET:/locations", null, Locations[]> = {
 	func: async req => null as any
 };
 
+const getByPriority: EndpointRoute<"GET:/locations/priority", null, Locations[]> = {
+	authentication: false,
+	method: "GET",
+	path: "/locations/priority",
+	hasUrlParams: false,
+	func: async req => null as any
+};
+
+
 const postReq = omit(v_Locations, ["id", "image"]);
 const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number }> = {
 	authentication: true,
@@ -56,6 +65,7 @@ const del: DefaultEndpointRoute<"DELETE:/locations", number[]> = {
 
 export const LocationsRoutes = {
 	get,
+	getByPriority,
 	post,
 	update,
 	fileUpload,
@@ -72,6 +82,11 @@ export const APILocationsEndpoints: APIEndpointsBuilder<"Locations", typeof Loca
 		method: "GET",
 		path: "/locations",
 		endpoint: "Locations.get"
+	},
+	"Locations.getByPriority": {
+		method: "GET",
+		path: "/locations/priority",
+		endpoint: "Locations.getByPriority"
 	},
 	"Locations.post": {
 		method: "POST",
@@ -105,6 +120,7 @@ export const APILocationsEndpoints: APIEndpointsBuilder<"Locations", typeof Loca
 export const APILocations: APIBuilder<"Locations", typeof LocationsRoutes> = {
 	Locations: {
 		get: "Locations.get",
+		getByPriority: "Locations.getByPriority",
 		post: "Locations.post",
 		update: "Locations.update",
 		fileUpload: "Locations.fileUpload",

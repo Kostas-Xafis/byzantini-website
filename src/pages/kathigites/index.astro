@@ -57,7 +57,7 @@ const musicEnd = [
 						>
 							{str}
 						</button>
-						<i class="mt-2 pr-6 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center z-10 opacity-0 -translate-x-8 transition-[400ms_opacity_ease-in,500ms_transform_ease-in] group-hover/btn:opacity-100 group-hover/btn:-translate-x-2 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"></i>
+						<i class="mt-2 pr-6 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center z-10 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"></i>
 					</div>
 				))
 			}
@@ -106,28 +106,6 @@ const musicEnd = [
 	button:is(.selected) {
 		background-color: rgb(153, 27, 27);
 	}
-	    @keyframes fadeIn {
-		0%{
-			opacity: 0.0001;
-		}
-		10%{
-			opacity: 0.0001;
-		}
-        100%{
-            opacity: 1;
-        }
-    }
-	@keyframes fadeOut {
-		0%{
-			opacity: 1;
-		}
-		99%{
-			opacity: 0.0001;
-		}
-        100%{
-			opacity: 0.0001;
-        }
-    }
 	.remove {
 		opacity: 1;
 		animation: fadeOut 0.4s ease-in-out forwards;
@@ -135,6 +113,9 @@ const musicEnd = [
 	#teachersContainer:is(:not(.remove)), #btsContainer  {
 		opacity: 0.0001;
 		animation: fadeIn 0.6s ease-in-out forwards;
+	}
+	#btsContainer > div:hover i {
+		animation: fadeInLeft 0.3s ease-in-out forwards;
 	}
 </style>
 
@@ -173,4 +154,11 @@ const musicEnd = [
 			}
 		})
 	})
+	if(window.location.hash) {
+		const hash = window.location.hash.replace("#", "");
+		const type = decodeURI(hash);
+		const btn = document.querySelector(`#btsContainer div[data-type='${type}'] button`) as HTMLElement;
+		console.log(btn);
+		btn.click();
+	}
 </script>

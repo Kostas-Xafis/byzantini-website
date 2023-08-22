@@ -10,6 +10,10 @@ serverRoutes.get.func = async _req => {
 	return await execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations"));
 };
 
+serverRoutes.getByPriority.func = async _req => {
+	return await execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations ORDER BY priority ASC, name ASC"));
+};
+
 serverRoutes.post.func = async req => {
 	return await execTryCatch(async () => {
 		const body = await req.json();
