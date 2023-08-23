@@ -114,7 +114,7 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 	<script is:inline>
 		const onElementMount = async (target, callback) => {
 			let counter = 0;
-			while (!document.querySelector(target) && counter++ < 20) {
+			while (!document.querySelector(target) && counter++ < 10) {
 				console.log("waiting for element to mount: " + target);
 				await new Promise(resolve => setTimeout(resolve, 200));
 			}

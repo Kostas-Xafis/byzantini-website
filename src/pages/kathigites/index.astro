@@ -1,30 +1,27 @@
 ---
 import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
-import type { Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
+import type { Instruments, Locations, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
-const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_classes_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
+const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}),
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "par"}}),
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "eur"}}),
-	useAPI(API.Teachers.getClasses, {}),
 	useAPI(API.Teachers.getLocations, {}),
 	useAPI(API.Locations.get, {}),
 	useAPI(API.Teachers.getInstruments, {}),
 	useAPI(API.Instruments.get, {}),
 ]);
 
-const [byz_teachers, par_teachers, eur_teachers, teacher_classes, teacher_locations, locations, teacher_instruments, instruments] = [
+const [byz_teachers, par_teachers, eur_teachers, teacher_locations, locations, teacher_instruments, instruments] = [
 	byz_teachers_res.data as Teachers[], 
 	par_teachers_res.data as Teachers[], 
 	eur_teachers_res.data as Teachers[], 
-	teacher_classes_res.data as TeacherClasses[], 
 	teacher_locations_res.data as TeacherLocations[], 
 	locations_res.data as Locations[],
 	teacher_instruments_res.data as TeacherInstruments[],
 	instruments_res.data as Instruments[]
-]
-
+];
 
 const enum MusicType {
 	Byzantine = "byz",
@@ -38,17 +35,28 @@ const teachers = [
 	[par_teachers, MusicType.Traditional],
 	[eur_teachers, MusicType.European]
 ] as const;
+
+const teacher_classes = teachers.map(([teachers, type], index) => {
+	return teachers.map(teacher => {
+			return {
+				teacher_id: teacher.id,
+				class_id: index + 1
+			};
+		}).flat();
+}).flat();
+
+
 const music = [
 	["Βυζαντινή Μουσική", MusicType.Byzantine],
 	["Παραδοσιακή Μουσική", MusicType.Traditional],
 	["Ευρωπαϊκή Μουσική", MusicType.European]
 ] as const;
 
-const musicEnd = [
-	["Βυζαντινής Μουσικής", MusicType.Byzantine],
-	["Παραδοσιακής Μουσικής", MusicType.Traditional],
-	["Ευρωπαϊκής Μουσικής", MusicType.European]
-] as const;
+// const musicEnd = [
+// 	["Βυζαντινής Μουσικής", MusicType.Byzantine],
+// 	["Παραδοσιακής Μουσικής", MusicType.Traditional],
+// 	["Ευρωπαϊκής Μουσικής", MusicType.European]
+// ] as const;
 ---
 
 <Layout title="Καθηγητές">
@@ -56,7 +64,7 @@ const musicEnd = [
 		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 border-red-900">
 			{
 				music.map(([str, type], ind) => (
-					<div id={type + "btn"} data-show={ind === 0} data-type={type} class={
+					<div id={type} data-show={ind === 0} data-type={type} class={
 						"group/btn relative cursor-pointer w-full h-max py-6 place-self-center red-300 grid grid-cols-[1fr_max-content] bg-white border-red-900 border-b-2"
 						+" after:transition-opacity after:duration-500 after:ease-in-out after:inset-0 after:w-full after:h-full after:absolute after:opacity-[0.001%]"
 						+" after:bg-gradient-to-r after:from-[#ff9387] after:from-[-200%] after:to-red-900" 
@@ -86,9 +94,9 @@ const musicEnd = [
 						t_nonInstruments?.sort();
 						return (
 						<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
-							+ (type === MusicType.Byzantine ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 
-							+ (type === MusicType.Traditional ? " group-[:has(#parbtn[data-show])]/type:grid" : "") 
-							+ (type === MusicType.European ? " group-[:has(#eurbtn[data-show])]/type:grid" : "")}>
+							+ (type === MusicType.Byzantine ? " group-[:has(#byz[data-show])]/type:grid" : "") 
+							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:grid" : "") 
+							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:grid" : "")}>
 							{teacher.picture ? (
 								<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-[15px]" />
 							) : (
@@ -176,8 +184,14 @@ const musicEnd = [
 	if(window.location.hash) {
 		const hash = window.location.hash.replace("#", "");
 		const type = decodeURI(hash);
-		const btn = document.querySelector(`#btsContainer div[data-type='${type}'] button`) as HTMLElement;
-		console.log(btn);
-		btn.click();
+		const music = {
+			"Βυζαντινή Μουσική": "byz",
+			"Παραδοσιακή Μουσική": "par",
+			"Ευρωπαϊκή Μουσική": "eur"
+		} as Record<string, string>;
+		if (type in music) {
+			const btn = document.querySelector(`#btsContainer #${music[type]} button`) as HTMLElement;
+			btn.click();
+		}
 	}
 </script>

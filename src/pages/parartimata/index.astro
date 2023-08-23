@@ -55,16 +55,22 @@ const locations = (await useAPI("Locations.getByPriority", {})).data as Location
 									{l.name}
 								</h1>
 								<p class="text-xl">
-									<i class="fa-solid fa-map-location-dot px-2 place-self-center" />
-									Διεύθυνση: {l.address + ", " + l.areacode + " - " + l.municipality}
+									<i class="fa-solid fa-map-location-dot pr-2 place-self-center" />
+									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Διεύθυνση:</span>
+									{l.address + ", " + l.areacode + " - " + l.municipality}
 								</p>
 								<p class="text-xl">
-									<i class="fa-solid fa-user px-2 place-self-center" />
-									Υπεύθυνος: {l.manager}
+									<i class="fa-solid fa-user pr-3 place-self-center" />
+									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Υπεύθυνος:</span>
+									{l.manager}
 								</p>
 								<p class="text-xl">
-									<i class="fa-regular fa-envelope px-2 place-self-center" />
-									Επικοινωνία: {l.email ?? ""}•{l.telephones.replaceAll(",", "")}
+									<i class="fa-regular fa-envelope pr-2 place-self-center" />
+									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Επικοινωνία:</span> 
+									<a target="_blank" href={`mailto:${l.email}`}>{l.email ?? ""}</a>•
+									{l.telephones.split(",").map((tel) => {
+										return (<a target="_blank" href={`tel:${tel}`}>{tel}</a>)
+									})}
 								</p>
 								{l.link ? 
 									<a target="_blank" href={l.link} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
@@ -174,7 +180,6 @@ const locations = (await useAPI("Locations.getByPriority", {})).data as Location
 			const hash = window.location.hash.replace("#", "");
 			const location = decodeURI(hash);
 			const btn = document.querySelector(`#btsContainer div[data-name='${location}'] button`) as HTMLElement;
-			console.log(btn);
 			btn.click();
 		}
 	})();

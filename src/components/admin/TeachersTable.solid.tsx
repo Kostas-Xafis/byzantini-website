@@ -24,6 +24,14 @@ type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number
 type TeachersTable = Omit<FullTeachers, "instruments"> & { priority_byz: number; priority_par: number; priority_eur: number };
 type TeacherJoins = { teacherClasses: number[]; teacherInstruments: number[]; teacherLocations: number[]; priorities: number[] };
 
+type ExtraInputs =
+	| "teacherClasses"
+	| "teacherLocations"
+	| "teacherInstrumentsTraditional"
+	| "teacherInstrumentsEuropean"
+	| "priority_byz"
+	| "priority_par"
+	| "priority_eur";
 const TeachersInputs = (
 	class_types: ClassType[],
 	locations: Locations[],
@@ -32,18 +40,11 @@ const TeachersInputs = (
 	classList?: TeacherClasses[],
 	locationsList?: TeacherLocations[],
 	instrumentsList?: TeacherInstruments[]
-): Record<
-	| keyof FullTeachers
-	| "teacherClasses"
-	| "teacherLocations"
-	| "teacherInstrumentsTraditional"
-	| "teacherInstrumentsEuropean"
-	| "priority_byz"
-	| "priority_par"
-	| "priority_eur",
-	InputProps
-> => {
+): Record<keyof FullTeachers | ExtraInputs, InputProps> => {
 	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];
+	const teacherPriorities = teacherClasses.map(c => {
+		return { priority: c.priority, class_id: c.class_id };
+	});
 	const multiselectClasses = class_types?.map(ct => {
 		let c = teacherClasses && teacherClasses.find(t => t.class_id === ct.id);
 		return { value: ct.id, label: ct.name, selected: !!c };
@@ -77,6 +78,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Βυζαντινής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
+			value: teacherPriorities.find(p => p.class_id === 1)?.priority || "",
 			minmax: [1, 1000]
 		},
 		priority_par: {
@@ -84,6 +86,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Παραδοσιακής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
+			value: teacherPriorities.find(p => p.class_id === 2)?.priority || "",
 			minmax: [1, 1000]
 		},
 		priority_eur: {
@@ -91,6 +94,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Ευρωπαϊκής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
+			value: teacherPriorities.find(p => p.class_id === 3)?.priority || "",
 			minmax: [1, 1000]
 		},
 		picture: {

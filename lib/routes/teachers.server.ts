@@ -1,4 +1,4 @@
-import type { TeacherClasses, Locations, TeacherLocations, Teachers, TeacherInstruments } from "../../types/entities";
+import type { TeacherClasses, TeacherLocations, Teachers, TeacherInstruments } from "../../types/entities";
 import { TeachersRoutes } from "./teachers.client";
 import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils";
 import { Bucket } from "../bucket";
@@ -12,7 +12,7 @@ serverRoutes.get.func = async _req => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
 };
 
-serverRoutes.getByPriorityClasses.func = async (req, slug) => {
+serverRoutes.getByPriorityClasses.func = async (_req, slug) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type) + 1;
 	if (class_id === 0) throw Error("Invalid class type");
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? ORDER BY tc.priority ASC, fullname ASC", [class_id]));

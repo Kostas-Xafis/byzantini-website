@@ -2,7 +2,7 @@ import { createStore } from "solid-js/store";
 import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
-import { Show, createEffect, createMemo, createSignal, on } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 const genericInputs: Record<
@@ -205,7 +205,7 @@ const instrumentsInput = ({
 
 	return {
 		instruments: {
-			label: "Όργανα",
+			label: "Όργανα-Μαθήματα",
 			name: "instruments",
 			iconClasses: "fa-solid fa-guitar",
 			type: "multiselect",
@@ -246,6 +246,7 @@ export function RegistrationForm() {
 	createEffect(
 		on(formSelected, type => {
 			const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
+			if (!select) return;
 			select.addEventListener("change", (e: Event) => {
 				const target = e.target as HTMLSelectElement;
 				const teacher_id = Number((target[target.selectedIndex] as HTMLOptionElement).value);
@@ -254,6 +255,28 @@ export function RegistrationForm() {
 			setSelectedTeacher(TeachersByType()[0]);
 		})
 	);
+
+	onMount(() => {
+		if (window.location.hash) {
+			const hash = window.location.hash.replace("#", "");
+			console.log(hash);
+			const type = decodeURI(hash);
+			const music = {
+				"Βυζαντινή Μουσική": "byz",
+				"Παραδοσιακή Μουσική": "par",
+				"Ευρωπαϊκή Μουσική": "eur"
+			} as Record<string, string>;
+			if (type in music) {
+				console.log(type);
+				const btn = document.querySelector(`#firstSelect #${music[type]} button`) as HTMLElement;
+				btn.parentElement?.parentElement?.focus();
+				void btn.offsetWidth;
+				setTimeout(() => btn.click(), 3000);
+				// setTimeout(() => (document.querySelector("a:is(.logoImg)") as HTMLElement).click(), 1000);
+			}
+		}
+	});
+
 	const btns = [
 		["Βυζαντινή Μουσική", MusicType.Byzantine],
 		["Παραδοσιακή Μουσική", MusicType.Traditional],
@@ -351,8 +374,11 @@ export function RegistrationForm() {
 					<div id="registrationContainer" class="w-full h-full grid grid-rows-1 grid-cols-1 place-items-center font-dicact">
 						<div id="firstSelect" class="h-full w-full grid grid-cols-3 place-items-center overflow-hidden">
 							{btns.map(([str, type]) => (
-								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 overflow-hidden">
-									<div class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out  group-hover/select:bg-opacity-80 group-hover/select:shadow-md">
+								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
+									<div
+										id={type}
+										class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out  group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md"
+									>
 										<button
 											class="p-6 text-5xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
 											onClick={onSelectClick(type)}
@@ -363,7 +389,7 @@ export function RegistrationForm() {
 									<img
 										src={`/${type}.jpg`}
 										alt="Φόντο εισόδου εγγραφής"
-										class="absolute inset-0 h-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105"
+										class="absolute inset-0 h-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105 group-focus-within/select:scale-105"
 									/>
 								</div>
 							))}
