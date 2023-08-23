@@ -57,6 +57,13 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 			}}
 		/>
 		<Links />
+	</head>
+	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
+		<Navbar obsv />
+		<div class="relative w-full h-full grid grid-rows-[100%]">
+			<slot />
+		</div>
+		<Contact />
 		<style is:inline>
 			html {
 				font-family: "Gothic Didact" system-ui, sans-serif;
@@ -130,12 +137,5 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 				}
 			}
 		</style>
-	</head>
-	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
-		<Navbar obsv />
-		<div class="relative w-full h-full grid grid-rows-[100%]">
-			<slot />
-		</div>
-		<Contact />
 	</body>
 </html>

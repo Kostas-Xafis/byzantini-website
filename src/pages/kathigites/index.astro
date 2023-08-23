@@ -87,14 +87,14 @@ const musicEnd = [
 						<div class="w-max grid auto-rows-max gap-y-2 p-4">
 							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
 							<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_locations.join("•")}</p>
-							<p class="text-xl">Διδάσκων: {t_classes_str.join('•')}</p>
+							<p class="text-xl"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Διδάσκων:</span>{t_classes_str.join('•')}</p>
 							{t_instruments && t_instruments.length > 0 ? (
-								<p class="text-xl">Όργανα: {t_instruments.join('•')}</p>
+								<p class="text-xl"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Όργανα:</span>{t_instruments.join('•')}</p>
 							) : (
 								<></>
 							)}
 							{t_nonInstruments && t_nonInstruments.length > 0 ? (
-								<p class="text-xl">Μαθήματα: {t_nonInstruments.join('•')}</p>
+								<p class="text-xl max-w-[60ch]"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Μαθήματα:</span>{t_nonInstruments.join('•')}</p>
 							) : (
 								<></>
 							)}
@@ -109,24 +109,23 @@ const musicEnd = [
 			}
 		</div>
 	</div>
+	<style is:inline>
+		button:is(.selected) {
+			background-color: rgb(153, 27, 27);
+		}
+		.remove {
+			opacity: 1;
+			animation: fadeOut 0.4s ease-in-out forwards;
+		}
+		#teachersContainer:is(:not(.remove)), #btsContainer  {
+			opacity: 0.0001;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
+		#btsContainer > div:hover i {
+			animation: fadeInLeft 0.3s ease-in-out forwards;
+		}
+	</style>
 </Layout>
-<style is:inline>
-	button:is(.selected) {
-		background-color: rgb(153, 27, 27);
-	}
-	.remove {
-		opacity: 1;
-		animation: fadeOut 0.4s ease-in-out forwards;
-	}
-	#teachersContainer:is(:not(.remove)), #btsContainer  {
-		opacity: 0.0001;
-		animation: fadeIn 0.6s ease-in-out forwards;
-	}
-	#btsContainer > div:hover i {
-		animation: fadeInLeft 0.3s ease-in-out forwards;
-	}
-</style>
-
 <script>
 	enum MusicType {
 		byz = "Βυζαντινής Μουσικής",

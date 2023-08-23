@@ -36,39 +36,39 @@ if (!("data" in res) || !res.data?.isValid) {
 			>
 		</form>
 	</div>
-</SigninLayout>
-<style>
-	@keyframes ShakeAnimation {
-		0% {
-			transform: translateX(0);
-			filter: blur(0px);
+	<style is:inline>
+		@keyframes ShakeAnimation {
+			0% {
+				transform: translateX(0);
+				filter: blur(0px);
+			}
+			10%,
+			30%,
+			70%,
+			90% {
+				transform: translateX(1px);
+			}
+			20%,
+			40%,
+			60%,
+			80% {
+				transform: translateX(-1px);
+			}
+			50% {
+				transform: translateX(1px);
+				filter: blur(1px);
+			}
+			100% {
+				transform: translateX(0px);
+				filter: blur(0px);
+			}
 		}
-		10%,
-		30%,
-		70%,
-		90% {
-			transform: translateX(1px);
-		}
-		20%,
-		40%,
-		60%,
-		80% {
-			transform: translateX(-1px);
-		}
-		50% {
-			transform: translateX(1px);
-			filter: blur(1px);
-		}
-		100% {
-			transform: translateX(0px);
-			filter: blur(0px);
-		}
-	}
 
-	.animate-shake button {
-		animation: ShakeAnimation 0.6s ease-in-out;
-	}
-</style>
+		.animate-shake button {
+			animation: ShakeAnimation 0.6s ease-in-out;
+		}
+	</style>
+</SigninLayout>
 <script>
 	import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
 	function setCookie(name: string, value: string, exdays: number) {

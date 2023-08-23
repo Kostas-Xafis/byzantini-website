@@ -32,7 +32,10 @@ const TeachersInputs = (
 	classList?: TeacherClasses[],
 	locationsList?: TeacherLocations[],
 	instrumentsList?: TeacherInstruments[]
-): Record<keyof FullTeachers | "teacherClasses" | "teacherLocations" | "teacherInstruments", InputProps> => {
+): Record<
+	keyof FullTeachers | "teacherClasses" | "teacherLocations" | "teacherInstrumentsTraditional" | "teacherInstrumentsEuropean",
+	InputProps
+> => {
 	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];
 	const multiselectClasses = class_types?.map(ct => {
 		let c = teacherClasses && teacherClasses.find(t => t.class_id === ct.id);
@@ -46,10 +49,19 @@ const TeachersInputs = (
 	});
 
 	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === teacher?.id) || [];
-	const multiselectInstruments = instruments?.map(i => {
-		let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
-		return { value: i.id, label: i.name, selected: !!c };
-	});
+
+	const multiselectInstrumentsTraditional = instruments
+		?.filter(i => i.type === "par")
+		.map(i => {
+			let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
+			return { value: i.id, label: i.name, selected: !!c };
+		});
+	const multiselectInstrumentsEuropean = instruments
+		?.filter(i => i.type === "eur")
+		.map(i => {
+			let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
+			return { value: i.id, label: i.name, selected: !!c };
+		});
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
@@ -90,12 +102,19 @@ const TeachersInputs = (
 			iconClasses: "fa-solid fa-chalkboard-teacher",
 			multiselectList: multiselectClasses
 		},
-		teacherInstruments: {
-			name: "teacherInstruments",
-			label: "Όργανα",
+		teacherInstrumentsTraditional: {
+			name: "teacherInstrumentsTraditional",
+			label: "Παραδοσιακή Μουσική",
 			type: "multiselect",
 			iconClasses: "fa-solid fa-guitar",
-			multiselectList: multiselectInstruments
+			multiselectList: multiselectInstrumentsTraditional
+		},
+		teacherInstrumentsEuropean: {
+			name: "teacherInstrumentsEuropean",
+			label: "Ευρωπαϊκή Μουσική",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-guitar",
+			multiselectList: multiselectInstrumentsEuropean
 		}
 	};
 };
@@ -198,7 +217,7 @@ export default function TeachersTable() {
 						return id;
 					})
 					.filter(Boolean) as number[],
-				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherInstruments']`)]
+				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier^='teacherInstruments']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;

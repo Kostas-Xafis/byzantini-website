@@ -1,13 +1,19 @@
-<div id="contacts" class="fixed bottom-0 right-[2.5%] w-max grid translate-y-full">
-	<div class="relative p-6 grid grid-rows-2 glass gap-y-2 rounded-t-lg font-didact bg-opacity-75">
+<div id="contacts" class="fixed bottom-0 right-[0px] w-max grid translate-y-full">
+	<div class="relative p-6 grid grid-rows-2 glass gap-y-2 rounded-t-lg font-didact !bg-opacity-80">
 		<p class="text-2xl text-red-50">
 			<i class="text-xl pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
 				class="text-red-50 underline underline-offset-2 pl-2"
 				href="tel:6983380631">6983380631</a
 			>
+			<i class="copy text-xl ml-2 px-2 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"></i>
 		</p>
 		<p class="text-2xl text-red-50">
-			<i class="text-xl pr-3 fa-solid fa-envelope"></i>Email: <span class="pl-2">byzscholemousikhs@gmail.com</span>
+			<i class="text-xl pr-3 fa-solid fa-envelope"></i>Email: <a
+				target="_blank"
+				class="text-red-50 underline underline-offset-2 pl-2"
+				href="mailto:byzscholemousikhs@gmail.com">byzscholemousikhs@gmail.com</a
+			>
+			<i class="copy text-xl ml-2 px-2 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"></i>
 		</p>
 		<p class="text-2xl text-red-50">
 			<i class="text-xl pr-1 fa-solid fa-map-location-dot"></i>
@@ -18,7 +24,7 @@
 		</p>
 		<button
 			id="showContacts"
-			class="group/btn px-4 pb-1 rounded-t-lg border-b-0 absolute -top-[1px] left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] bg-opacity-90"
+			class="group/btn px-4 pb-1 rounded-t-lg border-b-0 absolute -top-[1px] left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] !bg-opacity-100"
 		>
 			<i class="text-red-50 h-0 pb-4 fa-solid fa-chevron-up font-bold text-lg place-self-center"></i>
 			<p class="text-3xl text-red-50 font-anaktoria">Επικοινωνία</p>
@@ -41,6 +47,9 @@
 		#contacts:is(.clickedContacts) #showContacts i {
 			transform: rotateZ(180deg) translateY(calc(-1rem * 0.75));
 		}
+		.copy:is(.clicked) {
+			background-color: rgb(22, 163, 74);
+		}
 	</style>
 </div>
 <script>
@@ -57,6 +66,27 @@
 		const contacts = document.querySelector("#contacts") as HTMLElement;
 		btn.addEventListener("click", () => {
 			contacts.classList.toggle("clickedContacts");
+		});
+	});
+	onElementMount("#contacts", () => {
+		const btn = [...document.querySelectorAll("#contacts .copy")] as HTMLButtonElement[];
+		btn.forEach(btn => {
+			btn.addEventListener("click", () => {
+				const text = btn.parentElement?.querySelector("a")?.innerText;
+				if (text) {
+					navigator.clipboard.writeText(text);
+					btn.classList.add("clicked");
+					btn.classList.remove("fa-regular");
+					btn.classList.add("fa-solid");
+					btn.classList.add("fa-clipboard-check");
+					setTimeout(() => {
+						btn.classList.remove("clicked");
+						btn.classList.add("fa-regular");
+						btn.classList.remove("fa-solid");
+						btn.classList.remove("fa-clipboard-check");
+					}, 1000);
+				}
+			});
 		});
 	});
 </script>

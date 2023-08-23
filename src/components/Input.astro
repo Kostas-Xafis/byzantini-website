@@ -57,20 +57,20 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 	</p>
 	<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400 -z-10">
 	</div>
+	<style is:inline>
+		label {
+			text-shadow: -1px 1px 2px rgba(0 0 0/0.15);
+		}
+		input[type="number"] {
+			appearance: textfield;
+			-moz-appearance: textfield;
+		}
+		input::-webkit-outer-spin-button,
+		input::-webkit-inner-spin-button {
+			display: none;
+		}
+	</style>
 </label>
-<style>
-	label {
-		text-shadow: -1px 1px 2px rgba(0 0 0/0.15);
-	}
-	input[type="number"] {
-		appearance: textfield;
-		-moz-appearance: textfield;
-	}
-	input::-webkit-outer-spin-button,
-	input::-webkit-inner-spin-button {
-		display: none;
-	}
-</style>
 
 <script>
 	document.querySelectorAll(".formInputs").forEach(inp => {
