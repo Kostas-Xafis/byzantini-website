@@ -114,7 +114,7 @@ CREATE TABLE `locations` (
     `manager` varchar(80),
     `email` varchar(80) NOT NULL,
     `telephones` varchar(80) NOT NULL,
-    `priority` int NOT NULL DEFAULT 0,
+    `priority` int NOT NULL DEFAULT 1,
     `image` varchar(80),
     `map` varchar(400) NOT NULL,
     `link` varchar(200),
@@ -159,6 +159,7 @@ CREATE TABLE `teacher_locations` (
 CREATE TABLE `teacher_classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
+    `priority` int NOT NULL DEFAULT 0,
     PRIMARY KEY (`teacher_id`, `class_id`)
 );
 
@@ -258,6 +259,7 @@ INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 
 -- ALTER TABLE `locations` ADD COLUMN `manager` varchar(80) AFTER `municipality`;
 -- ALTER TABLE `instruments` ADD COLUMN `isInstrument` boolean NOT NULL DEFAULT 1 AFTER `type`;
+-- ALTER TABLE `teacher_classes` ADD COLUMN `priority` int NOT NULL DEFAULT 0 AFTER `class_id`;
 
 -- UPDATE instruments SET isInstrument=0 WHERE name='Σολφέζ' AND type="eur";
 -- UPDATE instruments SET isInstrument=0 WHERE name='Φωνητική - Ορθοφωνία' AND type="eur";

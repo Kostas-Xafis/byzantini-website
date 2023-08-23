@@ -12,11 +12,11 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	func: async req => null as any
 };
 
-const getByPriority: EndpointRoute<"GET:/teachers/priority", null, Teachers[]> = {
+const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:string]", null, Teachers[]> = {
 	authentication: false,
 	method: "GET",
-	path: "/teachers/priority",
-	hasUrlParams: false,
+	path: "/teachers/priority/[class_type:string]",
+	hasUrlParams: true,
 	func: async req => null as any
 };
 
@@ -47,7 +47,8 @@ const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherIn
 const teacherJoins = object({
 	teacherClasses: array(number([integer()])),
 	teacherLocations: array(number([integer()])),
-	teacherInstruments: array(number([integer()]))
+	teacherInstruments: array(number([integer()])),
+	priorities: array(number([integer()]))
 })
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);
@@ -97,7 +98,7 @@ const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
 
 export const TeachersRoutes = {
 	get,
-	getByPriority,
+	getByPriorityClasses,
 	getClasses,
 	getLocations,
 	getInstruments,
@@ -118,10 +119,10 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		path: "/teachers",
 		endpoint: "Teachers.get"
 	},
-	"Teachers.getByPriority": {
+	"Teachers.getByPriorityClasses": {
 		method: "GET",
-		path: "/teachers/priority",
-		endpoint: "Teachers.getByPriority"
+		path: "/teachers/priority/[class_type:string]",
+		endpoint: "Teachers.getByPriorityClasses"
 	},
 	"Teachers.getClasses": {
 		method: "GET",
@@ -171,7 +172,7 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 	Teachers: {
 		get: "Teachers.get",
-		getByPriority: "Teachers.getByPriority",
+		getByPriorityClasses: "Teachers.getByPriorityClasses",
 		getClasses: "Teachers.getClasses",
 		getLocations: "Teachers.getLocations",
 		getInstruments: "Teachers.getInstruments",

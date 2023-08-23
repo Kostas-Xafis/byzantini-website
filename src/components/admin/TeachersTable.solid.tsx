@@ -21,8 +21,8 @@ import Spinner from "../Spinner.solid";
 const PREFIX = "teachers";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type TeachersTable = Omit<FullTeachers, "instruments">;
-type TeacherJoins = { teacherClasses: number[]; teacherInstruments: number[]; teacherLocations: number[] };
+type TeachersTable = Omit<FullTeachers, "instruments"> & { priority_byz: number; priority_par: number; priority_eur: number };
+type TeacherJoins = { teacherClasses: number[]; teacherInstruments: number[]; teacherLocations: number[]; priorities: number[] };
 
 const TeachersInputs = (
 	class_types: ClassType[],
@@ -33,7 +33,14 @@ const TeachersInputs = (
 	locationsList?: TeacherLocations[],
 	instrumentsList?: TeacherInstruments[]
 ): Record<
-	keyof FullTeachers | "teacherClasses" | "teacherLocations" | "teacherInstrumentsTraditional" | "teacherInstrumentsEuropean",
+	| keyof FullTeachers
+	| "teacherClasses"
+	| "teacherLocations"
+	| "teacherInstrumentsTraditional"
+	| "teacherInstrumentsEuropean"
+	| "priority_byz"
+	| "priority_par"
+	| "priority_eur",
 	InputProps
 > => {
 	const teacherClasses = classList?.filter(c => c.teacher_id === teacher?.id) || [];
@@ -65,12 +72,26 @@ const TeachersInputs = (
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
-		priority: {
-			name: "priority",
-			label: "Προτεραιότητα",
+		priority_byz: {
+			name: "priority_byz",
+			label: "Προτεραιότητα Βυζαντινής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			minmax: [0, 100]
+			minmax: [1, 1000]
+		},
+		priority_par: {
+			name: "priority_par",
+			label: "Προτεραιότητα Παραδοσιακής",
+			type: "number",
+			iconClasses: "fa-solid fa-arrow-up-9-1",
+			minmax: [1, 1000]
+		},
+		priority_eur: {
+			name: "priority_eur",
+			label: "Προτεραιότητα Ευρωπαϊκής",
+			type: "number",
+			iconClasses: "fa-solid fa-arrow-up-9-1",
+			minmax: [1, 1000]
 		},
 		picture: {
 			name: "picture",
@@ -131,16 +152,21 @@ const fileToBlob = async (file: File): Promise<Blob | null> => {
 	});
 };
 
-const teacherToTableTeacher = (teacher: FullTeachers): TeachersTable => {
+const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[]): TeachersTable => {
+	const classes = classList.filter(c => c.teacher_id === teacher.id);
 	const columns = Object.values(teacher);
 
 	columns[2] = (teacher.picture && "/kathigites/images/" + teacher.picture) || "";
 	columns[3] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
+
+	columns[4] = classes.find(c => c.class_id === 1)?.priority || "-";
+	columns[5] = classes.find(c => c.class_id === 2)?.priority || "-";
+	columns[6] = classes.find(c => c.class_id === 3)?.priority || "-";
 	return columns as unknown as TeachersTable;
 };
 
-const teachersToTable = (teachers: FullTeachers[]): TeachersTable[] => {
-	return teachers.map(t => teacherToTableTeacher(t));
+const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]): TeachersTable[] => {
+	return teachers.map(t => teacherToTableTeacher(t, classList));
 };
 
 export default function TeachersTable() {
@@ -191,26 +217,28 @@ export default function TeachersTable() {
 		fullname: { name: "Ονοματεπώνυμο", size: () => 25 },
 		picture: "Φωτογραφία",
 		cv: "Βιογραφικό",
-		priority: "Προτεραιότητα"
+		priority_byz: { name: "Προτεραιότητα Βυζαντινής", size: () => 15 },
+		priority_par: { name: "Προτεραιότητα Παραδοσιακής", size: () => 15 },
+		priority_eur: { name: "Προτεραιότητα Ευρωπαϊκής", size: () => 15 }
 	};
 
 	const shapedData = createMemo(() => {
+		const classList = store[API.Teachers.getClasses];
 		const teachers = store[API.Teachers.get];
-		return teachers ? teachersToTable(teachers) : [];
+		if (!classList || !teachers) return [];
+		return teachers ? teachersToTable(teachers, classList) : [];
 	});
 	const onAdd = createMemo(() => {
-		const classList = store[API.Teachers.getClasses];
 		const locations = store[API.Locations.get];
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
-		if (!classList || !locations || !locationsList || !instruments) return;
+		if (!locations || !locationsList || !instruments) return;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
-				priority: Number(formData.get("priority") as string),
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
@@ -228,7 +256,10 @@ export default function TeachersTable() {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
-					.filter(Boolean) as number[]
+					.filter(Boolean) as number[],
+				priorities: [...document.querySelectorAll<HTMLInputElement>(`input[name^='priority']`)]
+					.map(i => Number(i.value))
+					.filter(Boolean)
 			};
 			const res = await useAPI(setStore, API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
@@ -274,14 +305,13 @@ export default function TeachersTable() {
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
-				priority: Number(formData.get("priority") as string) || 0,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
 					.filter(Boolean) as number[],
-				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherInstruments']`)]
+				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier^='teacherInstruments']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
@@ -292,7 +322,10 @@ export default function TeachersTable() {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
-					.filter(Boolean) as number[]
+					.filter(Boolean) as number[],
+				priorities: [...document.querySelectorAll<HTMLInputElement>(`input[name^='priority']`)]
+					.map(i => Number(i.value))
+					.filter(Boolean)
 			};
 			const res = await useAPI(setStore, API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;

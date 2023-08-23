@@ -1,25 +1,30 @@
 ---
-import { useAPI } from "../../../lib/hooks/useAPI.astro";
+import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
 import type { Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
-const [teachers_res, teacher_classes_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
-	useAPI("Teachers.getByPriority", {}),
-	useAPI("Teachers.getClasses", {}),
-	useAPI("Teachers.getLocations", {}),
-	useAPI("Locations.get", {}),
-	useAPI("Teachers.getInstruments", {}),
-	useAPI("Instruments.get", {}),
+const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_classes_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
+	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}),
+	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "par"}}),
+	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "eur"}}),
+	useAPI(API.Teachers.getClasses, {}),
+	useAPI(API.Teachers.getLocations, {}),
+	useAPI(API.Locations.get, {}),
+	useAPI(API.Teachers.getInstruments, {}),
+	useAPI(API.Instruments.get, {}),
 ]);
 
-const [teachers, teacher_classes, teacher_locations, locations, teacher_instruments, instruments] = [
-	teachers_res.data as Teachers[], 
+const [byz_teachers, par_teachers, eur_teachers, teacher_classes, teacher_locations, locations, teacher_instruments, instruments] = [
+	byz_teachers_res.data as Teachers[], 
+	par_teachers_res.data as Teachers[], 
+	eur_teachers_res.data as Teachers[], 
 	teacher_classes_res.data as TeacherClasses[], 
 	teacher_locations_res.data as TeacherLocations[], 
 	locations_res.data as Locations[],
 	teacher_instruments_res.data as TeacherInstruments[],
 	instruments_res.data as Instruments[]
 ]
+
 
 const enum MusicType {
 	Byzantine = "byz",
@@ -28,6 +33,11 @@ const enum MusicType {
 	None = ""
 }
 
+const teachers = [
+	[byz_teachers, MusicType.Byzantine],
+	[par_teachers, MusicType.Traditional],
+	[eur_teachers, MusicType.European]
+] as const;
 const music = [
 	["Βυζαντινή Μουσική", MusicType.Byzantine],
 	["Παραδοσιακή Μουσική", MusicType.Traditional],
@@ -65,47 +75,49 @@ const musicEnd = [
 		<div id="teachersContainer" class="w-full grid auto-rows-[max-content] grid-flow-row p-14 gap-y-10 overflow-auto">
 			<h1 id="teachersHead" class="text-4xl pb-8 justify-self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
-				teachers.map(teacher => {
-					const t_classes_type = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => music[c.class_id - 1][1]);
-					const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => music[c.class_id - 1][0]);
-					const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
-					const t_instrument_list = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments.find((inst) => inst.id === i.instrument_id) as Instruments);
-					const t_instruments = t_instrument_list.filter(i => i.isInstrument)?.map(i => i.name);
-					const t_nonInstruments = t_instrument_list.filter(i => !i.isInstrument)?.map(i => i.name);
-					t_instruments?.sort();
-					t_nonInstruments?.sort();
-					return (
-					<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
-						+ (t_classes_type.includes(MusicType.Byzantine) ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 
-						+ (t_classes_type.includes(MusicType.Traditional) ? " group-[:has(#parbtn[data-show])]/type:grid" : "") 
-						+ (t_classes_type.includes(MusicType.European) ? " group-[:has(#eurbtn[data-show])]/type:grid" : "")}>
-						{teacher.picture ? (
-							<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-[15px]" />
-						) : (
-							<div />
-						)}
-						<div class="w-max grid auto-rows-max gap-y-2 p-4">
-							<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
-							<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_locations.join("•")}</p>
-							<p class="text-xl"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Διδάσκων:</span>{t_classes_str.join('•')}</p>
-							{t_instruments && t_instruments.length > 0 ? (
-								<p class="text-xl"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Όργανα:</span>{t_instruments.join('•')}</p>
+				teachers.map(([teachersByType, type]) => {
+					return teachersByType.map(teacher => {
+						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => music[c.class_id - 1][0]);
+						const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
+						const t_instrument_list = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments.find((inst) => inst.id === i.instrument_id) as Instruments);
+						const t_instruments = t_instrument_list.filter(i => i.isInstrument)?.map(i => i.name);
+						const t_nonInstruments = t_instrument_list.filter(i => !i.isInstrument)?.map(i => i.name);
+						t_instruments?.sort();
+						t_nonInstruments?.sort();
+						return (
+						<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
+							+ (type === MusicType.Byzantine ? " group-[:has(#byzbtn[data-show])]/type:grid" : "") 
+							+ (type === MusicType.Traditional ? " group-[:has(#parbtn[data-show])]/type:grid" : "") 
+							+ (type === MusicType.European ? " group-[:has(#eurbtn[data-show])]/type:grid" : "")}>
+							{teacher.picture ? (
+								<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-[15px]" />
 							) : (
-								<></>
+								<div />
 							)}
-							{t_nonInstruments && t_nonInstruments.length > 0 ? (
-								<p class="text-xl max-w-[60ch]"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Μαθήματα:</span>{t_nonInstruments.join('•')}</p>
-							) : (
-								<></>
-							)}
-							{teacher.cv ?
-								<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
-									<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό
-								</a>
-								: <></>}
+							<div class="w-max grid auto-rows-max gap-y-2 p-4">
+								<p class="text-3xl underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
+								<p class="text-xl rounded-lg bg-red-900 text-white p-2 w-max">{t_locations.join("•")}</p>
+								<p class="text-xl"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Διδάσκων:</span>{t_classes_str.join('•')}</p>
+								{t_instruments && t_instruments.length > 0 ? (
+									<p class="text-xl"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Όργανα:</span>{t_instruments.join('•')}</p>
+								) : (
+									<></>
+								)}
+								{t_nonInstruments && t_nonInstruments.length > 0 ? (
+									<p class="text-xl max-w-[60ch]"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-3">Μαθήματα:</span>{t_nonInstruments.join('•')}</p>
+								) : (
+									<></>
+								)}
+								{teacher.cv ?
+									<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
+										<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό
+									</a>
+									: <></>}
+							</div>
 						</div>
-					</div>
-				)})
+						)
+					})
+				})
 			}
 		</div>
 	</div>

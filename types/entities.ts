@@ -76,8 +76,7 @@ export const v_Teachers = object({
 	id: number([integer(), minValue(0)]),
 	fullname: string([minLength(1)]),
 	picture: string(),
-	cv: string(),
-	priority: number([integer(), minValue(0)])
+	cv: string()
 });
 export type Teachers = Output<typeof v_Teachers>;
 
@@ -92,7 +91,8 @@ export type TeacherLocations = Output<typeof v_TeacherLocations>;
 
 export const v_TeacherClasses = object({
 	teacher_id: number([integer(), minValue(0)]),
-	class_id: number([integer(), minValue(0)])
+	class_id: number([integer(), minValue(0)]),
+	priority: number([integer(), minValue(1)])
 });
 export type TeacherClasses = Output<typeof v_TeacherClasses>;
 
@@ -113,7 +113,7 @@ export const v_Locations = object({
 	email: string([email()]),
 	manager: string(),
 	telephones: string(),
-	priority: number([integer(), minValue(0)]),
+	priority: number([integer(), minValue(1)]),
 	image: string(),
 	map: string(),
 	link: optional(string())

@@ -12,9 +12,11 @@ serverRoutes.get.func = async _req => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
 };
 
-serverRoutes.getByPriority.func = async _req => {
-	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY priority ASC, fullname ASC"));
-};
+serverRoutes.getByPriorityClasses.func = async (req, slug) => {
+	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type) + 1;
+	if (class_id === 0) throw Error("Invalid class type");
+	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? ORDER BY tc.priority ASC, fullname ASC", [class_id]));
+}
 
 serverRoutes.getClasses.func = async _req => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
@@ -31,10 +33,11 @@ serverRoutes.getInstruments.func = async req => {
 serverRoutes.post.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const args = [body.fullname, body.priority]
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, priority) VALUES (?, ?)`, args);
+		const args = [body.fullname]
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname) VALUES (?)`, args);
 		for (const class_id of body.teacherClasses) {
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [id.insertId, class_id]);
+			const priority = body.priorities.shift();
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [id.insertId, class_id, priority]);
 		}
 		for (const location_id of body.teacherLocations) {
 			await T.executeQuery(`INSERT INTO teacher_locations (teacher_id, location_id) VALUES (?, ?)`, [id.insertId, location_id]);
@@ -49,11 +52,12 @@ serverRoutes.post.func = async req => {
 serverRoutes.update.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const args = [body.fullname, body.priority, body.id];
-		await T.executeQuery(`UPDATE teachers SET fullname=?, priority=? WHERE id=?`, args);
+		const args = [body.fullname, body.id];
+		await T.executeQuery(`UPDATE teachers SET fullname=? WHERE id=?`, args);
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)`, [body.id, class_id]);
+			const priority = body.priorities.shift();
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [body.id, class_id, priority]);
 		}
 		await T.executeQuery("DELETE FROM teacher_locations WHERE teacher_id=?", [body.id]);
 		for (const location_id of body.teacherLocations) {
