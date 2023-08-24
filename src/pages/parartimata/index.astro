@@ -3,7 +3,8 @@ import { useAPI } from "../../../lib/hooks/useAPI.astro";
 import type { Locations } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/GMap.astro";
-const locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
+let locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
+const imgSrc = "/locations/";
 ---
 
 <Layout title="Παραρτήματα">
@@ -29,25 +30,23 @@ const locations = (await useAPI("Locations.getByPriority", {})).data as Location
 			}
 			</div>
 		</div>
-		<div id="locationsContainer" class="w-full h-full grid auto-rows-[max-content] grid-flow-row place-content-center overflow-auto">
+		<div id="locationsContainer" class="w-full h-full grid grid-rows-[80%] grid-cols-[90%] place-content-center justify-center overflow-auto">
 			{
 				locations.map((l, i) => {
 					return (
 						<div
 							data-name={l.name}
-							class="w-max grid-cols-[max-content_min-content] rounded-2xl shadow-md shadow-gray-400 border-solid border-2 border-red-900"
-							class:list={[i === 0 ? "show" : ""]}
-						>
-							{l.image ? (
+							class="hidden w-full justify-self-center rounded-2xl shadow-md shadow-gray-400 border-solid border-2 border-red-900"
+							class:list={[i === 0 ? " show" : "", !l.image ? " w-max" : ""]}
+						> 
+							{l.image && (
 								<img
-									src={"/locations/" + l.image}
+									src={imgSrc + l.image}
 									alt={"Φωτογραφία Παραρτήματος " + l.name}
-									class="w-[400px] h-full object-cover rounded-l-[14px]"
+									class="w-[clamp(0px,100%,600px)] h-full object-cover rounded-l-[14px]"
 								/>
-							) : (
-								<div />
 							)}
-							<div class="w-max grid auto-rows-max gap-y-6 p-12">
+							<div class="w-max grid auto-rows-max place-content-center gap-y-6 p-12 grow-[2]">
 								<h1
 									id="locationsHead"
 									class="text-3xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
@@ -89,31 +88,17 @@ const locations = (await useAPI("Locations.getByPriority", {})).data as Location
 		button:is(.selected) {
 			background-color: rgb(153, 27, 27);
 		}
-		@keyframes fadeOut {
-			0% {
-				opacity: 1;
-			}
-			99% {
-				opacity: 0.0001;
-			}
-			100% {
-				opacity: 0.0001;
-			}
-		}
 		.remove {
 			opacity: 1;
-			animation: fadeOut 0.4s ease-in-out forwards;
+			animation: fadeOut 0.3s ease-in-out forwards;
 		}
-		#locationsContainer:is(:not(.remove)),
+		.show {
+			display: flex;
+		}
+		#locationsContainer > div:is(:not(.remove)),
 		#btsContainer {
 			opacity: 0.0001;
 			animation: fadeIn 0.6s ease-in-out forwards;
-		}
-		#locationsContainer > div:is(:not(.show)) {
-			display: none;
-		}
-		#locationsContainer > div {
-			display: grid;
 		}
 		#btsContainer > div > div:hover i {
 			animation: fadeInLeft 0.3s ease-in-out forwards;
@@ -144,45 +129,6 @@ const locations = (await useAPI("Locations.getByPriority", {})).data as Location
 		const text = p.innerHTML;
 		p.innerHTML = text.replaceAll("•", '<span class="px-2 text-lg font-serif">•</span>');
 	});
-	(async function () {
-		const locations = (await useAPI("Locations.get", {})).data as Locations[];
-		locations.forEach(l => {
-			const btn = document.querySelector(`#btsContainer div[data-name='${l.name}']`) as HTMLElement;
-			btn.addEventListener("click", () => {
-				const shown = document.querySelector("[data-show]") as HTMLElement | null;
-				const location_name = shown?.dataset.name;
-				if (shown === btn) return;
-				if (location_name) {
-					document.querySelector(`#locationsContainer div[data-name='${location_name}']`)?.classList.remove("show");
-				}
-
-				const container = document.querySelector("#locationsContainer") as HTMLElement;
-				const heading = document.querySelector("#locationsHead") as HTMLElement;
-				if (shown) {
-					container.classList.add("remove");
-					void container.offsetWidth;
-					setTimeout(() => {
-						shown.removeAttribute("data-show");
-
-						container.classList.remove("remove");
-						container.querySelector(`div[data-name='${l.name}']`)?.classList.add("show");
-
-						heading.innerText = l.name;
-						btn.setAttribute("data-show", "");
-					}, 300);
-				} else {
-					heading.innerText = l.name;
-					btn.setAttribute("data-show", "");
-				}
-			});
-		});
-		if(window.location.hash) {
-			const hash = window.location.hash.replace("#", "");
-			const location = decodeURI(hash);
-			const btn = document.querySelector(`#btsContainer div[data-name='${location}'] button`) as HTMLElement;
-			btn.click();
-		}
-	})();
 	const onElementMount = async (target: string, callback: () => any) => {
 		while (!document.querySelector(target)) {
 			console.log("waiting for element to mount: " + target);
@@ -190,12 +136,50 @@ const locations = (await useAPI("Locations.getByPriority", {})).data as Location
 		}
 		callback();
 	};
+	onElementMount("#locationsContainer", 
+		(async function () {
+			let locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
+			locations.forEach(l => {
+				const btn = document.querySelector(`#btsContainer div[data-name='${l.name}']`) as HTMLElement;
+				btn.addEventListener("click", () => {
+					const shown = document.querySelector("[data-show]") as HTMLElement | null;
+					if (shown === btn) return;
+
+					const container = document.querySelector("#locationsContainer") as HTMLElement;
+					const heading = document.querySelector("#locationsHead") as HTMLElement;
+					if (shown) {
+						const location = container.querySelector(".show") as HTMLElement;
+						location.classList.add("remove");
+
+						setTimeout(() => {
+							location.classList.remove("show", "remove");
+							shown.removeAttribute("data-show");
+							void shown.offsetWidth;
+
+							container.querySelector(`div[data-name='${l.name}']`)?.classList.add("show");
+
+							heading.innerText = l.name;
+							btn.setAttribute("data-show", "");
+						}, 300);
+					} else {
+						heading.innerText = l.name;
+						btn.setAttribute("data-show", "");
+					}
+				});
+			});
+			if(window.location.hash) {
+				const hash = window.location.hash.replace("#", "");
+				const location = decodeURI(hash);
+				const btn = document.querySelector(`#btsContainer div[data-name='${location}'] button`) as HTMLElement;
+				btn.click();
+			}
+		})
+	)
 	onElementMount("#btsContainer", () => {
 		// Create an instersection observer that when the are more elements to be scrolled a shadow is added to the bottom of the container. Same case for the top.
 		const observer = new IntersectionObserver((entries) => {
 			entries.forEach(entry => {
 				const container = document.querySelector("#btsContainer") as HTMLElement;
-				console.log(entry);
 				if (entry.target === container.querySelector("div:first-child")) {
 					if (entry.intersectionRatio <= 0.4) {
 						container.classList.add("shadow-up");

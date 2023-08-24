@@ -159,7 +159,7 @@ CREATE TABLE `teacher_locations` (
 CREATE TABLE `teacher_classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
-    `priority` int NOT NULL DEFAULT 0,
+    `priority` int NOT NULL DEFAULT 1,
     PRIMARY KEY (`teacher_id`, `class_id`)
 );
 

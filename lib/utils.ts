@@ -75,5 +75,5 @@ export const DataWrapper = <T = object>(data: T) => {
 };
 
 export const isDevFromURL = (url: URL) => {
-	return url.hostname.includes("localhost") || url.hostname.includes("127.0.0.1");
+	return url.hostname === "localhost" || url.hostname === "127.0.0.1";
 } 

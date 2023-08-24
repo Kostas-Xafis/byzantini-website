@@ -1,5 +1,6 @@
 ---
 import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
+import { isDevFromURL } from "../../../lib/utils";
 import type { Instruments, Locations, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
@@ -51,6 +52,8 @@ const music = [
 	["Παραδοσιακή Μουσική", MusicType.Traditional],
 	["Ευρωπαϊκή Μουσική", MusicType.European]
 ] as const;
+const imgSrc = "/kathigites/images/";
+const cvSrc = "/kathigites/cv/";
 
 // const musicEnd = [
 // 	["Βυζαντινής Μουσικής", MusicType.Byzantine],
@@ -93,12 +96,12 @@ const music = [
 						t_instruments?.sort();
 						t_nonInstruments?.sort();
 						return (
-						<div class={"hidden w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
+						<div class={"hidden show w-max grid-cols-[max-content_1fr_max-content] rounded-2xl shadow-md shadow-gray-500 border-solid border-2 border-red-900"
 							+ (type === MusicType.Byzantine ? " group-[:has(#byz[data-show])]/type:grid" : "") 
 							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:grid" : "") 
 							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:grid" : "")}>
 							{teacher.picture ? (
-								<img src={"/kathigites/images/" + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-[15px]" />
+								<img src={imgSrc + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[200px] h-full object-cover rounded-l-[13px]" />
 							) : (
 								<div />
 							)}
@@ -117,7 +120,7 @@ const music = [
 									<></>
 								)}
 								{teacher.cv ?
-									<a target="_blank" href={"/kathigites/cv/" + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
+									<a target="_blank" href={cvSrc + teacher.cv} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
 										<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό
 									</a>
 									: <></>}
@@ -135,7 +138,11 @@ const music = [
 		}
 		.remove {
 			opacity: 1;
-			animation: fadeOut 0.4s ease-in-out forwards;
+			animation: fadeOut 0.3s ease-in-out forwards;
+		}
+		.show {
+			opacity: 0.01;
+			animation: fadeIn 0.3s ease-in-out forwards;
 		}
 		#teachersContainer:is(:not(.remove)), #btsContainer  {
 			opacity: 0.0001;
@@ -194,4 +201,31 @@ const music = [
 			btn.click();
 		}
 	}
+	const onElementMount = async (target: string, callback: () => any) => {
+		while (!document.querySelector(target)) {
+			console.log("waiting for element to mount: " + target);
+			await new Promise(resolve => setTimeout(resolve, 100));
+		}
+		callback();
+	};
+	onElementMount("#teachersContainer", () => {
+		const obsv = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				const isVisible = entry.target.classList.contains("show"); 
+				if (entry.intersectionRatio <= 0.05 && isVisible) {
+					entry.target.classList.remove("show");
+					entry.target.classList.add("remove");
+				} else if (entry.intersectionRatio >= 0.2 && !isVisible) {
+					entry.target.classList.remove("remove");
+					entry.target.classList.add("show");
+				}
+			})
+		}, {
+			threshold: [...(new Array(10).fill(0).map((x,i) => i / 100)), 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+		});
+		const teachersCard = document.querySelectorAll("#teachersContainer > div");
+		teachersCard.forEach((card) => {
+			obsv.observe(card);
+		})
+	});
 </script>

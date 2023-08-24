@@ -1,14 +1,16 @@
 ---
+import { isDevFromURL } from "../../lib/utils";
 export type Props = {
 	link: string;
 };
 const { link } = Astro.props;
+const isDev = isDevFromURL(Astro.url);
 ---
 
 <iframe
-	class="w-[900px] h-[400px] shadow-md shadow-gray-400 rounded-md border-2 border-solid border-red-900"
+	class="w-[700px] aspect-[4/2] shadow-md shadow-gray-400 rounded-md border-2 border-solid border-red-900"
 	referrerpolicy="same-origin"
-	src=`https://www.google.com/maps/embed?${link}`
+	src={isDev ? "" : `https://www.google.com/maps/embed?${link}`}
 	allowfullscreen
 	loading="lazy"
 >
