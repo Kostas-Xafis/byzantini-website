@@ -25,8 +25,5 @@
 		"solid-js": "^1.7.8",
 		"tailwindcss": "^3.3.2",
 		"valibot": "^0.12.0"
-	},
-	"devDependencies": {
-		"tailwindcss-debug-screens": "^2.2.1"
 	}
 }

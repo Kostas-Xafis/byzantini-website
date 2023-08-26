@@ -3,12 +3,14 @@ import { SEO } from "astro-seo";
 import Navbar from "../components/Navbar.astro";
 import Links from "../components/Links.astro";
 import Contact from "../components/Contact.astro";
+import { isDevFromURL } from "../../lib/utils";
 export interface Props {
 	title: string;
 }
 
 const { title } = Astro.props;
 const logoUrl = "https://byzantini-website.pages.dev/logo.png";
+const isDev = isDevFromURL(Astro.url);
 ---
 
 <!DOCTYPE html>
@@ -137,16 +139,20 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 				}
 			}
 		</style>
-		<div id="resize" class="fixed bottom-0 left-0 bg-gray-800 text-white text-2xl"></div>
-		<script>
-			function displayWindowSize() {
-				var w = document.documentElement.clientWidth;
-				var h = document.documentElement.clientHeight;
-
-				document.getElementById("resize").innerHTML = w + "px - " + h + "px";
-			}
-			window.addEventListener("resize", displayWindowSize);
-			displayWindowSize();
-		</script>
+		{
+			isDev ? 
+			(<div id="resize" class="fixed bottom-0 left-0 bg-gray-800 text-white text-2xl"></div>
+			<script>
+				function displayWindowSize() {
+					var w = document.documentElement.clientWidth;
+					var h = document.documentElement.clientHeight;
+	
+					document.getElementById("resize").innerHTML = w + "px - " + h + "px";
+				}
+				window.addEventListener("resize", displayWindowSize);
+				displayWindowSize();
+			</script>)
+			: ""
+		}
 	</body>
 </html>
