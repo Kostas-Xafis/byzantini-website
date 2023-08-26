@@ -118,10 +118,10 @@ const cvSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL
 								})}</p>
 								{t_instruments && t_instruments.length > 0 ? (
 									<p class="text-[1.25cqw] max-sm:text-2xs max-sm:leading-2xs max-w-[35ch] flex flex-row flex-wrap max-sm:gap-y-1 gap-y-2 max-sm:max-w-[55ch]">
-										<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-2 max-sm:pr-1">Διδάσκει:</span>{t_instruments.map((instr, i) => {
+										<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-2 max-sm:pr-1 whitespace-nowrap">Διδάσκει:</span>{t_instruments.map((instr, i) => {
 											const dot = i === t_instruments.length - 1 ? "" : "•";
 											return (
-												<>{instr}&thinsp;{dot}&thinsp;</>
+												<span>{instr}&thinsp;{dot}&thinsp;</span>
 											)
 										})}
 									</p>
