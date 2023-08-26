@@ -89,7 +89,6 @@ const text = [
 		);
 		// @ts-ignore
 		obsv.observe(document.querySelector("#lessons") as HTMLElement);
-		// document.querySelector("#lessons")?.scrollIntoView({behavior: "smooth"});
 	});
 	onElementMount("#lessons", () => {
 		const lessonCards = document.querySelectorAll(".lessonCard");

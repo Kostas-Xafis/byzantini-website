@@ -29,7 +29,9 @@ export default defineConfig({
 			watch: {
 				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**", "**/notAssets/**"]
 			},
-			host: true
+			host: true,
+			port: 3000,
+			strictPort: true
 		},
 		build: {
 			cssMinify: true,

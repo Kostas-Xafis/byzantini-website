@@ -14,6 +14,7 @@ const highlight = (url: string) => {
 
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
 const isMainPage = Astro.url.pathname === "/";
+const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.name as string;
 ---
 
 <>
@@ -76,11 +77,17 @@ const isMainPage = Astro.url.pathname === "/";
 				))
 			}
 		</div>
-		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col">
-			<i class="fa-solid fa-bars sm:hidden text-red-50 transition-opacity text-center self-center"></i>
-			<i
-				class="absolute left-[50%] translate-y-[-50%] top-0 fa-solid fa-xmark sm:hidden text-red-50 opacity-0 transition-opacity text-center self-center"
-			></i>
+		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center">
+			<p
+				class="relative self-center w-max font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]"
+			>
+				<i
+					class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
+				></i>
+				<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
+					>{currentLinkName}</span
+				>
+			</p>
 			<div class="hidden -z-10 absolute top-[calc(100%_+_0.5rem)] h-max grid-rows-[repeat(5,_1fr)] grid-cols-[100%] w-full">
 				{
 					links.map(link => (
@@ -88,9 +95,9 @@ const isMainPage = Astro.url.pathname === "/";
 							class="relative grid py-4 bg-red-900 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
 							href={link.url}
 						>
-							<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
+							<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 								{link.name}
-							</div>
+							</p>
 						</a>
 					))
 				}
@@ -119,25 +126,19 @@ const isMainPage = Astro.url.pathname === "/";
 		#burgerNav a:nth-child(1) {
 			transition-duration: 0.7s;
 		}
-		#burgerNav:is(.show) > .fa-bars {
-			opacity: 0;
-		}
-		#burgerNav:is(.show) > .fa-xmark {
-			opacity: 1;
-		}
-		#burgerNav:is(.show) a:nth-child(1) {
+		#burgerNav:is(.open) a:nth-child(1) {
 			transition-duration: 0.6s;
 		}
-		#burgerNav:is(.show) a:nth-child(2) {
+		#burgerNav:is(.open) a:nth-child(2) {
 			transition-duration: 0.625s;
 		}
-		#burgerNav:is(.show) a:nth-child(3) {
+		#burgerNav:is(.open) a:nth-child(3) {
 			transition-duration: 0.65s;
 		}
-		#burgerNav:is(.show) a:nth-child(4) {
+		#burgerNav:is(.open) a:nth-child(4) {
 			transition-duration: 0.675s;
 		}
-		#burgerNav:is(.show) a:nth-child(5) {
+		#burgerNav:is(.open) a:nth-child(5) {
 			transition-duration: 0.7s;
 		}
 	</style>
@@ -174,8 +175,7 @@ const isMainPage = Astro.url.pathname === "/";
 			obsv.observe(document.querySelector("#welcome-page"));
 		});
 		onElementMount("#burgerNav", () => {
-			const btn = document.querySelector("#burgerNav");
-			btn.addEventListener("click", () => {
+			document.querySelector("#burgerNav").addEventListener("click", () => {
 				const menu = document.querySelector("#burgerNav > div");
 				const isOpen = menu.parentElement.classList.contains("open");
 				if (isOpen) {

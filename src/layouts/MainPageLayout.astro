@@ -9,7 +9,7 @@ export interface Props {
 }
 
 const { title } = Astro.props;
-const logoUrl = "https://byzantini-website.pages.dev/logo.png";
+const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 const isDev = isDevFromURL(Astro.url);
 ---
 
@@ -60,7 +60,7 @@ const isDev = isDevFromURL(Astro.url);
 		/>
 		<Links />
 	</head>
-	<body class="debug-screens box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
+	<body class="debug-screens box-border h-[100dvh] p-0 grid bg-white grid-rows-1 overflow-hidden">
 		<Navbar />
 		<div class="relative w-full h-full grid grid-rows-[100%]">
 			<slot />

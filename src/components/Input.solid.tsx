@@ -134,13 +134,15 @@ export default function Input(props: Props) {
 	return (
 		<label
 			for={name}
-			class={"group/tooltip relative h-min max-h-[200px] max-w-[30ch] grid grid-rows-[1fr] text-xl rounded-md font-didact"}
+			class={
+				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact"
+			}
 		>
 			<Show when={type !== "select" && type !== "file" && type !== "multiselect"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
 				<input
 					class={
-						"peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
+						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
 						(disabled && blurDisabled ? " blur-[1px]" : "")
 					}
 					type={type}
@@ -163,7 +165,7 @@ export default function Input(props: Props) {
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
 				<select
 					class={
-						"peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
+						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
 						(disabled && blurDisabled ? " blur-[1px]" : "")
 					}
 					name={name}
