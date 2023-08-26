@@ -1,47 +1,62 @@
-<div id="welcome-page" class="h-screen p-20 content-end grid grid-rows-[1fr_repeat(5,_max-content)] grid-cols-2 grid-flow-col">
-	<div></div>
-	<p class="w-[20ch] text-7xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">Σχολή Βυζαντινής &</p>
-	<p class="w-[20ch] ml-[0.75ch] text-7xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">Παραδοσιακής Μουσικής</p>
-	<p class="w-[20ch] ml-[calc(0.75ch_+_0.75_*_4.5rem)] text-4xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">
+<div
+	id="welcome-page"
+	class={"@container/welcome h-screen p-[5cqw] @6xl/welcome:p-[2.5cqw] sm:content-end grid grid-rows-[1fr_repeat(5,_max-content)] grid-cols-2 grid-flow-col " +
+		" max-sm:grid-rows-[repeat(5,_max-content)_1fr] max-sm:grid-cols-[100%] max-sm:items-center max-sm:bg-center max-sm:pt-[12rem] max-sm:min-h-[720px]"}
+>
+	<div class="max-sm:hidden"></div>
+	<p class="text-[4cqw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl">
+		Σχολή Βυζαντινής &
+	</p>
+	<p
+		class="ml-[0.75ch] text-[4cqw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-[clamp(1.5rem,2vw,2.25rem)] max-2xs:text-2xl"
+	>
+		Παραδοσιακής Μουσικής
+	</p>
+	<p
+		class="ml-[4cqw] text-[2cqw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-lg max-sm:pl-4 max-2xs:text-base"
+	>
 		Ι.Ν. Μεταμορφώσεως του Σωτήρος
 	</p>
-	<p class="w-[20ch] ml-[calc(1.5ch_+_0.75_*_4.5rem)] text-3xl font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed">
+	<p
+		class="ml-[5cqw] text-[1.5cqw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-lg max-sm:pl-8 max-2xs:text-base"
+	>
 		Ομωνύμου Δήμου
 	</p>
 	<div
 		id="fek"
-		class="mt-[6rem] w-max p-6 py-4 grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg"
+		class="mt-[5cqw] w-max p-[1.5cqw] py-[1.2cqw] grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg"
 	>
-		<p class="text-4xl font-anaktoria font-bold text-red-50 self-center">
-			<i class="fa-solid fa-chevron-right pr-4 text-2xl self-center"></i>Ανεγνωρισμένη υπό του Κράτους
+		<p class="text-[2cqw] font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">
+			<i class="fa-solid fa-chevron-right pr-4 text-[1.5cqw] max-sm:text-sm self-center"></i>Ανεγνωρισμένη υπό του Κράτους
 		</p>
-		<div class="mt-4 grid grid-cols-[max-content_max-content] gap-x-8 place-content-center">
+		<div class="mt-[1cqh] grid grid-cols-[max-content_max-content] gap-x-8 place-content-center">
 			<a
 				target="_blank"
 				href="/fek-byzantini.pdf"
-				class="px-3 h-max self-end text-lg font-didact font-bold text-red-50 outline-none outline-red-50 rounded-md hover:bg-red-50 hover:text-red-900"
+				class="px-3 h-max self-end text-[1.2cqw] max-sm:text-xs font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
 				style="grid-row: 2 / 3;">ΦΕΚ 1</a
 			>
 			<a
 				target="_blank"
 				href="/fek-paradosiaki.pdf"
-				class="px-3 self-start h-max text-lg font-didact font-bold text-red-50 outline-none outline-red-50 rounded-md hover:bg-red-50 hover:text-red-900"
+				class="px-3 self-start h-max text-[1.2cqw] max-sm:text-xs font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
 				style="grid-row: 2 / 3;">ΦΕΚ 2</a
 			>
 		</div>
 	</div>
 	<div
 		id="eggrafesLink"
-		class={"glass place-self-center w-max h-max rounded-lg " +
-			"shadow-lg shadow-stone-800 px-12 py-8 grid auto-cols-max place-items-center gap-y-4 row-span-full"}
+		class={"glass place-self-center w-max h-max rounded-lg" +
+			" shadow-lg shadow-stone-800 px-[2cqw] py-[2cqh] grid auto-cols-max place-items-center row-span-full max-sm:row-span-1"}
 	>
-		<p class="text-5xl font-anaktoria font-bold text-red-50 self-center">Οι Εγγραφές ξεκίνησαν!</p>
-		<p class="text-5xl font-anaktoria font-bold text-red-50 self-center">από 1/9 έως 30/10</p>
+		<p class="text-[3cqw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</p>
+		<p class="text-[2.5cqw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">Σχoλικού Έτους 2023-2024</p>
+		<p class="text-[2.5cqw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">1/9 έως 30/10</p>
 		<a
-			class="group/regbtn px-8 py-4 mt-8 text-5xl font-anaktoria font-bold text-red-50 self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors hover:bg-red-50 hover:text-red-900"
+			class="group/regbtn px-[2.5cqw] py-[1cqh] mt-[2cqh] text-[2.75cqw] max-sm:text-2xl font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
 			href="/eggrafes"
 		>
-			Εγγραφές <i class="w-0 fa-solid fa-chevron-right font-bold text-2xl self-center opacity-0"></i>
+			Εγγραφές <i class="w-0 fa-solid fa-chevron-right font-bold text-[1.75cqw] self-center max-sm:text-sm max-sm:px-2"></i>
 		</a>
 	</div>
 	<style is:inline>
@@ -93,10 +108,12 @@
 </div>
 <script>
 	const onElementMount = async (target: string, callback: () => any) => {
-		while (!document.querySelector(target)) {
+		let count = 0;
+		while (!document.querySelector(target) && count++ < 10) {
 			console.log("waiting for element to mount: " + target);
 			await new Promise(resolve => setTimeout(resolve, 100));
 		}
+		if (count >= 10) return;
 		callback();
 	};
 	onElementMount("#welcome-page > p", () => {

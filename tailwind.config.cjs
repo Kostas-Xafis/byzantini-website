@@ -5,12 +5,25 @@ module.exports = {
 	theme: {
 		extend: {
 			fontFamily: {
-				thomadaki: ["Thomadaki", "sans-serif"],
 				anaktoria: ["Anaktoria", "sans-serif"],
 				didact: ["Didact Gothic", "sans-serif"]
 			},
 			fontSize: {
-				"2.5xl": "1.75rem"
+				"2.5xl": "1.75rem",
+				"3.5xl": "2rem",
+				"2xs": "0.625rem"
+			},
+			lineHeight: {
+				"2xs": "0.75rem"
+			},
+			containers: {
+				"2xs": "16rem",
+				"3xs": "12rem"
+			},
+			screens: {
+				xs: "480px",
+				"2xs": "360px",
+				"3xs": "280px"
 			}
 		}
 	},

@@ -23,11 +23,13 @@ export default defineConfig({
 	],
 	output: "server",
 	adapter: cloudflare(),
+
 	vite: {
 		server: {
 			watch: {
 				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**", "**/notAssets/**"]
-			}
+			},
+			host: true
 		},
 		build: {
 			cssMinify: true,

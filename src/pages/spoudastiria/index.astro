@@ -3,28 +3,30 @@ import { useAPI } from "../../../lib/hooks/useAPI.astro";
 import type { Locations } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/GMap.astro";
+import { isDevFromURL } from "../../../lib/utils";
 let locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
-const imgSrc = "/locations/";
+const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/locations/";
+const isPreviewSite = Astro.url.hostname === "byzantini-website.pages.dev";
 ---
 
 <Layout title="Παραρτήματα">
 	<div class="group/type w-full h-full grid font-didact" style={{ "grid-template-columns": "max-content 1fr" }}>
 		<div id="btsContainer" class="shadow-top relative border-r-2 overflow-auto border-red-900">
-			<i class="up opacity-0 absolute fa-solid fa-chevron-up drop-shadow-[0px_2px_1px_rgb(24,24,24,0.6)] text-red-900 text-xl text-center w-[100%] top-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"></i>
-			<i class="down opacity-0 absolute fa-solid fa-chevron-down drop-shadow-[0px_-2px_1px_rgb(24,24,24,0.6)] text-red-900 text-xl text-center w-[100%] bottom-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"></i>
+			<i class="up opacity-0 absolute fa-solid fa-chevron-up drop-shadow-[0px_2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] text-center w-[100%] top-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"></i>
+			<i class="down opacity-0 absolute fa-solid fa-chevron-down drop-shadow-[0px_-2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] text-center w-[100%] bottom-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"></i>
 			<div class="w-max h-full grid auto-rows-max cursor-pointer overflow-auto">
 			{
 				locations.map((l, ind) => (
 					<div
 						data-show={ind === 0}
 						data-name={l.name}
-						class="group/btn w-max h-max py-4 place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+						class="group/btn w-max h-max py-[1cqw] place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
 					
 					>
-						<button class="p-4 w-[20ch] text-2xl group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+						<button class="p-[0.8cqw] w-[20ch] text-[1.25cqw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
 							{l.name}
 						</button>
-						<i class="mt-2 pr-6 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"></i>
+						<i class="mt-[0.4cqw] pr-2 fa-solid fa-chevron-right font-bold text-[1cqw] text-red-50 place-self-center opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"></i>
 					</div>
 				))
 			}
@@ -43,27 +45,27 @@ const imgSrc = "/locations/";
 								<img
 									src={imgSrc + l.image}
 									alt={"Φωτογραφία Παραρτήματος " + l.name}
-									class="w-[clamp(0px,100%,600px)] h-full object-cover rounded-l-[14px]"
+									class={"w-[clamp(0px,33cqw,600px)] h-full rounded-l-[14px]" + (isPreviewSite ? " object-fill" : " object-cover")}
 								/>
 							)}
-							<div class="w-max grid auto-rows-max place-content-center gap-y-6 p-12 grow-[2]">
+							<div class="w-max grid auto-rows-max place-content-center gap-y-[1.25cqw] p-[2cqw] grow-[2]">
 								<h1
 									id="locationsHead"
-									class="text-3xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+									class="text-[2cqw] text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
 								>
 									{l.name}
 								</h1>
-								<p class="text-xl">
+								<p class="text-[1.25cqw]">
 									<i class="fa-solid fa-map-location-dot pr-2 place-self-center" />
 									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Διεύθυνση:</span>
 									{l.address + ", " + l.areacode + " - " + l.municipality}
 								</p>
-								<p class="text-xl">
+								<p class="text-[1.25cqw]">
 									<i class="fa-solid fa-user pr-3 place-self-center" />
 									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Υπεύθυνος:</span>
 									{l.manager}
 								</p>
-								<p class="text-xl">
+								<p class="text-[1.25cqw]">
 									<i class="fa-regular fa-envelope pr-2 place-self-center" />
 									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Επικοινωνία:</span> 
 									<a target="_blank" href={`mailto:${l.email}`}>{l.email ?? ""}</a>•
@@ -72,7 +74,7 @@ const imgSrc = "/locations/";
 									})}
 								</p>
 								{l.link ? 
-									<a target="_blank" href={l.link} class="w-max rounded-lg text-xl border-red-900 border-solid border-2 p-2 transition-colors hover:bg-red-900 hover:text-white">
+									<a target="_blank" href={l.link} class="w-max rounded-lg text-[1.25cqw] border-red-900 border-solid border-2 p-[0.4cqw] transition-colors hover:bg-red-900 hover:text-white">
 										<i class="fa-solid fa-link pr-2"></i> Σύνδεσμος
 									</a>
 									: <></>}
@@ -127,13 +129,14 @@ const imgSrc = "/locations/";
 	// wrap all • characters in a span tag like this <span class="px-2 text-lg font-serif">•</span>
 	document.querySelectorAll("#locationsContainer > div > div > p").forEach(p => {
 		const text = p.innerHTML;
-		p.innerHTML = text.replaceAll("•", '<span class="px-2 text-lg font-serif">•</span>');
+		p.innerHTML = text.replaceAll("•", '<span class="px-2 text-[1.25cqw] font-serif">•</span>');
 	});
 	const onElementMount = async (target: string, callback: () => any) => {
-		while (!document.querySelector(target)) {
-			console.log("waiting for element to mount: " + target);
-			await new Promise(resolve => setTimeout(resolve, 100));
+		let count = 0;
+		while (!document.querySelector(target) && count++ < 10) {
+			await new Promise(resolve => setTimeout(resolve, 50));
 		}
+		if (count >= 10) return ;
 		callback();
 	};
 	onElementMount("#locationsContainer", 
@@ -202,4 +205,21 @@ const imgSrc = "/locations/";
 		observer.observe(document.querySelector("#btsContainer > div > div:first-child") as HTMLElement);
 		observer.observe(document.querySelector("#btsContainer > div > div:last-child") as HTMLElement);
 	});
+	onElementMount("#btsContainer", () => {
+		const container = document.querySelector("#btsContainer > div") as HTMLElement;
+		const btnUp = document.querySelector(".up") as HTMLElement;
+		btnUp.addEventListener("click", () => {
+			container.scrollBy({
+				top: -container.offsetHeight / 4,
+				behavior: "smooth"
+			});
+		});
+		const btnDown = document.querySelector(".down") as HTMLElement;
+		btnDown.addEventListener("click", () => {
+			container.scrollBy({
+				top: container.offsetHeight / 4,
+				behavior: "smooth"
+			});
+		});
+	});		
 </script>

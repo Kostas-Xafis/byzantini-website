@@ -4,6 +4,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "astro dev",
+		"devLocal": "astro dev --host",
 		"start": "astro dev",
 		"build": "astro build",
 		"preview": "astro build && wrangler pages dev ./dist",

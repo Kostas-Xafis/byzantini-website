@@ -8,7 +8,7 @@ const isDev = isDevFromURL(Astro.url);
 ---
 
 <iframe
-	class="w-[700px] aspect-[4/2] shadow-md shadow-gray-400 rounded-md border-2 border-solid border-red-900"
+	class="w-[clamp(0px,33cqw,900px)] aspect-[12/5] shadow-md shadow-gray-400 rounded-md border-2 border-solid border-red-900"
 	referrerpolicy="same-origin"
 	src={isDev ? "" : `https://www.google.com/maps/embed?${link}`}
 	allowfullscreen

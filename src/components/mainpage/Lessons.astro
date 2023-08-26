@@ -1,54 +1,65 @@
 ---
 const lessons = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"];
-const text = Array(3).fill(
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quod, tenetur et. Odit nostrum suscipit illum corrupti maxime,adipisci beatae reiciendis laborum blanditiis nisi explicabo dolore reprehenderit, repellat quidem omnis deserunt facere quaenam quo sapiente amet at rerum incidunt fugiat."
-);
+const text = [
+	"Στον Ιερό Ναό Μεταμορφώσεως του Σωτήρος ομωνύμου Δήμου λειτουργεί Σχολή Βυζαντινής Μουσικής αναγνωρισμένη από το Κράτος (Φ.Ε.Κ. τ.Β./1427/20-5-2016), η οποία χορηγεί Πτυχία και Διπλώματα Βυζαντινής Μουσικής. Σκοπός της Σχολής είναι η διατήρηση και διάδοση της ελληνορθόδοξης μουσικής μας παραδόσεως και κατ’ επέκταση η στελέχωση των ιερών αναλογίων με αποφοίτους της εν λόγω Σχολής. Γίνε μέτοχος της ιεράς τέχνης του Ιωάννου του Δαμασκηνού και του Ρωμανού του Μελωδού.",
+	`Από το 2022 με σχετικό ΦΕΚ  προστέθηκαν επισήμως στην Σχολή μας τα εξής Τμήματα παραδοσιακής μουσικής: 
+α) Τραγουδιού και Οργάνων πανελληνίου και ευρύτερου ανατολικού ρεπερτορίου 
+β) Οργάνων τοπικών παραδοσιακών ρεπερτορίων 
+γ) Οργάνων του ειδικού ρεπερτορίου της Νεοελληνικής λαϊκής Αστικής Μουσικής, και για τα οποία χορηγούνται πτυχία αναγνωρισμένα υπό του Κράτους. 
+
+Πλέον, δίνεται σε όλους τους ενδιαφερομένους η ευκαιρία, ανεξαρτήτως ηλικίας, να εντρυφήσουν στα νάματα της εθνικής μας παραδοσιακής μουσικής, με τα οποία γαλουχήθηκαν γενεές γενεών των Ελλήνων. `,
+	`Στη Σχολή μας παραδίδονται μαθήματα Ευρωπαϊκής μουσικής, εξυπηρετώντας τις ανάγκες των σπουδαστών μας της βυζαντινής μουσικής, καθώς η θεωρία της εν λόγω μουσικής είναι απαραίτητη προϋπόθεση για τη λήψη του πτυχίου τους. Πέραν τούτου προσφέρει την απαραίτητη θεωρητική γνώση και σε όποιον επιθυμεί να ασχοληθεί ή ασχολείται με την ευρωπαϊκή μουσική είτε ως υποψήφιος μαθητής σε μουσικά σχολεία είτε ως υποψήφιος φοιτητής σε τμήματα Μουσικών Σπουδών των ΑΕΙ. `
+];
 ---
 
-<div id="lessons" class="h-max w-full grid grid-rows-[max-content_1fr] grid-cols-3 gap-16 p-16 py-20">
+<div
+	id="lessons"
+	class="h-[max(max-content,100vh)] w-full grid grid-rows-[max-content_1fr] max-sm:flex flex-col grid-cols-3 gap-[4cqw] p-[4cqw] py-[10cqh] max-sm:grid-rows-[max-content_repeat(3,_1fr)] max-sm:grid-cols-[66%] max-sm:justify-center"
+>
 	<h1
 		id="lessonsHead"
-		class="heading relative p-2 text-center w-[9ch] place-self-center text-7xl font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900"
+		class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5cqw] max-sm:text-3xl leading-[3.5cqw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
 	>
 		Μαθήματα
 	</h1>
 	{
 		lessons.map((l, i) => (
-			<div class="group/lesson relative h-[500px] rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-8 overflow-hidden after:blur-[3px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
-				<h2 class="text-center text-5xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(250px_-_50%_-_2rem)] group-hover/lesson:translate-y-0">
+			<div class="lessonCard group/lesson relative h-max rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2cqw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
+				<h2 class="absolute inset-0 text-center text-[2.5cqw] max-sm:text-2xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%_-_1.25cqw)] max-sm:translate-y-[calc(50%_-_0.75rem)] group-[:is(.show)]/lesson:translate-y-4 group-hover/lesson:translate-y-4">
 					{l}
 				</h2>
-				<p class="text-2xl font-didact text-red-50 place-self-center pt-8 transition-opacity duration-100 opacity-[0.0001] group-hover/lesson:opacity-100 group-hover/lesson:duration-500">
+				<p class="text-[1.2cqw] whitespace-pre-line max-sm:text-sm font-didact text-red-50 place-self-center pt-10 max-sm:px-2 max-sm:pb-4  transition-opacity duration-100 opacity-[0.0001] group-[:is(.show)]/lesson:opacity-100 group-hover/lesson:opacity-100 group-[:is(.show)]/lesson:duration-500 group-hover/lesson:duration-500">
 					{text[i]}
 				</p>
 			</div>
 		))
 	}
 	<style is:inline>
-		#lessons > div:nth-of-type(1)::after {
-			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/byz.jpg");
+		.lessonCard:nth-of-type(1)::after {
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/byz3.jpg");
 			background-size: cover;
 			background-position: center;
 		}
-		#lessons > div:nth-of-type(2)::after {
+		.lessonCard:nth-of-type(2)::after {
 			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/par.jpg");
 			background-size: cover;
 			background-position: center;
 		}
-		#lessons > div:nth-of-type(3)::after {
+		.lessonCard:nth-of-type(3)::after {
 			background-image: url("/eur.jpg");
 		}
 
-		#lessons > div {
+		.lessonCard {
 			background: linear-gradient(to right, transparent, rgb(28, 28, 28, 0.85) 85%);
 			background-size: 300% 300%;
 			transition: background-position 0.25s ease-in-out;
 		}
 		#lessons h1,
 		#lessons h2 {
-			text-shadow: -2px 1px 2px rgb(14, 14, 14, 0.5);
+			text-shadow: -1px 1px 2px rgb(14, 14, 14, 0.3);
 		}
-		#lessons > div:hover {
+		.lessonCard:is(.show),
+		.lessonCard:hover {
 			background-position: 100%;
 		}
 	</style>
@@ -57,7 +68,7 @@ const text = Array(3).fill(
 	const onElementMount = async (target: string, callback: () => any) => {
 		while (!document.querySelector(target)) {
 			console.log("waiting for element to mount: " + target);
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 200));
 		}
 		callback();
 	};
@@ -78,5 +89,27 @@ const text = Array(3).fill(
 		);
 		// @ts-ignore
 		obsv.observe(document.querySelector("#lessons") as HTMLElement);
+		// document.querySelector("#lessons")?.scrollIntoView({behavior: "smooth"});
+	});
+	onElementMount("#lessons", () => {
+		const lessonCards = document.querySelectorAll(".lessonCard");
+		if (window.matchMedia("not all and (min-width: 640px)").matches) {
+			const obsv = new IntersectionObserver(
+				entries => {
+					const entry = entries[0];
+					console.log(entry);
+					if (entry.intersectionRatio >= 0.95) entry.target.classList.add("show");
+					else if (entry.intersectionRatio <= 0.1) entry.target.classList.remove("show");
+				},
+				{
+					root: null,
+					rootMargin: "0px",
+					threshold: [0.1, 0.95]
+				}
+			);
+			lessonCards.forEach((card, i) => {
+				obsv.observe(card);
+			});
+		}
 	});
 </script>

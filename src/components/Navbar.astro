@@ -1,16 +1,10 @@
 ---
-export interface Props {
-	obsv?: boolean;
-}
-
-const { obsv } = Astro.props;
-
 const links = [
 	{ name: "Αρχική", url: "/" },
 	{ name: "Η Σχολή μας", url: "/sxoli" },
 	{ name: "Εγγραφές", url: "/eggrafes" },
 	{ name: "Καθηγητές", url: "/kathigites" },
-	{ name: "Παραρτήματα", url: "/parartimata" }
+	{ name: "Σπουδαστήρια", url: "/spoudastiria" }
 ];
 
 const highlight = (url: string) => {
@@ -19,96 +13,132 @@ const highlight = (url: string) => {
 };
 
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
+const isMainPage = Astro.url.pathname === "/";
 ---
 
 <>
-	{
-		!obsv ? (
-			<nav class="fixed top-0 left-0 w-full h-[75px] grid grid-rows-[75px] grid-cols-[max-content_1fr] bg-red-900 z-[10000]">
-				<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center">
-					<a href="/" class="logoImg w-[70px] row-span-full aspect-square">
-						<div class="w-full h-full bg-red-50" />
-						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
-					</a>
-					<div class="absolute top-[1px] left-[calc(1rem_-_2px)] blur-[2px] -z-10">
-						<div class="logoImg w-[70px] aspect-square">
-							<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]" />
-						</div>
-					</div>
-					<p class="text-3xl mt-1 drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-						Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
-					</p>
-					<p class="pl-[5rem] text-xl drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-						Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
-					</p>
+	<nav
+		class={"@container/nav fixed top-0 left-0 w-[100dvw] md:h-[4.5cqw] md:grid grid-rows-[4.4cqw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
+			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:gap-y-2 max-sm:py-2" +
+			(!isMainPage ? " bg-red-900" : " glass")}
+	>
+		<div
+			class={"relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center z-10" +
+				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-2"}
+		>
+			<a
+				href="/"
+				class="logoImg sm:w-[4cqw] row-span-full aspect-square place-self-center max-sm:w-[clamp(1.75rem,15dvw,3.5rem)] max-sm:self-center"
+			>
+				<div class="w-full h-full bg-red-50"></div>
+				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
+			</a>
+			<div
+				class={"absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10" +
+					" max-sm:top-[2px] max-sm:translate-y-0 max-sm:left-[6px]"}
+			>
+				<div class="logoImg sm:w-[4cqw] aspect-square max-sm:w-[clamp(1.75rem,15dvw,3.5rem)]">
+					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
-				<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4">
-					{links.map(link => (
+			</div>
+			<p
+				class="mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.75cqw] max-sm:text-base max-sm:text-center max-2xs:text-sm"
+			>
+				Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+			</p>
+			<p
+				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25cqw] @[1536px]/nav:pl-20 @6xl/nav:pl-12 pl-4 max-sm:text-xs max-sm:text-center"
+			>
+				Ι.Ν. Μεταμορφώσεως του Σωτήρος, <span class="max-[400px]:hidden">Ομωνύμου Δήμου</span>
+			</p>
+			<p class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 min-[400px]:hidden pl-4 text-xs text-center">
+				Ομωνύμου Δήμου
+			</p>
+		</div>
+		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-sm:hidden">
+			{
+				links.map(link => (
+					<a
+						class="group relative grid grid-rows-[minmax(min-content, 60px)] place-content-center @[1536px]/nav:px-4  @6xl/nav:px-2 px-1"
+						href={link.url}
+						rel={!isDev ? "prefetch" : ""}
+					>
+						<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-[1.5cqw]">
+							{link.name}
+						</div>
+						<div
+							class={
+								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px]" +
+								(highlight(link.url) ? " bg-red-200" : " group-hover:bg-red-200")
+							}
+						/>
+					</a>
+				))
+			}
+		</div>
+		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col">
+			<i class="fa-solid fa-bars sm:hidden text-red-50 transition-opacity text-center self-center"></i>
+			<i
+				class="absolute left-[50%] translate-y-[-50%] top-0 fa-solid fa-xmark sm:hidden text-red-50 opacity-0 transition-opacity text-center self-center"
+			></i>
+			<div class="hidden -z-10 absolute top-[calc(100%_+_0.5rem)] h-max grid-rows-[repeat(5,_1fr)] grid-cols-[100%] w-full">
+				{
+					links.map(link => (
 						<a
-							class="group relative px-4 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
+							class="relative grid py-4 bg-red-900 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
 							href={link.url}
-							rel="prefetch"
 						>
-							<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.25)]">
+							<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 								{link.name}
 							</div>
-							<div
-								class={
-									"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px] " +
-									(highlight(link.url) ? "bg-red-200" : "group-hover:bg-red-200")
-								}
-							/>
 						</a>
-					))}
-				</div>
-			</nav>
-		) : (
-			<nav class="fixed top-0 left-0 w-full h-[75px] grid grid-rows-[73px] grid-cols-[max-content_1fr] z-[10000] transition-colors glass border-t-[0px]">
-				<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center">
-					<a href="/" class="logoImg w-[70px] row-span-full aspect-square">
-						<div class="w-full h-full bg-red-50" />
-						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
-					</a>
-					<div class="absolute top-[1px] left-[calc(1rem_-_1px)] -z-10">
-						<div class="logoImg w-[70px] aspect-square">
-							<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]" />
-						</div>
-					</div>
-					<p class="text-3xl mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-						Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
-					</p>
-					<p class="pl-[5rem] text-xl font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50">
-						Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
-					</p>
-				</div>
-				<div class={`w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 `}>
-					{links.map(link => (
-						<a
-							class="group relative px-4 grid grid-rows-[minmax(min-content, 60px)] place-content-center"
-							href={link.url}
-							rel={!isDev ? "prefetch" : ""}
-						>
-							<div class="group px-2 font-bold font-anaktoria text-2.5xl text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								{link.name}
-							</div>
-							<div
-								class={
-									"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px]" +
-									(highlight(link.url) ? " bg-red-200" : " group-hover:bg-red-200")
-								}
-							/>
-						</a>
-					))}
-				</div>
-			</nav>
-		)
-	}
+					))
+				}
+			</div>
+		</div>
+	</nav>
 	<style is:inline>
 		.logoImg {
 			mask-image: url("/logo.png");
 			-webkit-mask-image: url("/logo.png");
 			mask-size: contain;
 			-webkit-mask-size: contain;
+		}
+		#burgerNav a:nth-child(5) {
+			transition-duration: 0.6s;
+		}
+		#burgerNav a:nth-child(4) {
+			transition-duration: 0.625s;
+		}
+		#burgerNav a:nth-child(3) {
+			transition-duration: 0.65s;
+		}
+		#burgerNav a:nth-child(2) {
+			transition-duration: 0.675s;
+		}
+		#burgerNav a:nth-child(1) {
+			transition-duration: 0.7s;
+		}
+		#burgerNav:is(.show) > .fa-bars {
+			opacity: 0;
+		}
+		#burgerNav:is(.show) > .fa-xmark {
+			opacity: 1;
+		}
+		#burgerNav:is(.show) a:nth-child(1) {
+			transition-duration: 0.6s;
+		}
+		#burgerNav:is(.show) a:nth-child(2) {
+			transition-duration: 0.625s;
+		}
+		#burgerNav:is(.show) a:nth-child(3) {
+			transition-duration: 0.65s;
+		}
+		#burgerNav:is(.show) a:nth-child(4) {
+			transition-duration: 0.675s;
+		}
+		#burgerNav:is(.show) a:nth-child(5) {
+			transition-duration: 0.7s;
 		}
 	</style>
 	<script is:inline>
@@ -118,10 +148,7 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 				console.log("waiting for element to mount: " + target);
 				await new Promise(resolve => setTimeout(resolve, 200));
 			}
-			if (counter >= 50) {
-				console.error("element mount timed out: " + target);
-				return;
-			}
+			if (counter >= 10) return;
 			callback();
 		};
 		onElementMount("#welcome-page", () => {
@@ -145,6 +172,25 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 				}
 			);
 			obsv.observe(document.querySelector("#welcome-page"));
+		});
+		onElementMount("#burgerNav", () => {
+			const btn = document.querySelector("#burgerNav");
+			btn.addEventListener("click", () => {
+				const menu = document.querySelector("#burgerNav > div");
+				const isOpen = menu.parentElement.classList.contains("open");
+				if (isOpen) {
+					menu.parentElement.classList.remove("open");
+					setTimeout(() => {
+						menu.classList.add("hidden");
+						menu.classList.remove("grid");
+					}, 700);
+				} else {
+					menu.classList.toggle("hidden");
+					menu.classList.toggle("grid");
+					void menu.offsetWidth;
+					menu.parentElement.classList.toggle("open");
+				}
+			});
 		});
 	</script>
 </>

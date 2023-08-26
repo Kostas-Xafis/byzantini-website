@@ -58,8 +58,8 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 		/>
 		<Links />
 	</head>
-	<body class="box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
-		<Navbar obsv />
+	<body class="debug-screens box-border h-[100vh] p-0 grid bg-white grid-rows-1 overflow-hidden">
+		<Navbar />
 		<div class="relative w-full h-full grid grid-rows-[100%]">
 			<slot />
 		</div>
@@ -137,5 +137,16 @@ const logoUrl = "https://byzantini-website.pages.dev/logo.png";
 				}
 			}
 		</style>
+		<div id="resize" class="fixed bottom-0 left-0 bg-gray-800 text-white text-2xl"></div>
+		<script>
+			function displayWindowSize() {
+				var w = document.documentElement.clientWidth;
+				var h = document.documentElement.clientHeight;
+
+				document.getElementById("resize").innerHTML = w + "px - " + h + "px";
+			}
+			window.addEventListener("resize", displayWindowSize);
+			displayWindowSize();
+		</script>
 	</body>
 </html>
