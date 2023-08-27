@@ -155,21 +155,25 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 		onElementMount("#welcome-page", () => {
 			const obsv = new IntersectionObserver(
 				entries => {
+					const nav = document.querySelector("nav");
 					const entry = entries[0];
-					if (entry.intersectionRatio >= 0.9) {
-						//@ts-ignore
-						document.querySelector("nav").classList.remove("bg-red-900");
-						//@ts-ignore
-						document.querySelector("nav").classList.add("glass");
+					const wHeight = window.innerHeight;
+					const cHeight = entry.boundingClientRect.height;
+
+					const ratio = cHeight > wHeight ? wHeight / cHeight : 1;
+					console.log({ ratio, wHeight, cHeight });
+					if (entry.intersectionRatio >= ratio * 0.9) {
+						nav.classList.remove("bg-red-900");
+						nav.classList.add("glass");
 					} else {
-						//@ts-ignore
-						document.querySelector("nav").classList.remove("glass");
-						//@ts-ignore
-						document.querySelector("nav").classList.add("bg-red-900");
+						nav.classList.remove("glass");
+						nav.classList.add("bg-red-900");
 					}
 				},
 				{
-					threshold: [0.9]
+					root: null,
+					rootMargin: "0px",
+					threshold: new Array(10).fill(0).map((_, i) => i / 10)
 				}
 			);
 			obsv.observe(document.querySelector("#welcome-page"));

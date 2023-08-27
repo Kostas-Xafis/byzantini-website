@@ -51,13 +51,13 @@ const genericInputs: Record<
 	telephone: {
 		label: "Τηλέφωνο",
 		name: "telephone",
-		type: "number",
+		type: "tel",
 		iconClasses: "fa-solid fa-phone"
 	},
 	cellphone: {
 		label: "Κινητό",
 		name: "cellphone",
-		type: "number",
+		type: "tel",
 		required: true,
 		iconClasses: "fa-solid fa-mobile-screen"
 	},
@@ -69,9 +69,9 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-envelope"
 	},
 	birth_year: {
-		label: "Έτος Γέννησης",
+		label: "Ημερομηνία Γέννησης",
 		name: "birth_year",
-		type: "number",
+		type: "date",
 		required: true,
 		iconClasses: "fa-regular fa-calendar"
 	},
@@ -259,7 +259,6 @@ export function RegistrationForm() {
 	onMount(() => {
 		if (window.location.hash) {
 			const hash = window.location.hash.replace("#", "");
-			console.log(hash);
 			const type = decodeURI(hash);
 			const music = {
 				"Βυζαντινή Μουσική": "byz",
@@ -284,10 +283,16 @@ export function RegistrationForm() {
 	] as const;
 
 	const TeachersByType = createMemo(() => {
-		const teachers = store[API.Teachers.get];
+		let teacher_store = store[API.Teachers.get]?.slice(0, -1);
+		const teachers = teacher_store && (JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
 		const teacher_classes = store[API.Teachers.getClasses];
 		if (!teachers || !teacher_classes) return [];
 		const id = btns.findIndex(btn => btn[1] === formSelected()) + 1;
+		teachers.sort((a, b) => {
+			if (a.fullname < b.fullname) return -1;
+			if (a.fullname > b.fullname) return 1;
+			return 0;
+		});
 		return teachers.filter(teacher =>
 			teacher_classes.find(teacher_class => teacher_class.teacher_id === teacher.id && teacher_class.class_id === id)
 		);
