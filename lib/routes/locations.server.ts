@@ -19,7 +19,7 @@ serverRoutes.post.func = async req => {
 		const body = await req.json();
 		const args = Object.values(body);
 		const { insertId } = await executeQuery(
-			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link) VALUES (${questionMarks(args.length)})`,
+			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube) VALUES (${questionMarks(args.length)})`,
 			args
 		);
 		return { insertId };
@@ -30,7 +30,7 @@ serverRoutes.update.func = async req => {
 	return await execTryCatch(async () => {
 		const body = await req.json();
 		const args = Object.values(body);
-		await executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=? WHERE id=?`, [
+		await executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=? WHERE id=?`, [
 			...args.slice(1),
 			body.id
 		]);

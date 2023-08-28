@@ -13,7 +13,7 @@ export default function Spinner() {
   animation: spin 1s infinite linear;
 }
 
-@keyframes spin{ 
+@keyframes spin{
   100%{transform: rotate(1turn)}
 }
 `}

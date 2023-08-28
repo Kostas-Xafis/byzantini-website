@@ -119,7 +119,7 @@ const teachingTitle = (fullname:string) => {
 										const dot = i === t_locations.length - 1 ? "" : "•";
 										return(<>{str}&thinsp;{dot}&thinsp;</>)
 								})}</p>
-								<p class="text-[1.25cqw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-xs"><span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-2 max-sm:pr-1">{teachingTitle(teacher.fullname)+":"}</span><span>{t_classes_str.map((str, i) => {
+								<p class="text-[1.25cqw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-xs"><span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1">{teachingTitle(teacher.fullname)+":"}</span><span>{t_classes_str.map((str, i) => {
 										let len = t_classes_str.length;
 										if (len === 1) return(<>{str}&thinsp;Μουσικής</>)
 										else if(len === 2) {
@@ -133,7 +133,7 @@ const teachingTitle = (fullname:string) => {
 								})}</span></p>
 								{t_instruments && t_instruments.length > 0 ? (
 									<p class="text-[1.25cqw] max-sm:text-xs max-sm:leading-2xs max-w-[35ch] flex flex-row flex-wrap max-sm:gap-y-1 gap-y-2 max-sm:max-w-[55ch]">
-										<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-2 max-sm:pr-1 whitespace-nowrap">Διδάσκει:</span>{t_instruments.map((instr, i) => {
+										<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1 whitespace-nowrap">Διδάσκει:</span>{t_instruments.map((instr, i) => {
 											const dot = i === t_instruments.length - 1 ? "" : "•";
 											return (
 												<span>{instr}&thinsp;</span><span>{dot}&thinsp;</span>

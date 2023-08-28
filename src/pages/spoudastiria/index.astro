@@ -4,83 +4,170 @@ import type { Locations } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/GMap.astro";
 import { isDevFromURL } from "../../../lib/utils";
-let locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
+let _locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/locations/";
-const isPreviewSite = Astro.url.hostname === "byzantini-website.pages.dev";
-const schoolLocations = locations.slice(0, 11);
-const otherLocations = locations.slice(11);
+const schoolLocations = _locations.slice(0, 10);
+const otherLocations = _locations.slice(10);
 ---
 
 <Layout title="Παραρτήματα">
-	<div class="group/type w-full h-full grid font-didact" style={{ "grid-template-columns": "max-content 1fr" }}>
-		<div id="btsContainer" class="shadow-top relative border-r-2 overflow-auto border-red-900">
-			<i class="up opacity-0 absolute fa-solid fa-chevron-up drop-shadow-[0px_2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] text-center w-[100%] top-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"></i>
-			<i class="down opacity-0 absolute fa-solid fa-chevron-down drop-shadow-[0px_-2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] text-center w-[100%] bottom-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"></i>
+	<style is:inline>
+		#btsContainer > div {
+			-ms-overflow-style: none !important; /* Internet Explorer 10+ */
+			scrollbar-width: none !important; /* Firefox */
+		}
+		#btsContainer > div::-webkit-scrollbar {
+			display: none !important; /* Safari and Chrome */
+		}
+	</style>
+	<div
+		class="group/type w-full h-full grid !font-didact grid-cols-[max-content_1fr] max-sm:grid-rows-[max-content_1fr] max-sm:grid-cols-[100%]"
+	>
+		<div id="btsContainer" class="max-sm:hidden relative border-r-2 overflow-auto border-red-900 z-10">
+			<i
+				class="up opacity-0 cursor-pointer absolute fa-solid fa-chevron-up drop-shadow-[0px_2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] pt-1 text-center w-[100%] top-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"
+			></i>
+			<i
+				class="down opacity-0 cursor-pointer absolute fa-solid fa-chevron-down drop-shadow-[0px_-2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] text-center w-[100%] bottom-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"
+			></i>
 			<div class="w-max h-full grid auto-rows-max cursor-pointer overflow-auto">
-			{
-				locations.map((l, ind) => (
-					<div
-						data-show={ind === 0}
-						data-name={l.name}
-						class="group/btn w-max h-max py-[1cqw] place-self-center grid grid-cols-[1fr_max-content] bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
-					
-					>
-						<button class="p-[0.8cqw] w-[20ch] text-[1.25cqw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
-							{l.name}
-						</button>
-						<i class="mt-[0.4cqw] pr-2 fa-solid fa-chevron-right font-bold text-[1cqw] text-red-50 place-self-center opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"></i>
-					</div>
-				))
-			}
+				{
+					schoolLocations.map((l, ind) => (
+						<div
+							data-show={ind === 0}
+							data-name={l.name}
+							class="btn group/btn relative w-full py-[1cqw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+						>
+							<button class="p-[0.75cqw] w-[20ch] text-[1.25cqw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+								{l.name}
+							</button>
+							<div class="absolute right-[0.625cqw] top-[50%] translate-y-[-50%] font-bold text-[1.25cqw]">
+								<i class="fa-solid fa-chevron-right text-red-50 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] group-data-[show]/btn:opacity-100" />
+							</div>
+						</div>
+					))
+				}
+				<div class="w-full px-[1cqw] py-[1cqw] place-self-center text-[1.5cqw] flex flex-col gap-y-[1.cqw] bg-red-900">
+					<p class="text-white">Συνεργαζόμενες Σχολές</p>
+					<i
+						class="fa-solid fa-chevron-down font-bold text-[1.25cqw] text-red-50 self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+					></i>
+				</div>
+				{
+					otherLocations.map(l => (
+						<div
+							data-name={l.name}
+							class="btn group/btn relative w-full py-[1cqw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+						>
+							<button class="p-[0.75cqw] w-[20ch] text-[1.25cqw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+								{l.name}
+							</button>
+							<div class="absolute right-[0.625cqw] top-[50%] translate-y-[-50%] font-bold text-[1.25cqw]">
+								<i class="fa-solid fa-chevron-right text-red-50 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] group-data-[show]/btn:opacity-100" />
+							</div>
+						</div>
+					))
+				}
 			</div>
 		</div>
-		<div id="locationsContainer" class="w-full h-full grid grid-rows-[80%] grid-cols-[90%] place-content-center justify-center overflow-auto">
+		<div id="btsMobileContainer" class="sm:hidden w-full relative flex flex-col border-b-2 overflow-auto border-red-900 z-10">
+			<select id="mobileLocationSelect" class="w-full text-lg px-2 pt-4 text-center focus:!outline-none">
+				<optgroup label="Σπουδαστήρια Σχολής" class="bg-red-900 text-center text-white">
+					{
+						schoolLocations.map((l, ind) => (
+							<option data-show={ind === 0} data-name={l.name} class="bg-white text-black">
+								{l.name}
+							</option>
+						))
+					}
+				</optgroup>
+				<optgroup label="Συνεργαζόμενες Σχολές" class="bg-red-900 text-center text-white">
+					{
+						otherLocations.map(l => (
+							<option data-name={l.name} value={l.name} class="bg-white text-black">
+								{l.name}
+							</option>
+						))
+					}
+				</optgroup>
+			</select>
+			<i class="fa-solid fa-chevron-down font-bold text-lg text-red-900 self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+			></i>
+		</div>
+		<div
+			id="locationsContainer"
+			class="relative w-full h-full grid-rows-[90%] grid-cols-[95%] sm:grid max-sm:flex sm:place-content-center sm:justify-center max-sm:overflow-auto max-sm:h-full"
+		>
 			{
-				locations.map((l, i) => {
+				_locations.map((l, i) => {
 					return (
 						<div
 							data-name={l.name}
-							class="hidden w-full justify-self-center rounded-2xl shadow-md shadow-gray-400 border-solid border-2 border-red-900"
+							class="hidden w-full max-sm:w-[100dvw] max-sm:flex-col justify-self-center sm:rounded-2xl shadow-md shadow-gray-400 border-solid sm:border-2 border-red-900 sm:overflow-hidden max-sm:overflow-auto"
 							class:list={[i === 0 ? " show" : "", !l.image ? " w-max" : ""]}
-						> 
+						>
 							{l.image && (
 								<img
 									src={imgSrc + l.image}
 									alt={"Φωτογραφία Παραρτήματος " + l.name}
-									class={"w-[clamp(0px,33cqw,600px)] h-full rounded-l-[14px]" + (isPreviewSite ? " object-fill" : " object-cover")}
+									class="w-[clamp(0px,37.5cqw,700px)] max-sm:w-[100dvw] h-[clamp(0px,40cqw,700px)] max-sm:h-[clamp(0px,100%,300px)] object-cover"
 								/>
 							)}
-							<div class="w-max grid auto-rows-max place-content-center gap-y-[1.25cqw] p-[2cqw] grow-[2]">
+							<div class="w-max max-sm:w-full grid grid-rows-[repeat(5,max-content)_1fr] gap-y-[1.25cqw] px-[2cqw] py-[1cqw] bg-white max-sm:px-4 max-sm:py-4">
 								<h1
 									id="locationsHead"
-									class="text-[2cqw] text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+									class="text-[2cqw] max-sm:text-xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
 								>
 									{l.name}
 								</h1>
-								<p class="text-[1.25cqw]">
-									<i class="fa-solid fa-map-location-dot pr-2 place-self-center" />
-									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Διεύθυνση:</span>
+								<p class="text-[1.25cqw] max-sm:text-lg">
+									<i class="fa-solid fa-map-location-dot pr-2" />
+									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">Διεύθυνση:</span>
 									{l.address + ", " + l.areacode + " - " + l.municipality}
 								</p>
-								<p class="text-[1.25cqw]">
-									<i class="fa-solid fa-user pr-3 place-self-center" />
-									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Υπεύθυνος:</span>
+								<p class="text-[1.25cqw] max-sm:text-lg">
+									<i class="fa-solid fa-user pr-3" />
+									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">Υπεύθυνος:</span>
 									{l.manager}
 								</p>
-								<p class="text-[1.25cqw]">
-									<i class="fa-regular fa-envelope pr-2 place-self-center" />
-									<span class="underline decoration-1 decoration-slate-600 underline-offset-[3px] pr-1">Επικοινωνία:</span> 
-									<a target="_blank" href={`mailto:${l.email}`}>{l.email ?? ""}</a>•
-									{l.telephones.split(",").map((tel) => {
-										return (<a target="_blank" href={`tel:${tel}`}>{tel}</a>)
+								<p class="text-[1.25cqw] max-sm:text-lg">
+									<i class="fa-regular fa-envelope pr-2" />
+									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">
+										Επικοινωνία:&NegativeThinSpace;
+									</span>
+									<a target="_blank" href={`mailto:${l.email}`}>
+										{l.email ?? ""}
+									</a>
+									<span class="text-[1.25cqw] max-sm:text-lg">•</span>
+									{l.telephones.split(",").map(tel => {
+										return (
+											<a target="_blank" href={`tel:${tel}`}>
+												{tel}
+											</a>
+										);
 									})}
 								</p>
-								{l.link ? 
-									<a target="_blank" href={l.link} class="w-max rounded-lg text-[1.25cqw] border-red-900 border-solid border-2 p-[0.4cqw] transition-colors hover:bg-red-900 hover:text-white">
-										<i class="fa-solid fa-link pr-2"></i> Σύνδεσμος
-									</a>
-									: <></>}
-									<GMap link={l.map} />
+								<div class="flex flex-row gap-x-4">
+									{l.link && (
+										<a
+											target="_blank"
+											href={l.link}
+											class="w-max rounded-lg text-[1.25cqw] max-sm:text-lg border-red-900 border-solid border-2 max-sm:border-[1px] p-[0.4cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white"
+										>
+											<i class="fa-solid fa-link pr-2" /> Σύνδεσμος
+										</a>
+									)}
+									{l.youtube && (
+										<a
+											target="_blank"
+											href={l.youtube}
+											class="w-max rounded-lg text-[1.25cqw] max-sm:text-lg border-red-900 border-solid border-2 max-sm:border-[1px] p-[0.4cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white"
+										>
+											<i class="fa-brands fa-youtube pr-2" /> YouTube
+										</a>
+									)}
+								</div>
+								<GMap link={l.map} />
 							</div>
 						</div>
 					);
@@ -97,22 +184,15 @@ const otherLocations = locations.slice(11);
 			animation: fadeOut 0.3s ease-in-out forwards;
 		}
 		.show {
-			display: flex;
+			display: flex !important;
 		}
 		#locationsContainer > div:is(:not(.remove)),
 		#btsContainer {
 			opacity: 0.0001;
 			animation: fadeIn 0.6s ease-in-out forwards;
 		}
-		#btsContainer > div > div:hover i {
+		#btsContainer > div > .btn:hover i {
 			animation: fadeInLeft 0.3s ease-in-out forwards;
-		}
-		#btsContainer > div {
-			-ms-overflow-style: none;  /* Internet Explorer 10+ */
-			scrollbar-width: none;  /* Firefox */
-		}
-		#btsContainer > div::-webkit-scrollbar { 
-			display: none;  /* Safari and Chrome */
 		}
 		#btsContainer:is(.shadow-up) .up {
 			opacity: 1;
@@ -120,33 +200,23 @@ const otherLocations = locations.slice(11);
 		#btsContainer:is(.shadow-down) .down {
 			opacity: 1;
 		}
-		
 	</style>
 </Layout>
 
 <script>
-	import { useAPI } from "../../../lib/hooks/useAPI.astro";
-	import type { Locations } from "../../../types/entities";
-
-	// wrap all • characters in a span tag like this <span class="px-2 text-lg font-serif">•</span>
-	document.querySelectorAll("#locationsContainer > div > div > p").forEach(p => {
-		const text = p.innerHTML;
-		p.innerHTML = text.replaceAll("•", '<span class="px-2 text-[1.25cqw] font-serif">•</span>');
-	});
 	const onElementMount = async (target: string, callback: () => any) => {
 		let count = 0;
 		while (!document.querySelector(target) && count++ < 10) {
 			await new Promise(resolve => setTimeout(resolve, 50));
 		}
-		if (count >= 10) return ;
+		if (count >= 10) return;
 		callback();
 	};
-	onElementMount("#locationsContainer", 
-		(async function () {
-			let locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
-			locations.forEach(l => {
-				const btn = document.querySelector(`#btsContainer div[data-name='${l.name}']`) as HTMLElement;
+	window.matchMedia("(min-width: 641px)").matches &&
+		onElementMount("#locationsContainer", async function () {
+			document.querySelectorAll("#btsContainer div[data-name]").forEach(btn =>
 				btn.addEventListener("click", () => {
+					const name = btn.getAttribute("data-name") as string;
 					const shown = document.querySelector("[data-show]") as HTMLElement | null;
 					if (shown === btn) return;
 
@@ -161,49 +231,79 @@ const otherLocations = locations.slice(11);
 							shown.removeAttribute("data-show");
 							void shown.offsetWidth;
 
-							container.querySelector(`div[data-name='${l.name}']`)?.classList.add("show");
+							container.querySelector(`div[data-name='${name}']`)?.classList.add("show");
 
-							heading.innerText = l.name;
+							heading.innerText = name;
 							btn.setAttribute("data-show", "");
 						}, 300);
 					} else {
-						heading.innerText = l.name;
+						heading.innerText = name;
 						btn.setAttribute("data-show", "");
 					}
-				});
-			});
-			if(window.location.hash) {
+				})
+			);
+			if (window.location.hash) {
 				const hash = window.location.hash.replace("#", "");
 				const location = decodeURI(hash);
 				const btn = document.querySelector(`#btsContainer div[data-name='${location}'] button`) as HTMLElement;
 				btn.click();
 			}
-		})
-	)
+		});
+	window.matchMedia("(max-width: 640px)").matches &&
+		onElementMount("#locationsContainer", async function () {
+			const select = document.querySelector("#btsMobileContainer > select") as HTMLSelectElement;
+			select.addEventListener("change", e => {
+				const locationName = select?.value as string;
+				const container = document.querySelector("#locationsContainer") as HTMLElement;
+				const heading = document.querySelector("#locationsHead") as HTMLElement;
+				const prevLocation = container.querySelector(".show") as HTMLElement;
+				prevLocation.classList.add("remove");
+				let locationClassList = [] as any;
+				prevLocation.classList.forEach(v => locationClassList.push(v));
+				let selectedClassList = [] as any;
+				container.querySelector(`div[data-name='${locationName}']`)?.classList.forEach(v => selectedClassList.push(v));
+				console.log({ locationClassList, locationName, selectedClassList });
+				setTimeout(() => {
+					prevLocation.classList.remove("show", "remove");
+					void prevLocation.offsetWidth;
+					container.querySelector(`div[data-name='${locationName}']`)?.classList.add("show");
+					heading.innerText = locationName;
+
+					locationClassList = [] as any;
+					prevLocation.classList.forEach(v => locationClassList.push(v));
+					selectedClassList = [] as any;
+					container.querySelector(`div[data-name='${locationName}']`)?.classList.forEach(v => selectedClassList.push(v));
+					console.log({ locationClassList, locationName, selectedClassList });
+				}, 300);
+			});
+		});
 	onElementMount("#btsContainer", () => {
 		// Create an instersection observer that when the are more elements to be scrolled a shadow is added to the bottom of the container. Same case for the top.
-		const observer = new IntersectionObserver((entries) => {
-			entries.forEach(entry => {
-				const container = document.querySelector("#btsContainer") as HTMLElement;
-				if (entry.target === container.querySelector("div:first-child")) {
-					if (entry.intersectionRatio <= 0.4) {
-						container.classList.add("shadow-up");
+		const observer = new IntersectionObserver(
+			entries => {
+				entries.forEach(entry => {
+					const container = document.querySelector("#btsContainer") as HTMLElement;
+					if (entry.target === container.querySelector("div:first-child")) {
+						if (entry.intersectionRatio <= 0.4) {
+							container.classList.add("shadow-up");
+						} else {
+							container.classList.remove("shadow-up");
+						}
 					} else {
-						container.classList.remove("shadow-up");
+						if (entry.intersectionRatio <= 0.4) {
+							container.classList.add("shadow-down");
+						} else {
+							container.classList.remove("shadow-down");
+						}
 					}
-				} else {
-					if (entry.intersectionRatio <= 0.4) {
-						container.classList.add("shadow-down");
-					} else {
-						container.classList.remove("shadow-down");
-					}
-				}
-			});
-		}, {
-			root: document.querySelector("#btsContainer") as HTMLElement,
-			rootMargin: "0px",
-			threshold: [0.1, 0.4, 0.5, 0.6, 0.9]
-		});
+				});
+			},
+			{
+				root: document.querySelector("#btsContainer") as HTMLElement,
+				rootMargin: "0px",
+				threshold: [0.1, 0.4, 0.5, 0.6, 0.9]
+			}
+		);
 		observer.observe(document.querySelector("#btsContainer > div > div:first-child") as HTMLElement);
 		observer.observe(document.querySelector("#btsContainer > div > div:last-child") as HTMLElement);
 	});
@@ -223,5 +323,5 @@ const otherLocations = locations.slice(11);
 				behavior: "smooth"
 			});
 		});
-	});		
+	});
 </script>

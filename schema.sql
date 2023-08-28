@@ -118,6 +118,7 @@ CREATE TABLE `locations` (
     `image` varchar(80),
     `map` varchar(400) NOT NULL,
     `link` varchar(200),
+    `youtube` varchar(120),
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -272,3 +273,4 @@ INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 -- ALTER TABLE `teachers` ADD COLUMN `linktree` varchar(80);
 
 -- ALTER TABLE `registrations` RENAME COLUMN `birth_year` TO `birth_date`;
+-- ALTER TABLE `locations` ADD COLUMN `youtube` varchar(120);

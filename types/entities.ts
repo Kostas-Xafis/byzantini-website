@@ -118,7 +118,8 @@ export const v_Locations = object({
 	priority: number([integer(), minValue(1)]),
 	image: string(),
 	map: string(),
-	link: optional(string())
+	link: optional(string()),
+	youtube: optional(string()),
 });
 export type Locations = Output<typeof v_Locations>;
 

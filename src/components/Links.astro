@@ -1,6 +1,7 @@
 ---
-const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
-const hasBrandIcons = !Astro.url.pathname.includes("admin");
+import { isDevFromURL } from "../../lib/utils";
+const isDev = isDevFromURL(Astro.url);
+const hasBrandIcons = !Astro.url.pathname.includes("admin") && !Astro.url.pathname.includes("login");
 ---
 
 <>

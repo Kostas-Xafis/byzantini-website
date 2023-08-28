@@ -12,7 +12,7 @@ import Spinner from "../Spinner.solid";
 const PREFIX = "locations";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type LocationsTable = Omit<Locations, "telephones" | "link" | "map">;
+type LocationsTable = Omit<Locations, "telephones" | "link" | "map" | "youtube">;
 
 const LocationsInputs = (location?: Locations): Record<keyof Locations, InputProps> => {
 	return {
@@ -34,7 +34,8 @@ const LocationsInputs = (location?: Locations): Record<keyof Locations, InputPro
 			value: location?.image
 		},
 		map: { name: "map", label: "Google Maps", type: "text", iconClasses: "fa-solid fa-map-location-dot", value: location?.map },
-		link: { name: "link", label: "Ιστοσελίδα", type: "text", iconClasses: "fa-solid fa-link", value: location?.link }
+		link: { name: "link", label: "Ιστοσελίδα", type: "text", iconClasses: "fa-solid fa-link", value: location?.link },
+		youtube: { name: "youtube", label: "Youtube", type: "text", iconClasses: "fa-brands fa-youtube", value: location?.youtube }
 	};
 };
 
@@ -45,6 +46,9 @@ const locationToTableLocation = (location: Locations): LocationsTable => {
 	delete location?.link;
 	// @ts-ignore
 	delete location.map;
+	// @ts-ignore
+	delete location?.youtube;
+
 	const columns = Object.values(location);
 	console.log(location, columns);
 	//@ts-ignore
@@ -102,11 +106,11 @@ export default function LocationsTable() {
 	const columnNames: ColumnType<LocationsTable> = {
 		id: "Id",
 		name: { name: "Παραρτήματος", size: () => 20 },
-		address: { name: "Οδός", size: () => 25 },
+		address: { name: "Οδός", size: () => 15 },
 		areacode: "Ταχ. Κώδικας",
-		municipality: { name: "Δήμος", size: () => 20 },
-		manager: { name: "Υπεύθυνος", size: () => 20 },
-		email: { name: "Email", size: () => 20 },
+		municipality: { name: "Δήμος", size: () => 12 },
+		manager: { name: "Υπεύθυνος", size: () => 15 },
+		email: { name: "Email", size: () => 25 },
 		priority: "Προτεραιότητα",
 		image: "Φωτογραφία"
 	};
@@ -131,7 +135,8 @@ export default function LocationsTable() {
 				telephones: formData.get("telephones") as string,
 				priority: Number(formData.get("priority")),
 				map: formData.get("map") as string,
-				link: formData.get("link") as string
+				link: formData.get("link") as string,
+				youtube: formData.get("youtube") as string
 			};
 			const res = await useAPI(setStore, API.Locations.post, { RequestObject: data });
 			if (!res.data) return;
@@ -177,7 +182,8 @@ export default function LocationsTable() {
 				telephones: formData.get("telephones") as string,
 				priority: Number(formData.get("priority")),
 				map: formData.get("map") as string,
-				link: formData.get("link") as string
+				link: formData.get("link") as string,
+				youtube: formData.get("youtube") as string
 			};
 			const res = await useAPI(setStore, API.Locations.update, { RequestObject: data });
 			if (!res.data && !res.message) return;

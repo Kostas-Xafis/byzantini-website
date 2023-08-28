@@ -73,7 +73,7 @@ const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 				color: #282828;
 			}
 			select {
-				background-color: white;
+				background-color: white !important;
 			}
 			input[type="number"] {
 				-moz-appearance: textfield;
@@ -83,6 +83,13 @@ const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 			input::-webkit-inner-spin-button {
 				display: none;
 			}
+			select:is(#mobileLocationSelect) {
+				/* for Firefox */
+				-moz-appearance: none;
+				/* for Chrome */
+				-webkit-appearance: none;
+			}
+
 			.glass {
 				--tw-bg-opacity: 0.45;
 				background: rgb(127 29 29 / var(--tw-bg-opacity));
