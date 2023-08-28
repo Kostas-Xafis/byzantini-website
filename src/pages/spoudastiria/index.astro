@@ -7,6 +7,8 @@ import { isDevFromURL } from "../../../lib/utils";
 let locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/locations/";
 const isPreviewSite = Astro.url.hostname === "byzantini-website.pages.dev";
+const schoolLocations = locations.slice(0, 11);
+const otherLocations = locations.slice(11);
 ---
 
 <Layout title="Παραρτήματα">

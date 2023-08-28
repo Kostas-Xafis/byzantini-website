@@ -8,13 +8,24 @@ const links = [
 ];
 
 const highlight = (url: string) => {
+	const urlWithEndingSlash = url.slice() + "/";
 	const path = Astro.url.pathname;
-	return path === url || path === url + "/";
+	return path === url || path === urlWithEndingSlash;
+};
+
+const getTitleFromUrl = (url: string) => {
+	const path = Astro.url.pathname;
+
+	const link = links.find(link => {
+		const linkWithEndingSlash = link.url.slice() + "/";
+		return path === link.url || path === linkWithEndingSlash;
+	});
+	return link?.name;
 };
 
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
 const isMainPage = Astro.url.pathname === "/";
-const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.name as string;
+const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 ---
 
 <>
@@ -45,7 +56,7 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 				Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 			</p>
 			<p
-				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25cqw] min-[1536px]:pl-20 min-[1152]/nav:pl-12 pl-4 max-sm:text-xs max-2xs:text-2xs max-sm:text-center"
+				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25cqw] min-[1536px]:pl-20 min-[1152px]/nav:pl-12 pl-4 max-sm:text-xs max-2xs:text-2xs max-sm:text-center"
 			>
 				Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
 			</p>
@@ -146,7 +157,6 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 		const onElementMount = async (target, callback) => {
 			let counter = 0;
 			while (!document.querySelector(target) && counter++ < 10) {
-				console.log("waiting for element to mount: " + target);
 				await new Promise(resolve => setTimeout(resolve, 200));
 			}
 			if (counter >= 10) return;
@@ -162,7 +172,6 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 						const cHeight = entry.boundingClientRect.height;
 
 						const ratio = cHeight > wHeight ? wHeight / cHeight : 1;
-						console.log({ ratio, wHeight, cHeight });
 						if (entry.intersectionRatio >= ratio * 0.9) {
 							nav.classList.replace("bg-red-900", "glass");
 						} else {
