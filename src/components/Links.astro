@@ -1,5 +1,6 @@
 ---
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
+const isTeachers = Astro.url.pathname.includes("kathigites");
 ---
 
 <>
@@ -13,6 +14,10 @@ const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.inc
 	<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
 	<link href="/fa/css/solid.min.css" rel="stylesheet" />
 	<link href="/fa/css/regular.min.css" rel="stylesheet" />
+	{
+		isTeachers && 
+		<link href="/fa/css/brands.min.css" rel="stylesheet" />
+	}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />

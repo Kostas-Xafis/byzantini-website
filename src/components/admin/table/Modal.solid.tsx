@@ -32,7 +32,7 @@ export default function Modal(props: Props) {
 				(!open() ? " hidden" : "")
 			}
 		>
-			<div class="relative max-w-[70%] h-min p-12 bg-white place-self-center grid grid-rows-[auto_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-12 justify-center">
+			<div class="relative max-w-[70%] h-[95vh] overflow-y-auto p-12 bg-white place-self-center grid grid-rows-[auto_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-12 justify-center">
 				<p class="text-4xl p-2 w-full text-center">{headerText()}</p>
 				<form class="group/form grid grid-cols-3 auto-rows-auto gap-8">
 					<For each={Object.values(inputs())}>

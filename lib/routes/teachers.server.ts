@@ -33,8 +33,8 @@ serverRoutes.getInstruments.func = async req => {
 serverRoutes.post.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const args = [body.fullname]
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname) VALUES (?)`, args);
+		const args = [body.fullname, body.email, body.telephone, body.linktree];
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree) VALUES (?)`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [id.insertId, class_id, priority]);
@@ -52,8 +52,8 @@ serverRoutes.post.func = async req => {
 serverRoutes.update.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
-		const args = [body.fullname, body.id];
-		await T.executeQuery(`UPDATE teachers SET fullname=? WHERE id=?`, args);
+		const args = [body.fullname, body.email, body.telephone, body.linktree, body.id];
+		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=? WHERE id=?`, args);
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();

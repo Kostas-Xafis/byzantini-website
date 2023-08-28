@@ -264,3 +264,7 @@ INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 -- UPDATE instruments SET isInstrument=0 WHERE name='Σολφέζ' AND type="eur";
 -- UPDATE instruments SET isInstrument=0 WHERE name='Φωνητική - Ορθοφωνία' AND type="eur";
 -- UPDATE instruments SET isInstrument=0 WHERE name='Θεωρία Ευρωπαϊκής Μουσικής' AND type="eur";
+
+-- ALTER TABLE `teachers` ADD COLUMN `email` varchar(80);
+-- ALTER TABLE `teachers` ADD COLUMN `telephone` varchar(80);
+-- ALTER TABLE `teachers` ADD COLUMN `linktree` varchar(80);

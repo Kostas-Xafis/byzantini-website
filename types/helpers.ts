@@ -16,23 +16,23 @@ export type UnionToArray<T, A extends unknown[] = []> = IsUnion<T> extends true
 
 export type ConcatStrings<A, B, Separator = ""> = A extends `${infer _A}`
 	? B extends `${infer _B}`
-		? Separator extends `${infer _S}`
-			? `${_A}${_S}${_B}`
-			: never
-		: never
+	? Separator extends `${infer _S}`
+	? `${_A}${_S}${_B}`
+	: never
+	: never
 	: never;
 export type ArrayToString<Arr, Separator = ""> = Arr extends [infer A, ...infer B]
 	? B extends []
-		? A
-		: ConcatStrings<A, ArrayToString<B, Separator>, Separator>
+	? A
+	: ConcatStrings<A, ArrayToString<B, Separator>, Separator>
 	: never;
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
 export type OptionalBy<T, K> = K extends keyof T
 	? Omit<T, K> & {
-			[Key in K]?: T[Key];
-	  }
+		[Key in K]?: T[Key];
+	}
 	: T;
 
 export type IsArray<T> = T extends Array<any> ? true : false;
@@ -57,10 +57,10 @@ type ObjectSplitToArray<T extends Record<any, any>> = ObjectSplit<T> extends inf
 // Recursively convert the array of kv pair objects into an array of the values
 type ObjectArrToTypedArray<Arr extends Record<any, any>[], Res extends unknown[] = []> = Arr extends [infer A, ...infer B]
 	? B extends []
-		? [...Res, A[keyof A]]
-		: B extends any[]
-		? ObjectArrToTypedArray<B, [...Res, A[keyof A]]>
-		: never
+	? [...Res, A[keyof A]]
+	: B extends any[]
+	? ObjectArrToTypedArray<B, [...Res, A[keyof A]]>
+	: never
 	: never;
 
 export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
@@ -69,26 +69,26 @@ export type Replace<T extends Record<any, any>, Replaced extends keyof T, Replac
 	[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
 };
 
-// type Baz = {
-// 	bob: 1;
-// 	alice: 2;
-// 	jake: "3";
-// 	garry: false;
-// 	sally: 1250125912905012959125n;
-// 	mary: { bob: 10 };
-// };
+type Baz = {
+	bob: 1;
+	alice: 2;
+	jake: "3";
+	garry: false;
+	sally: 1250125912905012959125n;
+	mary: { bob: 10 };
+};
 
-// type Books = {
-// 	id: number;
-// 	title: string;
-// 	genre: string;
-// 	wholesaler_id: number;
-// 	wholesale_price: number;
-// 	price: number;
-// 	quantity: number;
-// 	sold: number;
-// };
+type Books = {
+	id: number;
+	title: "2";
+	genre: string;
+	wholesaler_id: 5;
+	wholesale_price: number;
+	price: number;
+	quantity: number;
+	sold: number;
+};
 
-// type Bob = ObjectValues<Books>;
+type Bob = ObjectValues<Books>;
 
-// type Bazbob = ObjectValues<Baz>;
+type Bazbob = ObjectValues<Baz>;

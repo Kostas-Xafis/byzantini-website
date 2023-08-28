@@ -73,6 +73,9 @@ const TeachersInputs = (
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
+		email: { name: "email", label: "Email", type: "email", iconClasses: "fa-solid fa-envelope" },
+		telephone: { name: "telephone", label: "Τηλέφωνο", type: "text", iconClasses: "fa-solid fa-phone" },
+		linktree: { name: "linktree", label: "Σύνδεσμος", type: "text", iconClasses: "fa-solid fa-link" },
 		priority_byz: {
 			name: "priority_byz",
 			label: "Προτεραιότητα Βυζαντινής",
@@ -162,10 +165,13 @@ const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[
 
 	columns[2] = (teacher.picture && "/kathigites/images/" + teacher.picture) || "";
 	columns[3] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
+	columns[4] = teacher.email || "";
+	columns[5] = teacher.telephone || "";
+	columns[6] = teacher.linktree || "";
 
-	columns[4] = classes.find(c => c.class_id === 1)?.priority || "-";
-	columns[5] = classes.find(c => c.class_id === 2)?.priority || "-";
-	columns[6] = classes.find(c => c.class_id === 3)?.priority || "-";
+	columns[7] = classes.find(c => c.class_id === 1)?.priority || "-";
+	columns[8] = classes.find(c => c.class_id === 2)?.priority || "-";
+	columns[9] = classes.find(c => c.class_id === 3)?.priority || "-";
 	return columns as unknown as TeachersTable;
 };
 
@@ -221,6 +227,9 @@ export default function TeachersTable() {
 		fullname: { name: "Ονοματεπώνυμο", size: () => 25 },
 		picture: "Φωτογραφία",
 		cv: "Βιογραφικό",
+		email: { name: "Email", size: () => 20 },
+		telephone: { name: "Τηλέφωνο", size: () => 12 },
+		linktree: "Σύνδεσμος",
 		priority_byz: { name: "Προτεραιότητα Βυζαντινής", size: () => 15 },
 		priority_par: { name: "Προτεραιότητα Παραδοσιακής", size: () => 15 },
 		priority_eur: { name: "Προτεραιότητα Ευρωπαϊκής", size: () => 15 }
@@ -243,6 +252,9 @@ export default function TeachersTable() {
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
+				email: formData.get("email") as string,
+				telephone: formData.get("telephone") as string,
+				linktree: formData.get("linktree") as string,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
@@ -309,6 +321,9 @@ export default function TeachersTable() {
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
+				email: formData.get("email") as string,
+				telephone: formData.get("telephone") as string,
+				linktree: formData.get("linktree") as string,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;

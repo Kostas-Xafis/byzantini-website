@@ -76,7 +76,10 @@ export const v_Teachers = object({
 	id: number([integer(), minValue(0)]),
 	fullname: string([minLength(1)]),
 	picture: string(),
-	cv: string()
+	cv: string(),
+	email: optional(string()),
+	telephone: optional(string()),
+	linktree: optional(string()),
 });
 export type Teachers = Output<typeof v_Teachers>;
 
@@ -102,7 +105,6 @@ export const v_ClassType = object({
 	name: string([minLength(1)])
 });
 export type ClassType = Output<typeof v_ClassType>;
-
 
 export const v_Locations = object({
 	id: number([integer(), minValue(0)]),

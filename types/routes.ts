@@ -12,6 +12,7 @@ export type DefaultEndpointResponse = { res: "error"; error: any } | { res: "mes
 
 export type EndpointResponse<T> = { res: "data"; data: T };
 
+// Use for typing routes, accessible in the frontend
 export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL> extends false
 	? {
 		authentication: boolean;
@@ -49,7 +50,7 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 
 export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
 
-// Use for an type of routes, accessible in the frontend
+// Use for typing routes, accessible in the frontend
 export type APIEndpointsBuilder<Mount extends string, Routes extends { [k: string]: EndpointRoute<any, any, any> }> = {
 	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : never]: Routes[K] extends { validation: () => AnyObjectSchema }
 	? {
