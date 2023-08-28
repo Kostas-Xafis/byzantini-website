@@ -60,19 +60,21 @@ export default function Tooltip(props: TooltipProps) {
 	) : props.position === "top" ? (
 		<ul
 			class={
-				"absolute h-max p-8 pt-6 bg-red-100 shadow-md shadow-gray-500 rounded-md -top-8 translate-y-[-100%] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4 " +
+				"absolute h-max w-full p-2 pt-1 bg-red-100 shadow-md shadow-gray-500 rounded-md -top-8 translate-y-[-100%] left-[50%] translate-x-[-50%] flex flex-col gap-1" +
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}
 		>
-			<li class="justify-self-center" style={{ "grid-column": "1 / 3" }}>
-				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
+			<li class="text-center flex-grow-[2]">
+				<i class="fa-solid fa-circle-info text-xl text-red-900"></i>
 			</li>
-			{props.message.map(message => (
-				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
-					{message}
-				</li>
-			))}
+			<div class="w-full flex flex-row">
+				{props.message.map(message => (
+					<li class="text-sm max-w-[20ch] drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+						<i class="fa-solid fa-circle-chevron-right text-sm pr-4 text-red-900 drop-shadow-none"></i>
+						{message}
+					</li>
+				))}
+			</div>
 			<li
 				class={
 					"absolute bottom-[-25px] left-[calc(50%_-_25px)] border-[25px] border-red-100 border-l-transparent border-r-transparent border-b-0" +

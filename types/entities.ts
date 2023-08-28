@@ -145,7 +145,7 @@ export const v_Registrations = object({
 	telephone: string(),
 	cellphone: string(),
 	email: string([email()]),
-	birth_year: number([integer(), minValue(1923), maxValue(2023)]),
+	birth_date: number([integer(), minValue(1923), maxValue(2023)]),
 	road: string(),
 	number: number([integer(), minValue(0)]),
 	tk: number([integer(), minValue(0)]),

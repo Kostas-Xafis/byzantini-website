@@ -25,7 +25,7 @@ serverRoutes.post.func = async function (req) {
         if (!student) {
             const args = Object.values(body);
             await T.executeQuery(
-                `INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_year, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
+                `INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
                 args
             );
             const [total_registrations] = await T.executeQuery<{ amount: number }>("SELECT amount FROM total_registrations");
@@ -44,7 +44,7 @@ serverRoutes.update.func = async function (req) {
         const body = await req.json();
         const args = Object.values(body);
         args.shift(); // Remove the id from the arguments
-        await T.executeQuery(`UPDATE registrations SET last_name = ?, first_name = ?, am = ?, fathers_name = ?, telephone = ?, cellphone = ?, email = ?, birth_year = ?, road = ?, number = ?, tk = ?, region = ?, registration_year = ?, class_year = ?, date = ?, payment_amount = ? WHERE id = ?`, [...args, body.id]);
+        await T.executeQuery(`UPDATE registrations SET last_name = ?, first_name = ?, am = ?, fathers_name = ?, telephone = ?, cellphone = ?, email = ?, birth_date = ?, road = ?, number = ?, tk = ?, region = ?, registration_year = ?, class_year = ?, date = ?, payment_amount = ? WHERE id = ?`, [...args, body.id]);
         return "Registration updated successfully";
     });
 };

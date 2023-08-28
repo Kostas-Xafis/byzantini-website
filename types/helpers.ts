@@ -69,26 +69,26 @@ export type Replace<T extends Record<any, any>, Replaced extends keyof T, Replac
 	[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
 };
 
-type Baz = {
-	bob: 1;
-	alice: 2;
-	jake: "3";
-	garry: false;
-	sally: 1250125912905012959125n;
-	mary: { bob: 10 };
-};
+// type Baz = {
+// 	bob: 1;
+// 	alice: 2;
+// 	jake: "3";
+// 	garry: false;
+// 	sally: 1250125912905012959125n;
+// 	mary: { bob: 10 };
+// };
 
-type Books = {
-	id: number;
-	title: "2";
-	genre: string;
-	wholesaler_id: 5;
-	wholesale_price: number;
-	price: number;
-	quantity: number;
-	sold: number;
-};
+// type Books = {
+// 	id: number;
+// 	title: "2";
+// 	genre: string;
+// 	wholesaler_id: 5;
+// 	wholesale_price: number;
+// 	price: number;
+// 	quantity: number;
+// 	sold: number;
+// };
 
-type Bob = ObjectValues<Books>;
+// type Bob = ObjectValues<Books>;
 
-type Bazbob = ObjectValues<Baz>;
+// type Bazbob = ObjectValues<Baz>;

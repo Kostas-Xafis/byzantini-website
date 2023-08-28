@@ -124,9 +124,11 @@ CREATE TABLE `locations` (
 CREATE TABLE `teachers` (
     `id` int NOT NULL AUTO_INCREMENT,
     `fullname` varchar(80) NOT NULL,
+    `email` varchar(80),
+    `telephone` varchar(80),
+    `linktree` varchar(80),
     `picture` varchar(20),
     `cv` varchar(20),
-    `priority` int NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -180,7 +182,7 @@ CREATE TABLE `registrations`(
     `last_name` varchar(80) NOT NULL,
     `first_name` varchar(80) NOT NULL,
     `fathers_name` varchar(80) NOT NULL,
-    `birth_year` int NOT NULL,
+    `birth_date` int NOT NULL,
     `road` varchar(80) NOT NULL,
     `number` int NOT NULL,
     `tk` int NOT NULL,
@@ -268,3 +270,5 @@ INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 -- ALTER TABLE `teachers` ADD COLUMN `email` varchar(80);
 -- ALTER TABLE `teachers` ADD COLUMN `telephone` varchar(80);
 -- ALTER TABLE `teachers` ADD COLUMN `linktree` varchar(80);
+
+-- ALTER TABLE `registrations` RENAME COLUMN `birth_year` TO `birth_date`;

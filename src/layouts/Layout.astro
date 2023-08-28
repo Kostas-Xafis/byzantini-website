@@ -3,6 +3,7 @@ import { SEO } from "astro-seo";
 import Navbar from "../components/Navbar.astro";
 import Links from "../components/Links.astro";
 import Contact from "../components/Contact.astro";
+import ContactPhone from "../components/ContactPhone.astro";
 export interface Props {
 	title: string;
 }
@@ -127,11 +128,12 @@ const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 			}
 		</style>
 	</head>
-	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-1 overflow-hidden">
+	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-1 overflow-hidden max-sm:grid-rows-[calc(100dvh_-_40px)_40px]">
 		<Navbar />
-		<div class="relative w-full h-full grid grid-rows-[100%] pt-[4.5cqw] max-sm:pt-[6.75rem]">
+		<div class="relative w-full h-full grid grid-rows-[100%] pt-[4.5cqw] max-sm:pt-[5.5rem]">
 			<slot />
 		</div>
 		<Contact />
+		<ContactPhone />
 	</body>
 </html>

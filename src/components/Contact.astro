@@ -1,8 +1,8 @@
-<div id="contacts" class="fixed bottom-0 right-[0px] w-max grid translate-y-full">
-	<div class="relative px-[1.5cqw] py-[1.5cqh] grid grid-rows-2 glass gap-y-[0.5cqh] rounded-t-lg font-didact !bg-opacity-80">
+<div id="contacts" class="hidden fixed bottom-0 right-[0px] w-max translate-y-full">
+	<div class="relative px-[1.5cqw] py-[1.5cqh] pb-1 flex flex-col glass gap-y-[0.75cqh] rounded-t-lg font-didact !bg-opacity-80">
 		<p class="text-[1.25cqw] text-red-50">
 			<i class="text-[1cqw] pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
-				class="text-red-50 underline underline-offset-2 pl-2"
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
 				href="tel:6983380631">6983380631</a
 			>
 			<i class="copy text-[1cqw] ml-2 px-2 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"></i>
@@ -10,7 +10,7 @@
 		<p class="text-[1.25cqw] text-red-50">
 			<i class="text-[1cqw] pr-3 fa-solid fa-envelope"></i>Email: <a
 				target="_blank"
-				class="text-red-50 underline underline-offset-2 pl-2"
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
 				href="mailto:byzscholemousikhs@gmail.com">byzscholemousikhs@gmail.com</a
 			>
 			<i class="copy text-[1cqw] ml-2 px-2 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"></i>
@@ -18,13 +18,20 @@
 		<p class="text-[1.25cqw] text-red-50">
 			<i class="text-[1cqw] pr-1 fa-solid fa-map-location-dot"></i>
 			Τοποθεσία:
-			<a class="text-red-50 underline underline-offset-2 pl-2" href="/parartimata#Έδρα%20Σχολής%20-%20Μεταμόρφωση"
+			<a class="text-red-50 self-center" target="_blank" href="https://www.facebook.com/profile.php?id=100032307446762">
 				>Έδρα Μεταμόρφωσης</a
 			>
 		</p>
+		<div class="rounded-md bg-red-950 flex flex-col">
+			<p class="text-[1.25cqw] text-red-50 underline underline-offset-2 self-center">Ωράριο επικοινωνίας</p>
+			<p class="text-[1.25cqw] text-red-50 self-center">Κάθε Τρίτη 9πμ - 2μμ & 4:30μμ - 9μμ</p>
+		</div>
+		<a class="text-red-50 self-center" target="_blank" href="https://www.facebook.com/profile.php?id=100032307446762">
+			<i class="fa-brands fa-facebook text-[1.5cqw]"></i>
+		</a>
 		<button
 			id="showContacts"
-			class="group/btn tracking-wider px-[1cqw] rounded-t-lg border-b-0 absolute -top-[1px] left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] !bg-opacity-100"
+			class="group/btn tracking-wider px-[1cqw] rounded-t-lg border-b-0 absolute top-0 left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] !bg-opacity-100"
 		>
 			<i class="text-red-50 h-0 pb-[1cqw] fa-solid fa-chevron-up font-bold text-[1cqw] leading-[1.5cqw] place-self-center"></i>
 			<p class="text-[1.5cqw] text-red-50 font-anaktoria">Επικοινωνία</p>
@@ -51,44 +58,54 @@
 			background-color: rgb(22, 163, 74);
 		}
 	</style>
-</div>
-<script>
-	const onElementMount = async (target: string, callback: () => any) => {
-		let count = 0;
-		while (!document.querySelector(target) && count++ < 10) {
-			console.log("waiting for element to mount: " + target);
-			await new Promise(resolve => setTimeout(resolve, 200));
-		}
-		if (count >= 10) return;
-		callback();
-	};
-
-	onElementMount("#showContacts", () => {
-		const btn = document.querySelector("#showContacts") as HTMLButtonElement;
-		const contacts = document.querySelector("#contacts") as HTMLElement;
-		btn.addEventListener("click", () => {
-			contacts.classList.toggle("clickedContacts");
-		});
-	});
-	onElementMount("#contacts", () => {
-		const btn = [...document.querySelectorAll("#contacts .copy")] as HTMLButtonElement[];
-		btn.forEach(btn => {
-			btn.addEventListener("click", () => {
-				const text = btn.parentElement?.querySelector("a")?.innerText;
-				if (text) {
-					navigator.clipboard.writeText(text);
-					btn.classList.add("clicked");
-					btn.classList.remove("fa-regular");
-					btn.classList.add("fa-solid");
-					btn.classList.add("fa-clipboard-check");
-					setTimeout(() => {
-						btn.classList.remove("clicked");
-						btn.classList.add("fa-regular");
-						btn.classList.remove("fa-solid");
-						btn.classList.remove("fa-clipboard-check");
-					}, 1000);
+	<script is:inline>
+		(function () {
+			let onElementMount = async (target, callback) => {
+				let count = 0;
+				while (!document.querySelector(target) && count++ < 10) {
+					console.log("waiting for element to mount: " + target);
+					await new Promise(resolve => setTimeout(resolve, 200));
+				}
+				if (count >= 10) return;
+				callback();
+			};
+			onElementMount("#contacts", () => {
+				// delete the contacts element if the use is on his phone
+				const contacts = document.querySelector("#contacts");
+				if (window.matchMedia("(max-width: 640px)").matches) contacts.remove();
+				else contacts.classList.replace("hidden", "grid");
+			}).then(() => {
+				if (!window.matchMedia("(max-width: 640px)").matches) {
+					onElementMount("#showContacts", () => {
+						const btn = document.querySelector("#showContacts");
+						const contacts = document.querySelector("#contacts");
+						btn.addEventListener("click", () => {
+							contacts.classList.toggle("clickedContacts");
+						});
+					});
+					onElementMount("#contacts", () => {
+						const btn = [...document.querySelectorAll("#contacts .copy")];
+						btn.forEach(btn => {
+							btn.addEventListener("click", () => {
+								const text = btn.parentElement?.querySelector("a")?.innerText;
+								if (text) {
+									navigator.clipboard.writeText(text);
+									btn.classList.add("clicked");
+									btn.classList.remove("fa-regular");
+									btn.classList.add("fa-solid");
+									btn.classList.add("fa-clipboard-check");
+									setTimeout(() => {
+										btn.classList.remove("clicked");
+										btn.classList.add("fa-regular");
+										btn.classList.remove("fa-solid");
+										btn.classList.remove("fa-clipboard-check");
+									}, 1000);
+								}
+							});
+						});
+					});
 				}
 			});
-		});
-	});
-</script>
+		})();
+	</script>
+</div>

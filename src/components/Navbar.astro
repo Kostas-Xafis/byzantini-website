@@ -9,7 +9,7 @@ const links = [
 
 const highlight = (url: string) => {
 	const path = Astro.url.pathname;
-	return path === url;
+	return path === url || path === url + "/";
 };
 
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
@@ -19,18 +19,15 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 
 <>
 	<nav
-		class={"@container/nav fixed top-0 left-0 w-[100dvw] md:h-[4.5cqw] md:grid grid-rows-[4.4cqw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
-			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:gap-y-2 max-sm:py-2" +
+		class={"fixed top-0 left-0 w-[100dvw] md:h-[4.5cqw] md:grid grid-rows-[4.4cqw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
+			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:pb-1 max-sm:gap-y-0" +
 			(!isMainPage ? " bg-red-900" : " glass")}
 	>
 		<div
 			class={"relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center z-10" +
-				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-2"}
+				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-1"}
 		>
-			<a
-				href="/"
-				class="logoImg sm:w-[4cqw] row-span-full aspect-square place-self-center max-sm:w-[clamp(1.75rem,15dvw,3.5rem)] max-sm:self-center"
-			>
+			<a href="/" class="logoImg sm:w-[4cqw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-sm:self-center">
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
@@ -38,7 +35,7 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 				class={"absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10" +
 					" max-sm:top-[2px] max-sm:translate-y-0 max-sm:left-[6px]"}
 			>
-				<div class="logoImg sm:w-[4cqw] aspect-square max-sm:w-[clamp(1.75rem,15dvw,3.5rem)]">
+				<div class="logoImg sm:w-[4cqw] aspect-square max-sm:w-[3.5rem]">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>
@@ -48,12 +45,9 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 				Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 			</p>
 			<p
-				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25cqw] @[1536px]/nav:pl-20 @6xl/nav:pl-12 pl-4 max-sm:text-xs max-sm:text-center"
+				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25cqw] min-[1536px]:pl-20 min-[1152]/nav:pl-12 pl-4 max-sm:text-xs max-2xs:text-2xs max-sm:text-center"
 			>
-				Ι.Ν. Μεταμορφώσεως του Σωτήρος, <span class="max-[400px]:hidden">Ομωνύμου Δήμου</span>
-			</p>
-			<p class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 min-[400px]:hidden pl-4 text-xs text-center">
-				Ομωνύμου Δήμου
+				Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
 			</p>
 		</div>
 		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-sm:hidden">
@@ -79,7 +73,7 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 		</div>
 		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center">
 			<p
-				class="relative self-center w-max font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]"
+				class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]"
 			>
 				<i
 					class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
@@ -88,7 +82,7 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 					>{currentLinkName}</span
 				>
 			</p>
-			<div class="hidden -z-10 absolute top-[calc(100%_+_0.5rem)] h-max grid-rows-[repeat(5,_1fr)] grid-cols-[100%] w-full">
+			<div class="hidden absolute top-[1.75rem] h-max flex-col grid-cols-[100%] w-full">
 				{
 					links.map(link => (
 						<a
@@ -111,20 +105,26 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 			mask-size: contain;
 			-webkit-mask-size: contain;
 		}
+		/* Subpixel gaps for no reason at all.... */
 		#burgerNav a:nth-child(5) {
 			transition-duration: 0.6s;
+			transform: translateY(-5px);
 		}
 		#burgerNav a:nth-child(4) {
 			transition-duration: 0.625s;
+			transform: translateY(-4px);
 		}
 		#burgerNav a:nth-child(3) {
 			transition-duration: 0.65s;
+			transform: translateY(-3px);
 		}
 		#burgerNav a:nth-child(2) {
 			transition-duration: 0.675s;
+			transform: translateY(-2px);
 		}
 		#burgerNav a:nth-child(1) {
 			transition-duration: 0.7s;
+			transform: translateY(-1px);
 		}
 		#burgerNav:is(.open) a:nth-child(1) {
 			transition-duration: 0.6s;
@@ -152,49 +152,48 @@ const currentLinkName = links.find(link => link.url === Astro.url.pathname)?.nam
 			if (counter >= 10) return;
 			callback();
 		};
-		onElementMount("#welcome-page", () => {
-			const obsv = new IntersectionObserver(
-				entries => {
-					const nav = document.querySelector("nav");
-					const entry = entries[0];
-					const wHeight = window.innerHeight;
-					const cHeight = entry.boundingClientRect.height;
+		window.location.pathname === "/" &&
+			onElementMount("#welcome-page", () => {
+				const obsv = new IntersectionObserver(
+					entries => {
+						const nav = document.querySelector("nav");
+						const entry = entries[0];
+						const wHeight = window.innerHeight;
+						const cHeight = entry.boundingClientRect.height;
 
-					const ratio = cHeight > wHeight ? wHeight / cHeight : 1;
-					console.log({ ratio, wHeight, cHeight });
-					if (entry.intersectionRatio >= ratio * 0.9) {
-						nav.classList.remove("bg-red-900");
-						nav.classList.add("glass");
-					} else {
-						nav.classList.remove("glass");
-						nav.classList.add("bg-red-900");
+						const ratio = cHeight > wHeight ? wHeight / cHeight : 1;
+						console.log({ ratio, wHeight, cHeight });
+						if (entry.intersectionRatio >= ratio * 0.9) {
+							nav.classList.replace("bg-red-900", "glass");
+						} else {
+							nav.classList.replace("glass", "bg-red-900");
+						}
+					},
+					{
+						root: null,
+						rootMargin: "0px",
+						threshold: new Array(10).fill(0).map((_, i) => i / 10)
 					}
-				},
-				{
-					root: null,
-					rootMargin: "0px",
-					threshold: new Array(10).fill(0).map((_, i) => i / 10)
-				}
-			);
-			obsv.observe(document.querySelector("#welcome-page"));
-		});
-		onElementMount("#burgerNav", () => {
-			document.querySelector("#burgerNav").addEventListener("click", () => {
-				const menu = document.querySelector("#burgerNav > div");
-				const isOpen = menu.parentElement.classList.contains("open");
-				if (isOpen) {
-					menu.parentElement.classList.remove("open");
-					setTimeout(() => {
-						menu.classList.add("hidden");
-						menu.classList.remove("grid");
-					}, 700);
-				} else {
-					menu.classList.toggle("hidden");
-					menu.classList.toggle("grid");
-					void menu.offsetWidth;
-					menu.parentElement.classList.toggle("open");
-				}
+				);
+				obsv.observe(document.querySelector("#welcome-page"));
 			});
-		});
+		window.matchMedia("(max-width: 640px)").matches &&
+			onElementMount("#burgerNav", () => {
+				document.querySelector("#burgerNav").addEventListener("click", () => {
+					const menu = document.querySelector("#burgerNav > div");
+					const isOpen = menu.parentElement.classList.contains("open");
+					if (isOpen) {
+						menu.parentElement.classList.remove("open");
+						setTimeout(() => {
+							menu.classList.add("hidden", "flex");
+						}, 700);
+					} else {
+						menu.classList.toggle("hidden");
+						menu.classList.toggle("flex");
+						void menu.offsetWidth;
+						menu.parentElement.classList.toggle("open");
+					}
+				});
+			});
 	</script>
 </>

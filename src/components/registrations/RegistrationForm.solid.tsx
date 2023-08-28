@@ -5,6 +5,7 @@ import Input, { type Props as InputProps } from "../Input.solid";
 import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
+const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
 	keyof Omit<
 		Registrations,
@@ -24,7 +25,7 @@ const genericInputs: Record<
 				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
 				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
 			],
-			position: "left"
+			position: isPhone ? "top" : "left"
 		}
 	},
 	last_name: {
@@ -68,9 +69,9 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-envelope"
 	},
-	birth_year: {
+	birth_date: {
 		label: "Ημερομηνία Γέννησης",
-		name: "birth_year",
+		name: "birth_date",
 		type: "date",
 		required: true,
 		iconClasses: "fa-regular fa-calendar"
@@ -346,7 +347,7 @@ export function RegistrationForm() {
 			telephone: (formData.get("telephone") as string) || "-",
 			cellphone: formData.get("cellphone") as string,
 			email: formData.get("email") as string,
-			birth_year: Number(formData.get("birth_year") as string),
+			birth_date: Number(formData.get("birth_date") as string),
 			road: formData.get("road") as string,
 			number: Number(formData.get("number") as string),
 			tk: Number(formData.get("tk") as string),
@@ -482,28 +483,6 @@ export function RegistrationForm() {
 			</Show>
 			<style>
 				{`
-    @keyframes fadeIn {
-		0%{
-			opacity: 0.0001;
-		}
-		10%{
-			opacity: 0.0001;
-		}
-        100%{
-            opacity: 1;
-        }
-    }
-	@keyframes fadeOut {
-		0%{
-			opacity: 1;
-		}
-		99%{
-			opacity: 0.0001;
-		}
-        100%{
-			opacity: 0.0001;
-        }
-    }
 	#registrationSelect,
 	#registrationForm {
 		opacity: 0.0001;

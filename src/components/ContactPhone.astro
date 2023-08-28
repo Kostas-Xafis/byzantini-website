@@ -1,0 +1,109 @@
+<div id="phoneContact" class="w-full h-max">
+	<div class="relative h-max px-4 py-1 flex flex-col translate-y-[40px] gap-y-1 font-didact bg-red-900">
+		<p class="text-lg text-red-50">
+			<i class="text-base pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="tel:6983380631">6983380631</a
+			>
+		</p>
+		<p class="text-lg text-red-50">
+			<i class="text-base pr-3 fa-solid fa-envelope"></i>Email: <a
+				target="_blank"
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="mailto:byzscholemousikhs@gmail.com">byzscholemousikhs@gmail.com</a
+			>
+		</p>
+		<p class="text-lg text-red-50">
+			<i class="text-base pr-1 fa-solid fa-map-location-dot"></i>
+			Τοποθεσία:
+			<a class="text-red-50 underline decoration-1 underline-offset-2 pl-2" href="/spoudastiria#Έδρα%20Σχολής%20-%20Μεταμόρφωση"
+				>Έδρα Μεταμόρφωσης</a
+			>
+		</p>
+		<div class="rounded-md bg-red-950 flex flex-col">
+			<p class="text-lg text-red-50 underline underline-offset-2 self-center">Ωράριο επικοινωνίας</p>
+			<p class="text-lg text-red-50 self-center">Κάθε Τρίτη 9πμ - 2μμ & 4:30μμ - 9μμ</p>
+		</div>
+		<a class="text-red-50 self-center" target="_blank" href="https://www.facebook.com/profile.php?id=100032307446762">
+			<i class="fa-brands fa-facebook text-lg"></i>
+		</a>
+		<button
+			id="showPhoneContacts"
+			class="group/btn absolute inset-x-[-1px] top-0 h-[41px] -translate-y-[100%] flex flex-col tracking-wider bg-red-900"
+		>
+			<i class="text-red-50 h-0 my-1 pt-1 fa-solid fa-chevron-up font-bold text-sm leading-[1.5cqw] self-center"></i>
+			<p class="text-2xl text-red-50 font-anaktoria self-center">Επικοινωνία</p>
+		</button>
+	</div>
+	<style is:inline>
+		#phoneContact > div {
+			transition: transform 0.2s ease-in-out;
+		}
+		#phoneContact i,
+		#phoneContact p {
+			text-shadow: -1px 1px 2px rgb(24, 24, 24, 0.75);
+		}
+		#phoneContact:is(.clickedContacts) > div {
+			transform: translateY(calc(-100% + 40px));
+		}
+		#showPhoneContacts i {
+			transition: transform 0.2s ease-in-out;
+		}
+		#phoneContact:is(.clickedContacts) #showPhoneContacts i {
+			transform: rotateZ(180deg) translateY(calc(-1rem * 0.5));
+		}
+		.copy:is(.clicked) {
+			background-color: rgb(22, 163, 74);
+		}
+	</style>
+	<script is:inline>
+		(function () {
+			let onElementMount = async (target, callback) => {
+				let count = 0;
+				while (!document.querySelector(target) && count++ < 10) {
+					console.log("waiting for element to mount: " + target);
+					await new Promise(resolve => setTimeout(resolve, 200));
+				}
+				if (count >= 10) return;
+				callback();
+			};
+			onElementMount("#phoneContact", () => {
+				// delete the phoneContact element if the use is on his phone
+				const phoneContact = document.querySelector("#phoneContact");
+				if (!window.matchMedia("(max-width: 640px)").matches) phoneContact.remove();
+				else phoneContact.classList.replace("hidden", "grid");
+			}).then(() => {
+				if (window.matchMedia("(max-width: 640px)").matches) {
+					onElementMount("#showPhoneContacts", () => {
+						const btn = document.querySelector("#showPhoneContacts");
+						const phoneContact = document.querySelector("#phoneContact");
+						btn.addEventListener("click", () => {
+							phoneContact.classList.toggle("clickedContacts");
+						});
+					});
+					onElementMount("#phoneContact", () => {
+						const btn = [...document.querySelectorAll("#phoneContact .copy")];
+						btn.forEach(btn => {
+							btn.addEventListener("click", () => {
+								const text = btn.parentElement?.querySelector("a")?.innerText;
+								if (text) {
+									navigator.clipboard.writeText(text);
+									btn.classList.add("clicked");
+									btn.classList.remove("fa-regular");
+									btn.classList.add("fa-solid");
+									btn.classList.add("fa-clipboard-check");
+									setTimeout(() => {
+										btn.classList.remove("clicked");
+										btn.classList.add("fa-regular");
+										btn.classList.remove("fa-solid");
+										btn.classList.remove("fa-clipboard-check");
+									}, 1000);
+								}
+							});
+						});
+					});
+				}
+			});
+		})();
+	</script>
+</div>

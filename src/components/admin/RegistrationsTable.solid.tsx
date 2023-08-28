@@ -63,9 +63,9 @@ const RegistrationsInputs = (
 			type: "email",
 			iconClasses: "fa-solid fa-envelope"
 		},
-		birth_year: {
-			label: "Έτος Γέννησης",
-			name: "birth_year",
+		birth_date: {
+			label: "Ημερομηνία Γέννησης",
+			name: "birth_date",
 			type: "number",
 			iconClasses: "fa-regular fa-calendar"
 		},
@@ -208,7 +208,7 @@ export default function RegistrationsTable() {
 		first_name: { name: "Όνομα", size: () => 15 },
 		last_name: { name: "Επώνυμο", size: () => 15 },
 		fathers_name: { name: "Πατρώνυμο", size: () => 15 },
-		birth_year: { name: "Έτος Γέννησης", size: () => 6 },
+		birth_date: { name: "Ημερομηνία Γέννησης", size: () => 12 },
 		road: { name: "Οδός", size: () => 20 },
 		number: "Αριθμός",
 		tk: "Τ.Κ.",
@@ -254,7 +254,7 @@ export default function RegistrationsTable() {
 				telephone: (formData.get("telephone") as string) || "-",
 				cellphone: formData.get("cellphone") as string,
 				email: formData.get("email") as string,
-				birth_year: Number(formData.get("birth_year") as string),
+				birth_date: Number(formData.get("birth_date") as string),
 				road: formData.get("road") as string,
 				number: Number(formData.get("number") as string),
 				tk: Number(formData.get("tk") as string),

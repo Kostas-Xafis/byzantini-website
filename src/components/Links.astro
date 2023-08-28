@@ -1,6 +1,6 @@
 ---
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
-const isTeachers = Astro.url.pathname.includes("kathigites");
+const hasBrandIcons = !Astro.url.pathname.includes("admin");
 ---
 
 <>
@@ -15,7 +15,7 @@ const isTeachers = Astro.url.pathname.includes("kathigites");
 	<link href="/fa/css/solid.min.css" rel="stylesheet" />
 	<link href="/fa/css/regular.min.css" rel="stylesheet" />
 	{
-		isTeachers && 
+		hasBrandIcons && 
 		<link href="/fa/css/brands.min.css" rel="stylesheet" />
 	}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
