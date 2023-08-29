@@ -27,8 +27,6 @@ export const generateLink = (size = 16) => {
 	return link;
 };
 
-// FOR FUTURE ME: the return value of connection.execute is always an array of objects (i.e. Thing[])
-// FOR FUTURE ME: the return value of async connection.execute is always an array of arrays of objects (i.e. Thing[][])
 export const executeQuery = async <T = { insertId: number }>(query: string, args: any[] = [], trans?: Tx) => {
 	const conn = trans ?? await CreateDbConnection();
 	const res = await conn.execute(query, args, { as: "object" });

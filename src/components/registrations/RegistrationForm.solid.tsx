@@ -236,7 +236,6 @@ export function RegistrationForm() {
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 
 	const hydrate = createHydration(() => {
-		console.log("Hydrating table data");
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
 		useAPI(setStore, API.Teachers.getInstruments, {});

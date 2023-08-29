@@ -69,7 +69,6 @@ export default function PaymentsTable() {
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
-		console.log("Hydrating table data");
 		useAPI(setStore, API.Payments.get, {});
 		useAPI(setStore, API.Books.get, {});
 	});

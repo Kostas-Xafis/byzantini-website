@@ -188,7 +188,6 @@ export default function TeachersTable() {
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
-		console.log("Hydrating table data");
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
 

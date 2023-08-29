@@ -34,7 +34,7 @@ serverRoutes.post.func = async req => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await req.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree];
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree) VALUES (?)`, args);
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree) VALUES (?, ?, ?, ?)`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [id.insertId, class_id, priority]);

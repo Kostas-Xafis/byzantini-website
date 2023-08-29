@@ -16,7 +16,6 @@ type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number
 export default function TotalsTable() {
 	const [store, setStore] = createStore<APIStore>({});
 	createHydration(() => {
-		console.log("Hydrating table data");
 		useAPI(setStore, API.Payments.getTotal, {});
 		useAPI(setStore, API.Payoffs.getTotal, {});
 		useAPI(setStore, API.Registrations.getTotal, {});

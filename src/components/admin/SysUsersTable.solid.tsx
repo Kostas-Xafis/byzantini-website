@@ -30,7 +30,6 @@ export default function SysUsersTable() {
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
-		console.log("Hydrating table data");
 		useAPI(setStore, API.SysUsers.get, {});
 		useAPI(setStore, API.SysUsers.getBySid, {});
 	});

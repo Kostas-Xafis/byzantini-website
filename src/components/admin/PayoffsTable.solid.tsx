@@ -51,7 +51,6 @@ export default function PayoffsTable() {
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
-		console.log("Hydrating table data");
 		useAPI(setStore, API.Payoffs.get, {});
 		useAPI(setStore, API.Wholesalers.get, {});
 	});
