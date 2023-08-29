@@ -1,6 +1,6 @@
 ---
 import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
-import { isDevFromURL } from "../../../lib/utils";
+import { isDevFromURL } from "../../../lib/utils.client";
 import type { Instruments, Locations, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
@@ -109,13 +109,13 @@ const teachingTitle = (fullname:string) => {
 							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:flex" : "") 
 							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:flex" : "")}>
 							{teacher.picture ? (
-								<img src={imgSrc + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] h-full object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
+								<img src={imgSrc + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
 							) : (
 								<div class="group-odd/card:w-[clamp(0px,100%,200px)]"/>
 							)}
 							<div class="flex flex-col gap-y-[0.5cqw] p-[0.8cqw] max-sm:gap-y-2 max-sm:w-full max-sm:py-3 max-sm:pl-3">
 								<p class="text-[2cqw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
-								<p class="text-[1.25cqw] max-w-[35ch] max-sm:max-w-[30ch] max-[300px]:max-w-[25ch] max-sm:text-2xs rounded-lg max-sm:rounded-md bg-red-900 text-white p-[0.4cqw] max-sm:p-2 max-sm:mr-2">{t_locations.map((str, i) => {
+								<p class="text-[1.25cqw] max-w-[35ch] max-sm:max-w-[30ch] max-[300px]:max-w-[25ch] max-sm:text-xs rounded-lg max-sm:rounded-md bg-red-900 text-white p-[0.4cqw] max-sm:p-2 max-sm:mr-2">{t_locations.map((str, i) => {
 										const dot = i === t_locations.length - 1 ? "" : "•";
 										return(<>{str}&thinsp;{dot}&thinsp;</>)
 								})}</p>
@@ -152,7 +152,7 @@ const teachingTitle = (fullname:string) => {
 									{teacher.linktree ?
 										<a target="_blank" href={teacher.linktree} class="mt-auto w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25cqw] max-sm:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
 											<i class={"pr-2 max-sm:text-2xs max-sm:pr-1" 
-											+ (teacher.linktree.includes("youtube") ? " fa-brands fa-youtube" : " fa-solid fa-link") }></i> {teacher.linktree.includes("youtube") ? "YouTube" : "Σύνδεσμοι"}
+											+ (teacher.linktree.includes("youtube") ? " fa-brands fa-youtube" : " fa-solid fa-link") }></i> {teacher.linktree.includes("youtube") ? "YouTube" : "Πολυμέσα"}
 										</a>
 										: <></>}
 								</div>
@@ -185,7 +185,8 @@ const teachingTitle = (fullname:string) => {
 		}
 	</style>
 </Layout>
-<script>
+<script>import { onElementMount } from "../../../lib/utils.client";
+
 	enum MusicType {
 		byz = "Βυζαντινής Μουσικής",
 		par = "Παραδοσιακής Μουσικής",
@@ -232,15 +233,7 @@ const teachingTitle = (fullname:string) => {
 			}, 500);
 		}
 	}
-	const onElementMount = async (target: string, callback: () => any) => {
-		let count = 0;
-		while (!document.querySelector(target) && count++ < 10) {
-			console.log("waiting for element to mount: " + target);
-			await new Promise(resolve => setTimeout(resolve, 100));
-		}
-		if (count >= 10) return;
-		callback();
-	};
+	
 	onElementMount("#teachersContainer", () => {
 		const obsv = new IntersectionObserver((entries) => {
 			entries.forEach(entry => {

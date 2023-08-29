@@ -169,9 +169,9 @@ const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[
 	columns[5] = teacher.telephone || "";
 	columns[6] = teacher.linktree || "";
 
-	columns[7] = classes.find(c => c.class_id === 1)?.priority || "-";
-	columns[8] = classes.find(c => c.class_id === 2)?.priority || "-";
-	columns[9] = classes.find(c => c.class_id === 3)?.priority || "-";
+	columns[7] = classes.find(c => c.class_id === 1)?.priority || -1;
+	columns[8] = classes.find(c => c.class_id === 2)?.priority || -1;
+	columns[9] = classes.find(c => c.class_id === 3)?.priority || -1;
 	return columns as unknown as TeachersTable;
 };
 

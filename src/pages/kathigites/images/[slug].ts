@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
 import { Bucket } from "../../../../lib/bucket";
-import { isDevFromURL } from "../../../../lib/utils";
+import { isDevFromURL } from "../../../../lib/utils.client";
 
 export async function get(context: APIContext) {
 	if (isDevFromURL(context.url)) return new Response("", { status: 200 });

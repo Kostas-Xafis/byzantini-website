@@ -1,5 +1,5 @@
 import type { SysUsers } from "../../types/entities";
-import { executeQuery } from "../utils";
+import { executeQuery } from "../utils.server";
 
 export const getSessionId = (req: Request) => {
 	const cookies = req.headers.get("cookie");

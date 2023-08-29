@@ -60,12 +60,7 @@ const text = [
 	</style>
 </div>
 <script>
-	const onElementMount = async (target: string, callback: () => any) => {
-		while (!document.querySelector(target)) {
-			await new Promise(resolve => setTimeout(resolve, 200));
-		}
-		callback();
-	};
+	import { onElementMount } from "../../../lib/utils.client";
 	onElementMount("#lessons", () => {
 		const obsv = new IntersectionObserver(
 			entries => {

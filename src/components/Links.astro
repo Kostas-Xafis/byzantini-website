@@ -1,5 +1,5 @@
 ---
-import { isDevFromURL } from "../../lib/utils";
+import { isDevFromURL } from "../../lib/utils.client";
 const isDev = isDevFromURL(Astro.url);
 const hasBrandIcons = !Astro.url.pathname.includes("admin") && !Astro.url.pathname.includes("login");
 ---

@@ -1,6 +1,6 @@
 import type { Registrations } from "../../types/entities";
 import { RegistrationsRoutes } from "./registrations.client";
-import { Transaction, execTryCatch, executeQuery, questionMarks } from "../utils";
+import { Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
 
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(RegistrationsRoutes)) as typeof RegistrationsRoutes; // Copy the routes object to split it into client and server routes

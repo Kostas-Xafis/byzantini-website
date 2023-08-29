@@ -153,20 +153,13 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 			transition-duration: 0.7s;
 		}
 	</style>
-	<script is:inline>
-		const onElementMount = async (target, callback) => {
-			let counter = 0;
-			while (!document.querySelector(target) && counter++ < 10) {
-				await new Promise(resolve => setTimeout(resolve, 200));
-			}
-			if (counter >= 10) return;
-			callback();
-		};
+	<script>
+		import { onElementMount } from "../../lib/utils.client";
 		window.location.pathname === "/" &&
 			onElementMount("#welcome-page", () => {
 				const obsv = new IntersectionObserver(
 					entries => {
-						const nav = document.querySelector("nav");
+						const nav = document.querySelector("nav") as HTMLElement;
 						const entry = entries[0];
 						const wHeight = window.innerHeight;
 						const cHeight = entry.boundingClientRect.height;
@@ -184,15 +177,16 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 						threshold: new Array(10).fill(0).map((_, i) => i / 10)
 					}
 				);
-				obsv.observe(document.querySelector("#welcome-page"));
+				obsv.observe(document.querySelector("#welcome-page") as Element);
 			});
 		window.matchMedia("(max-width: 640px)").matches &&
 			onElementMount("#burgerNav", () => {
+				//@ts-ignore
 				document.querySelector("#burgerNav").addEventListener("click", () => {
-					const menu = document.querySelector("#burgerNav > div");
-					const isOpen = menu.parentElement.classList.contains("open");
+					const menu = document.querySelector("#burgerNav > div") as HTMLElement;
+					const isOpen = menu.parentElement?.classList.contains("open");
 					if (isOpen) {
-						menu.parentElement.classList.remove("open");
+						menu.parentElement?.classList.remove("open");
 						setTimeout(() => {
 							menu.classList.add("hidden", "flex");
 						}, 700);
@@ -200,7 +194,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 						menu.classList.toggle("hidden");
 						menu.classList.toggle("flex");
 						void menu.offsetWidth;
-						menu.parentElement.classList.toggle("open");
+						menu.parentElement?.classList.toggle("open");
 					}
 				});
 			});

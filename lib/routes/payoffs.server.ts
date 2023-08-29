@@ -1,5 +1,5 @@
 import type { SchoolPayoffs } from "../../types/entities";
-import { execTryCatch, executeQuery, questionMarks } from "../utils";
+import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { PayoffsRoutes, PayoffGetResponse } from "./payoffs.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(PayoffsRoutes)) as typeof PayoffsRoutes;

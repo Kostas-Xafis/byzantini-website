@@ -1,5 +1,5 @@
 import Row from "./Row.solid";
-import { Accessor, For, JSX } from "solid-js";
+import { Accessor, For, JSX, createEffect, createMemo, createSignal, on } from "solid-js";
 export type Props = {
 	columnNames: Record<string, string | { name: string; size: () => number }>;
 	data: Accessor<any[]>;
@@ -7,17 +7,49 @@ export type Props = {
 	children?: JSX.Element | JSX.Element[];
 };
 
+export const enum SortDirection {
+	ASCENDING,
+	DESCENDING,
+	NONE
+}
+
 export default function Table(props: Props) {
+	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], { equals: false });
 	const { columnNames, prefix = "", data } = props;
+	const [rowData, setRowData] = createSignal<any[]>(data());
+
+	const readRowData = createMemo(() => {
+		const rows = rowData().slice();
+		const [direction, column_index] = sorted();
+		console.log({ input: rows });
+		console.log({ direction, column_index });
+		if (direction === SortDirection.NONE || column_index < 0) return rows.sort((a, b) => a[0] - b[0]);
+		rows.sort((a, b) => {
+			if (a[column_index] === b[column_index]) return 0;
+			if (typeof a[column_index] === "string" && typeof b[column_index] === "string") {
+				if (a[column_index] === "" || !a[column_index]) return 1;
+				if (b[column_index] === "" || !b[column_index]) return -1;
+				return a[column_index].localeCompare(b[column_index]);
+			}
+			if (typeof a[column_index] === "number" && typeof b[column_index] === "number") {
+				if (a[column_index] <= 0) return 1;
+				if (b[column_index] <= 0) return -1;
+				return a[column_index] - b[column_index];
+			}
+			return 0;
+		});
+		console.log({ sorted: rows.slice() });
+		return direction === SortDirection.ASCENDING ? rows : rows.reverse();
+	});
 
 	let columnWidths = "grid-template-columns: ";
 	const columns = [] as string[];
 	Object.values(columnNames).forEach(str => {
 		if (typeof str === "object") {
-			columnWidths += str.size() + "ch ";
+			columnWidths += `calc(${str.size()}ch + 2ch)`;
 			columns.push(str.name);
 		} else {
-			columnWidths += str.length + 2 + "ch ";
+			columnWidths += `calc(${str.length}ch + 2ch)`;
 			columns.push(str);
 		}
 	});
@@ -35,9 +67,9 @@ export default function Table(props: Props) {
 				id="tableContainer"
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
-				<Row data={columns} columnWidths={columnWidths} rows={data.length} header />
+				<Row data={columns} columnWidths={columnWidths} rows={data.length} header sortOnClick={setSorted} />
 				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto auto grid-flow-row rounded-b-lg overflow-y-auto">
-					<For each={data()}>
+					<For each={readRowData()}>
 						{(item, index) => {
 							return <Row data={item} index={index()} columnWidths={columnWidths} rows={data.length} />;
 						}}

@@ -52,12 +52,20 @@
 		<p class="text-[3cqw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</p>
 		<p class="text-[2.5cqw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">Σχoλικού Έτους 2023-2024</p>
 		<p class="text-[2.5cqw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">1/9 έως 30/10</p>
-		<a
-			class="group/regbtn px-[2.5cqw] py-[1cqh] mt-[2cqh] text-[2.75cqw] max-sm:text-2xl font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
-			href="/eggrafes"
-		>
-			Εγγραφές <i class="w-0 fa-solid fa-chevron-right font-bold text-[1.75cqw] self-center max-sm:text-sm max-sm:px-2"></i>
-		</a>
+		<div class="flex flex-col gap-y-[1cqw]">
+			<a
+				class="group/regbtn px-[2cqw] py-[0.75cqh] mt-[2cqh] text-[2.5cqw] max-sm:text-2xl font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
+				href="/eggrafes"
+			>
+				Εγγραφές <i class="w-0 fa-solid fa-chevron-right font-bold text-[1.5cqw] self-center max-sm:text-sm max-sm:px-2"></i>
+			</a>
+			<a
+				class="group/regbtn px-[2cqw] py-[0.75cqh] mt-[2cqh] text-[2.5cqw] max-sm:text-2xl font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
+				href="/sxoli#anakoinosi-2022-23"
+			>
+				Ανακοίνωση <i class="w-0 fa-solid fa-chevron-right font-bold text-[1.5cqw] self-center max-sm:text-sm max-sm:px-2"></i>
+			</a>
+		</div>
 	</div>
 	<style is:inline>
 		#welcome-page {
@@ -107,14 +115,7 @@
 	</style>
 </div>
 <script>
-	const onElementMount = async (target: string, callback: () => any) => {
-		let count = 0;
-		while (!document.querySelector(target) && count++ < 10) {
-			await new Promise(resolve => setTimeout(resolve, 100));
-		}
-		if (count >= 10) return;
-		callback();
-	};
+	import { onElementMount } from "../../../lib/utils.client";
 	onElementMount("#welcome-page > p", () => {
 		const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
 		heads.forEach((head, i) => {

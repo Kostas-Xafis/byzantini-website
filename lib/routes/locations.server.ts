@@ -1,6 +1,6 @@
 import type { Locations } from "../../types/entities";
 import { LocationsRoutes } from "./locations.client";
-import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils";
+import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
 
 // Include this in all .server.ts files

@@ -3,7 +3,7 @@ import { useAPI } from "../../../lib/hooks/useAPI.astro";
 import type { Locations } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/GMap.astro";
-import { isDevFromURL } from "../../../lib/utils";
+import { isDevFromURL } from "../../../lib/utils.client";
 let _locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/locations/";
 const schoolLocations = _locations.slice(0, 10);
@@ -113,7 +113,7 @@ const otherLocations = _locations.slice(10);
 									class="w-[clamp(0px,37.5cqw,700px)] max-sm:w-[100dvw] h-[clamp(0px,40cqw,700px)] max-sm:h-[clamp(0px,100%,300px)] object-cover"
 								/>
 							)}
-							<div class="w-max max-sm:w-full grid grid-rows-[repeat(5,max-content)_1fr] gap-y-[1.25cqw] px-[2cqw] py-[1cqw] bg-white max-sm:px-4 max-sm:py-4">
+							<div class="w-max max-sm:w-full grid grid-rows-[repeat(5,max-content)_1fr] gap-y-[1.25cqw] max-sm:gap-y-4 px-[2cqw] py-[1cqw] bg-white max-sm:px-4 max-sm:py-4">
 								<h1
 									id="locationsHead"
 									class="text-[2cqw] max-sm:text-xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
@@ -204,14 +204,8 @@ const otherLocations = _locations.slice(10);
 </Layout>
 
 <script>
-	const onElementMount = async (target: string, callback: () => any) => {
-		let count = 0;
-		while (!document.querySelector(target) && count++ < 10) {
-			await new Promise(resolve => setTimeout(resolve, 50));
-		}
-		if (count >= 10) return;
-		callback();
-	};
+	import { onElementMount } from "../../../lib/utils.client";
+
 	window.matchMedia("(min-width: 641px)").matches &&
 		onElementMount("#locationsContainer", async function () {
 			document.querySelectorAll("#btsContainer div[data-name]").forEach(btn =>

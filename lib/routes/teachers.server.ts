@@ -1,9 +1,7 @@
 import type { TeacherClasses, TeacherLocations, Teachers, TeacherInstruments } from "../../types/entities";
 import { TeachersRoutes } from "./teachers.client";
-import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils";
+import { Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
-
-// TODO: REFACTOR INSERT/UPDATE/DELETE to account for the teachers_locations table
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(TeachersRoutes)) as typeof TeachersRoutes; // Copy the routes object to split it into client and server routes

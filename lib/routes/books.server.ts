@@ -1,6 +1,6 @@
 import type { Books } from "../../types/entities";
 import { BooksRoutes } from "./books.client";
-import { Transaction, execTryCatch, executeQuery, questionMarks } from "../utils";
+import { Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
 
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(BooksRoutes)) as typeof BooksRoutes; // Copy the routes object to split it into client and server routes

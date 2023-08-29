@@ -1,6 +1,6 @@
 import type { Instruments } from "../../types/entities";
 import { InstrumentsRoutes } from "./instruments.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils";
+import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(InstrumentsRoutes)) as typeof InstrumentsRoutes; // Copy the routes object to split it into client and server routes

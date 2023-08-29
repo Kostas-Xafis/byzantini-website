@@ -1,5 +1,5 @@
 import { AuthenticationRoutes } from "./authentication.client";
-import { createSessionId, execTryCatch, executeQuery } from "../utils";
+import { createSessionId, execTryCatch, executeQuery } from "../utils.server";
 import type { SysUsers } from "../../types/entities";
 import { authentication } from "../middleware/authentication";
 // import { scryptSync } from "node:crypto";
