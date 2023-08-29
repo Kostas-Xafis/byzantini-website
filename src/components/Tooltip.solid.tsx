@@ -67,7 +67,7 @@ export default function Tooltip(props: TooltipProps) {
 			<li class="text-center flex-grow-[2]">
 				<i class="fa-solid fa-circle-info text-xl text-red-900"></i>
 			</li>
-			<div class="w-full flex flex-row">
+			<div class="w-full flex flex-row justify-evenly">
 				{props.message.map(message => (
 					<li class="text-sm max-w-[20ch] drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 						<i class="fa-solid fa-circle-chevron-right text-sm pr-4 text-red-900 drop-shadow-none"></i>

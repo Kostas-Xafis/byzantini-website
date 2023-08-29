@@ -9,21 +9,21 @@ const text = [
 
 <div
 	id="lessons"
-	class="h-max w-full grid grid-rows-[max-content_1fr] max-sm:flex flex-col grid-cols-3 gap-[4cqw] p-[4cqw] py-[10cqh] max-sm:grid-rows-[max-content_repeat(3,_1fr)] max-sm:grid-cols-[66%] max-sm:justify-center"
+	class="h-max w-full grid grid-rows-[max-content_1fr] max-sm:flex flex-col grid-cols-3 gap-[4vw] p-[4vw] py-[10vh] max-sm:grid-rows-[max-content_repeat(3,_1fr)] max-sm:grid-cols-[66%] max-sm:justify-center"
 >
 	<h1
 		id="lessonsHead"
-		class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5cqw] max-sm:text-3xl leading-[3.5cqw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
+		class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5vw] max-sm:text-3xl leading-[3.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
 	>
 		Μαθήματα
 	</h1>
 	{
 		lessons.map((l, i) => (
-			<div class="lessonCard group/lesson relative h-full rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2cqw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
-				<h2 class="absolute inset-0 text-center text-[2.5cqw] max-sm:text-2xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%_-_1.25cqw)] max-sm:translate-y-[calc(50%_-_0.75rem)] group-[:is(.show)]/lesson:translate-y-4 group-hover/lesson:translate-y-4">
+			<div class="lessonCard group/lesson relative h-full rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2vw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
+				<h2 class="absolute inset-0 text-center text-[2.5vw] max-sm:text-2xl font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%_-_1.25vw)] max-sm:translate-y-[calc(50%_-_0.75rem)] group-[:is(.show)]/lesson:translate-y-4 group-hover/lesson:translate-y-4">
 					{l}
 				</h2>
-				<p class="text-[1.5cqw] whitespace-pre-line max-sm:text-base font-didact text-red-50 place-self-center pt-10 max-sm:px-2 max-sm:pb-4  transition-opacity duration-100 opacity-[0.0001] group-[:is(.show)]/lesson:opacity-100 group-hover/lesson:opacity-100 group-[:is(.show)]/lesson:duration-500 group-hover/lesson:duration-500">
+				<p class="text-[1.5vw] whitespace-pre-line max-sm:text-base font-didact text-red-50 place-self-center pt-10 max-sm:px-2 max-sm:pb-4  transition-opacity duration-100 opacity-[0.0001] group-[:is(.show)]/lesson:opacity-100 group-hover/lesson:opacity-100 group-[:is(.show)]/lesson:duration-500 group-hover/lesson:duration-500">
 					{text[i]}
 				</p>
 			</div>

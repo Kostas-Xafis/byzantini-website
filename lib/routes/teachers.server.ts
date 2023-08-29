@@ -16,6 +16,10 @@ serverRoutes.getByPriorityClasses.func = async (_req, slug) => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? ORDER BY tc.priority ASC, fullname ASC", [class_id]));
 }
 
+serverRoutes.getPrincipal.func = async _req => {
+	return await execTryCatch(async () => (await executeQuery<Teachers>("SELECT * FROM teachers WHERE fullname LIKE '%Κυριακόπουλος' LIMIT 1"))[0]);
+}
+
 serverRoutes.getClasses.func = async _req => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
 }

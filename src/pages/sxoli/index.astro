@@ -1,0 +1,35 @@
+---
+import { useAPI } from "../../../lib/hooks/useAPI.astro";
+import { isDevFromURL } from "../../../lib/utils.client";
+import type { Teachers } from "../../../types/entities";
+import Layout from "../../layouts/Layout.astro";
+export const prerender = true;
+
+const principal = (await useAPI("Teachers.getPrincipal", {})).data as Teachers;
+const principalText = [
+	"Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste quam magnam voluptatibus quaerat quisquam cum. Numquam nulla excepturi repudiandae perspiciatis voluptates dolorum dolores hic nemo incidunt iusto minima ipsa et quos asperiores earum exercitationem voluptatum nostrum expedita culpa deserunt, amet, debitis eos voluptate? Officia mollitia sunt. Eum quod ab eaque, enim architecto laudantium amet atque sunt! Tempore voluptas alias eos, quae suscipit accusamus aliquam sint magnam assumenda asperiores delectus itaque consectetur minus repellat exercitationem aperiam odio non vel. Debitis harum sapiente, minima minus, neque nesciunt consectetur quasi dolore accusamus ipsa eius quibusdam nam inventore rerum alias sunt enim. Iure animi saepe officia a rerum blanditiis cupiditate reprehenderit veritatis repellendus aliquid accusamus inventore corrupti assumenda quis in quisquam dolorem delectus unde, at aut?",
+	"Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste quam magnam voluptatibus quaerat quisquam cum. Numquam nulla excepturi repudiandae perspiciatis voluptates dolorum dolores hic nemo incidunt iusto minima ipsa et quos asperiores earum exercitationem voluptatum nostrum expedita culpa deserunt, amet, debitis eos voluptate? Officia mollitia sunt. Eum quod ab eaque, enim architecto laudantium amet atque sunt! Tempore voluptas alias eos, quae suscipit accusamus aliquam sint magnam assumenda asperiores delectus itaque consectetur minus repellat exercitationem aperiam odio non vel. Debitis harum sapiente, minima minus, neque nesciunt consectetur quasi dolore accusamus ipsa eius quibusdam nam inventore rerum alias sunt enim. Iure animi saepe officia a rerum blanditiis cupiditate reprehenderit veritatis repellendus aliquid accusamus inventore corrupti assumenda quis in quisquam dolorem delectus unde, at aut?"
+];
+const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
+---
+
+<Layout title="Η Σχολή μας">
+	<div class="w-full flex font-didact max-sm:grid-cols-[100%] max-sm:grid-rows-[max-content_1fr]">
+		<div class="grid grid-rows-[minmax(200px,400px)_1fr] p-12 gap-y-2">
+			<div class="flex flex-row gap-x-4">
+				<img src={imgSrc + principal.picture} alt="" class="w-[clamp(0px,100%,400px)] object-cover shadow-lg shadow-slate-700" />
+				<div class="flex flex-col gap-y-4">
+					<p
+						class="text-[2.5vw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+					>
+						{principal.fullname}
+					</p>
+					<p class="text-xl">{principalText[0]}</p>
+				</div>
+			</div>
+			<div class="text-xl">
+				<p>{principalText[1]}</p>
+			</div>
+		</div>
+	</div>
+</Layout>

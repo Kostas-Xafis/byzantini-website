@@ -30,7 +30,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 
 <>
 	<nav
-		class={"fixed top-0 left-0 w-[100dvw] md:h-[4.5cqw] md:grid grid-rows-[4.4cqw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
+		class={"fixed top-0 left-0 w-[100dvw] md:h-[4.5vw] md:grid grid-rows-[4.4vw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
 			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:pb-1 max-sm:gap-y-0" +
 			(!isMainPage ? " bg-red-900" : " glass")}
 	>
@@ -38,7 +38,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 			class={"relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center z-10" +
 				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-1"}
 		>
-			<a href="/" class="logoImg sm:w-[4cqw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-sm:self-center">
+			<a href="/" class="logoImg sm:w-[4vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-sm:self-center">
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
@@ -46,17 +46,17 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 				class={"absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10" +
 					" max-sm:top-[2px] max-sm:translate-y-0 max-sm:left-[6px]"}
 			>
-				<div class="logoImg sm:w-[4cqw] aspect-square max-sm:w-[3.5rem]">
+				<div class="logoImg sm:w-[4vw] aspect-square max-sm:w-[3.5rem]">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>
 			<p
-				class="mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.75cqw] max-sm:text-base max-sm:text-center max-2xs:text-sm"
+				class="mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.75vw] max-sm:text-base max-sm:text-center max-2xs:text-sm"
 			>
 				Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 			</p>
 			<p
-				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25cqw] min-[1536px]:pl-20 min-[1152px]/nav:pl-12 pl-4 max-sm:text-xs max-2xs:text-2xs max-sm:text-center"
+				class="font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.25vw] min-[1536px]:pl-20 min-[1152px]/nav:pl-12 pl-4 max-sm:text-xs max-2xs:text-2xs max-sm:text-center"
 			>
 				Ι.Ν. Μεταμορφώσεως του Σωτήρος, Ομωνύμου Δήμου
 			</p>
@@ -69,7 +69,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 						href={link.url}
 						rel={!isDev ? "prefetch" : ""}
 					>
-						<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-[1.5cqw]">
+						<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-[1.5vw]">
 							{link.name}
 						</div>
 						<div

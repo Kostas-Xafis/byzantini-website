@@ -77,25 +77,23 @@ const teachingTitle = (fullname:string) => {
 			{
 				music.map(([str, type], ind) => (
 					<div id={type} data-show={ind === 0} data-type={type} class={
-						"group/btn relative cursor-pointer w-full h-max py-[1cqw] max-sm:pt-2 place-self-center red-300 grid grid-cols-[1fr_max-content] max-sm:grid-cols-[100%] max-sm:justify-items-center bg-white border-red-900 border-b-2"
-						+ " after:transition-opacity after:duration-500 after:ease-in-out after:inset-0 after:w-full after:h-full after:absolute after:opacity-[0.001%]"
-						+ " after:bg-gradient-to-r after:from-[#ff9387] after:from-[-200%] after:to-red-900" 
-						+ " hover:after:opacity-100 data-[show]:after:opacity-100"}>
+						"group/btn relative cursor-pointer w-full h-max py-[1vw] max-sm:pt-2 place-self-center red-300 grid grid-cols-[1fr_max-content] max-sm:grid-cols-[100%] max-sm:justify-items-center"
+						+ " transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"}>
 						<button
-							class="p-[0.8cqw] text-[1.5cqw] max-sm:text-sm max-sm:w-[13ch] first-of-type:max-sm:w-[12ch] z-10 group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+							class="p-[0.8vw] text-[1.5vw] max-sm:text-sm max-sm:w-[13ch] first-of-type:max-sm:w-[12ch] z-10 group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
 							data-type={type}
 						>
 							{str}
 						</button>
-						<i class="mt-[0.4cqw] pr-2 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center z-10 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] max-sm:hidden"></i>
+						<i class="mt-[0.4vw] pr-2 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center z-10 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] max-sm:hidden"></i>
 					</div>
 				))
 			}
 		</div>
-		<div id="teachersContainer" class="max-w-full flex flex-wrap gap-x-[1.25%] p-[2cqw] px-4 pr-0 gap-y-8 max-sm:px-2 max-sm:pt-6 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
-			<h1 id="teachersHead" class="text-[3cqw] max-sm:text-2xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5cqw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.1)]">Καθηγητές Βυζαντινής Μουσικής</h1>
+		<div id="teachersContainer" class="max-w-full flex flex-wrap gap-x-[1.25%] p-[2vw] px-4 pr-0 gap-y-8 max-sm:px-2 max-sm:pt-6 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
+			<h1 id="teachersHead" class="text-[3vw] max-sm:text-2xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.1)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
-				teachers.map(([teachersByType, type], index) => {
+				teachers.map(([teachersByType, type]) => {
 					return teachersByType.map(teacher => {
 						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => musicOnly[c.class_id - 1][0]);
 						const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
@@ -109,17 +107,17 @@ const teachingTitle = (fullname:string) => {
 							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:flex" : "") 
 							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:flex" : "")}>
 							{teacher.picture ? (
-								<img src={imgSrc + teacher.picture} width="200" alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
+								<img src={imgSrc + teacher.picture} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
 							) : (
 								<div class="group-odd/card:w-[clamp(0px,100%,200px)]"/>
 							)}
-							<div class="flex flex-col gap-y-[0.5cqw] p-[0.8cqw] max-sm:gap-y-2 max-sm:w-full max-sm:py-3 max-sm:pl-3">
-								<p class="text-[2cqw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
-								<p class="text-[1.25cqw] max-w-[35ch] max-sm:max-w-[30ch] max-[300px]:max-w-[25ch] max-sm:text-xs rounded-lg max-sm:rounded-md bg-red-900 text-white p-[0.4cqw] max-sm:p-2 max-sm:mr-2">{t_locations.map((str, i) => {
+							<div class="flex flex-col gap-y-[0.5vw] p-[0.8vw] max-sm:gap-y-2 max-sm:w-full max-sm:py-3 max-sm:pl-3">
+								<p class="text-[2vw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
+								<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-[300px]:max-w-[25ch] max-sm:text-xs rounded-lg max-sm:rounded-md bg-red-900 text-white p-[0.4vw] max-sm:p-2 max-sm:mr-2">{t_locations.map((str, i) => {
 										const dot = i === t_locations.length - 1 ? "" : "•";
 										return(<>{str}&thinsp;{dot}&thinsp;</>)
 								})}</p>
-								<p class="text-[1.25cqw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-xs"><span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1">{teachingTitle(teacher.fullname)+":"}</span><span>{t_classes_str.map((str, i) => {
+								<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-xs"><span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1">{teachingTitle(teacher.fullname)+":"}</span><span>{t_classes_str.map((str, i) => {
 										let len = t_classes_str.length;
 										if (len === 1) return(<>{str}&thinsp;Μουσικής</>)
 										else if(len === 2) {
@@ -132,7 +130,7 @@ const teachingTitle = (fullname:string) => {
 										}
 								})}</span></p>
 								{t_instruments && t_instruments.length > 0 ? (
-									<p class="text-[1.25cqw] max-sm:text-xs max-sm:leading-2xs max-w-[35ch] flex flex-row flex-wrap max-sm:gap-y-1 gap-y-2 max-sm:max-w-[55ch]">
+									<p class="text-[1.25vw] max-sm:text-xs max-sm:leading-2xs max-w-[35ch] flex flex-row flex-wrap max-sm:gap-y-1 gap-y-2 max-sm:max-w-[55ch]">
 										<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1 whitespace-nowrap">Διδάσκει:</span>{t_instruments.map((instr, i) => {
 											const dot = i === t_instruments.length - 1 ? "" : "•";
 											return (
@@ -143,15 +141,15 @@ const teachingTitle = (fullname:string) => {
 								) : (
 									<></>
 								)}
-								<div class="mt-auto flex flex-row max-sm:flex-col sm:gap-x-2 max-sm:gap-y-2">
+								<div class="mt-auto flex flex-row flex-wrap max-sm:flex-col sm:gap-2 max-sm:gap-y-2">
 									{teacher.cv ?
-										<a target="_blank" href={cvSrc + teacher.cv} class="w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25cqw] max-sm:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
+										<a target="_blank" href={cvSrc + teacher.cv} class="w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25vw] max-sm:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6vw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
 											<i class="fa-solid fa-file-lines pr-2 max-sm:text-2xs max-sm:pr-1"></i> Βιογραφικό
 										</a>
 										: <></>}
 									{teacher.linktree ?
-										<a target="_blank" href={teacher.linktree} class="mt-auto w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25cqw] max-sm:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
-											<i class={"pr-2 max-sm:text-2xs max-sm:pr-1" 
+										<a target="_blank" href={teacher.linktree} class="mt-auto w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25vw] max-sm:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6vw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
+											<i class={"pr-2 max-sm:text-2xs max-sm:pr-1"
 											+ (teacher.linktree.includes("youtube") ? " fa-brands fa-youtube" : " fa-solid fa-link") }></i> {teacher.linktree.includes("youtube") ? "YouTube" : "Πολυμέσα"}
 										</a>
 										: <></>}

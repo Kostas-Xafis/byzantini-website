@@ -25,10 +25,10 @@ const otherLocations = _locations.slice(10);
 	>
 		<div id="btsContainer" class="max-sm:hidden relative border-r-2 overflow-auto border-red-900 z-10">
 			<i
-				class="up opacity-0 cursor-pointer absolute fa-solid fa-chevron-up drop-shadow-[0px_2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] pt-1 text-center w-[100%] top-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"
+				class="up opacity-0 cursor-pointer absolute fa-solid fa-chevron-up drop-shadow-[0px_2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5vw] pt-1 text-center w-[100%] top-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"
 			></i>
 			<i
-				class="down opacity-0 cursor-pointer absolute fa-solid fa-chevron-down drop-shadow-[0px_-2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5cqw] text-center w-[100%] bottom-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"
+				class="down opacity-0 cursor-pointer absolute fa-solid fa-chevron-down drop-shadow-[0px_-2px_1px_rgb(24,24,24,0.6)] text-red-900 text-[1.5vw] text-center w-[100%] bottom-0 bg-red-200 bg-opacity-50 backdrop-blur-[2px] z-50"
 			></i>
 			<div class="w-max h-full grid auto-rows-max cursor-pointer overflow-auto">
 				{
@@ -36,33 +36,33 @@ const otherLocations = _locations.slice(10);
 						<div
 							data-show={ind === 0}
 							data-name={l.name}
-							class="btn group/btn relative w-full py-[1cqw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+							class="btn group/btn relative w-full py-[1vw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
 						>
-							<button class="p-[0.75cqw] w-[20ch] text-[1.25cqw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+							<button class="p-[0.75vw] w-[20ch] text-[1.25vw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
 								{l.name}
 							</button>
-							<div class="absolute right-[0.625cqw] top-[50%] translate-y-[-50%] font-bold text-[1.25cqw]">
+							<div class="absolute right-[0.625vw] top-[50%] translate-y-[-50%] font-bold text-[1.25vw]">
 								<i class="fa-solid fa-chevron-right text-red-50 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] group-data-[show]/btn:opacity-100" />
 							</div>
 						</div>
 					))
 				}
-				<div class="w-full px-[1cqw] py-[1cqw] place-self-center text-[1.5cqw] flex flex-col gap-y-[1.cqw] bg-red-900">
+				<div class="w-full px-[1vw] py-[1vw] place-self-center text-[1.5vw] flex flex-col gap-y-[1.vw] bg-red-900">
 					<p class="text-white">Συνεργαζόμενες Σχολές</p>
 					<i
-						class="fa-solid fa-chevron-down font-bold text-[1.25cqw] text-red-50 self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+						class="fa-solid fa-chevron-down font-bold text-[1.25vw] text-red-50 self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
 					></i>
 				</div>
 				{
 					otherLocations.map(l => (
 						<div
 							data-name={l.name}
-							class="btn group/btn relative w-full py-[1cqw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
+							class="btn group/btn relative w-full py-[1vw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"
 						>
-							<button class="p-[0.75cqw] w-[20ch] text-[1.25cqw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+							<button class="p-[0.75vw] w-[20ch] text-[1.25vw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
 								{l.name}
 							</button>
-							<div class="absolute right-[0.625cqw] top-[50%] translate-y-[-50%] font-bold text-[1.25cqw]">
+							<div class="absolute right-[0.625vw] top-[50%] translate-y-[-50%] font-bold text-[1.25vw]">
 								<i class="fa-solid fa-chevron-right text-red-50 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] group-data-[show]/btn:opacity-100" />
 							</div>
 						</div>
@@ -110,27 +110,27 @@ const otherLocations = _locations.slice(10);
 								<img
 									src={imgSrc + l.image}
 									alt={"Φωτογραφία Παραρτήματος " + l.name}
-									class="w-[clamp(0px,37.5cqw,700px)] max-sm:w-[100dvw] h-[clamp(0px,40cqw,700px)] max-sm:h-[clamp(0px,100%,300px)] object-cover"
+									class="w-[clamp(0px,37.5vw,700px)] max-sm:w-[100dvw] max-sm:h-[clamp(0px,100%,300px)] object-cover"
 								/>
 							)}
-							<div class="w-max max-sm:w-full grid grid-rows-[repeat(5,max-content)_1fr] gap-y-[1.25cqw] max-sm:gap-y-4 px-[2cqw] py-[1cqw] bg-white max-sm:px-4 max-sm:py-4">
+							<div class="w-max max-sm:w-full grid grid-rows-[repeat(5,max-content)_1fr] gap-y-[1.25vw] max-sm:gap-y-4 px-[2vw] py-[1vw] bg-white max-sm:px-4 max-sm:py-4">
 								<h1
 									id="locationsHead"
-									class="text-[2cqw] max-sm:text-xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+									class="text-[2vw] max-sm:text-xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
 								>
 									{l.name}
 								</h1>
-								<p class="text-[1.25cqw] max-sm:text-lg">
+								<p class="text-[1.25vw] max-sm:text-lg">
 									<i class="fa-solid fa-map-location-dot pr-2" />
 									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">Διεύθυνση:</span>
 									{l.address + ", " + l.areacode + " - " + l.municipality}
 								</p>
-								<p class="text-[1.25cqw] max-sm:text-lg">
+								<p class="text-[1.25vw] max-sm:text-lg">
 									<i class="fa-solid fa-user pr-3" />
 									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">Υπεύθυνος:</span>
 									{l.manager}
 								</p>
-								<p class="text-[1.25cqw] max-sm:text-lg">
+								<p class="text-[1.25vw] max-sm:text-lg">
 									<i class="fa-regular fa-envelope pr-2" />
 									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">
 										Επικοινωνία:&NegativeThinSpace;
@@ -138,7 +138,7 @@ const otherLocations = _locations.slice(10);
 									<a target="_blank" href={`mailto:${l.email}`}>
 										{l.email ?? ""}
 									</a>
-									<span class="text-[1.25cqw] max-sm:text-lg">•</span>
+									<span class="text-[1.25vw] max-sm:text-lg">•</span>
 									{l.telephones.split(",").map(tel => {
 										return (
 											<a target="_blank" href={`tel:${tel}`}>
@@ -152,7 +152,7 @@ const otherLocations = _locations.slice(10);
 										<a
 											target="_blank"
 											href={l.link}
-											class="w-max rounded-lg text-[1.25cqw] max-sm:text-lg border-red-900 border-solid border-2 max-sm:border-[1px] p-[0.4cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white"
+											class="w-max rounded-lg text-[1.25vw] max-sm:text-lg border-red-900 border-solid border-2 max-sm:border-[1px] p-[0.4vw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white"
 										>
 											<i class="fa-solid fa-link pr-2" /> Σύνδεσμος
 										</a>
@@ -161,7 +161,7 @@ const otherLocations = _locations.slice(10);
 										<a
 											target="_blank"
 											href={l.youtube}
-											class="w-max rounded-lg text-[1.25cqw] max-sm:text-lg border-red-900 border-solid border-2 max-sm:border-[1px] p-[0.4cqw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white"
+											class="w-max rounded-lg text-[1.25vw] max-sm:text-lg border-red-900 border-solid border-2 max-sm:border-[1px] p-[0.4vw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white"
 										>
 											<i class="fa-brands fa-youtube pr-2" /> YouTube
 										</a>

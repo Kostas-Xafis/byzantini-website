@@ -22,8 +22,8 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-id-card",
 		tooltip: {
 			message: [
-				"Ο αριθμός μητρώου 000 ισχύει μόνο για τους νέους μαθητές.",
-				"Συμβουλευτέιτε το έγγραφο της περσινής αίτησης ή τη γραμματεία της σχολής για την εύρεση του αριθμού μητρώου."
+				"Για νέες εγγραφές: Ο αριθμός μητρώου είναι 000. ",
+				"Για επανεγγραφές: Αναζητήστε τον αριθμό μητρώο στην περσινή αίτηση, η οποία θα σας αποσταλεί με email."
 			],
 			position: isPhone ? "top" : "left"
 		}
@@ -33,14 +33,22 @@ const genericInputs: Record<
 		name: "last_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user"
+		iconClasses: "fa-solid fa-user",
+		tooltip: {
+			message: ["Συμπληρώνεται τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης)."],
+			position: isPhone ? "top" : "right"
+		}
 	},
 	first_name: {
 		label: "Όνομα",
 		name: "first_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user"
+		iconClasses: "fa-solid fa-user",
+		tooltip: {
+			message: ["Συμπληρώνεται τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητα σας."],
+			position: isPhone ? "top" : "left"
+		}
 	},
 	fathers_name: {
 		label: "Πατρώνυμο",
@@ -124,7 +132,11 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"]
+			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
+			tooltip: {
+				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
+				position: isPhone ? "top" : "right"
+			}
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -145,7 +157,11 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"]
+			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
+			tooltip: {
+				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
+				position: isPhone ? "top" : "right"
+			}
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -166,7 +182,11 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"]
+			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
+			tooltip: {
+				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
+				position: isPhone ? "top" : "right"
+			}
 		},
 		teacher_id: {
 			label: "Καθηγητής",
