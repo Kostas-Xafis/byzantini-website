@@ -149,6 +149,7 @@ const registrationToTableRegistration = (
 	instruments: Instruments[]
 ): RegistrationsTable => {
 	const columns = Object.values(registration);
+	columns[5] = new Date(columns[5] as number).toLocaleDateString("el-GR");
 	columns[15] = class_types[columns[15] as number];
 	columns[16] = teachers.find(t => t.id === columns[16])?.fullname || "";
 	columns[17] = instruments.find(i => i.id === columns[17])?.name || "";

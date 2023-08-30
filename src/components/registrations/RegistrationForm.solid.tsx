@@ -356,8 +356,11 @@ export function RegistrationForm() {
 
 	const onSubmit = async function (e: Event) {
 		e.preventDefault();
+		const teachers = store[API.Teachers.get];
+		if (!teachers) return;
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
+		let teacherName = (document.querySelector("select[name='teacher_id']") as HTMLSelectElement).selectedOptions[0].innerText;
 		const data: Omit<Registrations, "id"> = {
 			last_name: formData.get("last_name") as string,
 			first_name: formData.get("first_name") as string,
@@ -373,7 +376,7 @@ export function RegistrationForm() {
 			region: formData.get("region") as string,
 			registration_year: formData.get("registration_year") as string,
 			class_year: (document.querySelector("select[name='class_year']") as HTMLSelectElement).selectedOptions[0].innerText,
-			teacher_id: Number(formData.get("teacher_id") as string) + 1,
+			teacher_id: teachers?.find(t => t.fullname === teacherName)?.id || 0,
 			class_id: btns.findIndex(btn => btn[1] === formSelected()),
 			instrument_id:
 				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][data-selected='true']`)].map(btn => {
