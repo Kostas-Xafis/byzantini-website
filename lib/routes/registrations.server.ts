@@ -16,7 +16,7 @@ serverRoutes.getTotal.func = async _req => {
 serverRoutes.post.func = async function (req) {
     return await execTryCatch(async (T: Transaction) => {
         const body = await req.json();
-        const [student] = await T.executeQuery<{ id: number }>("SELECT id FROM registrations WHERE am = ? AND first_name = ? AND instrument_id = ? AND cellphone = ? LIMIT 1", [
+        const [student] = await T.executeQuery<{ id: number }>("SELECT id FROM registrations WHERE am=? AND first_name=? AND instrument_id=? AND cellphone=? LIMIT 1", [
             body.am,
             body.first_name,
             body.instrument_id,
@@ -29,7 +29,7 @@ serverRoutes.post.func = async function (req) {
                 args
             );
             const [total_registrations] = await T.executeQuery<{ amount: number }>("SELECT amount FROM total_registrations");
-            await T.executeQuery('UPDATE registrations SET id = ? WHERE am = ? AND first_name = ? AND instrument_id = ? AND cellphone = ? LIMIT 1', [total_registrations.amount + 1, body.am, body.first_name, body.instrument_id, body.cellphone]);
+            await T.executeQuery('UPDATE registrations SET id=? WHERE am=? AND first_name=? AND instrument_id=? AND cellphone=? LIMIT 1', [total_registrations.amount + 1, body.am, body.first_name, body.instrument_id, body.cellphone]);
             await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
         } else {
             return "Registration already made";
@@ -44,14 +44,14 @@ serverRoutes.update.func = async function (req) {
         const body = await req.json();
         const args = Object.values(body);
         args.shift(); // Remove the id from the arguments
-        await T.executeQuery(`UPDATE registrations SET last_name = ?, first_name = ?, am = ?, fathers_name = ?, telephone = ?, cellphone = ?, email = ?, birth_date = ?, road = ?, number = ?, tk = ?, region = ?, registration_year = ?, class_year = ?, date = ?, payment_amount = ? WHERE id = ?`, [...args, body.id]);
+        await T.executeQuery(`UPDATE registrations SET last_name=?, first_name=?, am=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, date=?, payment_amount=? WHERE id=?`, [...args, body.id]);
         return "Registration updated successfully";
     });
 };
 serverRoutes.complete.func = async function (req) {
     return await execTryCatch(async () => {
         const body = await req.json();
-        if (body.length === 1) await executeQuery(`DELETE FROM registrations WHERE id = ?`, body);
+        if (body.length === 1) await executeQuery(`DELETE FROM registrations WHERE id=?`, body);
         else await executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body.length)})`, body);
         return "Registration completed successfully";
     });

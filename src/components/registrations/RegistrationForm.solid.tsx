@@ -366,7 +366,7 @@ export function RegistrationForm() {
 			telephone: (formData.get("telephone") as string) || "-",
 			cellphone: formData.get("cellphone") as string,
 			email: formData.get("email") as string,
-			birth_date: Number(formData.get("birth_date") as string),
+			birth_date: new Date(formData.get("birth_date") as string).getTime(),
 			road: formData.get("road") as string,
 			number: Number(formData.get("number") as string),
 			tk: Number(formData.get("tk") as string),

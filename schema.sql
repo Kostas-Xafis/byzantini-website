@@ -274,3 +274,5 @@ INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 
 -- ALTER TABLE `registrations` RENAME COLUMN `birth_year` TO `birth_date`;
 -- ALTER TABLE `locations` ADD COLUMN `youtube` varchar(120);
+
+-- ALTER TABLE registrations ADD COLUMN birth_date int NOT NULL AFTER email;
