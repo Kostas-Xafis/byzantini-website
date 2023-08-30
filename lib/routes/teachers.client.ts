@@ -20,6 +20,14 @@ const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:st
 	func: async req => null as any
 };
 
+const getByFullnames: EndpointRoute<"GET:/teachers/fullnames", null, Teachers[]> = {
+	authentication: false,
+	method: "GET",
+	path: "/teachers/fullnames",
+	hasUrlParams: false,
+	func: async req => null as any
+};
+
 const getPrincipal: EndpointRoute<"GET:/teachers/principal", null, Teachers> = {
 	authentication: false,
 	method: "GET",
@@ -107,6 +115,7 @@ const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
 export const TeachersRoutes = {
 	get,
 	getByPriorityClasses,
+	getByFullnames,
 	getPrincipal,
 	getClasses,
 	getLocations,
@@ -132,6 +141,11 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		method: "GET",
 		path: "/teachers/priority/[class_type:string]",
 		endpoint: "Teachers.getByPriorityClasses"
+	},
+	"Teachers.getByFullnames": {
+		method: "GET",
+		path: "/teachers/fullnames",
+		endpoint: "Teachers.getByFullnames"
 	},
 	"Teachers.getPrincipal": {
 		method: "GET",
@@ -186,6 +200,7 @@ export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 	Teachers: {
 		get: "Teachers.get",
 		getByPriorityClasses: "Teachers.getByPriorityClasses",
+		getByFullnames: "Teachers.getByFullnames",
 		getPrincipal: "Teachers.getPrincipal",
 		getClasses: "Teachers.getClasses",
 		getLocations: "Teachers.getLocations",

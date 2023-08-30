@@ -237,7 +237,7 @@ export default function TeachersTable() {
 	const shapedData = createMemo(() => {
 		const classList = store[API.Teachers.getClasses];
 		const teachers = store[API.Teachers.get];
-		if (!classList || !teachers) return [];
+		if (!classList || !teachers || !teachers) return [];
 		return teachers ? teachersToTable(teachers, classList) : [];
 	});
 	const onAdd = createMemo(() => {

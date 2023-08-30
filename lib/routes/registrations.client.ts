@@ -28,13 +28,12 @@ const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
     func: async req => null as any
 };
 
-const updateReq = omit(v_Registrations, ["class_id", "teacher_id", "instrument_id"]);
-const update: DefaultEndpointRoute<"PUT:/registrations", typeof updateReq> = {
+const update: DefaultEndpointRoute<"PUT:/registrations", typeof v_Registrations> = {
     authentication: true,
     method: "PUT",
     path: "/registrations",
     hasUrlParams: false,
-    validation: () => updateReq,
+    validation: () => v_Registrations,
     func: async req => null as any
 };
 
@@ -79,7 +78,7 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         method: "PUT",
         path: "/registrations",
         endpoint: "Registrations.update",
-        validation: updateReq
+        validation: v_Registrations
     },
     "Registrations.complete": {
         method: "DELETE",

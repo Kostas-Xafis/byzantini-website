@@ -173,9 +173,13 @@ export default function Input(props: Props) {
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
 					disabled={disabled || false}
 				>
+					<option value="undefined"></option>
 					<For each={selectList}>
 						{(selectItem, index) => (
-							<option selected={index() === value} value={valueLiteral ? selectItem : index()}>
+							<option
+								selected={valueLiteral ? selectItem === value : index() === value}
+								value={valueLiteral ? selectItem : index()}
+							>
 								{selectItem}
 							</option>
 						)}

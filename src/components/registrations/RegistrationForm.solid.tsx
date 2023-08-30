@@ -133,6 +133,7 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
 			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
+			valueLiteral: true,
 			tooltip: {
 				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
 				position: isPhone ? "top" : "right"
@@ -144,7 +145,8 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map(teacher => teacher.fullname)
+			selectList: teachers.map(teacher => teacher.fullname),
+			valueLiteral: true
 		}
 	};
 };
@@ -158,6 +160,7 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
 			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
+			valueLiteral: true,
 			tooltip: {
 				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
 				position: isPhone ? "top" : "right"
@@ -169,7 +172,8 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map(teacher => teacher.fullname)
+			selectList: teachers.map(teacher => teacher.fullname),
+			valueLiteral: true
 		}
 	};
 };
@@ -183,6 +187,7 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
 			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
+			valueLiteral: true,
 			tooltip: {
 				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
 				position: isPhone ? "top" : "right"
@@ -194,7 +199,8 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map(teacher => teacher.fullname)
+			selectList: teachers.map(teacher => teacher.fullname),
+			valueLiteral: true
 		}
 	};
 };
@@ -269,10 +275,9 @@ export function RegistrationForm() {
 			if (!select) return;
 			select.addEventListener("change", (e: Event) => {
 				const target = e.target as HTMLSelectElement;
-				const teacher_id = Number((target[target.selectedIndex] as HTMLOptionElement).value);
-				setSelectedTeacher(TeachersByType()[teacher_id]);
+				const teacher_name = (target[target.selectedIndex] as HTMLOptionElement).value as string;
+				setSelectedTeacher(TeachersByType().find(t => t.fullname === teacher_name));
 			});
-			setSelectedTeacher(TeachersByType()[0]);
 		})
 	);
 
@@ -286,12 +291,10 @@ export function RegistrationForm() {
 				"Ευρωπαϊκή Μουσική": "eur"
 			} as Record<string, string>;
 			if (type in music) {
-				console.log(type);
 				const btn = document.querySelector(`#firstSelect #${music[type]} button`) as HTMLElement;
 				btn.parentElement?.parentElement?.focus();
 				void btn.offsetWidth;
 				setTimeout(() => btn.click(), 3000);
-				// setTimeout(() => (document.querySelector("a:is(.logoImg)") as HTMLElement).click(), 1000);
 			}
 		}
 	});
@@ -320,7 +323,8 @@ export function RegistrationForm() {
 	const InstrumentsByTeacher = createMemo(() => {
 		const instruments = store[API.Instruments.get];
 		const teacher_instruments = store[API.Teachers.getInstruments];
-		const teacher = selectedTeacher() || TeachersByType()[0];
+		const teacher = selectedTeacher();
+		console.log(teacher);
 		if (!instruments || !teacher_instruments || !teacher) return {};
 		return {
 			type: formSelected(),
@@ -360,7 +364,6 @@ export function RegistrationForm() {
 		if (!teachers) return;
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
-		let teacherName = (document.querySelector("select[name='teacher_id']") as HTMLSelectElement).selectedOptions[0].innerText;
 		const data: Omit<Registrations, "id"> = {
 			last_name: formData.get("last_name") as string,
 			first_name: formData.get("first_name") as string,
@@ -375,9 +378,9 @@ export function RegistrationForm() {
 			tk: Number(formData.get("tk") as string),
 			region: formData.get("region") as string,
 			registration_year: formData.get("registration_year") as string,
-			class_year: (document.querySelector("select[name='class_year']") as HTMLSelectElement).selectedOptions[0].innerText,
-			teacher_id: teachers?.find(t => t.fullname === teacherName)?.id || 0,
+			class_year: formData.get("class_year") as string,
 			class_id: btns.findIndex(btn => btn[1] === formSelected()),
+			teacher_id: teachers?.find(t => t.fullname === formData.get("teacher_id"))?.id || -1,
 			instrument_id:
 				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][data-selected='true']`)].map(btn => {
 					const id = Number(btn.dataset.value) || null;

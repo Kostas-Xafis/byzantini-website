@@ -4,7 +4,7 @@ import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
-import { Omit, type Props as InputProps, Pick, Fill } from "../Input.solid";
+import { type Props as InputProps, Fill } from "../Input.solid";
 import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
@@ -14,17 +14,13 @@ const PREFIX = "registrations";
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type RegistrationsTable = Registrations;
 
-const RegistrationsInputs = (
-	teachers: Teachers[],
-	instruments: Instruments[]
-): Record<keyof Omit<Registrations, "class_id">, InputProps> => {
+const RegistrationsInputs = (teachers: Teachers[], instruments: Instruments[]): Record<keyof Registrations, InputProps> => {
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		am: {
 			label: "Αριθμός Μητρώου",
 			name: "am",
 			type: "text",
-			disabled: true,
 			iconClasses: "fa-solid fa-id-card"
 		},
 		last_name: {
@@ -66,7 +62,7 @@ const RegistrationsInputs = (
 		birth_date: {
 			label: "Ημερομηνία Γέννησης",
 			name: "birth_date",
-			type: "number",
+			type: "date",
 			iconClasses: "fa-regular fa-calendar"
 		},
 		road: {
@@ -100,11 +96,19 @@ const RegistrationsInputs = (
 			iconClasses: "fa-solid fa-calendar",
 			value: "2023-2024"
 		},
+		class_id: {
+			label: "Τύπος Μουσικής",
+			name: "class_id",
+			type: "select",
+			selectList: ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
+			iconClasses: "fa-solid fa-graduation-cap"
+		},
 		teacher_id: {
 			label: "Καθηγητής",
 			name: "teacher_id",
 			type: "select",
-			selectList: teachers.map(t => t.fullname),
+			selectList: teachers.map(t => t.fullname).sort(),
+			valueLiteral: true,
 			iconClasses: "fa-solid fa-user"
 		},
 		instrument_id: {
@@ -112,6 +116,7 @@ const RegistrationsInputs = (
 			name: "instrument_id",
 			type: "select",
 			selectList: instruments.map(i => i.name),
+			valueLiteral: true,
 			iconClasses: "fa-solid fa-guitar"
 		},
 		class_year: {
@@ -175,7 +180,7 @@ export default function RegistrationsTable() {
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
 		useAPI(setStore, API.Registrations.get, {});
-		useAPI(setStore, API.Teachers.get, {});
+		useAPI(setStore, API.Teachers.getByFullnames, {});
 		useAPI(setStore, API.Instruments.get, {});
 	});
 
@@ -226,17 +231,17 @@ export default function RegistrationsTable() {
 		payment_date: { name: "Ημερομηνία Πληρωμής", size: () => 12 }
 	};
 
-	let shapedData = createMemo(() => {
+	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
-		const teachers = store[API.Teachers.get];
+		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return [];
-		return registrationsToTable(registrations, teachers, instruments);
+		return registrations ? registrationsToTable(registrations, teachers, instruments) : [];
 	});
 
 	const onEdit = createMemo(() => {
 		const registrations = store[API.Registrations.get];
-		const teachers = store[API.Teachers.get];
+		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!teachers || !registrations || !instruments) return undefined;
 		if (selectedItems.length !== 1) return undefined;
@@ -245,36 +250,41 @@ export default function RegistrationsTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<Registrations, "instrument_id" | "class_id" | "teacher_id"> = {
+			const class_id = Number(formData.get("class_id") as string);
+			const data: Registrations = {
 				id: registration.id,
+				am: formData.get("am") as string,
 				last_name: formData.get("last_name") as string,
 				first_name: formData.get("first_name") as string,
-				am: formData.get("am") as string,
 				fathers_name: formData.get("fathers_name") as string,
 				telephone: (formData.get("telephone") as string) || "-",
 				cellphone: formData.get("cellphone") as string,
 				email: formData.get("email") as string,
-				birth_date: Number(formData.get("birth_date") as string),
+				birth_date: new Date(formData.get("birth_date") as string).getTime(),
 				road: formData.get("road") as string,
 				number: Number(formData.get("number") as string),
 				tk: Number(formData.get("tk") as string),
 				region: formData.get("region") as string,
 				registration_year: formData.get("registration_year") as string,
 				class_year: formData.get("class_year") as string,
+				class_id,
+				teacher_id: teachers.find(t => t.fullname === (formData.get("teacher_id") as string))?.id || 0,
+				instrument_id: (class_id && instruments.find(i => i.name === (formData.get("instrument_id") as string))?.id) || 0,
 				date: Date.now(),
-				payment_amount: Number(formData.get("payment_amount") as string),
-				payment_date: formData.get("payment_date")
-					? Number(new Date(formData.get("payment_date") as string).getDate() / 1000)
-					: undefined
+				payment_amount: Number(formData.get("payment_amount") as string) ?? 0,
+				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() : null
 			};
 			const res = await useAPI(setStore, API.Registrations.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.EDIT);
 		});
+		console.log(registration);
 		const filledInputs = Fill(RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>, registration);
-		filledInputs.instrument_id.value = instruments.findIndex(i => i.id === registration.instrument_id) || 0; // findIndex because the instruments are sorted by name
+		filledInputs.class_id.value = registration.class_id;
+		filledInputs.teacher_id.value = teachers.find(t => t.id === registration.teacher_id)?.fullname;
+		filledInputs.instrument_id.value = instruments.find(i => i.id === registration.instrument_id)?.name || 0; // findIndex because the instruments are sorted by name
 		return {
-			inputs: Omit(filledInputs, "teacher_id", "instrument_id"),
+			inputs: filledInputs,
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
@@ -284,16 +294,15 @@ export default function RegistrationsTable() {
 	});
 	const onDelete = createMemo(() => {
 		const registrations = store[API.Registrations.get];
-		const teachers = store[API.Teachers.get];
+		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!teachers || !registrations || !instruments) return undefined;
 		if (selectedItems.length < 1) return undefined;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const data = selectedItems.map(i => registrations[i].id);
+			const data = selectedItems.map(s => s);
 			const res = await useAPI(setStore, API.Registrations.complete, { RequestObject: data });
-			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
 		});
 		return {
@@ -307,7 +316,10 @@ export default function RegistrationsTable() {
 	});
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Registrations.get] && store[API.Teachers.get] && store[API.Instruments.get]} fallback={<Spinner />}>
+			<Show
+				when={store[API.Registrations.get] && store[API.Teachers.getByFullnames] && store[API.Instruments.get]}
+				fallback={<Spinner />}
+			>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
 				</Table>

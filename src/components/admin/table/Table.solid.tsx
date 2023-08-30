@@ -16,13 +16,10 @@ export const enum SortDirection {
 export default function Table(props: Props) {
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], { equals: false });
 	const { columnNames, prefix = "", data } = props;
-	const [rowData, setRowData] = createSignal<any[]>(data());
 
 	const readRowData = createMemo(() => {
-		const rows = rowData().slice();
+		const rows = data().slice();
 		const [direction, column_index] = sorted();
-		console.log({ input: rows });
-		console.log({ direction, column_index });
 		if (direction === SortDirection.NONE || column_index < 0) return rows.sort((a, b) => a[0] - b[0]);
 		rows.sort((a, b) => {
 			if (a[column_index] === b[column_index]) return 0;
@@ -38,7 +35,6 @@ export default function Table(props: Props) {
 			}
 			return 0;
 		});
-		console.log({ sorted: rows.slice() });
 		return direction === SortDirection.ASCENDING ? rows : rows.reverse();
 	});
 
@@ -68,7 +64,7 @@ export default function Table(props: Props) {
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
 				<Row data={columns} columnWidths={columnWidths} rows={data.length} header sortOnClick={setSorted} />
-				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto auto grid-flow-row rounded-b-lg overflow-y-auto">
+				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto auto grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item, index) => {
 							return <Row data={item} index={index()} columnWidths={columnWidths} rows={data.length} />;

@@ -11,7 +11,8 @@ import {
 	omit,
 	literal,
 	union,
-	type Output
+	type Output,
+	nullable
 } from "valibot";
 
 export const v_Books = object({
@@ -158,6 +159,6 @@ export const v_Registrations = object({
 	instrument_id: number([integer(), minValue(0)]),
 	date: number([integer(), minValue(0)]),
 	payment_amount: optional(number([integer(), minValue(0)])),
-	payment_date: optional(number([integer(), minValue(0)]))
+	payment_date: optional(nullable(number([integer(), minValue(0)])))
 });
 export type Registrations = Output<typeof v_Registrations>;
