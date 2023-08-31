@@ -71,26 +71,29 @@ const otherLocations = _locations.slice(10);
 			</div>
 		</div>
 		<div id="btsMobileContainer" class="sm:hidden w-full relative flex flex-col border-b-2 overflow-auto border-red-900 z-10">
-			<select id="mobileLocationSelect" class="w-full text-lg px-2 pt-4 text-center focus:!outline-none">
-				<optgroup label="Σπουδαστήρια Σχολής" class="bg-red-900 text-center text-white">
-					{
-						schoolLocations.map((l, ind) => (
-							<option data-show={ind === 0} data-name={l.name} class="bg-white text-black">
-								{l.name}
-							</option>
-						))
-					}
-				</optgroup>
-				<optgroup label="Συνεργαζόμενες Σχολές" class="bg-red-900 text-center text-white">
-					{
-						otherLocations.map(l => (
-							<option data-name={l.name} value={l.name} class="bg-white text-black">
-								{l.name}
-							</option>
-						))
-					}
-				</optgroup>
-			</select>
+			<p class="relative w-full text-lg px-2 pt-4 text-center">
+				Αναζήτηση Σπουδαστηρίου
+				<select id="mobileLocationSelect" class="absolute inset-0 w-full h-full opacity-[0.005] focus:!outline-none">
+					<optgroup label="Σπουδαστήρια Σχολής" class="bg-red-900 text-center text-white">
+						{
+							schoolLocations.map((l, ind) => (
+								<option data-show={ind === 0} data-name={l.name} class="bg-white text-black">
+									{l.name}
+								</option>
+							))
+						}
+					</optgroup>
+					<optgroup label="Συνεργαζόμενες Σχολές" class="bg-red-900 text-center text-white">
+						{
+							otherLocations.map(l => (
+								<option data-name={l.name} value={l.name} class="bg-white text-black">
+									{l.name}
+								</option>
+							))
+						}
+					</optgroup>
+				</select>
+			</p>
 			<i class="fa-solid fa-chevron-down font-bold text-lg text-red-900 self-center drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
 			></i>
 		</div>
@@ -245,7 +248,7 @@ const otherLocations = _locations.slice(10);
 		});
 	window.matchMedia("(max-width: 640px)").matches &&
 		onElementMount("#locationsContainer", async function () {
-			const select = document.querySelector("#btsMobileContainer > select") as HTMLSelectElement;
+			const select = document.querySelector("#btsMobileContainer select") as HTMLSelectElement;
 			select.addEventListener("change", e => {
 				const locationName = select?.value as string;
 				const container = document.querySelector("#locationsContainer") as HTMLElement;
@@ -256,7 +259,6 @@ const otherLocations = _locations.slice(10);
 				prevLocation.classList.forEach(v => locationClassList.push(v));
 				let selectedClassList = [] as any;
 				container.querySelector(`div[data-name='${locationName}']`)?.classList.forEach(v => selectedClassList.push(v));
-				console.log({ locationClassList, locationName, selectedClassList });
 				setTimeout(() => {
 					prevLocation.classList.remove("show", "remove");
 					void prevLocation.offsetWidth;
@@ -267,7 +269,6 @@ const otherLocations = _locations.slice(10);
 					prevLocation.classList.forEach(v => locationClassList.push(v));
 					selectedClassList = [] as any;
 					container.querySelector(`div[data-name='${locationName}']`)?.classList.forEach(v => selectedClassList.push(v));
-					console.log({ locationClassList, locationName, selectedClassList });
 				}, 300);
 			});
 		});

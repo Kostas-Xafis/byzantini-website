@@ -36,12 +36,11 @@ const teachers = [
 	[par_teachers, MusicType.Traditional],
 	[eur_teachers, MusicType.European]
 ] as const;
-
-const teacher_classes = teachers.map(([teachers, type], index) => {
-	return teachers.map(teacher => {
+const teacher_classes = teachers.map(([teachersArr, type], index) => {
+	return teachersArr.map(teacher => {
 			return {
 				teacher_id: teacher.id,
-				class_id: index + 1
+				class_id: index
 			};
 		}).flat();
 }).flat();
@@ -95,7 +94,7 @@ const teachingTitle = (fullname:string) => {
 			{
 				teachers.map(([teachersByType, type]) => {
 					return teachersByType.map(teacher => {
-						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => musicOnly[c.class_id - 1][0]);
+						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => musicOnly[c.class_id][0]);
 						const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
 						const t_instrument_list = teacher_instruments.filter(i => i.teacher_id === teacher.id)?.map(i => instruments.find((inst) => inst.id === i.instrument_id) as Instruments);
 						const t_instruments = t_instrument_list.map(i => i.name);

@@ -307,19 +307,20 @@ export function RegistrationForm() {
 	] as const;
 
 	const TeachersByType = createMemo(() => {
-		let teacher_store = store[API.Teachers.get]?.slice(0, -1);
+		let teacher_store = store[API.Teachers.get]?.slice();
 		const teachers = teacher_store && (JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
 		const teacher_classes = store[API.Teachers.getClasses];
 		if (!teachers || !teacher_classes) return [];
-		const id = btns.findIndex(btn => btn[1] === formSelected()) + 1;
+		const id = btns.findIndex(btn => btn[1] === formSelected());
 		teachers.sort((a, b) => {
 			if (a.fullname < b.fullname) return -1;
 			if (a.fullname > b.fullname) return 1;
 			return 0;
 		});
-		return teachers.filter(teacher =>
+		let f = teachers.filter(teacher =>
 			teacher_classes.find(teacher_class => teacher_class.teacher_id === teacher.id && teacher_class.class_id === id)
 		);
+		return f;
 	});
 	const InstrumentsByTeacher = createMemo(() => {
 		const instruments = store[API.Instruments.get];

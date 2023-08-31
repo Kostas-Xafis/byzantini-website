@@ -189,10 +189,10 @@ export default function Input(props: Props) {
 			{/*--------------------------------MULTISELECT INPUT---------------------------------------- */}
 			<Show when={type === "multiselect"}>
 				<i class={"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " + (iconClasses || "")}></i>
-				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-auto z-10">
+				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-x-hidden z-10">
 					<For each={multiselectList}>
 						{(selectItem, index) =>
-							selectItem.value ? (
+							selectItem.value !== null || selectItem.value !== undefined ? (
 								<button
 									data-specifier={name}
 									data-selected={selectItem.selected}

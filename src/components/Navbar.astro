@@ -13,25 +13,14 @@ const highlight = (url: string) => {
 	return path === url || path === urlWithEndingSlash;
 };
 
-const getTitleFromUrl = (url: string) => {
-	const path = Astro.url.pathname;
-
-	const link = links.find(link => {
-		const linkWithEndingSlash = link.url.slice() + "/";
-		return path === link.url || path === linkWithEndingSlash;
-	});
-	return link?.name;
-};
-
 const isDev = Astro.url.hostname.includes("localhost") || Astro.url.hostname.includes("127.0.0.1");
 const isMainPage = Astro.url.pathname === "/";
-const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 ---
 
 <>
 	<nav
 		class={"fixed top-0 left-0 w-[100dvw] md:h-[4.5vw] md:grid grid-rows-[4.4vw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
-			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:pb-1 max-sm:gap-y-0" +
+			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:pb-0 max-sm:gap-y-0" +
 			(!isMainPage ? " bg-red-900" : " glass")}
 	>
 		<div
@@ -85,7 +74,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 				))
 			}
 		</div>
-		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center">
+		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
 			<p
 				class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]"
 			>
@@ -93,10 +82,10 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 					class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
 				></i>
 				<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
-					>{currentLinkName}</span
+					>Περιήγηση</span
 				>
 			</p>
-			<div class="hidden absolute top-[1.75rem] h-max flex-col grid-cols-[100%] w-full">
+			<div class="hidden absolute top-[2rem] h-max flex-col grid-cols-[100%] w-full">
 				{
 					links.map(link => (
 						<a
@@ -119,6 +108,11 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 			mask-size: contain;
 			-webkit-mask-size: contain;
 		}
+		/* #burgerNav {
+			background: linear-gradient(to bottom, rgb(255, 255, 255, 0.25) -50%, transparent, rgb(255, 255, 255, 0.25) 150%);
+			background: rgb(69 10 10 / 1);
+		} */
+
 		/* Subpixel gaps for no reason at all.... */
 		#burgerNav a:nth-child(5) {
 			transition-duration: 0.6s;

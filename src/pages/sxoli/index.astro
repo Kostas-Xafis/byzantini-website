@@ -10,8 +10,9 @@ const principalText = [
 	`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας. 
 Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ 
 Μητροπολιτικὸ Ναὸ Ἁγίου Δημητρίου 
-Κηφισιᾶς.`,
-	`Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς 
+Κηφισιᾶς.
+
+	Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς 
 τοῦ Πανεπιστημίου Ἀθηνῶν. Ὑπηρέτησε ὡς 
 καθηγητὴς στὴν Μέση Ἐκπαίδευση στὸ 1ο 
 Γυμνάσιο Κηφισιᾶς ἐπὶ εἰκοσαετίαν καὶ ἐπὶ 
@@ -80,12 +81,12 @@ const isDev = isDevFromURL(Astro.url);
 	{
 		isDev ? (
 			<div class="w-full flex font-didact">
-				<div class="grid grid-rows-[minmax(200px,400px)_1fr_1fr_1fr] p-12 gap-y-2">
+				<div class="grid auto-rows-auto p-12 gap-y-2 overflow-y-auto">
 					<div class="flex flex-row gap-x-4">
 						<img
 							src={imgSrc + principal.picture}
 							alt=""
-							class="w-[clamp(0px,100%,400px)] object-cover shadow-lg shadow-slate-700"
+							class="w-[clamp(0px,100%,350px)] object-cover shadow-lg shadow-slate-700"
 						/>
 						<div class="flex flex-col gap-y-4">
 							<p class="text-[2.5vw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
@@ -93,13 +94,12 @@ const isDev = isDevFromURL(Astro.url);
 							</p>
 							<p class="text-xl">{principalText[0]}</p>
 							<p class="text-xl">{principalText[1]}</p>
-							<p class="text-xl">{principalText[2]}</p>
 						</div>
 					</div>
 					<div class="text-xl">
+						<p>{principalText[2]}</p>
 						<p>{principalText[3]}</p>
 						<p>{principalText[4]}</p>
-						<p>{principalText[5]}</p>
 					</div>
 				</div>
 			</div>

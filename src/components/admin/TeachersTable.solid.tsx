@@ -81,7 +81,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Βυζαντινής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			value: teacherPriorities.find(p => p.class_id === 1)?.priority || "",
+			value: teacherPriorities.find(p => p.class_id === 0)?.priority || "",
 			minmax: [1, 1000]
 		},
 		priority_par: {
@@ -89,7 +89,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Παραδοσιακής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			value: teacherPriorities.find(p => p.class_id === 2)?.priority || "",
+			value: teacherPriorities.find(p => p.class_id === 1)?.priority || "",
 			minmax: [1, 1000]
 		},
 		priority_eur: {
@@ -97,7 +97,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Ευρωπαϊκής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			value: teacherPriorities.find(p => p.class_id === 3)?.priority || "",
+			value: teacherPriorities.find(p => p.class_id === 2)?.priority || "",
 			minmax: [1, 1000]
 		},
 		picture: {
@@ -169,9 +169,9 @@ const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[
 	columns[5] = teacher.telephone || "";
 	columns[6] = teacher.linktree || "";
 
-	columns[7] = classes.find(c => c.class_id === 1)?.priority || -1;
-	columns[8] = classes.find(c => c.class_id === 2)?.priority || -1;
-	columns[9] = classes.find(c => c.class_id === 3)?.priority || -1;
+	columns[7] = classes.find(c => c.class_id === 0)?.priority || -1;
+	columns[8] = classes.find(c => c.class_id === 1)?.priority || -1;
+	columns[9] = classes.find(c => c.class_id === 2)?.priority || -1;
 	return columns as unknown as TeachersTable;
 };
 
@@ -181,9 +181,9 @@ const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]):
 
 export default function TeachersTable() {
 	const class_types = [
-		{ id: 1, name: "Βυζαντινή Μουσική" },
-		{ id: 2, name: "Παραδοσιακή Μουσική" },
-		{ id: 3, name: "Ευρωπαϊκή Μουσική" }
+		{ id: 0, name: "Βυζαντινή Μουσική" },
+		{ id: 1, name: "Παραδοσιακή Μουσική" },
+		{ id: 2, name: "Ευρωπαϊκή Μουσική" }
 	];
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
