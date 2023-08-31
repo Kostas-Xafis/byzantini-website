@@ -36,9 +36,12 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 	>
 		<div
 			class={"relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center z-10" +
-				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-1"}
+				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-1 max-sm:gap-x-2 max-3xs:gap-x-1"}
 		>
-			<a href="/" class="logoImg sm:w-[4vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-sm:self-center">
+			<a
+				href="/"
+				class="logoImg sm:w-[4vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-3xs:w-[2.5rem] max-sm:self-center"
+			>
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
@@ -46,7 +49,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 				class={"absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10" +
 					" max-sm:top-[2px] max-sm:translate-y-0 max-sm:left-[6px]"}
 			>
-				<div class="logoImg sm:w-[4vw] aspect-square max-sm:w-[3.5rem]">
+				<div class="logoImg sm:w-[4vw] aspect-square max-sm:w-[3.5rem] max-3xs:w-[2.5rem]">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>

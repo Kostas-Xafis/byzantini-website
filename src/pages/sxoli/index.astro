@@ -7,18 +7,80 @@ export const prerender = true;
 
 const principal = (await useAPI("Teachers.getPrincipal", {})).data as Teachers;
 const principalText = [
-	"Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste quam magnam voluptatibus quaerat quisquam cum. Numquam nulla excepturi repudiandae perspiciatis voluptates dolorum dolores hic nemo incidunt iusto minima ipsa et quos asperiores earum exercitationem voluptatum nostrum expedita culpa deserunt, amet, debitis eos voluptate? Officia mollitia sunt. Eum quod ab eaque, enim architecto laudantium amet atque sunt! Tempore voluptas alias eos, quae suscipit accusamus aliquam sint magnam assumenda asperiores delectus itaque consectetur minus repellat exercitationem aperiam odio non vel. Debitis harum sapiente, minima minus, neque nesciunt consectetur quasi dolore accusamus ipsa eius quibusdam nam inventore rerum alias sunt enim. Iure animi saepe officia a rerum blanditiis cupiditate reprehenderit veritatis repellendus aliquid accusamus inventore corrupti assumenda quis in quisquam dolorem delectus unde, at aut?",
-	"Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste quam magnam voluptatibus quaerat quisquam cum. Numquam nulla excepturi repudiandae perspiciatis voluptates dolorum dolores hic nemo incidunt iusto minima ipsa et quos asperiores earum exercitationem voluptatum nostrum expedita culpa deserunt, amet, debitis eos voluptate? Officia mollitia sunt. Eum quod ab eaque, enim architecto laudantium amet atque sunt! Tempore voluptas alias eos, quae suscipit accusamus aliquam sint magnam assumenda asperiores delectus itaque consectetur minus repellat exercitationem aperiam odio non vel. Debitis harum sapiente, minima minus, neque nesciunt consectetur quasi dolore accusamus ipsa eius quibusdam nam inventore rerum alias sunt enim. Iure animi saepe officia a rerum blanditiis cupiditate reprehenderit veritatis repellendus aliquid accusamus inventore corrupti assumenda quis in quisquam dolorem delectus unde, at aut?"
+`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας. 
+Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ 
+Μητροπολιτικὸ Ναὸ Ἁγίου Δημητρίου 
+Κηφισιᾶς.`,
+`Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς 
+τοῦ Πανεπιστημίου Ἀθηνῶν. Ὑπηρέτησε ὡς 
+καθηγητὴς στὴν Μέση Ἐκπαίδευση στὸ 1ο 
+Γυμνάσιο Κηφισιᾶς ἐπὶ εἰκοσαετίαν καὶ ἐπὶ 
+δεκαετίαν στὸ Πειραματικὸ Γυμνάσιο – Λύκειο 
+Ἀναβρύτων, ἀπ’ ὅπου καὶ συνταξιοδοτήθηκε. 
+Τὸν Ἰούνιο τοῦ 2010 μὲ ἀπόφαση τοῦ 
+Σεβασμιωτάτου Μητροπολίτου Κηφισίας, 
+Ἀμαρουσίου, Ὠρωποῦ καὶ Μαραθῶνος κ. 
+Κυρίλλου διορίσθηκε Γενικὸς Ἀρχιερατικὸς 
+Ἐπίτροπος τῆς Ἱερᾶς Μητροπόλεως.`,
+`Ὁ π. Χρῖστος ἀπὸ νεαρὴ ἡλικία ἔδειξε τὴν κλίση του πρὸς τὴν μουσική. 
+Πρῶτος διδάσκαλός του στὴν Βυζαντινὴ Μουσική, ὁ Δημήτριος 
+Παναγιωτόπουλος - Κοῦρος, στὴ Ριζάρειο Σχολή, τῆς ὁποίας τυγχάνει 
+ἀπόφοιτος. Ἀργότερα διηύρυνε καὶ ὁλοκλήρωσε τὴν μουσική του παιδεία, 
+στὸ Ὠδεῖο Ἀθηνῶν, στὸ Ἑλληνικὸ Ὠδεῖο, στό Ὠδεῖο Ἀχαρνῶν καί στό Ὠδεῖο 
+Ἀργυρουπόλεως. Εἶναι πτυχιοῦχος καὶ διπλωματοῦχος μουσικοδιδάσκαλος 
+τῆς Βυζαντινῆς Μουσικῆς. Στὸν Μητροπολιτικὸ Ἱερὸ Ναὸ Ἁγίου Δημητρίου 
+Κηφισιᾶς τὸ 1984 ἱδρυσε Σχολὴ Βυζαντινῆς Μουσικῆς καὶ συνέστησε τὴν 
+πολυμελῆ Χορωδία «Βυζαντινὴ Κυψέλη». Χρημάτισε συνεργάτης στὸν 
+Ραδιοφωνικὸ Σταθμὸ τῆς Ἐκκλησίας τῆς Ἑλλάδος, ὅπου ἐπὶ σειρὰν ἐτῶν 
+διετέλεσε συντονιστὴς τῶν ἐκπομπῶν Βυζαντινῆς καὶ Παραδοσιακῆς 
+Μουσικῆς καθὼς ἐπίσης καὶ τακτικὸς συνεργάτης τῆς Ἑλληνικῆς 
+Ραδιοφωνίας καὶ Τηλεοράσεως.`,
+`Διετέλεσε καθηγητής Βυζαντινῆς Μουσικῆς στο Δημοτικό Ὠδεῖο Ἀμαρουσίου 
+καί διευθυντής τῆς Σχολῆς Βυζαντινῆς Μουσικῆς τῆς Ἱερᾶς Μητροπόλεως 
+Μεσογαίας καί Λαυρεωτικῆς. Εἶναι Διευθυντής τῆς Σχολῆς Βυζαντινῆς 
+Μουσικῆς τῆς Ἱερᾶς Μητροπόλεως Θηβῶν καί Λεβαδείας καί ἀπό τόν 
+Ὀκτώβριο 2015 διορίστηκε ἀπό τό Ὑπουργεῖο Πολιτισμοῦ καί Ἀθλητισμοῦ 
+Διευθυντής τῆς Σχολῆς Βυζαντινῆς Μουσικῆς τοῦ Ἱεροῦ Καθεδρικοῦ Ναοῦ 
+Μεταμορφώσεως τοῦ Σωτῆρος τοῦ ὁμωνύμου Δήμου.`,
+`Ἀσχολεῖται συστηματικὰ μὲ τὴν μουσικὴ λαογραφία καὶ τὴν καταγραφὴ 
+Δημοτικῶν Τραγουδιῶν. Ἡ Ἑταιρεία Πελοποννησιακῶν Σπουδῶν, τῆς 
+ὁποίας εἶναι μέλος καὶ ἐπιστημονικὸς συνεργάτης, ἐξέδωσε μελέτες του μὲ 
+καταγραφές Δημοτικῶν τραγουδιῶν σὲ βυζαντινὴ καὶ εὐρωπαϊκὴ μουσική.
+Γνωρίζει καὶ διδάσκει τό παραδοσιακό μουσικό ὄργανο ψαλτήριον 
+(κανονάκι). Ἔχει πραγματοποιήσει πολλὲς ἠχογραφήσεις μὲ Βυζαντινοὺς 
+ὕμνους, καθὼς καὶ παραδοσιακά τραγούδια. Ἀξιόλογη ἠχογράφηση 
+θεωρεῖται ἐκείνη, ἡ ὁποία πραγματοποιήθηκε μετὰ ἀπὸ ἔρευνά του γιὰ τὸν 
+Θούριο τοῦ Ρήγα Βελεστινλῆ καὶ τὴν ὁποία ἐξέδωσε σὲ ψηφιακὸ δίσκο, ἡ 
+«Ἐπιστημονικὴ Ἑταιρεία Μελέτης Φερρῶν - Βελεστίνου Ρήγα». Μάλιστα 
+παρουσιάστηκε στόν Βόλο, μὲ τὴν εὐκαιρία τῆς συμπληρώσεως διακοσίων 
+ἐτῶν, ἀπὸ τὸν μαρτυρικὸ θάνατο τοῦ πρωτομάρτυρα τῆς λευτεριᾶς. Ἐπίσης, 
+ἔχει ἑρμηνεύσει τὸν πρωταγωνιστικὸ ρόλο στὸ θρησκευτικὸ ὁρατόριο –
+ραψωδία «Κοσμᾶς ὁ Αἰτωλός» σὲ μουσικὴ Σωκράτη Βενάρδου καί ποίηση 
+Κώστα Χωρεάνθη, τὸ ὁποῖο παρουσιάστηκε σὲ πολλὲς πόλεις τῆς Ἑλλάδος. 
+Ἄλλες ἀξιόλογες ἠχογραφήσεις του, σὲ μονωδιακὴ ἐκτέλεση καθὼς καὶ μὲ τὴ 
+χορωδία «Βυζαντινὴ Κυψέλη», ποὺ ὁ ἴδιος διευθύνει, συνοδείᾳ 
+παραδοσιακῶν λαϊκῶν ὀργάνων, θεωροῦνται οἱ: «Ἡρωϊκοὶ Ἀντίλαλοι τοῦ 
+Μοριᾶ», «Παραδοσιακὰ Τραγούδια τοῦ Γάμου καὶ τῆς Χαρᾶς», «Μνῆμες τοῦ 
+Μοριᾶ», «Λεβέντικοι Ρυθμοί» καὶ «Κιβωτὸς Ἀσμάτων». Τὸ ἔτος 2006 
+συνέθεσε τὸ βυζαντινὸ ὀρατόριο, μουσικὸ ἔργο γιὰ βυζαντινὴ χορωδία καὶ 
+ὀρχήστρα παραδοσιακῶν ὀργάνων, «Ὁ αἰώνιος ὕμνος τῆς ἀγάπης», σὲ 
+κείμενα τοῦ πανεπιστημιακοῦ καθηγητοῦ Ἠλία Β. Οἰκονόμου, τὸ ὁποῖο 
+παρουσιάστηκε γιὰ πρώτη φορὰ στὸ πολιτιστικὸ κέντρο τοῦ Δήμου 
+Κηφισιᾶς.`,
+`Ὁ π. Χρῖστος Κυριακόπουλος, ἀνήκει στὴν κατηγορία τῶν κληρικῶν ἐκείνων, 
+οἱ ὁποῖοι πέρα ἀπὸ τὰ εἰδικὰ ἱερατικά τους καθήκοντα, προσφέρουν καὶ ἔργο 
+πολύτιμο γιὰ τὴν διάσωση καὶ διάδοση τῆς Ἐθνικῆς μας Μουσικῆς»`
 ];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
-const is_online_dev = isOnlineDev(Astro.url);
+// const is_online_dev = isOnlineDev(Astro.url);
+const isDev = isDevFromURL(Astro.url);
 ---
 
 <Layout title="Η Σχολή μας">
 	{
-		is_online_dev ? 
+		isDev ? 
 		<div class="w-full flex font-didact max-sm:grid-cols-[100%] max-sm:grid-rows-[max-content_1fr]">
-			<div class="grid grid-rows-[minmax(200px,400px)_1fr] p-12 gap-y-2">
+			<div class="grid grid-rows-[minmax(200px,400px)_1fr_1fr_1fr] p-12 gap-y-2">
 				<div class="flex flex-row gap-x-4">
 					<img src={imgSrc + principal.picture} alt="" class="w-[clamp(0px,100%,400px)] object-cover shadow-lg shadow-slate-700" />
 					<div class="flex flex-col gap-y-4">
@@ -28,10 +90,14 @@ const is_online_dev = isOnlineDev(Astro.url);
 							{principal.fullname}
 						</p>
 						<p class="text-xl">{principalText[0]}</p>
+						<p class="text-xl">{principalText[1]}</p>
+						<p class="text-xl">{principalText[2]}</p>
 					</div>
 				</div>
 				<div class="text-xl">
-					<p>{principalText[1]}</p>
+					<p>{principalText[3]}</p>
+					<p>{principalText[4]}</p>
+					<p>{principalText[5]}</p>
 				</div>
 			</div>
 		</div>

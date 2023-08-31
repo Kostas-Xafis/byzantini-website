@@ -16,24 +16,12 @@ serverRoutes.getTotal.func = async _req => {
 serverRoutes.post.func = async function (req) {
     return await execTryCatch(async (T: Transaction) => {
         const body = await req.json();
-        const [student] = await T.executeQuery<{ id: number }>("SELECT id FROM registrations WHERE am=? AND first_name=? AND instrument_id=? AND cellphone=? LIMIT 1", [
-            body.am,
-            body.first_name,
-            body.instrument_id,
-            body.cellphone
-        ]);
-        if (!student) {
-            const args = Object.values(body);
-            await T.executeQuery(
-                `INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
-                args
-            );
-            const [total_registrations] = await T.executeQuery<{ amount: number }>("SELECT amount FROM total_registrations");
-            await T.executeQuery('UPDATE registrations SET id=? WHERE am=? AND first_name=? AND instrument_id=? AND cellphone=? LIMIT 1', [total_registrations.amount + 1, body.am, body.first_name, body.instrument_id, body.cellphone]);
-            await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
-        } else return "Registration already made";
-
-
+        const args = Object.values(body);
+        await T.executeQuery(
+            `INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
+            args
+        );
+        await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
         return "Registrated successfully";
     });
 };
@@ -53,6 +41,7 @@ serverRoutes.complete.func = async function (req) {
         const body = await req.json();
         if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id=?`, body);
         else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body.length)})`, body);
+        await T.executeQuery("UPDATE total_registrations SET amount = amount - ?", [body.length]);
         return "Registration completed successfully";
     });
 };

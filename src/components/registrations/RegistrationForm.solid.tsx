@@ -35,7 +35,7 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
-			message: ["Συμπληρώνεται τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης)."],
+			message: ["Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης)."],
 			position: isPhone ? "top" : "right"
 		}
 	},
@@ -46,7 +46,7 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
-			message: ["Συμπληρώνεται τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητα σας."],
+			message: ["Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας."],
 			position: isPhone ? "top" : "left"
 		}
 	},
@@ -135,7 +135,7 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
 			valueLiteral: true,
 			tooltip: {
-				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
+				message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
 				position: isPhone ? "top" : "right"
 			}
 		},
@@ -162,7 +162,7 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
 			valueLiteral: true,
 			tooltip: {
-				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
+				message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
 				position: isPhone ? "top" : "right"
 			}
 		},
@@ -189,7 +189,7 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
 			valueLiteral: true,
 			tooltip: {
-				message: ["Εαν δεν γνωρίζεται το έτος φοίτησης σας, συμβουλευτείτε τη γραμματεία"],
+				message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
 				position: isPhone ? "top" : "right"
 			}
 		},
@@ -278,6 +278,7 @@ export function RegistrationForm() {
 				const teacher_name = (target[target.selectedIndex] as HTMLOptionElement).value as string;
 				setSelectedTeacher(TeachersByType().find(t => t.fullname === teacher_name));
 			});
+			setSelectedTeacher();
 		})
 	);
 
@@ -392,7 +393,7 @@ export function RegistrationForm() {
 		if (res.message) {
 			const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 			messageDialog.classList.remove("hidden");
-			messageDialog.classList.add("grid");
+			messageDialog.classList.add("flex");
 		}
 	};
 
@@ -486,20 +487,22 @@ export function RegistrationForm() {
 					</div>
 					<div
 						id="submitMessage"
-						class="hidden opacity-[0.0001] absolute w-full h-full grid-rows-[100%] place-items-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
+						class="hidden absolute inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
 					>
 						<div
 							id="messageBox"
-							class="relative p-16 w-[500px] h-max rounded-xl shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100"
+							class="relative p-12 max-sm:p-6 w-[500px] max-sm:w-[450px] max-[420px]:320px max-2xs:280px h-max rounded-xl flex flex-col justify-center gap-y-4 shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100"
 						>
 							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">Επιτυχής Εγγραφή</p>
-							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">Μήνυμα Επιτυχής εγγραφής</p>
+							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνίστε με τη Γραμματεία της Σχολής για περαιτέρω πληροφορίες
+							</p>
 							<CloseButton
-								classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl"
+								classes="absolute top-4 right-4 w-10 h-10 text-xl"
 								onClick={() => {
 									const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 									messageDialog.classList.add("hidden");
-									messageDialog.classList.remove("grid");
+									messageDialog.classList.remove("flex");
 								}}
 							></CloseButton>
 						</div>
