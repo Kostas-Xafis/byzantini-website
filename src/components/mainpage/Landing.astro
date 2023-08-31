@@ -24,7 +24,7 @@
 	</p>
 	<div
 		id="fek"
-		class="mt-[5vw] w-max p-[1.5vw] py-[1.2vw] grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg"
+		class="mt-[5vw] w-max p-[1.5vw] py-[1vw] grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg"
 	>
 		<p class="text-[2vw] font-anaktoria font-bold text-red-50 self-center max-sm:text-base">
 			<i class="fa-solid fa-chevron-right pr-4 text-[1.5vw] max-sm:text-xs self-center"></i>Ανεγνωρισμένη υπό του Κράτους
@@ -46,28 +46,42 @@
 	</div>
 	<div
 		id="eggrafesLink"
+		style="grid-row: 2 / full;"
 		class={"glass place-self-center w-max h-max rounded-lg" +
-			" shadow-lg shadow-stone-800 px-[2vw] py-[2vh] grid auto-cols-max place-items-center row-span-full max-sm:row-span-1"}
+			" shadow-lg shadow-stone-800 px-[2vw] py-[2vh] grid auto-cols-max place-items-center max-sm:!row-span-1"}
 	>
-		<p class="text-[3vw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</p>
-		<p class="text-[2.5vw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">Σχoλικού Έτους 2023-2024</p>
-		<p class="text-[2.5vw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">1/9 έως 30/10</p>
-		<div class="flex flex-col gap-y-[1vw] max-sm:flex-row max-sm:gap-x-4">
+		<p class="text-[2.75vw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</p>
+		<p class="text-[2.25vw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">Σχoλικού Έτους 2023-24</p>
+		<p class="text-[2.25vw] h-min font-anaktoria font-bold text-red-50 self-center max-sm:text-xl">1/9 έως 30/10</p>
+		<div class="flex flex-col gap-y-[1.5vw] max-sm:flex-row max-sm:gap-x-4 mt-2">
 			<a
-				class="group/regbtn px-[2vw] py-[0.75vh] mt-[2vh] text-[2.5vw] max-sm:text-2xl max-3xs:text-xl font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
+				class="group/regbtn px-[2vw] py-[0.75vh] text-[2.25vw] max-sm:text-xl max-3xs:text-lg font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 bg-red-50 text-red-900"
 				href="/eggrafes"
 			>
 				Εγγραφές <i
-					class="w-0 fa-solid fa-chevron-right font-bold text-[1.5vw] self-center max-sm:text-sm max-sm:px-2 max-3xs:text-xs"></i>
+					class="w-0 fa-solid fa-chevron-right font-bold text-[1.25vw] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+				></i>
 			</a>
 			<a
-				class="group/regbtn px-[2vw] py-[0.75vh] mt-[2vh] text-[2.5vw] max-sm:text-2xl max-3xs:text-xl font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
+				class="group/regbtn px-[2vw] py-[0.75vh] text-[2.25vw] max-sm:text-xl max-3xs:text-lg font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 bg-red-50 text-red-900"
 				href="/sxoli#anakoinosi-2022-23"
 			>
 				Ανακοίνωση <i
-					class="w-0 fa-solid fa-chevron-right font-bold text-[1.5vw] self-center max-sm:text-sm max-sm:px-2 max-3xs:text-xs"></i>
+					class="w-0 fa-solid fa-chevron-right font-bold text-[1.25vw] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+				></i>
 			</a>
 		</div>
+		<a
+			id="xairetismos-btn"
+			class="group/regbtn flex flex-row px-[2vw] py-[0.25vh] mt-[1.5vw] max-sm:mt-4 text-[1.75vw] max-sm:text-lg max-3xs:text-base font-anaktoria font-bold self-center shadow-md rounded-xl outline-none outline-red-50 transition-colors bg-red-50 text-red-900"
+			href="/#xairetismos-mitropolitou"
+		>
+			<div class="flex flex-col items-center">
+				<p class="outline-red-50 text-red-900">Χαιρετισμός</p>
+				<p class="outline-red-50 text-red-900">Σεβ. Μητροπολίτου</p>
+			</div>
+			<i class="w-0 fa-solid fa-chevron-right font-bold text-[1.25vw] self-center max-sm:text-sm max-sm:px-2 max-3xs:text-xs"></i>
+		</a>
 	</div>
 	<style is:inline>
 		#welcome-page {
@@ -135,6 +149,19 @@
 			head.innerHTML = txt;
 			head.style.opacity = "1";
 			head.style.setProperty("animation", `fadeInParent 0.5s ease-in forwards ${i * 50}ms`);
+		});
+	});
+	onElementMount("#xairetismos-btn", () => {
+		const btn = document.querySelector("#xairetismos-btn") as HTMLElement;
+		btn.addEventListener("click", e => {
+			e.preventDefault();
+			if (!window.matchMedia("(max-width: 640px)").matches) {
+				const xairetismos = document.querySelector("#xairetismos-mitropolitou") as HTMLElement;
+				xairetismos.scrollIntoView({ behavior: "smooth", block: "center" });
+			} else {
+				const xairetismos = document.querySelector("#xairetismos-mitropolitou > h2") as HTMLElement;
+				xairetismos.scrollIntoView({ behavior: "smooth", block: "center" });
+			}
 		});
 	});
 </script>
