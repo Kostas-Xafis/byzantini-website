@@ -78,7 +78,7 @@ const isDev = isDevFromURL(Astro.url);
 
 <Layout title="Η Σχολή μας">
 	{
-		!isDev ? (
+		isDev ? (
 			<div class="w-full flex font-didact">
 				<div class="grid grid-rows-[minmax(200px,400px)_1fr_1fr_1fr] p-12 gap-y-2">
 					<div class="flex flex-row gap-x-4">
