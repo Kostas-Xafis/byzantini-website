@@ -172,6 +172,7 @@ const currentLinkName = getTitleFromUrl(Astro.url.pathname) ?? "Αρχική";
 							nav.classList.replace("bg-red-900", "glass");
 						} else {
 							nav.classList.replace("glass", "bg-red-900");
+							document.querySelector("#xairetismos-btn")?.remove();
 						}
 					},
 					{
