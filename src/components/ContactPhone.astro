@@ -1,5 +1,5 @@
-<div id="phoneContact" class="w-[100svw] h-max">
-	<div class="relative h-max px-4 py-1 flex flex-col translate-y-[40px] gap-y-1 font-didact bg-red-900">
+<div id="phoneContact" class="w-[100dvw] h-max fixed bottom-0 translate-y-[100%]">
+	<div class="relative h-max px-4 py-1 flex flex-col gap-y-1 font-didact bg-red-900">
 		<p class="text-lg text-red-50">
 			<i class="text-base pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
 				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
@@ -29,7 +29,7 @@
 		</a>
 		<button
 			id="showPhoneContacts"
-			class="group/btn absolute inset-x-[-1px] top-0 h-[42px] -translate-y-[100%] flex flex-col tracking-wider bg-red-900"
+			class="group/btn absolute inset-x-[-1px] top-0 h-[44px] -translate-y-[42px] flex flex-col tracking-wider bg-red-900"
 		>
 			<i class="text-red-50 h-0 my-1 pt-1 fa-solid fa-chevron-up font-bold text-sm leading-[1.5vw] self-center"></i>
 			<p class="text-2xl text-red-50 font-anaktoria self-center">Επικοινωνία</p>
@@ -44,7 +44,7 @@
 			text-shadow: -1px 1px 2px rgb(24, 24, 24, 0.75);
 		}
 		#phoneContact:is(.clickedContacts) > div {
-			transform: translateY(calc(-100% + 42px));
+			transform: translateY(-100%);
 		}
 		#showPhoneContacts i {
 			transition: transform 0.2s ease-in-out;

@@ -1,6 +1,6 @@
 ---
 import { useAPI } from "../../../lib/hooks/useAPI.astro";
-import { isDevFromURL, isOnlineDev } from "../../../lib/utils.client";
+import { isDevFromURL } from "../../../lib/utils.client";
 import type { Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 export const prerender = true;
@@ -10,9 +10,8 @@ const principalText = [
 	`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας. 
 Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ 
 Μητροπολιτικὸ Ναὸ Ἁγίου Δημητρίου 
-Κηφισιᾶς.
-
-	Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς 
+Κηφισιᾶς.`,
+	`Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς 
 τοῦ Πανεπιστημίου Ἀθηνῶν. Ὑπηρέτησε ὡς 
 καθηγητὴς στὴν Μέση Ἐκπαίδευση στὸ 1ο 
 Γυμνάσιο Κηφισιᾶς ἐπὶ εἰκοσαετίαν καὶ ἐπὶ 
@@ -73,40 +72,231 @@ const principalText = [
 πολύτιμο γιὰ τὴν διάσωση καὶ διάδοση τῆς Ἐθνικῆς μας Μουσικῆς»`
 ];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
-// const is_online_dev = isOnlineDev(Astro.url);
-const isDev = isDevFromURL(Astro.url);
 ---
 
 <Layout title="Η Σχολή μας">
-	{
-		isDev ? (
-			<div class="w-full flex font-didact">
-				<div class="grid auto-rows-auto p-12 gap-y-2 overflow-y-auto">
-					<div class="flex flex-row gap-x-4">
-						<img
-							src={imgSrc + principal.picture}
-							alt=""
-							class="w-[clamp(0px,100%,350px)] object-cover shadow-lg shadow-slate-700"
-						/>
-						<div class="flex flex-col gap-y-4">
-							<p class="text-[2.5vw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								{principal.fullname}
-							</p>
-							<p class="text-xl">{principalText[0]}</p>
-							<p class="text-xl">{principalText[1]}</p>
-						</div>
-					</div>
-					<div class="text-xl">
-						<p>{principalText[2]}</p>
-						<p>{principalText[3]}</p>
-						<p>{principalText[4]}</p>
-					</div>
+	<div id="sxoli" class="w-full h-max flex flex-col font-didact overflow-y-auto px-12 py-6 max-sm:px-4">
+		<div
+			id="selectContainer"
+			class="self-center font-bold font-anaktoria flex flex-row max-sm:flex-wrap max-sm:justify-center py-6 gap-x-12 max-sm:py-3 max-sm:gap-4"
+		>
+			<button
+				id="principalBtn"
+				type="button"
+				class="group/btn relative pb-2 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl max-sm:w-max max-sm:after:!bottom-[6px]"
+				><span class="group-hover/btn:-translate-y-2">Ο Διευθυντής</span></button
+			>
+			<button
+				id="orgBtn"
+				type="button"
+				class="group/btn relative pb-2 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl max-sm:w-max max-sm:after:!bottom-[6px]"
+				><span class="group-hover/btn:-translate-y-2">Διοικητικό Συμβούλιο</span></button
+			>
+		</div>
+		<div id="principalContainer" class="group relative grid auto-rows-auto gap-y-2 overflow-y-visible max-sm:w-full">
+			<div class="flex flex-row gap-x-4 max-sm:gap-x-0 max-sm:gap-y-4 max-sm:flex-col">
+				<p
+					class="sm:hidden text-2xl text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+				>
+					{principal.fullname}
+				</p>
+				<img
+					src={imgSrc + principal.picture}
+					alt=""
+					class="w-[clamp(0px,100%,350px)] max-sm:w-[clamp(0px,100%,250px)] self-center object-cover shadow-lg shadow-slate-700"
+				/>
+				<div class="flex flex-col text-xl gap-y-4">
+					<p
+						class="max-sm:hidden text-[2.5vw] text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+					>
+						{principal.fullname}
+					</p>
+					<p>{principalText[0]}</p>
+					<p>{principalText[1]}</p>
+					<p class="max-sm:hidden">{principalText[2]}</p>
+					<p class="max-sm:hidden max-3xl:hidden">{principalText[3]}</p>
 				</div>
 			</div>
-		) : (
-			<div id="anakoinosi-2022-23" class="w-full flex font-didact items-start justify-center overflow-y-auto p-8 max-sm:p-4">
-				<img src="/poster.jpg" width="700px" class="w-[700px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl shadow-slate-800" />
+			<button
+				id="readMore"
+				type="button"
+				class="peer/open group/open absolute left-[-1rem] bottom-0 right-[-1rem] pb-6 pt-12 text-3xl font-bold peer-checked:hidden text-center self-end bg-gradient-to-b from-transparent to-[rgb(51,65,89,0.15)] backdrop-blur-sm rounded-b-md"
+			>
+				<span class="group-[:is(.open)]/open:hidden text-red-900 max-3xs:text-2xl drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
+					>Διαβάστε περισσότερα</span
+				>
+				<i
+					class="group-[:is(.open)]/open:hidden fa-solid fa-chevron-down text-red-900 text-2xl max-3xs:text-xl text-center self-end drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
+				></i>
+				<i
+					class="hidden group-[:is(.open)]/open:block fa-solid fa-chevron-up text-2xl max-3xs:text-xl text-center self-end drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
+				></i>
+			</button>
+			<div class="flex text-xl peer-[:is(.open)]/open:hidden flex-col -z-10 gap-y-4">
+				<p class="3xl:hidden">{principalText[3]}</p>
+				<p class="max-3xl:hidden">{principalText[4]}</p>
 			</div>
-		)
-	}
+			<div class="hidden text-xl peer-[:is(.open)]/open:flex flex-col -z-10 gap-y-4 pb-8">
+				<p class="3xl:hidden max-sm:block">{principalText[3]}</p>
+				<p>{principalText[4]}</p>
+				<p>{principalText[5]}</p>
+			</div>
+		</div>
+		<div id="orgContainer" class="hidden group relative h-max">
+			<div class="flex flex-col gap-4">
+				<h1
+					class="max-sm:text-2xl text-[2.25vw] text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+				>
+					Διοικοῦσα Ἐπιτροπή τῆς Σχολῆς Βυζαντινῆς και Παραδοσιακής Μουσικῆς,
+				</h1>
+				<ol class="flex flex-col text-xl gap-y-4">
+					<li class="max-sm:text-lg text-[1.5vw] pl-4">Πρόεδρος ὁ Αἰδεσ/τος Πρωτοπρεσβύτερος Σωτήριος Ἀλεβιζάκης,</li>
+					<li class="max-sm:text-lg text-[1.5vw] pl-4">
+						Γραμματέας ὁ κ. Βενέδικτος Γαρουφαλῆς, Λαμπαδάριος τοῦ Ἱ.Ν. Μετ/σεως Σωτῆρος καί
+					</li>
+					<li class="max-sm:text-lg text-[1.5vw] pl-4">
+						Ταμίας κ. Κωνσταντῖνος Μαυρογόνατος, Ἀντιπρόεδρος τοῦ Ἐκκλησιαστικοῦ Συμβουλίου Ἱ.Ν. Μετ/σεως Σωτῆρος
+					</li>
+				</ol>
+			</div>
+		</div>
+		<div
+			id="anakoinosi-2023-24"
+			class="w-full flex flex-col font-didact items-center justify-center overflow-y-auto mt-8 p-8 max-sm:p-4 gap-y-4"
+		>
+			<h1
+				id="announcementHead"
+				class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
+			>
+				Ανακοίνωση
+			</h1>
+			<img
+				src="/poster.jpg"
+				width="900px"
+				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
+			/>
+		</div>
+	</div>
+	<style>
+		.remove {
+			opacity: 1;
+			animation: fadeOut 0.3s ease-in-out forwards;
+		}
+		.open {
+			opacity: 0.01;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
+		#readMore:is(.open) {
+			padding-top: 0.5rem;
+			padding-bottom: 0.5rem;
+			background: transparent;
+			backdrop-filter: blur(0px);
+			transform: translateY(10%);
+		}
+		#readMore:is(.open):hover > i {
+			color: rgb(127, 29, 29);
+		}
+
+		#orgContainer ol li {
+			list-style: decimal;
+			list-style-position: inside;
+		}
+		#principalBtn::after,
+		#orgBtn::after {
+			content: "";
+			position: absolute;
+			bottom: 0px;
+			left: 0%;
+			translate: 0px -100%;
+			width: 100%;
+			background: rgb(127, 29, 29);
+		}
+
+		@keyframes scaleOut {
+			0% {
+				transform: scaleX(0.01);
+			}
+			100% {
+				transform: scaleX(1);
+			}
+		}
+
+		#selectContainer[data-selected="org"] #orgBtn::after,
+		#selectContainer:not([data-selected="org"]) #principalBtn::after {
+			height: 2px;
+			animation: scaleOut 0.2s ease-in-out forwards;
+		}
+	</style>
 </Layout>
+<script>
+	//@ts-ignore
+	import { onElementMount } from "../../../lib/utils.client";
+	onElementMount("#readMore", () => {
+		const btn = document.querySelector("#readMore") as HTMLButtonElement;
+		btn.addEventListener("click", () => {
+			btn.classList.toggle("open");
+			if (!btn.classList.contains("open")) document.querySelector("#sxoli")?.scrollIntoView({ behavior: "smooth", block: "start" });
+		});
+	});
+	onElementMount("#anakoinosi-2023-24", () => {
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				// @ts-ignore
+				if (entry.intersectionRatio >= 0.4) document.querySelector("#announcementHead").classList.add("emphasis");
+				// @ts-ignore
+				else document.querySelector("#announcementHead").classList.remove("emphasis");
+			},
+			{
+				root: null,
+				rootMargin: "0px",
+				threshold: [0.4]
+			}
+		);
+		// @ts-ignore
+		obsv.observe(document.querySelector("#anakoinosi-2023-24") as HTMLElement);
+	});
+	onElementMount("#principalContainer", () => {
+		const container = document.querySelector("#principalContainer") as HTMLDivElement;
+		container.classList.add("open");
+		setTimeout(() => {
+			container.classList.remove("open");
+		}, 550);
+	});
+	onElementMount("#principalBtn", () => {
+		const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
+		const btn = document.querySelector("#principalBtn") as HTMLButtonElement;
+		const container = document.querySelector("#principalContainer") as HTMLDivElement;
+		const orgContainer = document.querySelector("#orgContainer") as HTMLDivElement;
+		btn.addEventListener("click", () => {
+			orgContainer.classList.add("remove");
+			setTimeout(() => {
+				orgContainer.classList.add("hidden");
+				container.classList.remove("hidden", "remove");
+				container.classList.add("open");
+				selectContainer.dataset.selected = "";
+				setTimeout(() => {
+					container.classList.remove("open");
+				}, 550);
+			}, 300);
+		});
+	});
+	onElementMount("#orgBtn", () => {
+		const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
+		const btn = document.querySelector("#orgBtn") as HTMLButtonElement;
+		const container = document.querySelector("#orgContainer") as HTMLDivElement;
+		const principalContainer = document.querySelector("#principalContainer") as HTMLDivElement;
+		btn.addEventListener("click", () => {
+			principalContainer.classList.add("remove");
+			setTimeout(() => {
+				principalContainer.classList.add("hidden");
+				container.classList.remove("hidden", "remove");
+				container.classList.add("open");
+				selectContainer.dataset.selected = "org";
+				setTimeout(() => {
+					container.classList.remove("open");
+				}, 600);
+			}, 300);
+		});
+	});
+</script>

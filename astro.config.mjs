@@ -15,7 +15,7 @@ export default defineConfig({
 		solidJs(),
 		prefetch(),
 		sitemap({
-			filter: unmappedRoutes,
+			filter: page => !unmappedRoutes(page),
 			changefreq: "weekly",
 			priority: 1,
 			lastmod: new Date()
@@ -27,7 +27,16 @@ export default defineConfig({
 	vite: {
 		server: {
 			watch: {
-				ignored: ["**/node_modules/**", "**/.git/**", "**/.vscode/**", "./schema.sql", "**/getData/**", "**/notAssets/**"]
+				ignored: [
+					"**/node_modules/**",
+					"**/.git/**",
+					"**/.vscode/**",
+					"./schema.sql",
+					"**/getData/**",
+					"**/notAssets/**",
+					"**/dist/**",
+					"**/.wrangler/**"
+				]
 			}
 		},
 		build: {

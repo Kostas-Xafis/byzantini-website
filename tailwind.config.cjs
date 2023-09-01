@@ -16,14 +16,11 @@ module.exports = {
 			lineHeight: {
 				"2xs": "0.75rem"
 			},
-			containers: {
-				"2xs": "16rem",
-				"3xs": "12rem"
-			},
 			screens: {
 				xs: "480px",
 				"2xs": "360px",
-				"3xs": "320px"
+				"3xs": "320px",
+				"3xl": "1680px"
 			}
 		}
 	},
