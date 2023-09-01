@@ -3,9 +3,9 @@ import { useAPI } from "../../../lib/hooks/useAPI.astro";
 import { isDevFromURL } from "../../../lib/utils.client";
 import type { Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
-export const prerender = true;
 
 const principal = (await useAPI("Teachers.getPrincipal", {})).data as Teachers;
+console.log(principal);
 const principalText = [
 	`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας. 
 Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ 
