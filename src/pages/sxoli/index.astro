@@ -113,17 +113,17 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 					<p>{principalText[0]}</p>
 					<p>{principalText[1]}</p>
 					<p class="max-sm:hidden">{principalText[2]}</p>
-					<p class="max-sm:hidden max-3xl:hidden">{principalText[3]}</p>
+					<p class="block max-sm:hidden max-3xl:hidden">{principalText[3]}</p>
 				</div>
 			</div>
 			<button
 				id="readMore"
 				type="button"
-				class="peer/open group/open absolute left-[-1rem] bottom-0 right-[-1rem] pb-6 pt-12 text-3xl font-bold peer-checked:hidden text-center self-end bg-gradient-to-b from-transparent to-[rgb(51,65,89,0.15)] backdrop-blur-sm rounded-b-md"
+				class="peer/open group/open absolute left-[-1rem] bottom-0 right-[-1rem] py-12 text-3xl font-bold peer-checked:hidden text-center self-end bg-gradient-to-b from-transparent to-[rgb(51,65,89,0.15)] backdrop-blur-sm rounded-b-md"
 			>
 				<span class="group-[:is(.open)]/open:hidden text-red-900 max-3xs:text-2xl drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
-					>Διαβάστε περισσότερα</span
-				>
+					>Διαβάστε περισσότερα
+				</span>
 				<i
 					class="group-[:is(.open)]/open:hidden fa-solid fa-chevron-down text-red-900 text-2xl max-3xs:text-xl text-center self-end drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
 				></i>
@@ -132,10 +132,11 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				></i>
 			</button>
 			<div class="flex text-xl peer-[:is(.open)]/open:hidden flex-col -z-10 gap-y-4">
-				<p class="3xl:hidden">{principalText[3]}</p>
+				<p class="3xl:hidden max-sm:hidden">{principalText[3]}</p>
 				<p class="max-3xl:hidden">{principalText[4]}</p>
 			</div>
 			<div class="hidden text-xl peer-[:is(.open)]/open:flex flex-col -z-10 gap-y-4 pb-8">
+				<p class="sm:hidden">{principalText[2]}</p>
 				<p class="3xl:hidden max-sm:block">{principalText[3]}</p>
 				<p>{principalText[4]}</p>
 				<p>{principalText[5]}</p>
@@ -165,7 +166,7 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 		>
 			<h1
 				id="announcementHead"
-				class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
+				class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
 			>
 				Ανακοίνωση
 			</h1>
@@ -176,7 +177,7 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 			/>
 		</div>
 	</div>
-	<style>
+	<style is:inline>
 		.remove {
 			opacity: 1;
 			animation: fadeOut 0.3s ease-in-out forwards;
@@ -276,7 +277,7 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				selectContainer.dataset.selected = "";
 				setTimeout(() => {
 					container.classList.remove("open");
-				}, 550);
+				}, 500);
 			}, 300);
 		});
 	});
@@ -298,4 +299,12 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 			}, 300);
 		});
 	});
+	if (window.location.hash === "#anakoinosi") {
+		onElementMount("#sxoli", () => {
+			setTimeout(() => {
+				const announcement = document.querySelector("#anakoinosi-2023-24 > h1") as HTMLDivElement;
+				announcement.scrollIntoView({ behavior: "smooth", block: "center" });
+			}, 200);
+		});
+	}
 </script>
