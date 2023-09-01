@@ -4,6 +4,7 @@ import type { Instruments, Registrations, TeacherInstruments, Teachers } from ".
 import Input, { type Props as InputProps } from "../Input.solid";
 import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
+import Spinner from "../Spinner.solid";
 
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
@@ -260,7 +261,7 @@ export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
 	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
-
+	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	const hydrate = createHydration(() => {
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
@@ -326,7 +327,6 @@ export function RegistrationForm() {
 		const instruments = store[API.Instruments.get];
 		const teacher_instruments = store[API.Teachers.getInstruments];
 		const teacher = selectedTeacher();
-		console.log(teacher);
 		if (!instruments || !teacher_instruments || !teacher) return {};
 		return {
 			type: formSelected(),
@@ -364,6 +364,7 @@ export function RegistrationForm() {
 		e.preventDefault();
 		const teachers = store[API.Teachers.get];
 		if (!teachers) return;
+		setSpinner(true);
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
 		const data: Omit<Registrations, "id"> = {
@@ -390,14 +391,26 @@ export function RegistrationForm() {
 				})[0] || 0,
 			date: Date.now()
 		};
-		const res = await useAPI(setStore, API.Registrations.post, { RequestObject: data });
-		if (res.message) {
-			const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
-			messageDialog.classList.remove("hidden");
-			messageDialog.classList.add("flex");
+		try {
+			const res = await useAPI(setStore, API.Registrations.post, { RequestObject: data });
+			if (res.message) {
+				const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
+				messageDialog.classList.remove("hidden");
+				messageDialog.classList.add("flex");
+			}
+			if (res.error) throw Error(res.error);
+		} catch (err) {
+			console.error(err);
+			const form = document.querySelector("#registrationForm") as HTMLElement;
+			setSpinner(false);
+			setTimeout(() => {
+				form.classList.add("animate-shake");
+				setTimeout(() => form.classList.remove("animate-shake"), 500);
+			}, 500);
+		} finally {
+			setSpinner(false);
 		}
 	};
-
 	return (
 		<>
 			<Show
@@ -478,12 +491,21 @@ export function RegistrationForm() {
 								? // @ts-ignore
 								  Object.values(instrumentsInput(InstrumentsByTeacher())).map(input => <Input {...input} />)
 								: ""}
-							<button
-								class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
-								type="submit"
+							<Show
+								when={!spinner()}
+								fallback={
+									<div class="col-span-full w-max place-self-center p-2 px-6">
+										<Spinner />
+									</div>
+								}
 							>
-								Εγγραφή
-							</button>
+								<button
+									class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
+									type="submit"
+								>
+									Εγγραφή
+								</button>
+							</Show>
 						</form>
 					</div>
 					<div
@@ -496,7 +518,7 @@ export function RegistrationForm() {
 						>
 							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">Επιτυχής Εγγραφή</p>
 							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνίστε με τη Γραμματεία της Σχολής για περαιτέρω πληροφορίες
+								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνήστε με τη Γραμματεία της Σχολής για περαιτέρω πληροφορίες
 							</p>
 							<CloseButton
 								classes="absolute top-4 right-4 w-10 h-10 text-xl"
@@ -529,6 +551,37 @@ export function RegistrationForm() {
 	#registrationContainer:is(.remove) {
         animation: fadeOut 0.3s ease-in-out forwards;
     }
+	@keyframes ShakeAnimation {
+		0% {
+			transform: translateX(0);
+			filter: blur(0px);
+		}
+		10%,
+		30%,
+		70%,
+		90% {
+			transform: translateX(1px);
+		}
+		20%,
+		40%,
+		60%,
+		80% {
+			transform: translateX(-1px);
+		}
+		50% {
+			transform: translateX(1px);
+			filter: blur(1px);
+		}
+		100% {
+			transform: translateX(0px);
+			filter: blur(0px);
+		}
+	}
+
+	.animate-shake button {
+		animation: ShakeAnimation 0.6s ease-in-out;
+	}
+
 	`}
 			</style>
 		</>
