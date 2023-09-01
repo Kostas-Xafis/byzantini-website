@@ -5,7 +5,6 @@ import type { Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
 const principal = (await useAPI("Teachers.getPrincipal", {})).data as Teachers;
-console.log(principal);
 const principalText = [
 	`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας. 
 Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ 

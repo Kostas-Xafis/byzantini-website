@@ -79,7 +79,7 @@ const text = [
 		// @ts-ignore
 		obsv.observe(document.querySelector("#lessons") as HTMLElement);
 	});
-	window.matchMedia("(min-width: 640px)").matches &&
+	!window.matchMedia("(min-width: 640px)").matches &&
 		onElementMount("#lessons", () => {
 			const lessonCards = document.querySelectorAll(".lessonCard");
 			const obsv = new IntersectionObserver(
