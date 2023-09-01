@@ -259,7 +259,7 @@ export default function TeachersTable() {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
-					.filter(Boolean) as number[],
+					.filter(c => c !== null) as number[],
 				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier^='teacherInstruments']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
@@ -328,7 +328,7 @@ export default function TeachersTable() {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
 						return id;
 					})
-					.filter(Boolean) as number[],
+					.filter(c => c !== null) as number[],
 				teacherInstruments: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier^='teacherInstruments']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
@@ -345,6 +345,7 @@ export default function TeachersTable() {
 					.map(i => Number(i.value))
 					.filter(Boolean)
 			};
+			console.log(data);
 			const res = await useAPI(setStore, API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			const file = {
@@ -492,7 +493,6 @@ export default function TeachersTable() {
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const name = formData.get("name") as string;
-			console.log(name);
 			const instrument = instruments.find(i => i.name === name);
 			if (!instrument) return;
 			const res = await useAPI(setStore, API.Instruments.delete, { RequestObject: [instrument.id] });
