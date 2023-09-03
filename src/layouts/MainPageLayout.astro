@@ -58,14 +58,6 @@ const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 			}}
 		/>
 		<Links />
-	</head>
-	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-1 overflow-hidden max-sm:grid-rows-[calc(100dvh_-_40px)_40px]">
-		<Navbar />
-		<div class="relative w-full h-full overflow-auto grid grid-rows-[100%]">
-			<slot />
-		</div>
-		<Contact />
-		<ContactPhone />
 		<style is:inline>
 			html {
 				font-family: "Gothic Didact" system-ui, sans-serif;
@@ -107,7 +99,7 @@ const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 				border-radius: 3px;
 			}
 			.heading:is(.emphasis)::after {
-				transform: translateX(0);
+				transform: translateX(0px);
 			}
 			@keyframes fadeIn {
 				0% {
@@ -139,5 +131,13 @@ const logoUrl = "https://musicschool-metamorfosi.gr/logo.png";
 				}
 			}
 		</style>
+	</head>
+	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-1 overflow-hidden max-sm:grid-rows-[calc(100dvh_-_40px)_40px]">
+		<Navbar />
+		<div class="relative w-full h-full overflow-auto grid grid-rows-[100%]">
+			<slot />
+		</div>
+		<Contact />
+		<ContactPhone />
 	</body>
 </html>
