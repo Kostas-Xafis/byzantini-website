@@ -4,17 +4,17 @@ import { PayoffsRoutes, type PayoffGetResponse } from "./payoffs.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(PayoffsRoutes)) as typeof PayoffsRoutes;
 
-serverRoutes.get.func = async _req => {
+serverRoutes.get.func = async _ctx => {
 	return execTryCatch(() => executeQuery<PayoffGetResponse>("SELECT * FROM school_payoffs WHERE amount > 0"));
 };
 
-serverRoutes.getTotal.func = async _req => {
+serverRoutes.getTotal.func = async _ctx => {
 	return execTryCatch(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_school_payoffs"))[0]);
 };
 
-serverRoutes.updateAmount.func = async req => {
+serverRoutes.updateAmount.func = async ctx => {
 	return execTryCatch(async () => {
-		const payoff = await req.json();
+		const payoff = await ctx.request.json();
 		if (payoff.amount < 0) throw Error("Amount must be greater than 0");
 		const args = Object.values(payoff);
 		const previousAmount = (await executeQuery<{ amount: number }>("SELECT amount FROM school_payoffs WHERE id = ?", [args[0]]))[0].amount;
@@ -27,9 +27,9 @@ serverRoutes.updateAmount.func = async req => {
 	});
 };
 
-serverRoutes.complete.func = async req => {
+serverRoutes.complete.func = async ctx => {
 	return execTryCatch(async () => {
-		const ids = await req.json();
+		const ids = await ctx.request.json();
 		const payoffs = await executeQuery<SchoolPayoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids.length)}) `, ids);
 		if (payoffs.length === 0) throw Error("Payoff not found");
 		let sum = 0;

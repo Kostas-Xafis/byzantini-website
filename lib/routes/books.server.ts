@@ -5,13 +5,13 @@ import { type Transaction, execTryCatch, executeQuery, questionMarks } from "../
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(BooksRoutes)) as typeof BooksRoutes; // Copy the routes object to split it into client and server routes
 
-serverRoutes.get.func = async _req => {
+serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
 };
 
-serverRoutes.post.func = async function (req) {
+serverRoutes.post.func = async (ctx) => {
 	return await execTryCatch(async () => {
-		const body = await req.json();
+		const body = await ctx.request.json();
 		const args = Object.values(body);
 		await executeQuery(
 			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args.length)})`,
@@ -29,9 +29,9 @@ serverRoutes.post.func = async function (req) {
 	});
 };
 
-serverRoutes.updateQuantity.func = async function (req) {
+serverRoutes.updateQuantity.func = async (ctx) => {
 	return await execTryCatch(async () => {
-		const reqBook = await req.json();
+		const reqBook = await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
 		if (book.quantity > reqBook.quantity) throw Error("Cannot reduce quantity");
 		const newAddedAmount = book.wholesale_price * (reqBook.quantity - book.quantity);
@@ -48,8 +48,8 @@ serverRoutes.updateQuantity.func = async function (req) {
 	});
 };
 
-serverRoutes.delete.func = async function (req) {
-	const body = await req.json();
+serverRoutes.delete.func = async (ctx) => {
+	const body = await ctx.request.json();
 	return await execTryCatch(async () => {
 		if (body.length === 1) await executeQuery(`DELETE FROM books WHERE id = ?`, body);
 		else await executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(body.length)})`, body);

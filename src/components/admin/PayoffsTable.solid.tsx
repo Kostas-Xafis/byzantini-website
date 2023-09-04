@@ -1,6 +1,6 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Wholesalers, SchoolPayoffs } from "../../../types/entities";
-import type { Replace } from "../../../types/helpers";
+import type { ReplaceName } from "../../../types/helpers";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -13,7 +13,7 @@ import Spinner from "../Spinner.solid";
 const PREFIX = "payoffs";
 
 type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type SchoolPayoffsTable = Replace<SchoolPayoffs, "wholesaler_id", "wholesaler">;
+type SchoolPayoffsTable = ReplaceName<SchoolPayoffs, "wholesaler_id", "wholesaler">;
 
 const SchoolPayoffsInputs = (wholesalers: Wholesalers[]): Record<keyof SchoolPayoffs, InputProps> => {
 	return {

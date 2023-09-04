@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
     method: "GET",
     path: "/registrations",
     hasUrlParams: false,
-    func: async req => null as any
+    func: async ctx => null as any
 };
 
 const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number }> = {
@@ -15,7 +15,7 @@ const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number 
     method: "GET",
     path: "/registrations/total",
     hasUrlParams: false,
-    func: async req => null as any
+    func: async ctx => null as any
 };
 
 const postReq = omit(v_Registrations, ["id", "payment_amount", "payment_date"]);
@@ -25,7 +25,7 @@ const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
     path: "/registrations",
     hasUrlParams: false,
     validation: () => postReq,
-    func: async req => null as any
+    func: async ctx => null as any
 };
 
 const update: DefaultEndpointRoute<"PUT:/registrations", typeof v_Registrations> = {
@@ -34,7 +34,7 @@ const update: DefaultEndpointRoute<"PUT:/registrations", typeof v_Registrations>
     path: "/registrations",
     hasUrlParams: false,
     validation: () => v_Registrations,
-    func: async req => null as any
+    func: async ctx => null as any
 };
 
 const complete: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
@@ -42,7 +42,7 @@ const complete: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
     method: "DELETE",
     path: "/registrations",
     hasUrlParams: false,
-    func: async req => null as any
+    func: async ctx => null as any
 };
 
 export const RegistrationsRoutes = {

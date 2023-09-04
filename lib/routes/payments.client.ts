@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
 	method: "GET",
 	path: "/payments",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number }> = {
@@ -15,7 +15,7 @@ const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number }> = 
 	method: "GET",
 	path: "/payments/total",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 let postReq = omit(v_Payments, ["id", "amount", "date"]);
@@ -25,7 +25,7 @@ const post: EndpointRoute<"POST:/payments", typeof postReq, Payments> = {
 	path: "/payments",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 let updatePaymentReq = pick(v_Payments, ["id", "amount"]);
@@ -35,14 +35,14 @@ const updatePayment: EndpointRoute<"PUT:/payments", typeof updatePaymentReq> = {
 	path: "/payments",
 	hasUrlParams: false,
 	validation: () => updatePaymentReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 const complete: EndpointRoute<"DELETE:/payments", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/payments",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const PaymentsRoutes = {

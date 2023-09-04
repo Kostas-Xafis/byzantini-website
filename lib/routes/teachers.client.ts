@@ -9,7 +9,7 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	method: "GET",
 	path: "/teachers",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:string]", null, Teachers[]> = {
@@ -17,7 +17,7 @@ const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:st
 	method: "GET",
 	path: "/teachers/priority/[class_type:string]",
 	hasUrlParams: true,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getByFullnames: EndpointRoute<"GET:/teachers/fullnames", null, Teachers[]> = {
@@ -25,7 +25,7 @@ const getByFullnames: EndpointRoute<"GET:/teachers/fullnames", null, Teachers[]>
 	method: "GET",
 	path: "/teachers/fullnames",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getPrincipal: EndpointRoute<"GET:/teachers/principal", null, Teachers> = {
@@ -33,7 +33,7 @@ const getPrincipal: EndpointRoute<"GET:/teachers/principal", null, Teachers> = {
 	method: "GET",
 	path: "/teachers/principal",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherClasses[]> = {
@@ -41,7 +41,7 @@ const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherCla
 	method: "GET",
 	path: "/teachers/teacherClasses",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 }
 
 const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocations[]> = {
@@ -49,7 +49,7 @@ const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocati
 	method: "GET",
 	path: "/teachers/locations",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 }
 
 const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherInstruments[]> = {
@@ -57,7 +57,7 @@ const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherIn
 	method: "GET",
 	path: "/teachers/instruments",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 }
 
 const teacherJoins = object({
@@ -75,7 +75,7 @@ const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }
 	path: "/teachers",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 let updateReq = JoinedTeacher
@@ -85,7 +85,7 @@ const update: EndpointRoute<"PUT:/teachers", typeof updateReq> = {
 	path: "/teachers",
 	hasUrlParams: false,
 	validation: () => updateReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const fileUpload: EndpointRoute<"PUT:/teachers/file/[id:number]", Blob> = {
@@ -93,7 +93,7 @@ const fileUpload: EndpointRoute<"PUT:/teachers/file/[id:number]", Blob> = {
 	method: "PUT",
 	path: "/teachers/file/[id:number]",
 	hasUrlParams: true,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" | "picture" }> = {
@@ -101,7 +101,7 @@ const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" |
 	method: "PUT",
 	path: "/teachers/file",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
@@ -109,7 +109,7 @@ const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
 	method: "DELETE",
 	path: "/teachers",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const TeachersRoutes = {

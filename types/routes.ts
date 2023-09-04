@@ -1,6 +1,7 @@
-import type { IsAny, OptionalBy } from "./helpers";
+import type { IsAny, OptionalBy, ReplaceName, ReplaceValue } from "./helpers";
 import type { ArgumentParts, ExpectedArguments, ExtractURLMethod, GetURLMethod, HasUrlParams, Parts } from "./path";
 import type { Output, ObjectSchema, ObjectShape } from "valibot"
+import type { APIContext } from "astro";
 
 export type AnyObjectSchema = ObjectSchema<ObjectShape, any>;
 
@@ -12,6 +13,8 @@ export type DefaultEndpointResponse = { res: "error"; error: any } | { res: "mes
 
 export type EndpointResponse<T> = { res: "data"; data: T };
 
+export type Context = ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<any extends AnyObjectSchema ? Output<AnyObjectSchema> : any>>>
+
 // Use for typing routes, accessible in the frontend
 export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL> extends false
 	? {
@@ -22,14 +25,14 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 		func: HasUrlParams<URL> extends true
 		? (
 			req: Req extends null
-				? Request
-				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req> },
+				? APIContext
+				: ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>>>,
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
 		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 		: (
 			req: Req extends null
-				? Request
-				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req> }
+				? APIContext
+				: ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>>>,
 		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 	} & (IsValibotSchema<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})
 	: {
@@ -40,12 +43,12 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 		hasUrlParams: boolean;
 		func: (
 			req: Req extends null
-				? Request
-				: Omit<Request, "json"> & { json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req> },
+				? APIContext
+				: ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>>>,
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
 		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
 	} & (IsValibotSchema<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req } : {})) & {
-		middleware?: ((req: Request) => Promise<Response | undefined>)[];
+		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	};
 
 export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
@@ -78,10 +81,10 @@ export type APIArguments<Mount extends string, Routes extends { [k: string]: End
 	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : ""]: OptionalBy<
 		OptionalBy<
 			{
-				RequestObject: Parameters<Routes[K]["func"]>[0] extends { json: () => Promise<infer T> } ? T : never;
+				RequestObject: Parameters<Routes[K]["func"]>[0]["request"] extends { json: () => Promise<infer T> } ? T : never;
 				UrlArgs: Parameters<Routes[K]["func"]>[1];
 			},
-			Parameters<Routes[K]["func"]>[0] extends { json: () => Promise<infer T> } ? (IsAny<T> extends true ? "RequestObject" : "") : ""
+			Parameters<Routes[K]["func"]>[0]["request"] extends { json: () => Promise<infer T> } ? (IsAny<T> extends true ? "RequestObject" : "") : ""
 		>,
 		Parameters<Routes[K]["func"]>[1] extends undefined ? "UrlArgs" : ""
 	>;

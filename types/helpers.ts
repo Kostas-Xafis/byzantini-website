@@ -65,8 +65,12 @@ type ObjectArrToTypedArray<Arr extends Record<any, any>[], Res extends unknown[]
 
 export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
 
-export type Replace<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol> = {
+export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol> = {
 	[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
+};
+
+export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
+	[P in Replaced]: Value
 };
 
 // type Baz = {

@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/books", null, Books[]> = {
 	method: "GET",
 	path: "/books",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 const postReq = omit(v_Books, ["id"]);
 const post: EndpointRoute<"POST:/books", typeof postReq> = {
@@ -16,7 +16,7 @@ const post: EndpointRoute<"POST:/books", typeof postReq> = {
 	path: "/books",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const quantityReq = pick(v_Books, ["id", "quantity"]);
@@ -26,7 +26,7 @@ const updateQuantity: EndpointRoute<"PUT:/books/updateQuantity", typeof quantity
 	path: "/books/updateQuantity",
 	hasUrlParams: false,
 	validation: () => quantityReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const del: DefaultEndpointRoute<"DELETE:/books", number[]> = {
@@ -34,7 +34,7 @@ const del: DefaultEndpointRoute<"DELETE:/books", number[]> = {
 	method: "DELETE",
 	path: "/books",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const BooksRoutes = {

@@ -1,5 +1,6 @@
 import type { SysUsers } from "../../types/entities";
 import { executeQuery } from "../utils.server";
+import type { APIContext } from "astro";
 
 export const getSessionId = (req: Request) => {
 	const cookies = req.headers.get("cookie");
@@ -15,8 +16,8 @@ export const getSessionId = (req: Request) => {
 	return cookie.split("=")[1];
 }
 
-export async function authentication(req: Request) {
-	const session_id = getSessionId(req);
+export async function authentication(ctx: APIContext) {
+	const session_id = getSessionId(ctx.request);
 	if (!session_id) return new Response("Unauthorized", { status: 401 });
 	const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 	const isValid = user !== undefined;

@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/instruments", null, Instruments[]> = {
 	method: "GET",
 	path: "/instruments",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 let postReq = omit(v_Instruments, ["id"]);
@@ -17,7 +17,7 @@ const post: EndpointRoute<"POST:/instruments", typeof postReq, { insertId: numbe
 	path: "/instruments",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const del: DefaultEndpointRoute<"DELETE:/instruments", number[]> = {
@@ -25,7 +25,7 @@ const del: DefaultEndpointRoute<"DELETE:/instruments", number[]> = {
 	method: "DELETE",
 	path: "/instruments",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const InstrumentsRoutes = {

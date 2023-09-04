@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/wholesalers", null, Wholesalers[]> = {
 	method: "GET",
 	path: "/wholesalers",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 const postReq = omit(v_Wholesalers, ["id"]);
 const post: EndpointRoute<"POST:/wholesalers", typeof postReq> = {
@@ -16,14 +16,14 @@ const post: EndpointRoute<"POST:/wholesalers", typeof postReq> = {
 	path: "/wholesalers",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 const remove: EndpointRoute<"DELETE:/wholesalers", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/wholesalers",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const WholesalersRoutes = { get, post, delete: remove };

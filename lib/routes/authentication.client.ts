@@ -6,7 +6,7 @@ const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: 
 	method: "POST",
 	path: "/auth/session",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string }> = {
@@ -15,7 +15,7 @@ const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { 
 	path: "/auth/login",
 	hasUrlParams: false,
 	validation: () => v_LoginCredentials,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const AuthenticationRoutes = {

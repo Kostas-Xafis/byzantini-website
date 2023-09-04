@@ -9,7 +9,7 @@ const get: EndpointRoute<"GET:/payoffs", null, PayoffGetResponse[]> = {
 	method: "GET",
 	path: "/payoffs",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number }> = {
@@ -17,7 +17,7 @@ const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number }> = {
 	method: "GET",
 	path: "/payoffs/total",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 let updateAmountReq = pick(v_SchoolPayoffs, ["id", "amount"]);
@@ -27,7 +27,7 @@ const updateAmount: EndpointRoute<"PUT:/payoffs", typeof updateAmountReq> = {
 	path: "/payoffs",
 	hasUrlParams: false,
 	validation: () => updateAmountReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const complete: EndpointRoute<"DELETE:/payoffs", number[]> = {
@@ -35,7 +35,7 @@ const complete: EndpointRoute<"DELETE:/payoffs", number[]> = {
 	method: "DELETE",
 	path: "/payoffs",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const PayoffsRoutes = {

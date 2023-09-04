@@ -4,17 +4,17 @@ import { PaymentsRoutes } from "./payments.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(PaymentsRoutes)) as typeof PaymentsRoutes;
 
-serverRoutes.get.func = async _req => {
+serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"));
 };
 
-serverRoutes.getTotal.func = async _req => {
+serverRoutes.getTotal.func = async _ctx => {
 	return await execTryCatch(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_payments"))[0]);
 };
 
-serverRoutes.post.func = async req => {
+serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async () => {
-		const { book_id, student_name } = await req.json();
+		const { book_id, student_name } = await ctx.request.json();
 		const books = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]);
 		if (books.length === 0) throw Error("Book not found");
 		const book = books[0];
@@ -37,9 +37,9 @@ serverRoutes.post.func = async req => {
 	});
 };
 
-serverRoutes.updatePayment.func = async req => {
+serverRoutes.updatePayment.func = async ctx => {
 	return await execTryCatch(async () => {
-		const { id, amount } = await req.json();
+		const { id, amount } = await ctx.request.json();
 		//check if payment exists
 		const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
 		if (payment.length === 0) {
@@ -54,9 +54,9 @@ serverRoutes.updatePayment.func = async req => {
 	});
 };
 
-serverRoutes.complete.func = async req => {
+serverRoutes.complete.func = async ctx => {
 	return await execTryCatch(async () => {
-		const ids = await req.json();
+		const ids = await ctx.request.json();
 		//check if payment exists
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) `, ids);
 		if (payments.length === 0) throw Error("Payment not found");

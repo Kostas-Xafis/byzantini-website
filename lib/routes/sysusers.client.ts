@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/sys", null, Pick<SysUsers, "id" | "email" | "priv
 	method: "GET",
 	path: "/sys",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getBySid: EndpointRoute<"GET:/sys/sid", null, SysUsers> = {
@@ -15,7 +15,7 @@ const getBySid: EndpointRoute<"GET:/sys/sid", null, SysUsers> = {
 	method: "GET",
 	path: "/sys/sid",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const del: DefaultEndpointRoute<"DELETE:/sys", number[]> = {
@@ -23,7 +23,7 @@ const del: DefaultEndpointRoute<"DELETE:/sys", number[]> = {
 	method: "DELETE",
 	path: "/sys",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string }> = {
@@ -32,7 +32,7 @@ const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof 
 	path: "/sys/register/[link:string]",
 	hasUrlParams: true,
 	validation: () => v_LoginCredentials,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: string }> = {
@@ -40,7 +40,7 @@ const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: stri
 	method: "POST",
 	path: "/sys/register",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const validateRegisterLink: EndpointRoute<"POST:/sys/register/validate/[link:string]", null, { isValid: boolean }> = {
@@ -48,7 +48,7 @@ const validateRegisterLink: EndpointRoute<"POST:/sys/register/validate/[link:str
 	method: "POST",
 	path: "/sys/register/validate/[link:string]",
 	hasUrlParams: true,
-	func: async req => null as any
+	func: async ctx => null as any
 }
 
 

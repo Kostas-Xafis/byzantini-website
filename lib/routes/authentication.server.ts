@@ -6,9 +6,9 @@ import { authentication } from "../middleware/authentication";
 
 const serverRoutes = JSON.parse(JSON.stringify(AuthenticationRoutes)) as typeof AuthenticationRoutes;
 
-serverRoutes.userLogin.func = async function (req) {
+serverRoutes.userLogin.func = async (ctx) => {
 	return await execTryCatch(async () => {
-		const credentials = await req.json();
+		const credentials = await ctx.request.json();
 		// const SECRET = await import.meta.env.DB_PWD;
 		// const salt = (await executeQuery<string>("SELECT password FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]))[0].split(":")[1];
 		// const hash = scryptSync(credentials.password + SECRET, salt, 64).toString("hex") + ":" + salt;
@@ -32,9 +32,9 @@ serverRoutes.userLogin.func = async function (req) {
 	});
 };
 
-serverRoutes.authenticateSession.func = async function (req) {
+serverRoutes.authenticateSession.func = async (ctx) => {
 	return await execTryCatch(async () => {
-		const response = await authentication(req);
+		const response = await authentication(ctx);
 		if (response) return { isValid: false };
 		return { isValid: true };
 	});

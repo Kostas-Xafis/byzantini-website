@@ -7,7 +7,7 @@ const get: EndpointRoute<"GET:/locations", null, Locations[]> = {
 	method: "GET",
 	path: "/locations",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const getByPriority: EndpointRoute<"GET:/locations/priority", null, Locations[]> = {
@@ -15,7 +15,7 @@ const getByPriority: EndpointRoute<"GET:/locations/priority", null, Locations[]>
 	method: "GET",
 	path: "/locations/priority",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 
@@ -26,7 +26,7 @@ const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number 
 	path: "/locations",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const quantityReq = omit(v_Locations, ["image"]);
@@ -36,7 +36,7 @@ const update: EndpointRoute<"PUT:/locations", typeof quantityReq> = {
 	path: "/locations",
 	hasUrlParams: false,
 	validation: () => quantityReq,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const fileUpload: EndpointRoute<"PUT:/locations/file/[id:number]", Blob> = {
@@ -44,7 +44,7 @@ const fileUpload: EndpointRoute<"PUT:/locations/file/[id:number]", Blob> = {
 	method: "PUT",
 	path: "/locations/file/[id:number]",
 	hasUrlParams: true,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const fileDelete: EndpointRoute<"PUT:/locations/file", { id: number }> = {
@@ -52,7 +52,7 @@ const fileDelete: EndpointRoute<"PUT:/locations/file", { id: number }> = {
 	method: "PUT",
 	path: "/locations/file",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 const del: DefaultEndpointRoute<"DELETE:/locations", number[]> = {
@@ -60,7 +60,7 @@ const del: DefaultEndpointRoute<"DELETE:/locations", number[]> = {
 	method: "DELETE",
 	path: "/locations",
 	hasUrlParams: false,
-	func: async req => null as any
+	func: async ctx => null as any
 };
 
 export const LocationsRoutes = {
