@@ -1,7 +1,7 @@
 <div
 	id="welcome-page"
 	class={"relative h-[100dvh] p-[5vw] pb-[6vw] max-xl:p-[2.5vw] sm:content-end grid grid-rows-[1fr_repeat(5,_max-content)] grid-cols-2 grid-flow-col" +
-		" max-sm:grid-rows-[repeat(5,_max-content)_1fr] max-sm:grid-cols-[100%] max-sm:content-center max-sm:bg-center max-sm:pt-[8rem] max-sm:min-h-[720px]"}
+		" max-sm:grid-rows-[repeat(5,_max-content)_1fr] max-sm:grid-cols-[100%] max-sm:items-center max-sm:bg-center max-sm:pt-[8rem] max-sm:min-h-[720px]"}
 >
 	<div class="max-sm:hidden"></div>
 	<p class="text-[4vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl">
@@ -130,7 +130,7 @@
 	</style>
 </div>
 <script>
-	import { onElementMount } from "../../../lib/utils.client";
+	import { iOS, onElementMount } from "../../../lib/utils.client";
 	onElementMount("#welcome-page > p", () => {
 		const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
 		heads.forEach((head, i) => {
@@ -159,4 +159,12 @@
 			setTimeout(btn.remove, 1000);
 		});
 	});
+	if(iOS()) {
+		onElementMount("#welcome-page > p", () => {
+			const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
+			heads.forEach(head => {
+				head.style.setProperty("letter-spacing", "-1px");
+			});
+		})
+	}
 </script>

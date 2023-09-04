@@ -48,3 +48,18 @@ export class UpdateHandler {
         this.func = func;
     }
 }
+
+
+export function iOS() {
+    let iOSPlatforms = [
+        "iOS",
+        'iPad Simulator',
+        'iPhone Simulator',
+        'iPod Simulator',
+        'iPad',
+        'iPhone',
+        'iPod'
+    ];
+    // @ts-ignore
+    return iOSPlatforms.includes(navigator.platform) || iOSPlatforms.includes(navigator["userAgentData"]?.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+}
