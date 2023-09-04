@@ -32,9 +32,9 @@ export default function Modal(props: Props) {
 				(!open() ? " hidden" : "")
 			}
 		>
-			<div class="relative max-w-[70%] h-[95vh] overflow-y-auto p-12 bg-white place-self-center grid grid-rows-[auto_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-12 justify-center">
+			<div class="relative max-w-[70%] h-max max-h-[90vh] p-12 bg-white place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-8 justify-center">
 				<p class="text-4xl p-2 w-full text-center">{headerText()}</p>
-				<form class="group/form grid grid-cols-3 auto-rows-auto gap-8">
+				<form class="peer/form group/form grid grid-cols-3 auto-rows-max gap-8 py-4  overflow-y-auto">
 					<For each={Object.values(inputs())}>
 						{input => (
 							<Show when={input.name !== ""}>
@@ -42,13 +42,14 @@ export default function Modal(props: Props) {
 							</Show>
 						)}
 					</For>
-					<button
-						class="col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
-						type="submit"
-					>
-						{submitText()}
-					</button>
 				</form>
+				<button
+					class="col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-500 focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-500"
+					type="submit"
+					onClick={() => document.querySelector("form")?.dispatchEvent(new Event("submit"))}
+				>
+					{submitText()}
+				</button>
 				<CloseButton classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl" onClick={() => close()}></CloseButton>
 			</div>
 		</div>

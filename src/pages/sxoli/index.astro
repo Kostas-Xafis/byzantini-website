@@ -76,7 +76,7 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 	<div id="sxoli" class="w-full h-max flex flex-col font-didact overflow-y-auto overflow-x-hidden px-12 py-6 max-sm:px-4">
 		<div
 			id="selectContainer"
-			data-selected="principal"
+			data-selected="xairetismos"
 			class="self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center gap-x-4 border-x-2 border-t-2 border-red-900 rounded-t-lg shadow-lg shadow-slate-700"
 		>
 			<button
@@ -98,7 +98,7 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				><span class="group-hover/btn:-translate-y-2">Διοικητικό Συμβούλιο</span></button
 			>
 		</div>
-		<div id="xairetismosContainer" class="contentContainer hidden">
+		<div id="xairetismosContainer" class="contentContainer">
 			<div class="flex flex-col items-center justify-center pt-4 gap-y-4 bg-white border-x-2 border-t-2 border-red-900">
 				<div class="font-bold">
 					<h2 class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900">
@@ -129,10 +129,7 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				</div>
 			</div>
 		</div>
-		<div
-			id="principalContainer"
-			class="contentContainer group auto-rows-auto max-sm:p-0 gap-y-2 overflow-y-visible max-sm:w-full bg-red-900"
-		>
+		<div id="principalContainer" class="contentContainer hidden group max-sm:p-0 max-sm:w-full overflow-y-visible bg-red-900">
 			<div class="flex flex-row gap-x-4 max-sm:gap-x-0 max-sm:gap-y-4 max-sm:flex-col">
 				<p
 					class="sm:hidden text-3xl pt-4 text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
@@ -183,7 +180,7 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				<h1
 					class="max-sm:text-2xl text-[2.25vw] text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
 				>
-					Διοικοῦσα &thinsp;Ἐπιτροπή τῆς Σχολῆς Βυζαντινῆς και Παραδοσιακής Μουσικῆς
+					Διοικοῦσα &thinsp;Ἐπιτροπὴ τῆς Σχολῆς Βυζαντινῆς καὶ Παραδοσιακῆς Μουσικῆς
 				</h1>
 				<ol class="flex flex-col text-xl gap-y-4">
 					<li class="max-sm:text-lg text-[1.5vw] text-white pl-4">Πρόεδρος ὁ Αἰδεσ/τος Πρωτοπρεσβύτερος Σωτήριος Ἀλεβιζάκης,</li>

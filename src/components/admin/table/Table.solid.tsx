@@ -61,10 +61,10 @@ export default function Table(props: Props) {
 			{props.children}
 			<div
 				id="tableContainer"
-				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
+				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
 				<Row data={columns} columnWidths={columnWidths} rows={data.length} header sortOnClick={setSorted} />
-				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto auto grid-flow-row rounded-b-lg">
+				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item, index) => {
 							return <Row data={item} index={index()} columnWidths={columnWidths} rows={data.length} />;
