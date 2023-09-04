@@ -271,7 +271,6 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				const entry = entries[0];
 				// @ts-ignore
 				const head = document.querySelector("#announcementHead:is(:not(.emphasis))") as HTMLElement;
-				console.log(entry.intersectionRatio, window.matchMedia("(max-width: 640px)").matches);
 				if (!head) return;
 				if (entry.intersectionRatio >= 0.4) head.classList.add("emphasis");
 				else if (window.matchMedia("(max-width: 640px)").matches && entry.intersectionRatio >= 0.2) head.classList.add("emphasis");

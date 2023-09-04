@@ -1,9 +1,9 @@
-import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
+import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import Table from "./table/Table.solid";
 import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../Spinner.solid";
-import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 
 type TotalsTable = {
 	total_payments: number;

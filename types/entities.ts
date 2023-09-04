@@ -5,7 +5,6 @@ import {
 	minValue,
 	string,
 	minLength,
-	maxValue,
 	optional,
 	email,
 	omit,

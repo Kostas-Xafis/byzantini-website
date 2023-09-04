@@ -11,7 +11,6 @@ export const formErrorWrap = (onSubmit: (e: Event) => Promise<any>) => {
 		try {
 			await onSubmit(e);
 		} catch (error) {
-			console.error(error);
 			const form = document.querySelector(".modal:is(:not(.hidden)) > div > form") as HTMLFormElement;
 			form.classList.add("animate-shake");
 			setTimeout(() => form.classList.remove("animate-shake"), 500);

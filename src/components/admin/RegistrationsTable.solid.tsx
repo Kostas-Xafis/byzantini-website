@@ -1,11 +1,11 @@
-import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
+import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill } from "../Input.solid";
-import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
@@ -278,7 +278,6 @@ export default function RegistrationsTable() {
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.EDIT);
 		});
-		console.log(registration);
 		const filledInputs = Fill(RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>, registration);
 		filledInputs.class_id.value = registration.class_id;
 		filledInputs.teacher_id.value = teachers.find(t => t.id === registration.teacher_id)?.fullname;

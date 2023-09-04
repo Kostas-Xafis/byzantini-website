@@ -1,7 +1,7 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
-import { merge, array, number, integer, object, omit, boolean } from "valibot"
+import { merge, array, number, integer, object, omit } from "valibot"
 
 
 const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {

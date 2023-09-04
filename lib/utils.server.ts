@@ -30,7 +30,6 @@ export const generateLink = (size = 16) => {
 export const executeQuery = async <T = { insertId: number }>(query: string, args: any[] = [], trans?: Tx) => {
 	const conn = trans ?? await CreateDbConnection();
 	const res = await conn.execute(query, args, { as: "object" });
-	// console.log(res.statement)
 	return (res.insertId === '0' ? res.rows : { insertId: Number(res.insertId) }) as unknown as Promise<T extends { insertId: number } ? { insertId: number } : T[]>;
 };
 
@@ -58,7 +57,6 @@ export const execTryCatch = async <T>(
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);
 	} catch (error) {
-		console.log(error);
 		// @ts-ignore
 		res = { res: "error", error: { message: error?.message, stack: error?.stack } };
 	}

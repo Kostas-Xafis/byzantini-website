@@ -6,12 +6,12 @@ import { PayoffsServerRoutes } from "./payoffs.server";
 import { WholesalersServerRoutes } from "./wholesalers.server";
 import { TeachersServerRoutes } from "./teachers.server";
 import { LocationsServerRoutes } from "./locations.server";
-import { authentication } from "../middleware/authentication";
-import { requestValidation } from "../middleware/requestValidation";
 import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
-import { RegistrationsRoutes } from "./registrations.client";
 import { RegistrationsServerRoutes } from "./registrations.server";
+
+import { authentication } from "../middleware/authentication";
+import { requestValidation } from "../middleware/requestValidation";
 
 const routes = (function () {
 	const allRoutes = (function (...routesArr) {
@@ -27,7 +27,6 @@ const routes = (function () {
 		ClassTypeServerRoutes,
 		SysUsersServerRoutes,
 		RegistrationsServerRoutes,
-		RegistrationsRoutes
 	).flat() as (EndpointRoute<any, AnyObjectSchema, any> | EndpointRoute<any, any, any>)[];
 	allRoutes.forEach(route => {
 		route.middleware = [];

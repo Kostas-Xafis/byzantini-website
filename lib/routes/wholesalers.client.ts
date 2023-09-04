@@ -1,4 +1,4 @@
-import { Wholesalers, v_Wholesalers } from "../../types/entities";
+import { type Wholesalers, v_Wholesalers } from "../../types/entities";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
 import { omit } from "valibot";
 

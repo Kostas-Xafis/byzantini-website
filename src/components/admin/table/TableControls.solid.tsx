@@ -1,4 +1,4 @@
-import { Accessor, Show, batch, createEffect, createMemo, createSignal, on } from "solid-js";
+import { type Accessor, Show, batch, createEffect, createMemo, createSignal, on } from "solid-js";
 import Modal from "./Modal.solid";
 import type { Props as InputProps } from "../../Input.solid";
 import { createStore } from "solid-js/store";

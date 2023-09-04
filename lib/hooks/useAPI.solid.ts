@@ -1,6 +1,6 @@
 import { batch, createEffect, createSignal, untrack } from "solid-js";
-import { API as api, APIArgs, APIEndpoints, APIRes } from "../routes/index.client";
-import type { SetStoreFunction } from "solid-js/store/types/index";
+import { API as api, type APIArgs, APIEndpoints, type APIRes } from "../routes/index.client";
+import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 export type APIStore = {
 	[K in keyof typeof APIEndpoints]?: Extract<APIRes[K], { res: "data" }>["data"];

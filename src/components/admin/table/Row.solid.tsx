@@ -1,5 +1,5 @@
-import { Setter, onMount, useContext } from "solid-js";
-import { ContextType, SelectedItemsContext } from "./SelectedRowContext.solid";
+import { type Setter, onMount, useContext } from "solid-js";
+import { type ContextType, SelectedItemsContext } from "./SelectedRowContext.solid";
 import { SortDirection } from "./Table.solid";
 
 interface Props {

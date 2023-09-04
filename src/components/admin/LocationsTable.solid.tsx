@@ -1,11 +1,11 @@
-import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
+import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Locations } from "../../../types/entities";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
-import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 

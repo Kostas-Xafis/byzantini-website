@@ -1,5 +1,6 @@
 import Row from "./Row.solid";
-import { Accessor, For, JSX, createEffect, createMemo, createSignal, on } from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
+import type { Accessor, JSX } from "solid-js";
 export type Props = {
 	columnNames: Record<string, string | { name: string; size: () => number }>;
 	data: Accessor<any[]>;

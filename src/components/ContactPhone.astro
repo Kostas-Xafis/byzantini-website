@@ -60,9 +60,8 @@
 		(function () {
 			let onElementMount = async (target, callback) => {
 				let count = 0;
-				while (!document.querySelector(target) && count++ < 10) {
-					console.log("waiting for element to mount: " + target);
-					await new Promise(resolve => setTimeout(resolve, 200));
+				while (!document.querySelector(target) && count++ < 50) {
+					await new Promise(resolve => setTimeout(resolve, 50));
 				}
 				if (count >= 10) return;
 				callback();

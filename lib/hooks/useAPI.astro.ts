@@ -1,4 +1,4 @@
-import { API as api, APIArgs, APIEndpoints, APIRes } from "../routes/index.client";
+import { API as api, type APIArgs, APIEndpoints, type APIRes } from "../routes/index.client";
 import { parse } from "valibot";
 
 type Endpoint = typeof APIEndpoints;

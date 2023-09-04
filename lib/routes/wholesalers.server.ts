@@ -1,5 +1,5 @@
 import type { Wholesalers } from "../../types/entities";
-import { Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { type Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { WholesalersRoutes } from "./wholesalers.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(WholesalersRoutes)) as typeof WholesalersRoutes;

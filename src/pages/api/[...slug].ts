@@ -35,6 +35,6 @@ const RequestTemplate = async function ({ params, request }: APIContext) {
 	return await ResponseWrap(request, route, slug);
 };
 
-export async function all(context: APIContext) {
+export async function ALL(context: APIContext) {
 	return await RequestTemplate(context);
 }

@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
+import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
 import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
@@ -400,7 +400,6 @@ export function RegistrationForm() {
 			}
 			if (res.error) throw Error(res.error);
 		} catch (err) {
-			console.error(err);
 			const form = document.querySelector("#registrationForm") as HTMLElement;
 			setSpinner(false);
 			setTimeout(() => {

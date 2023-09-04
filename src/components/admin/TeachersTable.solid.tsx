@@ -1,4 +1,4 @@
-import { API, APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
+import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type {
 	SimpleTeacher as Teachers,
 	Teachers as FullTeachers,
@@ -14,7 +14,7 @@ import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
-import { ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener, formErrorWrap } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 
@@ -345,7 +345,6 @@ export default function TeachersTable() {
 					.map(i => Number(i.value))
 					.filter(Boolean)
 			};
-			console.log(data);
 			const res = await useAPI(setStore, API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			const file = {

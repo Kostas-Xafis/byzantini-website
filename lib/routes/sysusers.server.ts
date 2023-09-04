@@ -1,5 +1,5 @@
 import { SysUsersRoutes } from "./sysusers.client";
-import { Transaction, createSessionId, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { type Transaction, createSessionId, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
 import { getSessionId } from "../middleware/authentication";
 // import { randomBytes, scryptSync } from "crypto";

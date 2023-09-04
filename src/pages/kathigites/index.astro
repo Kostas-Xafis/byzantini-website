@@ -31,7 +31,6 @@ const enum MusicType {
 	European = "eur",
 	None = ""
 }
-
 const teachers = [
 	[byz_teachers, MusicType.Byzantine],
 	[par_teachers, MusicType.Traditional],
@@ -93,7 +92,8 @@ const teachingTitle = (fullname:string) => {
 		<div id="teachersContainer" class="max-w-full flex flex-wrap gap-x-[1.25%] p-[2vw] px-4 pr-0 gap-y-8 max-sm:px-2 max-sm:pt-6 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
 			<h1 id="teachersHead" class="text-[3vw] max-sm:text-2xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.1)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
-				teachers.map(([teachersByType, type]) => {
+				teachers.map(([teachersByType, type], i) => {
+
 					return teachersByType.map(teacher => {
 						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => musicOnly[c.class_id][0]);
 						const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
@@ -107,7 +107,7 @@ const teachingTitle = (fullname:string) => {
 							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:flex" : "") 
 							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:flex" : "")}>
 							{teacher.picture ? (
-								<img src={imgSrc + teacher.picture} width={240} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
+								<img data-url={imgSrc + teacher.picture} width={240} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
 							) : (
 								<div class="group-odd/card:w-[clamp(0px,100%,200px)]"/>
 							)}

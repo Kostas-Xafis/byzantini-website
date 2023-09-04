@@ -1,13 +1,13 @@
-import { APIBooks, APIBooksArgs, APIBooksEndpoints, APIBooksResponse } from "./books.client";
-import { APIAuthentication, APIAuthenticationArgs, APIAuthenticationEndpoints, APIAuthenticationResponse } from "./authentication.client";
-import { APIPayments, APIPaymentsArgs, APIPaymentsEndpoints, APIPaymentsResponse } from "./payments.client";
-import { APIPayoffs, APIPayoffsArgs, APIPayoffsEndpoints, APIPayoffsResponse } from "./payoffs.client";
-import { APIWholesalers, APIWholesalersArgs, APIWholesalersEndpoints, APIWholesalersResponse } from "./wholesalers.client";
-import { APITeachers, APITeachersArgs, APITeachersEndpoints, APITeachersResponse } from "./teachers.client";
-import { APILocations, APILocationsArgs, APILocationsEndpoints, APILocationsResponse } from "./locations.client";
-import { APIInstruments, APIInstrumentsArgs, APIInstrumentsEndpoints, APIInstrumentsResponse } from "./instruments.client";
-import { APISysUsers, APISysUsersArgs, APISysUsersEndpoints, APISysUsersResponse } from "./sysusers.client";
-import { APIRegistrations, APIRegistrationsArgs, APIRegistrationsEndpoints, APIRegistrationsResponse } from "./registrations.client";
+import { APIBooks, type APIBooksArgs, APIBooksEndpoints, type APIBooksResponse } from "./books.client";
+import { APIAuthentication, type APIAuthenticationArgs, APIAuthenticationEndpoints, type APIAuthenticationResponse } from "./authentication.client";
+import { APIPayments, type APIPaymentsArgs, APIPaymentsEndpoints, type APIPaymentsResponse } from "./payments.client";
+import { APIPayoffs, type APIPayoffsArgs, APIPayoffsEndpoints, type APIPayoffsResponse } from "./payoffs.client";
+import { APIWholesalers, type APIWholesalersArgs, APIWholesalersEndpoints, type APIWholesalersResponse } from "./wholesalers.client";
+import { APITeachers, type APITeachersArgs, APITeachersEndpoints, type APITeachersResponse } from "./teachers.client";
+import { APILocations, type APILocationsArgs, APILocationsEndpoints, type APILocationsResponse } from "./locations.client";
+import { APIInstruments, type APIInstrumentsArgs, APIInstrumentsEndpoints, type APIInstrumentsResponse } from "./instruments.client";
+import { APISysUsers, type APISysUsersArgs, APISysUsersEndpoints, type APISysUsersResponse } from "./sysusers.client";
+import { APIRegistrations, type APIRegistrationsArgs, APIRegistrationsEndpoints, type APIRegistrationsResponse } from "./registrations.client";
 
 export const API = {
 	...APIBooks,

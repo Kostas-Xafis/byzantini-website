@@ -1,5 +1,5 @@
 import type { Books, Payments } from "../../types/entities";
-import { execTryCatch, executeQuery, questionMarks, Transaction } from "../utils.server";
+import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { PaymentsRoutes } from "./payments.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(PaymentsRoutes)) as typeof PaymentsRoutes;
