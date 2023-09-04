@@ -1,4 +1,5 @@
 ---
+
 import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
 import { isDevFromURL } from "../../../lib/utils.client";
 import type { Instruments, Locations, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
@@ -106,7 +107,7 @@ const teachingTitle = (fullname:string) => {
 							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:flex" : "") 
 							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:flex" : "")}>
 							{teacher.picture ? (
-								<img src={imgSrc + teacher.picture} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
+								<img src={imgSrc + teacher.picture} width={240} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
 							) : (
 								<div class="group-odd/card:w-[clamp(0px,100%,200px)]"/>
 							)}
@@ -182,7 +183,8 @@ const teachingTitle = (fullname:string) => {
 		}
 	</style>
 </Layout>
-<script>import { onElementMount } from "../../../lib/utils.client";
+<script>
+	import { onElementMount, UpdateHandler } from "../../../lib/utils.client";
 
 	enum MusicType {
 		byz = "Βυζαντινής Μουσικής",
@@ -230,7 +232,7 @@ const teachingTitle = (fullname:string) => {
 			}, 500);
 		}
 	}
-	
+
 	onElementMount("#teachersContainer", () => {
 		const obsv = new IntersectionObserver((entries) => {
 			entries.forEach(entry => {
@@ -250,5 +252,44 @@ const teachingTitle = (fullname:string) => {
 		teachersCard.forEach((card) => {
 			obsv.observe(card);
 		})
+	});
+	function ImageLoad(img: HTMLImageElement) {
+		const url = img.getAttribute("data-url") as string;
+		img.setAttribute("src", url);
+	}
+
+	onElementMount("img[data-url]", () => {
+		let teacherImages = [...document.querySelectorAll("img[data-url]")] as HTMLImageElement[];
+		// immediatly load the first 4 images 
+		teacherImages.slice(0, 4).forEach(img => {
+			ImageLoad(img);
+		})
+		teacherImages = teacherImages.slice(4);
+		const obsv = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				const src = entry.target.getAttribute("src") as string;
+				if (entry.intersectionRatio >= 0.001 && (src === null || src === "")) {
+					ImageLoad(entry.target as HTMLImageElement);
+				} else if(src) obsv.unobserve(entry.target);
+			});
+		}, {
+			threshold: [0.001]
+		});
+		teacherImages.forEach((img) => {
+			obsv.observe(img);
+		})
+		const networkCheckHandler = new UpdateHandler(1000, () => {
+			teacherImages.forEach((img) => {
+				ImageLoad(img);
+				obsv.unobserve(img);
+			});
+		});
+		new PerformanceObserver((list) => {
+			const entries = list.getEntries();
+			entries.forEach(() => {
+				networkCheckHandler.reset().catch(() => {});
+			})
+		}).observe({entryTypes: ["resource"]});
+		networkCheckHandler.timeout().catch(() => {});
 	});
 </script>
