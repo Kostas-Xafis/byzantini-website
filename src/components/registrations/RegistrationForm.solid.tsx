@@ -273,11 +273,10 @@ export function RegistrationForm() {
 	createEffect(
 		on(formSelected, type => {
 			const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
-			if (!select) return;
+			const teachers = store[API.Teachers.get];
+			if (!select || !teachers) return;
 			select.addEventListener("change", (e: Event) => {
-				const target = e.target as HTMLSelectElement;
-				const teacher_name = (target[target.selectedIndex] as HTMLOptionElement).value as string;
-				setSelectedTeacher(TeachersByType().find(t => t.fullname === teacher_name));
+				setSelectedTeacher(TeachersByType().find(t => t.id === Number(select.value)));
 			});
 			setSelectedTeacher();
 		})
@@ -318,10 +317,9 @@ export function RegistrationForm() {
 			if (a.fullname > b.fullname) return 1;
 			return 0;
 		});
-		let f = teachers.filter(teacher =>
+		return teachers.filter(teacher =>
 			teacher_classes.find(teacher_class => teacher_class.teacher_id === teacher.id && teacher_class.class_id === id)
 		);
-		return f;
 	});
 	const InstrumentsByTeacher = createMemo(() => {
 		const instruments = store[API.Instruments.get];
