@@ -22,9 +22,9 @@ export default function TotalsTable() {
 	});
 
 	const columnNames: ColumnType<TotalsTable> = {
-		total_payments: { name: "Συνολικές Οφειλές Μαθητών", size: () => 14 },
-		total_school_payoffs: { name: "Συνολικά Οφειλές Σχολής", size: () => 14 },
-		total_registrations: { name: "Συνολικές Εγγραφές", size: () => 12 }
+		total_payments: { name: "Συνολικές Οφειλές Μαθητών", size: () => 20 },
+		total_school_payoffs: { name: "Συνολικές Οφειλές Σχολής", size: () => 20 },
+		total_registrations: { name: "Συνολικές Εγγραφές", size: () => 18 }
 	};
 
 	let shapedData = createMemo(() => {
@@ -32,7 +32,7 @@ export default function TotalsTable() {
 		const payoffs = store[API.Payoffs.getTotal];
 		const registrations = store[API.Registrations.getTotal];
 		if (!payments || !payoffs || !registrations) return [];
-		return [[payments.total, payoffs.total, registrations.total]];
+		return [[payments.total + "€", payoffs.total + "€", registrations.total]];
 	});
 	const ROWS = [
 		[],

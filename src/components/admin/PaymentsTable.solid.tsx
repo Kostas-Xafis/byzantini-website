@@ -19,7 +19,14 @@ const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		student_name: { name: "student_name", label: "Μαθητής", type: "text", iconClasses: "fa-solid fa-graduation-cap" },
-		book_id: { name: "book_id", label: "Βιβλίο", type: "select", iconClasses: "fa-solid fa-book", selectList: books.map(b => b.title) },
+		book_id: {
+			name: "book_id",
+			label: "Βιβλίο",
+			type: "select",
+			iconClasses: "fa-solid fa-book",
+			selectList: books.map(b => b.title),
+			valueList: books.map(b => b.id)
+		},
 		amount: {
 			name: "amount",
 			label: "Οφειλή",
@@ -44,18 +51,15 @@ const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
 
 const paymentToTablePayment = (payment: Payments, books: Books[]): PaymentsTable => {
 	const columns = Object.values(payment);
-	//@ts-ignore
-	columns[2] = books.find(b => b.id === payment.book_id).title;
+	columns[2] = books.find(b => b.id === payment.book_id)?.title || "Δεν βρέθηκε!";
 	let d = new Date(columns[4]);
 	columns[3] = columns[3] + "€";
-	//@ts-ignore
 	columns[4] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 	if (columns.length === 5) columns.push("-");
 	else if (columns[5] === 0) {
 		columns[5] = "-";
 	} else {
 		d = new Date(columns[5]);
-		//@ts-ignore
 		columns[5] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 	}
 	return columns as unknown as PaymentsTable;
@@ -120,7 +124,7 @@ export default function PaymentsTable() {
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Payments, "id" | "amount"> = {
 				student_name: formData.get("student_name") as string,
-				book_id: Number(formData.get("book_id") as string) + 1,
+				book_id: Number(formData.get("book_id") as string),
 				date: new Date(formData.get("date") as string).getTime() / 1000
 			};
 
@@ -148,9 +152,9 @@ export default function PaymentsTable() {
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Pick<Payments, "id" | "amount"> = {
 				id: payment.id,
-				amount: Number(formData.get("amount") as string)
+				amount: Number(formData.get("amount") as string) as number
 			};
-			if (data.amount > payment.amount || data.amount === 0) throw Error("Invalid amount");
+			if (data.amount > payment.amount || data.amount === 0 || !data.amount) return alert("Καταχώρηση μη επιτρεπτού ποσού!");
 			const res = await useAPI(setStore, API.Payments.updatePayment, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.EDIT);
@@ -172,8 +176,10 @@ export default function PaymentsTable() {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const data = selectedItems.map(i => (payments.find(p => p.id === i) as Payments).id);
-			const res = await useAPI(setStore, API.Payments.complete, { RequestObject: data });
+			let data = selectedItems.map(id => payments.find(p => p.id === id) as Payments);
+			if (data.filter(p => p.payment_date !== 0 || p.payment_date).length)
+				return alert("Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!");
+			const res = await useAPI(setStore, API.Payments.complete, { RequestObject: data.map(p => p.id) });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
 		});

@@ -59,6 +59,7 @@ export type Props = {
 	disabled?: boolean;
 	blurDisabled?: boolean;
 	selectList?: string[];
+	valueList?: (string | number)[];
 	valueLiteral?: boolean;
 	multiselectList?: { value: number; label: string; selected: boolean }[];
 	multiselectOnce?: boolean;
@@ -79,6 +80,7 @@ export default function Input(props: Props) {
 		disabled,
 		blurDisabled = true,
 		selectList,
+		valueList,
 		valueLiteral = false,
 		multiselectList,
 		multiselectOnce,
@@ -177,8 +179,10 @@ export default function Input(props: Props) {
 					<For each={selectList}>
 						{(selectItem, index) => (
 							<option
-								selected={valueLiteral ? selectItem === value : index() === value}
-								value={valueLiteral ? selectItem : index()}
+								selected={
+									valueLiteral ? selectItem === value : valueList ? valueList[index()] === value : index() === value
+								}
+								value={valueLiteral ? selectItem : valueList ? valueList[index()] : index()}
 							>
 								{selectItem}
 							</option>

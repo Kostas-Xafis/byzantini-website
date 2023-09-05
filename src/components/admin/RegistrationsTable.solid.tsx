@@ -15,6 +15,13 @@ type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number
 type RegistrationsTable = Registrations;
 
 const RegistrationsInputs = (teachers: Teachers[], instruments: Instruments[]): Record<keyof Registrations, InputProps> => {
+	let sortTeachers = teachers
+		.map(t => t)
+		.sort((a, b) => {
+			if (a.fullname < b.fullname) return -1;
+			if (a.fullname > b.fullname) return 1;
+			return 0;
+		});
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		am: {
@@ -44,13 +51,13 @@ const RegistrationsInputs = (teachers: Teachers[], instruments: Instruments[]): 
 		telephone: {
 			label: "Τηλέφωνο",
 			name: "telephone",
-			type: "number",
+			type: "text",
 			iconClasses: "fa-solid fa-phone"
 		},
 		cellphone: {
 			label: "Κινητό",
 			name: "cellphone",
-			type: "number",
+			type: "text",
 			iconClasses: "fa-solid fa-mobile-screen"
 		},
 		email: {
@@ -107,8 +114,8 @@ const RegistrationsInputs = (teachers: Teachers[], instruments: Instruments[]): 
 			label: "Καθηγητής",
 			name: "teacher_id",
 			type: "select",
-			selectList: teachers.map(t => t.fullname).sort(),
-			valueLiteral: true,
+			selectList: sortTeachers.map(t => t.fullname),
+			valueList: sortTeachers.map(t => t.id),
 			iconClasses: "fa-solid fa-user"
 		},
 		instrument_id: {
@@ -116,15 +123,13 @@ const RegistrationsInputs = (teachers: Teachers[], instruments: Instruments[]): 
 			name: "instrument_id",
 			type: "select",
 			selectList: instruments.map(i => i.name),
-			valueLiteral: true,
+			valueList: instruments.map(i => i.id),
 			iconClasses: "fa-solid fa-guitar"
 		},
 		class_year: {
 			label: "Τάξη",
 			name: "class_year",
 			type: "text",
-			disabled: true,
-			blurDisabled: false,
 			iconClasses: "fa-solid fa-graduation-cap"
 		},
 		date: {
@@ -210,8 +215,8 @@ export default function RegistrationsTable() {
 	const columnNames: ColumnType<RegistrationsTable> = {
 		id: "Id",
 		am: { name: "Αριθμός Μητρώου", size: () => 6 },
-		first_name: { name: "Όνομα", size: () => 15 },
 		last_name: { name: "Επώνυμο", size: () => 15 },
+		first_name: { name: "Όνομα", size: () => 15 },
 		fathers_name: { name: "Πατρώνυμο", size: () => 15 },
 		birth_date: { name: "Ημερομηνία Γέννησης", size: () => 12 },
 		road: { name: "Οδός", size: () => 20 },
@@ -268,19 +273,18 @@ export default function RegistrationsTable() {
 				registration_year: formData.get("registration_year") as string,
 				class_year: formData.get("class_year") as string,
 				class_id,
-				teacher_id: teachers.find(t => t.fullname === (formData.get("teacher_id") as string))?.id || 0,
-				instrument_id: (class_id && instruments.find(i => i.name === (formData.get("instrument_id") as string))?.id) || 0,
+				teacher_id: Number(formData.get("teacher_id")) || 0,
+				instrument_id: (class_id && Number(formData.get("instrument_id"))) || 0,
 				date: Date.now(),
-				payment_amount: Number(formData.get("payment_amount") as string) ?? 0,
+				payment_amount: Number(formData.get("payment_amount") as string) || 0,
 				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() : null
 			};
 			const res = await useAPI(setStore, API.Registrations.update, { RequestObject: data });
-			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.EDIT);
 		});
 		const filledInputs = Fill(RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>, registration);
 		filledInputs.class_id.value = registration.class_id;
-		filledInputs.teacher_id.value = teachers.find(t => t.id === registration.teacher_id)?.fullname;
+		filledInputs.teacher_id.value = registration.teacher_id;
 		filledInputs.instrument_id.value = instruments.find(i => i.id === registration.instrument_id)?.name || 0; // findIndex because the instruments are sorted by name
 		return {
 			inputs: filledInputs,
@@ -300,8 +304,9 @@ export default function RegistrationsTable() {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const data = selectedItems.map(s => s);
+			const data = selectedItems.map(id => id);
 			const res = await useAPI(setStore, API.Registrations.complete, { RequestObject: data });
+			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
 		});
 		return {

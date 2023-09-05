@@ -24,7 +24,8 @@ const BooksInputs = (wholesalers: Wholesalers[]): Record<keyof Books, InputProps
 			label: "Χονδρέμπορος",
 			type: "select",
 			iconClasses: "fa-solid fa-feather",
-			selectList: wholesalers.map(w => w.name)
+			selectList: wholesalers.map(w => w.name),
+			valueList: wholesalers.map(w => w.id)
 		},
 		wholesale_price: {
 			name: "wholesale_price",
@@ -40,7 +41,7 @@ const BooksInputs = (wholesalers: Wholesalers[]): Record<keyof Books, InputProps
 
 const bookToTableBook = (book: Books, wholesalers: Wholesalers[]): BooksTable => {
 	const columns = Object.values(book);
-	columns[2] = wholesalers[(columns[2] as number) - 1].name;
+	columns[2] = wholesalers.find(w => w.id === book.wholesaler_id)?.name || "";
 	columns[3] = columns[3] + "€";
 	columns[4] = columns[4] + "€";
 	//@ts-ignore
@@ -109,13 +110,14 @@ export default function BooksTable() {
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data: Omit<Books, "id"> = {
 				title: formData.get("title") as string,
-				wholesaler_id: wholesalers[parseInt(formData.get("wholesaler") as string)]?.id || -1,
+				wholesaler_id: Number(formData.get("wholesaler")),
 				wholesale_price: parseInt(formData.get("wholesale_price") as string),
 				price: parseInt(formData.get("price") as string),
 				quantity: parseInt(formData.get("quantity") as string),
 				sold: parseInt(formData.get("sold") as string)
 			};
-			if (data.wholesale_price >= data.price) return;
+			if (data.wholesale_price > data.price) return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική");
+			if (data.quantity < data.sold) return alert("Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων");
 			const res = await useAPI(setStore, API.Books.post, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.ADD);
@@ -166,7 +168,7 @@ export default function BooksTable() {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const data = selectedItems.map(i => books[i].id);
+			const data = selectedItems.map(id => books.find(b => b.id === id)?.id || -1);
 			const res = await useAPI(setStore, API.Books.delete, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
@@ -186,7 +188,7 @@ export default function BooksTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<Wholesalers, "id"> = {
+			const data = {
 				name: formData.get("name") as string
 			};
 			const res = await useAPI(setStore, API.Wholesalers.post, { RequestObject: data });
@@ -211,7 +213,7 @@ export default function BooksTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data = [wholesalers[parseInt(formData.get("name") as string)]?.id || -1];
+			const data = [Number(formData.get("name"))];
 			const res = await useAPI(setStore, API.Wholesalers.delete, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
@@ -223,7 +225,8 @@ export default function BooksTable() {
 					label: "Χονδρέμπορος",
 					type: "select",
 					iconClasses: "fa-solid fa-feather",
-					selectList: wholesalers.map(w => w.name)
+					selectList: wholesalers.map(w => w.name),
+					valueList: wholesalers.map(w => w.id)
 				} as InputProps
 			},
 			onMount: () => formListener(submit, true, "wholesalers"),

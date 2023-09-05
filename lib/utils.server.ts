@@ -58,7 +58,7 @@ export const execTryCatch = async <T>(
 		else res = DataWrapper(response);
 	} catch (error) {
 		// @ts-ignore
-		res = { res: "error", error: { message: error?.message, stack: error?.stack } };
+		res = { res: "error", error: { message: error?.message } };
 	}
 	return res as T extends string ? DefaultEndpointResponse : EndpointResponse<T>;
 };

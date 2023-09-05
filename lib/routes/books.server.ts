@@ -37,7 +37,7 @@ serverRoutes.updateQuantity.func = async (ctx) => {
 		const newAddedAmount = book.wholesale_price * (reqBook.quantity - book.quantity);
 		await Promise.all([
 			executeQuery(`UPDATE books SET quantity = ? WHERE id = ?`, [reqBook.quantity, reqBook.id]),
-			// Update school_payoffs table amount1
+			// Update school_payoffs table amount
 			executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
 				newAddedAmount,
 				book.wholesaler_id
@@ -50,9 +50,17 @@ serverRoutes.updateQuantity.func = async (ctx) => {
 
 serverRoutes.delete.func = async (ctx) => {
 	const body = await ctx.request.json();
-	return await execTryCatch(async () => {
-		if (body.length === 1) await executeQuery(`DELETE FROM books WHERE id = ?`, body);
-		else await executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(body.length)})`, body);
+	return await execTryCatch(async T => {
+		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(body.length)})`, body);
+		if (books.length === 0) throw Error("Book not found");
+
+		if (body.length === 1) await T.executeQuery(`DELETE FROM books WHERE id = ?`, body);
+		else await T.executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(body.length)})`, body);
+
+		// Update payments table & total amount
+		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE payment_date IS NULL AND book_id IN (${questionMarks(body.length)}))`, body);
+		await T.executeQuery("DELETE FROM payments WHERE (SELECT count(*) FROM books WHERE books.id=payments.book_id)=0"); // Delete payments with no book
+
 		return "Book deleted successfully";
 	});
 };

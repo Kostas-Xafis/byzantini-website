@@ -50,7 +50,6 @@ const locationToTableLocation = (location: Locations): LocationsTable => {
 	delete location?.youtube;
 
 	const columns = Object.values(location);
-	console.log(location, columns);
 	//@ts-ignore
 	columns[8] = (location.image && "/locations/" + location.image) || "";
 	return columns as unknown as LocationsTable;

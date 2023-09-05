@@ -146,8 +146,8 @@ const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations,
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map(teacher => teacher.fullname),
-			valueLiteral: true
+			selectList: teachers.map(t => t.fullname),
+			valueList: teachers.map(t => t.id)
 		}
 	};
 };
@@ -173,8 +173,8 @@ const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registration
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map(teacher => teacher.fullname),
-			valueLiteral: true
+			selectList: teachers.map(t => t.fullname),
+			valueList: teachers.map(t => t.id)
 		}
 	};
 };
@@ -200,8 +200,8 @@ const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, 
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map(teacher => teacher.fullname),
-			valueLiteral: true
+			selectList: teachers.map(t => t.fullname),
+			valueList: teachers.map(t => t.id)
 		}
 	};
 };
@@ -383,7 +383,7 @@ export function RegistrationForm() {
 			registration_year: formData.get("registration_year") as string,
 			class_year: formData.get("class_year") as string,
 			class_id: btns.findIndex(btn => btn[1] === formSelected()),
-			teacher_id: teachers?.find(t => t.fullname === formData.get("teacher_id"))?.id || -1,
+			teacher_id: Number(formData.get("teacher_id")) || -1,
 			instrument_id:
 				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][data-selected='true']`)].map(btn => {
 					const id = Number(btn.dataset.value) || null;
@@ -398,13 +398,14 @@ export function RegistrationForm() {
 				messageDialog.classList.remove("hidden");
 				messageDialog.classList.add("flex");
 			}
-			if (res.error) throw Error(res.error);
 		} catch (err) {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
 			setSpinner(false);
 			setTimeout(() => {
 				form.classList.add("animate-shake");
-				setTimeout(() => form.classList.remove("animate-shake"), 500);
+				setTimeout(() => {
+					form.classList.remove("animate-shake");
+				}, 500);
 			}, 500);
 		} finally {
 			setSpinner(false);
@@ -580,8 +581,7 @@ export function RegistrationForm() {
 	.animate-shake button {
 		animation: ShakeAnimation 0.6s ease-in-out;
 	}
-
-	`}
+`}
 			</style>
 		</>
 	);

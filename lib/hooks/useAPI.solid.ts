@@ -31,8 +31,9 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 		});
 		const json = (await res.json()) as APIRes[T];
 		if ("error" in json) {
+			console.error(json.error);
 			setStore(endpoint, json.error);
-			return { error: json.error };
+			throw new Error(JSON.stringify(json.error));
 		}
 		if ("message" in json) {
 			console.log(json.message);

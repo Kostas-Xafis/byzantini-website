@@ -1,4 +1,4 @@
-import type { Wholesalers } from "../../types/entities";
+import type { Books, Wholesalers } from "../../types/entities";
 import { type Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { WholesalersRoutes } from "./wholesalers.client";
 
@@ -21,9 +21,21 @@ serverRoutes.post.func = async (ctx) => {
 };
 
 serverRoutes.delete.func = async (ctx) => {
-	return await execTryCatch(async () => {
+	return await execTryCatch(async T => {
 		const args = await ctx.request.json();
-		await executeQuery(`DELETE FROM wholesalers WHERE id IN (${questionMarks(args.length)})`, args);
+		const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, args))[0] || null;
+		if (!wholesaler) throw Error("Wholesaler not found");
+		const id = wholesaler.id;
+		await T.executeQuery(`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`, [id]);
+		await T.executeQuery("DELETE FROM school_payoffs WHERE wholesaler_id=?", [id]);
+		const bookList = await T.executeQuery<Books>("SELECT * FROM books WHERE wholesaler_id=?", [id]);
+
+		await T.executeQuery("DELETE FROM books WHERE wholesaler_id=?", [id]);
+		if (bookList.length) {
+			await T.executeQuery("UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE payment_date IS NULL AND book_id IN (?))", [bookList.map(book => book.id)]);
+			await T.executeQuery("DELETE FROM payments WHERE (SELECT count(*) FROM books WHERE books.id=payments.book_id)=0");
+		}
+		await T.executeQuery(`DELETE FROM wholesalers WHERE id=?`, [id]);
 		return "Deleted wholesalers successfully";
 	});
 };

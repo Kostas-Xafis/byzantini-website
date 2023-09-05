@@ -15,10 +15,9 @@ serverRoutes.getTotal.func = async _ctx => {
 serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async () => {
 		const { book_id, student_name } = await ctx.request.json();
-		const books = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]);
-		if (books.length === 0) throw Error("Book not found");
-		const book = books[0];
-		if (book.quantity - book.sold === 0) throw Error("Book is out of stock");
+		const book = (await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
+		if (!book) throw Error("Book not found");
+		if (book.quantity - book.sold <= 0) throw Error("Book is out of stock")
 
 		const [result1, result2] = await Promise.allSettled([
 			executeQuery(`INSERT INTO payments (book_id, student_name, amount, date) VALUES (${questionMarks(4)})`, [

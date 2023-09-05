@@ -77,6 +77,7 @@ export default function TableControls(props: Props) {
 			inputs: store.inputs[0],
 			submitText: submitText(),
 			headerText: headerText(),
+			prefix,
 			close: () => {
 				batch(() => {
 					setOpen(false);

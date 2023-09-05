@@ -77,24 +77,24 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 		<div
 			id="selectContainer"
 			data-selected="xairetismos"
-			class="self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center gap-x-4 border-x-2 border-t-2 border-red-900 rounded-t-lg shadow-lg shadow-slate-700"
+			class="group/btn self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center border-x-2 border-t-2 border-red-900 rounded-t-lg shadow-lg shadow-slate-700"
 		>
 			<button
 				id="xairetismosBtn"
 				type="button"
-				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950"
+				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='xairetismos']/btn:text-white group-data-[selected='xairetismos']/btn:bg-red-950 "
 				><span class="group-hover/btn:-translate-y-2">Χαιρετισμός Σεβ. Μητροπολίτου</span></button
 			>
 			<button
 				id="principalBtn"
 				type="button"
-				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950"
+				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='principal']/btn:text-white group-data-[selected='principal']/btn:bg-red-950"
 				><span class="group-hover/btn:-translate-y-2">Ο Διευθυντής</span></button
 			>
 			<button
 				id="orgBtn"
 				type="button"
-				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950"
+				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='org']/btn:text-white group-data-[selected='org']/btn:bg-red-950"
 				><span class="group-hover/btn:-translate-y-2">Διοικητικό Συμβούλιο</span></button
 			>
 		</div>

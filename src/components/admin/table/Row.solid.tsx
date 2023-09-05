@@ -17,10 +17,10 @@ export default function Row(props: Props) {
 
 	const onClick = !header
 		? (e: MouseEvent) => {
-				const i = Number((e.currentTarget as HTMLElement).dataset.id as string);
-				const isSelected = selectedItems.includes(i);
-				if (isSelected) remove(i);
-				else add(i);
+				const item_id = Number((e.currentTarget as HTMLElement).dataset.id as string);
+				const isSelected = selectedItems.includes(item_id);
+				if (isSelected) remove(item_id);
+				else add(item_id);
 				(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
 		  }
 		: undefined;
