@@ -71,7 +71,7 @@ const teachingTitle = (fullname:string) => {
 ---
 
 <Layout title="Καθηγητές">
-	<div class="group/type w-full h-full grid grid-cols-[max-content_1fr] font-didact max-sm:grid-cols-[100%] max-sm:grid-rows-[max-content_1fr]">
+	<div id="teachersPage" class="group/type byz w-full h-full grid grid-cols-[max-content_1fr] font-didact max-sm:grid-cols-[100%] max-sm:grid-rows-[max-content_1fr]">
 		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 max-sm:border-none border-red-900 max-sm:w-full max-sm:grid-rows-1 max-sm:grid-cols-[repeat(3,_1fr)]">
 			{
 				music.map(([str, type], ind) => (
@@ -93,7 +93,6 @@ const teachingTitle = (fullname:string) => {
 			<h1 id="teachersHead" class="text-[3vw] max-sm:text-2xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.1)]">Καθηγητές Βυζαντινής Μουσικής</h1>
 			{
 				teachers.map(([teachersByType, type], i) => {
-
 					return teachersByType.map(teacher => {
 						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => musicOnly[c.class_id][0]);
 						const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");
@@ -103,9 +102,9 @@ const teachingTitle = (fullname:string) => {
 						t_instruments?.sort();
 						return (
 						<div class={"group/card w-[48.5%] hidden show max-sm:min-w-full odd:flex-row-reverse odd:justify-between rounded-2xl @7xl:rounded-2xl @4xl:rounded-lg max-sm:rounded-md max-sm:justify-items-center shadow-md shadow-gray-500 border-solid border-2 max-sm:border border-red-900"
-							+ (type === MusicType.Byzantine ? " group-[:has(#byz[data-show])]/type:flex" : "") 
-							+ (type === MusicType.Traditional ? " group-[:has(#par[data-show])]/type:flex" : "") 
-							+ (type === MusicType.European ? " group-[:has(#eur[data-show])]/type:flex" : "")}>
+							+ (type === MusicType.Byzantine ? " group-[:is(.byz)]/type:flex" : "") 
+							+ (type === MusicType.Traditional ? " group-[:is(.par)]/type:flex" : "") 
+							+ (type === MusicType.European ? " group-[:is(.eur)]/type:flex" : "")}>
 							{teacher.picture ? (
 								<img data-url={imgSrc + teacher.picture} width={240} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
 							) : (
@@ -191,30 +190,31 @@ const teachingTitle = (fullname:string) => {
 		par = "Παραδοσιακής Μουσικής",
 		eur = "Ευρωπαϊκής Μουσικής"
 	}
-	document.querySelectorAll("div:has(> button[data-type])").forEach(btn => {
+
+	document.querySelectorAll("div > button[data-type]").forEach(btnChild => {
+		const btn = btnChild.parentElement as HTMLElement;
 		const type = btn.getAttribute("data-type") as "byz" | "par" | "eur";
+		const teachersPage = document.querySelector("#teachersPage") as HTMLElement;
 		btn.addEventListener("click", () => {
-			const shown = document.querySelector("[data-show]") as HTMLElement | null;
+			const shown = document.querySelector("[data-show]") as HTMLElement;
 			if (shown === btn) return;
 			const container = document.querySelector("#teachersContainer") as HTMLElement;
 			const heading = document.querySelector("#teachersHead") as HTMLElement;
-			if (shown) {
-				container.classList.add("remove");
-				void container.offsetWidth;
-				setTimeout(() => {
-					shown.removeAttribute("data-show");
-					container.classList.remove("remove");
-					heading.innerText = "Καθηγητές " + MusicType[type];
-					btn.setAttribute("data-show", "");
-					document.querySelector("#teachersContainer")?.scrollTo({
-						top: 0,
-						behavior: "smooth"
-					})
-				}, 300);
-			} else {
+
+			container.classList.add("remove");
+			void container.offsetWidth;
+			setTimeout(() => {
+				shown.removeAttribute("data-show");
+				container.classList.remove("remove");
 				heading.innerText = "Καθηγητές " + MusicType[type];
 				btn.setAttribute("data-show", "");
-			}
+				teachersPage.classList.remove("byz", "par", "eur");
+				teachersPage.classList.add(type);
+				document.querySelector("#teachersContainer")?.scrollTo({
+					top: 0,
+					behavior: "smooth"
+				})
+			}, 300);
 		})
 	})
 	if(window.location.hash) {
