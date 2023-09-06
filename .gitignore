@@ -21,7 +21,7 @@ pnpm-debug.log*
 
 .vscode/
 test.exe
-*.txt
+todo.txt
 
 /getData
 
