@@ -81,8 +81,8 @@ export const v_Teachers = object({
 	email: optional(string()),
 	telephone: optional(string()),
 	linktree: optional(string()),
-	visible: optional(boolean()),
-	online: optional(boolean())
+	visible: boolean(),
+	online: boolean()
 });
 export type Teachers = Output<typeof v_Teachers>;
 

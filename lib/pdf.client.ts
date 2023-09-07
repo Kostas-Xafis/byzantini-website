@@ -20,11 +20,12 @@ export class PDF {
 
     public async fillTemplate(): Promise<void> {
         const p = this.doc.getPages()[0];
-        console.log(p);
-        const c = ByzTemplateCoords;
+        const c = TemplateCoords;
         this.doc.registerFontkit(window.fontkit);
-        const DidactGothicFont = await this.doc.embedFont(await (await fetch("/fonts/ANAKTORIA.OTF")).arrayBuffer());
+        const DidactGothicFont = await this.doc.embedFont(await (await fetch("/fonts/DidactGothic-Regular.ttf")).arrayBuffer());
         const fontSize = 14;
+        const smFontSize = 12;
+        const xsFontSize = 11;
         let s = this.student;
         p.drawText("" + s.am, { x: c.am.x, y: c.am.y, size: fontSize, font: DidactGothicFont, });
         p.drawText("" + s.last_name, { x: c.lastName.x, y: c.lastName.y, size: fontSize, font: DidactGothicFont });
@@ -40,7 +41,7 @@ export class PDF {
         p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font: DidactGothicFont });
         p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font: DidactGothicFont });
         p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + this.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: fontSize, font: DidactGothicFont });
+        p.drawText("" + this.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: this.teachersName.length <= 24 ? fontSize : (this.teachersName.length <= 30 ? smFontSize : xsFontSize), font: DidactGothicFont });
 
         const date = new Date(s.date);
         let month = (date.getMonth() + 1) + "";
@@ -58,6 +59,13 @@ export class PDF {
 
         p.drawText("23", { x: c.year1.x, y: c.year1.y, size: fontSize, font: DidactGothicFont });
         p.drawText("24", { x: c.year2.x, y: c.year2.y, size: fontSize, font: DidactGothicFont });
+
+        if (this.instrument.length > 15) {
+            p.drawText(this.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font: DidactGothicFont });
+        } else {
+            if (this.student.class_id === 1) p.drawText(this.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font: DidactGothicFont });
+            else if (this.student.class_id === 2) p.drawText(this.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font: DidactGothicFont });
+        }
     }
 
     public async loadTemplate(): Promise<void> {
@@ -117,12 +125,14 @@ type TemplateCoords = {
     dateYYYY: { x: number, y: number },
     year1: { x: number, y: number },
     year2: { x: number, y: number },
-    instrument?: { x: number, y: number },
+    instrumentPar: { x: number, y: number },
+    instrumentEur: { x: number, y: number },
+    instrumentLarge: { x: number, y: number },
 }
 
 const pdfHeight = 841.89;
 const H = (y: number) => pdfHeight - y;
-const ByzTemplateCoords: TemplateCoords = {
+const TemplateCoords: TemplateCoords = {
     am: { x: 140, y: 260 },
     lastName: { x: 105, y: 285 },
     firstName: { x: 85, y: 310 },
@@ -142,7 +152,9 @@ const ByzTemplateCoords: TemplateCoords = {
     dateMM: { x: 193, y: 736 },
     dateYYYY: { x: 237, y: 736 },
     year1: { x: 418, y: 436 },
-    year2: { x: 480, y: 436 }
+    year2: { x: 480, y: 436 },
+    instrumentPar: { x: 475, y: 488 },
+    instrumentEur: { x: 420, y: 489 },
+    instrumentLarge: { x: 325, y: 513 },
 }
-Object.values(ByzTemplateCoords).forEach(v => v.y = H(v.y));
-
+Object.values(TemplateCoords).forEach(v => v.y = H(v.y));

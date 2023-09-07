@@ -329,7 +329,7 @@ export default function RegistrationsTable() {
 			e.stopPropagation();
 			const student = registrations.find(r => r.id === selectedItems[0]) as Registrations;
 			const teacher = teachers.find(t => t.id === student.teacher_id) as Teachers;
-			const instrument = (!student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
+			const instrument = (student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
 			try {
 				const pdf = new PDF();
 				// load pdf library
