@@ -287,6 +287,7 @@ const teachingTitle = (fullname:string) => {
 		new PerformanceObserver((list) => {
 			const entries = list.getEntries();
 			entries.forEach(() => {
+
 				networkCheckHandler.reset().catch(() => {});
 			})
 		}).observe({entryTypes: ["resource"]});

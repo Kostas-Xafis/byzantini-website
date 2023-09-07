@@ -4,7 +4,7 @@ import type { ReplaceName } from "../../../types/helpers";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
 import { Omit, type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
@@ -101,9 +101,9 @@ export default function BooksTable() {
 		if (!books || !wholesalers) return [];
 		return books && wholesalers ? booksToTable(books, wholesalers) : [];
 	});
-	const onAdd = createMemo(() => {
+	const onAdd = createMemo((): Action | EmptyAction => {
 		const wholesalers = store["Wholesalers.get"];
-		if (!wholesalers) return undefined;
+		if (!wholesalers) return { icon: ActionIcon.ADD };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -128,14 +128,15 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Βιβλίου",
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD
 		};
 	});
-	const onEdit = createMemo(() => {
+	const onModify = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers || !books) return undefined;
-		if (selectedItems.length !== 1) return undefined;
+		if (!wholesalers || !books) return { icon: ActionIcon.MODIFY };
+		if (selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
 		const book = books.find(b => b.id === selectedItems[0]) as Books;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -147,7 +148,7 @@ export default function BooksTable() {
 			};
 			const res = await useAPI(setStore, API.Books.updateQuantity, { RequestObject: data });
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.EDIT);
+			setActionPressed(ActionEnum.MODIFY);
 		});
 		const filledInputs = Fill(BooksInputs(wholesalers), book);
 		filledInputs.wholesaler_id.value = (filledInputs.wholesaler_id.value as number) - 1;
@@ -157,14 +158,15 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
-			type: ActionEnum.EDIT
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY
 		};
 	});
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers || !books) return undefined;
-		if (selectedItems.length < 1) return undefined;
+		if (!wholesalers || !books) return { icon: ActionIcon.DELETE };
+		if (selectedItems.length < 1) return { icon: ActionIcon.DELETE };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -179,11 +181,12 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Βιβλίων",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE
 		};
 	});
 
-	const onAddWholesaler = createMemo(() => {
+	const onAddWholesaler = createMemo((): Action | EmptyAction => {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -203,12 +206,13 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, "wholesalers"),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Χονδρέμπορου",
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD_USER
 		};
 	});
-	const onDeleteWholesaler = createMemo(() => {
+	const onDeleteWholesaler = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers) return undefined;
+		if (!wholesalers) return { icon: ActionIcon.DELETE_USER };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -233,7 +237,8 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, "wholesalers"),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Χονδρέμπορου",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE_USER
 		};
 	});
 
@@ -241,11 +246,10 @@ export default function BooksTable() {
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Books.get] && store[API.Wholesalers.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 					<TableControls
 						pressedAction={actionPressed}
-						onAdd={onAddWholesaler}
-						onDelete={onDeleteWholesaler}
+						onActionsArray={[onAddWholesaler, onDeleteWholesaler]}
 						prefix={"wholesalers"}
 					/>
 				</Table>

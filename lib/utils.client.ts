@@ -1,4 +1,3 @@
-
 export const isDevFromURL = (url: URL) => {
     return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname.includes("192.168.2.");
 }
@@ -14,6 +13,8 @@ export const onElementMount = async (target: string, callback: () => any) => {
     if (counter >= 10) return;
     callback();
 };
+
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class UpdateHandler {
     abortController = new AbortController();

@@ -50,7 +50,7 @@ export const RegistrationsRoutes = {
     getTotal,
     post,
     update,
-    complete
+    complete,
 };
 
 export type APIRegistrationsArgs = APIArguments<"Registrations", typeof RegistrationsRoutes>;
@@ -84,7 +84,7 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         method: "DELETE",
         path: "/registrations",
         endpoint: "Registrations.complete"
-    }
+    },
 };
 
 export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsRoutes> = {
@@ -93,6 +93,6 @@ export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsR
         getTotal: "Registrations.getTotal",
         post: "Registrations.post",
         update: "Registrations.update",
-        complete: "Registrations.complete"
+        complete: "Registrations.complete",
     }
 };

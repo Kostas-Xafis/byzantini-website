@@ -3,7 +3,7 @@ import type { SysUsers as FullSysUser } from "../../../types/entities";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
@@ -68,7 +68,7 @@ export default function SysUsersTable() {
 		return sysusers ? sysusersToTable(sysusers) : [];
 	});
 
-	const onAdd = createMemo(() => {
+	const onAdd = createMemo((): Action | EmptyAction => {
 		const link = store[API.SysUsers.createRegisterLink]?.link;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -86,18 +86,19 @@ export default function SysUsersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
 			headerText: !link ? "Δημιουργία link εγγραφής" : "Link εγγραφής:\n https://musicschool-metamorfosi.gr/admin/signup/" + link,
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD_USER
 		};
 	});
 
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const sysusers = store[API.SysUsers.get];
 		const self = store[API.SysUsers.getBySid];
-		if (!sysusers || selectedItems.length < 1 || !self) return undefined;
+		if (!sysusers || selectedItems.length < 1 || !self) return { icon: ActionIcon.DELETE_USER };
 
 		const selectedSysUsers = selectedItems.map(i => sysusers.find(p => p.id === i) as SysUsers);
 		if (!selectedSysUsers.find(s => s.privilege < self.privilege || (s.privilege === self.privilege && s.id === self.id)))
-			return undefined;
+			return { icon: ActionIcon.DELETE_USER };
 
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -113,7 +114,8 @@ export default function SysUsersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Διαχειριστή/ών",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE_USER
 		};
 	});
 
@@ -121,7 +123,7 @@ export default function SysUsersTable() {
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onAdd={onAdd} onDelete={onDelete} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

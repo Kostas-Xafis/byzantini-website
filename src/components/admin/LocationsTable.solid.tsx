@@ -3,7 +3,7 @@ import type { Locations } from "../../../types/entities";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
@@ -118,7 +118,7 @@ export default function LocationsTable() {
 		if (!locations) return [];
 		return locations ? locationsToTable(locations) : [];
 	});
-	const onAdd = createMemo(() => {
+	const onAdd = createMemo((): Action | EmptyAction => {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -155,15 +155,15 @@ export default function LocationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Παραρτήματος",
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD
 		};
 	});
-	const onEdit = createMemo(() => {
+	const onModify = createMemo((): Action | EmptyAction => {
 		const locations = store[API.Locations.get];
-		if (!locations || selectedItems.length !== 1) return undefined;
+		if (!locations || selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
 		const location = locations.find(p => p.id === selectedItems[0]);
-		if (!location) return undefined;
-
+		if (!location) return { icon: ActionIcon.MODIFY };
 		let imageRemoved = false;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -200,7 +200,7 @@ export default function LocationsTable() {
 					RequestObject: file.image,
 					UrlArgs: { id: location.id }
 				});
-			setActionPressed(ActionEnum.EDIT);
+			setActionPressed(ActionEnum.MODIFY);
 		});
 		const emptyFileRemove = (e: CustomEvent) => {
 			e.preventDefault();
@@ -228,12 +228,13 @@ export default function LocationsTable() {
 			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Παραρτήματος",
-			type: ActionEnum.EDIT
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY
 		};
 	});
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const locations = store[API.Locations.get];
-		if (!locations || selectedItems.length < 1) return undefined;
+		if (!locations || selectedItems.length < 1) return { icon: ActionIcon.DELETE };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -248,7 +249,8 @@ export default function LocationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Παραρτήματος",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE
 		};
 	});
 
@@ -256,7 +258,7 @@ export default function LocationsTable() {
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Locations.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

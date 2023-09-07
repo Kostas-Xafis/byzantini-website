@@ -4,7 +4,7 @@ import type { ReplaceName } from "../../../types/helpers";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
@@ -91,10 +91,10 @@ export default function PayoffsTable() {
 		return wholesalers && payements ? payoffsToTable(payements, wholesalers) : [];
 	});
 
-	const onEdit = createMemo(() => {
+	const onModify = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
-		if (!payoffs || !wholesalers || selectedItems.length !== 1) return undefined;
+		if (!payoffs || !wholesalers || selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
 		const payoff = payoffs.find(p => p.id === selectedItems[0]) as SchoolPayoffs;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -107,7 +107,7 @@ export default function PayoffsTable() {
 			if (data.amount > payoff.amount || data.amount === 0) throw Error("Invalid amount");
 			const res = await useAPI(setStore, API.Payoffs.updateAmount, { RequestObject: data });
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.EDIT);
+			setActionPressed(ActionEnum.MODIFY);
 		});
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 		return {
@@ -116,13 +116,14 @@ export default function PayoffsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",
-			type: ActionEnum.EDIT
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY
 		};
 	});
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
-		if (!payoffs || !wholesalers || selectedItems.length < 1) return undefined;
+		if (!payoffs || !wholesalers || selectedItems.length < 1) return { icon: ActionIcon.CHECK };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -137,7 +138,8 @@ export default function PayoffsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ολοκλήρωση",
 			headerText: "Ολοκλήρωση Οφειλών",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.CHECK
 		};
 	});
 
@@ -145,7 +147,7 @@ export default function PayoffsTable() {
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Wholesalers.get] && store[API.Payoffs.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} complete />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

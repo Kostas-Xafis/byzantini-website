@@ -4,7 +4,7 @@ import type { ReplaceName } from "../../../types/helpers";
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
@@ -115,9 +115,9 @@ export default function PaymentsTable() {
 		if (!books || !payments) return [];
 		return books && payments ? paymentsToTable(payments, books) : [];
 	});
-	const onAdd = createMemo(() => {
+	const onAdd = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get];
-		if (!books) return undefined;
+		if (!books) return { icon: ActionIcon.ADD };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -138,13 +138,14 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Πληρωμής",
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD
 		};
 	});
-	const onEdit = createMemo(() => {
+	const onModify = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
-		if (!payments || !books || selectedItems.length !== 1) return undefined;
+		if (!payments || !books || selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
 		const payment = payments.find(p => p.id === selectedItems[0]) as Payments;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -157,7 +158,7 @@ export default function PaymentsTable() {
 			if (data.amount > payment.amount || data.amount === 0 || !data.amount) return alert("Καταχώρηση μη επιτρεπτού ποσού!");
 			const res = await useAPI(setStore, API.Payments.updatePayment, { RequestObject: data });
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.EDIT);
+			setActionPressed(ActionEnum.MODIFY);
 		});
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
@@ -166,13 +167,14 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: `Ενημέρωση πληρωμής`,
-			type: ActionEnum.EDIT
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY
 		};
 	});
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
-		if (!payments || !books || selectedItems.length < 1) return undefined;
+		if (!payments || !books || selectedItems.length < 1) return { icon: ActionIcon.CHECK };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -189,7 +191,8 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ολοκλήρωση",
 			headerText: `Ολοκλήρωση πληρωμών`,
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.CHECK
 		};
 	});
 
@@ -197,14 +200,7 @@ export default function PaymentsTable() {
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Books.get] && store[API.Payments.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls
-						pressedAction={actionPressed}
-						onAdd={onAdd}
-						onEdit={onEdit}
-						onDelete={onDelete}
-						prefix={PREFIX}
-						complete
-					/>
+					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

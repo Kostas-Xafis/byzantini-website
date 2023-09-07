@@ -12,7 +12,7 @@ import type {
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener, formErrorWrap } from "./table/formSubmit";
@@ -240,11 +240,11 @@ export default function TeachersTable() {
 		if (!classList || !teachers || !teachers) return [];
 		return teachers ? teachersToTable(teachers, classList) : [];
 	});
-	const onAdd = createMemo(() => {
+	const onAdd = createMemo((): Action | EmptyAction => {
 		const locations = store[API.Locations.get];
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
-		if (!locations || !locationsList || !instruments) return;
+		if (!locations || !locationsList || !instruments) return { icon: ActionIcon.ADD };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -297,19 +297,21 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Καθηγητή",
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD
 		};
 	});
-	const onEdit = createMemo(() => {
+	const onModify = createMemo((): Action | EmptyAction => {
 		const teachers = store[API.Teachers.get];
-		if (!teachers || selectedItems.length !== 1) return undefined;
+		if (!teachers || selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
 		const teacher = teachers.find(p => p.id === selectedItems[0]);
 		const classList = store[API.Teachers.getClasses];
 		const locations = store[API.Locations.get];
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
 		const teacherInstruments = store[API.Teachers.getInstruments];
-		if (!teacher || !classList || !locations || !locationsList || !instruments || !teacherInstruments) return;
+		if (!teacher || !classList || !locations || !locationsList || !instruments || !teacherInstruments)
+			return { icon: ActionIcon.MODIFY };
 
 		let pictureRemoved = false;
 		let cvRemoved = false;
@@ -372,7 +374,7 @@ export default function TeachersTable() {
 					RequestObject: file.cv,
 					UrlArgs: { id: teacher.id }
 				});
-			setActionPressed(ActionEnum.EDIT);
+			setActionPressed(ActionEnum.MODIFY);
 		});
 		const emptyFileRemove = (e: CustomEvent) => {
 			e.preventDefault();
@@ -407,12 +409,13 @@ export default function TeachersTable() {
 			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Καθηγητή",
-			type: ActionEnum.EDIT
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY
 		};
 	});
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const teachers = store[API.Teachers.get];
-		if (!teachers || selectedItems.length < 1) return undefined;
+		if (!teachers || selectedItems.length < 1) return { icon: ActionIcon.DELETE };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -427,11 +430,12 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Καθηγητών",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE
 		};
 	});
 
-	const onAddInstrument = createMemo(() => {
+	const onAddInstrument = createMemo((): Action | EmptyAction => {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -481,12 +485,13 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Οργάνου",
-			type: ActionEnum.ADD
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD_BOX
 		};
 	});
-	const onDeleteInstrument = createMemo(() => {
+	const onDeleteInstrument = createMemo((): Action | EmptyAction => {
 		const instruments = store[API.Instruments.get];
-		if (!instruments) return undefined;
+		if (!instruments) return { icon: ActionIcon.DELETE_BOX };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -513,7 +518,8 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Οργάνου",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE_BOX
 		};
 	});
 	return (
@@ -530,11 +536,10 @@ export default function TeachersTable() {
 				fallback={<Spinner />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 					<TableControls
 						pressedAction={actionPressed}
-						onAdd={onAddInstrument}
-						onDelete={onDeleteInstrument}
+						onActionsArray={[onAddInstrument, onDeleteInstrument]}
 						prefix={"instrument"}
 					/>
 				</Table>

@@ -3,11 +3,12 @@ import type { Instruments, Registrations, Teachers } from "../../../types/entiti
 import Table from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum } from "./table/TableControls.solid";
+import TableControls, { ActionEnum, type Action, ActionIcon, type EmptyAction } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
+import { PDF } from "../../../lib/pdf.client";
 
 const PREFIX = "registrations";
 
@@ -165,8 +166,8 @@ const registrationToTableRegistration = (
 	columns[17] = instruments.find(i => i.id === columns[17])?.name || "";
 	let d = new Date(columns[18] as number);
 	columns[18] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-	if (columns[19] === 0) columns[19] = "-";
-	if (columns[20] === 0) columns[20] = "-";
+	if (columns[19] === 0 || !columns[19]) columns[19] = "-";
+	if (columns[20] === 0 || !columns[20]) columns[20] = "-";
 	else {
 		d = new Date(columns[20] as number);
 		columns[20] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
@@ -244,12 +245,12 @@ export default function RegistrationsTable() {
 		return registrations ? registrationsToTable(registrations, teachers, instruments) : [];
 	});
 
-	const onEdit = createMemo(() => {
+	const onModify = createMemo((): Action | EmptyAction => {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (!teachers || !registrations || !instruments) return undefined;
-		if (selectedItems.length !== 1) return undefined;
+		if (!teachers || !registrations || !instruments) return { icon: ActionIcon.MODIFY };
+		if (selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
 		const registration = JSON.parse(JSON.stringify(registrations.find(r => r.id === selectedItems[0]) as any)) as Registrations;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -279,8 +280,8 @@ export default function RegistrationsTable() {
 				payment_amount: Number(formData.get("payment_amount") as string) || 0,
 				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() : null
 			};
-			const res = await useAPI(setStore, API.Registrations.update, { RequestObject: data });
-			setActionPressed(ActionEnum.EDIT);
+			await useAPI(setStore, API.Registrations.update, { RequestObject: data });
+			setActionPressed(ActionEnum.MODIFY);
 		});
 		const filledInputs = Fill(RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>, registration);
 		filledInputs.class_id.value = registration.class_id;
@@ -292,15 +293,13 @@ export default function RegistrationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Εγγραφής",
-			type: ActionEnum.EDIT
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY
 		};
 	});
-	const onDelete = createMemo(() => {
+	const onDelete = createMemo((): Action | EmptyAction => {
 		const registrations = store[API.Registrations.get];
-		const teachers = store[API.Teachers.getByFullnames];
-		const instruments = store[API.Instruments.get];
-		if (!teachers || !registrations || !instruments) return undefined;
-		if (selectedItems.length < 1) return undefined;
+		if (!registrations || selectedItems.length < 1) return { icon: ActionIcon.DELETE };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -315,9 +314,47 @@ export default function RegistrationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Εγγραφής",
-			type: ActionEnum.DELETE
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE
 		};
 	});
+
+	const onSingleDownloadPDf = createMemo(() => {
+		const registrations = store[API.Registrations.get];
+		const teachers = store[API.Teachers.getByFullnames];
+		const instruments = store[API.Instruments.get];
+		if (!teachers || !registrations || !instruments || selectedItems.length !== 1) return { icon: ActionIcon.DOWNLOAD_SINGLE };
+		const onSubmit = formErrorWrap(async function (e: Event) {
+			e.preventDefault();
+			e.stopPropagation();
+			const student = registrations.find(r => r.id === selectedItems[0]) as Registrations;
+			const teacher = teachers.find(t => t.id === student.teacher_id) as Teachers;
+			const instrument = (!student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
+			try {
+				const pdf = new PDF();
+				// load pdf library
+				await PDF.loadPDFLib();
+				pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
+				await pdf.loadTemplate();
+				await pdf.fillTemplate();
+				await pdf.download();
+			} catch (error) {
+				console.error(error);
+			}
+
+			setActionPressed(ActionEnum.DOWNLOAD);
+		});
+		return {
+			inputs: {},
+			onMount: () => formListener(onSubmit, true, PREFIX),
+			onCleanup: () => formListener(onSubmit, false, PREFIX),
+			submitText: "Λήψη",
+			headerText: "Λήψη Εγγράφης σε PDF",
+			type: ActionEnum.DOWNLOAD,
+			icon: ActionIcon.DOWNLOAD_SINGLE
+		};
+	});
+
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show
@@ -325,7 +362,8 @@ export default function RegistrationsTable() {
 				fallback={<Spinner />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
-					<TableControls pressedAction={actionPressed} onEdit={onEdit} onDelete={onDelete} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onSingleDownloadPDf]} prefix={PREFIX} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

@@ -52,14 +52,8 @@ export default function Table(props: Props) {
 	});
 	columnWidths += ";";
 	return (
-		<div
-			class={
-				"w-[100%] h-[97.5vh] mt-[2.5vh] grid grid-rows[auto_1fr] justify-between" +
-				(["books", "teachers"].includes(prefix) && " grid-cols-2")
-			}
-			data-prefix={prefix}
-		>
-			{props.children}
+		<div class="w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] flex flex-col justify-center items-center gap-y-4" data-prefix={prefix}>
+			<div class="flex flex-row w-full justify-evenly">{props.children}</div>
 			<div
 				id="tableContainer"
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"

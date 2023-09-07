@@ -2,6 +2,7 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import type { Props as InputProps } from "../../Input.solid";
 import Input from "../../Input.solid";
 import { CloseButton } from "./CloseButton.solid";
+import Spinner from "../../Spinner.solid";
 
 type Props = {
 	open: boolean;
@@ -11,6 +12,8 @@ type Props = {
 	headerText: string;
 	prefix: string;
 };
+
+export const [loading, setLoading] = createSignal(false, { equals: false });
 
 export default function Modal(props: Props) {
 	const { close, prefix } = props;
@@ -28,6 +31,7 @@ export default function Modal(props: Props) {
 
 	const onSubmit = (e: Event) => {
 		document.querySelector(`form[data-prefix='${prefix}']`)?.dispatchEvent(new Event("submit"));
+		setLoading(true);
 	};
 
 	return (
@@ -48,13 +52,15 @@ export default function Modal(props: Props) {
 						)}
 					</For>
 				</form>
-				<button
-					class="col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-500 focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-500"
-					type="submit"
-					onClick={onSubmit}
-				>
-					{submitText()}
-				</button>
+				<Show when={!loading()} fallback={<Spinner />}>
+					<button
+						class="col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-500 focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-500"
+						type="submit"
+						onClick={onSubmit}
+					>
+						{submitText()}
+					</button>
+				</Show>
 				<CloseButton classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl" onClick={() => close()}></CloseButton>
 			</div>
 		</div>
