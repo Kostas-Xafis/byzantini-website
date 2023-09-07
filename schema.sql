@@ -130,6 +130,8 @@ CREATE TABLE `teachers` (
     `linktree` varchar(80),
     `picture` varchar(20),
     `cv` varchar(20),
+    `visible` boolean NOT NULL DEFAULT 1,
+    `online` boolean NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

@@ -145,3 +145,4 @@ const ByzTemplateCoords: TemplateCoords = {
     year2: { x: 480, y: 436 }
 }
 Object.values(ByzTemplateCoords).forEach(v => v.y = H(v.y));
+

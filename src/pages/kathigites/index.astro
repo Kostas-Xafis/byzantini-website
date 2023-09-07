@@ -100,6 +100,7 @@ const teachingTitle = (fullname:string) => {
 						const t_instruments = t_instrument_list.map(i => i.name);
 						if (t_classes_str.includes("Βυζαντινής") && t_classes_str.includes("Παραδοσιακής")) t_instruments?.push("Βυζαντινή Μουσική");
 						t_instruments?.sort();
+						if (teacher.online) t_locations?.push("Διαδικτυακά Μαθήματα");
 						return (
 						<div class={"group/card w-[48.5%] hidden show max-sm:min-w-full odd:flex-row-reverse odd:justify-between rounded-2xl @7xl:rounded-2xl @4xl:rounded-lg max-sm:rounded-md max-sm:justify-items-center shadow-md shadow-gray-500 border-solid border-2 max-sm:border border-red-900"
 							+ (type === MusicType.Byzantine ? " group-[:is(.byz)]/type:flex" : "") 
@@ -113,7 +114,7 @@ const teachingTitle = (fullname:string) => {
 							<div class="flex flex-col gap-y-[0.5vw] p-[0.8vw] max-sm:gap-y-2 max-sm:w-full max-sm:py-3 max-sm:pl-3">
 								<p class="text-[2vw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">{teacher.fullname}</p>
 								<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-[300px]:max-w-[25ch] max-sm:text-xs rounded-lg max-sm:rounded-md bg-red-900 text-white p-[0.4vw] max-sm:p-2 max-sm:mr-2">{t_locations.map((str, i) => {
-										const dot = i === t_locations.length - 1 ? "" : "•";
+										const dot = i === t_locations.length - 1 ? "" : "&";
 										return(<>{str}&thinsp;{dot}&thinsp;</>)
 								})}</p>
 								<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-xs"><span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1">{teachingTitle(teacher.fullname)+":"}</span><span>{t_classes_str.map((str, i) => {

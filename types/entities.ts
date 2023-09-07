@@ -11,7 +11,8 @@ import {
 	literal,
 	union,
 	type Output,
-	nullable
+	nullable,
+	boolean
 } from "valibot";
 
 export const v_Books = object({
@@ -80,6 +81,8 @@ export const v_Teachers = object({
 	email: optional(string()),
 	telephone: optional(string()),
 	linktree: optional(string()),
+	visible: optional(boolean()),
+	online: optional(boolean())
 });
 export type Teachers = Output<typeof v_Teachers>;
 

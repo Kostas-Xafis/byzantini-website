@@ -41,9 +41,9 @@ export default function Modal(props: Props) {
 				(!open() ? " hidden" : "")
 			}
 		>
-			<div class="relative max-w-[70%] h-max max-h-[90vh] p-12 bg-white place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-8 justify-center">
+			<div class="relative max-w-[70%] h-max max-h-[90vh] p-6 bg-white place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center">
 				<p class="text-4xl p-2 w-full text-center">{headerText()}</p>
-				<form data-prefix={prefix} class="peer/form group/form grid grid-cols-3 auto-rows-max gap-8 py-4  overflow-y-auto">
+				<form data-prefix={prefix} class="peer/form group/form grid grid-cols-3 auto-rows-max gap-8 py-4 overflow-y-auto">
 					<For each={Object.values(inputs())}>
 						{input => (
 							<Show when={input.name !== ""}>

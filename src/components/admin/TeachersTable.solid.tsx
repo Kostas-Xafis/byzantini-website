@@ -70,6 +70,7 @@ const TeachersInputs = (
 			let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
 			return { value: i.id, label: i.name, selected: !!c };
 		});
+	console.log(teacher);
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
@@ -115,6 +116,28 @@ const TeachersInputs = (
 			iconClasses: "fa-solid fa-file-pdf",
 			fileExtension: ".pdf",
 			value: teacher?.cv
+		},
+		visible: {
+			name: "visible",
+			label: "Εμφάνιση",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-eye",
+			multiselectList: [
+				{ value: 1, label: "Ναι", selected: !!teacher?.visible },
+				{ value: 0, label: "Όχι", selected: !teacher?.visible }
+			],
+			multiselectOnce: true
+		},
+		online: {
+			name: "online",
+			label: "Ηλεκτρ. Μάθημα",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-laptop",
+			multiselectList: [
+				{ value: 1, label: "Ναι", selected: !!teacher?.online },
+				{ value: 0, label: "Όχι", selected: !teacher?.online }
+			],
+			multiselectOnce: true
 		},
 		teacherLocations: {
 			name: "teacherLocations",
@@ -172,6 +195,8 @@ const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[
 	columns[7] = classes.find(c => c.class_id === 0)?.priority || -1;
 	columns[8] = classes.find(c => c.class_id === 1)?.priority || -1;
 	columns[9] = classes.find(c => c.class_id === 2)?.priority || -1;
+	columns[10] = teacher.visible ? "Ναι" : "Όχι";
+	columns[11] = teacher.online ? "Ναι" : "Όχι";
 	return columns as unknown as TeachersTable;
 };
 
@@ -226,12 +251,14 @@ export default function TeachersTable() {
 		fullname: { name: "Ονοματεπώνυμο", size: () => 25 },
 		picture: "Φωτογραφία",
 		cv: "Βιογραφικό",
-		email: { name: "Email", size: () => 20 },
+		email: { name: "Email", size: () => 25 },
 		telephone: { name: "Τηλέφωνο", size: () => 12 },
 		linktree: "Σύνδεσμος",
 		priority_byz: { name: "Προτεραιότητα Βυζαντινής", size: () => 15 },
 		priority_par: { name: "Προτεραιότητα Παραδοσιακής", size: () => 15 },
-		priority_eur: { name: "Προτεραιότητα Ευρωπαϊκής", size: () => 15 }
+		priority_eur: { name: "Προτεραιότητα Ευρωπαϊκής", size: () => 15 },
+		visible: "Εμφάνιση",
+		online: "Online"
 	};
 
 	const shapedData = createMemo(() => {
@@ -254,6 +281,18 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
+				visible: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='visible']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? !!Number(btn.dataset.value) : null; // Convert to boolean or null
+						return id;
+					})
+					.filter(c => c !== null)[0] as boolean,
+				online: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='online']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? !!Number(btn.dataset.value) : null; // Convert to boolean or null
+						return id;
+					})
+					.filter(c => c !== null)[0] as boolean,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;
@@ -325,6 +364,18 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
+				visible: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='visible']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? !!Number(btn.dataset.value) : null; // Convert to boolean or null
+						return id;
+					})
+					.filter(c => c !== null)[0] as boolean,
+				online: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='online']`)]
+					.map(btn => {
+						const id = btn.dataset.selected === "true" ? !!Number(btn.dataset.value) : null; // Convert to boolean or null
+						return id;
+					})
+					.filter(c => c !== null)[0] as boolean,
 				teacherClasses: [...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='teacherClasses']`)]
 					.map(btn => {
 						const id = btn.dataset.selected === "true" ? Number(btn.dataset.value) : null;

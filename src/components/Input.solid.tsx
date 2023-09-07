@@ -61,7 +61,7 @@ export type Props = {
 	selectList?: string[];
 	valueList?: (string | number)[];
 	valueLiteral?: boolean;
-	multiselectList?: { value: number; label: string; selected: boolean }[];
+	multiselectList?: { value: number; label: string; selected: boolean | undefined }[];
 	multiselectOnce?: boolean;
 	fileExtension?: string;
 	minmax?: [number, number];
@@ -204,7 +204,9 @@ export default function Input(props: Props) {
 									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 									onClick={(e: MouseEvent) => {
 										if (multiselectOnce) {
-											const buttons = document.querySelectorAll(`button[data-selected='true']`);
+											const buttons = document.querySelectorAll(
+												`button[data-specifier=${name}][data-selected='true']`
+											);
 											buttons.forEach(button => {
 												button.setAttribute("data-selected", "false");
 											});

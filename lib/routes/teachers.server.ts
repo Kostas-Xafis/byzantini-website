@@ -13,7 +13,7 @@ serverRoutes.get.func = async _ctx => {
 serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");
-	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? ORDER BY tc.priority ASC, fullname ASC", [class_id]));
+	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC, fullname ASC", [class_id]));
 }
 
 serverRoutes.getByFullnames.func = async _ctx => {
@@ -39,8 +39,8 @@ serverRoutes.getInstruments.func = async ctx => {
 serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await ctx.request.json();
-		const args = [body.fullname, body.email, body.telephone, body.linktree];
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree) VALUES (?, ?, ?, ?)`, args);
+		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online];
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, visible, online) VALUES (${questionMarks(args.length)})`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [id.insertId, class_id, priority]);
@@ -58,8 +58,8 @@ serverRoutes.post.func = async ctx => {
 serverRoutes.update.func = async ctx => {
 	return await execTryCatch(async (T: Transaction) => {
 		const body = await ctx.request.json();
-		const args = [body.fullname, body.email, body.telephone, body.linktree, body.id];
-		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=? WHERE id=?`, args);
+		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online, body.id];
+		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, visible=?, online=? WHERE id=?`, args);
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
