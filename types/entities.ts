@@ -167,7 +167,7 @@ export type Registrations = Output<typeof v_Registrations>;
 
 export const v_EmailSubscriptions = object({
 	email: string([email()]),
-	unsubscribe_link: string()
+	unsubscribe_token: string()
 });
 
 export type EmailSubscriptions = Output<typeof v_EmailSubscriptions>;

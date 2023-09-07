@@ -65,6 +65,15 @@ const emailUnsubscribe: DefaultEndpointRoute<"POST:/registrations/email-unsubscr
     func: async ctx => null as any
 };
 
+const getSubscriptionToken: EndpointRoute<"POST:/registrations/email-subscribe/token", typeof v_Email, { token: string }> = {
+    authentication: false,
+    method: "POST",
+    path: "/registrations/email-subscribe/token",
+    hasUrlParams: false,
+    validation: () => v_Email,
+    func: async ctx => null as any
+};
+
 export const RegistrationsRoutes = {
     get,
     getTotal,
@@ -72,7 +81,8 @@ export const RegistrationsRoutes = {
     update,
     complete,
     emailSubscribe,
-    emailUnsubscribe
+    emailUnsubscribe,
+    getSubscriptionToken
 };
 
 export type APIRegistrationsArgs = APIArguments<"Registrations", typeof RegistrationsRoutes>;
@@ -119,6 +129,12 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         endpoint: "Registrations.emailUnsubscribe",
         validation: v_EmailToken
     },
+    "Registrations.getSubscriptionToken": {
+        method: "POST",
+        path: "/registrations/email-subscribe/token",
+        endpoint: "Registrations.getSubscriptionToken",
+        validation: v_Email
+    },
 };
 
 export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsRoutes> = {
@@ -130,5 +146,6 @@ export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsR
         complete: "Registrations.complete",
         emailSubscribe: "Registrations.emailSubscribe",
         emailUnsubscribe: "Registrations.emailUnsubscribe",
+        getSubscriptionToken: "Registrations.getSubscriptionToken"
     }
 };
