@@ -1,6 +1,6 @@
-import type { Registrations } from "../../types/entities";
+import type { EmailSubscriptions, Registrations } from "../../types/entities";
 import { RegistrationsRoutes } from "./registrations.client";
-import { type Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { type Transaction, execTryCatch, executeQuery, questionMarks, generateLink } from "../utils.server";
 
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(RegistrationsRoutes)) as typeof RegistrationsRoutes; // Copy the routes object to split it into client and server routes
@@ -22,6 +22,7 @@ serverRoutes.post.func = async (ctx) => {
             args
         );
         await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
+        await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_link) VALUES (?, ?)", [body.email, generateLink(16)]);
         return "Registrated successfully";
     });
 };
@@ -43,6 +44,25 @@ serverRoutes.complete.func = async (ctx) => {
         else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body.length)})`, body);
         await T.executeQuery("UPDATE total_registrations SET amount = amount - ?", [body.length]);
         return "Registration completed successfully";
+    });
+};
+
+serverRoutes.emailSubscribe.func = async (ctx) => {
+    return await execTryCatch(async () => {
+        const body = await ctx.request.json();
+        console.log({ body });
+        console.log(await executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]));
+        return "Email subscribed successfully";
+    });
+};
+
+serverRoutes.emailUnsubscribe.func = async (ctx) => {
+    return await execTryCatch(async () => {
+        const body = await ctx.request.json();
+        const isSubscribed = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
+        if (isSubscribed.length === 0) throw new Error("Invalid token");
+        await executeQuery("DELETE FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
+        return "Email unsubscribed successfully";
     });
 };
 

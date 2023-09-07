@@ -164,3 +164,10 @@ export const v_Registrations = object({
 	payment_date: optional(nullable(number([integer(), minValue(0)])))
 });
 export type Registrations = Output<typeof v_Registrations>;
+
+export const v_EmailSubscriptions = object({
+	email: string([email()]),
+	unsubscribe_link: string()
+});
+
+export type EmailSubscriptions = Output<typeof v_EmailSubscriptions>;

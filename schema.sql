@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS `teacher_instruments`;
 DROP TABLE IF EXISTS `files`;
 DROP TABLE IF EXISTS `sys_users`;
 DROP TABLE IF EXISTS `sys_user_register_links`;
+DROP TABLE IF EXISTS `email_subscriptions`;
 
 -- DB SCHEMA;
 CREATE TABLE `wholesalers` (
@@ -261,6 +262,12 @@ INSERT INTO instruments (name, type, isInstrument) VALUES ('Θεωρία Ευρ�
 INSERT INTO instruments (name, type) VALUES ('Πιάνο', "eur");
 INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
 
+
+CREATE TABLE email_subscriptions (
+    `email` varchar(80) NOT NULL,
+    `unsubscribe_token` varchar(16) NOT NULL,
+    PRIMARY KEY (`email`)
+)DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ALTER TABLE `locations` ADD COLUMN `manager` varchar(80) AFTER `municipality`;
 -- ALTER TABLE `locations` MODIFY COLUMN `email` varchar(80);
