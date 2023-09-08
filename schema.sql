@@ -27,17 +27,6 @@ CREATE TABLE `wholesalers` (
     PRIMARY KEY (`id`)
 )CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO wholesalers (name) VALUES ('George Orwell');
-INSERT INTO wholesalers (name) VALUES ('F. Scott Fitzgerald');
-INSERT INTO wholesalers (name) VALUES ('Frances Hodgson Burnett');
-INSERT INTO wholesalers (name) VALUES ('Harper Lee');
-INSERT INTO wholesalers (name) VALUES ('J.K. Rowling');
-INSERT INTO wholesalers (name) VALUES ('Jane Austen');
-INSERT INTO wholesalers (name) VALUES ('J.R.R. Tolkien');
-INSERT INTO wholesalers (name) VALUES ('J.D. Salinger');
-INSERT INTO wholesalers (name) VALUES ('Paulo Coelho');
-
-
 CREATE TABLE `books`(
     `id` int NOT NULL AUTO_INCREMENT,
     `title` varchar(80) NOT NULL,
@@ -49,19 +38,6 @@ CREATE TABLE `books`(
 PRIMARY KEY (`id`))
 AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("1984", 1, 13, 15, 30, 10);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Great Gatsby", 2, 9, 12, 40, 15);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Lord of the Rings", 7, 20, 25, 45, 24);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Secret Garden", 3, 16, 20, 50, 20);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("1986", 1, 13, 15, 30, 25);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("To Kill a Mockingbird", 4, 10, 13, 20, 11);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Sad Gatsby", 2, 9, 12, 40, 27);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("Harry Potter and the Sorcerer's Stone", 5, 15, 17, 60, 47);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("Pride and Prejudice", 6, 8, 10, 25, 16);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Hobbit", 7, 12, 15, 35, 12);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Catcher in the Rye", 8, 11, 14, 15, 12);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Alchemist", 9,  10, 12, 30, 18);
-INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES ("The Rock of the Rings", 7, 20, 25, 45, 23);
 
 CREATE TABLE `payments`(
     `id` int AUTO_INCREMENT,
@@ -78,19 +54,6 @@ CREATE TABLE `total_payments` (
     `amount` int DEFAULT 0
 )CHARSET=utf8mb4;
 
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Jane Smith", 1, 15, 1686580302600);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("John Doe", 2, 12, 1686580312655);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Michael Johnson", 3, 25, 1686580312657);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Emily Davis", 4, 20, 1686580312658);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Daniel Wilson", 6, 13, 1686580312659);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Olivia Thompson", 6, 13, 1686580312660);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("William Martinez", 8, 17, 1686580312661);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Sophia Anderson", 8, 17, 1686580312662);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("James Taylor", 10, 15, 1686580312663);
-INSERT INTO payments (student_name, book_id, amount, date) VALUES ("Emma Hernandez", 10, 15, 1686580312664);
-
-INSERT INTO total_payments (amount) SELECT SUM(amount) FROM payments;
-
 CREATE TABLE `school_payoffs` (
     `id` int NOT NULL AUTO_INCREMENT,
     `wholesaler_id` int NOT NULL,
@@ -101,10 +64,6 @@ AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE `total_school_payoffs` (
     `amount` int DEFAULT 0
 )CHARSET=utf8mb4;
-
-INSERT INTO school_payoffs (wholesaler_id, amount) SELECT wholesaler_id, SUM((quantity-sold)*wholesale_price) FROM books GROUP BY wholesaler_id;
-
-INSERT INTO total_school_payoffs (amount) SELECT SUM(amount) FROM school_payoffs;
 
 CREATE TABLE `locations` (
     `id` int NOT NULL AUTO_INCREMENT,
@@ -186,7 +145,7 @@ CREATE TABLE `registrations`(
     `last_name` varchar(80) NOT NULL,
     `first_name` varchar(80) NOT NULL,
     `fathers_name` varchar(80) NOT NULL,
-    `birth_date` int NOT NULL,
+    `birth_date` bigint NOT NULL,
     `road` varchar(80) NOT NULL,
     `number` int NOT NULL,
     `tk` int NOT NULL,
@@ -259,9 +218,8 @@ INSERT INTO instruments (name, type) VALUES ('Ακκορντεόν', "par");
 INSERT INTO instruments (name, type, isInstrument) VALUES ('Σολφέζ', "eur", 0);
 INSERT INTO instruments (name, type, isInstrument) VALUES ('Φωνητική - Ορθοφωνία', "eur", 0);
 INSERT INTO instruments (name, type, isInstrument) VALUES ('Θεωρία Ευρωπαϊκής Μουσικής', "eur", 0);
-INSERT INTO instruments (name, type) VALUES ('Πιάνο', "eur");
-INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur");
-
+INSERT INTO instruments (name, type) VALUES ('Πιάνο', "eur", 0);
+INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur", 0);
 
 CREATE TABLE email_subscriptions (
     `email` varchar(80) NOT NULL,
@@ -269,23 +227,13 @@ CREATE TABLE email_subscriptions (
     PRIMARY KEY (`email`)
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ALTER TABLE `locations` ADD COLUMN `manager` varchar(80) AFTER `municipality`;
--- ALTER TABLE `locations` MODIFY COLUMN `email` varchar(80);
--- ALTER TABLE `instruments` ADD COLUMN `isInstrument` boolean NOT NULL DEFAULT 1 AFTER `type`;
--- ALTER TABLE `teacher_classes` ADD COLUMN `priority` int NOT NULL DEFAULT 0 AFTER `class_id`;
-
--- UPDATE instruments SET isInstrument=0 WHERE name='Σολφέζ' AND type="eur";
--- UPDATE instruments SET isInstrument=0 WHERE name='Φωνητική - Ορθοφωνία' AND type="eur";
--- UPDATE instruments SET isInstrument=0 WHERE name='Θεωρία Ευρωπαϊκής Μουσικής' AND type="eur";
-
--- ALTER TABLE `teachers` ADD COLUMN `email` varchar(80);
--- ALTER TABLE `teachers` ADD COLUMN `telephone` varchar(80);
--- ALTER TABLE `teachers` ADD COLUMN `linktree` varchar(80);
-
--- ALTER TABLE `registrations` RENAME COLUMN `birth_year` TO `birth_date`;
--- ALTER TABLE `locations` ADD COLUMN `youtube` varchar(120);
-
--- ALTER TABLE registrations ADD COLUMN birth_date int NOT NULL AFTER email;
+CREATE TABLE query_logs (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `query` varchar(400) NOT NULL,
+    `args` varchar(400) NOT NULL,
+    `date` bigint NOT NULL,
+    PRIMARY KEY (`id`)
+)DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('Sjjddj', 'Dnjdjd', '000', 'Ndjdkdk', '-', '95959595', 'dsaf@asdffsa.as', 967161600000, 'Rjrjfjfk', 56, 98656, 'Hdjdjfj', "2023-2024", "Γ' Ετος", 34, 0, 0, 1693417795772);
 -- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('asdasfd', 'sadfasdf', '000', 'asdjfafsd', '125905', '21521351', "aslkdjggd@askjdj.com", 918777600000, "asdjgksjadg", 1250, 21059,"gasdgs", "2023-2024", "Δ' Ετος", 31, 0, 0, 1693394532814);

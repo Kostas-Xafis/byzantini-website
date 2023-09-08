@@ -22,7 +22,6 @@ serverRoutes.post.func = async (ctx) => {
             args
         );
         await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
-        await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
         return "Registrated successfully";
     });
 };

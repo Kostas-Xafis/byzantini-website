@@ -27,10 +27,12 @@ export const generateLink = (size = 16) => {
 	return link;
 };
 
-export const executeQuery = async <T = { insertId: number }>(query: string, args: any[] = [], trans?: Tx) => {
+export const executeQuery = async <T = { insertId: number }>(query: string, args: any[] = [], trans?: Tx, log = true) => {
 	const conn = trans ?? await CreateDbConnection();
 	const res = await conn.execute(query, args, { as: "object" });
-	console.log(res);
+	// if (log) {
+	// 	executeQuery
+	// }
 	return (res.insertId === '0' ? res.rows : { insertId: Number(res.insertId) }) as unknown as Promise<T extends { insertId: number } ? { insertId: number } : T[]>;
 };
 
