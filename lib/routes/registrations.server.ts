@@ -37,7 +37,7 @@ serverRoutes.update.func = async (ctx) => {
     });
 };
 
-serverRoutes.complete.func = async (ctx) => {
+serverRoutes.delete.func = async (ctx) => {
     return await execTryCatch(async (T) => {
         const body = await ctx.request.json();
         if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id=?`, body);
@@ -50,8 +50,7 @@ serverRoutes.complete.func = async (ctx) => {
 serverRoutes.emailSubscribe.func = async (ctx) => {
     return await execTryCatch(async () => {
         const body = await ctx.request.json();
-        console.log({ body });
-        console.log(await executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]));
+        await executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
         return "Email subscribed successfully";
     });
 };

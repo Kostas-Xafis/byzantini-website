@@ -304,7 +304,7 @@ export default function RegistrationsTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map(id => id);
-			const res = await useAPI(setStore, API.Registrations.complete, { RequestObject: data });
+			const res = await useAPI(setStore, API.Registrations.delete, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.DELETE);
 		});

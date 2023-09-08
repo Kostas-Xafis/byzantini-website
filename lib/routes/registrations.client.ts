@@ -37,7 +37,7 @@ const update: DefaultEndpointRoute<"PUT:/registrations", typeof v_Registrations>
     func: async ctx => null as any
 };
 
-const complete: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
+const del: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
     authentication: true,
     method: "DELETE",
     path: "/registrations",
@@ -79,7 +79,7 @@ export const RegistrationsRoutes = {
     getTotal,
     post,
     update,
-    complete,
+    delete: del,
     emailSubscribe,
     emailUnsubscribe,
     getSubscriptionToken
@@ -112,10 +112,10 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
         endpoint: "Registrations.update",
         validation: v_Registrations
     },
-    "Registrations.complete": {
+    "Registrations.delete": {
         method: "DELETE",
         path: "/registrations",
-        endpoint: "Registrations.complete"
+        endpoint: "Registrations.delete"
     },
     "Registrations.emailSubscribe": {
         method: "POST",
@@ -143,7 +143,7 @@ export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsR
         getTotal: "Registrations.getTotal",
         post: "Registrations.post",
         update: "Registrations.update",
-        complete: "Registrations.complete",
+        delete: "Registrations.delete",
         emailSubscribe: "Registrations.emailSubscribe",
         emailUnsubscribe: "Registrations.emailUnsubscribe",
         getSubscriptionToken: "Registrations.getSubscriptionToken"

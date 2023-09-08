@@ -4,7 +4,6 @@ import SigninLayout from "../layouts/SigninLayout.astro";
 export const prerender = true;
 
 const token = Astro.url.searchParams.get("token") || "";
-console.log({token});
 const res = await useAPI("Registrations.emailUnsubscribe", {RequestObject: {token}});
 let success = (res.data || res.message) || false;
 ---

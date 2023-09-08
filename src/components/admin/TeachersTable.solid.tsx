@@ -70,7 +70,6 @@ const TeachersInputs = (
 			let c = teacherInstruments && teacherInstruments.find(t => t.instrument_id === i.id);
 			return { value: i.id, label: i.name, selected: !!c };
 		});
-	console.log(teacher);
 	return {
 		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
 		fullname: { name: "fullname", label: "Ονοματεπώνυμο", type: "text", iconClasses: "fa-solid fa-user" },
