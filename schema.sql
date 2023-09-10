@@ -1,25 +1,3 @@
--- DROP TABLES;
-
-DROP TABLE IF EXISTS `total_registrations`;
-DROP TABLE IF EXISTS `registrations`;
-DROP TABLE IF EXISTS `books`;
-DROP TABLE IF EXISTS `wholesalers`;
-DROP TABLE IF EXISTS `payments`;
-DROP TABLE IF EXISTS `total_payments`;
-DROP TABLE IF EXISTS `school_payoffs`;
-DROP TABLE IF EXISTS `total_school_payoffs`;
-DROP TABLE IF EXISTS `locations`;
-DROP TABLE IF EXISTS `teachers`;
-DROP TABLE IF EXISTS `instruments`;
-DROP TABLE IF EXISTS `class_type`;
-DROP TABLE IF EXISTS `teacher_classes`;
-DROP TABLE IF EXISTS `teacher_locations`;
-DROP TABLE IF EXISTS `teacher_instruments`;
-DROP TABLE IF EXISTS `files`;
-DROP TABLE IF EXISTS `sys_users`;
-DROP TABLE IF EXISTS `sys_user_register_links`;
-DROP TABLE IF EXISTS `email_subscriptions`;
-
 -- DB SCHEMA;
 CREATE TABLE `wholesalers` (
     `id` int NOT NULL AUTO_INCREMENT,

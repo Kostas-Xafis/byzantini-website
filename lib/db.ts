@@ -1,8 +1,7 @@
-import { cast, connect } from "@planetscale/database";
+import { cast, connect, } from "@planetscale/database";
 
 export const CreateDbConnection = async () => {
-	const { DB_URL, DB_PWD, DB_HOST, DB_USERNAME } = await import.meta.env;
-	if (!DB_URL) throw new Error("DB_URL is not defined");
+	const { DB_PWD, DB_HOST, DB_USERNAME } = await import.meta.env;
 	return connect({
 		host: DB_HOST,
 		password: DB_PWD,

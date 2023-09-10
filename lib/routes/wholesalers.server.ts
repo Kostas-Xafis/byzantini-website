@@ -5,10 +5,7 @@ import { WholesalersRoutes } from "./wholesalers.client";
 const serverRoutes = JSON.parse(JSON.stringify(WholesalersRoutes)) as typeof WholesalersRoutes;
 
 serverRoutes.get.func = async function (_ctx) {
-	return execTryCatch(async () => {
-		const wholesalers = await executeQuery<Wholesalers>("SELECT * FROM wholesalers");
-		return wholesalers;
-	});
+	return await execTryCatch(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"));
 };
 
 serverRoutes.post.func = async (ctx) => {
