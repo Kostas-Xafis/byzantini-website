@@ -289,7 +289,7 @@ const teachingTitle = (fullname:string) => {
 			const entries = list.getEntries();
 			entries.forEach(() => {
 
-				networkCheckHandler.reset().catch(() => {});
+				networkCheckHandler.reset();
 			})
 		}).observe({entryTypes: ["resource"]});
 		networkCheckHandler.timeout().catch(() => {});

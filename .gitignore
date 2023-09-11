@@ -19,9 +19,9 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-.vscode/
+.vscode
 test.exe
-todo.txt
+*.txt
 
 /getData
 

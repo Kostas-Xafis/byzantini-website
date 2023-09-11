@@ -52,14 +52,17 @@ export default function Table(props: Props) {
 	});
 	columnWidths += ";";
 	return (
-		<div class="w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] flex flex-col justify-center items-center gap-y-4" data-prefix={prefix}>
-			<div class="flex flex-row w-full justify-evenly">{props.children}</div>
+		<div
+			class="w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4"
+			data-prefix={prefix}
+		>
+			<div class="flex flex-row w-full justify-evenly z-[1001]">{props.children}</div>
 			<div
 				id="tableContainer"
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
 				<Row data={columns} columnWidths={columnWidths} rows={data.length} header sortOnClick={setSorted} />
-				<div class="data-container relative z-0 max-h-[calc(85vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+				<div class="data-container relative z-0 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item, index) => {
 							return <Row data={item} index={index()} columnWidths={columnWidths} rows={data.length} />;

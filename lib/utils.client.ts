@@ -16,11 +16,15 @@ export const onElementMount = async (target: string, callback: () => any) => {
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+export const removeAccents = (str: string) =>
+    str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+
 export class UpdateHandler {
     abortController = new AbortController();
     timeoutFired = false;
-    func: Function = () => { };
-    timer = 0;
+    func: Function;
+    timer: number;
     timeout = (ms = 0) => {
         this.timeoutFired = true;
         return new Promise((res, rej) => {
@@ -40,13 +44,19 @@ export class UpdateHandler {
         if (this.timeoutFired) this.abortController.abort();
         this.timeoutFired = false;
     };
-    reset(ms = 0) {
+    reset(ms = 0, func?: Function, catchAbort = false) {
         this.abort();
+        func && (this.func = func);
+        if (catchAbort) return this.timeout(ms || this.timer).catch(() => { });
         return this.timeout(ms || this.timer);
     }
     constructor(timer = 0, func = () => { }) {
-        this.timer = timer;
+        this.timer = timer || 1000;
         this.func = func;
+    }
+
+    static createInstance(timer = 0, func = () => { }) {
+        return new UpdateHandler(timer, func);
     }
 }
 
@@ -64,3 +74,4 @@ export function iOS() {
     // @ts-ignore
     return iOSPlatforms.includes(navigator.platform) || iOSPlatforms.includes(navigator["userAgentData"]?.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
 }
+

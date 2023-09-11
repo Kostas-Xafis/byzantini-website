@@ -73,8 +73,9 @@ export class PDF {
         this.doc = await window.PDFLib.PDFDocument.load(buffer);
     }
 
-    public static async loadPDFLib(): Promise<void> {
-        if (window.PDFLib) return;
+    // async load of pdf library as a constructor
+    public static async createInstance(): Promise<PDF> {
+        if (window.PDFLib) return new PDF();
 
         let s = document.createElement("script");
         s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
@@ -87,6 +88,7 @@ export class PDF {
         document.body.appendChild(s);
 
         while (!window.PDFLib || !window.fontkit) await sleep(100);
+        return new PDF();
     }
 
     public async download(): Promise<void> {

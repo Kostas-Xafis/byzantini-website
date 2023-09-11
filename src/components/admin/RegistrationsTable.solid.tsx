@@ -9,6 +9,8 @@ import { type ContextType, SelectedItemsContext } from "./table/SelectedRowConte
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 import { PDF } from "../../../lib/pdf.client";
+import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
+import { removeAccents } from "../../../lib/utils.client";
 
 const PREFIX = "registrations";
 
@@ -161,7 +163,7 @@ const registrationToTableRegistration = (
 ): RegistrationsTable => {
 	const columns = Object.values(registration);
 	columns[5] = new Date(columns[5] as number).toLocaleDateString("el-GR");
-	columns[15] = class_types[columns[15] as number];
+	columns[15] = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"][columns[15] as number];
 	columns[16] = teachers.find(t => t.id === columns[16])?.fullname || "";
 	columns[17] = instruments.find(i => i.id === columns[17])?.name || "";
 	let d = new Date(columns[18] as number);
@@ -179,10 +181,42 @@ const registrationsToTable = (registrations: Registrations[], teachers: Teachers
 	return registrations.map(registration => registrationToTableRegistration(registration, teachers, instruments));
 };
 
-const class_types = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"] as const;
+const columnNames: ColumnType<RegistrationsTable> = {
+	id: "Id",
+	am: { name: "Αριθμός Μητρώου", size: () => 6 },
+	last_name: { name: "Επώνυμο", size: () => 15 },
+	first_name: { name: "Όνομα", size: () => 15 },
+	fathers_name: { name: "Πατρώνυμο", size: () => 15 },
+	birth_date: { name: "Ημερομηνία Γέννησης", size: () => 12 },
+	road: { name: "Οδός", size: () => 20 },
+	number: "Αριθμός",
+	tk: "Τ.Κ.",
+	region: { name: "Δήμος/Περιοχή", size: () => 15 },
+	telephone: { name: "Τηλέφωνο", size: () => 12 },
+	cellphone: { name: "Κινητό", size: () => 12 },
+	email: { name: "Email", size: () => 20 },
+	registration_year: { name: "Σχολικό Έτος", size: () => 10 },
+	class_year: { name: "Έτος Φοίτησης", size: () => 15 },
+	class_id: { name: "Τάξη", size: () => 15 },
+	teacher_id: { name: "Καθηγητής", size: () => 15 },
+	instrument_id: { name: "Όργανο", size: () => 15 },
+	date: { name: "Ημερομηνία Εγγραφής", size: () => 12 },
+	payment_amount: { name: "Ποσό Πληρωμής", size: () => 8 },
+	payment_date: { name: "Ημερομηνία Πληρωμής", size: () => 12 }
+};
+
+const searchColumns: SearchColumn[] = [
+	{ columnName: "am", name: "ΑΜ :", type: "string" },
+	{ columnName: "last_name", name: "Επώνυμο :", type: "string" },
+	{ columnName: "first_name", name: "Όνομα :", type: "string" },
+	{ columnName: "telephone", name: "Τηλέφωνο :", type: "string" },
+	{ columnName: "cellphone", name: "Κινητό :", type: "string" },
+	{ columnName: "email", name: "Email :", type: "string" }
+];
 
 export default function RegistrationsTable() {
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
 		useAPI(setStore, API.Registrations.get, {});
@@ -213,36 +247,32 @@ export default function RegistrationsTable() {
 			}
 		}
 	] as const;
-	const columnNames: ColumnType<RegistrationsTable> = {
-		id: "Id",
-		am: { name: "Αριθμός Μητρώου", size: () => 6 },
-		last_name: { name: "Επώνυμο", size: () => 15 },
-		first_name: { name: "Όνομα", size: () => 15 },
-		fathers_name: { name: "Πατρώνυμο", size: () => 15 },
-		birth_date: { name: "Ημερομηνία Γέννησης", size: () => 12 },
-		road: { name: "Οδός", size: () => 20 },
-		number: "Αριθμός",
-		tk: "Τ.Κ.",
-		region: { name: "Δήμος/Περιοχή", size: () => 15 },
-		telephone: { name: "Τηλέφωνο", size: () => 12 },
-		cellphone: { name: "Κινητό", size: () => 12 },
-		email: { name: "Email", size: () => 20 },
-		registration_year: { name: "Σχολικό Έτος", size: () => 10 },
-		class_year: { name: "Έτος Φοίτησης", size: () => 15 },
-		class_id: { name: "Τάξη", size: () => 15 },
-		teacher_id: { name: "Καθηγητής", size: () => 15 },
-		instrument_id: { name: "Όργανο", size: () => 15 },
-		date: { name: "Ημερομηνία Εγγραφής", size: () => 12 },
-		payment_amount: { name: "Ποσό Πληρωμής", size: () => 8 },
-		payment_date: { name: "Ημερομηνία Πληρωμής", size: () => 12 }
-	};
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return [];
-		return registrations ? registrationsToTable(registrations, teachers, instruments) : [];
+		const { columnName, value } = searchQuery;
+		let searchRows: Registrations[] | null = null;
+		if (columnName && value) {
+			searchRows = registrations
+				.map(x => x)
+				.filter(r => {
+					const col = r[columnName as keyof Registrations];
+					if (typeof col === "number") return ("" + col).includes("" + value);
+					if (typeof col === "string") {
+						let nCol = removeAccents(col).toLowerCase();
+						let nVal = removeAccents(value as string).toLowerCase();
+						return nCol.includes(nVal);
+					} // implement fuzzy search later
+					return false;
+				});
+			console.log("searchRows:", searchRows);
+			// Somehow implement highlighting
+		}
+
+		return registrationsToTable(searchRows || registrations, teachers, instruments);
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {
@@ -251,6 +281,7 @@ export default function RegistrationsTable() {
 		const instruments = store[API.Instruments.get];
 		if (!teachers || !registrations || !instruments) return { icon: ActionIcon.MODIFY };
 		if (selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
+		console.log("selectedItems:", selectedItems);
 		const registration = JSON.parse(JSON.stringify(registrations.find(r => r.id === selectedItems[0]) as any)) as Registrations;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -331,17 +362,14 @@ export default function RegistrationsTable() {
 			const teacher = teachers.find(t => t.id === student.teacher_id) as Teachers;
 			const instrument = (student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
 			try {
-				const pdf = new PDF();
-				// load pdf library
-				await PDF.loadPDFLib();
+				const pdf = await PDF.createInstance();
 				pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
-				await pdf.loadTemplate();
+				await pdf.loadTemplate(); //loads the appropriate template based on the class_id
 				await pdf.fillTemplate();
 				await pdf.download();
 			} catch (error) {
 				console.error(error);
 			}
-
 			setActionPressed(ActionEnum.DOWNLOAD);
 		});
 		return {
@@ -364,6 +392,7 @@ export default function RegistrationsTable() {
 				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
 					<TableControls pressedAction={actionPressed} onActionsArray={[onSingleDownloadPDf]} prefix={PREFIX} />
+					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>
