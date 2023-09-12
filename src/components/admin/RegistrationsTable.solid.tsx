@@ -206,12 +206,12 @@ const columnNames: ColumnType<RegistrationsTable> = {
 };
 
 const searchColumns: SearchColumn[] = [
-	{ columnName: "am", name: "ΑΜ :", type: "string" },
-	{ columnName: "last_name", name: "Επώνυμο :", type: "string" },
-	{ columnName: "first_name", name: "Όνομα :", type: "string" },
-	{ columnName: "telephone", name: "Τηλέφωνο :", type: "string" },
-	{ columnName: "cellphone", name: "Κινητό :", type: "string" },
-	{ columnName: "email", name: "Email :", type: "string" }
+	{ columnName: "am", name: "ΑΜ", type: "string" },
+	{ columnName: "last_name", name: "Επώνυμο", type: "string" },
+	{ columnName: "first_name", name: "Όνομα", type: "string" },
+	{ columnName: "telephone", name: "Τηλέφωνο", type: "string" },
+	{ columnName: "cellphone", name: "Κινητό", type: "string" },
+	{ columnName: "email", name: "Email", type: "string" }
 ];
 
 export default function RegistrationsTable() {
@@ -268,7 +268,7 @@ export default function RegistrationsTable() {
 					} // implement fuzzy search later
 					return false;
 				});
-			console.log("searchRows:", searchRows);
+			// console.log("searchRows:", searchRows);
 			// Somehow implement highlighting
 		}
 
@@ -307,7 +307,7 @@ export default function RegistrationsTable() {
 				class_id,
 				teacher_id: Number(formData.get("teacher_id")) || 0,
 				instrument_id: (class_id && Number(formData.get("instrument_id"))) || 0,
-				date: Date.now(),
+				date: new Date(formData.get("date") as string).getTime(),
 				payment_amount: Number(formData.get("payment_amount") as string) || 0,
 				payment_date: formData.get("payment_date") ? new Date(formData.get("payment_date") as string).getTime() : null
 			};

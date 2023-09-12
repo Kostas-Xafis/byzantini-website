@@ -26,7 +26,7 @@ export function SearchTable(props: SearchTableProps) {
 	let debounce = new UpdateHandler();
 	const searchHandler = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		debounce.reset(150, () => {
+		debounce.reset(125, () => {
 			const value = target.value;
 			const c = column();
 			const val = c.type === "number" ? Number(value) : c.type === "boolean" ? Boolean(value) : value;
@@ -46,7 +46,7 @@ export function SearchTable(props: SearchTableProps) {
 			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md"></i>
 			<div class="group relative w-max flex flex-row !font-didact" onClick={e => columnSelect(e)}>
 				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-base cursor-pointer rounded-md shadow-md">
-					{column().name}
+					{column().name} :
 				</p>
 				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 rounded-md overflow-hidden ">
 					<For each={props.columns}>

@@ -17,6 +17,8 @@ import { type Props as InputProps, Fill, Omit } from "../Input.solid";
 import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener, formErrorWrap } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
+import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
+import { removeAccents } from "../../../lib/utils.client";
 
 const PREFIX = "teachers";
 
@@ -203,12 +205,19 @@ const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]):
 	return teachers.map(t => teacherToTableTeacher(t, classList));
 };
 
+const class_types = [
+	{ id: 0, name: "Βυζαντινή Μουσική" },
+	{ id: 1, name: "Παραδοσιακή Μουσική" },
+	{ id: 2, name: "Ευρωπαϊκή Μουσική" }
+];
+
+const searchColumns: SearchColumn[] = [
+	{ columnName: "fullname", name: "Ονοματεπώνυμο", type: "string" },
+	{ columnName: "email", name: "Email", type: "string" }
+];
+
 export default function TeachersTable() {
-	const class_types = [
-		{ id: 0, name: "Βυζαντινή Μουσική" },
-		{ id: 1, name: "Παραδοσιακή Μουσική" },
-		{ id: 2, name: "Ευρωπαϊκή Μουσική" }
-	];
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
 	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
 	const hydrate = createHydration(() => {
@@ -264,7 +273,25 @@ export default function TeachersTable() {
 		const classList = store[API.Teachers.getClasses];
 		const teachers = store[API.Teachers.get];
 		if (!classList || !teachers || !teachers) return [];
-		return teachers ? teachersToTable(teachers, classList) : [];
+		const { columnName, value } = searchQuery;
+		let searchRows: FullTeachers[] | null = null;
+		if (columnName && value) {
+			searchRows = teachers
+				.map(x => x)
+				.filter(r => {
+					const col = r[columnName as keyof Teachers];
+					if (typeof col === "number") return ("" + col).includes("" + value);
+					if (typeof col === "string") {
+						let nCol = removeAccents(col).toLowerCase();
+						let nVal = removeAccents(value as string).toLowerCase();
+						return nCol.includes(nVal);
+					}
+					return false;
+				});
+			// console.log("searchRows:", searchRows);
+			// Somehow implement highlighting
+		}
+		return teachersToTable(searchRows || teachers, classList);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const locations = store[API.Locations.get];
@@ -592,6 +619,7 @@ export default function TeachersTable() {
 						onActionsArray={[onAddInstrument, onDeleteInstrument]}
 						prefix={"instrument"}
 					/>
+					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

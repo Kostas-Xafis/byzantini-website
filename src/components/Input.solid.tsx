@@ -18,6 +18,7 @@ export function Omit<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[
 	for (const key of keys) {
 		disable(inputs[key]);
 	}
+	// @ts-ignore
 	return inputs;
 }
 
@@ -89,14 +90,13 @@ export default function Input(props: Props) {
 		tooltip
 	} = props;
 	if (type === null) return <></>;
-	if (type === "date") {
+	if (type === "date" && value) {
 		onMount(() => {
-			if (value !== 0) {
-				//@ts-ignore
-				document.querySelector(`input[name='${name}']`).valueAsDate = new Date(value);
-			}
+			// @ts-ignore;
+			(document.querySelector(`input[name='${name}']`) as HTMLInputElement).valueAsDate = new Date(value);
 		});
 	}
+
 	let onFileClick;
 	let onFileChange;
 	let onFileRemove;
@@ -232,6 +232,43 @@ export default function Input(props: Props) {
 					</For>
 				</div>
 			</Show>
+			{/*--------------------------------DATE INPUT---------------------------------------- */}
+			{/* <Show when={type === "date"}>
+				<div class="relative max-w-sm">
+					<div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+						<svg
+							class="w-4 h-4 text-gray-500 dark:text-gray-400"
+							aria-hidden="true"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="currentColor"
+							viewBox="0 0 20 20"
+						>
+							<path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+						</svg>
+					</div>
+					<input
+						{...{ datepicker: true }}
+						type="text"
+						name={name}
+						placeholder={placeholder || "Select date"}
+						value={value === 0 ? "0" : value || ""}
+						readOnly={disabled || false}
+						min={minmax?.[0] || ""}
+						max={minmax?.[1] || ""}
+						onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
+						onblur={(e: FocusEvent) =>
+							required &&
+							(e.currentTarget as HTMLInputElement).value === "" &&
+							(e.currentTarget as HTMLElement).setAttribute("required", "")
+						}
+						class={
+							"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
+							(disabled && blurDisabled ? " blur-[1px]" : "") +
+							" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+						}
+					/>
+				</div>
+			</Show> */}
 			{/*--------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
 				<div
