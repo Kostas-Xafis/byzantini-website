@@ -1,9 +1,38 @@
 import { createSignal, For } from "solid-js";
 import { UpdateHandler } from "../../../lib/utils.client";
 import type { SetStoreFunction } from "solid-js/store";
+import type { CellValue } from "./table/Row.solid";
 
-export type SearchColumn = { columnName: string; name: string; type: "string" | "number" | "boolean" };
-export type SearchSetter = Partial<{ columnName: string; value: string | number | boolean }>;
+export const enum Compare {
+	Eq = "=",
+	Ne = "!=",
+	Gt = ">",
+	Lt = "<",
+	Gte = ">=",
+	Lte = "<="
+}
+
+export const getCompareFn = (value: string) => {
+	const EqCheck = CompareList.findLast(c => value.startsWith(c));
+	switch (EqCheck) {
+		case Compare.Gte:
+			return (nCol: number, nVal: number) => nCol >= nVal;
+		case Compare.Lte:
+			return (nCol: number, nVal: number) => nCol <= nVal;
+		case Compare.Gt:
+			return (nCol: number, nVal: number) => nCol > nVal;
+		case Compare.Lt:
+			return (nCol: number, nVal: number) => nCol < nVal;
+		case Compare.Eq:
+			return (nCol: number, nVal: number) => nCol === nVal;
+	}
+};
+
+// Since findLast is used to find the last occurence of the operator, the order of the array is important
+export const CompareList = [Compare.Eq, Compare.Ne, Compare.Gt, Compare.Lt, Compare.Gte, Compare.Lte];
+
+export type SearchColumn = { columnName: string; name: string; type: CellValue };
+export type SearchSetter = Partial<{ columnName: string; value: string; type: CellValue }>;
 type SearchTableProps = {
 	setSearchQuery: SetStoreFunction<SearchSetter>; // returns the ids of the searched result rows
 	columns: SearchColumn[];
@@ -18,7 +47,6 @@ export function SearchTable(props: SearchTableProps) {
 		const columnName = target.dataset.colname;
 		const name = target.dataset.name;
 		const type = target.dataset.type as SearchColumn["type"];
-		console.log({ target, columnName, name, type });
 		if (!columnName || !name || !type) return;
 		setColumn({ columnName, name, type });
 	};
@@ -29,9 +57,10 @@ export function SearchTable(props: SearchTableProps) {
 		debounce.reset(125, () => {
 			const value = target.value;
 			const c = column();
-			const val = c.type === "number" ? Number(value) : c.type === "boolean" ? Boolean(value) : value;
+			console.log({ value, c });
 			props.setSearchQuery("columnName", c.columnName);
-			props.setSearchQuery("value", val);
+			props.setSearchQuery("value", value);
+			props.setSearchQuery("type", c.type);
 		});
 	};
 

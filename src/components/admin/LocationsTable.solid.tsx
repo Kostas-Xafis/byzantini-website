@@ -1,6 +1,6 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Locations } from "../../../types/entities";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
@@ -11,7 +11,6 @@ import Spinner from "../Spinner.solid";
 
 const PREFIX = "locations";
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type LocationsTable = Omit<Locations, "telephones" | "link" | "map" | "youtube">;
 
 const LocationsInputs = (location?: Locations): Record<keyof Locations, InputProps> => {
@@ -51,7 +50,7 @@ const locationToTableLocation = (location: Locations): LocationsTable => {
 
 	const columns = Object.values(location);
 	//@ts-ignore
-	columns[8] = (location.image && "/locations/" + location.image) || "";
+	columns[8] = (location.image && "/spoudastiria/" + location.image) || "";
 	return columns as unknown as LocationsTable;
 };
 
@@ -102,15 +101,15 @@ export default function LocationsTable() {
 		}
 	] as const;
 	const columnNames: ColumnType<LocationsTable> = {
-		id: "Id",
-		name: { name: "Παραρτήματος", size: () => 20 },
-		address: { name: "Οδός", size: () => 15 },
-		areacode: "Ταχ. Κώδικας",
-		municipality: { name: "Δήμος", size: () => 12 },
-		manager: { name: "Υπεύθυνος", size: () => 15 },
-		email: { name: "Email", size: () => 25 },
-		priority: "Προτεραιότητα",
-		image: "Φωτογραφία"
+		id: { type: "number", name: "Id" },
+		name: { type: "string", name: "Όνομα Παραρτήματος", size: () => 15 },
+		address: { type: "string", name: "Διεύθυνση", size: () => 15 },
+		areacode: { type: "number", name: "Ταχ. Κώδικας" },
+		municipality: { type: "string", name: "Δήμος", size: () => 12 },
+		manager: { type: "string", name: "Υπεύθυνος", size: () => 15 },
+		email: { type: "string", name: "Email", size: () => 25 },
+		priority: { type: "number", name: "Προτεραιότητα" },
+		image: { type: "link", name: "Φωτογραφία", size: () => 15 }
 	};
 
 	let shapedData = createMemo(() => {
@@ -257,7 +256,7 @@ export default function LocationsTable() {
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Locations.get]} fallback={<Spinner />}>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>

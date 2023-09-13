@@ -18,7 +18,6 @@ export function Omit<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[
 	for (const key of keys) {
 		disable(inputs[key]);
 	}
-	// @ts-ignore
 	return inputs;
 }
 
@@ -92,7 +91,6 @@ export default function Input(props: Props) {
 	if (type === null) return <></>;
 	if (type === "date" && value) {
 		onMount(() => {
-			// @ts-ignore;
 			(document.querySelector(`input[name='${name}']`) as HTMLInputElement).valueAsDate = new Date(value);
 		});
 	}

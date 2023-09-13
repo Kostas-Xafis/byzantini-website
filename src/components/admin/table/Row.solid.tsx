@@ -2,10 +2,12 @@ import { type Setter, onMount, useContext } from "solid-js";
 import { type ContextType, SelectedItemsContext } from "./SelectedRowContext.solid";
 import { SortDirection } from "./Table.solid";
 
+export type CellValue = "string" | "number" | "date" | "link" | "boolean";
+
 interface Props {
 	data: (number | string)[]; // data[0] must always be the id of the item
 	columnWidths: string;
-	rows: number;
+	columnType: CellValue[];
 	index?: number;
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
@@ -13,7 +15,7 @@ interface Props {
 
 export default function Row(props: Props) {
 	const [selectedItems, { add, remove }] = useContext(SelectedItemsContext) as ContextType;
-	const { data, columnWidths, index = -1, rows, header, sortOnClick } = props;
+	const { data, columnWidths, index = -1, columnType, header, sortOnClick } = props;
 
 	const onClick = !header
 		? (e: MouseEvent) => {
@@ -24,12 +26,6 @@ export default function Row(props: Props) {
 				(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
 		  }
 		: undefined;
-	const openToNewTab = (e: MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		const url = (e.currentTarget as HTMLAnchorElement).href;
-		window.open(url, "_blank");
-	};
 	let onClickSort: (e: MouseEvent) => void;
 	if (header) {
 		onClickSort = (e: MouseEvent) => {
@@ -78,21 +74,27 @@ export default function Row(props: Props) {
 						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500"
 						: "")
 				}
-				style={columnWidths + ` z-index: ${(rows - index) * 10}`}
+				style={columnWidths + ` z-index: ${(columnType.length - index) * 10}`}
 			>
 				{data.map((item, colIndex) => {
-					const isLink = typeof item === "string" && (item.startsWith("/") || item.startsWith("https"));
-					if (isLink)
+					let type = (!header && columnType[colIndex]) || ""; // If it's a header row there is no type
+					if (type === "link" && item)
 						return (
 							<a
-								href={item}
-								onClick={openToNewTab}
+								href={item as string}
+								target="_blank"
 								class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1"
 							>
 								<div>Προβολή</div>
 								<i class="fa-solid fa-up-right-from-square"></i>
 							</a>
 						);
+
+					if (type === "date" && item) {
+						item = new Date(item as number).toLocaleDateString("el-GR");
+					} else if (type === "date") item = "-";
+					if (type === "boolean") item = item ? "Ναι" : "Όχι";
+					if (type === "number" && (item === undefined || item === null)) item = "-";
 					return (
 						<div
 							class={
@@ -102,7 +104,7 @@ export default function Row(props: Props) {
 							data-col-ind={colIndex}
 							onClick={onClickSort}
 						>
-							{typeof item === "number" && item <= 0 ? "-" : item}
+							{item}
 							<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
 							<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
 						</div>

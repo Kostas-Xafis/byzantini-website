@@ -1,5 +1,5 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../Spinner.solid";
@@ -11,8 +11,6 @@ type TotalsTable = {
 	total_registrations: number;
 };
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-
 export default function TotalsTable() {
 	const [store, setStore] = createStore<APIStore>({});
 	createHydration(() => {
@@ -22,9 +20,9 @@ export default function TotalsTable() {
 	});
 
 	const columnNames: ColumnType<TotalsTable> = {
-		total_payments: { name: "Συνολικές Οφειλές Μαθητών", size: () => 20 },
-		total_school_payoffs: { name: "Συνολικές Οφειλές Σχολής", size: () => 20 },
-		total_registrations: { name: "Συνολικές Εγγραφές", size: () => 18 }
+		total_payments: { type: "number", name: "Συνολικές Οφειλές Μαθητών", size: () => 20 },
+		total_school_payoffs: { type: "number", name: "Συνολικές Οφειλές Σχολής", size: () => 20 },
+		total_registrations: { type: "number", name: "Συνολικές Εγγραφές", size: () => 18 }
 	};
 
 	let shapedData = createMemo(() => {
@@ -48,7 +46,7 @@ export default function TotalsTable() {
 				when={store[API.Payoffs.getTotal] && store[API.Payments.getTotal] && store[API.Registrations.getTotal]}
 				fallback={<Spinner />}
 			>
-				<Table data={shapedData} columnNames={columnNames}>
+				<Table data={shapedData} columns={columnNames}>
 					<div></div>
 				</Table>
 			</Show>

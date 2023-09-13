@@ -1,7 +1,7 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
@@ -12,7 +12,6 @@ import Spinner from "../Spinner.solid";
 
 const PREFIX = "payments";
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type PaymentsTable = ReplaceName<Payments, "book_id", "title">;
 
 const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
@@ -52,16 +51,7 @@ const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
 const paymentToTablePayment = (payment: Payments, books: Books[]): PaymentsTable => {
 	const columns = Object.values(payment);
 	columns[2] = books.find(b => b.id === payment.book_id)?.title || "Δεν βρέθηκε!";
-	let d = new Date(columns[4]);
 	columns[3] = columns[3] + "€";
-	columns[4] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-	if (columns.length === 5) columns.push("-");
-	else if (columns[5] === 0) {
-		columns[5] = "-";
-	} else {
-		d = new Date(columns[5]);
-		columns[5] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-	}
 	return columns as unknown as PaymentsTable;
 };
 
@@ -101,12 +91,12 @@ export default function PaymentsTable() {
 		}
 	] as const;
 	const columnNames: ColumnType<PaymentsTable> = {
-		id: "Id",
-		student_name: { name: "Μαθητής", size: () => 15 },
-		title: { name: "Τίτλος", size: () => 25 },
-		amount: "Οφειλή",
-		date: "Ημερομηνία",
-		payment_date: "Ημερομηνία Πληρωμής"
+		id: { type: "number", name: "Id" },
+		student_name: { type: "string", name: "Μαθητής", size: () => 15 },
+		title: { type: "string", name: "Βιβλίο", size: () => 25 },
+		amount: { type: "number", name: "Οφειλή" },
+		date: { type: "date", name: "Ημερομηνία Παραλαβής" },
+		payment_date: { type: "date", name: "Ημερομηνία Πληρωμής" }
 	};
 
 	let shapedData = createMemo(() => {
@@ -199,7 +189,7 @@ export default function PaymentsTable() {
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Books.get] && store[API.Payments.get]} fallback={<Spinner />}>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>

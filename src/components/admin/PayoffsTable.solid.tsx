@@ -1,7 +1,7 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Wholesalers, SchoolPayoffs } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
@@ -12,7 +12,6 @@ import Spinner from "../Spinner.solid";
 
 const PREFIX = "payoffs";
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type SchoolPayoffsTable = ReplaceName<SchoolPayoffs, "wholesaler_id", "wholesaler">;
 
 const SchoolPayoffsInputs = (wholesalers: Wholesalers[]): Record<keyof SchoolPayoffs, InputProps> => {
@@ -79,9 +78,9 @@ export default function PayoffsTable() {
 		}
 	] as const;
 	const columnNames: ColumnType<SchoolPayoffsTable> = {
-		id: "Id",
-		wholesaler: { name: "Χονδρέμπορος", size: () => 20 },
-		amount: "Οφειλή"
+		id: { type: "number", name: "Id" },
+		wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 25 },
+		amount: { type: "number", name: "Οφειλή" }
 	};
 
 	let shapedData = createMemo(() => {
@@ -146,7 +145,7 @@ export default function PayoffsTable() {
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Wholesalers.get] && store[API.Payoffs.get]} fallback={<Spinner />}>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>

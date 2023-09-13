@@ -9,7 +9,7 @@ import type {
 	Instruments,
 	TeacherInstruments
 } from "../../../types/entities";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
@@ -22,7 +22,6 @@ import { removeAccents } from "../../../lib/utils.client";
 
 const PREFIX = "teachers";
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type TeachersTable = Omit<FullTeachers, "instruments"> & { priority_byz: number; priority_par: number; priority_eur: number };
 type TeacherJoins = { teacherClasses: number[]; teacherInstruments: number[]; teacherLocations: number[]; priorities: number[] };
 
@@ -185,7 +184,7 @@ const fileToBlob = async (file: File): Promise<Blob | null> => {
 
 const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[]): TeachersTable => {
 	const classes = classList.filter(c => c.teacher_id === teacher.id);
-	const columns = Object.values(teacher);
+	const columns = Object.values(teacher) as any[];
 
 	columns[2] = (teacher.picture && "/kathigites/images/" + teacher.picture) || "";
 	columns[3] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
@@ -193,11 +192,11 @@ const teacherToTableTeacher = (teacher: FullTeachers, classList: TeacherClasses[
 	columns[5] = teacher.telephone || "";
 	columns[6] = teacher.linktree || "";
 
-	columns[7] = classes.find(c => c.class_id === 0)?.priority || -1;
-	columns[8] = classes.find(c => c.class_id === 1)?.priority || -1;
-	columns[9] = classes.find(c => c.class_id === 2)?.priority || -1;
-	columns[10] = teacher.visible ? "Ναι" : "Όχι";
-	columns[11] = teacher.online ? "Ναι" : "Όχι";
+	columns[7] = classes.find(c => c.class_id === 0)?.priority;
+	columns[8] = classes.find(c => c.class_id === 1)?.priority;
+	columns[9] = classes.find(c => c.class_id === 2)?.priority;
+	columns[10] = !!teacher.visible;
+	columns[11] = !!teacher.online;
 	return columns as unknown as TeachersTable;
 };
 
@@ -255,18 +254,18 @@ export default function TeachersTable() {
 		}
 	] as const;
 	const columnNames: ColumnType<TeachersTable> = {
-		id: "Id",
-		fullname: { name: "Ονοματεπώνυμο", size: () => 25 },
-		picture: "Φωτογραφία",
-		cv: "Βιογραφικό",
-		email: { name: "Email", size: () => 25 },
-		telephone: { name: "Τηλέφωνο", size: () => 12 },
-		linktree: "Σύνδεσμος",
-		priority_byz: { name: "Προτεραιότητα Βυζαντινής", size: () => 15 },
-		priority_par: { name: "Προτεραιότητα Παραδοσιακής", size: () => 15 },
-		priority_eur: { name: "Προτεραιότητα Ευρωπαϊκής", size: () => 15 },
-		visible: "Εμφάνιση",
-		online: "Online"
+		id: { type: "number", name: "Id" },
+		fullname: { type: "string", name: "Ονοματεπώνυμο", size: () => 25 },
+		picture: { type: "link", name: "Φωτογραφία" },
+		cv: { type: "link", name: "Βιογραφικό" },
+		email: { type: "string", name: "Email", size: () => 25 },
+		telephone: { type: "string", name: "Τηλέφωνο", size: () => 15 },
+		linktree: { type: "link", name: "Σύνδεσμος", size: () => 15 },
+		priority_byz: { type: "number", name: "Προτεραιότητα Βυζαντινής", size: () => 15 },
+		priority_par: { type: "number", name: "Προτεραιότητα Παραδοσιακής", size: () => 15 },
+		priority_eur: { type: "number", name: "Προτεραιότητα Ευρωπαϊκής", size: () => 15 },
+		visible: { type: "boolean", name: "Εμφάνιση", size: () => 15 },
+		online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: () => 15 }
 	};
 
 	const shapedData = createMemo(() => {
@@ -274,24 +273,20 @@ export default function TeachersTable() {
 		const teachers = store[API.Teachers.get];
 		if (!classList || !teachers || !teachers) return [];
 		const { columnName, value } = searchQuery;
-		let searchRows: FullTeachers[] | null = null;
-		if (columnName && value) {
-			searchRows = teachers
-				.map(x => x)
-				.filter(r => {
-					const col = r[columnName as keyof Teachers];
-					if (typeof col === "number") return ("" + col).includes("" + value);
-					if (typeof col === "string") {
-						let nCol = removeAccents(col).toLowerCase();
-						let nVal = removeAccents(value as string).toLowerCase();
-						return nCol.includes(nVal);
-					}
-					return false;
-				});
-			// console.log("searchRows:", searchRows);
-			// Somehow implement highlighting
-		}
-		return teachersToTable(searchRows || teachers, classList);
+		if (!columnName || !value) return teachersToTable(teachers, classList);
+		let searchRows: FullTeachers[] = teachers
+			.map(x => x)
+			.filter(r => {
+				const col = r[columnName as keyof Teachers];
+				if (typeof col === "number") return ("" + col).includes("" + value);
+				if (typeof col === "string") {
+					let nCol = removeAccents(col).toLowerCase();
+					let nVal = removeAccents(value as string).toLowerCase();
+					return nCol.includes(nVal);
+				}
+				return false;
+			});
+		return teachersToTable(searchRows, classList);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const locations = store[API.Locations.get];
@@ -612,7 +607,7 @@ export default function TeachersTable() {
 				}
 				fallback={<Spinner />}
 			>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 					<TableControls
 						pressedAction={actionPressed}

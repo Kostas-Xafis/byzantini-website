@@ -1,6 +1,6 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { SysUsers as FullSysUser } from "../../../types/entities";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
@@ -12,17 +12,14 @@ const PREFIX = "sysusers";
 
 type SysUsers = Pick<FullSysUser, "id" | "email" | "privilege">;
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
-type SysUsersTable = SysUsers; // & classes
-
-const sysuserToTableSysuser = (sysuser: SysUsers): SysUsersTable => {
+const sysuserToTableSysuser = (sysuser: SysUsers): SysUsers => {
 	const columns = Object.values(sysuser);
 
 	columns[2] = columns[2] === 2 ? "Super Admin" : columns[2] === 1 ? "Διαχειριστής Συστήματος" : "Διαχειριστής";
-	return columns as unknown as SysUsersTable;
+	return columns as unknown as SysUsers;
 };
 
-const sysusersToTable = (sysusers: SysUsers[]): SysUsersTable[] => {
+const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
 	return sysusers.map(u => sysuserToTableSysuser(u));
 };
 
@@ -57,10 +54,10 @@ export default function SysUsersTable() {
 			}
 		}
 	] as const;
-	const columnNames: ColumnType<SysUsersTable> = {
-		id: "Id",
-		email: { name: "Email", size: () => 20 },
-		privilege: { name: "Privilege", size: () => 15 }
+	const columnNames: ColumnType<SysUsers> = {
+		id: { type: "number", name: "Id" },
+		email: { type: "string", name: "Email", size: () => 25 },
+		privilege: { type: "string", name: "Δικαιώματα", size: () => 25 }
 	};
 
 	const shapedData = createMemo(() => {
@@ -122,7 +119,7 @@ export default function SysUsersTable() {
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]} fallback={<Spinner />}>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onDelete]} prefix={PREFIX} />
 				</Table>
 			</Show>

@@ -1,6 +1,6 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, ActionIcon, type EmptyAction } from "./table/TableControls.solid";
@@ -9,12 +9,11 @@ import { type ContextType, SelectedItemsContext } from "./table/SelectedRowConte
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 import { PDF } from "../../../lib/pdf.client";
-import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
+import { SearchTable, type SearchColumn, type SearchSetter, CompareList, getCompareFn } from "./SearchTable.solid";
 import { removeAccents } from "../../../lib/utils.client";
 
 const PREFIX = "registrations";
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type RegistrationsTable = Registrations;
 
 const RegistrationsInputs = (teachers: Teachers[], instruments: Instruments[]): Record<keyof Registrations, InputProps> => {
@@ -162,18 +161,10 @@ const registrationToTableRegistration = (
 	instruments: Instruments[]
 ): RegistrationsTable => {
 	const columns = Object.values(registration);
-	columns[5] = new Date(columns[5] as number).toLocaleDateString("el-GR");
 	columns[15] = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"][columns[15] as number];
 	columns[16] = teachers.find(t => t.id === columns[16])?.fullname || "";
 	columns[17] = instruments.find(i => i.id === columns[17])?.name || "";
-	let d = new Date(columns[18] as number);
-	columns[18] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 	if (columns[19] === 0 || !columns[19]) columns[19] = "-";
-	if (columns[20] === 0 || !columns[20]) columns[20] = "-";
-	else {
-		d = new Date(columns[20] as number);
-		columns[20] = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-	}
 	return columns as unknown as RegistrationsTable;
 };
 
@@ -181,37 +172,38 @@ const registrationsToTable = (registrations: Registrations[], teachers: Teachers
 	return registrations.map(registration => registrationToTableRegistration(registration, teachers, instruments));
 };
 
-const columnNames: ColumnType<RegistrationsTable> = {
-	id: "Id",
-	am: { name: "Αριθμός Μητρώου", size: () => 6 },
-	last_name: { name: "Επώνυμο", size: () => 15 },
-	first_name: { name: "Όνομα", size: () => 15 },
-	fathers_name: { name: "Πατρώνυμο", size: () => 15 },
-	birth_date: { name: "Ημερομηνία Γέννησης", size: () => 12 },
-	road: { name: "Οδός", size: () => 20 },
-	number: "Αριθμός",
-	tk: "Τ.Κ.",
-	region: { name: "Δήμος/Περιοχή", size: () => 15 },
-	telephone: { name: "Τηλέφωνο", size: () => 12 },
-	cellphone: { name: "Κινητό", size: () => 12 },
-	email: { name: "Email", size: () => 20 },
-	registration_year: { name: "Σχολικό Έτος", size: () => 10 },
-	class_year: { name: "Έτος Φοίτησης", size: () => 15 },
-	class_id: { name: "Τάξη", size: () => 15 },
-	teacher_id: { name: "Καθηγητής", size: () => 15 },
-	instrument_id: { name: "Όργανο", size: () => 15 },
-	date: { name: "Ημερομηνία Εγγραφής", size: () => 12 },
-	payment_amount: { name: "Ποσό Πληρωμής", size: () => 8 },
-	payment_date: { name: "Ημερομηνία Πληρωμής", size: () => 12 }
+const columns: ColumnType<RegistrationsTable> = {
+	id: { type: "number", name: "Id" },
+	am: { type: "number", name: "Αριθμός Μητρώου", size: () => 6 },
+	last_name: { type: "string", name: "Επώνυμο", size: () => 15 },
+	first_name: { type: "string", name: "Όνομα", size: () => 15 },
+	fathers_name: { type: "string", name: "Πατρώνυμο", size: () => 15 },
+	birth_date: { type: "date", name: "Ημερομηνία Γέννησης", size: () => 12 },
+	road: { type: "string", name: "Οδός", size: () => 20 },
+	number: { type: "number", name: "Αριθμός" },
+	tk: { type: "number", name: "Τ.Κ." },
+	region: { type: "string", name: "Δήμος/Περιοχή", size: () => 15 },
+	telephone: { type: "string", name: "Τηλέφωνο", size: () => 12 },
+	cellphone: { type: "string", name: "Κινητό", size: () => 12 },
+	email: { type: "string", name: "Email", size: () => 20 },
+	registration_year: { type: "string", name: "Σχολικό Έτος", size: () => 10 },
+	class_year: { type: "string", name: "Έτος Φοίτησης", size: () => 15 },
+	class_id: { type: "string", name: "Τάξη", size: () => 15 },
+	teacher_id: { type: "string", name: "Καθηγητής", size: () => 15 },
+	instrument_id: { type: "string", name: "Όργανο", size: () => 15 },
+	date: { type: "date", name: "Ημερομηνία Εγγραφής", size: () => 12 },
+	payment_amount: { type: "number", name: "Ποσό Πληρωμής", size: () => 8 },
+	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής", size: () => 12 }
 };
 
 const searchColumns: SearchColumn[] = [
-	{ columnName: "am", name: "ΑΜ", type: "string" },
+	{ columnName: "am", name: "ΑΜ", type: "number" },
 	{ columnName: "last_name", name: "Επώνυμο", type: "string" },
 	{ columnName: "first_name", name: "Όνομα", type: "string" },
 	{ columnName: "telephone", name: "Τηλέφωνο", type: "string" },
 	{ columnName: "cellphone", name: "Κινητό", type: "string" },
-	{ columnName: "email", name: "Email", type: "string" }
+	{ columnName: "email", name: "Email", type: "string" },
+	{ columnName: "date", name: "Ημερομηνία Εγγραφής", type: "date" }
 ];
 
 export default function RegistrationsTable() {
@@ -253,26 +245,54 @@ export default function RegistrationsTable() {
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return [];
-		const { columnName, value } = searchQuery;
-		let searchRows: Registrations[] | null = null;
-		if (columnName && value) {
+		let { columnName, value, type } = searchQuery;
+		if (!columnName || !value || !type) return registrationsToTable(registrations, teachers, instruments);
+		let searchRows: Registrations[] = [];
+
+		if (type === "number") {
+			// @ts-ignore value is misstyped....
+			const EqCheck = CompareList.findLast(c => value.startsWith(c));
+			const fn = EqCheck && getCompareFn(value);
+			const nVal = Number(value.slice((EqCheck || "").length));
+			searchRows = registrations
+				.map(x => x)
+				.filter(r => {
+					const nCol = Number(r[columnName as keyof Registrations]); //Converting to number because the column might be a stringified number
+					if (fn) return fn(nCol, nVal);
+					let sCol = "" + nCol;
+					let sVal = "" + nVal;
+					return sCol.includes(sVal);
+				});
+		} else if (type === "string") {
 			searchRows = registrations
 				.map(x => x)
 				.filter(r => {
 					const col = r[columnName as keyof Registrations];
-					if (typeof col === "number") return ("" + col).includes("" + value);
-					if (typeof col === "string") {
-						let nCol = removeAccents(col).toLowerCase();
-						let nVal = removeAccents(value as string).toLowerCase();
-						return nCol.includes(nVal);
-					} // implement fuzzy search later
-					return false;
+					const nsCol = removeAccents(col as string).toLowerCase();
+					const nsVal = removeAccents(value as string).toLowerCase();
+					return nsCol.includes(nsVal);
 				});
-			// console.log("searchRows:", searchRows);
-			// Somehow implement highlighting
-		}
+		} else if (type === "date") {
+			// @ts-ignore
+			const EqCheck = CompareList.findLast(c => value.startsWith(c));
+			const fn = EqCheck && getCompareFn(value);
+			value = value.replace(EqCheck || "", "");
 
-		return registrationsToTable(searchRows || registrations, teachers, instruments);
+			let [day, month = 1, year = 1970] = value.split("/").map(x => Number(x));
+			const dVal = new Date(year, month - 1, day);
+			const nVal = dVal.getTime();
+			const sVal = dVal.toLocaleDateString("el-GR");
+
+			searchRows = registrations
+				.map(x => x)
+				.filter(r => {
+					const nCol = r[columnName as keyof Registrations] as number;
+					if (fn) return fn(nCol, nVal - 1);
+					let sCol = new Date(nCol).toLocaleDateString("el-GR");
+					return sCol.includes(sVal);
+				});
+		}
+		return registrationsToTable(searchRows, teachers, instruments);
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {
@@ -389,7 +409,7 @@ export default function RegistrationsTable() {
 				when={store[API.Registrations.get] && store[API.Teachers.getByFullnames] && store[API.Instruments.get]}
 				fallback={<Spinner />}
 			>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columns}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
 					<TableControls pressedAction={actionPressed} onActionsArray={[onSingleDownloadPDf]} prefix={PREFIX} />
 					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />

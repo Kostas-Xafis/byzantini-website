@@ -1,7 +1,7 @@
 import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import Table from "./table/Table.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
@@ -12,7 +12,6 @@ import Spinner from "../Spinner.solid";
 
 const PREFIX = "books";
 
-type ColumnType<T> = Record<keyof T, string | { name: string; size: () => number }>;
 type BooksTable = ReplaceName<Books, "wholesaler_id", "wholesaler"> & { reserved: number };
 
 const BooksInputs = (wholesalers: Wholesalers[]): Record<keyof Books, InputProps> => {
@@ -85,14 +84,14 @@ export default function BooksTable() {
 		}
 	] as const;
 	const columnNames: ColumnType<BooksTable> = {
-		id: "Id",
-		title: { name: "Τίτλος", size: () => 20 },
-		wholesaler: { name: "Χονδρέμπορος", size: () => 15 },
-		wholesale_price: { name: "Χονδρική Τιμή", size: () => 9 },
-		price: { name: "Λιανική Τιμή", size: () => 9 },
-		quantity: "Ποσότητα",
-		sold: "Πωλήσεις",
-		reserved: "Απόθεμα"
+		id: { type: "number", name: "Id" },
+		title: { type: "string", name: "Τίτλος", size: () => 15 },
+		wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 15 },
+		wholesale_price: { type: "number", name: "Χονδρική Τιμή", size: () => 9 },
+		price: { type: "number", name: "Λιανική Τιμή", size: () => 9 },
+		quantity: { type: "number", name: "Ποσότητα" },
+		sold: { type: "number", name: "Πωλήσεις" },
+		reserved: { type: "number", name: "Απόθεμα" }
 	};
 
 	let shapedData = createMemo(() => {
@@ -150,10 +149,8 @@ export default function BooksTable() {
 			if (!res.data && !res.message) return;
 			setActionPressed(ActionEnum.MODIFY);
 		});
-		const filledInputs = Fill(BooksInputs(wholesalers), book);
-		filledInputs.wholesaler_id.value = (filledInputs.wholesaler_id.value as number) - 1;
 		return {
-			inputs: Pick(filledInputs, "quantity"),
+			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
 			onMount: () => formListener(submit, true, PREFIX),
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
@@ -245,7 +242,7 @@ export default function BooksTable() {
 	return (
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show when={store[API.Books.get] && store[API.Wholesalers.get]} fallback={<Spinner />}>
-				<Table prefix={PREFIX} data={shapedData} columnNames={columnNames}>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onAdd, onModify, onDelete]} prefix={PREFIX} />
 					<TableControls
 						pressedAction={actionPressed}
