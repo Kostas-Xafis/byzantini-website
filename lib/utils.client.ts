@@ -16,8 +16,33 @@ export const onElementMount = async (target: string, callback: () => any) => {
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const removeAccents = (str: string) =>
-    str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+export const removeAccents = (str: string) => {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+export const asyncQueue = async <T>(jobs: (() => Promise<T>)[], maxJobs = 1, verb = false) => {
+    let totalJobs = jobs.length;
+    let jobsCompleted = 0;
+    let queue = maxJobs < jobs.length ? Array.from(jobs.splice(0, maxJobs - 1)) : Array.from(jobs);
+    let results: T[] = [];
+    while (jobsCompleted < totalJobs) {
+        while (!queue.length) await sleep(25);
+        (async () => {
+            let job = queue.shift() as () => Promise<T>;
+            if (!job) return;
+            results.push(await job());
+            jobsCompleted++;
+            verb && console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
+            while (queue.length === maxJobs) await sleep(50);
+            if (jobsCompleted !== jobs.length && queue.length !== maxJobs) {
+                let newJob = jobs.shift() as () => Promise<T>;
+                queue.push(newJob);
+            }
+        })();
+    }
+    while (jobsCompleted < totalJobs) await sleep(100);
+    return results;
+}
 
 
 export class UpdateHandler {

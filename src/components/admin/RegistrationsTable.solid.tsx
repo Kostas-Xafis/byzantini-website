@@ -231,11 +231,18 @@ export default function RegistrationsTable() {
 			add: (id: number) => {
 				setSelectedItems([...selectedItems, id]);
 			},
+			addMany: (ids: number[]) => {
+				let newIds = [...new Set([...selectedItems, ...ids])];
+				setSelectedItems(newIds);
+			},
 			remove: (id: number) => {
 				setSelectedItems(selectedItems.filter(i => i !== id));
 			},
 			removeAll: () => {
 				setSelectedItems([]);
+			},
+			removeMany: (ids: number[]) => {
+				setSelectedItems(selectedItems.filter(i => !ids.includes(i)));
 			}
 		}
 	] as const;
@@ -292,6 +299,11 @@ export default function RegistrationsTable() {
 					return sCol.includes(sVal);
 				});
 		}
+		if (searchRows.length) {
+			// Reset the checked rows when a search is made
+			ROWS[1].removeAll();
+			document.querySelector(".mcb")?.classList.remove("selected");
+		}
 		return registrationsToTable(searchRows, teachers, instruments);
 	});
 
@@ -301,7 +313,6 @@ export default function RegistrationsTable() {
 		const instruments = store[API.Instruments.get];
 		if (!teachers || !registrations || !instruments) return { icon: ActionIcon.MODIFY };
 		if (selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
-		console.log("selectedItems:", selectedItems);
 		const registration = JSON.parse(JSON.stringify(registrations.find(r => r.id === selectedItems[0]) as any)) as Registrations;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
@@ -370,28 +381,53 @@ export default function RegistrationsTable() {
 		};
 	});
 
-	const onSingleDownloadPDf = createMemo(() => {
+	const onDownloadPDf = createMemo(() => {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (!teachers || !registrations || !instruments || selectedItems.length !== 1) return { icon: ActionIcon.DOWNLOAD_SINGLE };
-		const onSubmit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const student = registrations.find(r => r.id === selectedItems[0]) as Registrations;
-			const teacher = teachers.find(t => t.id === student.teacher_id) as Teachers;
-			const instrument = (student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
-			try {
-				const pdf = await PDF.createInstance();
-				pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
-				await pdf.loadTemplate(); //loads the appropriate template based on the class_id
-				await pdf.fillTemplate();
-				await pdf.download();
-			} catch (error) {
-				console.error(error);
-			}
-			setActionPressed(ActionEnum.DOWNLOAD);
-		});
+		if (!teachers || !registrations || !instruments || selectedItems.length <= 0) return { icon: ActionIcon.DOWNLOAD_SINGLE };
+
+		let bulk = selectedItems.length > 1;
+
+		const onSubmit = !bulk
+			? formErrorWrap(async function (e: Event) {
+					e.preventDefault();
+					e.stopPropagation();
+					const student = registrations.find(r => r.id === selectedItems[0]) as Registrations;
+					const teacher = teachers.find(t => t.id === student.teacher_id) as Teachers;
+					const instrument = (student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
+					try {
+						const pdf = await PDF.createInstance();
+						pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
+						await pdf.fillTemplate();
+						await pdf.download();
+					} catch (error) {
+						console.error(error);
+					}
+					setActionPressed(ActionEnum.DOWNLOAD);
+			  })
+			: formErrorWrap(async function (e: Event) {
+					e.preventDefault();
+					e.stopPropagation();
+					const items = selectedItems.map(id => {
+						const student = registrations.find(r => r.id === id) as Registrations;
+						const teacher = teachers.find(t => t.id === student.teacher_id) as Teachers;
+						const instrument =
+							(student.class_id && (instruments.find(i => i.id === student.instrument_id) as Instruments)) || null;
+						return { student, teacher, instrument };
+					});
+					let pdfArr: PDF[] = [];
+					try {
+						for (const item of items) {
+							const pdf = await PDF.createInstance();
+							pdf.setTemplateData(item.student, item.teacher.fullname, item.instrument?.name || "");
+							pdfArr.push(pdf);
+						}
+					} catch (error) {
+						console.error(error);
+					}
+					await PDF.downloadBulk(pdfArr);
+			  });
 		return {
 			inputs: {},
 			onMount: () => formListener(onSubmit, true, PREFIX),
@@ -409,9 +445,9 @@ export default function RegistrationsTable() {
 				when={store[API.Registrations.get] && store[API.Teachers.getByFullnames] && store[API.Instruments.get]}
 				fallback={<Spinner />}
 			>
-				<Table prefix={PREFIX} data={shapedData} columns={columns}>
+				<Table prefix={PREFIX} data={shapedData} columns={columns} hasSelectBox>
 					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
-					<TableControls pressedAction={actionPressed} onActionsArray={[onSingleDownloadPDf]} prefix={PREFIX} />
+					<TableControls pressedAction={actionPressed} onActionsArray={[onDownloadPDf]} prefix={PREFIX} />
 					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 				</Table>
 			</Show>

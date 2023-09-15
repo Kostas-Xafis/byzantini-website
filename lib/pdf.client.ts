@@ -1,14 +1,19 @@
 import type { Registrations } from "../types/entities";
-import { sleep } from "./utils.client";
+//@ts-ignore
+import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
+import { asyncQueue, sleep } from "./utils.client";
+
+
+const DidactGothicFontBufffer = await (await fetch("/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
+
+const TemplateCache = new Map<string, ArrayBuffer>();
 
 export class PDF {
-    private static font: ArrayBuffer;
-    private static TemplateURL = ["/byz_template.pdf", "/par_template.pdf", "/eur_template.pdf"]
-    private student = {} as Registrations;
-    private teachersName = "";
-    private instrument = "";
+    private static TemplateURL = ["/byz_template.pdf", "/par_template.pdf", "/eur_template.pdf"];
+    private student: Registrations = {} as Registrations;
+    private teachersName: string = "";
+    private instrument: string = "";
     private doc = {} as typeof window.PDFLib.PDFDocument.prototype;
-
     constructor() { };
 
     public setTemplateData(student: Registrations, teachersName: string, instrument?: string): PDF {
@@ -18,30 +23,43 @@ export class PDF {
         return this;
     }
 
+    public getTemplateURL(): string {
+        return PDF.TemplateURL[this.student.class_id];
+    }
+
     public async fillTemplate(): Promise<void> {
+        let url = this.getTemplateURL();
+        if (!TemplateCache.has(url)) {
+            let res = await fetch(url);
+            TemplateCache.set(url, await res.arrayBuffer() as ArrayBuffer);
+        }
+        this.doc = await window.PDFLib.PDFDocument.load(TemplateCache.get(url) as ArrayBuffer);
+
         const p = this.doc.getPages()[0];
         const c = TemplateCoords;
+
         this.doc.registerFontkit(window.fontkit);
-        const DidactGothicFont = await this.doc.embedFont(await (await fetch("/fonts/DidactGothic-Regular.ttf")).arrayBuffer());
+        const font = await this.doc.embedFont(DidactGothicFontBufffer);
+
         const fontSize = 14;
         const smFontSize = 12;
         const xsFontSize = 11;
         let s = this.student;
-        p.drawText("" + s.am, { x: c.am.x, y: c.am.y, size: fontSize, font: DidactGothicFont, });
-        p.drawText("" + s.last_name, { x: c.lastName.x, y: c.lastName.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.first_name, { x: c.firstName.x, y: c.firstName.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.fathers_name, { x: c.fathersName.x, y: c.fathersName.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.road, { x: c.road.x, y: c.road.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.number, { x: c.number.x, y: c.number.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.tk, { x: c.tk.x, y: c.tk.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.region, { x: c.region.x, y: c.region.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + (new Date(s.birth_date)).getFullYear(), { x: c.birthDate.x, y: c.birthDate.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.telephone, { x: c.telephone.x, y: c.telephone.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.cellphone, { x: c.cellphone.x, y: c.cellphone.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("" + this.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: this.teachersName.length <= 24 ? fontSize : (this.teachersName.length <= 30 ? smFontSize : xsFontSize), font: DidactGothicFont });
+        p.drawText("" + s.am, { x: c.am.x, y: c.am.y, size: fontSize, font });
+        p.drawText("" + s.last_name, { x: c.lastName.x, y: c.lastName.y, size: fontSize, font });
+        p.drawText("" + s.first_name, { x: c.firstName.x, y: c.firstName.y, size: fontSize, font });
+        p.drawText("" + s.fathers_name, { x: c.fathersName.x, y: c.fathersName.y, size: fontSize, font });
+        p.drawText("" + s.road, { x: c.road.x, y: c.road.y, size: fontSize, font });
+        p.drawText("" + s.number, { x: c.number.x, y: c.number.y, size: fontSize, font });
+        p.drawText("" + s.tk, { x: c.tk.x, y: c.tk.y, size: fontSize, font });
+        p.drawText("" + s.region, { x: c.region.x, y: c.region.y, size: fontSize, font });
+        p.drawText("" + (new Date(s.birth_date)).getFullYear(), { x: c.birthDate.x, y: c.birthDate.y, size: fontSize, font });
+        p.drawText("" + s.telephone, { x: c.telephone.x, y: c.telephone.y, size: fontSize, font });
+        p.drawText("" + s.cellphone, { x: c.cellphone.x, y: c.cellphone.y, size: fontSize, font });
+        p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font });
+        p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font });
+        p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font });
+        p.drawText("" + this.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: this.teachersName.length <= 24 ? fontSize : (this.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
 
         const date = new Date(s.date);
         let month = (date.getMonth() + 1) + "";
@@ -53,27 +71,21 @@ export class PDF {
         let year = (date.getFullYear() % 100) + "";
         year = year.length === 1 ? "0" + year : year;
 
-        p.drawText(day, { x: c.dateDD.x, y: c.dateDD.y, size: fontSize, font: DidactGothicFont });
-        p.drawText(month, { x: c.dateMM.x, y: c.dateMM.y, size: fontSize, font: DidactGothicFont });
-        p.drawText(year, { x: c.dateYYYY.x, y: c.dateYYYY.y, size: fontSize, font: DidactGothicFont });
+        p.drawText(day, { x: c.dateDD.x, y: c.dateDD.y, size: fontSize, font });
+        p.drawText(month, { x: c.dateMM.x, y: c.dateMM.y, size: fontSize, font });
+        p.drawText(year, { x: c.dateYYYY.x, y: c.dateYYYY.y, size: fontSize, font });
 
-        p.drawText("23", { x: c.year1.x, y: c.year1.y, size: fontSize, font: DidactGothicFont });
-        p.drawText("24", { x: c.year2.x, y: c.year2.y, size: fontSize, font: DidactGothicFont });
+        p.drawText("23", { x: c.year1.x, y: c.year1.y, size: fontSize, font });
+        p.drawText("24", { x: c.year2.x, y: c.year2.y, size: fontSize, font });
 
         if (this.instrument.length > 15) {
-            p.drawText(this.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font: DidactGothicFont });
+            p.drawText(this.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
         } else {
-            if (this.student.class_id === 1) p.drawText(this.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font: DidactGothicFont });
-            else if (this.student.class_id === 2) p.drawText(this.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font: DidactGothicFont });
+            if (this.student.class_id === 1) p.drawText(this.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
+            else if (this.student.class_id === 2) p.drawText(this.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
         }
     }
 
-    public async loadTemplate(): Promise<void> {
-        let buffer = await (await fetch(this.getTemplateURL())).arrayBuffer();
-        this.doc = await window.PDFLib.PDFDocument.load(buffer);
-    }
-
-    // async load of pdf library as a constructor
     public static async createInstance(): Promise<PDF> {
         if (window.PDFLib) return new PDF();
 
@@ -91,20 +103,65 @@ export class PDF {
         return new PDF();
     }
 
-    public async download(): Promise<void> {
+    public async toBlob(): Promise<Blob> {
         let uintArr = await this.doc.save();
-        let blob = new Blob([uintArr], { type: "application/pdf" });
+        return new Blob([uintArr], { type: "application/pdf" });
+    }
 
+    public async download(): Promise<void> {
         let a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
+        a.href = URL.createObjectURL(await this.toBlob());
         a.download = `${this.student.first_name}_${this.student.last_name}.pdf`;
         a.click();
     }
 
-    public getTemplateURL(): string {
-        return PDF.TemplateURL[this.student.class_id];
+    public static async downloadBulk(arr: PDF[]): Promise<void> {
+        let requestArr = arr.map((pdf) => async () => {
+            let res;
+            if (Math.random() > 0.725) {
+                let tries = 3;
+                while (--tries) {
+                    try {
+                        let resp = await fetch("https://pdf-create.koxafis.workers.dev/", {
+                            method: "POST",
+                            body: JSON.stringify({
+                                student: pdf.student,
+                                teachersName: pdf.teachersName,
+                                instrument: pdf.instrument,
+                            })
+                        });
+                        res = await resp.blob();
+                        break;
+                    } catch (e) {
+                        if (tries === 0) break;
+                        console.log("Retrying...in 10 sec");
+                        await sleep(15000);
+                    }
+                }
+            }
+            if (!res) {
+                await pdf.fillTemplate();
+                let blob = await pdf.toBlob();
+                return { input: blob, name: `${pdf.teachersName}/${pdf.student.first_name}_${pdf.student.last_name}.pdf`, size: blob.size };
+            } else {
+                return { input: res, name: `${pdf.teachersName}/${pdf.student.first_name}_${pdf.student.last_name}.pdf`, size: res.size };
+            }
+        });
+        let t = Date.now();
+        let queueResult = await asyncQueue(requestArr, 6, true)
+        console.log("Queue took", Date.now() - t);
+
+        let z = zip as typeof import("client-zip");
+        const zipFile = await z.downloadZip(queueResult).blob();
+
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(zipFile);
+        a.download = `Εγγραφές.zip`;
+        a.click();
+        a.remove();
     }
 }
+
 
 type TemplateCoords = {
     am: { x: number, y: number },

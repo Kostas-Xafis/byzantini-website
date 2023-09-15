@@ -34,7 +34,10 @@ export default defineConfig({
 					"**/getData/**",
 					"**/notAssets/**",
 					"**/dist/**",
-					"**/.wrangler/**"
+					"**/.wrangler/**",
+					"**/wrangler.toml",
+					"**/dbSnapshots/**",
+					"**/pdfWorker/**"
 				]
 			}
 		},

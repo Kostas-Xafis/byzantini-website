@@ -57,7 +57,6 @@ export function SearchTable(props: SearchTableProps) {
 		debounce.reset(125, () => {
 			const value = target.value;
 			const c = column();
-			console.log({ value, c });
 			props.setSearchQuery("columnName", c.columnName);
 			props.setSearchQuery("value", value);
 			props.setSearchQuery("type", c.type);

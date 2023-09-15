@@ -74,13 +74,13 @@ export const execTryCatch = async <T>(
 		let response;
 		if (hasTransaction) {
 			let conn = await CreateDbConnection();
-			response = await conn.transaction(async (tx) => {
+			response = await conn.transaction((tx) => {
 				(tx as Transaction).queryHistory = [];
 				(tx as Transaction).executeQuery = (query: string, args?: any[], log = false) => executeQuery(query, args, tx as Transaction, log);
-				return await func(tx as Transaction)
+				return func(tx as Transaction) as Promise<T>;
 			});
 		} else {
-			response = await (func as () => Promise<T>)();
+			response = (await (func as () => Promise<T>)()) as T;
 		}
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);

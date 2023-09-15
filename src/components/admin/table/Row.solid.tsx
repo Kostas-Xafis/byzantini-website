@@ -8,24 +8,35 @@ interface Props {
 	data: (number | string)[]; // data[0] must always be the id of the item
 	columnWidths: string;
 	columnType: CellValue[];
+	hasSelectBox: boolean;
 	index?: number;
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
 }
 
 export default function Row(props: Props) {
-	const [selectedItems, { add, remove }] = useContext(SelectedItemsContext) as ContextType;
-	const { data, columnWidths, index = -1, columnType, header, sortOnClick } = props;
+	const [selectedItems, { add, remove, addMany, removeMany }] = useContext(SelectedItemsContext) as ContextType;
+	const { data, columnWidths, index = -1, columnType, header, sortOnClick, hasSelectBox } = props;
 
-	const onClick = !header
-		? (e: MouseEvent) => {
-				const item_id = Number((e.currentTarget as HTMLElement).dataset.id as string);
-				const isSelected = selectedItems.includes(item_id);
-				if (isSelected) remove(item_id);
-				else add(item_id);
-				(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
-		  }
-		: undefined;
+	const onClick = (e: MouseEvent) => {
+		if (!header) {
+			const item_id = Number((e.currentTarget as HTMLElement).dataset.id as string);
+			const isSelected = selectedItems.includes(item_id);
+			if (isSelected) remove && remove(item_id);
+			else add && add(item_id);
+			(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
+
+			if (hasSelectBox) document.querySelector(`.cb[data-value="${item_id}"]`)?.classList.toggle("selected");
+		} else if (hasSelectBox) {
+			const allCbs = document.querySelectorAll(".cb");
+			const ids = ([...allCbs] as HTMLElement[]).map(el => Number(el.dataset.value));
+			const isSelected = new Set([...ids, ...selectedItems]).size === selectedItems.length;
+			if (isSelected) removeMany && removeMany(ids);
+			else addMany && addMany(ids);
+			allCbs.forEach(cb => cb.classList.toggle("selected"));
+			document.querySelector(".mcb")?.classList.toggle("selected");
+		}
+	};
 	let onClickSort: (e: MouseEvent) => void;
 	if (header) {
 		onClickSort = (e: MouseEvent) => {
@@ -76,6 +87,19 @@ export default function Row(props: Props) {
 				}
 				style={columnWidths + ` z-index: ${(columnType.length - index) * 10}`}
 			>
+				{hasSelectBox && (
+					<div class="relative w-full">
+						<div
+							class={
+								"group/checkbox relative items-center" + (header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
+							}
+							data-value={data[0]}
+						>
+							<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
+							<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
+						</div>
+					</div>
+				)}
 				{data.map((item, colIndex) => {
 					let type = (!header && columnType[colIndex]) || ""; // If it's a header row there is no type
 					if (type === "link" && item)

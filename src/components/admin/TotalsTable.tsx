@@ -32,16 +32,8 @@ export default function TotalsTable() {
 		if (!payments || !payoffs || !registrations) return [];
 		return [[payments.total + "€", payoffs.total + "€", registrations.total]];
 	});
-	const ROWS = [
-		[],
-		{
-			add: (id: number) => {},
-			remove: (id: number) => {},
-			removeAll: () => {}
-		}
-	];
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider value={[[], {}]}>
 			<Show
 				when={store[API.Payoffs.getTotal] && store[API.Payments.getTotal] && store[API.Registrations.getTotal]}
 				fallback={<Spinner />}

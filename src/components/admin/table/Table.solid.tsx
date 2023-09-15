@@ -6,6 +6,7 @@ export type Props = {
 	data: Accessor<any[]>;
 	prefix?: string;
 	children?: JSX.Element | JSX.Element[];
+	hasSelectBox?: boolean;
 };
 
 export const enum SortDirection {
@@ -39,7 +40,7 @@ export default function Table(props: Props) {
 		return direction === SortDirection.ASCENDING ? rows : rows.reverse();
 	});
 
-	let columnWidths = "grid-template-columns: ";
+	let columnWidths = "grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
 		let len = (size && size()) || name.length;
 		columnWidths += `calc(${len}ch + 2ch)`;
@@ -56,11 +57,26 @@ export default function Table(props: Props) {
 				id="tableContainer"
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
-				<Row data={columns} columnWidths={columnWidths} columnType={columnTypes} header sortOnClick={setSorted} />
+				<Row
+					data={columns}
+					columnWidths={columnWidths}
+					columnType={columnTypes}
+					header
+					sortOnClick={setSorted}
+					hasSelectBox={!!props.hasSelectBox}
+				/>
 				<div class="data-container relative z-0 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item, index) => {
-							return <Row data={item} index={index()} columnWidths={columnWidths} columnType={columnTypes} />;
+							return (
+								<Row
+									data={item}
+									index={index()}
+									columnWidths={columnWidths}
+									columnType={columnTypes}
+									hasSelectBox={!!props.hasSelectBox}
+								/>
+							);
 						}}
 					</For>
 				</div>

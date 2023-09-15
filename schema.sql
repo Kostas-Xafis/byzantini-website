@@ -137,7 +137,8 @@ CREATE TABLE `registrations`(
     `teacher_id` int NOT NULL,
     `instrument_id` int DEFAULT 0,
     `date` bigint NOT NULL,
-    `payment_amount` int DEFAULT 0,
+    `payed` int DEFAULT 0,
+    `total_payment` int DEFAULT 0,
     `payment_date` bigint DEFAULT 0,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -202,22 +203,15 @@ INSERT INTO instruments (name, type) VALUES ('Αρμόνιο', "eur", 0);
 CREATE TABLE email_subscriptions (
     `email` varchar(80) NOT NULL,
     `unsubscribe_token` varchar(16) NOT NULL,
+    `unrelated` boolean NOT NULL DEFAULT 0,
     PRIMARY KEY (`email`)
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE query_logs (
-    `id` int NOT NULL AUTO_INCREMENT,
+    `id` varchar(20) NOT NULL UNIQUE,
     `query` varchar(400) NOT NULL,
     `args` varchar(400) NOT NULL,
     `date` bigint NOT NULL,
+    `error` boolean NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('Sjjddj', 'Dnjdjd', '000', 'Ndjdkdk', '-', '95959595', 'dsaf@asdffsa.as', 967161600000, 'Rjrjfjfk', 56, 98656, 'Hdjdjfj', "2023-2024", "Γ' Ετος", 34, 0, 0, 1693417795772);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('asdasfd', 'sadfasdf', '000', 'asdjfafsd', '125905', '21521351', "aslkdjggd@askjdj.com", 918777600000, "asdjgksjadg", 1250, 21059,"gasdgs", "2023-2024", "Δ' Ετος", 31, 0, 0, 1693394532814);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('ΠΕΛΕΚΗ', 'Αικατερίνη', '000', 'Χριστόφορος', '2106131194', '6973490962', "cpeleki@icloud.com", 70502400000, "ΕΦΕΣΟΥ", 1, 15236, "ΝΕΑ ΠΕΝΤΕΛΗ", "2023-2024", "Β' Ετος", 28, 0, 0, 1693400495166);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('Κουρτέση' , 'Αικατερίνη' , '000', 'Σπυρίδων' , '2102510251', '6976402019', "katkourtesi@gmail.com", -160704000000, "Αδριανού" , 12, 14341, "Νέα Φιλαδέλφεια", "2023-2024", "Β' Ετος", 28, 0, 0, 1693403193388);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('ΣΙΔΕΡΗΣ', 'ΔΗΜΗΤΡΙΟΣ', '000', 'ΚΩΝΣΤΑΝΤΙΝΟΣ', '2102818990', '6908612455', "siderisdd@gmail.com", -209174400000, "ΜΙΑΟΥΛΗ", 18, 14122, "Αττικής", "2023-2024", "Γ' Ετος", 19, 0, 0, 1693394702348);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('ΑΛΙΑΪ' , 'ΣΙΝΤΟΡΕΛΑ' , '000', 'Αγκιμ' , '-', '6937517301', "eirhnhlerra228@yahoo.com", 457056000000, "Σμύρνης", 15, 14123, "Λυκόβρυση" , "2023-2024", "Γ' Ετος", 28, 0, 0, 1693402399270);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('Αλεβιζάκης', 'Χρίστος Εφραίμ', '000', 'Σωτήριος', "-", '694 3735559', "xristos.ef.ale@gmail.com", 1323993600000,  "Πήγασου", 24, 13675, "Αχαρνές", "2023-2024", "Α' Μέση", 3, 1, 9, 1693418152844);
--- INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, teacher_id, class_id, instrument_id, date) VALUES ('Ξοφάκης', 'Γεώργιος', '737', 'Χαράλαμπος' , '2102482854', '6972522484', "gxophakes@gmail.com", 1062806400000, "Ιωάννη Καποδίστρια" , 55, 13341, "Άνω Λιόσια", "2023-2024", "Β' Ετος", 1, 0, 0, 1693419238997);
