@@ -5,7 +5,8 @@ import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
 
-const unmappedRoutes = page => page.includes("admin") || page.includes("login");
+const unmappedRoutes = (page) =>
+	page.includes("admin") || page.includes("login");
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,11 +16,11 @@ export default defineConfig({
 		solidJs(),
 		prefetch(),
 		sitemap({
-			filter: page => !unmappedRoutes(page),
+			filter: (page) => !unmappedRoutes(page),
 			changefreq: "weekly",
 			priority: 1,
-			lastmod: new Date()
-		})
+			lastmod: new Date(),
+		}),
 	],
 	output: "server",
 	adapter: cloudflare({ mode: "advanced" }),
@@ -37,13 +38,13 @@ export default defineConfig({
 					"**/.wrangler/**",
 					"**/wrangler.toml",
 					"**/dbSnapshots/**",
-					"**/pdfWorker/**"
-				]
-			}
+					"**/pdfWorker/**",
+				],
+			},
 		},
 		build: {
 			cssMinify: true,
-			minify: true
-		}
-	}
+			minify: true,
+		},
+	},
 });

@@ -24,13 +24,13 @@
 		"astro": "^3.0.8",
 		"astro-seo": "^0.7.5",
 		"client-zip": "^2.4.4",
-		"mysql2": "^3.6.1",
 		"pdf-lib": "^1.17.1",
 		"solid-js": "^1.7.8",
 		"tailwindcss": "^3.3.2",
 		"valibot": "^0.13.1"
 	},
 	"devDependencies": {
-		"flowbite-datepicker": "^1.2.2"
+		"flowbite-datepicker": "^1.2.2",
+		"mysql2": "^3.6.1"
 	}
 }

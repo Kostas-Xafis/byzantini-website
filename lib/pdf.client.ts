@@ -34,7 +34,6 @@ export class PDF {
             TemplateCache.set(url, await res.arrayBuffer() as ArrayBuffer);
         }
         this.doc = await window.PDFLib.PDFDocument.load(TemplateCache.get(url) as ArrayBuffer);
-
         const p = this.doc.getPages()[0];
         const c = TemplateCoords;
 
@@ -84,6 +83,11 @@ export class PDF {
             if (this.student.class_id === 1) p.drawText(this.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
             else if (this.student.class_id === 2) p.drawText(this.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
         }
+        if (this.instrument) {
+            p.drawText(this.student.first_name + " " + this.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
+        } else {
+            p.drawText(this.student.first_name + " " + this.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
+        }
     }
 
     public static async createInstance(): Promise<PDF> {
@@ -116,27 +120,23 @@ export class PDF {
     }
 
     public static async downloadBulk(arr: PDF[]): Promise<void> {
+        let serverTimeout = false;
         let requestArr = arr.map((pdf) => async () => {
             let res;
-            if (Math.random() > 0.725) {
-                let tries = 3;
-                while (--tries) {
-                    try {
-                        let resp = await fetch("https://pdf-create.koxafis.workers.dev/", {
-                            method: "POST",
-                            body: JSON.stringify({
-                                student: pdf.student,
-                                teachersName: pdf.teachersName,
-                                instrument: pdf.instrument,
-                            })
-                        });
-                        res = await resp.blob();
-                        break;
-                    } catch (e) {
-                        if (tries === 0) break;
-                        console.log("Retrying...in 10 sec");
-                        await sleep(15000);
-                    }
+            if (!serverTimeout && Math.random() > 0.7) {
+                try {
+                    let resp = await fetch("https://pdf-create.koxafis.workers.dev/" + pdf.student.class_id, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            student: pdf.student,
+                            teachersName: pdf.teachersName,
+                            instrument: pdf.instrument,
+                        })
+                    });
+                    res = await resp.blob();
+                } catch (e) {
+                    serverTimeout = true;
+                    setTimeout(() => serverTimeout = false, 1000 * 20);
                 }
             }
             if (!res) {
@@ -162,7 +162,6 @@ export class PDF {
     }
 }
 
-
 type TemplateCoords = {
     am: { x: number, y: number },
     lastName: { x: number, y: number },
@@ -187,6 +186,8 @@ type TemplateCoords = {
     instrumentPar: { x: number, y: number },
     instrumentEur: { x: number, y: number },
     instrumentLarge: { x: number, y: number },
+    signatureByz: { x: number, y: number },
+    signatureEur: { x: number, y: number },
 }
 
 const pdfHeight = 841.89;
@@ -215,5 +216,7 @@ const TemplateCoords: TemplateCoords = {
     instrumentPar: { x: 475, y: 488 },
     instrumentEur: { x: 420, y: 489 },
     instrumentLarge: { x: 325, y: 513 },
+    signatureByz: { x: 360, y: 622 },
+    signatureEur: { x: 360, y: 662 },
 }
 Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
