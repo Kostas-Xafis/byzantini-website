@@ -1,13 +1,4 @@
-import {
-	type Accessor,
-	Show,
-	batch,
-	createEffect,
-	createMemo,
-	createSignal,
-	on,
-	For,
-} from "solid-js";
+import { type Accessor, Show, batch, createEffect, createMemo, createSignal, on, For } from "solid-js";
 import Modal from "./Modal.solid";
 import type { Props as InputProps } from "../../Input.solid";
 import { createStore } from "solid-js/store";
@@ -18,7 +9,7 @@ export const enum ActionEnum {
 	DELETE = "DELETE",
 	CHECK = "CHECK",
 	DOWNLOAD = "DOWNLOAD",
-	NONE = "",
+	NONE = ""
 }
 
 export const enum ActionIcon {
@@ -31,8 +22,7 @@ export const enum ActionIcon {
 	ADD_BOX = "fa-regular fa-square-plus",
 	DELETE_BOX = "fa-regular fa-square-minus",
 	DOWNLOAD_SINGLE = "fa-solid fa-download",
-	DOWNLOAD_ZIP = "fa-regular fa-file-zipper",
-	DOWNLOAD_EXCEL = "fa-solid fa-table",
+	DOWNLOAD_ZIP = "fa-regular fa-file-zipper"
 }
 
 export type Action = {
@@ -59,14 +49,12 @@ export default function TableControls(props: Props) {
 	const { onActionsArray, pressedAction, prefix } = props;
 	const [open, setOpen] = createSignal(false, { equals: false });
 	const [cleanup, setCleanup] = createSignal(() => {}, { equals: false });
-	const [inputs, setInputs] = createStore<{
-		inputs: [Record<string, InputProps>];
-	}>({ inputs: [{}] });
+	const [inputs, setInputs] = createStore<{ inputs: [Record<string, InputProps>] }>({ inputs: [{}] });
 	const [submitText, setSubmitText] = createSignal("", { equals: false });
 	const [headerText, setHeaderText] = createSignal("", { equals: false });
 
 	createEffect(
-		on(pressedAction, (action) => {
+		on(pressedAction, action => {
 			if (action === ActionEnum.NONE) return;
 			batch(() => {
 				cleanup()();
@@ -83,12 +71,11 @@ export default function TableControls(props: Props) {
 			setInputs("inputs", [a.inputs]);
 			setSubmitText(a.submitText);
 			setHeaderText(a.headerText);
-			setCleanup((prev) => a.onCleanup);
+			setCleanup(prev => a.onCleanup);
 			a.onMount();
 		});
 	};
-	const onActionsArrayClick = (action: Action | EmptyAction) =>
-		batchUpdate(action);
+	const onActionsArrayClick = (action: Action | EmptyAction) => batchUpdate(action);
 
 	const modalProps = createMemo(() => {
 		return {
@@ -101,19 +88,19 @@ export default function TableControls(props: Props) {
 				batch(() => {
 					setOpen(false);
 					cleanup()();
-					setInputs((prev) => ({}));
+					setInputs(prev => ({}));
 				});
-			},
+			}
 		};
 	});
 	const actionsArrayMemo = createMemo(() => {
 		const actions = onActionsArray;
-		return actions.map((accessor) => {
+		return actions.map(accessor => {
 			const a = accessor();
 			return {
 				type: "type" in a ? a.type : ActionEnum.NONE,
 				icon: a.icon,
-				action: a,
+				action: a
 			};
 		});
 	});
@@ -124,33 +111,21 @@ export default function TableControls(props: Props) {
 				class="controlsContainer w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent"
 			>
 				<For each={actionsArrayMemo()}>
-					{(action) => {
+					{memo => {
 						return (
 							<Show
-								when={action.type}
+								when={memo.type}
 								fallback={
 									<button class="controlBtn py-2 px-4 text-neutral-500 blur-[1px] first-of-type:rounded-l-xl last-of-type:rounded-r-xl">
-										<i
-											class={
-												"text-lg " +
-												(action?.icon || ActionIcon.ADD)
-											}
-										></i>
+										<i class={memo?.icon || "fa-solid fa-plus"}></i>
 									</button>
 								}
 							>
 								<button
 									class="controlBtn py-2 px-4 hover:shadow-gray-600 hover:bg-red-200 first-of-type:rounded-l-xl last-of-type:rounded-r-xl"
-									onClick={() =>
-										onActionsArrayClick(action.action)
-									}
+									onClick={() => onActionsArrayClick(memo.action)}
 								>
-									<i
-										class={
-											"text-lg " +
-											(action?.icon || ActionIcon.ADD)
-										}
-									></i>
+									<i class={memo?.icon || "fa-solid fa-plus"}></i>
 								</button>
 							</Show>
 						);

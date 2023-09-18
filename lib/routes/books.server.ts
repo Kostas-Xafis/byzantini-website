@@ -1,6 +1,6 @@
-import type { Books, Payments } from "../../types/entities";
+import type { Books } from "../../types/entities";
 import { BooksRoutes } from "./books.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { type Transaction, execTryCatch, executeQuery, questionMarks } from "../utils.server";
 
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(BooksRoutes)) as typeof BooksRoutes; // Copy the routes object to split it into client and server routes
@@ -17,7 +17,6 @@ serverRoutes.post.func = async (ctx) => {
 			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args.length)})`,
 			args
 		);
-
 		// Update school_payoffs table amount
 		await Promise.all([
 			executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
@@ -50,22 +49,17 @@ serverRoutes.updateQuantity.func = async (ctx) => {
 };
 
 serverRoutes.delete.func = async (ctx) => {
+	const body = await ctx.request.json();
 	return await execTryCatch(async T => {
-		const ids = await ctx.request.json();
-		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids.length)})`, ids);
+		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(body.length)})`, body);
 		if (books.length === 0) throw Error("Book not found");
 
-		if (ids.length === 1) await T.executeQuery(`DELETE FROM books WHERE id = ?`, ids);
-		else await T.executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(ids.length)})`, ids);
+		if (body.length === 1) await T.executeQuery(`DELETE FROM books WHERE id = ?`, body);
+		else await T.executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(body.length)})`, body);
 
 		// Update payments table & total amount
-		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE book_id IN (${questionMarks(ids.length)}) AND payment_date = 0`, ids);
-		let sum = 0;
-		for (const payment of payments) {
-			sum += (books.find(book => book.id === payment.book_id)?.price || 0) * payment.book_amount;
-		}
-		await T.executeQuery(`UPDATE total_payments SET amount = amount - ?`, [sum]);
-		await T.executeQuery<Payments>(`DELETE FROM payments WHERE book_id IN (${questionMarks(ids.length)})`, ids);
+		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE payment_date IS NULL AND book_id IN (${questionMarks(body.length)}))`, body);
+		await T.executeQuery("DELETE FROM payments WHERE (SELECT count(*) FROM books WHERE books.id=payments.book_id)=0"); // Delete payments with no book
 
 		return "Book deleted successfully";
 	});

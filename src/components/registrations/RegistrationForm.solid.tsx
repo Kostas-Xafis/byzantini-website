@@ -1,25 +1,8 @@
 import { createStore } from "solid-js/store";
-import {
-	API,
-	type APIStore,
-	createHydration,
-	useAPI,
-} from "../../../lib/hooks/useAPI.solid";
-import type {
-	Instruments,
-	Registrations,
-	TeacherInstruments,
-	Teachers,
-} from "../../../types/entities";
+import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
+import type { Instruments, Registrations, TeacherInstruments, Teachers } from "../../../types/entities";
 import Input, { type Props as InputProps } from "../Input.solid";
-import {
-	Show,
-	createEffect,
-	createMemo,
-	createSignal,
-	on,
-	onMount,
-} from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 import Spinner from "../Spinner.solid";
 
@@ -27,15 +10,7 @@ const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
 	keyof Omit<
 		Registrations,
-		| "id"
-		| "date"
-		| "class_id"
-		| "class_year"
-		| "teacher_id"
-		| "instrument_id"
-		| "payment_date"
-		| "payment_amount"
-		| "total_payment"
+		"id" | "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id" | "payment_date" | "payment_amount"
 	>,
 	InputProps
 > = {
@@ -49,10 +24,10 @@ const genericInputs: Record<
 		tooltip: {
 			message: [
 				"Για νέες εγγραφές: Ο αριθμός μητρώου είναι 000. ",
-				"Για επανεγγραφές: Αναζητήστε τον αριθμό μητρώο στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής.",
+				"Για επανεγγραφές: Αναζητήστε τον αριθμό μητρώο στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής."
 			],
-			position: isPhone ? "top" : "left",
-		},
+			position: isPhone ? "top" : "left"
+		}
 	},
 	last_name: {
 		label: "Επώνυμο",
@@ -61,11 +36,9 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
-			message: [
-				"Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης).",
-			],
-			position: isPhone ? "top" : "right",
-		},
+			message: ["Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης)."],
+			position: isPhone ? "top" : "right"
+		}
 	},
 	first_name: {
 		label: "Όνομα",
@@ -74,73 +47,71 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
-			message: [
-				"Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας.",
-			],
-			position: isPhone ? "top" : "left",
-		},
+			message: ["Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας."],
+			position: isPhone ? "top" : "left"
+		}
 	},
 	fathers_name: {
 		label: "Πατρώνυμο",
 		name: "fathers_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
+		iconClasses: "fa-solid fa-user"
 	},
 	telephone: {
 		label: "Τηλέφωνο",
 		name: "telephone",
 		type: "tel",
-		iconClasses: "fa-solid fa-phone",
+		iconClasses: "fa-solid fa-phone"
 	},
 	cellphone: {
 		label: "Κινητό",
 		name: "cellphone",
 		type: "tel",
 		required: true,
-		iconClasses: "fa-solid fa-mobile-screen",
+		iconClasses: "fa-solid fa-mobile-screen"
 	},
 	email: {
 		label: "Email",
 		name: "email",
 		type: "email",
 		required: true,
-		iconClasses: "fa-solid fa-envelope",
+		iconClasses: "fa-solid fa-envelope"
 	},
 	birth_date: {
 		label: "Ημερομηνία Γέννησης",
 		name: "birth_date",
 		type: "date",
 		required: true,
-		iconClasses: "fa-regular fa-calendar",
+		iconClasses: "fa-regular fa-calendar"
 	},
 	road: {
 		label: "Οδός",
 		name: "road",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-location-dot",
+		iconClasses: "fa-solid fa-location-dot"
 	},
 	number: {
 		label: "Αριθμός",
 		name: "number",
 		type: "number",
 		required: true,
-		iconClasses: "fa-solid fa-hashtag",
+		iconClasses: "fa-solid fa-hashtag"
 	},
 	tk: {
 		label: "Τ.Κ.",
 		name: "tk",
 		type: "number",
 		required: true,
-		iconClasses: "fa-solid fa-hashtag",
+		iconClasses: "fa-solid fa-hashtag"
 	},
 	region: {
 		label: "Δήμος/Περιοχή",
 		name: "region",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-tree-city",
+		iconClasses: "fa-solid fa-tree-city"
 	},
 	registration_year: {
 		label: "Σχολικό Έτος",
@@ -150,16 +121,11 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-calendar",
 		disabled: true,
 		blurDisabled: false,
-		value: "2023-2024",
-	},
+		value: "2023-2024"
+	}
 };
 
-const byzantineInputs = (
-	teachers: Teachers[]
-): Record<
-	keyof Pick<Registrations, "class_year" | "teacher_id">,
-	InputProps
-> => {
+const byzantineInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -167,22 +133,12 @@ const byzantineInputs = (
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: [
-				"Α' Ετος",
-				"Β' Ετος",
-				"Γ' Ετος",
-				"Δ' Ετος",
-				"Ε' Ετος",
-				"Α' Ετος Διπλώματος",
-				"Β' Ετος Διπλώματος",
-			],
+			selectList: ["Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
 			valueLiteral: true,
 			tooltip: {
-				message: [
-					"Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής",
-				],
-				position: isPhone ? "top" : "right",
-			},
+				message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
+				position: isPhone ? "top" : "right"
+			}
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -190,18 +146,13 @@ const byzantineInputs = (
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map((t) => t.fullname),
-			valueList: teachers.map((t) => t.id),
-		},
+			selectList: teachers.map(t => t.fullname),
+			valueList: teachers.map(t => t.id)
+		}
 	};
 };
 
-const traditionalInputs = (
-	teachers: Teachers[]
-): Record<
-	keyof Pick<Registrations, "class_year" | "teacher_id">,
-	InputProps
-> => {
+const traditionalInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -209,23 +160,12 @@ const traditionalInputs = (
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: [
-				"Α' Προκαταρκτική",
-				"Α' Κατωτέρα",
-				"Β' Κατωτέρα",
-				"Α' Μέση",
-				"Β' Μέση",
-				"Γ' Μέση",
-				"Α' Ανωτέρα",
-				"Β' Ανωτέρα",
-			],
+			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
 			valueLiteral: true,
 			tooltip: {
-				message: [
-					"Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής",
-				],
-				position: isPhone ? "top" : "right",
-			},
+				message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
+				position: isPhone ? "top" : "right"
+			}
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -233,18 +173,13 @@ const traditionalInputs = (
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map((t) => t.fullname),
-			valueList: teachers.map((t) => t.id),
-		},
+			selectList: teachers.map(t => t.fullname),
+			valueList: teachers.map(t => t.id)
+		}
 	};
 };
 
-const europeanInputs = (
-	teachers: Teachers[]
-): Record<
-	keyof Pick<Registrations, "class_year" | "teacher_id">,
-	InputProps
-> => {
+const europeanInputs = (teachers: Teachers[]): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -252,23 +187,12 @@ const europeanInputs = (
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: [
-				"Α' Προκαταρκτική",
-				"Α' Κατωτέρα",
-				"Β' Κατωτέρα",
-				"Α' Μέση",
-				"Β' Μέση",
-				"Γ' Μέση",
-				"Α' Ανωτέρα",
-				"Β' Ανωτέρα",
-			],
+			selectList: ["Α' Προκαταρκτική", "Α' Κατωτέρα", "Β' Κατωτέρα", "Α' Μέση", "Β' Μέση", "Γ' Μέση", "Α' Ανωτέρα", "Β' Ανωτέρα"],
 			valueLiteral: true,
 			tooltip: {
-				message: [
-					"Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής",
-				],
-				position: isPhone ? "top" : "right",
-			},
+				message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
+				position: isPhone ? "top" : "right"
+			}
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -276,9 +200,9 @@ const europeanInputs = (
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-user",
-			selectList: teachers.map((t) => t.fullname),
-			valueList: teachers.map((t) => t.id),
-		},
+			selectList: teachers.map(t => t.fullname),
+			valueList: teachers.map(t => t.id)
+		}
 	};
 };
 
@@ -286,25 +210,18 @@ const instrumentsInput = ({
 	type,
 	teacher,
 	instruments,
-	instrumentsList,
+	instrumentsList
 }: {
 	type?: MusicType;
 	teacher?: Teachers;
 	instruments?: Instruments[];
 	instrumentsList?: TeacherInstruments[];
 }): { instruments: InputProps } => {
-	if (
-		!type ||
-		!teacher ||
-		!instruments ||
-		!instrumentsList ||
-		instruments.length === 0
-	)
+	if (!type || !teacher || !instruments || !instrumentsList || instruments.length === 0)
 		return { instruments: { type: null, label: "", name: "" } };
-	const teacherInstruments =
-		instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
-	const multiselectInstruments = teacherInstruments?.map((ti) => {
-		const i = instruments.find((i) => i.id === ti.instrument_id);
+	const teacherInstruments = instrumentsList?.filter(i => i.teacher_id === teacher?.id) || [];
+	const multiselectInstruments = teacherInstruments?.map(ti => {
+		const i = instruments.find(i => i.id === ti.instrument_id);
 		if (!i) return { value: 0, label: "", selected: false };
 		return { value: i.id, label: i.name, selected: false };
 	});
@@ -322,8 +239,8 @@ const instrumentsInput = ({
 			type: "multiselect",
 			required: true,
 			multiselectList: multiselectInstruments,
-			multiselectOnce: true,
-		},
+			multiselectOnce: true
+		}
 	};
 };
 
@@ -331,20 +248,18 @@ const enum MusicType {
 	Byzantine = "byz",
 	Traditional = "par",
 	European = "eur",
-	None = "",
+	None = ""
 }
 
 const heading = {
 	[MusicType.Byzantine]: "Φόρμα Εγγραφής Βυζαντινής Μουσικής",
 	[MusicType.Traditional]: "Φόρμα Εγγραφής Παραδοσιακής Μουσικής",
-	[MusicType.European]: "Φόρμα Εγγραφής Ευρωπαϊκής Μουσικής",
+	[MusicType.European]: "Φόρμα Εγγραφής Ευρωπαϊκής Μουσικής"
 } as { [key in MusicType]: string };
 
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [formSelected, setFormSelected] = createSignal<MusicType>(
-		MusicType.None
-	);
+	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	const hydrate = createHydration(() => {
@@ -356,16 +271,12 @@ export function RegistrationForm() {
 
 	createEffect(() => hydrate(true));
 	createEffect(
-		on(formSelected, (type) => {
-			const select = document.querySelector(
-				"select[name='teacher_id']"
-			) as HTMLSelectElement;
+		on(formSelected, type => {
+			const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
 			const teachers = store[API.Teachers.get];
 			if (!select || !teachers) return;
 			select.addEventListener("change", (e: Event) => {
-				setSelectedTeacher(
-					TeachersByType().find((t) => t.id === Number(select.value))
-				);
+				setSelectedTeacher(TeachersByType().find(t => t.id === Number(select.value)));
 			});
 			setSelectedTeacher();
 		})
@@ -378,12 +289,10 @@ export function RegistrationForm() {
 			const music = {
 				"Βυζαντινή Μουσική": "byz",
 				"Παραδοσιακή Μουσική": "par",
-				"Ευρωπαϊκή Μουσική": "eur",
+				"Ευρωπαϊκή Μουσική": "eur"
 			} as Record<string, string>;
 			if (type in music) {
-				const btn = document.querySelector(
-					`#firstSelect #${music[type]} button`
-				) as HTMLElement;
+				const btn = document.querySelector(`#firstSelect #${music[type]} button`) as HTMLElement;
 				btn.parentElement?.parentElement?.focus();
 				void btn.offsetWidth;
 				setTimeout(() => btn.click(), 3000);
@@ -394,28 +303,22 @@ export function RegistrationForm() {
 	const btns = [
 		["Βυζαντινή Μουσική", MusicType.Byzantine],
 		["Παραδοσιακή Μουσική", MusicType.Traditional],
-		["Ευρωπαϊκή Μουσική", MusicType.European],
+		["Ευρωπαϊκή Μουσική", MusicType.European]
 	] as const;
 
 	const TeachersByType = createMemo(() => {
 		let teacher_store = store[API.Teachers.get]?.slice();
-		const teachers =
-			teacher_store &&
-			(JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
+		const teachers = teacher_store && (JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
 		const teacher_classes = store[API.Teachers.getClasses];
 		if (!teachers || !teacher_classes) return [];
-		const id = btns.findIndex((btn) => btn[1] === formSelected());
+		const id = btns.findIndex(btn => btn[1] === formSelected());
 		teachers.sort((a, b) => {
 			if (a.fullname < b.fullname) return -1;
 			if (a.fullname > b.fullname) return 1;
 			return 0;
 		});
-		return teachers.filter((teacher) =>
-			teacher_classes.find(
-				(teacher_class) =>
-					teacher_class.teacher_id === teacher.id &&
-					teacher_class.class_id === id
-			)
+		return teachers.filter(teacher =>
+			teacher_classes.find(teacher_class => teacher_class.teacher_id === teacher.id && teacher_class.class_id === id)
 		);
 	});
 	const InstrumentsByTeacher = createMemo(() => {
@@ -426,22 +329,16 @@ export function RegistrationForm() {
 		return {
 			type: formSelected(),
 			teacher,
-			instruments: instruments.filter((i) => i.type === formSelected()),
-			instrumentsList: teacher_instruments,
+			instruments: instruments.filter(i => i.type === formSelected()),
+			instrumentsList: teacher_instruments
 		};
-	}) as () => {
-		teacher: Teachers;
-		instruments: Instruments[];
-		instrumentsList: TeacherInstruments[];
-	};
+	}) as () => { teacher: Teachers; instruments: Instruments[]; instrumentsList: TeacherInstruments[] };
 
 	const onSelectClick = (type: MusicType) => () => {
 		const curType = formSelected();
 		if (curType === type) return;
 		if (curType === MusicType.None) {
-			const regContainer = document.querySelector(
-				"#registrationContainer"
-			) as HTMLElement;
+			const regContainer = document.querySelector("#registrationContainer") as HTMLElement;
 			regContainer.classList.add("remove");
 			void regContainer.offsetWidth;
 			setTimeout(() => {
@@ -450,9 +347,7 @@ export function RegistrationForm() {
 				setFormSelected(type);
 			}, 500);
 		} else {
-			const form = document.querySelector(
-				"#registrationForm"
-			) as HTMLElement;
+			const form = document.querySelector("#registrationForm") as HTMLElement;
 			form.classList.add("remove");
 			void form.offsetWidth;
 			setTimeout(() => {
@@ -470,10 +365,7 @@ export function RegistrationForm() {
 		setSpinner(true);
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
-		const data: Omit<
-			Registrations,
-			"id" | "payment_amount" | "total_payment"
-		> = {
+		const data: Omit<Registrations, "id"> = {
 			last_name: formData.get("last_name") as string,
 			first_name: formData.get("first_name") as string,
 			am: formData.get("am") as string,
@@ -481,43 +373,31 @@ export function RegistrationForm() {
 			telephone: (formData.get("telephone") as string) || "-",
 			cellphone: formData.get("cellphone") as string,
 			email: formData.get("email") as string,
-			birth_date: new Date(
-				formData.get("birth_date") as string
-			).getTime(),
+			birth_date: new Date(formData.get("birth_date") as string).getTime(),
 			road: formData.get("road") as string,
 			number: Number(formData.get("number") as string),
 			tk: Number(formData.get("tk") as string),
 			region: formData.get("region") as string,
 			registration_year: formData.get("registration_year") as string,
 			class_year: formData.get("class_year") as string,
-			class_id: btns.findIndex((btn) => btn[1] === formSelected()),
+			class_id: btns.findIndex(btn => btn[1] === formSelected()),
 			teacher_id: Number(formData.get("teacher_id")) || -1,
 			instrument_id:
-				[
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='instruments'][data-selected='true']`
-					),
-				].map((btn) => {
+				[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='instruments'][data-selected='true']`)].map(btn => {
 					const id = Number(btn.dataset.value) || null;
 					return id;
 				})[0] || 0,
-			date: Date.now(),
+			date: Date.now()
 		};
 		try {
-			const res = await useAPI(setStore, API.Registrations.post, {
-				RequestObject: data,
-			});
+			const res = await useAPI(setStore, API.Registrations.post, { RequestObject: data });
 			if (res.message) {
-				const messageDialog = document.querySelector(
-					"#submitMessage"
-				) as HTMLElement;
+				const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 				messageDialog.classList.remove("hidden");
 				messageDialog.classList.add("flex");
 			}
 		} catch (err) {
-			const form = document.querySelector(
-				"#registrationForm"
-			) as HTMLElement;
+			const form = document.querySelector("#registrationForm") as HTMLElement;
 			setSpinner(false);
 			setTimeout(() => {
 				form.classList.add("animate-shake");
@@ -535,14 +415,8 @@ export function RegistrationForm() {
 				when={formSelected() !== MusicType.None}
 				fallback={
 					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
-					<div
-						id="registrationContainer"
-						class="w-full h-full place-items-center font-dicact"
-					>
-						<div
-							id="firstSelect"
-							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col"
-						>
+					<div id="registrationContainer" class="w-full h-full place-items-center font-dicact">
+						<div id="firstSelect" class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
 							{btns.map(([str, type]) => (
 								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
 									<div
@@ -580,17 +454,13 @@ export function RegistrationForm() {
 								<div
 									class={
 										"group self-center grid grid-cols-1 border-solid border-2 border-red-900 max-sm:border-0 max-sm:border-b-[1px] rounded-md max-sm:rounded-none shadow-md max-sm:shadow-none shadow-gray-400 transition-colors ease-in-out " +
-										(type === formSelected()
-											? "bg-red-900"
-											: "hover:bg-red-900")
+										(type === formSelected() ? "bg-red-900" : "hover:bg-red-900")
 									}
 								>
 									<button
 										class={
 											"p-6 max-sm:p-2 text-2xl font-didact font-medium bg-transparent group-hover:text-white transition-colors ease-in-out max-sm:text-base" +
-											(type === formSelected()
-												? " text-white"
-												: " group-hover:text-white")
+											(type === formSelected() ? " text-white" : " group-hover:text-white")
 										}
 										onClick={onSelectClick(type)}
 									>
@@ -607,26 +477,17 @@ export function RegistrationForm() {
 							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
 							</h1>
-							{Object.values(genericInputs).map((input) => (
+							{Object.values(genericInputs).map(input => (
 								<Input {...input} />
 							))}
 							{formSelected() === MusicType.Byzantine
-								? Object.values(
-										byzantineInputs(TeachersByType())
-								  ).map((input) => <Input {...input} />)
+								? Object.values(byzantineInputs(TeachersByType())).map(input => <Input {...input} />)
 								: formSelected() === MusicType.Traditional
-								? Object.values(
-										traditionalInputs(TeachersByType())
-								  ).map((input) => <Input {...input} />)
-								: Object.values(
-										europeanInputs(TeachersByType())
-								  ).map((input) => <Input {...input} />)}
-							{formSelected() === MusicType.Traditional ||
-							formSelected() === MusicType.European
+								? Object.values(traditionalInputs(TeachersByType())).map(input => <Input {...input} />)
+								: Object.values(europeanInputs(TeachersByType())).map(input => <Input {...input} />)}
+							{formSelected() === MusicType.Traditional || formSelected() === MusicType.European
 								? // @ts-ignore
-								  Object.values(
-										instrumentsInput(InstrumentsByTeacher())
-								  ).map((input) => <Input {...input} />)
+								  Object.values(instrumentsInput(InstrumentsByTeacher())).map(input => <Input {...input} />)
 								: ""}
 							<Show
 								when={!spinner()}
@@ -653,21 +514,14 @@ export function RegistrationForm() {
 							id="messageBox"
 							class="relative p-12 max-sm:p-6 w-[500px] max-sm:w-[450px] max-[420px]:320px max-2xs:280px h-max rounded-xl flex flex-col justify-center gap-y-4 shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100"
 						>
-							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								Επιτυχής Εγγραφή
-							</p>
+							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">Επιτυχής Εγγραφή</p>
 							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνήστε
-								με τη Γραμματεία της Σχολής για περαιτέρω
-								πληροφορίες
+								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνήστε με τη Γραμματεία της Σχολής για περαιτέρω πληροφορίες
 							</p>
 							<CloseButton
 								classes="absolute top-4 right-4 w-10 h-10 text-xl"
 								onClick={() => {
-									const messageDialog =
-										document.querySelector(
-											"#submitMessage"
-										) as HTMLElement;
+									const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 									messageDialog.classList.add("hidden");
 									messageDialog.classList.remove("flex");
 								}}
