@@ -1,5 +1,4 @@
 import type { Books, Payments } from "../../types/entities";
-import { Bucket } from "../bucket";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { PaymentsRoutes } from "./payments.client";
 
@@ -10,25 +9,27 @@ serverRoutes.get.func = async _ctx => {
 };
 
 serverRoutes.getTotal.func = async _ctx => {
-	return await execTryCatch(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_payments"))[0]);
+	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_payments"))[0]);
 };
 
 serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async () => {
-		const { book_id, student_name } = await ctx.request.json();
+		const { book_id, student_name, book_amount } = await ctx.request.json();
 		const book = (await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 		if (!book) throw Error("Book not found");
-		if (book.quantity - book.sold <= 0) throw Error("Book is out of stock")
-
+		if (book.quantity - book.sold <= 0) throw Error("Book is out of stock");
+		if (book_amount > book.quantity - book.sold) throw Error("Not enough books in stock");
+		if (book_amount <= 0) throw Error("Invalid book amount");
 		const [result1, result2] = await Promise.allSettled([
-			executeQuery(`INSERT INTO payments (book_id, student_name, amount, date) VALUES (${questionMarks(4)})`, [
+			executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
 				book_id,
 				student_name,
-				book.price,
+				book.price * book_amount,
+				book_amount,
 				Date.now()
 			]),
-			executeQuery("UPDATE books SET sold = sold + 1 WHERE id = ? AND sold < quantity LIMIT 1", [book_id]),
-			executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price]),
+			executeQuery("UPDATE books SET sold = sold + ? WHERE id = ? AND sold + ? < quantity LIMIT 1", [book_amount, book_id, book_amount]),
+			executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]),
 		]);
 		if (result1.status === "rejected" || result2.status === "rejected") throw Error("Failed database insertion and/or update");
 		// get inserted payment from database
@@ -45,28 +46,34 @@ serverRoutes.updatePayment.func = async ctx => {
 		if (payment.length === 0) {
 			throw Error("Payment not found");
 		}
-		const previousAmount = (await executeQuery<{ amount: number }>("SELECT amount FROM payments WHERE id = ?", [id]))[0].amount;
-		await Promise.all([
-			executeQuery("UPDATE payments SET amount = ? WHERE id = ? LIMIT 1", [amount, id]),
-			executeQuery("UPDATE total_payments SET amount = amount - ?", [previousAmount - amount])
-		]);
+		await executeQuery("UPDATE payments SET amount = ? WHERE id = ? LIMIT 1", [amount, id]);
 		return "Updated payment successfully";
 	});
 };
 
 serverRoutes.complete.func = async ctx => {
-	return await execTryCatch(async () => {
+	return await execTryCatch(async (T) => {
 		const ids = await ctx.request.json();
 		//check if payment exists
-		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) `, ids);
+		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) AND payment_date = 0`, ids);
 		if (payments.length === 0) throw Error("Payment not found");
-		let sum = 0;
-		for (const payment of payments) {
-			sum += payment.amount;
-		}
+		await T.executeQuery(`UPDATE payments SET payment_date=?, amount=(SELECT price FROM books WHERE books.id=payments.book_id)*book_amount WHERE id IN (${questionMarks(ids.length)})`, [Date.now(), ...ids]);
+		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids.length)}))`, [...ids]);
+		return "Completed payment successfully";
+	});
+};
+
+serverRoutes.delete.func = async ctx => {
+	return await execTryCatch(async T => {
+		const ids = await ctx.request.json();
+
+		//check if payment exists
+		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) AND payment_date != 0`, ids);
+		if (payments.length === 0) throw Error("Payments not found");
+		let updateBooks = payments.map(payment => T.executeQuery("UPDATE books SET sold = sold - ? WHERE id=? LIMIT 1", [payment.book_amount, payment.book_id]));
 		await Promise.all([
-			executeQuery(`UPDATE payments SET payment_date=?, amount=(SELECT price FROM books WHERE books.id=payments.book_id) WHERE id IN (${questionMarks(ids.length)})`, [Date.now(), ...ids]),
-			executeQuery("UPDATE total_payments SET amount = amount - ?", [sum])
+			T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids.length)})`, ids),
+			...updateBooks
 		]);
 		return "Deleted payment successfully";
 	});

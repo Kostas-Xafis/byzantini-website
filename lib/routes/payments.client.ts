@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
 	func: async ctx => null as any
 };
 
-const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number }> = {
+const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payments/total",
@@ -37,7 +37,15 @@ const updatePayment: EndpointRoute<"PUT:/payments", typeof updatePaymentReq> = {
 	validation: () => updatePaymentReq,
 	func: async ctx => null as any
 };
-const complete: EndpointRoute<"DELETE:/payments", number[]> = {
+const complete: EndpointRoute<"POST:/payments/compelete", number[]> = {
+	authentication: true,
+	method: "POST",
+	path: "/payments/compelete",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
+const del: EndpointRoute<"DELETE:/payments", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/payments",
@@ -50,7 +58,8 @@ export const PaymentsRoutes = {
 	getTotal,
 	post,
 	updatePayment,
-	complete
+	complete,
+	delete: del
 };
 
 export type APIPaymentsArgs = APIArguments<"Payments", typeof PaymentsRoutes>;
@@ -81,9 +90,14 @@ export const APIPaymentsEndpoints: APIEndpointsBuilder<"Payments", typeof Paymen
 		validation: updatePaymentReq
 	},
 	"Payments.complete": {
+		method: "POST",
+		path: "/payments/compelete",
+		endpoint: "Payments.complete"
+	},
+	"Payments.delete": {
 		method: "DELETE",
 		path: "/payments",
-		endpoint: "Payments.complete"
+		endpoint: "Payments.delete"
 	}
 };
 
@@ -93,6 +107,7 @@ export const APIPayments: APIBuilder<"Payments", typeof PaymentsRoutes> = {
 		getTotal: "Payments.getTotal",
 		post: "Payments.post",
 		updatePayment: "Payments.updatePayment",
-		complete: "Payments.complete"
+		complete: "Payments.complete",
+		delete: "Payments.delete"
 	}
 };

@@ -2,7 +2,10 @@ import Row, { type CellValue } from "./Row.solid";
 import { For, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 export type Props = {
-	columns: Record<string, { type: CellValue; name: string; size?: () => number }>;
+	columns: Record<
+		string,
+		{ type: CellValue; name: string; size?: () => number }
+	>;
 	data: Accessor<any[]>;
 	prefix?: string;
 	children?: JSX.Element | JSX.Element[];
@@ -12,13 +15,19 @@ export type Props = {
 export const enum SortDirection {
 	ASCENDING,
 	DESCENDING,
-	NONE
+	NONE,
 }
 
-export type ColumnType<T> = Record<keyof T, { type: CellValue; name: string; size?: () => number }>;
+export type ColumnType<T> = Record<
+	keyof T,
+	{ type: CellValue; name: string; size?: () => number }
+>;
 
 export default function Table(props: Props) {
-	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], { equals: false });
+	const [sorted, setSorted] = createSignal<[SortDirection, number]>(
+		[SortDirection.NONE, -1],
+		{ equals: false }
+	);
 	const { columns: columnNames, prefix = "", data } = props;
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
@@ -40,7 +49,8 @@ export default function Table(props: Props) {
 		return direction === SortDirection.ASCENDING ? rows : rows.reverse();
 	});
 
-	let columnWidths = "grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
+	let columnWidths =
+		"grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
 		let len = (size && size()) || name.length;
 		columnWidths += `calc(${len}ch + 2ch)`;
@@ -52,27 +62,27 @@ export default function Table(props: Props) {
 			class="w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4"
 			data-prefix={prefix}
 		>
-			<div class="flex flex-row w-full justify-evenly z-[1001]">{props.children}</div>
+			<div class="flex flex-row w-full justify-evenly z-[1001]">
+				{props.children}
+			</div>
 			<div
 				id="tableContainer"
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 			>
 				<Row
 					data={columns}
-					columnWidths={columnWidths}
 					columnType={columnTypes}
 					header
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
 				/>
-				<div class="data-container relative z-0 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+				<div class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item, index) => {
 							return (
 								<Row
 									data={item}
 									index={index()}
-									columnWidths={columnWidths}
 									columnType={columnTypes}
 									hasSelectBox={!!props.hasSelectBox}
 								/>
@@ -83,6 +93,9 @@ export default function Table(props: Props) {
 			</div>
 			<style>
 				{`
+	.row {
+		${columnWidths}
+	}
 	.row:is(.selectedRow):nth-child(odd)::before,
 	.row:is(.selectedRow)::before {
 		background-color: rgb(254,202,202);
