@@ -1,11 +1,26 @@
-import { cast, connect, } from "@planetscale/database";
+import { cast, connect } from "@planetscale/database";
+
+export type ExecReturn<T> = { insertId: '0', rows: T[]; };
+export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
+
+export type Transaction = {
+	execute: Exec,
+	executeQuery: <T = undefined>(query: string, args?: any[], log?: boolean) => Promise<T extends undefined ? { insertId: number; } : T[]>,
+	queryHistory: string[];
+};
+
+export type Connection = {
+	execute: Exec,
+	transaction: (func: (tx: Transaction) => any) => Promise<any>;
+};
 
 
-export const CreateDbConnection = async () => {
+export const CreateDbConnection = async (): Promise<Connection> => {
 	const { DB_PWD, DB_HOST, DB_USERNAME, CONNECTOR, DB_NAME, DB_PORT } = await import.meta.env;
 	try {
 		if (CONNECTOR === "mysql") {
-			const mysql = await import("mysql2/promise");
+			// This is the worst & most shameful line of code I've ever written
+			const mysql = await eval(`import("mysql2/promise")`);
 			const db = await mysql.createConnection({
 				user: DB_USERNAME,
 				database: DB_NAME,
@@ -14,32 +29,35 @@ export const CreateDbConnection = async () => {
 				port: DB_PORT,
 				multipleStatements: false
 			});
-			type ExecReturn = { insertId: string, rows: any[] };
-			async function execute(query: string, args: any[] = [], _?: any): Promise<ExecReturn> {
+			const execute: Exec = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
 				try {
-					const [res] = await db.execute(query, args);
-					let resObj = {} as ExecReturn;
+					const [res] = await db.execute(query, args) as [{ insertId: number; } | T[]];
+					let resObj = {} as any;
 					if ("insertId" in res) resObj["insertId"] = "" + res.insertId;
 					else {
 						resObj["insertId"] = "0";
 						resObj["rows"] = res;
 					}
-					return resObj;
+					return resObj as T extends undefined ? { insertId: string; } : ExecReturn<T>;
 				} catch (error) {
 					db.end();
 					throw new Error(error as any);
 				}
-			}
+			};
 			return {
-				execute,
-				queryHistory: [],
-				transaction: async (func: Function) => {
+				execute: async <T>(query: string, args: any[] = [], _?: any) => {
+					let res = await execute<T>(query, args);
+					db.end();
+					return res;
+				},
+				transaction: async (func) => {
 					await db.beginTransaction();
-					const res = await func({ execute });
+					const res = await func({ execute } as Transaction);
 					await db.commit();
+					db.end();
 					return res;
 				}
-			}
+			};
 		}
 		return connect({
 			host: DB_HOST,
@@ -51,7 +69,7 @@ export const CreateDbConnection = async () => {
 			},
 			cast(field, value) {
 				if (field.type === 'INT64' || field.type === 'UINT64') {
-					return Number(value)
+					return Number(value);
 				}
 				// if it's a boolean
 				// if (field.type === 'INT8' && field.columnLength === 1) {
@@ -59,7 +77,8 @@ export const CreateDbConnection = async () => {
 				// }
 				return cast(field, value);
 			},
-		});
+			// trust me typescript...
+		}) as unknown as Connection;
 	} catch (error) {
 		console.log(error);
 		throw new Error(error as any);

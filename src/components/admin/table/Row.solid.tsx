@@ -1,12 +1,14 @@
 import { type Setter, onMount, useContext } from "solid-js";
-import { type ContextType, SelectedItemsContext } from "./SelectedRowContext.solid";
+import {
+	type ContextType,
+	SelectedItemsContext,
+} from "./SelectedRowContext.solid";
 import { SortDirection } from "./Table.solid";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean";
 
 interface Props {
 	data: (number | string)[]; // data[0] must always be the id of the item
-	columnWidths: string;
 	columnType: CellValue[];
 	hasSelectBox: boolean;
 	index?: number;
@@ -15,26 +17,48 @@ interface Props {
 }
 
 export default function Row(props: Props) {
-	const [selectedItems, { add, remove, addMany, removeMany }] = useContext(SelectedItemsContext) as ContextType;
-	const { data, columnWidths, index = -1, columnType, header, sortOnClick, hasSelectBox } = props;
+	const [selectedItems, { add, remove, addMany, removeMany }] = useContext(
+		SelectedItemsContext
+	) as ContextType;
+	const {
+		data,
+		index = -1,
+		columnType,
+		header,
+		sortOnClick,
+		hasSelectBox,
+	} = props;
 
 	const onClick = (e: MouseEvent) => {
 		if (!header) {
-			const item_id = Number((e.currentTarget as HTMLElement).dataset.id as string);
+			const item_id = Number(
+				(e.currentTarget as HTMLElement).dataset.id as string
+			);
 			const isSelected = selectedItems.includes(item_id);
 			if (isSelected) remove && remove(item_id);
 			else add && add(item_id);
 			(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
 
-			if (hasSelectBox) document.querySelector(`.cb[data-value="${item_id}"]`)?.classList.toggle("selected");
+			if (hasSelectBox)
+				document
+					.querySelector(`.cb[data-value="${item_id}"]`)
+					?.classList.toggle("selected");
 		} else if (hasSelectBox) {
 			const allCbs = document.querySelectorAll(".cb");
-			const ids = ([...allCbs] as HTMLElement[]).map(el => Number(el.dataset.value));
-			const isSelected = new Set([...ids, ...selectedItems]).size === selectedItems.length;
+			const ids = ([...allCbs] as HTMLElement[]).map((el) =>
+				Number(el.dataset.value)
+			);
+			const isSelected =
+				new Set([...ids, ...selectedItems]).size ===
+				selectedItems.length;
+			allCbs.forEach((cb) => {
+				cb.classList.toggle("selected");
+				//@ts-ignore
+				cb.parentElement.parentElement.classList.toggle("selectedRow");
+			});
+			document.querySelector(".mcb")?.classList.toggle("selected");
 			if (isSelected) removeMany && removeMany(ids);
 			else addMany && addMany(ids);
-			allCbs.forEach(cb => cb.classList.toggle("selected"));
-			document.querySelector(".mcb")?.classList.toggle("selected");
 		}
 	};
 	let onClickSort: (e: MouseEvent) => void;
@@ -62,15 +86,6 @@ export default function Row(props: Props) {
 			const column_index = Number(el.dataset.colInd as string);
 			sortOnClick && sortOnClick([direction, column_index]);
 		};
-		onMount(async () => {
-			const container = document.querySelector(".data-container") as HTMLElement;
-			if (container.scrollHeight > container.clientHeight) {
-				document
-					.querySelector(".header")
-					//@ts-ignore
-					?.style.setProperty("grid-template-columns", columnWidths.split(":")[1].slice(0, -2) + " 1ch");
-			}
-		});
 	}
 	return (
 		<>
@@ -85,13 +100,13 @@ export default function Row(props: Props) {
 						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500"
 						: "")
 				}
-				style={columnWidths + ` z-index: ${(columnType.length - index) * 10}`}
 			>
 				{hasSelectBox && (
 					<div class="relative w-full">
 						<div
 							class={
-								"group/checkbox relative items-center" + (header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
+								"group/checkbox relative items-center" +
+								(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
 							}
 							data-value={data[0]}
 						>
@@ -115,10 +130,16 @@ export default function Row(props: Props) {
 						);
 
 					if (type === "date" && item) {
-						item = new Date(item as number).toLocaleDateString("el-GR");
+						item = new Date(item as number).toLocaleDateString(
+							"el-GR"
+						);
 					} else if (type === "date") item = "-";
 					if (type === "boolean") item = item ? "Ναι" : "Όχι";
-					if (type === "number" && (item === undefined || item === null)) item = "-";
+					if (
+						type === "number" &&
+						(item === undefined || item === null)
+					)
+						item = "-";
 					return (
 						<div
 							class={

@@ -31,6 +31,7 @@ export const v_Payments = object({
 	student_name: string([minLength(1)]),
 	book_id: number([integer(), minValue(0)]),
 	amount: number([integer(), minValue(0)]),
+	book_amount: number([integer(), minValue(1)]),
 	date: number([integer(), minValue(0)]),
 	payment_date: optional(number([integer(), minValue(0)]))
 });
@@ -160,7 +161,8 @@ export const v_Registrations = object({
 	teacher_id: number([integer(), minValue(0)]),
 	instrument_id: number([integer(), minValue(0)]),
 	date: number([integer(), minValue(0)]),
-	payment_amount: optional(number([integer(), minValue(0)])),
+	payment_amount: number([integer(), minValue(0)]),
+	total_payment: number([integer(), minValue(0)]),
 	payment_date: optional(nullable(number([integer(), minValue(0)])))
 });
 export type Registrations = Output<typeof v_Registrations>;

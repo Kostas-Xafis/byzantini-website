@@ -1,6 +1,5 @@
-import type { Transaction as Tx } from "@planetscale/database";
 import type { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
-import { CreateDbConnection } from "./db";
+import { CreateDbConnection, type Transaction } from "./db";
 
 /**
  *
@@ -27,8 +26,6 @@ export const generateLink = (size = 16) => {
 	return link;
 };
 
-export type Transaction = Tx & { executeQuery: <T = { insertId: number }>(query: string, args?: any[]) => ReturnType<typeof executeQuery<T>>, queryHistory: string[] };
-
 const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
 	let argStr = JSON.stringify(args);
@@ -40,7 +37,7 @@ const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	}
 };
 
-export const executeQuery = async <T = { insertId: number }>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
+export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? await CreateDbConnection();
 	let queryId, res;
 	try {
@@ -49,8 +46,9 @@ export const executeQuery = async <T = { insertId: number }>(query: string, args
 			tx && tx.queryHistory.push(queryId);
 			await queryLogger(queryId, query, args);
 		}
-		res = await conn.execute(query, args, { as: "object" });
+		res = await conn.execute<T>(query, args, { as: "object" });
 	} catch (error) {
+		console.log(error);
 		if (queryId) {
 			const errConn = await CreateDbConnection();
 			if (tx)
@@ -60,7 +58,7 @@ export const executeQuery = async <T = { insertId: number }>(query: string, args
 		}
 		throw new Error(error as any);
 	}
-	return (res.insertId === '0' ? res.rows : { insertId: Number(res.insertId) }) as unknown as Promise<T extends { insertId: number } ? { insertId: number } : T[]>;
+	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? { insertId: number; } : T[];
 };
 
 export const execTryCatch = async <T>(
@@ -75,8 +73,8 @@ export const execTryCatch = async <T>(
 		if (hasTransaction) {
 			let conn = await CreateDbConnection();
 			response = await conn.transaction((tx) => {
-				(tx as Transaction).queryHistory = [];
-				(tx as Transaction).executeQuery = (query: string, args?: any[], log = false) => executeQuery(query, args, tx as Transaction, log);
+				tx.queryHistory = [];
+				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
 				return func(tx as Transaction) as Promise<T>;
 			});
 		} else {

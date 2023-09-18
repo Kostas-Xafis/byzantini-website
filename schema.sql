@@ -16,17 +16,16 @@ CREATE TABLE `books`(
 PRIMARY KEY (`id`))
 AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
 CREATE TABLE `payments`(
     `id` int AUTO_INCREMENT,
     `student_name` varchar(80) NOT NULL,
     `book_id` int NOT NULL,
     `amount` int NOT NULL,
+	`book_amount` int DEFAULT 1,
     `date` bigint NOT NULL,
-    `payment_date` bigint,
+    `payment_date` bigint DEFAULT 0,
     PRIMARY KEY (`id`)
 ) CHARSET=utf8mb4 AUTO_INCREMENT=0 COLLATE=utf8mb4_0900_ai_ci;
-
 
 CREATE TABLE `total_payments` (
     `amount` int DEFAULT 0
@@ -82,7 +81,7 @@ CREATE TABLE `class_type` (
 CREATE TABLE `instruments` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(80) NOT NULL,
-    `type` varchar(4) NOT NULL, 
+    `type` varchar(4) NOT NULL,
     `isInstrument` boolean NOT NULL DEFAULT 1,
     PRIMARY KEY (`id`)
 )AUTO_INCREMENT=0;
@@ -137,7 +136,7 @@ CREATE TABLE `registrations`(
     `teacher_id` int NOT NULL,
     `instrument_id` int DEFAULT 0,
     `date` bigint NOT NULL,
-    `payed` int DEFAULT 0,
+    `payment_amount` int DEFAULT 0,
     `total_payment` int DEFAULT 0,
     `payment_date` bigint DEFAULT 0,
     PRIMARY KEY (`id`)
@@ -215,3 +214,4 @@ CREATE TABLE query_logs (
     `error` boolean NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
 )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
