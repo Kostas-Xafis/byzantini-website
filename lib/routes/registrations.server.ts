@@ -1,6 +1,6 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
 import { RegistrationsRoutes } from "./registrations.client";
-import { type Transaction, execTryCatch, executeQuery, questionMarks, generateLink } from "../utils.server";
+import { execTryCatch, executeQuery, questionMarks, generateLink } from "../utils.server";
 
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(RegistrationsRoutes)) as typeof RegistrationsRoutes; // Copy the routes object to split it into client and server routes
@@ -10,11 +10,11 @@ serverRoutes.get.func = async _ctx => {
 };
 
 serverRoutes.getTotal.func = async _ctx => {
-	return await execTryCatch(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_registrations"))[0]);
+	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
 };
 
 serverRoutes.post.func = async (ctx) => {
-	return await execTryCatch(async (T: Transaction) => {
+	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		await T.executeQuery(

@@ -1,6 +1,6 @@
 import type { Locations } from "../../types/entities";
 import { LocationsRoutes } from "./locations.client";
-import { type Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
 
 // Include this in all .server.ts files
@@ -19,7 +19,7 @@ serverRoutes.post.func = async ctx => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		const { insertId } = await executeQuery(
-			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube) VALUES (${questionMarks(args.length)})`,
+			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube, partner) VALUES (${questionMarks(args.length)})`,
 			args
 		);
 		return { insertId };
@@ -30,7 +30,7 @@ serverRoutes.update.func = async ctx => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
-		await executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=? WHERE id=?`, [
+		await executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`, [
 			...args.slice(1),
 			body.id
 		]);
@@ -70,7 +70,7 @@ serverRoutes.fileDelete.func = async ctx => {
 };
 
 serverRoutes.delete.func = async ctx => {
-	return await execTryCatch(async (T: Transaction) => {
+	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const files = await T.executeQuery<Pick<Locations, "image">>(
 			`SELECT image FROM locations WHERE id IN (${questionMarks(body.length)})`,

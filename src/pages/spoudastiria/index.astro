@@ -6,8 +6,8 @@ import GMap from "../../components/GMap.astro";
 import { isDevFromURL } from "../../../lib/utils.client";
 let _locations = (await useAPI("Locations.getByPriority", {})).data as Locations[];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/locations/";
-const schoolLocations = _locations.slice(0, 10);
-const otherLocations = _locations.slice(10);
+const schoolLocations = _locations.filter(l => !l.partner);
+const otherLocations = _locations.filter(l => !!l.partner);
 ---
 
 <Layout title="Παραρτήματα">

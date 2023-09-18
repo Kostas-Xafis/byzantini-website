@@ -124,6 +124,7 @@ export const v_Locations = object({
 	map: string(),
 	link: optional(string()),
 	youtube: optional(string()),
+	partner: union([literal(1), literal(0)]),
 });
 export type Locations = Output<typeof v_Locations>;
 

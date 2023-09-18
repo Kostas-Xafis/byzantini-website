@@ -1,5 +1,5 @@
 import { SysUsersRoutes } from "./sysusers.client";
-import { type Transaction, createSessionId, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { createSessionId, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
 import { getSessionId } from "../middleware/authentication";
 // import { randomBytes, scryptSync } from "crypto";
@@ -7,10 +7,9 @@ import { getSessionId } from "../middleware/authentication";
 
 const serverRoutes = JSON.parse(JSON.stringify(SysUsersRoutes)) as typeof SysUsersRoutes;
 
-
 serverRoutes.get.func = async (ctx) => {
 	return await execTryCatch(() => executeQuery<Pick<SysUsers, "id" | "email" | "privilege">>("SELECT id, email, privilege FROM sys_users"));
-}
+};
 
 serverRoutes.getBySid.func = async (ctx) => {
 	return await execTryCatch(async () => {
@@ -18,7 +17,7 @@ serverRoutes.getBySid.func = async (ctx) => {
 		const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		return user;
 	});
-}
+};
 
 serverRoutes.delete.func = async (ctx) => {
 	return await execTryCatch(async () => {
@@ -34,12 +33,12 @@ serverRoutes.delete.func = async (ctx) => {
 		else await executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(body.length)}) AND privelege < ?`, [...body, privilege]);
 		return "User/s deleted successfully";
 	});
-}
+};
 
 
 serverRoutes.registerSysUser.func = async (ctx, slug) => {
 	const { link } = slug;
-	return await execTryCatch(async (T: Transaction) => {
+	return await execTryCatch(async T => {
 		const linkCheck = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ?", [link]);
 		if (linkCheck.length === 0) {
 			throw new Error("Invalid Link");
@@ -86,6 +85,6 @@ serverRoutes.validateRegisterLink.func = async (ctx, slug) => {
 		}
 		return { isValid: true };
 	});
-}
+};
 
 export const SysUsersServerRoutes = serverRoutes;

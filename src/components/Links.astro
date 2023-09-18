@@ -1,7 +1,7 @@
 ---
 import { isDevFromURL } from "../../lib/utils.client";
 const isDev = isDevFromURL(Astro.url);
-const hasBrandIcons = !Astro.url.pathname.includes("admin") && !Astro.url.pathname.includes("login");
+const hasBrandIcons = !Astro.url.pathname.includes("login");
 ---
 <>
 	<link rel="sitemap" href="/sitemap-index.xml" />
@@ -16,16 +16,16 @@ const hasBrandIcons = !Astro.url.pathname.includes("admin") && !Astro.url.pathna
 	<link href="/fa/css/solid.min.css" rel="stylesheet" />
 	<link href="/fa/css/regular.min.css" rel="stylesheet" />
 	{
-		hasBrandIcons && 
+		hasBrandIcons &&
 		<link href="/fa/css/brands.min.css" rel="stylesheet" />
 	}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />
 	{
-        !isDev ? 
+        !isDev ?
         <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}'>
         </script>
         : <></>
-    } 
+    }
 </>

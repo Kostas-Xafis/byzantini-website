@@ -1,6 +1,6 @@
 import type { TeacherClasses, TeacherLocations, Teachers, TeacherInstruments } from "../../types/entities";
 import { TeachersRoutes } from "./teachers.client";
-import { type Transaction, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
 
 // Include this in all .server.ts files
@@ -14,30 +14,30 @@ serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC, fullname ASC", [class_id]));
-}
+};
 
 serverRoutes.getByFullnames.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"));
-}
+};
 
 serverRoutes.getPrincipal.func = async _ctx => {
 	return await execTryCatch(async () => (await executeQuery<Teachers>("SELECT * FROM teachers WHERE fullname LIKE '%Κυριακόπουλος' LIMIT 1"))[0]);
-}
+};
 
 serverRoutes.getClasses.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
-}
+};
 
 serverRoutes.getLocations.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations"));
-}
+};
 
 serverRoutes.getInstruments.func = async ctx => {
 	return await execTryCatch(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments"));
-}
+};
 
 serverRoutes.post.func = async ctx => {
-	return await execTryCatch(async (T: Transaction) => {
+	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online];
 		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, visible, online) VALUES (${questionMarks(args.length)})`, args);
@@ -56,7 +56,7 @@ serverRoutes.post.func = async ctx => {
 };
 
 serverRoutes.update.func = async ctx => {
-	return await execTryCatch(async (T: Transaction) => {
+	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online, body.id];
 		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, visible=?, online=? WHERE id=?`, args);
@@ -121,7 +121,7 @@ serverRoutes.fileDelete.func = async ctx => {
 };
 
 serverRoutes.delete.func = async ctx => {
-	return await execTryCatch(async (T: Transaction) => {
+	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (${questionMarks(body.length)})`, body);
 		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (${questionMarks(body.length)})`, body);
