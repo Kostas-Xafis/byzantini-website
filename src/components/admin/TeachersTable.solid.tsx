@@ -264,6 +264,9 @@ const teacherToTableTeacher = (
 	columns[7] = classes.find((c) => c.class_id === 0)?.priority;
 	columns[8] = classes.find((c) => c.class_id === 1)?.priority;
 	columns[9] = classes.find((c) => c.class_id === 2)?.priority;
+
+	columns[10] = teacher.visible;
+	columns[11] = teacher.online;
 	return columns as unknown as TeachersTable;
 };
 

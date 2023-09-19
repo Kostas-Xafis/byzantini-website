@@ -1,4 +1,4 @@
-import { type Setter, onMount, useContext } from "solid-js";
+import { type Setter, useContext } from "solid-js";
 import {
 	type ContextType,
 	SelectedItemsContext,
@@ -30,37 +30,41 @@ export default function Row(props: Props) {
 	} = props;
 
 	const onClick = (e: MouseEvent) => {
-		if (!header) {
-			const item_id = Number(
-				(e.currentTarget as HTMLElement).dataset.id as string
-			);
-			const isSelected = selectedItems.includes(item_id);
-			if (isSelected) remove && remove(item_id);
-			else add && add(item_id);
-			(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
+		if (header) return;
+		const item_id = Number(
+			(e.currentTarget as HTMLElement).dataset.id as string
+		);
+		const isSelected = selectedItems.includes(item_id);
+		if (isSelected) remove && remove(item_id);
+		else add && add(item_id);
+		(e.currentTarget as HTMLElement).classList.toggle("selectedRow");
 
-			if (hasSelectBox)
-				document
-					.querySelector(`.cb[data-value="${item_id}"]`)
-					?.classList.toggle("selected");
-		} else if (hasSelectBox) {
-			const allCbs = document.querySelectorAll(".cb");
-			const ids = ([...allCbs] as HTMLElement[]).map((el) =>
-				Number(el.dataset.value)
-			);
-			const isSelected =
-				new Set([...ids, ...selectedItems]).size ===
-				selectedItems.length;
-			allCbs.forEach((cb) => {
-				cb.classList.toggle("selected");
-				//@ts-ignore
-				cb.parentElement.parentElement.classList.toggle("selectedRow");
-			});
-			document.querySelector(".mcb")?.classList.toggle("selected");
-			if (isSelected) removeMany && removeMany(ids);
-			else addMany && addMany(ids);
-		}
+		if (hasSelectBox)
+			document
+				.querySelector(`.cb[data-value="${item_id}"]`)
+				?.classList.toggle("selected");
 	};
+	const onClickHeader = header
+		? (e: MouseEvent) => {
+				const allCbs = document.querySelectorAll(".cb");
+				const ids = ([...allCbs] as HTMLElement[]).map((el) =>
+					Number(el.dataset.value)
+				);
+				const isSelected =
+					new Set([...ids, ...selectedItems]).size ===
+					selectedItems.length;
+				allCbs.forEach((cb) => {
+					cb.classList.toggle("selected");
+					//@ts-ignore
+					cb.parentElement.parentElement.classList.toggle(
+						"selectedRow"
+					);
+				});
+				document.querySelector(".mcb")?.classList.toggle("selected");
+				if (isSelected) removeMany && removeMany(ids);
+				else addMany && addMany(ids);
+		  }
+		: () => {};
 	let onClickSort: (e: MouseEvent) => void;
 	if (header) {
 		onClickSort = (e: MouseEvent) => {
@@ -104,6 +108,7 @@ export default function Row(props: Props) {
 				{hasSelectBox && (
 					<div class="relative w-full">
 						<div
+							onClick={onClickHeader}
 							class={
 								"group/checkbox relative items-center" +
 								(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
@@ -128,13 +133,12 @@ export default function Row(props: Props) {
 								<i class="fa-solid fa-up-right-from-square"></i>
 							</a>
 						);
-
 					if (type === "date" && item) {
 						item = new Date(item as number).toLocaleDateString(
 							"el-GR"
 						);
 					} else if (type === "date") item = "-";
-					if (type === "boolean") item = item ? "Ναι" : "Όχι";
+					if (type === "boolean") item = !!item ? "Ναι" : "Όχι";
 					if (
 						type === "number" &&
 						(item === undefined || item === null)

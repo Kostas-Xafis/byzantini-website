@@ -23,6 +23,28 @@ export type ColumnType<T> = Record<
 	{ type: CellValue; name: string; size?: () => number }
 >;
 
+// Horizontal Scrolling for table from https://codepen.io/toddwebdev/pen/yExKoj
+let isDown = false;
+let startX: number, scrollLeft: number;
+const startDragging = (e: MouseEvent) => {
+	isDown = true;
+	(e.currentTarget as HTMLElement).classList.add("active");
+	startX = e.pageX - (e.currentTarget as HTMLElement).offsetLeft;
+	scrollLeft = (e.currentTarget as HTMLElement).scrollLeft;
+};
+const stopDragging = (e: MouseEvent) => {
+	isDown = false;
+	(e.currentTarget as HTMLElement).classList.remove("active");
+};
+const move = (e: MouseEvent) => {
+	if (!isDown) return;
+	e.preventDefault();
+	const x = e.pageX - (e.currentTarget as HTMLElement).offsetLeft;
+	const walk = (x - startX) * 3.25; //scroll-fast
+	(e.currentTarget as HTMLElement).scrollLeft = scrollLeft - walk;
+	console.log(walk);
+};
+
 export default function Table(props: Props) {
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>(
 		[SortDirection.NONE, -1],
@@ -32,9 +54,9 @@ export default function Table(props: Props) {
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = createMemo(() => {
-		const rows = data().slice(); // Remove any solid-js proxies
 		const [direction, column_index] = sorted();
-		if (direction === SortDirection.NONE || column_index < 0) return rows;
+		if (direction === SortDirection.NONE || column_index < 0) return data();
+		const rows = data().slice(); // Remove any solid-js proxies
 
 		let columnType = columnTypes[column_index];
 		if (columnType === "date" || columnType === "number") {
@@ -68,6 +90,10 @@ export default function Table(props: Props) {
 			<div
 				id="tableContainer"
 				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
+				onMouseMove={move}
+				onMouseDown={startDragging}
+				onMouseUp={stopDragging}
+				onMouseLeave={stopDragging}
 			>
 				<Row
 					data={columns}

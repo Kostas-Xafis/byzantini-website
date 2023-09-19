@@ -1,34 +1,34 @@
-<div
+<main
 	id="welcome-page"
 	class={"relative h-[100dvh] p-[5vw] pb-[6vw] max-xl:p-[2.5vw] sm:content-end grid grid-rows-[1fr_repeat(5,_max-content)] grid-cols-2 grid-flow-col" +
 		" max-sm:grid-rows-[repeat(5,_max-content)_1fr] max-sm:grid-cols-[100%] max-sm:items-center max-sm:bg-center max-sm:pt-[8rem] max-sm:min-h-[720px]"}
 >
 	<div class="max-sm:hidden"></div>
-	<p class="text-[4vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl">
+	<h1 class="text-[4vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl">
 		Σχολή Βυζαντινής &
-	</p>
-	<p
+	</h1>
+	<h1
 		class="ml-[0.75ch] text-[4vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl"
 	>
 		Παραδοσιακής Μουσικής
-	</p>
-	<p
+	</>
+	<h2
 		class="ml-[4vw] text-[2vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-lg max-sm:pl-4 max-2xs:text-base"
 	>
 		Ι.Ν. Μεταμορφώσεως του Σωτήρος
-	</p>
-	<p
+	</h2>
+	<h2
 		class="ml-[5vw] text-[1.5vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-lg max-sm:pl-8 max-2xs:text-base"
 	>
 		ομωνύμου Δήμου
-	</p>
+	</h2>
 	<div
 		id="fek"
 		class="mt-[5vw] w-max p-[1.5vw] py-[1vw] grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg"
 	>
-		<p class="text-[1.75vw] font-anaktoria font-bold text-red-50 self-center max-sm:text-base">
+		<h3 class="text-[1.75vw] font-anaktoria font-bold text-red-50 self-center max-sm:text-base">
 			<i class="fa-solid fa-chevron-right pr-4 text-[1.5vw] max-sm:text-xs self-center"></i>Ανεγνωρισμένη υπό του Κράτους
-		</p>
+		</h3>
 		<div class="mt-[1vh] grid grid-cols-[max-content_max-content] gap-x-8 place-content-center">
 			<a
 				target="_blank"
@@ -49,9 +49,9 @@
 		class={"glass place-self-center w-max h-max rounded-lg font-anaktoria row-span-full" +
 			" shadow-lg shadow-stone-800 px-[2vw] py-[2vh] grid auto-cols-max place-items-center max-sm:!row-span-1"}
 	>
-		<p class="text-[2.75vw] h-min font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</p>
-		<p class="text-[2.25vw] h-min font-bold text-red-50 self-center max-sm:text-xl">Σχoλικού Έτους 2023-24</p>
-		<p class="text-[2.25vw] h-min font-bold text-red-50 self-center max-sm:text-xl">1/9 έως 30/10</p>
+		<h3 class="text-[2.75vw] h-min font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</h3>
+		<h3 class="text-[2.25vw] h-min font-bold text-red-50 self-center max-sm:text-xl">Σχoλικού Έτους 2023-24</h3>
+		<h3 class="text-[2.25vw] h-min font-bold text-red-50 self-center max-sm:text-xl">1/9 έως 30/10</h3>
 		<div class="flex flex-col gap-y-[1.5vw] max-sm:flex-row max-sm:gap-x-4 mt-2">
 			<a
 				class="group/regbtn px-[2vw] py-[0.75vh] text-[2.25vw] max-sm:text-xl max-3xs:text-lg font-bold self-center shadow-md rounded-xl outline-none outline-red-50 bg-red-50 text-red-900"
@@ -84,14 +84,17 @@
 			background: linear-gradient(to bottom left, rgba(12 10 9 / 0.5), rgba(12 10 9 / 0.9)), url("/church.jpg");
 			background-size: cover;
 		}
-		#welcome-page > p {
+		#welcome-page > h1,
+		#welcome-page > h2 {
 			transform: translateY(25px);
 			opacity: 0.0001;
 		}
-		#welcome-page p span {
+		#welcome-page h1 span,
+		#welcome-page h2 span {
 			text-shadow: -1px 6px 6px rgba(12 10 9 / 0.6);
 		}
-		#welcome-page > p > span:hover + span {
+		#welcome-page > h1 > span:hover + span,
+		#welcome-page > h2 > span:hover + span {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(127 29 29 / 1) 10%, rgb(254, 202, 202));
 			background-clip: text;
@@ -99,7 +102,8 @@
 			color: transparent;
 		}
 
-		#welcome-page > p > span:has(+ span:hover) {
+		#welcome-page > h1 > span:has(+ span:hover),
+		#welcome-page > h2 > span:hover + span {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(254, 202, 202), rgb(127 29 29 / 1) 90%);
 			background-clip: text;
@@ -128,11 +132,11 @@
 			background: radial-gradient(ellipse at 50% 200%, rgb(69 10 10 / 1), transparent);
 		}
 	</style>
-</div>
+</main>
 <script>
 	import { iOS, onElementMount } from "../../../lib/utils.client";
-	onElementMount("#welcome-page > p", () => {
-		const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
+	onElementMount("#welcome-page > h1", () => {
+		const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h2")] as HTMLElement[];
 		heads.forEach((head, i) => {
 			let txt = head.innerText;
 			const txtArr = txt.split("");
@@ -156,12 +160,11 @@
 			e.preventDefault();
 			const xairetismos = document.querySelector("#xairetismos-mitropolitou") as HTMLElement;
 			xairetismos.scrollIntoView({ behavior: "smooth", block: "center" });
-			setTimeout(btn.remove, 1000);
 		});
 	});
 	if(iOS()) {
-		onElementMount("#welcome-page > p", () => {
-			const heads = [...document.querySelectorAll("#welcome-page > p")] as HTMLElement[];
+		onElementMount("#welcome-page > h1", () => {
+			const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h2")] as HTMLElement[];
 			heads.forEach(head => {
 				head.style.setProperty("letter-spacing", "-1px");
 			});

@@ -67,7 +67,7 @@ const isMainPage = Astro.url.pathname === "/";
 						<div
 							class={
 								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px]" +
-								(highlight(link.url) ? " bg-red-200" : " group-hover:bg-red-200")
+								(highlight(link.url) ? " bg-red-100" : " group-hover:bg-red-100")
 							}
 						/>
 					</a>
@@ -108,10 +108,6 @@ const isMainPage = Astro.url.pathname === "/";
 			mask-size: contain;
 			-webkit-mask-size: contain;
 		}
-		/* #burgerNav {
-			background: linear-gradient(to bottom, rgb(255, 255, 255, 0.25) -50%, transparent, rgb(255, 255, 255, 0.25) 150%);
-			background: rgb(69 10 10 / 1);
-		} */
 
 		/* Subpixel gaps for no reason at all.... */
 		#burgerNav a:nth-child(5) {

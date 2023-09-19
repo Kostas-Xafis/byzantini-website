@@ -573,7 +573,7 @@ export default function RegistrationsTable() {
 			onMount: () => formListener(onSubmit, true, PREFIX),
 			onCleanup: () => formListener(onSubmit, false, PREFIX),
 			submitText: "Λήψη",
-			headerText: "Λήψη Εγγράφης σε PDF",
+			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγράφης σε PDF",
 			type: ActionEnum.DOWNLOAD,
 			icon:
 				selectedItems.length > 1
@@ -739,37 +739,39 @@ export default function RegistrationsTable() {
 			onMount: () => formListener(onSubmit, true, PREFIX),
 			onCleanup: () => formListener(onSubmit, false, PREFIX),
 			submitText: "Λήψη",
-			headerText: "Λήψη Εγγράφης σε PDF",
+			headerText: "Λήψη Εγγραφών σε Excel",
 			type: ActionEnum.DOWNLOAD,
 			icon: ActionIcon.DOWNLOAD_EXCEL,
 		};
 	});
 
-	const onFullHydrate = createMemo(() => {
+	createEffect(() => {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (!registrations || !teachers || !instruments) return false;
-		return true;
+		if (!registrations || !teachers || !instruments) return;
+		document.dispatchEvent(new Event("hydrate"));
 	});
 
-	onMount(async () => {
-		while (!onFullHydrate()) {
-			await sleep(25);
-		}
-		const registrations = store[API.Registrations.get];
-		registrations?.forEach((r) => {
-			const row = document.querySelector(
-				`.row[data-id='${r.id}']`
-			) as HTMLElement;
-			const payment_status = r.total_payment - r.payment_amount;
-			if (r.payment_amount === 0 && r.total_payment === 0) return;
-			if (payment_status === 0) row.setAttribute("data-paid", "");
-			else if (
-				payment_status > 0 ||
-				(r.payment_amount > r.total_payment && r.total_payment === 0)
-			)
-				row.setAttribute("data-partially-paid", "");
+	onMount(() => {
+		console.log("calling mount");
+		document.addEventListener("hydrate", (e) => {
+			e.stopPropagation();
+			const registrations = store[API.Registrations.get];
+			registrations?.forEach((r) => {
+				const row = document.querySelector(
+					`.row[data-id='${r.id}']`
+				) as HTMLElement;
+				const payment_status = r.total_payment - r.payment_amount;
+				if (r.payment_amount === 0 && r.total_payment === 0) return;
+				if (payment_status === 0) row.setAttribute("data-paid", "");
+				else if (
+					payment_status > 0 ||
+					(r.payment_amount > r.total_payment &&
+						r.total_payment === 0)
+				)
+					row.setAttribute("data-partially-paid", "");
+			});
 		});
 	});
 

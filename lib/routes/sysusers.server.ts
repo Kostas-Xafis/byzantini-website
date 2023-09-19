@@ -2,7 +2,6 @@ import { SysUsersRoutes } from "./sysusers.client";
 import { createSessionId, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
 import { getSessionId } from "../middleware/authentication";
-// import { randomBytes, scryptSync } from "crypto";
 
 
 const serverRoutes = JSON.parse(JSON.stringify(SysUsersRoutes)) as typeof SysUsersRoutes;
