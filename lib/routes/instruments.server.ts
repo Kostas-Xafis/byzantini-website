@@ -12,7 +12,7 @@ serverRoutes.get.func = async _ctx => {
 serverRoutes.getById.func = async ctx => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
-		const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", [id]);
+		const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", id);
 		if (!instrument) throw Error("Instrument not found");
 		return instrument;
 	});
@@ -23,7 +23,7 @@ serverRoutes.post.func = async ctx => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		const id = await executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
-		return { insertId: id.insertId };
+		return id;
 	});
 };
 

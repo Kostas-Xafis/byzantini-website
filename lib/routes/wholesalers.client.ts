@@ -19,7 +19,7 @@ const getById: EndpointRoute<"POST:/wholesalers/id", number[], Wholesalers> = {
 };
 
 const postReq = omit(v_Wholesalers, ["id"]);
-const post: EndpointRoute<"POST:/wholesalers", typeof postReq> = {
+const post: EndpointRoute<"POST:/wholesalers", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/wholesalers",

@@ -22,7 +22,7 @@ serverRoutes.post.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
-		await executeQuery(
+		const res = await executeQuery(
 			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args)})`,
 			args
 		);
@@ -35,7 +35,7 @@ serverRoutes.post.func = async (ctx) => {
 			]),
 			executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [body.wholesale_price * body.quantity])
 		]);
-		return "Book added successfully";
+		return res;
 	});
 };
 

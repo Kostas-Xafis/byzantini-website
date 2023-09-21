@@ -11,7 +11,7 @@ serverRoutes.get.func = async function (_ctx) {
 serverRoutes.getById.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
-		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", [id]);
+		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", id);
 		if (!wholesaler) throw Error("Wholesaler not found");
 		return wholesaler;
 	});
@@ -22,7 +22,7 @@ serverRoutes.post.func = async (ctx) => {
 		const args = Object.values(await ctx.request.json());
 		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
 		await T.executeQuery("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
-		return "Wholesaler added successfully";
+		return result;
 	});
 };
 

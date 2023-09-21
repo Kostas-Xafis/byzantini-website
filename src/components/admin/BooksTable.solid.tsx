@@ -124,6 +124,9 @@ export default function BooksTable() {
 		API.Books.getById,
 		API.Books.get
 	);
+	const [actionPressedWholesalers, setActionPressedWholesalers] =
+		useHydrateById(setStore, API.Wholesalers.getById, API.Wholesalers.get);
+
 	useHydrate(() => {
 		useAPI(setStore, API.Books.get, {});
 		useAPI(setStore, API.Wholesalers.get, {});
@@ -205,7 +208,6 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
-
 			icon: ActionIcon.MODIFY,
 		};
 	});
@@ -235,7 +237,6 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Βιβλίων",
-
 			icon: ActionIcon.DELETE,
 		};
 	});
@@ -252,10 +253,9 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setActionPressedWholesalers({
 				action: ActionEnum.ADD,
 				mutate: [res.data.insertId as number],
-				mutatedEndpoint: API.Wholesalers.get,
 			});
 		});
 		return {
@@ -271,7 +271,6 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, "wholesalers"),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Χονδρέμπορου",
-
 			icon: ActionIcon.ADD_USER,
 		};
 	});
@@ -287,10 +286,9 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setActionPressedWholesalers({
 				action: ActionEnum.DELETE,
 				mutate: data,
-				mutatedEndpoint: API.Wholesalers.get,
 			});
 		});
 		return {
@@ -328,7 +326,7 @@ export default function BooksTable() {
 						prefix={PREFIX}
 					/>
 					<TableControls
-						pressedAction={actionPressed}
+						pressedAction={actionPressedWholesalers}
 						onActionsArray={[onAddWholesaler, onDeleteWholesaler]}
 						prefix={"wholesalers"}
 					/>

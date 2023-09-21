@@ -19,7 +19,7 @@ const getById: EndpointRoute<"POST:/books/id", number[], Books> = {
 };
 
 const postReq = omit(v_Books, ["id"]);
-const post: EndpointRoute<"POST:/books", typeof postReq> = {
+const post: EndpointRoute<"POST:/books", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/books",

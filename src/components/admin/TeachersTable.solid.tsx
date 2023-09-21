@@ -290,6 +290,33 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "email", name: "Email", type: "string" },
 ];
 
+const columnNames: ColumnType<TeachersTable> = {
+	id: { type: "number", name: "Id" },
+	fullname: { type: "string", name: "Ονοματεπώνυμο", size: () => 25 },
+	picture: { type: "link", name: "Φωτογραφία" },
+	cv: { type: "link", name: "Βιογραφικό" },
+	email: { type: "string", name: "Email", size: () => 25 },
+	telephone: { type: "string", name: "Τηλέφωνο", size: () => 15 },
+	linktree: { type: "link", name: "Σύνδεσμος", size: () => 15 },
+	priority_byz: {
+		type: "number",
+		name: "Προτεραιότητα Βυζαντινής",
+		size: () => 15,
+	},
+	priority_par: {
+		type: "number",
+		name: "Προτεραιότητα Παραδοσιακής",
+		size: () => 15,
+	},
+	priority_eur: {
+		type: "number",
+		name: "Προτεραιότητα Ευρωπαϊκής",
+		size: () => 15,
+	},
+	visible: { type: "boolean", name: "Εμφάνιση", size: () => 15 },
+	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: () => 15 },
+};
+
 const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function TeachersTable() {
@@ -300,6 +327,8 @@ export default function TeachersTable() {
 		API.Teachers.getById,
 		API.Teachers.get
 	);
+	const [actionPressedInstruments, setActionPressedInstruments] =
+		useHydrateById(setStore, API.Instruments.getById, API.Instruments.get);
 	useHydrate(() => {
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
@@ -310,33 +339,6 @@ export default function TeachersTable() {
 		useAPI(setStore, API.Instruments.get, {});
 		useAPI(setStore, API.Teachers.getInstruments, {});
 	})(true);
-
-	const columnNames: ColumnType<TeachersTable> = {
-		id: { type: "number", name: "Id" },
-		fullname: { type: "string", name: "Ονοματεπώνυμο", size: () => 25 },
-		picture: { type: "link", name: "Φωτογραφία" },
-		cv: { type: "link", name: "Βιογραφικό" },
-		email: { type: "string", name: "Email", size: () => 25 },
-		telephone: { type: "string", name: "Τηλέφωνο", size: () => 15 },
-		linktree: { type: "link", name: "Σύνδεσμος", size: () => 15 },
-		priority_byz: {
-			type: "number",
-			name: "Προτεραιότητα Βυζαντινής",
-			size: () => 15,
-		},
-		priority_par: {
-			type: "number",
-			name: "Προτεραιότητα Παραδοσιακής",
-			size: () => 15,
-		},
-		priority_eur: {
-			type: "number",
-			name: "Προτεραιότητα Ευρωπαϊκής",
-			size: () => 15,
-		},
-		visible: { type: "boolean", name: "Εμφάνιση", size: () => 15 },
-		online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: () => 15 },
-	};
 
 	const shapedData = createMemo(() => {
 		const classList = store[API.Teachers.getClasses];
@@ -721,10 +723,9 @@ export default function TeachersTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setActionPressedInstruments({
 				action: ActionEnum.ADD,
 				mutate: [res.data.insertId],
-				mutatedEndpoint: API.Instruments.get,
 			});
 		});
 		return {
@@ -777,10 +778,9 @@ export default function TeachersTable() {
 				RequestObject: [instrument.id],
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setActionPressedInstruments({
 				action: ActionEnum.DELETE,
 				mutate: [instrument.id],
-				mutatedEndpoint: API.Instruments.get,
 			});
 		});
 		return {
@@ -824,7 +824,7 @@ export default function TeachersTable() {
 						prefix={PREFIX}
 					/>
 					<TableControls
-						pressedAction={actionPressed}
+						pressedAction={actionPressedInstruments}
 						onActionsArray={[onAddInstrument, onDeleteInstrument]}
 						prefix={"instrument"}
 					/>

@@ -32,13 +32,15 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 		on(actionPressed, ({ action, mutate, mutatedEndpoint: mutEndpoint }) => {
 			if (action === ActionEnum.NONE || action === ActionEnum.DOWNLOAD)
 				return;
+			console.log("Mutating :", mutate, "with action :", action);
 			if (action === ActionEnum.DELETE) {
-				return setStore(mutEndpoint || mutatedEndpoint, (prev) => {
+				setStore(mutEndpoint || mutatedEndpoint, (prev) => {
 					if (!prev) return;
 					return (prev as any[]).filter((item) => !mutate.includes(item.id));
 				});
+			} else {
+				hydrateById(mutate, action);
 			}
-			hydrateById(mutate, action);
 			document.dispatchEvent(new Event("RemoveAllRows"));
 		})
 	);

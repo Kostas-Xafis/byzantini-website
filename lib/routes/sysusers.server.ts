@@ -13,7 +13,7 @@ serverRoutes.get.func = async (ctx) => {
 serverRoutes.getById.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
-		const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE id = ? LIMIT 1", [id]);
+		const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE id = ? LIMIT 1", id);
 		if (!user) throw Error("User not found");
 		return user;
 	});

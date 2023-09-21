@@ -10,8 +10,8 @@ serverRoutes.get.func = async _ctx => {
 
 serverRoutes.getById.func = async ctx => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
-		const payoff = (await executeQuery<Payoffs>("SELECT * FROM school_payoffs WHERE id = ? LIMIT 1", [id]));
+		const ids = await ctx.request.json();
+		const payoff = (await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)})`, ids));
 		if (!payoff) throw Error("Payoff not found");
 		return payoff;
 	});
