@@ -9,6 +9,15 @@ const get: EndpointRoute<"GET:/wholesalers", null, Wholesalers[]> = {
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
+
+const getById: EndpointRoute<"POST:/wholesalers/id", number[], Wholesalers> = {
+	authentication: true,
+	method: "POST",
+	path: "/wholesalers/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
 const postReq = omit(v_Wholesalers, ["id"]);
 const post: EndpointRoute<"POST:/wholesalers", typeof postReq> = {
 	authentication: true,
@@ -26,7 +35,7 @@ const remove: EndpointRoute<"DELETE:/wholesalers", number[]> = {
 	func: async ctx => null as any
 };
 
-export const WholesalersRoutes = { get, post, delete: remove };
+export const WholesalersRoutes = { get, post, getById, delete: remove };
 
 export type APIWholesalersArgs = APIArguments<"Wholesalers", typeof WholesalersRoutes>;
 
@@ -37,6 +46,11 @@ export const APIWholesalersEndpoints: APIEndpointsBuilder<"Wholesalers", typeof 
 		method: "GET",
 		path: "/wholesalers",
 		endpoint: "Wholesalers.get"
+	},
+	"Wholesalers.getById": {
+		method: "POST",
+		path: "/wholesalers/id",
+		endpoint: "Wholesalers.getById"
 	},
 	"Wholesalers.post": {
 		method: "POST",
@@ -54,6 +68,7 @@ export const APIWholesalersEndpoints: APIEndpointsBuilder<"Wholesalers", typeof 
 export const APIWholesalers: APIBuilder<"Wholesalers", typeof WholesalersRoutes> = {
 	Wholesalers: {
 		get: "Wholesalers.get",
+		getById: "Wholesalers.getById",
 		post: "Wholesalers.post",
 		delete: "Wholesalers.delete"
 	}

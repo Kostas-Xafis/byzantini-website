@@ -2,8 +2,10 @@ import { batch, createEffect, createSignal, untrack } from "solid-js";
 import { API as api, type APIArgs, APIEndpoints, type APIRes } from "../routes/index.client";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
+import { ActionEnum } from "../../src/components/admin/table/TableControls.solid";
+type APIEndpointKey = keyof typeof APIEndpoints;
 export type APIStore = {
-	[K in keyof typeof APIEndpoints]?: Extract<APIRes[K], { res: "data" }>["data"];
+	[K in APIEndpointKey]?: Extract<APIRes[K], { res: "data"; }>["data"];
 };
 
 export const API = api;
@@ -12,8 +14,15 @@ export const API = api;
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
 const URL = "";
 
+type StoreMutation = {
+	mutatedEndpoint?: APIEndpointKey,
+	mutation: number[];
+	mutationType: ActionEnum;
+};
+
+
 // Astro version
-export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetStoreFunction<APIStore>, endpoint: T, req: APIArgs[T]) => {
+export const useAPI = async <T extends APIEndpointKey>(setStore: SetStoreFunction<APIStore>, endpoint: T, req: APIArgs[T], StoreMut?: StoreMutation) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
 		parse(Route.validation, req.RequestObject);
@@ -40,7 +49,18 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 			setStore(json.message as any);
 			return { message: json.message };
 		}
-		setStore(endpoint, json.data as any);
+		//@ts-ignore
+		!StoreMut ? setStore(endpoint, json.data as any) : setStore(StoreMut.mutatedEndpoint, (prev) => {
+			console.log("Mutating: ", StoreMut.mutation, " to:", json.data);
+			const isArr = Array.isArray(json.data);
+			let prevData = prev as any[] || [];
+			if (StoreMut.mutationType === ActionEnum.ADD)
+				return isArr ? [...prevData, ...(json.data as any[])] : [...prevData, json.data];
+			return isArr ?
+				//@ts-ignore
+				prevData.map(item => StoreMut.mutation.includes(item.id) ? json.data.find(d => d.id === item.id) || item : item)
+				: prevData.map(item => StoreMut.mutation.includes(item.id) ? json.data : item);
+		});
 		return { data: json.data as any };
 	} catch (err) {
 		setStore(endpoint, err as any);
@@ -49,7 +69,7 @@ export const useAPI = async <T extends keyof typeof APIEndpoints>(setStore: SetS
 	}
 };
 
-export const createHydration = (func: () => void) => {
+export const useHydrate = (func: () => void) => {
 	const [hydrate, setHydrate] = createSignal<boolean>(false, { equals: (prev, next) => false });
 	createEffect(() => {
 		hydrate();

@@ -1,7 +1,7 @@
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -18,12 +18,11 @@ type TotalsTable = {
 
 export default function TotalsTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	createHydration(() => {
+	useHydrate(() => {
 		useAPI(setStore, API.Payments.getTotal, {});
 		useAPI(setStore, API.Payoffs.getTotal, {});
 		useAPI(setStore, API.Registrations.getTotal, {});
-	});
-
+	})(true);
 	const columnNames: ColumnType<TotalsTable> = {
 		total_payments: {
 			type: "number",

@@ -18,9 +18,16 @@ const getByPriority: EndpointRoute<"GET:/locations/priority", null, Locations[]>
 	func: async ctx => null as any
 };
 
+const getById: EndpointRoute<"POST:/locations/id", number[], Locations> = {
+	authentication: true,
+	method: "POST",
+	path: "/locations/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
 
 const postReq = omit(v_Locations, ["id", "image"]);
-const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number }> = {
+const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/locations",
@@ -47,11 +54,11 @@ const fileUpload: EndpointRoute<"PUT:/locations/file/[id:number]", Blob> = {
 	func: async ctx => null as any
 };
 
-const fileDelete: EndpointRoute<"PUT:/locations/file", { id: number }> = {
+const fileDelete: EndpointRoute<"DELETE:/locations/file/[id:number]", null> = {
 	authentication: true,
-	method: "PUT",
-	path: "/locations/file",
-	hasUrlParams: false,
+	method: "DELETE",
+	path: "/locations/file/[id:number]",
+	hasUrlParams: true,
 	func: async ctx => null as any
 };
 
@@ -65,6 +72,7 @@ const del: DefaultEndpointRoute<"DELETE:/locations", number[]> = {
 
 export const LocationsRoutes = {
 	get,
+	getById,
 	getByPriority,
 	post,
 	update,
@@ -82,6 +90,11 @@ export const APILocationsEndpoints: APIEndpointsBuilder<"Locations", typeof Loca
 		method: "GET",
 		path: "/locations",
 		endpoint: "Locations.get"
+	},
+	"Locations.getById": {
+		method: "POST",
+		path: "/locations/id",
+		endpoint: "Locations.getById"
 	},
 	"Locations.getByPriority": {
 		method: "GET",
@@ -106,8 +119,8 @@ export const APILocationsEndpoints: APIEndpointsBuilder<"Locations", typeof Loca
 		endpoint: "Locations.fileUpload"
 	},
 	"Locations.fileDelete": {
-		method: "PUT",
-		path: "/locations/file",
+		method: "DELETE",
+		path: "/locations/file/[id:number]",
 		endpoint: "Locations.fileDelete"
 	},
 	"Locations.delete": {
@@ -120,6 +133,7 @@ export const APILocationsEndpoints: APIEndpointsBuilder<"Locations", typeof Loca
 export const APILocations: APIBuilder<"Locations", typeof LocationsRoutes> = {
 	Locations: {
 		get: "Locations.get",
+		getById: "Locations.getById",
 		getByPriority: "Locations.getByPriority",
 		post: "Locations.post",
 		update: "Locations.update",

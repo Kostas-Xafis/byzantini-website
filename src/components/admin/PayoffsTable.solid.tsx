@@ -1,112 +1,131 @@
-import { API, type APIStore, createHydration, useAPI } from "../../../lib/hooks/useAPI.solid";
-import type { Wholesalers, SchoolPayoffs } from "../../../types/entities";
+import {
+	API,
+	type APIStore,
+	useHydrate,
+	useAPI,
+} from "../../../lib/hooks/useAPI.solid";
+import type { Wholesalers, Payoffs } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, { ActionEnum, type Action, type EmptyAction, ActionIcon } from "./table/TableControls.solid";
+import TableControls, {
+	ActionEnum,
+	type Action,
+	type EmptyAction,
+	ActionIcon,
+} from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
-import { type ContextType, SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "payoffs";
 
-type SchoolPayoffsTable = ReplaceName<SchoolPayoffs, "wholesaler_id", "wholesaler">;
+type SchoolPayoffsTable = ReplaceName<Payoffs, "wholesaler_id", "wholesaler">;
 
-const SchoolPayoffsInputs = (wholesalers: Wholesalers[]): Record<keyof SchoolPayoffs, InputProps> => {
+const SchoolPayoffsInputs = (
+	wholesalers: Wholesalers[]
+): Record<keyof Payoffs, InputProps> => {
 	return {
-		id: { name: "id", label: "Id", type: "number", iconClasses: "fa-solid fa-hashtag" },
+		id: {
+			name: "id",
+			label: "Id",
+			type: "number",
+			iconClasses: "fa-solid fa-hashtag",
+		},
 		wholesaler_id: {
 			name: "wholesaler_id",
 			label: "Χονδρέμπορος",
 			type: "select",
 			iconClasses: "fa-regular fa-feather",
-			selectList: wholesalers.map(w => w.name)
+			selectList: wholesalers.map((w) => w.name),
 		},
 		amount: {
 			name: "amount",
 			label: "Οφειλή",
 			type: "number",
-			iconClasses: "fa-solid fa-money-bills"
-		}
+			iconClasses: "fa-solid fa-money-bills",
+		},
 	};
 };
 
-const payoffToTablePayoff = (payoff: SchoolPayoffs, wholesalers: Wholesalers[]): SchoolPayoffsTable => {
+const payoffToTablePayoff = (
+	payoff: Payoffs,
+	wholesalers: Wholesalers[]
+): SchoolPayoffsTable => {
 	const columns = Object.values(payoff);
 	//@ts-ignore
-	columns[1] = wholesalers.find(w => w.id === payoff.wholesaler_id)?.name;
+	columns[1] = wholesalers.find((w) => w.id === payoff.wholesaler_id)?.name;
 	//@ts-ignore
 	columns[2] = columns[2] + "€";
 	return columns as unknown as SchoolPayoffsTable;
 };
 
-const payoffsToTable = (payoffs: SchoolPayoffs[], wholesalers: Wholesalers[]): SchoolPayoffsTable[] => {
-	return payoffs.map(p => payoffToTablePayoff(p, wholesalers));
+const payoffsToTable = (
+	payoffs: Payoffs[],
+	wholesalers: Wholesalers[]
+): SchoolPayoffsTable[] => {
+	return payoffs.map((p) => payoffToTablePayoff(p, wholesalers));
 };
 
+const [selectedItems, setSelectedItems] = useSelectedRows();
+
 export default function PayoffsTable() {
-	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, { equals: false });
 	const [store, setStore] = createStore<APIStore>({});
-	const hydrate = createHydration(() => {
+	const [actionPressed, setActionPressed] = useHydrateById(
+		setStore,
+		API.Payoffs.getById,
+		API.Payoffs.get
+	);
+	useHydrate(() => {
 		useAPI(setStore, API.Payoffs.get, {});
 		useAPI(setStore, API.Wholesalers.get, {});
-	});
+	})(true);
 
-	createEffect(
-		on(actionPressed, action => {
-			if (action === ActionEnum.NONE) return;
-			ROWS[1].removeAll();
-			hydrate(true);
-		})
-	);
-
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter(i => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			}
-		}
-	] as const;
 	const columnNames: ColumnType<SchoolPayoffsTable> = {
 		id: { type: "number", name: "Id" },
 		wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 25 },
-		amount: { type: "number", name: "Οφειλή" }
+		amount: { type: "number", name: "Οφειλή" },
 	};
 
 	let shapedData = createMemo(() => {
 		const wholesalers = store[API.Wholesalers.get];
 		const payements = store[API.Payoffs.get];
 		if (!wholesalers || !payements) return [];
-		return wholesalers && payements ? payoffsToTable(payements, wholesalers) : [];
+		return wholesalers && payements
+			? payoffsToTable(payements, wholesalers)
+			: [];
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
-		if (!payoffs || !wholesalers || selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
-		const payoff = payoffs.find(p => p.id === selectedItems[0]) as SchoolPayoffs;
+		if (!payoffs || !wholesalers || selectedItems.length !== 1)
+			return { icon: ActionIcon.MODIFY };
+		const payoff = payoffs.find(
+			(p) => p.id === selectedItems[0]
+		) as Payoffs;
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<SchoolPayoffs, "wholesaler_id"> = {
+			const data: Omit<Payoffs, "wholesaler_id"> = {
 				id: payoff.id,
-				amount: Number(formData.get("amount") as string)
+				amount: Number(formData.get("amount") as string),
 			};
-			if (data.amount > payoff.amount || data.amount === 0) throw Error("Invalid amount");
-			const res = await useAPI(setStore, API.Payoffs.updateAmount, { RequestObject: data });
+			if (data.amount > payoff.amount || data.amount === 0)
+				throw Error("Invalid amount");
+			const res = await useAPI(setStore, API.Payoffs.updateAmount, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.MODIFY);
+			setActionPressed({
+				action: ActionEnum.MODIFY,
+				mutate: [payoff.id],
+			});
 		});
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 		return {
@@ -115,21 +134,29 @@ export default function PayoffsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",
-			type: ActionEnum.MODIFY,
-			icon: ActionIcon.MODIFY
+
+			icon: ActionIcon.MODIFY,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
-		if (!payoffs || !wholesalers || selectedItems.length < 1) return { icon: ActionIcon.CHECK };
+		if (!payoffs || !wholesalers || selectedItems.length < 1)
+			return { icon: ActionIcon.CHECK };
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const data = selectedItems.map(i => (payoffs.find(p => p.id === i) as SchoolPayoffs).id);
-			const res = await useAPI(setStore, API.Payoffs.complete, { RequestObject: data });
+			const data = selectedItems.map(
+				(i) => (payoffs.find((p) => p.id === i) as Payoffs).id
+			);
+			const res = await useAPI(setStore, API.Payoffs.complete, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({
+				action: ActionEnum.DELETE,
+				mutate: selectedItems.slice(),
+			});
 		});
 		return {
 			inputs: {},
@@ -137,16 +164,25 @@ export default function PayoffsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ολοκλήρωση",
 			headerText: "Ολοκλήρωση Οφειλών",
-			type: ActionEnum.DELETE,
-			icon: ActionIcon.CHECK
+
+			icon: ActionIcon.CHECK,
 		};
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
-			<Show when={store[API.Wholesalers.get] && store[API.Payoffs.get]} fallback={<Spinner />}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
+			<Show
+				when={store[API.Wholesalers.get] && store[API.Payoffs.get]}
+				fallback={<Spinner />}
+			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControls pressedAction={actionPressed} onActionsArray={[onModify, onDelete]} prefix={PREFIX} />
+					<TableControls
+						pressedAction={actionPressed}
+						onActionsArray={[onModify, onDelete]}
+						prefix={PREFIX}
+					/>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

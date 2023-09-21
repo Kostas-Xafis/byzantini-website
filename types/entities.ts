@@ -37,12 +37,12 @@ export const v_Payments = object({
 });
 export type Payments = Output<typeof v_Payments>;
 
-export const v_SchoolPayoffs = object({
+export const v_Payoffs = object({
 	id: number([integer(), minValue(0)]),
 	wholesaler_id: number([integer(), minValue(0)]),
 	amount: number([integer(), minValue(0)])
 });
-export type SchoolPayoffs = Output<typeof v_SchoolPayoffs>;
+export type Payoffs = Output<typeof v_Payoffs>;
 
 export const v_Wholesalers = object({
 	id: number([integer(), minValue(0)]),

@@ -8,6 +8,15 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"));
 };
 
+serverRoutes.getById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const ids = await ctx.request.json();
+		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
+		if (!payments) throw Error("Payment not found");
+		return payments;
+	});
+};
+
 serverRoutes.getTotal.func = async _ctx => {
 	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_payments"))[0]);
 };
@@ -55,10 +64,10 @@ serverRoutes.complete.func = async ctx => {
 	return await execTryCatch(async (T) => {
 		const ids = await ctx.request.json();
 		//check if payment exists
-		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) AND payment_date = 0`, ids);
+		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
 		if (payments.length === 0) throw Error("Payment not found");
-		await T.executeQuery(`UPDATE payments SET payment_date=?, amount=(SELECT price FROM books WHERE books.id=payments.book_id)*book_amount WHERE id IN (${questionMarks(ids.length)})`, [Date.now(), ...ids]);
-		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids.length)}))`, [...ids]);
+		await T.executeQuery(`UPDATE payments SET payment_date=?, amount=(SELECT price FROM books WHERE books.id=payments.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`, [Date.now(), ...ids]);
+		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids)}))`, [...ids]);
 		return "Completed payment successfully";
 	});
 };
@@ -68,11 +77,11 @@ serverRoutes.delete.func = async ctx => {
 		const ids = await ctx.request.json();
 
 		//check if payment exists
-		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids.length)}) AND payment_date != 0`, ids);
+		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);
 		if (payments.length === 0) throw Error("Payments not found");
 		let updateBooks = payments.map(payment => T.executeQuery("UPDATE books SET sold = sold - ? WHERE id=? LIMIT 1", [payment.book_amount, payment.book_id]));
 		await Promise.all([
-			T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids.length)})`, ids),
+			T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids),
 			...updateBooks
 		]);
 		return "Deleted payment successfully";

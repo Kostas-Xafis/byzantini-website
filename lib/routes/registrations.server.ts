@@ -9,6 +9,15 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
 };
 
+serverRoutes.getById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const ids = await ctx.request.json();
+		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", ids);
+		if (!registration) throw Error("Registration not found");
+		return registration;
+	});
+};
+
 serverRoutes.getTotal.func = async _ctx => {
 	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
 };
@@ -18,7 +27,7 @@ serverRoutes.post.func = async (ctx) => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		await T.executeQuery(
-			`INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date) VALUES (${questionMarks(args.length)})`,
+			`INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date) VALUES (${questionMarks(args)})`,
 			args
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
@@ -43,7 +52,7 @@ serverRoutes.delete.func = async (ctx) => {
 	return await execTryCatch(async (T) => {
 		const body = await ctx.request.json();
 		if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id=?`, body);
-		else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body.length)})`, body);
+		else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body)})`, body);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount - ?", [body.length]);
 		return "Registration completed successfully";
 	});

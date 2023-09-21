@@ -40,9 +40,8 @@ const move = (e: MouseEvent) => {
 	if (!isDown) return;
 	e.preventDefault();
 	const x = e.pageX - (e.currentTarget as HTMLElement).offsetLeft;
-	const walk = (x - startX) * 3.25; //scroll-fast
+	const walk = (x - startX) * 4; //scroll-fast
 	(e.currentTarget as HTMLElement).scrollLeft = scrollLeft - walk;
-	console.log(walk);
 };
 
 export default function Table(props: Props) {

@@ -2,7 +2,7 @@ import { createStore } from "solid-js/store";
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import type {
@@ -347,7 +347,7 @@ export function RegistrationForm() {
 	);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
-	const hydrate = createHydration(() => {
+	(useHydrate(() => {
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
 		useAPI(setStore, API.Teachers.getInstruments, {});

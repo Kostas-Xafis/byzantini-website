@@ -9,12 +9,21 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
 };
 
+serverRoutes.getById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const ids = await ctx.request.json();
+		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", ids);
+		if (!book) throw Error("Book not found");
+		return book;
+	});
+};
+
 serverRoutes.post.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		await executeQuery(
-			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args.length)})`,
+			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args)})`,
 			args
 		);
 
@@ -52,20 +61,20 @@ serverRoutes.updateQuantity.func = async (ctx) => {
 serverRoutes.delete.func = async (ctx) => {
 	return await execTryCatch(async T => {
 		const ids = await ctx.request.json();
-		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids.length)})`, ids);
+		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids)})`, ids);
 		if (books.length === 0) throw Error("Book not found");
 
 		if (ids.length === 1) await T.executeQuery(`DELETE FROM books WHERE id = ?`, ids);
-		else await T.executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(ids.length)})`, ids);
+		else await T.executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(ids)})`, ids);
 
 		// Update payments table & total amount
-		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE book_id IN (${questionMarks(ids.length)}) AND payment_date = 0`, ids);
+		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE book_id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
 		let sum = 0;
 		for (const payment of payments) {
 			sum += (books.find(book => book.id === payment.book_id)?.price || 0) * payment.book_amount;
 		}
 		await T.executeQuery(`UPDATE total_payments SET amount = amount - ?`, [sum]);
-		await T.executeQuery<Payments>(`DELETE FROM payments WHERE book_id IN (${questionMarks(ids.length)})`, ids);
+		await T.executeQuery<Payments>(`DELETE FROM payments WHERE book_id IN (${questionMarks(ids)})`, ids);
 
 		return "Book deleted successfully";
 	});

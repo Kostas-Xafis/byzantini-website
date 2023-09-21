@@ -1,7 +1,7 @@
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import type {
@@ -10,14 +10,7 @@ import type {
 	Teachers,
 } from "../../../types/entities";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	createEffect,
-	createMemo,
-	createSignal,
-	on,
-	Show,
-	onMount,
-} from "solid-js";
+import { createEffect, createMemo, Show, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, {
 	ActionEnum,
@@ -26,10 +19,7 @@ import TableControls, {
 	type EmptyAction,
 } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill } from "../Input.solid";
-import {
-	type ContextType,
-	SelectedItemsContext,
-} from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
@@ -40,7 +30,9 @@ import {
 	CompareList,
 	getCompareFn,
 } from "./SearchTable.solid";
-import { removeAccents, sleep } from "../../../lib/utils.client";
+import { removeAccents } from "../../../lib/utils.client";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "registrations";
 
@@ -267,48 +259,21 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "class_year", name: "Έτος Φοίτησης", type: "string" },
 ];
 
+const [selectedItems, setSelectedItems] = useSelectedRows();
+
 export default function RegistrationsTable() {
-	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, {
-		equals: false,
-	});
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
 	const [store, setStore] = createStore<APIStore>({});
-	const hydrate = createHydration(() => {
+	const [actionPressed, setActionPressed] = useHydrateById(
+		setStore,
+		API.Registrations.getById,
+		API.Registrations.get
+	);
+	useHydrate(() => {
 		useAPI(setStore, API.Registrations.get, {});
 		useAPI(setStore, API.Teachers.getByFullnames, {});
 		useAPI(setStore, API.Instruments.get, {});
-	});
-
-	createEffect(
-		on(actionPressed, (action) => {
-			if (action === ActionEnum.NONE) return;
-			ROWS[1].removeAll();
-			hydrate(true);
-		})
-	);
-
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			addMany: (ids: number[]) => {
-				let newIds = [...new Set([...selectedItems, ...ids])];
-				setSelectedItems(newIds);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter((i) => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			},
-			removeMany: (ids: number[]) => {
-				setSelectedItems(selectedItems.filter((i) => !ids.includes(i)));
-			},
-		},
-	] as const;
+	})(true);
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
@@ -377,7 +342,7 @@ export default function RegistrationsTable() {
 		}
 		if (searchRows.length) {
 			// Reset the checked rows when a search is made
-			ROWS[1].removeAll();
+			setSelectedItems.removeAll();
 			document
 				.querySelectorAll(".mcb, .cb")
 				.forEach((r) => r.classList.remove("selected"));
@@ -436,7 +401,7 @@ export default function RegistrationsTable() {
 			await useAPI(setStore, API.Registrations.update, {
 				RequestObject: data,
 			});
-			setActionPressed(ActionEnum.MODIFY);
+			setActionPressed({ action: ActionEnum.MODIFY, mutate: [data.id] });
 		});
 		const filledInputs = Fill(
 			RegistrationsInputs(teachers, instruments) as Record<
@@ -444,11 +409,6 @@ export default function RegistrationsTable() {
 				InputProps
 			>,
 			registration
-		);
-		console.log(
-			instruments,
-			registration.instrument_id,
-			instruments.find((i) => i.id === registration.instrument_id)
 		);
 		filledInputs.class_id.value = registration.class_id;
 		filledInputs.teacher_id.value = registration.teacher_id;
@@ -461,7 +421,6 @@ export default function RegistrationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Εγγραφής",
-			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
 		};
 	});
@@ -477,7 +436,7 @@ export default function RegistrationsTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});
 		return {
 			inputs: {},
@@ -485,7 +444,6 @@ export default function RegistrationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Εγγραφής",
-			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE,
 		};
 	});
@@ -529,10 +487,11 @@ export default function RegistrationsTable() {
 						);
 						await pdf.fillTemplate();
 						await pdf.download();
-					} catch (error) {
-						console.error(error);
-					}
-					setActionPressed(ActionEnum.DOWNLOAD);
+					} catch (error) {}
+					setActionPressed({
+						action: ActionEnum.DOWNLOAD,
+						mutate: [],
+					});
 			  })
 			: formErrorWrap(async function (e: Event) {
 					e.preventDefault();
@@ -563,10 +522,12 @@ export default function RegistrationsTable() {
 							);
 							pdfArr.push(pdf);
 						}
-					} catch (error) {
-						console.error(error);
-					}
-					await PDF.downloadBulk(pdfArr);
+						await PDF.downloadBulk(pdfArr);
+					} catch (error) {}
+					setActionPressed({
+						action: ActionEnum.DOWNLOAD,
+						mutate: [],
+					});
 			  });
 		return {
 			inputs: {},
@@ -574,7 +535,7 @@ export default function RegistrationsTable() {
 			onCleanup: () => formListener(onSubmit, false, PREFIX),
 			submitText: "Λήψη",
 			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγράφης σε PDF",
-			type: ActionEnum.DOWNLOAD,
+
 			icon:
 				selectedItems.length > 1
 					? ActionIcon.DOWNLOAD_ZIP
@@ -740,7 +701,7 @@ export default function RegistrationsTable() {
 			onCleanup: () => formListener(onSubmit, false, PREFIX),
 			submitText: "Λήψη",
 			headerText: "Λήψη Εγγραφών σε Excel",
-			type: ActionEnum.DOWNLOAD,
+
 			icon: ActionIcon.DOWNLOAD_EXCEL,
 		};
 	});
@@ -754,7 +715,6 @@ export default function RegistrationsTable() {
 	});
 
 	onMount(() => {
-		console.log("calling mount");
 		document.addEventListener("hydrate", (e) => {
 			e.stopPropagation();
 			const registrations = store[API.Registrations.get];
@@ -776,7 +736,9 @@ export default function RegistrationsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
 			<Show
 				when={
 					store[API.Registrations.get] &&

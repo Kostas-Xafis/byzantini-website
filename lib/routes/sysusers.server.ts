@@ -10,6 +10,15 @@ serverRoutes.get.func = async (ctx) => {
 	return await execTryCatch(() => executeQuery<Pick<SysUsers, "id" | "email" | "privilege">>("SELECT id, email, privilege FROM sys_users"));
 };
 
+serverRoutes.getById.func = async (ctx) => {
+	return await execTryCatch(async () => {
+		const id = await ctx.request.json();
+		const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE id = ? LIMIT 1", [id]);
+		if (!user) throw Error("User not found");
+		return user;
+	});
+};
+
 serverRoutes.getBySid.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const session_id = getSessionId(ctx.request) as string;
@@ -29,7 +38,7 @@ serverRoutes.delete.func = async (ctx) => {
 			if (body.length === 0) return "Deleted self successfully";
 		}
 		if (body.length === 1) await executeQuery(`DELETE FROM sys_users WHERE id = ? AND privilege < ?`, [body[0], privilege]);
-		else await executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(body.length)}) AND privelege < ?`, [...body, privilege]);
+		else await executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(body)}) AND privelege < ?`, [...body, privilege]);
 		return "User/s deleted successfully";
 	});
 };
@@ -55,7 +64,7 @@ serverRoutes.registerSysUser.func = async (ctx, slug) => {
 		const args = Object.values(await ctx.request.json()) as any[];
 		const { session_id, session_exp_date } = createSessionId();
 		args.push(linkCheck[0].privilege, session_id, session_exp_date);
-		await T.executeQuery(`INSERT INTO sys_users (email, password, privilege, session_id, session_exp_date) VALUES (${questionMarks(args.length)})`, args);
+		await T.executeQuery(`INSERT INTO sys_users (email, password, privilege, session_id, session_exp_date) VALUES (${questionMarks(args)})`, args);
 		return { session_id };
 	});
 };

@@ -11,12 +11,20 @@ const get: EndpointRoute<"GET:/instruments", null, Instruments[]> = {
 };
 
 let postReq = omit(v_Instruments, ["id"]);
-const post: EndpointRoute<"POST:/instruments", typeof postReq, { insertId: number }> = {
+const post: EndpointRoute<"POST:/instruments", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/instruments",
 	hasUrlParams: false,
 	validation: () => postReq,
+	func: async ctx => null as any
+};
+
+const getById: EndpointRoute<"POST:/instruments/id", number[], Instruments> = {
+	authentication: false,
+	method: "POST",
+	path: "/instruments/id",
+	hasUrlParams: false,
 	func: async ctx => null as any
 };
 
@@ -31,6 +39,7 @@ const del: DefaultEndpointRoute<"DELETE:/instruments", number[]> = {
 export const InstrumentsRoutes = {
 	get,
 	post,
+	getById,
 	delete: del
 };
 
@@ -50,6 +59,11 @@ export const APIInstrumentsEndpoints: APIEndpointsBuilder<"Instruments", typeof 
 		endpoint: "Instruments.post",
 		validation: postReq
 	},
+	"Instruments.getById": {
+		method: "POST",
+		path: "/instruments/id",
+		endpoint: "Instruments.getById"
+	},
 	"Instruments.delete": {
 		method: "DELETE",
 		path: "/instruments",
@@ -61,6 +75,7 @@ export const APIInstruments: APIBuilder<"Instruments", typeof InstrumentsRoutes>
 	Instruments: {
 		get: "Instruments.get",
 		post: "Instruments.post",
+		getById: "Instruments.getById",
 		delete: "Instruments.delete"
 	}
 };

@@ -3,10 +3,10 @@ import { CreateDbConnection, type Transaction } from "./db";
 
 /**
  *
- * @param num
+ * @param arg
  * @returns Return the number of question marks needed for a query
  */
-export const questionMarks = (num: number) => "?".repeat(num).split("").join(", ");
+export const questionMarks = (arg: number | any[]) => Array.isArray(arg) ? "?".repeat(arg.length).split("").join(", ") : "?".repeat(arg).split("").join(", ");
 
 export const createSessionId = (size = 32) => {
 	const hexLookup = "0123456789abcdef";

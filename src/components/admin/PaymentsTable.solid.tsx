@@ -1,13 +1,13 @@
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, {
 	ActionEnum,
@@ -16,12 +16,11 @@ import TableControls, {
 	ActionIcon,
 } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../Input.solid";
-import {
-	type ContextType,
-	SelectedItemsContext,
-} from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "payments";
 
@@ -95,39 +94,20 @@ const paymentsToTable = (
 	return payments.map((p) => paymentToTablePayment(p, books));
 };
 
+const [selectedItems, setSelectedItems] = useSelectedRows();
+
 export default function PaymentsTable() {
-	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, {
-		equals: false,
-	});
 	const [store, setStore] = createStore<APIStore>({});
-	const hydrate = createHydration(() => {
+	const [actionPressed, setActionPressed] = useHydrateById(
+		setStore,
+		API.Payments.getById,
+		API.Payments.get
+	);
+	useHydrate(() => {
 		useAPI(setStore, API.Payments.get, {});
 		useAPI(setStore, API.Books.get, {});
-	});
+	})(true);
 
-	createEffect(
-		on(actionPressed, (action) => {
-			if (action === ActionEnum.NONE) return;
-			ROWS[1].removeAll();
-			hydrate(true);
-		})
-	);
-
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter((i) => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			},
-		},
-	] as const;
 	const columnNames: ColumnType<PaymentsTable> = {
 		id: { type: "number", name: "Id" },
 		student_name: { type: "string", name: "Μαθητής", size: () => 15 },
@@ -162,7 +142,10 @@ export default function PaymentsTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.ADD);
+			setActionPressed({
+				action: ActionEnum.ADD,
+				mutate: [res.data.id],
+			});
 		});
 		return {
 			inputs: Pick(
@@ -176,7 +159,6 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Πληρωμής",
-			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD,
 		};
 	});
@@ -206,7 +188,10 @@ export default function PaymentsTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.MODIFY);
+			setActionPressed({
+				action: ActionEnum.MODIFY,
+				mutate: [payment.id],
+			});
 		});
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
@@ -215,7 +200,6 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση πληρωμής",
-			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
 		};
 	});
@@ -230,7 +214,6 @@ export default function PaymentsTable() {
 			let data = selectedItems.map(
 				(id) => payments.find((p) => p.id === id) as Payments
 			);
-			console.log(data);
 			if (data.filter((p) => p.payment_date !== 0).length > 0)
 				return alert(
 					"Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!"
@@ -239,7 +222,10 @@ export default function PaymentsTable() {
 				RequestObject: data.map((p) => p.id),
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({
+				action: ActionEnum.CHECK,
+				mutate: selectedItems.slice(),
+			});
 		});
 		return {
 			inputs: {},
@@ -247,7 +233,6 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ολοκλήρωση",
 			headerText: "Ολοκλήρωση πληρωμών",
-			type: ActionEnum.DELETE,
 			icon: ActionIcon.CHECK,
 		};
 	});
@@ -270,7 +255,10 @@ export default function PaymentsTable() {
 				RequestObject: data.map((p) => p.id),
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({
+				action: ActionEnum.DELETE,
+				mutate: selectedItems.slice(),
+			});
 		});
 		return {
 			inputs: {},
@@ -278,13 +266,14 @@ export default function PaymentsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή πληρωμών",
-			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE,
 		};
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
 			<Show
 				when={store[API.Books.get] && store[API.Payments.get]}
 				fallback={<Spinner />}

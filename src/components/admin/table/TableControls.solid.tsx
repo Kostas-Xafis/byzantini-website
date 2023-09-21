@@ -39,7 +39,6 @@ export type Action = {
 	inputs: Record<string, InputProps>;
 	onMount: () => void;
 	onCleanup: () => void;
-	type: ActionEnum;
 	submitText: string;
 	headerText: string;
 	icon: ActionIcon;
@@ -51,7 +50,7 @@ export type EmptyAction = {
 
 type Props = {
 	onActionsArray: Accessor<Action | EmptyAction>[];
-	pressedAction: Accessor<ActionEnum>;
+	pressedAction: Accessor<{ action: ActionEnum; mutate: number[] }>;
 	prefix: string;
 };
 
@@ -66,7 +65,7 @@ export default function TableControls(props: Props) {
 	const [headerText, setHeaderText] = createSignal("", { equals: false });
 
 	createEffect(
-		on(pressedAction, (action) => {
+		on(pressedAction, ({ action }) => {
 			if (action === ActionEnum.NONE) return;
 			batch(() => {
 				cleanup()();
@@ -111,7 +110,7 @@ export default function TableControls(props: Props) {
 		return actions.map((accessor) => {
 			const a = accessor();
 			return {
-				type: "type" in a ? a.type : ActionEnum.NONE,
+				active: !!("inputs" in a),
 				icon: a.icon,
 				action: a,
 			};
@@ -127,7 +126,7 @@ export default function TableControls(props: Props) {
 					{(action) => {
 						return (
 							<Show
-								when={action.type}
+								when={action.active}
 								fallback={
 									<button class="controlBtn py-2 px-4 text-neutral-500 blur-[1px] first-of-type:rounded-l-xl last-of-type:rounded-r-xl">
 										<i

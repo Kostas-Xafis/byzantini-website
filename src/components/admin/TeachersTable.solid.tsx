@@ -1,7 +1,7 @@
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import type {
@@ -15,7 +15,7 @@ import type {
 	TeacherInstruments,
 } from "../../../types/entities";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, {
 	ActionEnum,
@@ -36,6 +36,8 @@ import {
 	type SearchSetter,
 } from "./SearchTable.solid";
 import { removeAccents } from "../../../lib/utils.client";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "teachers";
 
@@ -288,13 +290,17 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "email", name: "Email", type: "string" },
 ];
 
+const [selectedItems, setSelectedItems] = useSelectedRows();
+
 export default function TeachersTable() {
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
-	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, {
-		equals: false,
-	});
 	const [store, setStore] = createStore<APIStore>({});
-	const hydrate = createHydration(() => {
+	const [actionPressed, setActionPressed] = useHydrateById(
+		setStore,
+		API.Teachers.getById,
+		API.Teachers.get
+	);
+	useHydrate(() => {
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
 
@@ -303,31 +309,8 @@ export default function TeachersTable() {
 
 		useAPI(setStore, API.Instruments.get, {});
 		useAPI(setStore, API.Teachers.getInstruments, {});
-	});
+	})(true);
 
-	createEffect(
-		on(actionPressed, (action) => {
-			if (action === ActionEnum.NONE) return;
-			ROWS[1].removeAll();
-			hydrate(true);
-		})
-	);
-
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter((i) => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			},
-		},
-	] as const;
 	const columnNames: ColumnType<TeachersTable> = {
 		id: { type: "number", name: "Id" },
 		fullname: { type: "string", name: "Ονοματεπώνυμο", size: () => 25 },
@@ -483,7 +466,7 @@ export default function TeachersTable() {
 					RequestObject: files.cv,
 					UrlArgs: { id },
 				});
-			setActionPressed(ActionEnum.ADD);
+			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {
 			inputs: Omit(
@@ -494,7 +477,7 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Καθηγητή",
-			type: ActionEnum.ADD,
+
 			icon: ActionIcon.ADD,
 		};
 	});
@@ -634,7 +617,10 @@ export default function TeachersTable() {
 					RequestObject: file.cv,
 					UrlArgs: { id: teacher.id },
 				});
-			setActionPressed(ActionEnum.MODIFY);
+			setActionPressed({
+				action: ActionEnum.MODIFY,
+				mutate: [teacher.id],
+			});
 		});
 		const emptyFileRemove = (e: CustomEvent) => {
 			e.preventDefault();
@@ -680,7 +666,7 @@ export default function TeachersTable() {
 			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Καθηγητή",
-			type: ActionEnum.MODIFY,
+
 			icon: ActionIcon.MODIFY,
 		};
 	});
@@ -698,7 +684,7 @@ export default function TeachersTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});
 		return {
 			inputs: {},
@@ -706,7 +692,7 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Καθηγητών",
-			type: ActionEnum.DELETE,
+
 			icon: ActionIcon.DELETE,
 		};
 	});
@@ -735,7 +721,11 @@ export default function TeachersTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.ADD);
+			setActionPressed({
+				action: ActionEnum.ADD,
+				mutate: [res.data.insertId],
+				mutatedEndpoint: API.Instruments.get,
+			});
 		});
 		return {
 			inputs: {
@@ -769,7 +759,7 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Οργάνου",
-			type: ActionEnum.ADD,
+
 			icon: ActionIcon.ADD_BOX,
 		};
 	});
@@ -787,7 +777,11 @@ export default function TeachersTable() {
 				RequestObject: [instrument.id],
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({
+				action: ActionEnum.DELETE,
+				mutate: [instrument.id],
+				mutatedEndpoint: API.Instruments.get,
+			});
 		});
 		return {
 			inputs: {
@@ -804,12 +798,14 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Οργάνου",
-			type: ActionEnum.DELETE,
+
 			icon: ActionIcon.DELETE_BOX,
 		};
 	});
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
 			<Show
 				when={
 					store[API.Teachers.get] &&

@@ -10,6 +10,14 @@ const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
 	func: async ctx => null as any
 };
 
+const getById: EndpointRoute<"POST:/registrations/id", number[], Registrations> = {
+	authentication: true,
+	method: "POST",
+	path: "/registrations/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
 const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
@@ -76,6 +84,7 @@ const getSubscriptionToken: EndpointRoute<"POST:/registrations/email-subscribe/t
 
 export const RegistrationsRoutes = {
 	get,
+	getById,
 	getTotal,
 	post,
 	update,
@@ -94,6 +103,11 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
 		method: "GET",
 		path: "/registrations",
 		endpoint: "Registrations.get"
+	},
+	"Registrations.getById": {
+		method: "POST",
+		path: "/registrations/id",
+		endpoint: "Registrations.getById"
 	},
 	"Registrations.getTotal": {
 		method: "GET",
@@ -140,6 +154,7 @@ export const APIRegistrationsEndpoints: APIEndpointsBuilder<"Registrations", typ
 export const APIRegistrations: APIBuilder<"Registrations", typeof RegistrationsRoutes> = {
 	Registrations: {
 		get: "Registrations.get",
+		getById: "Registrations.getById",
 		getTotal: "Registrations.getTotal",
 		post: "Registrations.post",
 		update: "Registrations.update",

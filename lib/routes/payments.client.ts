@@ -10,6 +10,14 @@ const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
 	func: async ctx => null as any
 };
 
+const getById: EndpointRoute<"POST:/payments/id", number[], Payments[]> = {
+	authentication: true,
+	method: "POST",
+	path: "/payments/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
 const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
@@ -37,10 +45,10 @@ const updatePayment: EndpointRoute<"PUT:/payments", typeof updatePaymentReq> = {
 	validation: () => updatePaymentReq,
 	func: async ctx => null as any
 };
-const complete: EndpointRoute<"POST:/payments/compelete", number[]> = {
+const complete: EndpointRoute<"POST:/payments/complete", number[]> = {
 	authentication: true,
 	method: "POST",
-	path: "/payments/compelete",
+	path: "/payments/complete",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
@@ -55,6 +63,7 @@ const del: EndpointRoute<"DELETE:/payments", number[]> = {
 
 export const PaymentsRoutes = {
 	get,
+	getById,
 	getTotal,
 	post,
 	updatePayment,
@@ -71,6 +80,11 @@ export const APIPaymentsEndpoints: APIEndpointsBuilder<"Payments", typeof Paymen
 		method: "GET",
 		path: "/payments",
 		endpoint: "Payments.get"
+	},
+	"Payments.getById": {
+		method: "POST",
+		path: "/payments/id",
+		endpoint: "Payments.getById"
 	},
 	"Payments.getTotal": {
 		method: "GET",
@@ -91,7 +105,7 @@ export const APIPaymentsEndpoints: APIEndpointsBuilder<"Payments", typeof Paymen
 	},
 	"Payments.complete": {
 		method: "POST",
-		path: "/payments/compelete",
+		path: "/payments/complete",
 		endpoint: "Payments.complete"
 	},
 	"Payments.delete": {
@@ -104,6 +118,7 @@ export const APIPaymentsEndpoints: APIEndpointsBuilder<"Payments", typeof Paymen
 export const APIPayments: APIBuilder<"Payments", typeof PaymentsRoutes> = {
 	Payments: {
 		get: "Payments.get",
+		getById: "Payments.getById",
 		getTotal: "Payments.getTotal",
 		post: "Payments.post",
 		updatePayment: "Payments.updatePayment",

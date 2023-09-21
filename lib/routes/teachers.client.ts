@@ -1,7 +1,7 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
-import { merge, array, number, integer, object, omit } from "valibot"
+import { merge, array, number, integer, object, omit } from "valibot";
 
 
 const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
@@ -12,6 +12,13 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	func: async ctx => null as any
 };
 
+const getById: EndpointRoute<"POST:/teachers/id", number[], Teachers> = {
+	authentication: true,
+	method: "POST",
+	path: "/teachers/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
 const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:string]", null, Teachers[]> = {
 	authentication: false,
 	method: "GET",
@@ -28,21 +35,13 @@ const getByFullnames: EndpointRoute<"GET:/teachers/fullnames", null, Teachers[]>
 	func: async ctx => null as any
 };
 
-const getPrincipal: EndpointRoute<"GET:/teachers/principal", null, Teachers> = {
-	authentication: false,
-	method: "GET",
-	path: "/teachers/principal",
-	hasUrlParams: false,
-	func: async ctx => null as any
-};
-
 const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherClasses[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/teacherClasses",
 	hasUrlParams: false,
 	func: async ctx => null as any
-}
+};
 
 const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocations[]> = {
 	authentication: false,
@@ -50,7 +49,7 @@ const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocati
 	path: "/teachers/locations",
 	hasUrlParams: false,
 	func: async ctx => null as any
-}
+};
 
 const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherInstruments[]> = {
 	authentication: false,
@@ -58,18 +57,18 @@ const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherIn
 	path: "/teachers/instruments",
 	hasUrlParams: false,
 	func: async ctx => null as any
-}
+};
 
 const teacherJoins = object({
 	teacherClasses: array(number([integer()])),
 	teacherLocations: array(number([integer()])),
 	teacherInstruments: array(number([integer()])),
 	priorities: array(number([integer()]))
-})
+});
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);
 let postReq = omit(JoinedTeacher, ["id"]);
-const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }> = {
+const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers",
@@ -78,7 +77,7 @@ const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number }
 	func: async ctx => null as any
 };
 
-let updateReq = JoinedTeacher
+let updateReq = JoinedTeacher;
 const update: EndpointRoute<"PUT:/teachers", typeof updateReq> = {
 	authentication: true,
 	method: "PUT",
@@ -96,7 +95,7 @@ const fileUpload: EndpointRoute<"PUT:/teachers/file/[id:number]", Blob> = {
 	func: async ctx => null as any
 };
 
-const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" | "picture" }> = {
+const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" | "picture"; }> = {
 	authentication: true,
 	method: "PUT",
 	path: "/teachers/file",
@@ -114,9 +113,9 @@ const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
 
 export const TeachersRoutes = {
 	get,
+	getById,
 	getByPriorityClasses,
 	getByFullnames,
-	getPrincipal,
 	getClasses,
 	getLocations,
 	getInstruments,
@@ -137,6 +136,11 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		path: "/teachers",
 		endpoint: "Teachers.get"
 	},
+	"Teachers.getById": {
+		method: "POST",
+		path: "/teachers/id",
+		endpoint: "Teachers.getById"
+	},
 	"Teachers.getByPriorityClasses": {
 		method: "GET",
 		path: "/teachers/priority/[class_type:string]",
@@ -147,11 +151,7 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		path: "/teachers/fullnames",
 		endpoint: "Teachers.getByFullnames"
 	},
-	"Teachers.getPrincipal": {
-		method: "GET",
-		path: "/teachers/principal",
-		endpoint: "Teachers.getPrincipal"
-	},
+
 	"Teachers.getClasses": {
 		method: "GET",
 		path: "/teachers/teacherClasses",
@@ -199,9 +199,9 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 	Teachers: {
 		get: "Teachers.get",
+		getById: "Teachers.getById",
 		getByPriorityClasses: "Teachers.getByPriorityClasses",
 		getByFullnames: "Teachers.getByFullnames",
-		getPrincipal: "Teachers.getPrincipal",
 		getClasses: "Teachers.getClasses",
 		getLocations: "Teachers.getLocations",
 		getInstruments: "Teachers.getInstruments",

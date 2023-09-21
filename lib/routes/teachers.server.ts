@@ -10,6 +10,15 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
 };
 
+serverRoutes.getById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const ids = await ctx.request.json();
+		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", ids);
+		if (!teacher) throw Error("Teacher not found");
+		return teacher;
+	});
+};
+
 serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");
@@ -18,10 +27,6 @@ serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
 
 serverRoutes.getByFullnames.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"));
-};
-
-serverRoutes.getPrincipal.func = async _ctx => {
-	return await execTryCatch(async () => (await executeQuery<Teachers>("SELECT * FROM teachers WHERE fullname LIKE '%Κυριακόπουλος' LIMIT 1"))[0]);
 };
 
 serverRoutes.getClasses.func = async _ctx => {
@@ -40,7 +45,7 @@ serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online];
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, visible, online) VALUES (${questionMarks(args.length)})`, args);
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, visible, online) VALUES (${questionMarks(args)})`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [id.insertId, class_id, priority]);
@@ -123,19 +128,19 @@ serverRoutes.fileDelete.func = async ctx => {
 serverRoutes.delete.func = async ctx => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
-		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (${questionMarks(body.length)})`, body);
-		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (${questionMarks(body.length)})`, body);
-		await T.executeQuery(`DELETE FROM teacher_instruments WHERE teacher_id IN (${questionMarks(body.length)})`, body);
+		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (${questionMarks(body)})`, body);
+		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (${questionMarks(body)})`, body);
+		await T.executeQuery(`DELETE FROM teacher_instruments WHERE teacher_id IN (${questionMarks(body)})`, body);
 
 		const files = await T.executeQuery<Pick<Teachers, "cv" | "picture">>(
-			`SELECT cv, picture FROM teachers WHERE id IN (${questionMarks(body.length)})`,
+			`SELECT cv, picture FROM teachers WHERE id IN (${questionMarks(body)})`,
 			body
 		);
 		for (const file of files) {
 			if (file.cv) await Bucket.delete(ctx, file.cv);
 			if (file.picture) await Bucket.delete(ctx, file.picture);
 		}
-		await T.executeQuery(`DELETE FROM teachers WHERE id IN (${questionMarks(body.length)})`, body);
+		await T.executeQuery(`DELETE FROM teachers WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
 	});
 };

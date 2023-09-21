@@ -9,6 +9,15 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Instruments>("SELECT * FROM instruments ORDER BY name ASC"));
 };
 
+serverRoutes.getById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const id = await ctx.request.json();
+		const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", [id]);
+		if (!instrument) throw Error("Instrument not found");
+		return instrument;
+	});
+};
+
 serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
@@ -21,7 +30,7 @@ serverRoutes.post.func = async ctx => {
 serverRoutes.delete.func = async ctx => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
-		await executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body.length)})`, body);
+		await executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
 	});
 };

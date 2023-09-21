@@ -1,11 +1,18 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
-import { string, email, object } from "valibot";
 
 const get: EndpointRoute<"GET:/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
+const getById: EndpointRoute<"POST:/sys/id", number[], SysUsers> = {
+	authentication: true,
+	method: "POST",
+	path: "/sys/id",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
@@ -26,7 +33,7 @@ const del: DefaultEndpointRoute<"DELETE:/sys", number[]> = {
 	func: async ctx => null as any
 };
 
-const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string }> = {
+const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/[link:string]",
@@ -35,7 +42,7 @@ const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof 
 	func: async ctx => null as any
 };
 
-const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: string }> = {
+const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: string; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/register",
@@ -43,17 +50,18 @@ const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: stri
 	func: async ctx => null as any
 };
 
-const validateRegisterLink: EndpointRoute<"POST:/sys/register/validate/[link:string]", null, { isValid: boolean }> = {
+const validateRegisterLink: EndpointRoute<"POST:/sys/register/validate/[link:string]", null, { isValid: boolean; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/validate/[link:string]",
 	hasUrlParams: true,
 	func: async ctx => null as any
-}
+};
 
 
 export const SysUsersRoutes = {
 	get,
+	getById,
 	getBySid,
 	delete: del,
 	registerSysUser,
@@ -70,6 +78,11 @@ export const APISysUsersEndpoints: APIEndpointsBuilder<"SysUsers", typeof SysUse
 		method: "GET",
 		path: "/sys",
 		endpoint: "SysUsers.get"
+	},
+	"SysUsers.getById": {
+		method: "POST",
+		path: "/sys/id",
+		endpoint: "SysUsers.getById"
 	},
 	"SysUsers.getBySid": {
 		method: "GET",
@@ -102,6 +115,7 @@ export const APISysUsersEndpoints: APIEndpointsBuilder<"SysUsers", typeof SysUse
 export const APISysUsers: APIBuilder<"SysUsers", typeof SysUsersRoutes> = {
 	SysUsers: {
 		get: "SysUsers.get",
+		getById: "SysUsers.getById",
 		getBySid: "SysUsers.getBySid",
 		delete: "SysUsers.delete",
 		registerSysUser: "SysUsers.registerSysUser",

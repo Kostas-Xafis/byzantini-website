@@ -1,8 +1,8 @@
-import { v_SchoolPayoffs, type SchoolPayoffs, type Wholesalers } from "../../types/entities";
+import { v_Payoffs, type Payoffs, type Wholesalers } from "../../types/entities";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
 import { pick } from "valibot";
 
-export type PayoffGetResponse = Pick<SchoolPayoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
+export type PayoffGetResponse = Pick<Payoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
 
 const get: EndpointRoute<"GET:/payoffs", null, PayoffGetResponse[]> = {
 	authentication: true,
@@ -12,7 +12,15 @@ const get: EndpointRoute<"GET:/payoffs", null, PayoffGetResponse[]> = {
 	func: async ctx => null as any
 };
 
-const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number }> = {
+const getById: EndpointRoute<"POST:/payoffs/id", number[], Payoffs[]> = {
+	authentication: true,
+	method: "POST",
+	path: "/payoffs/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
+const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payoffs/total",
@@ -20,7 +28,7 @@ const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number }> = {
 	func: async ctx => null as any
 };
 
-let updateAmountReq = pick(v_SchoolPayoffs, ["id", "amount"]);
+let updateAmountReq = pick(v_Payoffs, ["id", "amount"]);
 const updateAmount: EndpointRoute<"PUT:/payoffs", typeof updateAmountReq> = {
 	authentication: true,
 	method: "PUT",
@@ -40,6 +48,7 @@ const complete: EndpointRoute<"DELETE:/payoffs", number[]> = {
 
 export const PayoffsRoutes = {
 	get,
+	getById,
 	getTotal,
 	updateAmount,
 	complete
@@ -54,6 +63,11 @@ export const APIPayoffsEndpoints: APIEndpointsBuilder<"Payoffs", typeof PayoffsR
 		method: "GET",
 		path: "/payoffs",
 		endpoint: "Payoffs.get"
+	},
+	"Payoffs.getById": {
+		method: "POST",
+		path: "/payoffs/id",
+		endpoint: "Payoffs.getById"
 	},
 	"Payoffs.getTotal": {
 		method: "GET",
@@ -76,6 +90,7 @@ export const APIPayoffsEndpoints: APIEndpointsBuilder<"Payoffs", typeof PayoffsR
 export const APIPayoffs: APIBuilder<"Payoffs", typeof PayoffsRoutes> = {
 	Payoffs: {
 		get: "Payoffs.get",
+		getById: "Payoffs.getById",
 		getTotal: "Payoffs.getTotal",
 		updateAmount: "Payoffs.updateAmount",
 		complete: "Payoffs.complete"

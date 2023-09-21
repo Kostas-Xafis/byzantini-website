@@ -1,12 +1,12 @@
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import type { Locations } from "../../../types/entities";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, {
 	ActionEnum,
@@ -15,12 +15,11 @@ import TableControls, {
 	ActionIcon,
 } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
-import {
-	type ContextType,
-	SelectedItemsContext,
-} from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "locations";
 
@@ -167,38 +166,19 @@ const fileToBlob = async (file: File): Promise<Blob | null> => {
 	});
 };
 
+const [selectedItems, setSelectedItems] = useSelectedRows();
+
 export default function LocationsTable() {
-	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, {
-		equals: false,
-	});
 	const [store, setStore] = createStore<APIStore>({});
-	const hydrate = createHydration(() => {
-		useAPI(setStore, API.Locations.get, {});
-	});
-
-	createEffect(
-		on(actionPressed, (action) => {
-			if (action === ActionEnum.NONE) return;
-			ROWS[1].removeAll();
-			hydrate(true);
-		})
+	const [actionPressed, setActionPressed] = useHydrateById(
+		setStore,
+		API.Locations.getById,
+		API.Locations.get
 	);
+	useHydrate(() => {
+		useAPI(setStore, API.Locations.get, {});
+	})(true);
 
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter((i) => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			},
-		},
-	] as const;
 	const columnNames: ColumnType<LocationsTable> = {
 		id: { type: "number", name: "Id" },
 		name: { type: "string", name: "Όνομα Παραρτήματος", size: () => 15 },
@@ -240,11 +220,9 @@ export default function LocationsTable() {
 				youtube: formData.get("youtube") as string,
 				partner: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='partner']`
+						`button[data-specifier='partner'][data-selected='true']`
 					),
-				]
-					.map((i) => Number(i.dataset.value) as 0 | 1)
-					.filter((x) => !!x)[0],
+				].map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
 			const res = await useAPI(setStore, API.Locations.post, {
 				RequestObject: data,
@@ -259,7 +237,7 @@ export default function LocationsTable() {
 					RequestObject: files.image,
 					UrlArgs: { id },
 				});
-			setActionPressed(ActionEnum.ADD);
+			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {
 			inputs: Omit(LocationsInputs(), "id"),
@@ -267,7 +245,6 @@ export default function LocationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Παραρτήματος",
-			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD,
 		};
 	});
@@ -297,11 +274,9 @@ export default function LocationsTable() {
 				youtube: formData.get("youtube") as string,
 				partner: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='partner']`
+						`button[data-specifier='partner'][data-selected='true']`
 					),
-				]
-					.map((i) => Number(i.dataset.value) as 0 | 1)
-					.filter((x) => !!x)[0],
+				].map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
 			const res = await useAPI(setStore, API.Locations.update, {
 				RequestObject: data,
@@ -312,9 +287,7 @@ export default function LocationsTable() {
 			};
 			if (imageRemoved) {
 				await useAPI(setStore, API.Locations.fileDelete, {
-					RequestObject: {
-						id: location.id,
-					},
+					UrlArgs: { id: location.id },
 				});
 			}
 			if (file.image)
@@ -322,7 +295,10 @@ export default function LocationsTable() {
 					RequestObject: file.image,
 					UrlArgs: { id: location.id },
 				});
-			setActionPressed(ActionEnum.MODIFY);
+			setActionPressed({
+				action: ActionEnum.MODIFY,
+				mutate: [location.id],
+			});
 		});
 		const emptyFileRemove = (e: CustomEvent) => {
 			e.preventDefault();
@@ -353,7 +329,6 @@ export default function LocationsTable() {
 			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Παραρτήματος",
-			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
 		};
 	});
@@ -364,14 +339,13 @@ export default function LocationsTable() {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const data = selectedItems.map(
-				(i) => (locations.find((p) => p.id === i) as Locations).id
-			);
+
+			const data = selectedItems.slice();
 			const res = await useAPI(setStore, API.Locations.delete, {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});
 		return {
 			inputs: {},
@@ -379,13 +353,14 @@ export default function LocationsTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Παραρτήματος",
-			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE,
 		};
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
 			<Show when={store[API.Locations.get]} fallback={<Spinner />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls

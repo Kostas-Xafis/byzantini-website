@@ -9,6 +9,15 @@ const get: EndpointRoute<"GET:/books", null, Books[]> = {
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
+
+const getById: EndpointRoute<"POST:/books/id", number[], Books> = {
+	authentication: true,
+	method: "POST",
+	path: "/books/id",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
 const postReq = omit(v_Books, ["id"]);
 const post: EndpointRoute<"POST:/books", typeof postReq> = {
 	authentication: true,
@@ -39,6 +48,7 @@ const del: DefaultEndpointRoute<"DELETE:/books", number[]> = {
 
 export const BooksRoutes = {
 	get,
+	getById,
 	post,
 	updateQuantity,
 	delete: del
@@ -53,6 +63,11 @@ export const APIBooksEndpoints: APIEndpointsBuilder<"Books", typeof BooksRoutes>
 		method: "GET",
 		path: "/books",
 		endpoint: "Books.get"
+	},
+	"Books.getById": {
+		method: "POST",
+		path: "/books/id",
+		endpoint: "Books.getById"
 	},
 	"Books.post": {
 		method: "POST",
@@ -76,6 +91,7 @@ export const APIBooksEndpoints: APIEndpointsBuilder<"Books", typeof BooksRoutes>
 export const APIBooks: APIBuilder<"Books", typeof BooksRoutes> = {
 	Books: {
 		get: "Books.get",
+		getById: "Books.getById",
 		post: "Books.post",
 		updateQuantity: "Books.updateQuantity",
 		delete: "Books.delete"

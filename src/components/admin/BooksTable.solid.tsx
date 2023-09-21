@@ -1,13 +1,13 @@
 import {
 	API,
 	type APIStore,
-	createHydration,
+	useHydrate,
 	useAPI,
 } from "../../../lib/hooks/useAPI.solid";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import TableControls, {
 	ActionEnum,
@@ -16,12 +16,11 @@ import TableControls, {
 	ActionIcon,
 } from "./table/TableControls.solid";
 import { Omit, type Props as InputProps, Pick, Fill } from "../Input.solid";
-import {
-	type ContextType,
-	SelectedItemsContext,
-} from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "books";
 
@@ -101,53 +100,34 @@ const booksToTable = (
 	return books.map((book) => bookToTableBook(book, wholesalers));
 };
 
+const columnNames: ColumnType<BooksTable> = {
+	id: { type: "number", name: "Id" },
+	title: { type: "string", name: "Τίτλος", size: () => 15 },
+	wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 15 },
+	wholesale_price: {
+		type: "number",
+		name: "Χονδρική Τιμή",
+		size: () => 9,
+	},
+	price: { type: "number", name: "Λιανική Τιμή", size: () => 9 },
+	quantity: { type: "number", name: "Ποσότητα" },
+	sold: { type: "number", name: "Πωλήσεις" },
+	reserved: { type: "number", name: "Απόθεμα" },
+};
+
+const [selectedItems, setSelectedItems] = useSelectedRows();
+
 export default function BooksTable() {
-	const [actionPressed, setActionPressed] = createSignal(ActionEnum.NONE, {
-		equals: false,
-	});
 	const [store, setStore] = createStore<APIStore>({});
-	const hydrate = createHydration(() => {
+	const [actionPressed, setActionPressed] = useHydrateById(
+		setStore,
+		API.Books.getById,
+		API.Books.get
+	);
+	useHydrate(() => {
 		useAPI(setStore, API.Books.get, {});
 		useAPI(setStore, API.Wholesalers.get, {});
-	});
-
-	createEffect(
-		on(actionPressed, (action) => {
-			if (action === ActionEnum.NONE) return;
-			ROWS[1].removeAll();
-			hydrate(true);
-		})
-	);
-
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter((i) => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			},
-		},
-	] as const;
-	const columnNames: ColumnType<BooksTable> = {
-		id: { type: "number", name: "Id" },
-		title: { type: "string", name: "Τίτλος", size: () => 15 },
-		wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 15 },
-		wholesale_price: {
-			type: "number",
-			name: "Χονδρική Τιμή",
-			size: () => 9,
-		},
-		price: { type: "number", name: "Λιανική Τιμή", size: () => 9 },
-		quantity: { type: "number", name: "Ποσότητα" },
-		sold: { type: "number", name: "Πωλήσεις" },
-		reserved: { type: "number", name: "Απόθεμα" },
-	};
+	})(true);
 
 	let shapedData = createMemo(() => {
 		const books = store[API.Books.get];
@@ -184,7 +164,10 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.ADD);
+			setActionPressed({
+				action: ActionEnum.ADD,
+				mutate: [res.data.insertId as number],
+			});
 		});
 		return {
 			inputs: Omit(BooksInputs(wholesalers), "id"),
@@ -192,7 +175,7 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Βιβλίου",
-			type: ActionEnum.ADD,
+
 			icon: ActionIcon.ADD,
 		};
 	});
@@ -214,7 +197,7 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.MODIFY);
+			setActionPressed({ action: ActionEnum.MODIFY, mutate: [book.id] });
 		});
 		return {
 			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
@@ -222,7 +205,7 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
-			type: ActionEnum.MODIFY,
+
 			icon: ActionIcon.MODIFY,
 		};
 	});
@@ -241,7 +224,10 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({
+				action: ActionEnum.DELETE,
+				mutate: selectedItems.slice(),
+			});
 		});
 		return {
 			inputs: {},
@@ -249,7 +235,7 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Βιβλίων",
-			type: ActionEnum.DELETE,
+
 			icon: ActionIcon.DELETE,
 		};
 	});
@@ -266,7 +252,11 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.ADD);
+			setActionPressed({
+				action: ActionEnum.ADD,
+				mutate: [res.data.insertId as number],
+				mutatedEndpoint: API.Wholesalers.get,
+			});
 		});
 		return {
 			inputs: {
@@ -281,7 +271,7 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, "wholesalers"),
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Χονδρέμπορου",
-			type: ActionEnum.ADD,
+
 			icon: ActionIcon.ADD_USER,
 		};
 	});
@@ -297,7 +287,11 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setActionPressed(ActionEnum.DELETE);
+			setActionPressed({
+				action: ActionEnum.DELETE,
+				mutate: data,
+				mutatedEndpoint: API.Wholesalers.get,
+			});
 		});
 		return {
 			inputs: {
@@ -314,13 +308,15 @@ export default function BooksTable() {
 			onCleanup: () => formListener(submit, false, "wholesalers"),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Χονδρέμπορου",
-			type: ActionEnum.DELETE,
+
 			icon: ActionIcon.DELETE_USER,
 		};
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
 			<Show
 				when={store[API.Books.get] && store[API.Wholesalers.get]}
 				fallback={<Spinner />}
