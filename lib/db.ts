@@ -20,7 +20,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 	try {
 		if (CONNECTOR === "mysql") {
 			// This is the worst & most shameful line of code I've ever written
-			const mysql = await eval(`import("mysql2/promise")`);
+			const mysql = await import("mysql2/promise");
 			const db = await mysql.createConnection({
 				user: DB_USERNAME,
 				database: DB_NAME,
