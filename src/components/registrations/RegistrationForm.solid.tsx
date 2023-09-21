@@ -347,14 +347,12 @@ export function RegistrationForm() {
 	);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
-	(useHydrate(() => {
+	useHydrate(() => {
 		useAPI(setStore, API.Teachers.get, {});
 		useAPI(setStore, API.Teachers.getClasses, {});
 		useAPI(setStore, API.Teachers.getInstruments, {});
 		useAPI(setStore, API.Instruments.get, {});
-	});
-
-	createEffect(() => hydrate(true));
+	})(true);
 	createEffect(
 		on(formSelected, (type) => {
 			const select = document.querySelector(
