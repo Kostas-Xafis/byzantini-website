@@ -19,6 +19,7 @@ import {
 	createSignal,
 	on,
 	onMount,
+	For,
 } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 import Spinner from "../Spinner.solid";
@@ -433,7 +434,8 @@ export function RegistrationForm() {
 		instrumentsList: TeacherInstruments[];
 	};
 
-	const onSelectClick = (type: MusicType) => () => {
+	const onSelectClick = (type: MusicType) => {
+		console.log("Dude I am here", type);
 		const curType = formSelected();
 		if (curType === type) return;
 		if (curType === MusicType.None) {
@@ -541,26 +543,30 @@ export function RegistrationForm() {
 							id="firstSelect"
 							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col"
 						>
-							{btns.map(([str, type]) => (
-								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
-									<div
-										id={type}
-										class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md"
-									>
-										<button
-											class="p-6 text-5xl max-sm:text-3xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
-											onClick={onSelectClick(type)}
+							<For each={btns}>
+								{([str, type], index) => (
+									<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
+										<div
+											id={type}
+											class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md"
 										>
-											{str}
-										</button>
+											<button
+												class="p-6 text-5xl max-sm:text-3xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
+												onClick={(e) =>
+													onSelectClick(type)
+												}
+											>
+												{str}
+											</button>
+										</div>
+										<img
+											src={`/${type}.jpg`}
+											alt="Φόντο εισόδου εγγραφής"
+											class="absolute inset-0 h-full max-sm:w-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105 group-focus-within/select:scale-105"
+										/>
 									</div>
-									<img
-										src={`/${type}.jpg`}
-										alt="Φόντο εισόδου εγγραφής"
-										class="absolute inset-0 h-full max-sm:w-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105 group-focus-within/select:scale-105"
-									/>
-								</div>
-							))}
+								)}
+							</For>
 						</div>
 					</div>
 				}
@@ -568,11 +574,11 @@ export function RegistrationForm() {
 				<>
 					<div
 						id="registrationContainer"
-						class="w-full h-full overflow-y-auto pb-20 flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact"
+						class="w-full h-full overflow-y-auto pb-20 flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact max-sm:gap-y-12"
 					>
 						<div
 							id="registrationSelect"
-							class="py-6 max-sm:py-1 max-sm:w-full flex flex-row gap-x-16 max-sm:gap-x-0 max-sm:pt-0 place-items-center"
+							class="py-6 max-sm:py-1 max-sm:w-full flex flex-row gap-x-16 max-sm:gap-x-0 max-sm:pt-0 place-items-center z-[100]"
 						>
 							{btns.map(([str, type]) => (
 								<div
@@ -582,6 +588,7 @@ export function RegistrationForm() {
 											? "bg-red-900"
 											: "hover:bg-red-900")
 									}
+									onClick={(e) => onSelectClick(type)}
 								>
 									<button
 										class={
@@ -590,7 +597,6 @@ export function RegistrationForm() {
 												? " text-white"
 												: " group-hover:text-white")
 										}
-										onClick={onSelectClick(type)}
 									>
 										{str}
 									</button>
@@ -602,7 +608,7 @@ export function RegistrationForm() {
 							class="group/form px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
 							onSubmit={onSubmit}
 						>
-							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
 							</h1>
 							{Object.values(genericInputs).map((input) => (

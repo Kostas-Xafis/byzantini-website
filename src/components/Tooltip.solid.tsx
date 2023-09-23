@@ -19,7 +19,7 @@ export default function Tooltip(props: TooltipProps) {
 			<li class="justify-self-center">
 				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
 			</li>
-			{props.message.map(message => (
+			{props.message.map((message) => (
 				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
 					{message}
@@ -43,7 +43,7 @@ export default function Tooltip(props: TooltipProps) {
 			<li class="justify-self-center">
 				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
 			</li>
-			{props.message.map(message => (
+			{props.message.map((message) => (
 				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
 					{message}
@@ -68,7 +68,7 @@ export default function Tooltip(props: TooltipProps) {
 				<i class="fa-solid fa-circle-info text-xl text-red-900"></i>
 			</li>
 			<div class="w-full flex flex-row justify-evenly">
-				{props.message.map(message => (
+				{props.message.map((message) => (
 					<li class="text-sm max-w-[20ch] drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 						<i class="fa-solid fa-circle-chevron-right text-sm pr-4 text-red-900 drop-shadow-none"></i>
 						{message}
@@ -93,7 +93,7 @@ export default function Tooltip(props: TooltipProps) {
 			<li class="justify-self-center" style={{ "grid-column": "1 / 3" }}>
 				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
 			</li>
-			{props.message.map(message => (
+			{props.message.map((message) => (
 				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
 					{message}

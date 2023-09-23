@@ -37,33 +37,22 @@ export type OptionalBy<T, K> = K extends keyof T
 
 export type IsArray<T> = T extends Array<any> ? true : false;
 
-// let baz = {
-// 	bob: 1,
-// 	alice: 2,
-// 	jake: "3",
-// 	garry: false,
-// 	sally: 1250125912905012959125,
-// 	mary: { bob: 10 }
-// };
-// let vals = Object.values(baz);
-// type FooBar = typeof vals;
+// // For each kv pair, assign the kv pair as the value of the key to separate the object into a "union" of objects
+// type ObjectSplit<T extends Record<any, any>> = { [K in keyof T]: Pick<T, K> };
 
-// For each kv pair, assign the kv pair as the value of the key to separate the object into a "union" of objects
-type ObjectSplit<T extends Record<any, any>> = { [K in keyof T]: Pick<T, K> };
+// // Convert the union of objects into an array of the unique kv pair objects
+// type ObjectSplitToArray<T extends Record<any, any>> = ObjectSplit<T> extends infer K ? UnionToArray<K[keyof K]> : never;
 
-// Convert the union of objects into an array of the unique kv pair objects
-type ObjectSplitToArray<T extends Record<any, any>> = ObjectSplit<T> extends infer K ? UnionToArray<K[keyof K]> : never;
+// // Recursively convert the array of kv pair objects into an array of the values
+// type ObjectArrToTypedArray<Arr extends Record<any, any>[], Res extends unknown[] = []> = Arr extends [infer A, ...infer B]
+// 	? B extends []
+// 	? [...Res, A[keyof A]]
+// 	: B extends any[]
+// 	? ObjectArrToTypedArray<B, [...Res, A[keyof A]]>
+// 	: never
+// 	: never;
 
-// Recursively convert the array of kv pair objects into an array of the values
-type ObjectArrToTypedArray<Arr extends Record<any, any>[], Res extends unknown[] = []> = Arr extends [infer A, ...infer B]
-	? B extends []
-	? [...Res, A[keyof A]]
-	: B extends any[]
-	? ObjectArrToTypedArray<B, [...Res, A[keyof A]]>
-	: never
-	: never;
-
-export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
+// export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
 
 export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol> = {
 	[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
@@ -72,27 +61,3 @@ export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Re
 export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
 	[P in Replaced]: Value
 };
-
-// type Baz = {
-// 	bob: 1;
-// 	alice: 2;
-// 	jake: "3";
-// 	garry: false;
-// 	sally: 1250125912905012959125n;
-// 	mary: { bob: 10 };
-// };
-
-// type Books = {
-// 	id: number;
-// 	title: "2";
-// 	genre: string;
-// 	wholesaler_id: 5;
-// 	wholesale_price: number;
-// 	price: number;
-// 	quantity: number;
-// 	sold: number;
-// };
-
-// type Bob = ObjectValues<Books>;
-
-// type Bazbob = ObjectValues<Baz>;
