@@ -131,7 +131,7 @@ export default function TableControls(props: Props) {
 									<button class="controlBtn py-2 px-4 text-neutral-500 blur-[1px] first-of-type:rounded-l-xl last-of-type:rounded-r-xl">
 										<i
 											class={
-												"text-lg " +
+												"text-lg max-sm:text-base " +
 												(action?.icon || ActionIcon.ADD)
 											}
 										></i>
@@ -146,7 +146,7 @@ export default function TableControls(props: Props) {
 								>
 									<i
 										class={
-											"text-lg " +
+											"text-lg max-sm:text-base " +
 											(action?.icon || ActionIcon.ADD)
 										}
 									></i>

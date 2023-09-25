@@ -93,7 +93,7 @@ export function SearchTable(props: SearchTableProps) {
 				class="group relative w-max flex flex-row !font-didact"
 				onClick={(e) => columnSelect(e)}
 			>
-				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-base cursor-pointer rounded-md shadow-md">
+				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-sm cursor-pointer rounded-md shadow-md">
 					{column().name} :
 				</p>
 				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 rounded-md overflow-hidden ">
@@ -113,7 +113,7 @@ export function SearchTable(props: SearchTableProps) {
 			</div>
 			<input
 				id="search"
-				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-base shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none max-sm:self-center"
+				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-sm shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none max-sm:self-center"
 				type="text"
 				name="search"
 				autocomplete="off"

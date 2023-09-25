@@ -97,7 +97,7 @@ export default function Row(props: Props) {
 				data-id={data[0]}
 				data-index={index}
 				class={
-					"row relative grid grid-flow-col justify-between justify-items-center items-center h-min px-8 gap-x-2 text-center text-lg bg-transparent" +
+					"row relative grid grid-flow-col justify-between justify-items-center items-center h-min px-8 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent" +
 					" hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100" +
 					(props?.header
 						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500"
