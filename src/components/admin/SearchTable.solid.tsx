@@ -9,11 +9,11 @@ export const enum Compare {
 	Gt = ">",
 	Lt = "<",
 	Gte = ">=",
-	Lte = "<="
+	Lte = "<=",
 }
 
 export const getCompareFn = (value: string) => {
-	const EqCheck = CompareList.findLast(c => value.startsWith(c));
+	const EqCheck = CompareList.findLast((c) => value.startsWith(c));
 	switch (EqCheck) {
 		case Compare.Gte:
 			return (nCol: number, nVal: number) => nCol >= nVal;
@@ -29,10 +29,25 @@ export const getCompareFn = (value: string) => {
 };
 
 // Since findLast is used to find the last occurence of the operator, the order of the array is important
-export const CompareList = [Compare.Eq, Compare.Ne, Compare.Gt, Compare.Lt, Compare.Gte, Compare.Lte];
+export const CompareList = [
+	Compare.Eq,
+	Compare.Ne,
+	Compare.Gt,
+	Compare.Lt,
+	Compare.Gte,
+	Compare.Lte,
+];
 
-export type SearchColumn = { columnName: string; name: string; type: CellValue };
-export type SearchSetter = Partial<{ columnName: string; value: string; type: CellValue }>;
+export type SearchColumn = {
+	columnName: string;
+	name: string;
+	type: CellValue;
+};
+export type SearchSetter = Partial<{
+	columnName: string;
+	value: string;
+	type: CellValue;
+}>;
 type SearchTableProps = {
 	setSearchQuery: SetStoreFunction<SearchSetter>; // returns the ids of the searched result rows
 	columns: SearchColumn[];
@@ -40,7 +55,9 @@ type SearchTableProps = {
 
 export function SearchTable(props: SearchTableProps) {
 	let first = props.columns[0];
-	const [column, setColumn] = createSignal<SearchColumn>(first, { equals: false });
+	const [column, setColumn] = createSignal<SearchColumn>(first, {
+		equals: false,
+	});
 
 	const columnSelect = (e: MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -70,15 +87,18 @@ export function SearchTable(props: SearchTableProps) {
 	};
 
 	return (
-		<div class="relative flex flex-row border-[2px] border-red-900 px-4 py-2 gap-x-3 items-center rounded-[4px]">
+		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2  border-[2px] border-red-900 px-4 py-2 gap-x-3 items-center rounded-[4px] ">
 			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md"></i>
-			<div class="group relative w-max flex flex-row !font-didact" onClick={e => columnSelect(e)}>
+			<div
+				class="group relative w-max flex flex-row !font-didact"
+				onClick={(e) => columnSelect(e)}
+			>
 				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-base cursor-pointer rounded-md shadow-md">
 					{column().name} :
 				</p>
 				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 rounded-md overflow-hidden ">
 					<For each={props.columns}>
-						{c => (
+						{(c) => (
 							<p
 								class="py-1 px-3 bg-red-50 hover:bg-red-200 text-red-900 cursor-pointer"
 								data-colname={c.columnName}
@@ -93,16 +113,16 @@ export function SearchTable(props: SearchTableProps) {
 			</div>
 			<input
 				id="search"
-				class="px-4 py-1 font-didact shadow-md text-lg shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-base shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none max-sm:self-center"
 				type="text"
 				name="search"
 				autocomplete="off"
-				onKeyDown={e => searchHandler(e)}
-				onChange={e => searchHandler(e)}
+				onKeyDown={(e) => searchHandler(e)}
+				onChange={(e) => searchHandler(e)}
 			/>
 			<i
-				class="absolute fa-solid fa-xmark text-red-900 drop-shadow-md right-4 translate-x-[-25%] hover:bg-red-200 rounded-full p-2 text-lg leading-[0.9rem]  cursor-pointer text-center"
-				onClick={e => clearSearch()}
+				class="absolute fa-solid fa-xmark text-red-900 drop-shadow-md right-4 translate-x-[-25%] hover:bg-red-200 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
+				onClick={(e) => clearSearch()}
 			></i>
 		</div>
 	);

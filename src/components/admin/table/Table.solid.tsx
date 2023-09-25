@@ -80,15 +80,18 @@ export default function Table(props: Props) {
 	columnWidths += ";";
 	return (
 		<div
-			class="w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4"
+			class={
+				"w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4 z-[1]" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4"
+			}
 			data-prefix={prefix}
 		>
-			<div class="flex flex-row w-full justify-evenly z-[1001]">
+			<div class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
 				{props.children}
 			</div>
 			<div
 				id="tableContainer"
-				class="relative z-[1000] min-w-[40%] max-w-[80%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
+				class="relative z-[1000] min-w-[40%] max-w-[80%] max-sm:max-w-[92.5%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}

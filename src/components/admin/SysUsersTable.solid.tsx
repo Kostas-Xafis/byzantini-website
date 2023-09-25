@@ -26,20 +26,17 @@ const PREFIX = "sysusers";
 
 type SysUsers = Pick<FullSysUser, "id" | "email" | "privilege">;
 
-const sysuserToTableSysuser = (sysuser: SysUsers): SysUsers => {
-	const columns = Object.values(sysuser);
-
-	columns[2] =
-		columns[2] === 2
-			? "Super Admin"
-			: columns[2] === 1
-			? "Διαχειριστής Συστήματος"
-			: "Διαχειριστής";
-	return columns as unknown as SysUsers;
-};
-
 const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
-	return sysusers.map((u) => sysuserToTableSysuser(u));
+	return sysusers.map((u) => {
+		const columns = Object.values(u);
+		columns[2] =
+			columns[2] === 2
+				? "Super Admin"
+				: columns[2] === 1
+				? "Διαχειριστής Συστήματος"
+				: "Διαχειριστής";
+		return columns as unknown as SysUsers;
+	});
 };
 
 export default function SysUsersTable() {
@@ -159,7 +156,7 @@ export default function SysUsersTable() {
 		<SelectedItemsContext.Provider value={ROWS as ContextType}>
 			<Show
 				when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls

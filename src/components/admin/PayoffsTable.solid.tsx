@@ -40,8 +40,9 @@ const SchoolPayoffsInputs = (
 			name: "wholesaler_id",
 			label: "Χονδρέμπορος",
 			type: "select",
-			iconClasses: "fa-regular fa-feather",
+			iconClasses: "fa-solid fa-feather",
 			selectList: wholesalers.map((w) => w.name),
+			valueList: wholesalers.map((w) => w.id),
 		},
 		amount: {
 			name: "amount",
@@ -52,23 +53,18 @@ const SchoolPayoffsInputs = (
 	};
 };
 
-const payoffToTablePayoff = (
-	payoff: Payoffs,
-	wholesalers: Wholesalers[]
-): SchoolPayoffsTable => {
-	const columns = Object.values(payoff);
-	//@ts-ignore
-	columns[1] = wholesalers.find((w) => w.id === payoff.wholesaler_id)?.name;
-	//@ts-ignore
-	columns[2] = columns[2] + "€";
-	return columns as unknown as SchoolPayoffsTable;
-};
-
 const payoffsToTable = (
 	payoffs: Payoffs[],
 	wholesalers: Wholesalers[]
 ): SchoolPayoffsTable[] => {
-	return payoffs.map((p) => payoffToTablePayoff(p, wholesalers));
+	return payoffs.map((p) => {
+		const columns = Object.values(p);
+		//@ts-ignore
+		columns[1] = wholesalers.find((w) => w.id === p.wholesaler_id)?.name;
+		//@ts-ignore
+		columns[2] = columns[2] + "€";
+		return columns as unknown as SchoolPayoffsTable;
+	});
 };
 
 const [selectedItems, setSelectedItems] = useSelectedRows();
@@ -175,7 +171,7 @@ export default function PayoffsTable() {
 		>
 			<Show
 				when={store[API.Wholesalers.get] && store[API.Payoffs.get]}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls

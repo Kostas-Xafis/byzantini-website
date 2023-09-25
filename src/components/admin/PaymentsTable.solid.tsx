@@ -76,22 +76,17 @@ const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
 	};
 };
 
-const paymentToTablePayment = (
-	payment: Payments,
-	books: Books[]
-): PaymentsTable => {
-	const columns = Object.values(payment);
-	columns[2] =
-		books.find((b) => b.id === payment.book_id)?.title || "Δεν βρέθηκε!";
-	columns[3] = columns[3] + "€";
-	return columns as unknown as PaymentsTable;
-};
-
 const paymentsToTable = (
 	payments: Payments[],
 	books: Books[]
 ): PaymentsTable[] => {
-	return payments.map((p) => paymentToTablePayment(p, books));
+	return payments.map((p) => {
+		const columns = Object.values(p);
+		columns[2] =
+			books.find((b) => b.id === p.book_id)?.title || "Δεν βρέθηκε!";
+		columns[3] = columns[3] + "€";
+		return columns as unknown as PaymentsTable;
+	});
 };
 
 const [selectedItems, setSelectedItems] = useSelectedRows();
@@ -276,7 +271,7 @@ export default function PaymentsTable() {
 		>
 			<Show
 				when={store[API.Books.get] && store[API.Payments.get]}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls

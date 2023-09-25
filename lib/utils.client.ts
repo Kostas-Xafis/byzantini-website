@@ -1,24 +1,29 @@
 export const isDevFromURL = (url: URL) => {
-	return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname.includes("192.168.2.");
-}
+	return (
+		url.hostname === "localhost" ||
+		url.hostname === "127.0.0.1" ||
+		url.hostname.includes("192.168.2.")
+	);
+};
 
 export const isOnlineDev = (url: URL) => {
 	return url.hostname === "byzantini-website.pages.dev";
-}
+};
 export const onElementMount = async (target: string, callback: () => any) => {
 	let counter = 0;
 	while (!document.querySelector(target) && counter++ < 40) {
-		await new Promise(resolve => setTimeout(resolve, 25));
+		await new Promise((resolve) => setTimeout(resolve, 25));
 	}
 	if (counter >= 10) return;
 	callback();
 };
 
-export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const sleep = (ms: number) =>
+	new Promise((resolve) => setTimeout(resolve, ms));
 
 export const removeAccents = (str: string) => {
-	return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
+	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
 
 export const loadScript = (src: string, res: () => boolean) => {
 	return new Promise(async (resolve, reject) => {
@@ -31,12 +36,19 @@ export const loadScript = (src: string, res: () => boolean) => {
 			resolve(null);
 		}
 	});
-}
+};
 
-export const asyncQueue = async <T>(jobs: (() => Promise<T>)[], maxJobs = 1, verb = false) => {
+export const asyncQueue = async <T>(
+	jobs: (() => Promise<T>)[],
+	maxJobs = 1,
+	verb = false
+) => {
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
-	let queue = maxJobs < jobs.length ? Array.from(jobs.splice(0, maxJobs - 1)) : Array.from(jobs);
+	let queue =
+		maxJobs < jobs.length
+			? Array.from(jobs.splice(0, maxJobs - 1))
+			: Array.from(jobs);
 	let results: T[] = [];
 	while (jobsCompleted < totalJobs) {
 		while (!queue.length) await sleep(25);
@@ -45,7 +57,8 @@ export const asyncQueue = async <T>(jobs: (() => Promise<T>)[], maxJobs = 1, ver
 			if (!job) return;
 			results.push(await job());
 			jobsCompleted++;
-			verb && console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
+			verb &&
+				console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
 			while (queue.length === maxJobs) await sleep(50);
 			if (jobsCompleted !== jobs.length && queue.length !== maxJobs) {
 				let newJob = jobs.shift() as () => Promise<T>;
@@ -55,8 +68,7 @@ export const asyncQueue = async <T>(jobs: (() => Promise<T>)[], maxJobs = 1, ver
 	}
 	while (jobsCompleted < totalJobs) await sleep(100);
 	return results;
-}
-
+};
 
 export class UpdateHandler {
 	abortController = new AbortController();
@@ -98,18 +110,33 @@ export class UpdateHandler {
 	}
 }
 
-
 export function iOS() {
 	let iOSPlatforms = [
 		"iOS",
-		'iPad Simulator',
-		'iPhone Simulator',
-		'iPod Simulator',
-		'iPad',
-		'iPhone',
-		'iPod'
+		"iPad Simulator",
+		"iPhone Simulator",
+		"iPod Simulator",
+		"iPad",
+		"iPhone",
+		"iPod",
 	];
-	// @ts-ignore
-	return iOSPlatforms.includes(navigator.platform) || iOSPlatforms.includes(navigator["userAgentData"]?.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+	return (
+		iOSPlatforms.includes(navigator.platform) ||
+		// @ts-ignore
+		iOSPlatforms.includes(navigator["userAgentData"]?.platform) ||
+		(navigator.userAgent.includes("Mac") && "ontouchend" in document)
+	);
 }
 
+export const fileToBlob = async (file: File): Promise<Blob | null> => {
+	if (!file.name) return null;
+	return new Promise((res) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			if (reader.result)
+				res(new Blob([reader.result], { type: file.type }));
+			else res(null);
+		};
+		reader.readAsArrayBuffer(file);
+	});
+};

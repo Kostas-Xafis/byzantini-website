@@ -79,25 +79,20 @@ const BooksInputs = (
 	};
 };
 
-const bookToTableBook = (
-	book: Books,
-	wholesalers: Wholesalers[]
-): BooksTable => {
-	const columns = Object.values(book);
-	columns[2] =
-		wholesalers.find((w) => w.id === book.wholesaler_id)?.name || "";
-	columns[3] = columns[3] + "€";
-	columns[4] = columns[4] + "€";
-	//@ts-ignore
-	columns.push(columns[5] - columns[6]);
-	return columns as unknown as BooksTable;
-};
-
 const booksToTable = (
 	books: Books[],
 	wholesalers: Wholesalers[]
 ): BooksTable[] => {
-	return books.map((book) => bookToTableBook(book, wholesalers));
+	return books.map((book) => {
+		const columns = Object.values(book);
+		columns[2] =
+			wholesalers.find((w) => w.id === book.wholesaler_id)?.name || "";
+		columns[3] = columns[3] + "€";
+		columns[4] = columns[4] + "€";
+		//@ts-ignore
+		columns.push(columns[5] - columns[6]);
+		return columns as unknown as BooksTable;
+	});
 };
 
 const columnNames: ColumnType<BooksTable> = {
@@ -317,7 +312,7 @@ export default function BooksTable() {
 		>
 			<Show
 				when={store[API.Books.get] && store[API.Wholesalers.get]}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls

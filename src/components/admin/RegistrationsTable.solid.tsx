@@ -195,32 +195,25 @@ const RegistrationsInputs = (
 	};
 };
 
-const registrationToTableRegistration = (
-	registration: Registrations,
-	teachers: Teachers[],
-	instruments: Instruments[]
-): RegistrationsTable => {
-	const columns = Object.values(registration);
-	columns[15] = [
-		"Βυζαντινή Μουσική",
-		"Παραδοσιακή Μουσική",
-		"Ευρωπαϊκή Μουσική",
-	][columns[15] as number];
-	columns[16] = teachers.find((t) => t.id === columns[16])?.fullname || "";
-	columns[17] = instruments.find((i) => i.id === columns[17])?.name || "";
-	if (columns[19] === 0 || !columns[19]) columns[19] = "-";
-	if (columns[20] === 0 || !columns[20]) columns[20] = "-";
-	return columns as unknown as RegistrationsTable;
-};
-
 const registrationsToTable = (
 	registrations: Registrations[],
 	teachers: Teachers[],
 	instruments: Instruments[]
 ): RegistrationsTable[] => {
-	return registrations.map((registration) =>
-		registrationToTableRegistration(registration, teachers, instruments)
-	);
+	return registrations.map((reg) => {
+		const columns = Object.values(reg);
+		columns[15] = [
+			"Βυζαντινή Μουσική",
+			"Παραδοσιακή Μουσική",
+			"Ευρωπαϊκή Μουσική",
+		][columns[15] as number];
+		columns[16] =
+			teachers.find((t) => t.id === columns[16])?.fullname || "";
+		columns[17] = instruments.find((i) => i.id === columns[17])?.name || "";
+		if (columns[19] === 0 || !columns[19]) columns[19] = "-";
+		if (columns[20] === 0 || !columns[20]) columns[20] = "-";
+		return columns as unknown as RegistrationsTable;
+	});
 };
 
 const columns: ColumnType<RegistrationsTable> = {
@@ -558,21 +551,29 @@ export default function RegistrationsTable() {
 		const onSubmit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const items = selectedItems.map((id) => {
-				const student = registrations.find(
-					(r) => r.id === id
-				) as Registrations;
-				const teacher = teachers.find(
-					(t) => t.id === student.teacher_id
-				) as Teachers;
-				const instrument =
-					(student.class_id &&
-						(instruments.find(
-							(i) => i.id === student.instrument_id
-						) as Instruments)) ||
-					null;
-				return { student, teacher, instrument };
-			});
+			const items = selectedItems
+				.map((id) => {
+					console.log(id);
+					const student = registrations.find((r) => r.id === id);
+					if (!student) return;
+					const teacher = teachers.find(
+						(t) => t.id === student.teacher_id
+					);
+					if (!teacher) return;
+					const instrument =
+						(student.class_id &&
+							(instruments.find(
+								(i) => i.id === student.instrument_id
+							) as Instruments)) ||
+						null;
+					return { student, teacher, instrument };
+				})
+				.filter((x) => !!x) as {
+				student: Registrations;
+				teacher: Teachers;
+				instrument: Instruments | null;
+			}[];
+			console.log("Made it here!");
 			const xlsx = await loadXLSX();
 			const wb = xlsx.utils.book_new();
 			const wsStudentsBook = xlsx.utils.aoa_to_sheet(
@@ -711,24 +712,43 @@ export default function RegistrationsTable() {
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return;
+		let { columnName, value, type } = searchQuery;
 		document.dispatchEvent(new Event("hydrate"));
 	});
 
 	onMount(() => {
 		document.addEventListener("hydrate", (e) => {
 			e.stopPropagation();
-			const registrations = store[API.Registrations.get];
-			registrations?.forEach((r) => {
-				const row = document.querySelector(
-					`.row[data-id='${r.id}']`
-				) as HTMLElement;
-				const payment_status = r.total_payment - r.payment_amount;
-				if (r.payment_amount === 0 && r.total_payment === 0) return;
+			let registrations = store[API.Registrations.get];
+			if (!registrations) return;
+			let rows = [
+				...document.querySelectorAll<HTMLElement>(".row[data-id]"),
+			];
+			let result = rows
+				.map((row) => {
+					const id = Number(row.dataset.id);
+					//@ts-ignore
+					let reg = registrations.find((r) => r.id === id);
+					if (reg) return { row, registration: reg };
+					return null;
+				})
+				.filter((x) => !!x) as {
+				row: HTMLElement;
+				registration: Registrations;
+			}[];
+			result.forEach(({ row, registration }) => {
+				const payment_status =
+					registration.total_payment - registration.payment_amount;
+				if (
+					registration.payment_amount === 0 &&
+					registration.total_payment === 0
+				)
+					return;
 				if (payment_status === 0) row.setAttribute("data-paid", "");
 				else if (
 					payment_status > 0 ||
-					(r.payment_amount > r.total_payment &&
-						r.total_payment === 0)
+					(registration.payment_amount > registration.total_payment &&
+						registration.total_payment === 0)
 				)
 					row.setAttribute("data-partially-paid", "");
 			});
@@ -745,7 +765,7 @@ export default function RegistrationsTable() {
 					store[API.Teachers.getByFullnames] &&
 					store[API.Instruments.get]
 				}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table
 					prefix={PREFIX}

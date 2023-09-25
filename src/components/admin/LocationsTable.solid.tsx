@@ -20,6 +20,7 @@ import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { fileToBlob } from "../../../lib/utils.client";
 
 const PREFIX = "locations";
 
@@ -130,39 +131,28 @@ const LocationsInputs = (
 	};
 };
 
-const locationToTableLocation = (location: Locations): LocationsTable => {
-	// @ts-ignore
-	delete location.telephones;
-	// @ts-ignore
-	delete location?.link;
-	// @ts-ignore
-	delete location.map;
-	// @ts-ignore
-	delete location?.youtube;
-
-	const columns = Object.values(location) as (string | number | boolean)[];
-	//@ts-ignore
-	columns[8] = (location.image && "/spoudastiria/" + location.image) || "";
-	columns[9] = !!location.partner;
-	return columns as unknown as LocationsTable;
-};
-
 const locationsToTable = (locations: Locations[]): LocationsTable[] => {
-	return locations.map((p) =>
-		locationToTableLocation(JSON.parse(JSON.stringify(p)))
-	);
-};
+	return locations.map((p) => {
+		let location = JSON.parse(JSON.stringify(p)) as Locations;
+		// @ts-ignore
+		delete location.telephones;
+		// @ts-ignore
+		delete location?.link;
+		// @ts-ignore
+		delete location.map;
+		// @ts-ignore
+		delete location?.youtube;
 
-const fileToBlob = async (file: File): Promise<Blob | null> => {
-	if (!file.name) return null;
-	return new Promise((res) => {
-		const reader = new FileReader();
-		reader.onload = () => {
-			if (reader.result)
-				res(new Blob([reader.result], { type: file.type }));
-			else res(null);
-		};
-		reader.readAsArrayBuffer(file);
+		const columns = Object.values(location) as (
+			| string
+			| number
+			| boolean
+		)[];
+		//@ts-ignore
+		columns[8] =
+			(location.image && "/spoudastiria/" + location.image) || "";
+		columns[9] = !!location.partner;
+		return columns as unknown as LocationsTable;
 	});
 };
 
@@ -361,7 +351,10 @@ export default function LocationsTable() {
 		<SelectedItemsContext.Provider
 			value={[selectedItems, setSelectedItems]}
 		>
-			<Show when={store[API.Locations.get]} fallback={<Spinner />}>
+			<Show
+				when={store[API.Locations.get]}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
+			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls
 						pressedAction={actionPressed}

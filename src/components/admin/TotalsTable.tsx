@@ -58,7 +58,7 @@ export default function TotalsTable() {
 					store[API.Payments.getTotal] &&
 					store[API.Registrations.getTotal]
 				}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table data={shapedData} columns={columnNames}>
 					<div></div>

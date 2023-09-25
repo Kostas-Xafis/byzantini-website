@@ -99,7 +99,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 		</div>
 		<div
 			id="locationsContainer"
-			class="relative w-full h-full grid-rows-[90%] grid-cols-[95%] sm:grid max-sm:flex sm:place-content-center sm:justify-center max-sm:overflow-auto max-sm:h-full"
+			class="relative w-full h-full grid-rows-[90%] grid-cols-[95%] sm:grid max-sm:flex sm:place-content-center sm:justify-center max-sm:h-max max-sm:pb-8"
 		>
 			{
 				_locations.map((l, i) => {
@@ -110,11 +110,13 @@ const otherLocations = _locations.filter(l => !!l.partner);
 							class:list={[i === 0 ? " show" : "", !l.image ? " w-max" : ""]}
 						>
 							{l.image && (
-								<img
-									src={imgSrc + l.image}
-									alt={"Φωτογραφία Παραρτήματος " + l.name}
-									class="w-[clamp(0px,37.5vw,700px)] max-sm:w-[100dvw] max-sm:h-[clamp(0px,100%,300px)] object-cover"
-								/>
+								<div class="flex max-h-[100vh] max-sm:max-h-[300px]">
+									<img
+										src={imgSrc + l.image}
+										alt={"Φωτογραφία Παραρτήματος " + l.name}
+										class="w-[clamp(0px,37.5vw,700px)] max-sm:w-[100dvw] max-sm:h-[clamp(0px,100%,300px)] object-cover"
+									/>
+								</div>
 							)}
 							<div class="w-max max-sm:w-full grid grid-rows-[repeat(5,max-content)_1fr] gap-y-[1.25vw] max-sm:gap-y-4 px-[2vw] py-[1vw] bg-white max-sm:px-4 max-sm:py-4">
 								<h1
@@ -135,11 +137,10 @@ const otherLocations = _locations.filter(l => !!l.partner);
 								</p>
 								<p class="text-[1.25vw] max-sm:text-lg">
 									<i class="fa-regular fa-envelope pr-2" />
-									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">
-										Επικοινωνία:&NegativeThinSpace;
+									<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-1">Επικοινωνία:&NegativeThinSpace;
 									</span>
 									<a target="_blank" href={`mailto:${l.email}`}>
-										{l.email ?? ""}
+										{l.email ?? ""}&NegativeThinSpace;
 									</a>
 									<span class="text-[1.25vw] max-sm:text-lg px-1">•</span>
 									{l.telephones.split(",").map(tel => {

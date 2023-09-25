@@ -504,6 +504,14 @@ export function RegistrationForm() {
 			date: Date.now(),
 		};
 		try {
+			if (data.teacher_id === -1) {
+				alert("Παρακαλώ επιλέξτε καθηγητή");
+				throw Error("");
+			}
+			if (data.instrument_id === 0 && data.class_id > 0) {
+				alert("Παρακαλώ επιλέξτε όργανο / μάθημα");
+				throw Error("");
+			}
 			const res = await useAPI(setStore, API.Registrations.post, {
 				RequestObject: data,
 			});
@@ -537,7 +545,7 @@ export function RegistrationForm() {
 					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
 					<div
 						id="registrationContainer"
-						class="w-full h-full place-items-center font-dicact"
+						class="w-full h-full max-sm:h-[calc(100dvh_-_8rem)]  place-items-center font-dicact"
 					>
 						<div
 							id="firstSelect"
@@ -571,10 +579,10 @@ export function RegistrationForm() {
 					</div>
 				}
 			>
-				<>
+				<div class="h-max pb-20">
 					<div
 						id="registrationContainer"
-						class="w-full h-full overflow-y-auto pb-20 flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact max-sm:gap-y-12"
+						class="w-full h-full flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact max-sm:gap-y-12"
 					>
 						<div
 							id="registrationSelect"
@@ -651,7 +659,7 @@ export function RegistrationForm() {
 					</div>
 					<div
 						id="submitMessage"
-						class="hidden absolute inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
+						class="hidden fixed inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
 					>
 						<div
 							id="messageBox"
@@ -678,7 +686,7 @@ export function RegistrationForm() {
 							></CloseButton>
 						</div>
 					</div>
-				</>
+				</div>
 			</Show>
 			<style>
 				{`

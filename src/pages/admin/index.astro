@@ -1,11 +1,9 @@
 ---
-import AdminNav from "../../components/admin/AdminNav.astro";
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import TotalsTable from "../../components/admin/TotalsTable";
 export const prerender = true;
 ---
 
 <AdminLayout title="Διαχείρηση">
-	<AdminNav />
 	<TotalsTable client:only="solid-js" />
 </AdminLayout>

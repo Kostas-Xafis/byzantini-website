@@ -24,10 +24,7 @@ import TableControls, {
 	ActionIcon,
 } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill, Omit } from "../Input.solid";
-import {
-	type ContextType,
-	SelectedItemsContext,
-} from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener, formErrorWrap } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 import {
@@ -35,7 +32,7 @@ import {
 	type SearchColumn,
 	type SearchSetter,
 } from "./SearchTable.solid";
-import { removeAccents } from "../../../lib/utils.client";
+import { fileToBlob, removeAccents } from "../../../lib/utils.client";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
@@ -236,47 +233,28 @@ const TeachersInputs = (
 	};
 };
 
-const fileToBlob = async (file: File): Promise<Blob | null> => {
-	if (!file.name) return null;
-	return new Promise((res) => {
-		const reader = new FileReader();
-		reader.onload = () => {
-			if (reader.result)
-				res(new Blob([reader.result], { type: file.type }));
-			else res(null);
-		};
-		reader.readAsArrayBuffer(file);
-	});
-};
-
-const teacherToTableTeacher = (
-	teacher: FullTeachers,
-	classList: TeacherClasses[]
-): TeachersTable => {
-	const classes = classList.filter((c) => c.teacher_id === teacher.id);
-	const columns = Object.values(teacher) as any[];
-
-	columns[2] =
-		(teacher.picture && "/kathigites/images/" + teacher.picture) || "";
-	columns[3] = (teacher.cv && "/kathigites/cv/" + teacher.cv) || "";
-	columns[4] = teacher.email || "";
-	columns[5] = teacher.telephone || "";
-	columns[6] = teacher.linktree || "";
-
-	columns[7] = classes.find((c) => c.class_id === 0)?.priority;
-	columns[8] = classes.find((c) => c.class_id === 1)?.priority;
-	columns[9] = classes.find((c) => c.class_id === 2)?.priority;
-
-	columns[10] = teacher.visible;
-	columns[11] = teacher.online;
-	return columns as unknown as TeachersTable;
-};
-
 const teachersToTable = (
 	teachers: FullTeachers[],
 	classList: TeacherClasses[]
 ): TeachersTable[] => {
-	return teachers.map((t) => teacherToTableTeacher(t, classList));
+	return teachers.map((t) => {
+		const classes = classList.filter((c) => c.teacher_id === t.id);
+		const columns = Object.values(t) as any[];
+
+		columns[2] = (t.picture && "/kathigites/images/" + t.picture) || "";
+		columns[3] = (t.cv && "/kathigites/cv/" + t.cv) || "";
+		columns[4] = t.email || "";
+		columns[5] = t.telephone || "";
+		columns[6] = t.linktree || "";
+
+		columns[7] = classes.find((c) => c.class_id === 0)?.priority;
+		columns[8] = classes.find((c) => c.class_id === 1)?.priority;
+		columns[9] = classes.find((c) => c.class_id === 2)?.priority;
+
+		columns[10] = t.visible;
+		columns[11] = t.online;
+		return columns as unknown as TeachersTable;
+	});
 };
 
 const class_types = [
@@ -815,7 +793,7 @@ export default function TeachersTable() {
 					store[API.Instruments.get] &&
 					store[API.Teachers.getInstruments]
 				}
-				fallback={<Spinner />}
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls

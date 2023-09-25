@@ -19,8 +19,8 @@ const isMainPage = Astro.url.pathname === "/";
 
 <>
 	<nav
-		class={"fixed top-0 left-0 w-full md:h-[4.5vw] md:grid grid-rows-[4.4vw] grid-cols-[max-content_1fr] z-[10000] transition-colors border-t-[0px]" +
-			" max-sm:flex flex-col max-sm:align-center max-sm:h-max max-sm:pt-2 max-sm:pb-0 max-sm:gap-y-0" +
+		class={"fixed top-0 left-0 w-full md:h-[4.5vw] md:grid grid-rows-[4.4vw] grid-cols-[max-content_1fr] z-[1000] transition-colors border-t-[0px]" +
+			" max-sm:flex flex-col max-sm:align-center max-sm:h-min max-sm:pt-2 max-sm:pb-0 max-sm:gap-y-0" +
 			(!isMainPage ? " bg-red-900" : " glass")}
 	>
 		<div
@@ -85,7 +85,7 @@ const isMainPage = Astro.url.pathname === "/";
 					>Περιήγηση</span
 				>
 			</p>
-			<div class="hidden absolute top-[2rem] h-max flex-col grid-cols-[100%] w-full">
+			<div class="hidden absolute top-[2rem] h-max flex-col w-full">
 				{
 					links.map(link => (
 						<a

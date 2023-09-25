@@ -29,7 +29,7 @@ serverRoutes.updateAmount.func = async ctx => {
 		const previousAmount = (await executeQuery<{ amount: number; }>("SELECT amount FROM school_payoffs WHERE id = ?", [args[0]]))[0].amount;
 		if (previousAmount < args[1]) throw Error("Amount must be less than previous amount");
 		await Promise.all([
-			executeQuery("UPDATE school_payoffs SET amount = ? WHERE id = ? LIMIT 1", [args[1], args[0], args[1]]),
+			executeQuery("UPDATE school_payoffs SET amount = ? WHERE id = ? LIMIT 1", [args[1], args[0]]),
 			executeQuery("UPDATE total_school_payoffs SET amount = amount - ?", [previousAmount - args[1]])
 		]);
 		return "Updated payoff amount";

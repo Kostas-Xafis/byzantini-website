@@ -17,9 +17,8 @@ interface Props {
 }
 
 export default function Row(props: Props) {
-	const [selectedItems, { add, remove, addMany, removeMany }] = useContext(
-		SelectedItemsContext
-	) as ContextType;
+	const [selectedItems, { add, remove, addMany, removeMany, removeAll }] =
+		useContext(SelectedItemsContext) as ContextType;
 	const {
 		data,
 		index = -1,
@@ -46,23 +45,23 @@ export default function Row(props: Props) {
 	};
 	const onClickHeader = header
 		? (e: MouseEvent) => {
-				const allCbs = document.querySelectorAll(".cb");
-				const ids = ([...allCbs] as HTMLElement[]).map((el) =>
-					Number(el.dataset.value)
-				);
-				const isSelected =
-					new Set([...ids, ...selectedItems]).size ===
-					selectedItems.length;
+				const allCbs = document.querySelectorAll<HTMLElement>(".cb");
+				const mainCb = document.querySelector<HTMLElement>(
+					".mcb"
+				) as HTMLElement;
+				const ids = [...allCbs].map((el) => Number(el.dataset.value));
+				const isSelected = mainCb.classList.contains("selected");
 				allCbs.forEach((cb) => {
-					cb.classList.toggle("selected");
+					cb.classList.toggle("selected", !isSelected);
 					//@ts-ignore
 					cb.parentElement.parentElement.classList.toggle(
-						"selectedRow"
+						"selectedRow",
+						!isSelected
 					);
 				});
-				document.querySelector(".mcb")?.classList.toggle("selected");
-				if (isSelected) removeMany && removeMany(ids);
-				else addMany && addMany(ids);
+				mainCb.classList.toggle("selected");
+				if (isSelected) removeAll();
+				else addMany(ids);
 		  }
 		: () => {};
 	let onClickSort: (e: MouseEvent) => void;

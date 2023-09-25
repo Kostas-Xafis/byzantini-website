@@ -1,11 +1,9 @@
 ---
-import AdminNav from "../../components/admin/AdminNav.astro";
 import LocationsTable from "../../components/admin/LocationsTable.solid";
 import AdminLayout from "../../layouts/AdminLayout.astro";
 export const prerender = true;
 ---
 
 <AdminLayout title="Διαχείρηση">
-	<AdminNav />
 	<LocationsTable client:only="solid-js" />
 </AdminLayout>
