@@ -9,7 +9,7 @@ const links = [
 	{ name: "Παραρτήματα", url: "/admin/locations" },
 	{ name: "Διαχειριστές", url: "/admin/sysusers" }
 ];
-const currentPage = links.find(link => link.url === Astro.url.pathname)?.name ?? "Αρχική";
+const currentPage = links.find(link => link.url === Astro.url.pathname || link.url + "/" === Astro.url.pathname )?.name ?? "Αρχική";
 ---
 
 <nav class={"pt-8 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1  max-sm:gap-y-2 max-sm:flex flex-col max-sm:overflow-visible z-50 max-sm:sticky max-sm:top-0"}>
