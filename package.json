@@ -30,7 +30,6 @@
 		"valibot": "^0.13.1"
 	},
 	"devDependencies": {
-		"flowbite-datepicker": "^1.2.2",
 		"mysql2": "^3.6.1",
 		"xlsx": "^0.18.5"
 	}

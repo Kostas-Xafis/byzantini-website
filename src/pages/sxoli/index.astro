@@ -1,5 +1,5 @@
 ---
-import { isDevFromURL } from "../../../lib/utils.client";
+import { isDevFromURL, isOnlineDev } from "../../../lib/utils.client";
 import Layout from "../../layouts/Layout.astro";
 export const prerender = true;
 
@@ -70,11 +70,12 @@ const principalText = [
 ];
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
 const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
+const stageChoir = isOnlineDev(Astro.url) || isDevFromURL(Astro.url);
 ---
 
 <Layout title="Η Σχολή μας">
-	<div id="sxoli" class="w-full h-max flex flex-col font-didact overflow-y-auto overflow-x-hidden px-12 py-6 max-sm:px-4">
-		<div
+	<main id="sxoli" class="w-full h-max flex flex-col font-didact overflow-hidden px-12 py-6 max-sm:px-4">
+		<section
 			id="selectContainer"
 			data-selected="xairetismos"
 			class="group/btn self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center border-x-2 border-t-2 border-red-900 rounded-t-lg shadow-lg shadow-slate-700"
@@ -97,8 +98,8 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='org']/btn:text-white group-data-[selected='org']/btn:bg-red-950"
 				><span class="group-hover/btn:-translate-y-2">Διοικητικό Συμβούλιο</span></button
 			>
-		</div>
-		<div id="xairetismosContainer" class="contentContainer">
+		</section>
+		<section id="xairetismosContainer" class="contentContainer">
 			<div class="flex flex-col items-center justify-center pt-4 gap-y-4 bg-white border-x-2 border-t-2 border-red-900">
 				<div class="font-bold">
 					<h2 class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900">
@@ -128,8 +129,8 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 					</p>
 				</div>
 			</div>
-		</div>
-		<div id="principalContainer" class="contentContainer hidden group max-sm:p-0 max-sm:w-full overflow-y-visible bg-red-900">
+		</section>
+		<section id="principalContainer" class="contentContainer hidden group max-sm:p-0 max-sm:w-full overflow-y-visible bg-red-900">
 			<div class="flex flex-row gap-x-4 max-sm:gap-x-0 max-sm:gap-y-4 max-sm:flex-col">
 				<p
 					class="sm:hidden text-3xl pt-4 text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
@@ -139,7 +140,7 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				<img
 					src={imgSrc + "pjcqQA6rQAIi.jpeg"}
 					alt="Φωτογραφία Διευθυντή"
-					width={350}
+					width="350px"
 					class="w-[clamp(0px,100%,350px)] max-sm:w-[clamp(0px,100%,250px)] self-center sm:group-[:is(.unfold)]:sticky sm:group-[:is(.unfold)]:self-start object-cover shadow-md shadow-slate-800 max-sm:shadow-slate-100"
 				/>
 				<div class="relative flex flex-col gap-y-4 px-16 py-8 pb-8 max-sm:px-4">
@@ -174,8 +175,8 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 					</div>
 				</div>
 			</div>
-		</div>
-		<div id="orgContainer" class="contentContainer hidden group relative h-max bg-red-900 p-8 max-sm:p-4">
+		</section>
+		<section id="orgContainer" class="contentContainer hidden group relative h-max bg-red-900 p-8 max-sm:p-4">
 			<div class="flex flex-col gap-4">
 				<h1
 					class="max-sm:text-2xl text-[2.25vw] text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
@@ -208,13 +209,13 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 						target="_blank"
 						href="/praktiko_dioik_epitroph.pdf"
 						class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
-						>Πρακτικό περί ορισμού Διοικούσας Επιστροπής της Σχολής</a
+						>Ορισμός Διοικούσας Επιστροπής της Σχολής</a
 					>
 					<a
 						target="_blank"
 						href="/praktiko_peri_idrysews.pdf"
 						class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
-						>Πρακτικό περί ιδρύσεως της Σχολής Βυζαντινής Μουσικής</a
+						>Ιδρύση της Σχολής Βυζαντινής Μουσικής</a
 					>
 					<a
 						target="_blank"
@@ -224,10 +225,10 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 					>
 				</div>
 			</div>
-		</div>
-		<div
+		</section>
+		<section
 			id="anakoinosi-2023-24"
-			class="w-full flex flex-col font-didact items-center justify-center overflow-y-auto mt-8 p-8 max-sm:p-4 gap-y-4"
+			class="w-full flex flex-col font-didact items-center justify-center mt-8 p-8 max-sm:p-4 gap-y-4"
 		>
 			<h1
 				id="announcementHead"
@@ -240,8 +241,47 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				width="900px"
 				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
 			/>
-		</div>
-	</div>
+		</section>
+		{
+			stageChoir &&
+			<section
+				id="choir"
+				class="w-full flex flex-col font-didact items-center justify-center mt-8 py-8 max-sm:py-4 max-sm:px-2 gap-y-20 overflow-visible max-sm:gap-y-10"
+			>
+				<h1
+					id="choirHead"
+					class="heading relative p-2 text-center flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px]"
+				>
+					Άδοντες και Ψάλλοντες
+				</h1>
+				<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-between max-sm:justify-center overflow-visible">
+					<div id="choirText" class="flex flex-col">
+						<h2 class="text-[3vw] max-sm:text-2xl max-sm:font-bold text-center font-anaktoria text-red-900">
+							Χορωδία Βυζαντινής & Παραδοσιακής Μουσικής
+						</h2>
+						<p class="text-3xl max-sm:text-lg text-red-900 text-center">
+							Διευθύνει ο Πρωτοπρ. Σωτήριος Αλεβιζάκης
+						</p>
+						<p class="text-xl max-sm:text-base w-[45ch] max-sm:w-full">
+							Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vitae, molestiae.
+							Iste necessitatibus optio itaque aspernatur, eligendi esse dicta consectetur sequi?
+							Quidem repellat voluptatem ex inventore itaque animi accusantium assumenda dolorum.
+							Beatae, ad. Earum voluptate consequuntur corrupti. Maxime nobis temporibus animi.
+							Excepturi, aspernatur. Perspiciatis eligendi maiores ipsam veniam perferendis qui quam.
+						</p>
+					</div>
+					<div id="choirCarousel" class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
+						<img
+							src={"choir_1.jpg"}
+							width="900px"
+							alt="Φωτογραφία Χορωδίας"
+							class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
+						/>
+					</div>
+				</div>
+			</section>
+		}
+	</main>
 	<style is:inline>
 		.remove {
 			opacity: 1;
@@ -279,10 +319,40 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 		#sxoli {
 			color: white;
 		}
+		#choirCarousel {
+			--tr-per: 0; /* transition percentage */
+			--tr-per-op: 0;
+			transform: scale(var(--tr-per)) translateX(calc(-25% + 25% * var(--tr-per)));
+			transform-origin: right;
+		}
+		#choirCarousel > img {
+			opacity: var(--tr-per-op);
+		}
+		#choirCarousel::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(transparent 0%, rgba(0, 0, 0, calc(1 - var(--tr-per-op))) 75%);
+			opacity: var(--tr-per-op);
+		}
+		@media screen and (max-width: 640px) {
+			#choirCarousel {
+				--tr-per: 0; /* transition percentage */
+				transform: scale(var(--tr-per)) translateY(calc(-25% + 25% * var(--tr-per)));
+				transform-origin: top;
+			}
+		}
+		#choirText {
+			opacity: 1;
+		}
+		#choirText:is(.show) {
+			opacity: 1;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
 	</style>
 </Layout>
 <script>
-	import { onElementMount } from "../../../lib/utils.client";
+	import { onElementMount, swapElementsWithFade, UpdateHandler, mappedValue, loadImage } from "../../../lib/utils.client";
 	onElementMount("#readMore", () => {
 		const btn = document.querySelector("#readMore") as HTMLButtonElement;
 		const principalContainer = document.querySelector("#principalContainer") as HTMLDivElement;
@@ -302,9 +372,9 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 			entries => {
 				const entry = entries[0];
 				// @ts-ignore
-				const head = document.querySelector("#announcementHead:is(:not(.emphasis))") as HTMLElement;
+				const head = document.querySelector("#announcementHead") as HTMLElement;
 				if (!head) return;
-				if (entry.intersectionRatio >= 0.4) head.classList.add("emphasis");
+				if (entry.intersectionRatio >= 0.3) head.classList.add("emphasis");
 				else if (window.matchMedia("(max-width: 640px)").matches && entry.intersectionRatio >= 0.2) head.classList.add("emphasis");
 				else head.classList.remove("emphasis");
 			},
@@ -317,6 +387,83 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 		// @ts-ignore
 		obsv.observe(document.querySelector("#anakoinosi-2023-24") as HTMLElement);
 	});
+	onElementMount("#choir", (choir) => {
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				// @ts-ignore
+				const head = document.querySelector("#choirHead") as HTMLElement;
+				if (!head) return;
+				if (entry.intersectionRatio >= 0.3) head.classList.add("emphasis");
+				else if (window.matchMedia("(max-width: 640px)").matches && entry.intersectionRatio >= 0.2) head.classList.add("emphasis");
+				else head.classList.remove("emphasis");
+			},
+			{
+				root: null,
+				rootMargin: "0px",
+				threshold: [0.2, 0.3, 0.4, 0.5]
+			}
+		);
+		obsv.observe(choir);
+
+		const carouselUpdate = new UpdateHandler(5000);
+		const carousel = document.querySelector("#choirCarousel") as HTMLDivElement;
+		const choirText = document.querySelector("#choirText") as HTMLDivElement;
+		let isCarouselVisible = false;
+		const obsv2 = new IntersectionObserver(
+			entries => {
+				let { intersectionRatio, target } = entries[0];
+				if (screen.height < target.clientHeight) {
+					intersectionRatio = mappedValue(intersectionRatio, 0, 0.6);
+					carousel.style.setProperty("--tr-per", `${mappedValue(intersectionRatio, 0, 0.6, 1.25, 1).toFixed(3)}`);
+					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0.3, 0.6).toFixed(3)}`);
+				} else {
+					carousel.style.setProperty("--tr-per", `${mappedValue(intersectionRatio, 0, 1, 1.4, 1).toFixed(3)}`);
+					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0.3, 1).toFixed(3)}`);
+				}
+
+				if(intersectionRatio >= 0.6  && !choirText.classList.contains("show")) choirText.classList.add("show");
+				else if(intersectionRatio < 0.6  && choirText.classList.contains("show")) {
+					choirText.classList.remove("show")
+					choirText.classList.add("remove")
+				};
+				isCarouselVisible = intersectionRatio > 0.4;
+				if(isCarouselVisible && !carouselUpdate.timeoutFired) {
+					carouselUpdate.timeout();
+				} else if(!isCarouselVisible && carouselUpdate.timeoutFired) {
+					carouselUpdate.abort();
+				}
+			},
+			{
+				root:null,
+				rootMargin: "0px",
+				threshold: new Array(101).fill(0).map((_, i) => i / 100)
+			}
+		);
+		obsv2.observe(choir);
+		const carouselImgs = ["choir_2.jpg", "choir_3.jpg", "choir_4.jpg", "choir_5.jpg", "choir_1.jpg"];
+		const loadedImgs = new Set<string>(["choir_1.jpg"]);
+		carouselUpdate.setFunction(async () => {
+			const img = carousel.querySelector("img") as HTMLImageElement;
+			let imgSrc = carouselImgs.shift() as string;
+			carouselImgs.push(imgSrc);
+			if(!loadedImgs.has(imgSrc)) {
+				loadedImgs.add(imgSrc);
+				await loadImage(imgSrc);
+			}
+			carousel.classList.remove("open");
+			carousel.classList.add("remove");
+			setTimeout(() => {
+				img.src = imgSrc;
+				void carousel.clientWidth;
+				carousel.classList.remove("remove");
+				carousel.classList.add("open");
+				if(!isCarouselVisible) carouselUpdate.abort();
+				else carouselUpdate.reset();
+			}, 300);
+		});
+		carouselUpdate.timeout();
+	});
 	onElementMount("#principalContainer", () => {
 		const container = document.querySelector("#principalContainer") as HTMLDivElement;
 		container.classList.add("open");
@@ -324,58 +471,17 @@ const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 			container.classList.remove("open");
 		}, 500);
 	});
-	onElementMount("#xairetismosBtn", () => {
-		const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
-		const btn = document.querySelector("#xairetismosBtn") as HTMLButtonElement;
-		const container = document.querySelector("#xairetismosContainer") as HTMLDivElement;
-		btn.addEventListener("click", () => {
-			const prevContainer = document.querySelector(".contentContainer:is(:not(.hidden))") as HTMLDivElement;
-			prevContainer.classList.add("remove");
-			selectContainer.dataset.selected = "xairetismos";
-			setTimeout(() => {
-				prevContainer.classList.add("hidden");
-				container.classList.remove("hidden", "remove");
-				container.classList.add("open");
-				setTimeout(() => {
-					container.classList.remove("open");
-				}, 500);
-			}, 300);
-		});
-	});
-	onElementMount("#principalBtn", () => {
-		const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
-		const btn = document.querySelector("#principalBtn") as HTMLButtonElement;
-		const container = document.querySelector("#principalContainer") as HTMLDivElement;
-		btn.addEventListener("click", () => {
-			const prevContainer = document.querySelector(".contentContainer:is(:not(.hidden))") as HTMLDivElement;
-			prevContainer.classList.add("remove");
-			selectContainer.dataset.selected = "principal";
-			setTimeout(() => {
-				prevContainer.classList.add("hidden");
-				container.classList.remove("hidden", "remove");
-				container.classList.add("open");
-				setTimeout(() => {
-					container.classList.remove("open");
-				}, 500);
-			}, 300);
-		});
-	});
-	onElementMount("#orgBtn", () => {
-		const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
-		const btn = document.querySelector("#orgBtn") as HTMLButtonElement;
-		const container = document.querySelector("#orgContainer") as HTMLDivElement;
-		btn.addEventListener("click", () => {
-			const prevContainer = document.querySelector(".contentContainer:is(:not(.hidden))") as HTMLDivElement;
-			prevContainer.classList.add("remove");
-			selectContainer.dataset.selected = "org";
-			setTimeout(() => {
-				prevContainer.classList.add("hidden");
-				container.classList.remove("hidden", "remove");
-				container.classList.add("open");
-				setTimeout(() => {
-					container.classList.remove("open");
-				}, 600);
-			}, 300);
+	const btns = ["xairetismos", "principal", "org"];
+	btns.forEach(btnName => {
+		onElementMount(`#${btnName}Btn`, () => {
+			const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
+			const btn = document.querySelector(`#${btnName}Btn`) as HTMLButtonElement;
+			const container = document.querySelector(`#${btnName}Container`) as HTMLDivElement;
+			btn.addEventListener("click", () => {
+				const prevContainer = document.querySelector(".contentContainer:is(:not(.hidden))") as HTMLDivElement;
+				selectContainer.dataset.selected = btnName;
+				swapElementsWithFade(prevContainer, container);
+			});
 		});
 	});
 	if (window.location.hash === "#anakoinosi") {

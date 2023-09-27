@@ -9,13 +9,38 @@ export const isDevFromURL = (url: URL) => {
 export const isOnlineDev = (url: URL) => {
 	return url.hostname === "byzantini-website.pages.dev";
 };
-export const onElementMount = async (target: string, callback: () => any) => {
+export const onElementMount = async (target: string, callback: (el: HTMLElement) => any) => {
 	let counter = 0;
-	while (!document.querySelector(target) && counter++ < 40) {
+	let el;
+	while (!(el = document.querySelector(target)) && counter++ < 40) {
 		await new Promise((resolve) => setTimeout(resolve, 25));
 	}
 	if (counter >= 10) return;
-	callback();
+	callback(el as HTMLElement);
+};
+
+export const swapElementsWithFade = (prev: HTMLElement, curr: HTMLElement, msFadeOut = 300, msFadeIn = 500) => {
+	prev.classList.add("remove");
+	prev.style.setProperty("--msFadeOut", `${msFadeOut}ms`);
+	curr.style.setProperty("--msFadeIn", `${msFadeIn}ms`);
+	setTimeout(() => {
+		prev.classList.add("hidden");
+		curr.classList.remove("hidden", "remove");
+		curr.classList.add("open");
+		setTimeout(() => {
+			curr.classList.remove("open");
+		}, msFadeIn);
+	}, msFadeOut);
+
+};
+
+export const loadImage = (src: string) => {
+	return new Promise((resolve, reject) => {
+		let img = new Image();
+		img.onload = () => resolve(null);
+		img.onerror = () => reject(null);
+		img.src = src;
+	});
 };
 
 export const sleep = (ms: number) =>
@@ -23,6 +48,18 @@ export const sleep = (ms: number) =>
 
 export const removeAccents = (str: string) => {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
+export const mappedValue = (value: number, min = 0, max = 1, outMin = 0, outMax = 1) => {
+	if (min === max) return outMin;
+	if (outMin === outMax) return outMin;
+	if (value >= max) return outMax;
+	if (value <= min) return outMin;
+	let range = max - min;
+	let outRange = outMax - outMin;
+	let normalized = (value - min) / range;
+
+	return normalized * outRange + outMin;
 };
 
 export const loadScript = (src: string, res: () => boolean) => {
@@ -59,8 +96,8 @@ export const asyncQueue = async <T>(
 			jobsCompleted++;
 			verb &&
 				console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
-			while (queue.length === maxJobs) await sleep(50);
-			if (jobsCompleted !== jobs.length && queue.length !== maxJobs) {
+			while (queue.length === maxJobs) await sleep(50); // wait for a job to finish
+			if (jobsCompleted !== totalJobs && queue.length !== maxJobs) {
 				let newJob = jobs.shift() as () => Promise<T>;
 				queue.push(newJob);
 			}
@@ -74,8 +111,11 @@ export class UpdateHandler {
 	abortController = new AbortController();
 	timeoutFired = false;
 	func: Function;
+	setFunction(func: Function) {
+		this.func = func;
+	}
 	timer: number;
-	timeout = (ms = 0) => {
+	timeout(ms = 0) {
 		this.timeoutFired = true;
 		return new Promise((res, rej) => {
 			let tId = setTimeout(() => {
@@ -90,7 +130,7 @@ export class UpdateHandler {
 			};
 		});
 	};
-	abort = () => {
+	abort() {
 		if (this.timeoutFired) this.abortController.abort();
 		this.timeoutFired = false;
 	};
