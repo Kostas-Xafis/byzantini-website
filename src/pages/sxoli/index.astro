@@ -269,7 +269,7 @@ const poster = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_B
 				</div>
 				<div id="choirCarousel" class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
 					<img
-						src={"choir_1.jpg"}
+						src={"/choir_1.jpg"}
 						width="900px"
 						alt="Φωτογραφία Χορωδίας"
 						class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
@@ -437,7 +437,7 @@ const poster = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_B
 			}
 		);
 		obsv2.observe(choir);
-		const carouselImgs = ["choir_2.jpg", "choir_3.jpg", "choir_4.jpg", "choir_5.jpg", "choir_1.jpg"];
+		const carouselImgs = ["/choir_2.jpg", "/choir_3.jpg", "/choir_4.jpg", "/choir_5.jpg", "/choir_1.jpg"];
 		const loadedImgs = new Set<string>(["choir_1.jpg"]);
 		carouselUpdate.setFunction(async () => {
 			const img = carousel.querySelector("img") as HTMLImageElement;
