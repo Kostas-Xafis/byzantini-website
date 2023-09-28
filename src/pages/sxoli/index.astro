@@ -70,9 +70,6 @@ const principalText = [
 ];
 const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
 const poster = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
-
-let test = [Astro.url, Astro.request.url, [...new Set(Astro.request.headers.entries())]]
-const stageChoir = isOnlineDev(Astro.request.url) || isDevFromURL(Astro.request.url);
 ---
 
 <Layout title="Η Σχολή μας">
@@ -243,47 +240,43 @@ const stageChoir = isOnlineDev(Astro.request.url) || isDevFromURL(Astro.request.
 				width="900px"
 				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
 			/>
-		</section>
-		<p>{JSON.stringify(test)}</p>
-		{
-			stageChoir &&
-			<section
-				id="choir"
-				class="w-full flex flex-col font-didact items-center justify-center mt-8 py-8 max-sm:py-4 max-sm:px-2 gap-y-20 overflow-visible max-sm:gap-y-10"
+	</section>
+		<section
+			id="choir"
+			class="w-full flex flex-col font-didact items-center justify-center mt-8 py-8 max-sm:py-4 max-sm:px-2 gap-y-20 overflow-visible max-sm:gap-y-10"
+		>
+			<h1
+				id="choirHead"
+				class="heading relative p-2 text-center flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px]"
 			>
-				<h1
-					id="choirHead"
-					class="heading relative p-2 text-center flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px]"
-				>
-					Άδοντες και Ψάλλοντες
-				</h1>
-				<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-between max-sm:justify-center overflow-visible">
-						<div id="choirText" class="flex flex-col">
-						<h2 class="text-[3vw] max-sm:text-2xl max-sm:font-bold text-center font-anaktoria text-red-900">
-							Χορωδία Βυζαντινής & Παραδοσιακής Μουσικής
-						</h2>
-						<p class="text-3xl max-sm:text-lg text-red-900 text-center">
-							Διευθύνει ο Πρωτοπρ. Σωτήριος Αλεβιζάκης
-						</p>
-						<p class="text-xl max-sm:text-base w-[45ch] max-sm:w-full">
-							Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vitae, molestiae.
-							Iste necessitatibus optio itaque aspernatur, eligendi esse dicta consectetur sequi?
-							Quidem repellat voluptatem ex inventore itaque animi accusantium assumenda dolorum.
-							Beatae, ad. Earum voluptate consequuntur corrupti. Maxime nobis temporibus animi.
-							Excepturi, aspernatur. Perspiciatis eligendi maiores ipsam veniam perferendis qui quam.
-						</p>
-					</div>
-					<div id="choirCarousel" class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
-						<img
-							src={"choir_1.jpg"}
-							width="900px"
-							alt="Φωτογραφία Χορωδίας"
-							class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
-						/>
-					</div>
+				Άδοντες και Ψάλλοντες
+			</h1>
+			<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-between max-sm:justify-center overflow-visible">
+					<div id="choirText" class="flex flex-col">
+					<h2 class="text-[3vw] max-sm:text-2xl max-sm:font-bold text-center font-anaktoria text-red-900">
+						Χορωδία Βυζαντινής & Παραδοσιακής Μουσικής
+					</h2>
+					<p class="text-3xl max-sm:text-lg text-red-900 text-center">
+						Διευθύνει ο Πρωτοπρ. Σωτήριος Αλεβιζάκης
+					</p>
+					<p class="text-xl max-sm:text-base w-[45ch] max-sm:w-full">
+						Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vitae, molestiae.
+						Iste necessitatibus optio itaque aspernatur, eligendi esse dicta consectetur sequi?
+						Quidem repellat voluptatem ex inventore itaque animi accusantium assumenda dolorum.
+						Beatae, ad. Earum voluptate consequuntur corrupti. Maxime nobis temporibus animi.
+						Excepturi, aspernatur. Perspiciatis eligendi maiores ipsam veniam perferendis qui quam.
+					</p>
 				</div>
-			</section>
-		}
+				<div id="choirCarousel" class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
+					<img
+						src={"choir_1.jpg"}
+						width="900px"
+						alt="Φωτογραφία Χορωδίας"
+						class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
+					/>
+				</div>
+			</div>
+		</section>
 	</main>
 	<style is:inline>
 		.remove {
