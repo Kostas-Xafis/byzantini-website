@@ -71,6 +71,7 @@ const principalText = [
 const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
 const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
 const stageChoir = isOnlineDev(Astro.url) || isDevFromURL(Astro.url);
+console.log(Astro.url.hostname);
 ---
 
 <Layout title="Η Σχολή μας">
@@ -242,6 +243,7 @@ const stageChoir = isOnlineDev(Astro.url) || isDevFromURL(Astro.url);
 				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
 			/>
 		</section>
+		<p>{Astro.url.hostname}</p>
 		{
 			stageChoir &&
 			<section
@@ -255,7 +257,7 @@ const stageChoir = isOnlineDev(Astro.url) || isDevFromURL(Astro.url);
 					Άδοντες και Ψάλλοντες
 				</h1>
 				<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-between max-sm:justify-center overflow-visible">
-					<div id="choirText" class="flex flex-col">
+						<div id="choirText" class="flex flex-col">
 						<h2 class="text-[3vw] max-sm:text-2xl max-sm:font-bold text-center font-anaktoria text-red-900">
 							Χορωδία Βυζαντινής & Παραδοσιακής Μουσικής
 						</h2>

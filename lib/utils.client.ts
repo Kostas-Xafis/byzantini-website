@@ -7,7 +7,7 @@ export const isDevFromURL = (url: URL) => {
 };
 
 export const isOnlineDev = (url: URL) => {
-	return url.hostname === "byzantini-website.pages.dev";
+	return url.hostname === 'byzantini-website.pages.dev';
 };
 export const onElementMount = async (target: string, callback: (el: HTMLElement) => any) => {
 	let counter = 0;
