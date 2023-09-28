@@ -1,4 +1,5 @@
-export const isDevFromURL = (url: URL) => {
+export const isDevFromURL = (url: URL | string) => {
+	if (typeof url === "string") url = new URL(url);
 	return (
 		url.hostname === "localhost" ||
 		url.hostname === "127.0.0.1" ||
@@ -6,7 +7,8 @@ export const isDevFromURL = (url: URL) => {
 	);
 };
 
-export const isOnlineDev = (url: URL) => {
+export const isOnlineDev = (url: URL | string) => {
+	if (typeof url === "string") url = new URL(url);
 	return url.hostname === 'byzantini-website.pages.dev';
 };
 export const onElementMount = async (target: string, callback: (el: HTMLElement) => any) => {

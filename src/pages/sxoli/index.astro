@@ -68,10 +68,9 @@ const principalText = [
 οἱ ὁποῖοι πέρα ἀπὸ τὰ εἰδικὰ ἱερατικά τους καθήκοντα, προσφέρουν καὶ ἔργο
 πολύτιμο γιὰ τὴν διάσωση καὶ διάδοση τῆς Ἐθνικῆς μας Μουσικῆς»`
 ];
-const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
-const poster = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
-const stageChoir = isOnlineDev(Astro.url) || isDevFromURL(Astro.url);
-console.log(Astro.url.hostname);
+const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
+const poster = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
+const stageChoir = isOnlineDev(Astro.request.url) || isDevFromURL(Astro.request.url);
 ---
 
 <Layout title="Η Σχολή μας">
