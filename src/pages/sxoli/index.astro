@@ -71,7 +71,7 @@ const principalText = [
 const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
 const poster = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
 
-let test = [Astro.url, Astro.clientAddress, Astro.site, Astro.request.url, [...new Set(Astro.request.headers.entries())]]
+let test = [Astro.url, Astro.request.url, [...new Set(Astro.request.headers.entries())]]
 const stageChoir = isOnlineDev(Astro.request.url) || isDevFromURL(Astro.request.url);
 ---
 
