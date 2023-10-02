@@ -173,5 +173,19 @@ export const v_EmailSubscriptions = object({
 	unsubscribe_token: string(),
 	unrelated: boolean(),
 });
-
 export type EmailSubscriptions = Output<typeof v_EmailSubscriptions>;
+
+export const v_Announcements = object({
+	id: number([integer(), minValue(0)]),
+	title: string([minLength(1)]),
+	content: string(),
+	date: number([integer(), minValue(0)]),
+});
+export type Announcements = Output<typeof v_Announcements>;
+
+export const v_AnnouncementImages = object({
+	announcement_id: number([integer(), minValue(0)]),
+	image: string(),
+	priority: number([integer(), minValue(1)]),
+});
+export type AnnouncementImages = Output<typeof v_AnnouncementImages>;

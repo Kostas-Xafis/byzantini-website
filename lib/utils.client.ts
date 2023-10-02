@@ -59,6 +59,8 @@ export const mappedValue = (value: number, min = 0, max = 1, outMin = 0, outMax 
 	if (value <= min) return outMin;
 	let range = max - min;
 	let outRange = outMax - outMin;
+
+	value = value > max ? max : value < min ? min : value;
 	let normalized = (value - min) / range;
 
 	return normalized * outRange + outMin;

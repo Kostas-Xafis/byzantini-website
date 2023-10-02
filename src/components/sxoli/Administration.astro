@@ -1,0 +1,298 @@
+---
+import { isDevFromURL } from "../../../lib/utils.client";
+
+const principalText = [
+	`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας.
+Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ
+Μητροπολιτικὸ Ναὸ Ἁγίου Δημητρίου
+Κηφισιᾶς.`,
+	`Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς
+τοῦ Πανεπιστημίου Ἀθηνῶν. Ὑπηρέτησε ὡς
+καθηγητὴς στὴν Μέση Ἐκπαίδευση στὸ 1ο
+Γυμνάσιο Κηφισιᾶς ἐπὶ εἰκοσαετίαν καὶ ἐπὶ
+δεκαετίαν στὸ Πειραματικὸ Γυμνάσιο – Λύκειο
+Ἀναβρύτων, ἀπ’ ὅπου καὶ συνταξιοδοτήθηκε.
+Τὸν Ἰούνιο τοῦ 2010 μὲ ἀπόφαση τοῦ
+Σεβασμιωτάτου Μητροπολίτου Κηφισίας,
+Ἀμαρουσίου, Ὠρωποῦ καὶ Μαραθῶνος κ.
+Κυρίλλου διορίσθηκε Γενικὸς Ἀρχιερατικὸς
+Ἐπίτροπος τῆς Ἱερᾶς Μητροπόλεως.`,
+	`Ὁ π. Χρῖστος ἀπὸ νεαρὴ ἡλικία ἔδειξε τὴν κλίση του πρὸς τὴν μουσική.
+Πρῶτος διδάσκαλός του στὴν Βυζαντινὴ Μουσική, ὁ Δημήτριος
+Παναγιωτόπουλος - Κοῦρος, στὴ Ριζάρειο Σχολή, τῆς ὁποίας τυγχάνει
+ἀπόφοιτος. Ἀργότερα διηύρυνε καὶ ὁλοκλήρωσε τὴν μουσική του παιδεία,
+στὸ Ὠδεῖο Ἀθηνῶν, στὸ Ἑλληνικὸ Ὠδεῖο, στό Ὠδεῖο Ἀχαρνῶν καί στό Ὠδεῖο
+Ἀργυρουπόλεως. Εἶναι πτυχιοῦχος καὶ διπλωματοῦχος μουσικοδιδάσκαλος
+τῆς Βυζαντινῆς Μουσικῆς. Στὸν Μητροπολιτικὸ Ἱερὸ Ναὸ Ἁγίου Δημητρίου
+Κηφισιᾶς τὸ 1984 ἱδρυσε Σχολὴ Βυζαντινῆς Μουσικῆς καὶ συνέστησε τὴν
+πολυμελῆ Χορωδία «Βυζαντινὴ Κυψέλη». Χρημάτισε συνεργάτης στὸν
+Ραδιοφωνικὸ Σταθμὸ τῆς Ἐκκλησίας τῆς Ἑλλάδος, ὅπου ἐπὶ σειρὰν ἐτῶν
+διετέλεσε συντονιστὴς τῶν ἐκπομπῶν Βυζαντινῆς καὶ Παραδοσιακῆς
+Μουσικῆς καθὼς ἐπίσης καὶ τακτικὸς συνεργάτης τῆς Ἑλληνικῆς
+Ραδιοφωνίας καὶ Τηλεοράσεως.`,
+	`Διετέλεσε καθηγητής Βυζαντινῆς Μουσικῆς στο Δημοτικό Ὠδεῖο Ἀμαρουσίου
+καί διευθυντής τῆς Σχολῆς Βυζαντινῆς Μουσικῆς τῆς Ἱερᾶς Μητροπόλεως
+Μεσογαίας καί Λαυρεωτικῆς. Εἶναι Διευθυντής τῆς Σχολῆς Βυζαντινῆς
+Μουσικῆς τῆς Ἱερᾶς Μητροπόλεως Θηβῶν καί Λεβαδείας καί ἀπό τόν
+Ὀκτώβριο 2015 διορίστηκε ἀπό τό Ὑπουργεῖο Πολιτισμοῦ καί Ἀθλητισμοῦ
+Διευθυντής τῆς Σχολῆς Βυζαντινῆς Μουσικῆς τοῦ Ἱεροῦ Καθεδρικοῦ Ναοῦ
+Μεταμορφώσεως τοῦ Σωτῆρος τοῦ ὁμωνύμου Δήμου.`,
+	`Ἀσχολεῖται συστηματικὰ μὲ τὴν μουσικὴ λαογραφία καὶ τὴν καταγραφὴ
+Δημοτικῶν Τραγουδιῶν. Ἡ Ἑταιρεία Πελοποννησιακῶν Σπουδῶν, τῆς
+ὁποίας εἶναι μέλος καὶ ἐπιστημονικὸς συνεργάτης, ἐξέδωσε μελέτες του μὲ
+καταγραφές Δημοτικῶν τραγουδιῶν σὲ βυζαντινὴ καὶ εὐρωπαϊκὴ μουσική.
+Γνωρίζει καὶ διδάσκει τό παραδοσιακό μουσικό ὄργανο ψαλτήριον
+(κανονάκι). Ἔχει πραγματοποιήσει πολλὲς ἠχογραφήσεις μὲ Βυζαντινοὺς
+ὕμνους, καθὼς καὶ παραδοσιακά τραγούδια. Ἀξιόλογη ἠχογράφηση
+θεωρεῖται ἐκείνη, ἡ ὁποία πραγματοποιήθηκε μετὰ ἀπὸ ἔρευνά του γιὰ τὸν
+Θούριο τοῦ Ρήγα Βελεστινλῆ καὶ τὴν ὁποία ἐξέδωσε σὲ ψηφιακὸ δίσκο, ἡ
+«Ἐπιστημονικὴ Ἑταιρεία Μελέτης Φερρῶν - Βελεστίνου Ρήγα». Μάλιστα
+παρουσιάστηκε στόν Βόλο, μὲ τὴν εὐκαιρία τῆς συμπληρώσεως διακοσίων
+ἐτῶν, ἀπὸ τὸν μαρτυρικὸ θάνατο τοῦ πρωτομάρτυρα τῆς λευτεριᾶς. Ἐπίσης,
+ἔχει ἑρμηνεύσει τὸν πρωταγωνιστικὸ ρόλο στὸ θρησκευτικὸ ὁρατόριο –
+ραψωδία «Κοσμᾶς ὁ Αἰτωλός» σὲ μουσικὴ Σωκράτη Βενάρδου καί ποίηση
+Κώστα Χωρεάνθη, τὸ ὁποῖο παρουσιάστηκε σὲ πολλὲς πόλεις τῆς Ἑλλάδος.
+Ἄλλες ἀξιόλογες ἠχογραφήσεις του, σὲ μονωδιακὴ ἐκτέλεση καθὼς καὶ μὲ τὴ
+χορωδία «Βυζαντινὴ Κυψέλη», ποὺ ὁ ἴδιος διευθύνει, συνοδείᾳ
+παραδοσιακῶν λαϊκῶν ὀργάνων, θεωροῦνται οἱ: «Ἡρωϊκοὶ Ἀντίλαλοι τοῦ
+Μοριᾶ», «Παραδοσιακὰ Τραγούδια τοῦ Γάμου καὶ τῆς Χαρᾶς», «Μνῆμες τοῦ
+Μοριᾶ», «Λεβέντικοι Ρυθμοί» καὶ «Κιβωτὸς Ἀσμάτων». Τὸ ἔτος 2006
+συνέθεσε τὸ βυζαντινὸ ὀρατόριο, μουσικὸ ἔργο γιὰ βυζαντινὴ χορωδία καὶ
+ὀρχήστρα παραδοσιακῶν ὀργάνων, «Ὁ αἰώνιος ὕμνος τῆς ἀγάπης», σὲ
+κείμενα τοῦ πανεπιστημιακοῦ καθηγητοῦ Ἠλία Β. Οἰκονόμου, τὸ ὁποῖο
+παρουσιάστηκε γιὰ πρώτη φορὰ στὸ πολιτιστικὸ κέντρο τοῦ Δήμου
+Κηφισιᾶς.`,
+	`Ὁ π. Χρῖστος Κυριακόπουλος, ἀνήκει στὴν κατηγορία τῶν κληρικῶν ἐκείνων,
+οἱ ὁποῖοι πέρα ἀπὸ τὰ εἰδικὰ ἱερατικά τους καθήκοντα, προσφέρουν καὶ ἔργο
+πολύτιμο γιὰ τὴν διάσωση καὶ διάδοση τῆς Ἐθνικῆς μας Μουσικῆς»`
+];
+const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
+---
+<>
+	<section
+		id="selectContainer"
+		data-selected="xairetismos"
+		class="group/btn self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center border-x-2 border-t-2 border-red-900 rounded-t-lg shadow-lg shadow-slate-700"
+	>
+		<button
+			id="xairetismosBtn"
+			type="button"
+			class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='xairetismos']/btn:text-white group-data-[selected='xairetismos']/btn:bg-red-950 "
+			><span class="group-hover/btn:-translate-y-2">Χαιρετισμός Σεβ. Μητροπολίτου</span></button
+		>
+		<button
+			id="principalBtn"
+			type="button"
+			class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='principal']/btn:text-white group-data-[selected='principal']/btn:bg-red-950"
+			><span class="group-hover/btn:-translate-y-2">Ο Διευθυντής</span></button
+		>
+		<button
+			id="orgBtn"
+			type="button"
+			class="group/btn relative w-full p-4 text-4xl text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] max-sm:text-2xl transition-color hover:text-white hover:bg-red-950 group-data-[selected='org']/btn:text-white group-data-[selected='org']/btn:bg-red-950"
+			><span class="group-hover/btn:-translate-y-2">Διοικητικό Συμβούλιο</span></button
+		>
+	</section>
+	<section id="xairetismosContainer" class="contentContainer">
+		<div class="flex flex-col items-center justify-center pt-4 gap-y-4 bg-white border-x-2 border-t-2 border-red-900">
+			<div class="font-bold">
+				<h2 class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900">
+					Χαιρετισμὸς Σεβασμιωτάτου Μητροπολίτου<span class="sm:hidden">
+						Κηφισίας, Ἀμαρουσίου, Ὠρωποῦ καὶ Μαραθῶνος κ. Κυρίλλου</span
+					>
+				</h2>
+				<h2 class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900 max-sm:hidden">
+					Κηφισίας, Ἀμαρουσίου, Ὠρωποῦ καὶ Μαραθῶνος κ. Κυρίλλου
+				</h2>
+			</div>
+			<div class="flex flex-row max-sm:flex-col items-center max-sm:gap-y-4 bg-red-900 hover:bg-red-950">
+				<img
+					src={imgSrc + "mitropolitis.jpg"}
+					alt="Φωτογραφία Σεβασμιωτάτου Μητροπολίτου"
+					width="300px"
+					class="w-[300px] max-sm:w-[200px] shadow-lg shadow-slate-800 max-sm:shadow-[rgb(210,210,210,0.4)]"
+				/>
+				<p class="text-2xl p-8 max-sm:text-lg text-red-50 max-sm:px-4 font-didact">
+					Ἡ Ψαλτική, καί ὡς τέχνη καί ὡς ἐπιστήμη, ἀνήκει στήν λατρευτική ζωή τῆς Ἐκκλησίας μας καί λειτουργεῖ ὡς μέσο
+					μυσταγωγικό καί ἀναγωγικό. Σημειώνουμε περί αὐτοῦ τούς λόγους τοῦ Ὁσίου Πορφυρίου τοῦ Καυσοκαλυβίτου: «Κανένας
+					χριστιανός δέν πρέπει νά ὑπάρχει χωρίς νά ξέρει βυζαντινή μουσική. Πρέπει ὅλοι νά μάθομε. Ἔχει ἄμεση σχέση μέ τήν
+					ψυχή. Ἡ μουσική ἁγιάζει τόν άνθρωπο ἀναίμακτα. Χωρίς κόπο, ἀγαλλόμενος, γίνεσαι ἅγιος». Ὁρμώμενοι ἐκ τῶν λόγων τοῦ
+					ἁγίου, συνειδητοποιοῦμε πόσο σημαντικό καί θεάρεστο ἔργο ἐπιτελεῖ ἡ Σχολή Βυζαντινῆς καί Παραδοσιακῆς Μουσικῆς τοῦ
+					Ἱεροῦ Ναοῦ Μεταμορφώσεως τοῦ Σωτῆρος τοῦ Δήμου Μεταμόρφωσης, τῆς καθ’ ἡμᾶς Ἱεράς Μητροπόλεως, τό ὁποῖο ἐπευλογοῦμε
+					καί στηρίζομε.
+				</p>
+			</div>
+		</div>
+	</section>
+	<section id="principalContainer" class="contentContainer hidden group max-sm:p-0 max-sm:w-full overflow-y-visible bg-red-900">
+		<div class="flex flex-row gap-x-4 max-sm:gap-x-0 max-sm:gap-y-4 max-sm:flex-col">
+			<p
+				class="sm:hidden text-3xl pt-4 text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+			>
+				Πρωτοπρ. Χρίστος Κυριακόπουλος
+			</p>
+			<img
+				src={imgSrc + "pjcqQA6rQAIi.jpeg"}
+				alt="Φωτογραφία Διευθυντή"
+				width="350px"
+				class="w-[clamp(0px,100%,350px)] max-sm:w-[clamp(0px,100%,250px)] self-center sm:group-[:is(.unfold)]:sticky sm:group-[:is(.unfold)]:self-start object-cover shadow-md shadow-slate-800 max-sm:shadow-slate-100"
+			/>
+			<div class="relative flex flex-col gap-y-4 px-16 py-8 pb-8 max-sm:px-4">
+				<p
+					class="max-sm:hidden text-[2.5vw] text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+				>
+					Πρωτοπρ. Χρίστος Κυριακόπουλος
+				</p>
+				<p class="text-white text-2xl max-sm:text-xl">{principalText[0]}</p>
+				<p class="text-white text-2xl max-sm:text-xl max-sm:group-[:is(:not(.unfold))]:pb-16">{principalText[1]}</p>
+				<button
+					id="readMore"
+					type="button"
+					class="peer/open group/open absolute left-[50%] translate-x-[-50%] bottom-4 p-4 py-2 flex flex-row items-center text-2xl max-sm:text-xl bg-red-950 text-center transition-colors hover:bg-white z-10"
+				>
+					<span
+						class="group-[:is(.show)]/open:hidden font-bold text-white transition-colors group-hover/open:text-red-900 max-3xs:text-xl drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
+						>Διαβάστε περισσότερα
+					</span>
+					<i
+						class="group-[:is(.show)]/open:hidden p-1 pt-2 fa-solid fa-chevron-down text-white transition-colors group-hover/open:text-red-900 text-xl max-3xs:text-lg text-center drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
+					></i>
+					<i
+						class="hidden group-[:is(.show)]/open:flex fa-solid fa-chevron-up text-white transition-colors group-hover/open:text-red-900 text-2xl max-3xs:text-xl text-center drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.15)]"
+					></i>
+				</button>
+				<div id="moreText" class="hidden text-xl flex-col gap-y-4 pb-12">
+					<p class="text-white text-2xl max-sm:text-xl">{principalText[2]}</p>
+					<p class="text-white text-2xl max-sm:text-xl">{principalText[3]}</p>
+					<p class="text-white text-2xl max-sm:text-xl">{principalText[4]}</p>
+					<p class="text-white text-2xl max-sm:text-xl">{principalText[5]}</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="orgContainer" class="contentContainer hidden group relative h-max bg-red-900 p-8 max-sm:p-4">
+		<div class="flex flex-col gap-4">
+			<h1
+				class="max-sm:text-2xl text-[2.25vw] text-white text-center underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+			>
+				Διοικοῦσα &thinsp;Ἐπιτροπὴ τῆς Σχολῆς Βυζαντινῆς καὶ Παραδοσιακῆς Μουσικῆς
+			</h1>
+			<ol class="flex flex-col text-xl gap-y-4">
+				<li class="max-sm:text-lg text-[1.5vw] text-white pl-4">Πρόεδρος ὁ Αἰδεσ/τος Πρωτοπρεσβύτερος Σωτήριος Ἀλεβιζάκης,</li>
+				<li class="max-sm:text-lg text-[1.5vw] text-white pl-4">
+					Γραμματέας ὁ κ. Βενέδικτος Γαρουφαλῆς, Λαμπαδάριος τοῦ Ἱ.Ν. Μετ/σεως Σωτῆρος καί
+				</li>
+				<li class="max-sm:text-lg text-[1.5vw] text-white pl-4">
+					Ταμίας κ. Κωνσταντῖνος Μαυρογόνατος, Ἀντιπρόεδρος τοῦ Ἐκκλησιαστικοῦ Συμβουλίου Ἱ.Ν. Μετ/σεως Σωτῆρος
+				</li>
+			</ol>
+			<div class="pt-8 flex flex-row flex-wrap  gap-8 place-content-center">
+				<a
+					target="_blank"
+					href="/fek-byzantini.pdf"
+					class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
+					>ΦΕΚ Βυζαντινής Μουσικής</a
+				>
+				<a
+					target="_blank"
+					href="/fek-paradosiaki.pdf"
+					class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
+					>ΦΕΚ Παραδοσιακής Μουσικής</a
+				>
+				<a
+					target="_blank"
+					href="/praktiko_dioik_epitroph.pdf"
+					class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
+					>Ορισμός Διοικούσας Επιστροπής της Σχολής</a
+				>
+				<a
+					target="_blank"
+					href="/praktiko_peri_idrysews.pdf"
+					class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
+					>Ιδρύση της Σχολής Βυζαντινής Μουσικής</a
+				>
+				<a
+					target="_blank"
+					href="/egkrisis.pdf"
+					class="px-4 py-2 max-sm:px-2 h-max text-xl text-center max-sm:text-base font-didact font-bold text-red-50 outline-none max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-sm hover:bg-red-50 hover:text-red-900"
+					>Έγκριση ιδρύσεως και λειτουργίας της Σχολής</a
+				>
+			</div>
+		</div>
+	</section>
+	<style is:inline>
+		.remove {
+			opacity: 1;
+			animation: fadeOut 0.3s ease-in-out forwards;
+		}
+		.open {
+			opacity: 0.01;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
+		#readMore:is(.open) {
+			padding-top: 0.5rem;
+			padding-bottom: 0.5rem;
+			background: transparent;
+			backdrop-filter: blur(0px);
+			transform: translateY(10%);
+		}
+		#readMore:is(.open):hover > i {
+			color: rgb(127, 29, 29);
+		}
+
+		#orgContainer ol li {
+			list-style: decimal;
+			list-style-position: inside;
+		}
+		#xairetismos-mitropolitou h2 {
+			text-shadow: -1px 2px 2px rgba(12 10 9 / 0.35);
+		}
+
+		#selectContainer[data-selected="org"] #orgBtn span,
+		#selectContainer[data-selected="xairetismos"] #xairetismosBtn span,
+		#selectContainer[data-selected="principal"] #principalBtn span {
+			text-decoration: underline;
+			text-underline-offset: 8px;
+		}
+		#sxoli {
+			color: white;
+		}
+	</style>
+</>
+<script>
+	import { onElementMount, swapElementsWithFade } from "../../../lib/utils.client";
+	onElementMount("#readMore", () => {
+		const btn = document.querySelector("#readMore") as HTMLButtonElement;
+		const principalContainer = document.querySelector("#principalContainer") as HTMLDivElement;
+		btn.addEventListener("click", () => {
+			principalContainer.classList.toggle("unfold");
+			btn.classList.toggle("show");
+			if (!btn.classList.contains("show")) document.querySelector("#sxoli")?.scrollIntoView({ behavior: "smooth", block: "start" });
+			const moreText = document.querySelector("#moreText") as HTMLDivElement;
+			moreText.classList.toggle("hidden");
+			moreText.classList.toggle("flex");
+			void moreText.offsetWidth;
+			moreText.classList.toggle("open");
+		});
+	});
+	onElementMount("#principalContainer", () => {
+		const container = document.querySelector("#principalContainer") as HTMLDivElement;
+		container.classList.add("open");
+		setTimeout(() => {
+			container.classList.remove("open");
+		}, 500);
+	});
+	const btns = ["xairetismos", "principal", "org"];
+	btns.forEach(btnName => {
+		onElementMount(`#${btnName}Btn`, () => {
+			const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
+			const btn = document.querySelector(`#${btnName}Btn`) as HTMLButtonElement;
+			const container = document.querySelector(`#${btnName}Container`) as HTMLDivElement;
+			btn.addEventListener("click", () => {
+				const prevContainer = document.querySelector(".contentContainer:is(:not(.hidden))") as HTMLDivElement;
+				selectContainer.dataset.selected = btnName;
+				swapElementsWithFade(prevContainer, container);
+			});
+		});
+	});
+</script>

@@ -1,0 +1,160 @@
+<>
+	<section
+		id="choir"
+		class="w-full flex flex-col font-didact items-center justify-center mt-8 py-8 max-sm:py-4 max-sm:px-2 gap-y-20 overflow-visible max-sm:gap-y-10"
+	>
+		<h1
+			id="choirHead"
+			class="heading relative p-2 text-center flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px]"
+		>
+			Άδοντες & Ψάλλοντες
+		</h1>
+		<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-between max-sm:justify-center overflow-visible">
+				<div id="choirText" class="flex flex-col">
+				<h2 class="text-[3vw] max-sm:text-2xl max-sm:font-bold text-center font-anaktoria text-red-900">
+					Χορωδία Βυζαντινής & Παραδοσιακής Μουσικής
+				</h2>
+				<p class="text-3xl max-sm:text-lg text-red-900 text-center">
+					Διευθύνει ο Πρωτοπρ. Σωτήριος Αλεβιζάκης
+				</p>
+				<p class="text-xl max-sm:text-base w-[45ch] max-sm:w-full">
+					Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vitae, molestiae.
+					Iste necessitatibus optio itaque aspernatur, eligendi esse dicta consectetur sequi?
+					Quidem repellat voluptatem ex inventore itaque animi accusantium assumenda dolorum.
+					Beatae, ad. Earum voluptate consequuntur corrupti. Maxime nobis temporibus animi.
+					Excepturi, aspernatur. Perspiciatis eligendi maiores ipsam veniam perferendis qui quam.
+				</p>
+			</div>
+			<div id="choirCarousel" class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
+				<img
+					src={"/choir_1.jpg"}
+					width="900px"
+					alt="Φωτογραφία Χορωδίας"
+					class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
+				/>
+			</div>
+		</div>
+	</section>
+	<style is:inline>
+		.remove {
+			opacity: 1;
+			animation: fadeOut 0.3s ease-in-out forwards;
+		}
+		.open {
+			opacity: 0.01;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
+		#choirCarousel {
+			--tr-per: 0; /* transition percentage */
+			--tr-per-op: 0;
+			transform: scale(var(--tr-per)) translateX(calc(-25% + 25% * var(--tr-per)));
+			transform-origin: right;
+		}
+		#choirCarousel > img {
+			opacity: var(--tr-per-op);
+		}
+		#choirCarousel::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(transparent 0%, rgba(0, 0, 0, 1) 75%);
+			opacity: calc(1 - var(--tr-per-op));
+		}
+		@media screen and (max-width: 640px) {
+			#choirCarousel {
+				--tr-per: 0; /* transition percentage */
+				transform: scale(var(--tr-per)) translateY(calc(-25% + 25% * var(--tr-per)));
+				transform-origin: top;
+			}
+		}
+		#choirText {
+			opacity: 1;
+		}
+		#choirText:is(.show) {
+			opacity: 1;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
+	</style>
+</>
+<script>
+	import { onElementMount, UpdateHandler, mappedValue, loadImage } from "../../../lib/utils.client";
+
+	onElementMount("#choir", (choir) => {
+		const obsv = new IntersectionObserver(
+			entries => {
+				const entry = entries[0];
+				// @ts-ignore
+				const head = document.querySelector("#choirHead") as HTMLElement;
+				if (!head) return;
+				if (entry.intersectionRatio >= 0.3) head.classList.add("emphasis");
+				else if (window.matchMedia("(max-width: 640px)").matches && entry.intersectionRatio >= 0.2) head.classList.add("emphasis");
+				else head.classList.remove("emphasis");
+			},
+			{
+				root: null,
+				rootMargin: "0px",
+				threshold: [0.2, 0.3, 0.4, 0.5]
+			}
+		);
+		obsv.observe(choir);
+
+		const carouselUpdate = new UpdateHandler(5000);
+		const carousel = document.querySelector("#choirCarousel") as HTMLDivElement;
+		const choirText = document.querySelector("#choirText") as HTMLDivElement;
+		let isCarouselVisible = false;
+		const obsv2 = new IntersectionObserver(
+			entries => {
+				let { intersectionRatio, target } = entries[0];
+				if (document.body.clientHeight < target.clientHeight) {
+					const heightRatio = Math.min(760, Math.max(540, document.body.clientHeight)) / target.clientHeight;
+					intersectionRatio = mappedValue(intersectionRatio, 0, heightRatio * 0.85); // max out at 65% of the available height
+					carousel.style.setProperty("--tr-per", `${mappedValue(intersectionRatio, 0, 1, 1.25, 1).toFixed(3)}`);
+					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`);
+				} else {
+					carousel.style.setProperty("--tr-per", `${mappedValue(intersectionRatio, 0, 1, 1.4, 1).toFixed(3)}`);
+					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`);
+				}
+
+				if(intersectionRatio >= 0.6  && !choirText.classList.contains("show")) choirText.classList.add("show");
+				else if(intersectionRatio < 0.6  && choirText.classList.contains("show")) {
+					choirText.classList.remove("show")
+					choirText.classList.add("remove")
+				};
+				isCarouselVisible = intersectionRatio > 0.4;
+				if(isCarouselVisible && !carouselUpdate.timeoutFired) {
+					carouselUpdate.timeout();
+				} else if(!isCarouselVisible && carouselUpdate.timeoutFired) {
+					carouselUpdate.abort();
+				}
+			},
+			{
+				root:null,
+				rootMargin: "0px",
+				threshold: new Array(101).fill(0).map((_, i) => i / 100)
+			}
+		);
+		obsv2.observe(choir);
+		const carouselImgs = ["/choir_2.jpg", "/choir_3.jpg", "/choir_4.jpg", "/choir_5.jpg", "/choir_1.jpg"];
+		const loadedImgs = new Set<string>(["choir_1.jpg"]);
+		carouselUpdate.setFunction(async () => {
+			const img = carousel.querySelector("img") as HTMLImageElement;
+			let imgSrc = carouselImgs.shift() as string;
+			carouselImgs.push(imgSrc);
+			if(!loadedImgs.has(imgSrc)) {
+				loadedImgs.add(imgSrc);
+				await loadImage(imgSrc);
+			}
+			carousel.classList.remove("open");
+			carousel.classList.add("remove");
+			setTimeout(() => {
+				img.src = imgSrc;
+				void carousel.clientWidth;
+				carousel.classList.remove("remove");
+				carousel.classList.add("open");
+				if(!isCarouselVisible) carouselUpdate.abort();
+				else carouselUpdate.reset();
+			}, 300);
+		});
+		carouselUpdate.timeout();
+	});
+</script>
