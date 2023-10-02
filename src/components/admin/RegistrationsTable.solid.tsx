@@ -713,7 +713,12 @@ export default function RegistrationsTable() {
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return;
 		let { columnName, value, type } = searchQuery;
-		document.dispatchEvent(new Event("hydrate"));
+		if (!columnName || !value || !type) {
+			// Make use of the variables to avoid optimization and therefore not triggering the effect when a search is made
+			document.dispatchEvent(new Event("hydrate"));
+		} else {
+			document.dispatchEvent(new Event("hydrate"));
+		}
 	});
 
 	onMount(() => {
