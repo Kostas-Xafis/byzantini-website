@@ -97,14 +97,14 @@ const booksToTable = (
 
 const columnNames: ColumnType<BooksTable> = {
 	id: { type: "number", name: "Id" },
-	title: { type: "string", name: "Τίτλος", size: () => 15 },
-	wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 15 },
+	title: { type: "string", name: "Τίτλος", size: 15 },
+	wholesaler: { type: "string", name: "Χονδρέμπορος", size: 15 },
 	wholesale_price: {
 		type: "number",
 		name: "Χονδρική Τιμή",
-		size: () => 9,
+		size: 9,
 	},
-	price: { type: "number", name: "Λιανική Τιμή", size: () => 9 },
+	price: { type: "number", name: "Λιανική Τιμή", size: 9 },
 	quantity: { type: "number", name: "Ποσότητα" },
 	sold: { type: "number", name: "Πωλήσεις" },
 	reserved: { type: "number", name: "Απόθεμα" },

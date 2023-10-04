@@ -7,7 +7,8 @@ const links = [
 	{ name: "Οφειλές Σχολής", url: "/admin/payoffs" },
 	{ name: "Καθηγητές", url: "/admin/teachers" },
 	{ name: "Παραρτήματα", url: "/admin/locations" },
-	{ name: "Διαχειριστές", url: "/admin/sysusers" }
+	{ name: "Ανακοινώσεις", url: "/admin/announcements" },
+	{ name: "Διαχειριστές", url: "/admin/sysusers" },
 ];
 const currentPage = links.find(link => link.url === Astro.url.pathname || link.url + "/" === Astro.url.pathname )?.name ?? "Αρχική";
 ---

@@ -180,6 +180,7 @@ export const v_Announcements = object({
 	title: string([minLength(1)]),
 	content: string(),
 	date: number([integer(), minValue(0)]),
+	views: number([integer(), minValue(0)]),
 });
 export type Announcements = Output<typeof v_Announcements>;
 

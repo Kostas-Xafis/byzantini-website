@@ -171,18 +171,18 @@ export default function LocationsTable() {
 
 	const columnNames: ColumnType<LocationsTable> = {
 		id: { type: "number", name: "Id" },
-		name: { type: "string", name: "Όνομα Παραρτήματος", size: () => 15 },
-		address: { type: "string", name: "Διεύθυνση", size: () => 15 },
+		name: { type: "string", name: "Όνομα Παραρτήματος", size: 15 },
+		address: { type: "string", name: "Διεύθυνση", size: 15 },
 		areacode: { type: "number", name: "Ταχ. Κώδικας" },
-		municipality: { type: "string", name: "Δήμος", size: () => 12 },
-		manager: { type: "string", name: "Υπεύθυνος", size: () => 15 },
-		email: { type: "string", name: "Email", size: () => 25 },
+		municipality: { type: "string", name: "Δήμος", size: 12 },
+		manager: { type: "string", name: "Υπεύθυνος", size: 15 },
+		email: { type: "string", name: "Email", size: 25 },
 		priority: { type: "number", name: "Προτεραιότητα" },
-		image: { type: "link", name: "Φωτογραφία", size: () => 15 },
+		image: { type: "link", name: "Φωτογραφία", size: 15 },
 		partner: {
 			type: "boolean",
 			name: "Συνεργαζόμενο Σπουδαστήριο",
-			size: () => 10,
+			size: 10,
 		},
 	};
 

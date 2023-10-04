@@ -34,9 +34,8 @@ serverRoutes.userLogin.func = async (ctx) => {
 
 serverRoutes.authenticateSession.func = async (ctx) => {
 	return await execTryCatch(async () => {
-		const response = await authentication(ctx);
-		if (response) return { isValid: false };
-		return { isValid: true };
+		const isAuthenticated = await authentication(ctx);
+		return { isValid: isAuthenticated };
 	});
 };
 

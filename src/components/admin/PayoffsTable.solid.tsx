@@ -83,7 +83,7 @@ export default function PayoffsTable() {
 
 	const columnNames: ColumnType<SchoolPayoffsTable> = {
 		id: { type: "number", name: "Id" },
-		wholesaler: { type: "string", name: "Χονδρέμπορος", size: () => 25 },
+		wholesaler: { type: "string", name: "Χονδρέμπορος", size: 25 },
 		amount: { type: "number", name: "Οφειλή" },
 	};
 

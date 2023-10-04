@@ -270,29 +270,29 @@ const searchColumns: SearchColumn[] = [
 
 const columnNames: ColumnType<TeachersTable> = {
 	id: { type: "number", name: "Id" },
-	fullname: { type: "string", name: "Ονοματεπώνυμο", size: () => 25 },
+	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 25 },
 	picture: { type: "link", name: "Φωτογραφία" },
 	cv: { type: "link", name: "Βιογραφικό" },
-	email: { type: "string", name: "Email", size: () => 25 },
-	telephone: { type: "string", name: "Τηλέφωνο", size: () => 15 },
-	linktree: { type: "link", name: "Σύνδεσμος", size: () => 15 },
+	email: { type: "string", name: "Email", size: 25 },
+	telephone: { type: "string", name: "Τηλέφωνο", size: 15 },
+	linktree: { type: "link", name: "Σύνδεσμος", size: 15 },
 	priority_byz: {
 		type: "number",
 		name: "Προτεραιότητα Βυζαντινής",
-		size: () => 15,
+		size: 15,
 	},
 	priority_par: {
 		type: "number",
 		name: "Προτεραιότητα Παραδοσιακής",
-		size: () => 15,
+		size: 15,
 	},
 	priority_eur: {
 		type: "number",
 		name: "Προτεραιότητα Ευρωπαϊκής",
-		size: () => 15,
+		size: 15,
 	},
-	visible: { type: "boolean", name: "Εμφάνιση", size: () => 15 },
-	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: () => 15 },
+	visible: { type: "boolean", name: "Εμφάνιση", size: 15 },
+	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 15 },
 };
 
 const [selectedItems, setSelectedItems] = useSelectedRows();

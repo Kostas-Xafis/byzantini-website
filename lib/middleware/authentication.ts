@@ -2,9 +2,11 @@ import type { SysUsers } from "../../types/entities";
 import { executeQuery } from "../utils.server";
 import type { APIContext } from "astro";
 
+const small_cache = new Map<string, boolean>();
+
 export const getSessionId = (req: Request) => {
 	const cookies = req.headers.get("cookie");
-	if (!cookies) return null
+	if (!cookies) return null;
 	let cookie = "" as string | undefined;
 	if (cookies.indexOf(";") === -1) cookie = cookies;
 	else
@@ -14,12 +16,18 @@ export const getSessionId = (req: Request) => {
 			.find(cookie => cookie.startsWith("session_id"));
 	if (!cookie) return null;
 	return cookie.split("=")[1];
-}
+};
 
 export async function authentication(ctx: APIContext) {
 	const session_id = getSessionId(ctx.request);
-	if (!session_id) return new Response("Unauthorized", { status: 401 });
+	if (!session_id) return false;
+	if (small_cache.has(session_id)) {
+		// console.log("small cache hit");
+		executeQuery("UPDATE cache_hits SET hits = hits + 1 WHERE cache_name = 'small_cache'");
+		return true;
+	}
 	const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 	const isValid = user !== undefined;
-	if (!isValid) return new Response("Unauthorized", { status: 401 });
+	if (isValid) small_cache.set(session_id, isValid);
+	return isValid;
 }

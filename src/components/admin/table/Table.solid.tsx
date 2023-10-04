@@ -2,10 +2,7 @@ import Row, { type CellValue } from "./Row.solid";
 import { For, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 export type Props = {
-	columns: Record<
-		string,
-		{ type: CellValue; name: string; size?: () => number }
-	>;
+	columns: Record<string, { type: CellValue; name: string; size?: number }>;
 	data: Accessor<any[]>;
 	prefix?: string;
 	children?: JSX.Element | JSX.Element[];
@@ -20,7 +17,7 @@ export const enum SortDirection {
 
 export type ColumnType<T> = Record<
 	keyof T,
-	{ type: CellValue; name: string; size?: () => number }
+	{ type: CellValue; name: string; size?: number }
 >;
 
 // Horizontal Scrolling for table from https://codepen.io/toddwebdev/pen/yExKoj
@@ -73,7 +70,7 @@ export default function Table(props: Props) {
 	let columnWidths =
 		"grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
-		let len = (size && size()) || name.length;
+		let len = size || name.length;
 		columnWidths += `calc(${len}ch + 2ch)`;
 		return name;
 	});

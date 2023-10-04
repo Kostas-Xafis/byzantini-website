@@ -105,8 +105,8 @@ export default function PaymentsTable() {
 
 	const columnNames: ColumnType<PaymentsTable> = {
 		id: { type: "number", name: "Id" },
-		student_name: { type: "string", name: "Μαθητής", size: () => 15 },
-		title: { type: "string", name: "Βιβλίο", size: () => 25 },
+		student_name: { type: "string", name: "Μαθητής", size: 15 },
+		title: { type: "string", name: "Βιβλίο", size: 25 },
 		amount: { type: "number", name: "Οφειλή" },
 		book_amount: { type: "number", name: "Ποσότητα" },
 		date: { type: "date", name: "Ημερομηνία Παραλαβής" },

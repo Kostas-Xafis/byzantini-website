@@ -1,7 +1,8 @@
 import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
-import { v_Announcements, type Announcements, v_AnnouncementImages, type AnnouncementImages } from "../../types/entities";
+import { v_Announcements, type Announcements, v_AnnouncementImages } from "../../types/entities";
+import { omit } from "valibot";
 
-const get: EndpointRoute<"GET:/announcements", null, Omit<Announcements, "content">[]> = {
+const get: EndpointRoute<"GET:/announcements", null, Announcements[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/announcements",
@@ -10,19 +11,37 @@ const get: EndpointRoute<"GET:/announcements", null, Omit<Announcements, "conten
 };
 
 const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements & { images: string[]; }> = {
-	authentication: true,
+	authentication: false,
 	method: "POST",
 	path: "/announcements/id",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
 
-const post: EndpointRoute<"POST:/announcements", typeof v_Announcements, { insertId: number; }> = {
+const postReq = omit(v_Announcements, ["id", "views"]);
+const post: EndpointRoute<"POST:/announcements", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements",
 	hasUrlParams: false,
-	validation: () => v_Announcements,
+	validation: () => postReq,
+	func: async ctx => null as any
+};
+
+const postImage: EndpointRoute<"POST:/announcements/image", typeof v_AnnouncementImages, { insertId: number; }> = {
+	authentication: true,
+	method: "POST",
+	path: "/announcements/image",
+	hasUrlParams: false,
+	validation: () => v_AnnouncementImages,
+	func: async ctx => null as any
+};
+
+const imageUpload: EndpointRoute<"POST:/announcements/image/[id:number]", Blob> = {
+	authentication: true,
+	method: "POST",
+	path: "/announcements/image/[id:number]",
+	hasUrlParams: true,
 	func: async ctx => null as any
 };
 
@@ -38,6 +57,8 @@ export const AnnouncementsRoutes = {
 	get,
 	getById,
 	post,
+	postImage,
+	imageUpload,
 	delete: del
 };
 
@@ -60,7 +81,18 @@ export const APIAnnouncementsEndpoints: APIEndpointsBuilder<"Announcements", typ
 		method: "POST",
 		path: "/announcements",
 		endpoint: "Announcements.post",
-		validation: v_Announcements
+		validation: postReq
+	},
+	"Announcements.postImage": {
+		method: "POST",
+		path: "/announcements/image",
+		endpoint: "Announcements.postImage",
+		validation: v_AnnouncementImages
+	},
+	"Announcements.imageUpload": {
+		method: "POST",
+		path: "/announcements/image/[id:number]",
+		endpoint: "Announcements.imageUpload"
 	},
 	"Announcements.delete": {
 		method: "DELETE",
@@ -74,6 +106,8 @@ export const APIAnnouncements: APIBuilder<"Announcements", typeof AnnouncementsR
 		get: "Announcements.get",
 		getById: "Announcements.getById",
 		post: "Announcements.post",
+		postImage: "Announcements.postImage",
+		imageUpload: "Announcements.imageUpload",
 		delete: "Announcements.delete"
 	}
 };

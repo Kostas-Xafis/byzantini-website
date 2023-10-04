@@ -3,6 +3,7 @@ import { isDevFromURL } from "../../../lib/utils.client";
 import Layout from "../../layouts/Layout.astro";
 import Administration from "../../components/sxoli/Administration.astro";
 import Choir from "../../components/sxoli/Choir.astro";
+export const prerender = true
 const posterSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
 ---
 <Layout title="Η Σχολή μας">

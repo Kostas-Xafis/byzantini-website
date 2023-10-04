@@ -68,8 +68,8 @@ export default function SysUsersTable() {
 	] as const;
 	const columnNames: ColumnType<SysUsers> = {
 		id: { type: "number", name: "Id" },
-		email: { type: "string", name: "Email", size: () => 25 },
-		privilege: { type: "string", name: "Δικαιώματα", size: () => 25 },
+		email: { type: "string", name: "Email", size: 25 },
+		privilege: { type: "string", name: "Δικαιώματα", size: 25 },
 	};
 
 	const shapedData = createMemo(() => {

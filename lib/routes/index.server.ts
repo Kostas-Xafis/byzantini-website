@@ -9,6 +9,7 @@ import { LocationsServerRoutes } from "./locations.server";
 import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
 import { RegistrationsServerRoutes } from "./registrations.server";
+import { AnnouncementsServerRoutes } from "./announcement.server";
 
 import { authentication } from "../middleware/authentication";
 import { requestValidation } from "../middleware/requestValidation";
@@ -27,10 +28,14 @@ const routes = (function () {
 		ClassTypeServerRoutes,
 		SysUsersServerRoutes,
 		RegistrationsServerRoutes,
+		AnnouncementsServerRoutes
 	).flat() as (EndpointRoute<any, AnyObjectSchema, any> | EndpointRoute<any, any, any>)[];
 	allRoutes.forEach(route => {
 		route.middleware = [];
-		if (route.authentication) route.middleware?.push(authentication);
+		if (route.authentication) route.middleware?.push(async (ctx) => {
+			let isAuthenticated = await authentication(ctx);
+			if (!isAuthenticated) return new Response("Unauthorized", { status: 401 });
+		});
 		if ("validation" in route) route.middleware?.push(requestValidation(route.validation));
 	});
 

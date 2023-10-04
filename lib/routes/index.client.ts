@@ -8,6 +8,7 @@ import { APILocations, type APILocationsArgs, APILocationsEndpoints, type APILoc
 import { APIInstruments, type APIInstrumentsArgs, APIInstrumentsEndpoints, type APIInstrumentsResponse } from "./instruments.client";
 import { APISysUsers, type APISysUsersArgs, APISysUsersEndpoints, type APISysUsersResponse } from "./sysusers.client";
 import { APIRegistrations, type APIRegistrationsArgs, APIRegistrationsEndpoints, type APIRegistrationsResponse } from "./registrations.client";
+import { APIAnnouncements, type APIAnnouncementsArgs, APIAnnouncementsEndpoints, type APIAnnouncementsResponse } from "./announcements.client";
 
 export const API = {
 	...APIBooks,
@@ -20,6 +21,7 @@ export const API = {
 	...APIInstruments,
 	...APISysUsers,
 	...APIRegistrations,
+	...APIAnnouncements,
 };
 
 export const APIEndpoints = {
@@ -33,6 +35,7 @@ export const APIEndpoints = {
 	...APIInstrumentsEndpoints,
 	...APISysUsersEndpoints,
 	...APIRegistrationsEndpoints,
+	...APIAnnouncementsEndpoints,
 };
 export type APIArgs = APIBooksArgs &
 	APIAuthenticationArgs &
@@ -43,7 +46,8 @@ export type APIArgs = APIBooksArgs &
 	APILocationsArgs &
 	APIInstrumentsArgs &
 	APISysUsersArgs &
-	APIRegistrationsArgs;
+	APIRegistrationsArgs &
+	APIAnnouncementsArgs;
 
 export type APIRes = APIBooksResponse &
 	APIAuthenticationResponse &
@@ -54,4 +58,5 @@ export type APIRes = APIBooksResponse &
 	APILocationsResponse &
 	APIInstrumentsResponse &
 	APISysUsersResponse &
-	APIRegistrationsResponse;
+	APIRegistrationsResponse &
+	APIAnnouncementsResponse;
