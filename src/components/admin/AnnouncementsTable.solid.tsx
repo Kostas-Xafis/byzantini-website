@@ -21,13 +21,14 @@ import Spinner from "../Spinner.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { fileToBlob } from "../../../lib/utils.client";
+import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "announcements";
 
 type AnnouncementTable = Omit<Announcements, "content">;
 
 const AnnouncementsInputs = (): Omit<
-	Record<keyof Announcements, InputProps>,
+	Record<keyof Announcements | "images", InputProps>,
 	"views"
 > => {
 	return {
@@ -54,6 +55,12 @@ const AnnouncementsInputs = (): Omit<
 			label: "Περιεχόμενο",
 			type: "text",
 			iconClasses: "fa-solid fa-paragraph",
+		},
+		images: {
+			type: "multifile",
+			name: "photos",
+			label: "Φωτογραφίες",
+			iconClasses: "fa-solid fa-images",
 		},
 	};
 };
@@ -100,17 +107,19 @@ export default function AnnouncementsTable() {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
-			const data: Omit<Announcements, "id" | "views"> = {
-				title: formData.get("title") as string,
-				content: formData.get("content") as string,
-				date: new Date(formData.get("date") as string).getTime(),
-			};
-			const res = await useAPI(setStore, API.Announcements.post, {
-				RequestObject: data,
-			});
-			if (!res.data) return;
-			const id = res.data.insertId;
+			// const formData = new FormData(e.currentTarget as HTMLFormElement);
+			// const data: Omit<Announcements, "id" | "views"> = {
+			// 	title: formData.get("title") as string,
+			// 	content: formData.get("content") as string,
+			// 	date: new Date(formData.get("date") as string).getTime(),
+			// };
+			// const res = await useAPI(setStore, API.Announcements.post, {
+			// 	RequestObject: data,
+			// });
+			// if (!res.data) return;
+			// const id = res.data.insertId;
+			const photos = FileHandler.getFiles("photos");
+			console.log(photos);
 			// const files = {
 			// 	image: await fileToBlob(formData.get("image") as File),
 			// };
@@ -119,7 +128,7 @@ export default function AnnouncementsTable() {
 			// 		RequestObject: files.image,
 			// 		UrlArgs: { id },
 			// 	});
-			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
+			// setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {
 			inputs: Omit(AnnouncementsInputs(), "id"),
