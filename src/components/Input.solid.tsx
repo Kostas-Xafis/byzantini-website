@@ -214,7 +214,7 @@ export default function Input(props: Props) {
 			>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " +
+						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}
 				></i>
@@ -250,7 +250,7 @@ export default function Input(props: Props) {
 			<Show when={type === "select"}>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " +
+						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}
 				></i>
@@ -304,7 +304,7 @@ export default function Input(props: Props) {
 			<Show when={type === "multiselect"}>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 " +
+						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}
 				></i>
@@ -382,7 +382,7 @@ export default function Input(props: Props) {
 				>
 					<i
 						class={
-							"text-4xl text-gray-400 group-hover/file:text-gray-50 " +
+							"text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 							(iconClasses || "")
 						}
 					></i>
@@ -420,7 +420,7 @@ export default function Input(props: Props) {
 						>
 							<i
 								class={
-									"text-5xl text-gray-400 group-hover/file:text-gray-50 " +
+									"text-5xl text-gray-400 group-hover/file:text-gray-50  " +
 									(iconClasses || "")
 								}
 							></i>
