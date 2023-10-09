@@ -86,22 +86,30 @@ export const asyncQueue = async <T>(
 ) => {
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
-	let queue =
-		maxJobs < jobs.length
-			? Array.from(jobs.splice(0, maxJobs - 1))
-			: Array.from(jobs);
+	let queue: any[];
+	if (maxJobs < jobs.length) {
+		queue = Array.from(jobs.splice(0, maxJobs - 1));
+	} else {
+		queue = Array.from(jobs);
+		maxJobs = jobs.length;
+		jobs = []; // empty the jobs array
+	}
 	let results: T[] = [];
-	while (jobsCompleted < totalJobs) {
-		while (!queue.length) await sleep(25);
-		(async () => {
-			let job = queue.shift() as () => Promise<T>;
+	console.log(`Starting ${totalJobs} jobs with ${maxJobs} max jobs`);
+	while (true) {
+		if (jobsCompleted === totalJobs) break;
+		while (queue.length === 0 && jobsCompleted !== totalJobs) await sleep(25); // wait for a job to be added to the queue if any are left
+		(jobsCompleted < totalJobs) && (async () => {
+			let job = queue.shift() as () => Promise<T>; // dequeue the job
 			if (!job) return;
-			results.push(await job());
+
+			results.push(await job()); // execute the job
 			jobsCompleted++;
 			verb &&
 				console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
-			while (queue.length === maxJobs) await sleep(50); // wait for a job to finish
-			if (jobsCompleted !== totalJobs && queue.length !== maxJobs) {
+
+			while (queue.length === maxJobs) await sleep(50); // respect the maxJobs limit
+			if (jobsCompleted !== totalJobs && jobs.length !== 0) {
 				let newJob = jobs.shift() as () => Promise<T>;
 				queue.push(newJob);
 			}

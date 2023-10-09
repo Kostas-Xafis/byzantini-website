@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/announcements", null, Announcements[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements & { images: string[]; }> = {
+const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements> = {
 	authentication: false,
 	method: "POST",
 	path: "/announcements/id",
@@ -37,10 +37,10 @@ const postImage: EndpointRoute<"POST:/announcements/image", typeof v_Announcemen
 	func: async ctx => null as any
 };
 
-const imageUpload: EndpointRoute<"POST:/announcements/image/[id:number]", Blob> = {
+const imageUpload: EndpointRoute<"POST:/announcements/image/[id:number]/[name:string]", Blob> = {
 	authentication: true,
 	method: "POST",
-	path: "/announcements/image/[id:number]",
+	path: "/announcements/image/[id:number]/[name:string]",
 	hasUrlParams: true,
 	func: async ctx => null as any
 };
@@ -91,7 +91,7 @@ export const APIAnnouncementsEndpoints: APIEndpointsBuilder<"Announcements", typ
 	},
 	"Announcements.imageUpload": {
 		method: "POST",
-		path: "/announcements/image/[id:number]",
+		path: "/announcements/image/[id:number]/[name:string]",
 		endpoint: "Announcements.imageUpload"
 	},
 	"Announcements.delete": {

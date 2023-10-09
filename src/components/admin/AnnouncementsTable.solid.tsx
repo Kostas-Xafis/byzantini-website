@@ -20,7 +20,7 @@ import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../Spinner.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { fileToBlob } from "../../../lib/utils.client";
+import { asyncQueue, fileToBlob } from "../../../lib/utils.client";
 import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "announcements";
@@ -51,9 +51,9 @@ const AnnouncementsInputs = (): Omit<
 			iconClasses: "fa-solid fa-calendar",
 		},
 		content: {
+			type: "textarea",
 			name: "content",
 			label: "Περιεχόμενο",
-			type: "text",
 			iconClasses: "fa-solid fa-paragraph",
 		},
 		images: {
@@ -107,28 +107,43 @@ export default function AnnouncementsTable() {
 		const submit = formErrorWrap(async function (e: Event) {
 			e.preventDefault();
 			e.stopPropagation();
-			// const formData = new FormData(e.currentTarget as HTMLFormElement);
-			// const data: Omit<Announcements, "id" | "views"> = {
-			// 	title: formData.get("title") as string,
-			// 	content: formData.get("content") as string,
-			// 	date: new Date(formData.get("date") as string).getTime(),
-			// };
-			// const res = await useAPI(setStore, API.Announcements.post, {
-			// 	RequestObject: data,
-			// });
-			// if (!res.data) return;
-			// const id = res.data.insertId;
-			const photos = FileHandler.getFiles("photos");
-			console.log(photos);
-			// const files = {
-			// 	image: await fileToBlob(formData.get("image") as File),
-			// };
-			// if (files.image)
-			// 	await useAPI(setStore, API.Announcements.imageUpload, {
-			// 		RequestObject: files.image,
-			// 		UrlArgs: { id },
-			// 	});
-			// setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
+			const formData = new FormData(e.currentTarget as HTMLFormElement);
+			const data: Omit<Announcements, "id" | "views"> = {
+				title: formData.get("title") as string,
+				content: formData.get("content") as string,
+				date: new Date(formData.get("date") as string).getTime(),
+			};
+			const res = await useAPI(setStore, API.Announcements.post, {
+				RequestObject: data,
+			});
+			if (!res.data) return;
+			const id = res.data.insertId;
+			const photos = FileHandler.getFiles("photos").map((file, i) => {
+				return async function () {
+					let blob = await fileToBlob(file);
+					if (!blob) {
+						console.error("Could not load file:", file.name);
+						return;
+					}
+					try {
+						await useAPI(setStore, API.Announcements.postImage, {
+							RequestObject: {
+								announcement_id: id,
+								name: file.name,
+								priority: i + 1,
+							},
+						});
+						await useAPI(setStore, API.Announcements.imageUpload, {
+							RequestObject: blob,
+							UrlArgs: { id, name: file.name },
+						});
+					} catch (e) {
+						console.error(e);
+					}
+				};
+			});
+			await asyncQueue(photos, 2, true);
+			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {
 			inputs: Omit(AnnouncementsInputs(), "id"),

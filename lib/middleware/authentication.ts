@@ -2,7 +2,7 @@ import type { SysUsers } from "../../types/entities";
 import { executeQuery } from "../utils.server";
 import type { APIContext } from "astro";
 
-const small_cache = new Map<string, boolean>();
+const small_cache = new Map<string, boolean>(); // This actually works! Nice.
 
 export const getSessionId = (req: Request) => {
 	const cookies = req.headers.get("cookie");
@@ -23,7 +23,7 @@ export async function authentication(ctx: APIContext) {
 	if (!session_id) return false;
 	if (small_cache.has(session_id)) {
 		// console.log("small cache hit");
-		executeQuery("UPDATE cache_hits SET hits = hits + 1 WHERE cache_name = 'small_cache'");
+		// executeQuery("UPDATE cache_hits SET hits = hits + 1 WHERE cache_name = 'small_cache'");
 		return true;
 	}
 	const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);

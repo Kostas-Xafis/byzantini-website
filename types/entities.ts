@@ -186,7 +186,7 @@ export type Announcements = Output<typeof v_Announcements>;
 
 export const v_AnnouncementImages = object({
 	announcement_id: number([integer(), minValue(0)]),
-	image: string(),
+	name: string(),
 	priority: number([integer(), minValue(1)]),
 });
 export type AnnouncementImages = Output<typeof v_AnnouncementImages>;

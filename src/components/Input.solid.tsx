@@ -162,11 +162,14 @@ export default function Input(props: Props) {
 				);
 		};
 	}
+
 	let fileList: Accessor<string[]>, setFileList: Setter<string[]>;
 	if (type === "multifile") {
 		[fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
 		const fileHandler = new FileHandler(name);
 		onFileClick = (e: MouseEvent) => {
+			e.stopPropagation();
+			e.preventDefault();
 			const input = document.querySelector(
 				`input[name='${name}']`
 			) as HTMLInputElement;
@@ -180,8 +183,27 @@ export default function Input(props: Props) {
 			setFileList(fileHandler.getFiles().map((f) => f.name));
 		};
 		onFileRemove = (fileId: number = 0) => {
+			console.log("removing file: ", fileId);
 			fileHandler.removeFile(fileId);
+			setFileList(fileHandler.getFiles().map((f) => f.name));
 		};
+		onMount(() => {
+			const fileDiv = document.querySelector(
+				"#multifileDropZone"
+			) as HTMLElement;
+			fileHandler.mountDragAndDrop(fileDiv, {
+				enterEvent: (e) => {
+					fileDiv.classList.add("bg-gray-600", "z-10", "unblur");
+				},
+				leaveEvent: (e) => {
+					fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
+				},
+				dropEvent: (e) => {
+					fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
+					setFileList(fileHandler.getFiles().map((f) => f.name));
+				},
+			});
+		});
 	}
 
 	document.querySelectorAll(".formInputs").forEach((inp) => {
@@ -201,7 +223,9 @@ export default function Input(props: Props) {
 			for={name}
 			class={
 				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
-				(isExtended ? " col-span-full max-w-full h-[200px]" : "")
+				(isExtended
+					? " col-span-full max-w-full !h-[300px] max-h-[300px]"
+					: "")
 			}
 		>
 			<Show
@@ -209,7 +233,8 @@ export default function Input(props: Props) {
 					type !== "select" &&
 					type !== "file" &&
 					type !== "multiselect" &&
-					type !== "multifile"
+					type !== "multifile" &&
+					type !== "textarea"
 				}
 			>
 				<i
@@ -407,17 +432,22 @@ export default function Input(props: Props) {
 			</Show>
 			{/*--------------------------------MULTIFILE INPUT---------------------------------------- */}
 			<Show when={type === "multifile"}>
-				<Show
-					when={
-						// @ts-ignore
-						fileList().length
-					}
-					fallback={
-						<div
-							data-name={name}
-							onclick={onFileClick}
-							class="peer peer-[:is(.show)]/file:hidden show group/file w-[95%] h-[85%] justify-self-center self-center flex flex-col items-center justify-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600 z-10"
-						>
+				<div
+					data-name={name}
+					onclick={onFileClick}
+					class="relative peer peer-[:is(.show)]/file:hidden show w-[95%] h-[85%] justify-self-center self-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer z-10 overflow-y-auto"
+				>
+					<div
+						id="multifileDropZone"
+						class={
+							"absolute inset-0 grid items-center" +
+							//@ts-ignore
+							(fileList().length > 0
+								? " -z-10 blur-[2px]"
+								: " hover:bg-gray-600 group/file")
+						}
+					>
+						<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
 							<i
 								class={
 									"text-5xl text-gray-400 group-hover/file:text-gray-50  " +
@@ -428,9 +458,8 @@ export default function Input(props: Props) {
 								Drag&thinsp; & Drop
 							</p>
 						</div>
-					}
-				>
-					<div class="flex flex-row flex-wrap">
+					</div>
+					<div class="flex flex-row flex-wrap gap-4 p-4 self-start">
 						<For
 							each={
 								// @ts-ignore
@@ -438,18 +467,17 @@ export default function Input(props: Props) {
 							}
 						>
 							{(fname, index) => (
-								<div class="flex flex-row">
+								<div class="flex flex-row items-center h-min px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
 									<CloseButton
 										onClick={() => onFileRemove(index())}
-										classes="text-lg w-[1.4rem] h-[1.4rem]"
-										data-fid={index()}
+										classes="text-lg w-[1.4rem] h-[1.4rem] mt-1 hover:bg-white"
 									></CloseButton>
 									<p>{fname}</p>
 								</div>
 							)}
 						</For>
 					</div>
-				</Show>
+				</div>
 				<input
 					class="hidden"
 					type="file"
@@ -463,8 +491,44 @@ export default function Input(props: Props) {
 				<style>
 					{`.show {
 						display: flex;
-					}`}
+					}
+					.unblur {
+						filter: blur(0);
+					}
+					`}
 				</style>
+			</Show>
+			<Show when={type === "textarea"}>
+				<i
+					class={
+						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
+						(iconClasses || "")
+					}
+				></i>
+				<textarea
+					class={
+						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
+						(disabled && blurDisabled ? " blur-[1px]" : "")
+					}
+					name={name}
+					placeholder={placeholder || ""}
+					value={value === 0 ? "0" : value || ""}
+					readOnly={disabled || false}
+					onfocus={(e: FocusEvent) =>
+						required &&
+						(e.currentTarget as HTMLElement).removeAttribute(
+							"required"
+						)
+					}
+					onblur={(e: FocusEvent) =>
+						required &&
+						(e.currentTarget as HTMLInputElement).value === "" &&
+						(e.currentTarget as HTMLElement).setAttribute(
+							"required",
+							""
+						)
+					}
+				/>
 			</Show>
 			<p class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10">
 				{label}

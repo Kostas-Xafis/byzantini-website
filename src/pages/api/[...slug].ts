@@ -24,6 +24,7 @@ const ResponseWrap = async (ctx: Context, route: EndpointRoute<any, any | AnyObj
 		if (response) return response;
 	}
 	const res = await generateResponse(ctx, route, urlSlug);
+	if ("error" in res) return new Response(JSON.stringify(res), { status: 500 });
 	return new Response(JSON.stringify(res), { status: 200 });
 };
 
