@@ -5,8 +5,6 @@ export class Bucket {
 	static async put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
 		const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
 		await S3_BUCKET.put(filename, file, { httpMetadata: { "contentType": filetype } });
-		// let res = await S3_BUCKET.put(filename, file, { httpMetadata: { "contentType": filetype } });
-		// console.log(JSON.stringify(res));
 	};
 
 	static async get(context: APIContext, filename: string) {

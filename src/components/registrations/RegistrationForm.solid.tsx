@@ -435,7 +435,6 @@ export function RegistrationForm() {
 	};
 
 	const onSelectClick = (type: MusicType) => {
-		console.log("Dude I am here", type);
 		const curType = formSelected();
 		if (curType === type) return;
 		if (curType === MusicType.None) {

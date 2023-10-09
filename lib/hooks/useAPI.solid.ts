@@ -51,7 +51,6 @@ export const useAPI = async <T extends APIEndpointKey>(setStore: SetStoreFunctio
 		}
 		//@ts-ignore
 		!StoreMut ? setStore(endpoint, json.data as any) : setStore(StoreMut.mutatedEndpoint, (prev) => {
-			console.log("Mutating: ", StoreMut.mutation, " to:", json.data);
 			const isArr = Array.isArray(json.data);
 			let prevData = prev as any[] || [];
 			if (StoreMut.mutationType === ActionEnum.ADD)

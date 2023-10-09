@@ -1,6 +1,6 @@
 import type { Announcements, AnnouncementImages } from "../../types/entities";
 import { AnnouncementsRoutes } from "./announcements.client";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
 
 const bucketPrefix = "announcements";
@@ -66,11 +66,8 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 		if (imageMIMEType.includes(filetype)) {
 			const imageBuf = await blob.arrayBuffer();
 			const bucketFileName = bucketPrefix + `/${id}/` + name;
-			console.log(bucketFileName);
 			if (announcement.name) await Bucket.delete(ctx, announcement.name);
 			await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
-			let file = await Bucket.get(ctx, bucketFileName);
-			console.log(JSON.stringify(file));
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
@@ -84,11 +81,11 @@ serverRoutes.delete.func = async ctx => {
 		if (!announcements || !announcements.length) throw Error("announcements not found");
 		await T.executeQuery(`DELETE FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
 		for (const id of ids) {
-			const images = await T.executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [id]);
+			const images = await T.executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
 			if (images.length) {
 				await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ?`, [id]);
-				for (const { name: image } of images) {
-					await Bucket.delete(ctx, image);
+				for (const { name, announcement_id } of images) {
+					await Bucket.delete(ctx, "announcements/" + announcement_id + "/" + name);
 				}
 			}
 		}

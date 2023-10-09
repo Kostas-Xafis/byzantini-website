@@ -553,7 +553,6 @@ export default function RegistrationsTable() {
 			e.stopPropagation();
 			const items = selectedItems
 				.map((id) => {
-					console.log(id);
 					const student = registrations.find((r) => r.id === id);
 					if (!student) return;
 					const teacher = teachers.find(
@@ -573,7 +572,6 @@ export default function RegistrationsTable() {
 				teacher: Teachers;
 				instrument: Instruments | null;
 			}[];
-			console.log("Made it here!");
 			const xlsx = await loadXLSX();
 			const wb = xlsx.utils.book_new();
 			const wsStudentsBook = xlsx.utils.aoa_to_sheet(

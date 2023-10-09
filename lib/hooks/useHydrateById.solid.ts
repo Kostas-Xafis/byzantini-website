@@ -32,7 +32,6 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 		on(actionPressed, ({ action, mutate, mutatedEndpoint: mutEndpoint }) => {
 			if (action === ActionEnum.NONE || action === ActionEnum.DOWNLOAD)
 				return;
-			console.log("Mutating :", mutate, "with action :", action);
 			if (action === ActionEnum.DELETE) {
 				setStore(mutEndpoint || mutatedEndpoint, (prev) => {
 					if (!prev) return;
