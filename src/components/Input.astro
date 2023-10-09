@@ -84,6 +84,5 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 		});
 	});
 
-	//@ts-ignore
-	document.querySelectorAll("input[type='date']").forEach(d => (d.valueAsDate = new Date()));
+	document.querySelectorAll<HTMLInputElement>("input[type='date']").forEach(d => (d.valueAsDate = new Date()));
 </script>

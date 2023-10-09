@@ -47,8 +47,8 @@ export default function SysUsersTable() {
 		API.SysUsers.get
 	);
 	useHydrate(() => {
-		useAPI(setStore, API.SysUsers.get, {});
-		useAPI(setStore, API.SysUsers.getBySid, {});
+		useAPI(API.SysUsers.get, {}, setStore);
+		useAPI(API.SysUsers.getBySid, {}, setStore);
 	})(true);
 
 	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
@@ -83,15 +83,13 @@ export default function SysUsersTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			if (!link)
-				await useAPI(setStore, API.SysUsers.createRegisterLink, {});
+				await useAPI(API.SysUsers.createRegisterLink, {}, setStore);
 			setTimeout(() => {
-				//@ts-ignore
 				document
-					.querySelector(
+					.querySelector<HTMLElement>(
 						"div[data-prefix='sysusers'] button:first-child"
 					)
-					//@ts-ignore
-					.click();
+					?.click();
 			}, 200);
 		});
 		return {
@@ -132,9 +130,13 @@ export default function SysUsersTable() {
 			const data = selectedItems.map(
 				(i) => (sysusers.find((p) => p.id === i) as SysUsers).id
 			);
-			const res = await useAPI(setStore, API.SysUsers.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.SysUsers.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.DELETE,

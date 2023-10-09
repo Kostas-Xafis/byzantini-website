@@ -58,10 +58,9 @@ const payoffsToTable = (
 	wholesalers: Wholesalers[]
 ): SchoolPayoffsTable[] => {
 	return payoffs.map((p) => {
-		const columns = Object.values(p);
-		//@ts-ignore
-		columns[1] = wholesalers.find((w) => w.id === p.wholesaler_id)?.name;
-		//@ts-ignore
+		const columns = Object.values(p) as (string | number)[];
+		columns[1] =
+			wholesalers.find((w) => w.id === p.wholesaler_id)?.name || "";
 		columns[2] = columns[2] + "€";
 		return columns as unknown as SchoolPayoffsTable;
 	});
@@ -77,8 +76,8 @@ export default function PayoffsTable() {
 		API.Payoffs.get
 	);
 	useHydrate(() => {
-		useAPI(setStore, API.Payoffs.get, {});
-		useAPI(setStore, API.Wholesalers.get, {});
+		useAPI(API.Payoffs.get, {}, setStore);
+		useAPI(API.Wholesalers.get, {}, setStore);
 	})(true);
 
 	const columnNames: ColumnType<SchoolPayoffsTable> = {
@@ -114,9 +113,13 @@ export default function PayoffsTable() {
 			};
 			if (data.amount > payoff.amount || data.amount === 0)
 				throw Error("Invalid amount");
-			const res = await useAPI(setStore, API.Payoffs.updateAmount, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Payoffs.updateAmount,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.MODIFY,
@@ -145,9 +148,13 @@ export default function PayoffsTable() {
 			const data = selectedItems.map(
 				(i) => (payoffs.find((p) => p.id === i) as Payoffs).id
 			);
-			const res = await useAPI(setStore, API.Payoffs.complete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Payoffs.complete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.DELETE,

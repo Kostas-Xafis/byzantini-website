@@ -85,7 +85,6 @@
 		const obsv = new IntersectionObserver(
 			entries => {
 				const entry = entries[0];
-				// @ts-ignore
 				const head = document.querySelector("#choirHead") as HTMLElement;
 				if (!head) return;
 				if (entry.intersectionRatio >= 0.3) head.classList.add("emphasis");
@@ -124,7 +123,7 @@
 				};
 				isCarouselVisible = intersectionRatio > 0.4;
 				if(isCarouselVisible && !carouselUpdate.timeoutFired) {
-					carouselUpdate.timeout();
+					carouselUpdate.timeout().catch((e) => {});
 				} else if(!isCarouselVisible && carouselUpdate.timeoutFired) {
 					carouselUpdate.abort();
 				}
@@ -157,6 +156,6 @@
 				else carouselUpdate.reset();
 			}, 300);
 		});
-		carouselUpdate.timeout();
+		carouselUpdate.timeout().catch((e) => {});
 	});
 </script>

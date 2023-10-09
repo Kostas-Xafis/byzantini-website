@@ -19,9 +19,9 @@ type TotalsTable = {
 export default function TotalsTable() {
 	const [store, setStore] = createStore<APIStore>({});
 	useHydrate(() => {
-		useAPI(setStore, API.Payments.getTotal, {});
-		useAPI(setStore, API.Payoffs.getTotal, {});
-		useAPI(setStore, API.Registrations.getTotal, {});
+		useAPI(API.Payments.getTotal, {}, setStore);
+		useAPI(API.Payoffs.getTotal, {}, setStore);
+		useAPI(API.Registrations.getTotal, {}, setStore);
 	})(true);
 	const columnNames: ColumnType<TotalsTable> = {
 		total_payments: {

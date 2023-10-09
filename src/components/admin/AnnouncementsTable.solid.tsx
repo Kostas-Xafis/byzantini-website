@@ -70,8 +70,9 @@ const announcementsToTable = (
 	announcements: Announcements[]
 ): AnnouncementTable[] => {
 	return announcements.map((a) => {
-		let announcement = JSON.parse(JSON.stringify(a)) as Announcements;
-		//@ts-ignore
+		let announcement = JSON.parse(
+			JSON.stringify(a)
+		) as Partial<Announcements>;
 		delete announcement.content;
 		const columns = Object.values(announcement);
 
@@ -96,7 +97,7 @@ export default function AnnouncementsTable() {
 		API.Announcements.get
 	);
 	useHydrate(() => {
-		useAPI(setStore, API.Announcements.get, {});
+		useAPI(API.Announcements.get, {}, setStore);
 	})(true);
 
 	let shapedData = createMemo(() => {
@@ -114,9 +115,13 @@ export default function AnnouncementsTable() {
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
 			};
-			const res = await useAPI(setStore, API.Announcements.post, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Announcements.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const photos = FileHandler.getFiles("photos").map((file, i) => {
@@ -127,17 +132,25 @@ export default function AnnouncementsTable() {
 						return;
 					}
 					try {
-						await useAPI(setStore, API.Announcements.postImage, {
-							RequestObject: {
-								announcement_id: id,
-								name: file.name,
-								priority: i + 1,
+						await useAPI(
+							API.Announcements.postImage,
+							{
+								RequestObject: {
+									announcement_id: id,
+									name: file.name,
+									priority: i + 1,
+								},
 							},
-						});
-						await useAPI(setStore, API.Announcements.imageUpload, {
-							RequestObject: blob,
-							UrlArgs: { id, name: file.name },
-						});
+							setStore
+						);
+						await useAPI(
+							API.Announcements.imageUpload,
+							{
+								RequestObject: blob,
+								UrlArgs: { id, name: file.name },
+							},
+							setStore
+						);
 					} catch (e) {
 						console.error(e);
 					}
@@ -164,9 +177,13 @@ export default function AnnouncementsTable() {
 			e.stopPropagation();
 
 			const data = selectedItems.slice();
-			const res = await useAPI(setStore, API.Announcements.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Announcements.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});

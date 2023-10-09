@@ -61,7 +61,6 @@ export class FileHandler {
 				width: w,
 				x: px,
 				y: py,
-				//@ts-ignore
 			} = div.getBoundingClientRect();
 			const { x: mx, y: my } = e;
 			if (

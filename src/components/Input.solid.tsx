@@ -163,7 +163,8 @@ export default function Input(props: Props) {
 		};
 	}
 
-	let fileList: Accessor<string[]>, setFileList: Setter<string[]>;
+	let fileList: Accessor<string[]> = () => [],
+		setFileList: Setter<string[]>;
 	if (type === "multifile") {
 		[fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
 		const fileHandler = new FileHandler(name);
@@ -441,10 +442,8 @@ export default function Input(props: Props) {
 						id="multifileDropZone"
 						class={
 							"absolute inset-0 grid items-center" +
-							//@ts-ignore
-							(fileList().length > 0
-								? " -z-10 blur-[2px]"
-								: " hover:bg-gray-600 group/file")
+							((fileList().length > 0 && " -z-10 blur-[2px]") ||
+								" hover:bg-gray-600 group/file")
 						}
 					>
 						<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
@@ -460,12 +459,7 @@ export default function Input(props: Props) {
 						</div>
 					</div>
 					<div class="flex flex-row flex-wrap gap-4 p-4 self-start">
-						<For
-							each={
-								// @ts-ignore
-								fileList()
-							}
-						>
+						<For each={fileList()}>
 							{(fname, index) => (
 								<div class="flex flex-row items-center h-min px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
 									<CloseButton

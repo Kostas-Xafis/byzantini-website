@@ -263,9 +263,9 @@ export default function RegistrationsTable() {
 		API.Registrations.get
 	);
 	useHydrate(() => {
-		useAPI(setStore, API.Registrations.get, {});
-		useAPI(setStore, API.Teachers.getByFullnames, {});
-		useAPI(setStore, API.Instruments.get, {});
+		useAPI(API.Registrations.get, {}, setStore);
+		useAPI(API.Teachers.getByFullnames, {}, setStore);
+		useAPI(API.Instruments.get, {}, setStore);
 	})(true);
 
 	const shapedData = createMemo(() => {
@@ -391,9 +391,13 @@ export default function RegistrationsTable() {
 					? new Date(formData.get("payment_date") as string).getTime()
 					: null,
 			};
-			await useAPI(setStore, API.Registrations.update, {
-				RequestObject: data,
-			});
+			await useAPI(
+				API.Registrations.update,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			setActionPressed({ action: ActionEnum.MODIFY, mutate: [data.id] });
 		});
 		const filledInputs = Fill(
@@ -425,9 +429,13 @@ export default function RegistrationsTable() {
 			e.preventDefault();
 			e.stopPropagation();
 			const data = selectedItems.map((id) => id);
-			const res = await useAPI(setStore, API.Registrations.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Registrations.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});
@@ -713,9 +721,9 @@ export default function RegistrationsTable() {
 		let { columnName, value, type } = searchQuery;
 		if (!columnName || !value || !type) {
 			// Make use of the variables to avoid optimization and therefore not triggering the effect when a search is made
-			document.dispatchEvent(new Event("hydrate"));
+			document.dispatchEvent(new CustomEvent("hydrate") as CustomEvent);
 		} else {
-			document.dispatchEvent(new Event("hydrate"));
+			document.dispatchEvent(new CustomEvent("hydrate") as CustomEvent);
 		}
 	});
 

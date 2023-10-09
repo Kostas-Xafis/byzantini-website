@@ -99,8 +99,8 @@ export default function PaymentsTable() {
 		API.Payments.get
 	);
 	useHydrate(() => {
-		useAPI(setStore, API.Payments.get, {});
-		useAPI(setStore, API.Books.get, {});
+		useAPI(API.Payments.get, {}, setStore);
+		useAPI(API.Books.get, {}, setStore);
 	})(true);
 
 	const columnNames: ColumnType<PaymentsTable> = {
@@ -133,10 +133,14 @@ export default function PaymentsTable() {
 				date: new Date(formData.get("date") as string).getTime() / 1000,
 			};
 
-			const res = await useAPI(setStore, API.Payments.post, {
-				RequestObject: data,
-			});
-			if (!res.data && !res.message) return;
+			const res = await useAPI(
+				API.Payments.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
+			if (!res.data) return;
 			setActionPressed({
 				action: ActionEnum.ADD,
 				mutate: [res.data.id],
@@ -179,9 +183,13 @@ export default function PaymentsTable() {
 				!data.amount
 			)
 				return alert("Καταχώρηση μη επιτρεπτού ποσού!");
-			const res = await useAPI(setStore, API.Payments.updatePayment, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Payments.updatePayment,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.MODIFY,
@@ -213,9 +221,13 @@ export default function PaymentsTable() {
 				return alert(
 					"Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!"
 				);
-			const res = await useAPI(setStore, API.Payments.complete, {
-				RequestObject: data.map((p) => p.id),
-			});
+			const res = await useAPI(
+				API.Payments.complete,
+				{
+					RequestObject: data.map((p) => p.id),
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.CHECK,
@@ -246,9 +258,13 @@ export default function PaymentsTable() {
 				return alert(
 					"Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!"
 				);
-			const res = await useAPI(setStore, API.Payments.delete, {
-				RequestObject: data.map((p) => p.id),
-			});
+			const res = await useAPI(
+				API.Payments.delete,
+				{
+					RequestObject: data.map((p) => p.id),
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.DELETE,

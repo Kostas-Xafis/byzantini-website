@@ -12,14 +12,19 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"));
 };
 
+serverRoutes.getSimple.func = async _ctx => {
+	return await execTryCatch(() => executeQuery<Omit<Announcements, "content">>("SELECT id, title, date, views FROM announcements"));
+};
+
 serverRoutes.getById.func = async ctx => {
 	return await execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", ids);
 		if (!announcement) throw Error("announcement not found");
-		return { ...announcement };
+		return announcement;
 	});
 };
+
 
 // This is getById but for the client side, will fix later
 // serverRoutes.getById.func = async ctx => {

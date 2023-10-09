@@ -133,14 +133,10 @@ const LocationsInputs = (
 
 const locationsToTable = (locations: Locations[]): LocationsTable[] => {
 	return locations.map((p) => {
-		let location = JSON.parse(JSON.stringify(p)) as Locations;
-		// @ts-ignore
+		let location = JSON.parse(JSON.stringify(p)) as Partial<Locations>;
 		delete location.telephones;
-		// @ts-ignore
 		delete location?.link;
-		// @ts-ignore
 		delete location.map;
-		// @ts-ignore
 		delete location?.youtube;
 
 		const columns = Object.values(location) as (
@@ -148,7 +144,6 @@ const locationsToTable = (locations: Locations[]): LocationsTable[] => {
 			| number
 			| boolean
 		)[];
-		//@ts-ignore
 		columns[8] =
 			(location.image && "/spoudastiria/" + location.image) || "";
 		columns[9] = !!location.partner;
@@ -166,7 +161,7 @@ export default function LocationsTable() {
 		API.Locations.get
 	);
 	useHydrate(() => {
-		useAPI(setStore, API.Locations.get, {});
+		useAPI(API.Locations.get, {}, setStore);
 	})(true);
 
 	const columnNames: ColumnType<LocationsTable> = {
@@ -214,19 +209,27 @@ export default function LocationsTable() {
 					),
 				].map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
-			const res = await useAPI(setStore, API.Locations.post, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Locations.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const files = {
 				image: await fileToBlob(formData.get("image") as File),
 			};
 			if (files.image)
-				await useAPI(setStore, API.Locations.fileUpload, {
-					RequestObject: files.image,
-					UrlArgs: { id },
-				});
+				await useAPI(
+					API.Locations.fileUpload,
+					{
+						RequestObject: files.image,
+						UrlArgs: { id },
+					},
+					setStore
+				);
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {
@@ -268,49 +271,54 @@ export default function LocationsTable() {
 					),
 				].map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
-			const res = await useAPI(setStore, API.Locations.update, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Locations.update,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			const file = {
 				image: await fileToBlob(formData.get("image") as File),
 			};
 			if (imageRemoved) {
-				await useAPI(setStore, API.Locations.fileDelete, {
-					UrlArgs: { id: location.id },
-				});
+				await useAPI(
+					API.Locations.fileDelete,
+					{
+						UrlArgs: { id: location.id },
+					},
+					setStore
+				);
 			}
 			if (file.image)
-				await useAPI(setStore, API.Locations.fileUpload, {
-					RequestObject: file.image,
-					UrlArgs: { id: location.id },
-				});
+				await useAPI(
+					API.Locations.fileUpload,
+					{
+						RequestObject: file.image,
+						UrlArgs: { id: location.id },
+					},
+					setStore
+				);
 			setActionPressed({
 				action: ActionEnum.MODIFY,
 				mutate: [location.id],
 			});
 		});
-		const emptyFileRemove = (e: CustomEvent) => {
+		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();
 			e.stopPropagation();
-			const name = e.detail as string;
+			const name = e.detail;
 			if (name === location.image) imageRemoved = true;
 		};
 
-		const simpleTeacher = JSON.parse(JSON.stringify(location)) as Locations;
-		// @ts-ignore
-		delete simpleTeacher.image;
-		// @ts-ignore
-		delete simpleTeacher.cv;
 		return {
-			inputs: Omit(Fill(LocationsInputs(location), simpleTeacher), "id"),
+			inputs: Omit(Fill(LocationsInputs(location), location), "id"),
 			onMount: () => {
-				//@ts-ignore
 				document.addEventListener("emptyFileRemove", emptyFileRemove);
 				formListener(submit, true, PREFIX);
 			},
 			onCleanup: () => {
-				//@ts-ignore
 				document.removeEventListener(
 					"emptyFileRemove",
 					emptyFileRemove
@@ -331,9 +339,13 @@ export default function LocationsTable() {
 			e.stopPropagation();
 
 			const data = selectedItems.slice();
-			const res = await useAPI(setStore, API.Locations.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Locations.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});

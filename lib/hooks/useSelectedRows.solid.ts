@@ -1,5 +1,4 @@
 import { createStore } from "solid-js/store";
-import type { ContextType } from "../../src/components/admin/table/SelectedRowContext.solid";
 
 export function useSelectedRows() {
 	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
@@ -25,5 +24,5 @@ export function useSelectedRows() {
 				setSelectedItems([]);
 			},
 		},
-	] as ContextType;
+	] as const;
 }

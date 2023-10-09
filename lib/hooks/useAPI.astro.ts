@@ -23,10 +23,10 @@ export const useAPI = async <T extends keyof Endpoint>(endpoint: T, req: APIArgs
 			method: route.method,
 			body: RequestObject ? JSON.stringify(RequestObject) : null
 		});
-		const json = (await res.json()) as APIRes[T];
-		if ("error" in json) return { error: json.error };
-		if ("message" in json) return { message: json.message };
-		return { data: json.data as any };
+		const { res: response } = (await res.json()) as APIRes[T];
+		if ("error" in response) return { error: response.error };
+		if ("message" in response) return { message: response.message };
+		return { data: response.data as any };
 	} catch (error) {
 		return { error };
 	}

@@ -10,6 +10,14 @@ const get: EndpointRoute<"GET:/announcements", null, Announcements[]> = {
 	func: async ctx => null as any
 };
 
+const getSimple: EndpointRoute<"GET:/announcements/no-content", null, Omit<Announcements, "content">[]> = {
+	authentication: false,
+	method: "GET",
+	path: "/announcements/no-content",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
 const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements> = {
 	authentication: false,
 	method: "POST",
@@ -55,6 +63,7 @@ const del: DefaultEndpointRoute<"DELETE:/announcements", number[]> = {
 
 export const AnnouncementsRoutes = {
 	get,
+	getSimple,
 	getById,
 	post,
 	postImage,
@@ -71,6 +80,11 @@ export const APIAnnouncementsEndpoints: APIEndpointsBuilder<"Announcements", typ
 		method: "GET",
 		path: "/announcements",
 		endpoint: "Announcements.get"
+	},
+	"Announcements.getSimple": {
+		method: "GET",
+		path: "/announcements/no-content",
+		endpoint: "Announcements.getSimple"
 	},
 	"Announcements.getById": {
 		method: "POST",
@@ -104,6 +118,7 @@ export const APIAnnouncementsEndpoints: APIEndpointsBuilder<"Announcements", typ
 export const APIAnnouncements: APIBuilder<"Announcements", typeof AnnouncementsRoutes> = {
 	Announcements: {
 		get: "Announcements.get",
+		getSimple: "Announcements.getSimple",
 		getById: "Announcements.getById",
 		post: "Announcements.post",
 		postImage: "Announcements.postImage",

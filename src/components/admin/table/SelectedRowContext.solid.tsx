@@ -1,5 +1,7 @@
 import { createContext } from "solid-js";
 
+export type EmptyContextType = [number[], {}];
+
 export type ContextType = [
 	number[],
 	{
@@ -10,4 +12,5 @@ export type ContextType = [
 		removeMany: (i: number[]) => void;
 	}
 ];
+
 export const SelectedItemsContext = createContext<ContextType>();

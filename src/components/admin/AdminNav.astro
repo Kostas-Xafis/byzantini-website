@@ -134,8 +134,7 @@ const currentPage = links.find(link => link.url === Astro.url.pathname || link.u
 
 	window.matchMedia("(max-width: 640px)").matches &&
 			onElementMount("#burgerNav", () => {
-				//@ts-ignore
-				document.querySelector("#burgerNav").addEventListener("click", () => {
+				document.querySelector<HTMLElement>("#burgerNav")?.addEventListener("click", () => {
 					const menu = document.querySelector("#burgerNav > div") as HTMLElement;
 					const isOpen = menu.parentElement?.classList.contains("open");
 					if (isOpen) {

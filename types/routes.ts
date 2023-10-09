@@ -9,9 +9,22 @@ type IsValibotSchema<T> = T extends (infer K)[] ? IsValibotSchema<K> : T extends
 
 export type HTTPMethods = "GET" | "POST" | "PUT" | "DELETE";
 
-export type DefaultEndpointResponse = { res: "error"; error: any; } | { res: "message"; message: string; };
-
-export type EndpointResponse<T> = { res: "data"; data: T; };
+export type EndpointResponse2<T> = {
+	res: ((T extends string ? {
+		type: "message";
+		message: string;
+	} : IsAny<T> extends true ?
+		{
+			type: "message";
+			message: string;
+		} : {
+			type: "data";
+			data: T;
+		})) | {
+			type: "error";
+			error: any;
+		};
+};
 
 export type Context = ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<any extends AnyObjectSchema ? Output<AnyObjectSchema> : any>>>;
 
@@ -28,12 +41,12 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 				? APIContext
 				: ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>>>,
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>
+		) => Promise<EndpointResponse2<Res>>
 		: (
 			req: Req extends null
 				? APIContext
 				: ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>>>,
-		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>;
+		) => Promise<EndpointResponse2<Res>>;
 	} & (IsValibotSchema<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req; } : {})
 	: {
 		// For default use case
@@ -46,7 +59,7 @@ export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL
 				? APIContext
 				: ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>>>,
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-		) => Promise<Res extends undefined ? DefaultEndpointResponse : EndpointResponse<Res>>;
+		) => Promise<EndpointResponse2<Res>>;
 	} & (IsValibotSchema<Req> extends true ? { validation: () => Req extends (infer R)[] ? R : Req; } : {})) & {
 		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	};

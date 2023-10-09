@@ -89,6 +89,7 @@ const booksToTable = (
 			wholesalers.find((w) => w.id === book.wholesaler_id)?.name || "";
 		columns[3] = columns[3] + "€";
 		columns[4] = columns[4] + "€";
+
 		//@ts-ignore
 		columns.push(columns[5] - columns[6]);
 		return columns as unknown as BooksTable;
@@ -123,8 +124,8 @@ export default function BooksTable() {
 		useHydrateById(setStore, API.Wholesalers.getById, API.Wholesalers.get);
 
 	useHydrate(() => {
-		useAPI(setStore, API.Books.get, {});
-		useAPI(setStore, API.Wholesalers.get, {});
+		useAPI(API.Books.get, {}, setStore);
+		useAPI(API.Wholesalers.get, {}, setStore);
 	})(true);
 
 	let shapedData = createMemo(() => {
@@ -158,13 +159,17 @@ export default function BooksTable() {
 				return alert(
 					"Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων"
 				);
-			const res = await useAPI(setStore, API.Books.post, {
-				RequestObject: data,
-			});
-			if (!res.data && !res.message) return;
+			const res = await useAPI(
+				API.Books.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
+			if (!res.data) return;
 			setActionPressed({
 				action: ActionEnum.ADD,
-				mutate: [res.data.insertId as number],
+				mutate: [res.data.insertId],
 			});
 		});
 		return {
@@ -191,9 +196,13 @@ export default function BooksTable() {
 				id: book.id,
 				quantity: Number(formData.get("quantity") as string),
 			};
-			const res = await useAPI(setStore, API.Books.updateQuantity, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Books.updateQuantity,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.MODIFY, mutate: [book.id] });
 		});
@@ -217,9 +226,13 @@ export default function BooksTable() {
 			const data = selectedItems.map(
 				(id) => books.find((b) => b.id === id)?.id || -1
 			);
-			const res = await useAPI(setStore, API.Books.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Books.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({
 				action: ActionEnum.DELETE,
@@ -244,13 +257,17 @@ export default function BooksTable() {
 			const data = {
 				name: formData.get("name") as string,
 			};
-			const res = await useAPI(setStore, API.Wholesalers.post, {
-				RequestObject: data,
-			});
-			if (!res.data && !res.message) return;
+			const res = await useAPI(
+				API.Wholesalers.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
+			if (!res.data) return;
 			setActionPressedWholesalers({
 				action: ActionEnum.ADD,
-				mutate: [res.data.insertId as number],
+				mutate: [res.data.insertId],
 			});
 		});
 		return {
@@ -277,9 +294,13 @@ export default function BooksTable() {
 			e.stopPropagation();
 			const formData = new FormData(e.currentTarget as HTMLFormElement);
 			const data = [Number(formData.get("name"))];
-			const res = await useAPI(setStore, API.Wholesalers.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Wholesalers.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressedWholesalers({
 				action: ActionEnum.DELETE,

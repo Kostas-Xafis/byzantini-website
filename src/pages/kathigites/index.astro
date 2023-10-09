@@ -1,6 +1,5 @@
 ---
-
-import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
+import { useAPI, API } from "../../../lib/hooks/useAPI.solid";
 import { isDevFromURL } from "../../../lib/utils.client";
 import type { Instruments, Locations, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
@@ -15,15 +14,13 @@ const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_r
 	useAPI(API.Instruments.get, {}),
 ]);
 
-const [byz_teachers, par_teachers, eur_teachers, teacher_locations, locations, teacher_instruments, instruments] = [
-	byz_teachers_res.data as Teachers[],
-	par_teachers_res.data as Teachers[],
-	eur_teachers_res.data as Teachers[],
-	teacher_locations_res.data as TeacherLocations[],
-	locations_res.data as Locations[],
-	teacher_instruments_res.data as TeacherInstruments[],
-	instruments_res.data as Instruments[]
-];
+let byz_teachers = "data" in byz_teachers_res && byz_teachers_res.data || [],
+	par_teachers = "data" in par_teachers_res && par_teachers_res.data || [],
+	eur_teachers = "data" in eur_teachers_res && eur_teachers_res.data || [],
+	teacher_locations = "data" in teacher_locations_res && teacher_locations_res.data || [],
+	locations = "data" in locations_res && locations_res.data || [],
+	teacher_instruments = "data" in teacher_instruments_res && teacher_instruments_res.data || [],
+	instruments = "data" in instruments_res && instruments_res.data || [];
 
 const enum MusicType {
 	Byzantine = "byz",
@@ -63,7 +60,7 @@ const cvSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL
 
 const femaleTeachers = ["Αθηνά Κουκή", "Ναταλία Χαρίκλεια Ζαχαράκη", "Αικατερίνη Σκρέκη"]
 const notProfessor = ["Ναταλία Χαρίκλεια Ζαχαράκη", "Χρήστος Σαράντης", "Γεώργιος Γιόβας", "Γεώργιος Γεωργακόπουλος"];
-const teachingTitle = (fullname:string) => {
+const teachingTitle = (fullname: string) => {
 	const isProfessor = !notProfessor.includes(fullname);
 	const isFemale = femaleTeachers.includes(fullname);
 	return isProfessor ? (isFemale ? "Καθηγήτρια" : "Καθηγητής") : (isFemale ? "Δασκάλα" : "Δάσκαλος");
@@ -288,10 +285,9 @@ const teachingTitle = (fullname:string) => {
 		new PerformanceObserver((list) => {
 			const entries = list.getEntries();
 			entries.forEach(() => {
-
 				networkCheckHandler.reset();
 			})
 		}).observe({entryTypes: ["resource"]});
-		networkCheckHandler.timeout().catch(() => {});
+		networkCheckHandler.timeout().catch((e) => {});
 	});
 </script>

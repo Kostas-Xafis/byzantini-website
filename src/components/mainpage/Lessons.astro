@@ -65,10 +65,8 @@ const text = [
 		const obsv = new IntersectionObserver(
 			entries => {
 				const entry = entries[0];
-				// @ts-ignore
-				if (entry.intersectionRatio >= 0.4) document.querySelector("#lessonsHead").classList.add("emphasis");
-				// @ts-ignore
-				else document.querySelector("#lessonsHead").classList.remove("emphasis");
+				if (entry.intersectionRatio >= 0.4) document.querySelector<HTMLElement>("#lessonsHead")?.classList.add("emphasis");
+				else document.querySelector<HTMLElement>("#lessonsHead")?.classList.remove("emphasis");
 			},
 			{
 				root: null,
@@ -76,7 +74,6 @@ const text = [
 				threshold: [0.4]
 			}
 		);
-		// @ts-ignore
 		obsv.observe(document.querySelector("#lessons") as HTMLElement);
 	});
 	!window.matchMedia("(min-width: 640px)").matches &&

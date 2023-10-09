@@ -349,10 +349,10 @@ export function RegistrationForm() {
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	useHydrate(() => {
-		useAPI(setStore, API.Teachers.get, {});
-		useAPI(setStore, API.Teachers.getClasses, {});
-		useAPI(setStore, API.Teachers.getInstruments, {});
-		useAPI(setStore, API.Instruments.get, {});
+		useAPI(API.Teachers.get, {}, setStore);
+		useAPI(API.Teachers.getClasses, {}, setStore);
+		useAPI(API.Teachers.getInstruments, {}, setStore);
+		useAPI(API.Instruments.get, {}, setStore);
 	})(true);
 	createEffect(
 		on(formSelected, (type) => {
@@ -511,9 +511,13 @@ export function RegistrationForm() {
 				alert("Παρακαλώ επιλέξτε όργανο / μάθημα");
 				throw Error("");
 			}
-			const res = await useAPI(setStore, API.Registrations.post, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Registrations.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (res.message) {
 				const messageDialog = document.querySelector(
 					"#submitMessage"
@@ -634,8 +638,7 @@ export function RegistrationForm() {
 								  ).map((input) => <Input {...input} />)}
 							{formSelected() === MusicType.Traditional ||
 							formSelected() === MusicType.European
-								? // @ts-ignore
-								  Object.values(
+								? Object.values(
 										instrumentsInput(InstrumentsByTeacher())
 								  ).map((input) => <Input {...input} />)
 								: ""}

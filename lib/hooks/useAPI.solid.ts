@@ -5,14 +5,16 @@ import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControls.solid";
 type APIEndpointKey = keyof typeof APIEndpoints;
 export type APIStore = {
-	[K in APIEndpointKey]?: Extract<APIRes[K], { res: "data"; }>["data"];
+	[K in APIEndpointKey]?: Extract<APIRes[K]["res"], { type: "data"; }>["data"];
 };
+type APIStoreValue<Key extends keyof APIStore> = APIStore[Key];
+
 
 export const API = api;
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
-const URL = "";
+const URL = (import.meta.env.URL as string) ?? "";
 
 type StoreMutation = {
 	mutatedEndpoint?: APIEndpointKey,
@@ -20,9 +22,8 @@ type StoreMutation = {
 	mutationType: ActionEnum;
 };
 
-
 // Astro version
-export const useAPI = async <T extends APIEndpointKey>(setStore: SetStoreFunction<APIStore>, endpoint: T, req: APIArgs[T], StoreMut?: StoreMutation) => {
+export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, StoreMut?: StoreMutation) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
 		parse(Route.validation, req.RequestObject);
@@ -38,31 +39,39 @@ export const useAPI = async <T extends APIEndpointKey>(setStore: SetStoreFunctio
 			},
 			body
 		});
-		const json = (await res.json()) as APIRes[T];
-		if ("error" in json) {
-			console.error(json.error);
-			setStore(endpoint, json.error);
-			throw new Error(JSON.stringify(json.error));
+		const { res: response } = (await res.json()) as APIRes[T];
+		console.log(response);
+		if ("error" in response) {
+			console.error(response.error);
+			setStore && setStore(endpoint, response.error);
+			throw new Error(JSON.stringify(response.error));
 		}
-		if ("message" in json) {
-			console.log(json.message);
-			setStore(json.message as any);
-			return { message: json.message };
+		if ("message" in response) {
+			console.log(response.message);
+			setStore && setStore(response.message as any);
+			return { message: response.message };
 		}
-		//@ts-ignore
-		!StoreMut ? setStore(endpoint, json.data as any) : setStore(StoreMut.mutatedEndpoint, (prev) => {
-			const isArr = Array.isArray(json.data);
-			let prevData = prev as any[] || [];
-			if (StoreMut.mutationType === ActionEnum.ADD)
-				return isArr ? [...prevData, ...(json.data as any[])] : [...prevData, json.data];
-			return isArr ?
-				//@ts-ignore
-				prevData.map(item => StoreMut.mutation.includes(item.id) ? json.data.find(d => d.id === item.id) || item : item)
-				: prevData.map(item => StoreMut.mutation.includes(item.id) ? json.data : item);
-		});
-		return { data: json.data as any };
+		if (setStore && "data" in response) {
+			if (StoreMut && StoreMut.mutatedEndpoint) {
+				setStore(StoreMut.mutatedEndpoint as APIEndpointKey, (prev) => {
+					let data = response.data;
+					if (!data) return prev;
+					const isArr = Array.isArray(data);
+					let prevData = prev as any[] || [];
+					if (StoreMut.mutationType === ActionEnum.ADD)
+						return isArr ? [...prevData, ...(response.data as any[])] : [...prevData, response.data];
+
+					if (Array.isArray(data)) {
+						return prevData.map(item => StoreMut.mutation.includes(item.id) ? (data as any[]).find(d => d.id === item.id) || item : item);
+					} else {
+						return prevData.map(item => StoreMut.mutation.includes(item.id) ? response.data : item);
+					}
+				});
+			} else setStore(endpoint, response.data as APIStoreValue<T>);
+		}
+		return { data: response.data as APIStoreValue<T> };
 	} catch (err) {
-		setStore(endpoint, err as any);
+		setStore && setStore(endpoint, err as any);
 		console.error(err);
 		throw new Error(JSON.stringify(err as {}));
 	}

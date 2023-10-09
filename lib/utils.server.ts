@@ -1,4 +1,4 @@
-import type { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
+import type { EndpointResponse2 } from "../types/routes";
 import { CreateDbConnection, type Transaction } from "./db";
 
 /**
@@ -63,12 +63,11 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 
 export const execTryCatch = async <T>(
 	func: (t: Transaction) => Promise<T>
-): Promise<T extends string ? DefaultEndpointResponse : EndpointResponse<T>> => {
+): Promise<EndpointResponse2<T>> => {
 	// This is a work around because if I return inside the try-catch blocks, the return type is not inferred correctly
-	let res: DefaultEndpointResponse | EndpointResponse<T>;
+	let res: EndpointResponse2<T>;
 	const hasTransaction: boolean = func.length === 1;
 	try {
-		//@ts-ignore
 		let response;
 		if (hasTransaction) {
 			let conn = await CreateDbConnection();
@@ -76,26 +75,29 @@ export const execTryCatch = async <T>(
 				tx.queryHistory = [];
 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
 				return func(tx as Transaction) as Promise<T>;
-			});
+			}) as T;
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;
 		}
+		// @ts-ignore
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);
 	} catch (error: Error | any) {
 		if (error instanceof Error) {
-			res = { res: "error", error: { message: error?.message } };
+			res = { res: { type: "error", error: { message: error?.message } } };
 		} else {
-			res = { res: "error", error: { message: error } };
+			res = { res: { type: "error", error: { message: error } } };
 		}
 	}
-	return res as T extends string ? DefaultEndpointResponse : EndpointResponse<T>;
+	return res;
 };
 
 export const MessageWrapper = (msg: string) => {
-	return { res: "message", message: msg } as DefaultEndpointResponse;
+	return {
+		res: { type: "message", message: msg }
+	} as EndpointResponse2<string>;
 };
 
 export const DataWrapper = <T = object>(data: T) => {
-	return { res: "data", data } as EndpointResponse<T>;
+	return { res: { type: "data", data } } as EndpointResponse2<T>;
 };

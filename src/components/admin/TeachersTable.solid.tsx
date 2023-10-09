@@ -308,14 +308,14 @@ export default function TeachersTable() {
 	const [actionPressedInstruments, setActionPressedInstruments] =
 		useHydrateById(setStore, API.Instruments.getById, API.Instruments.get);
 	useHydrate(() => {
-		useAPI(setStore, API.Teachers.get, {});
-		useAPI(setStore, API.Teachers.getClasses, {});
+		useAPI(API.Teachers.get, {}, setStore);
+		useAPI(API.Teachers.getClasses, {}, setStore);
 
-		useAPI(setStore, API.Locations.get, {});
-		useAPI(setStore, API.Teachers.getLocations, {});
+		useAPI(API.Locations.get, {}, setStore);
+		useAPI(API.Teachers.getLocations, {}, setStore);
 
-		useAPI(setStore, API.Instruments.get, {});
-		useAPI(setStore, API.Teachers.getInstruments, {});
+		useAPI(API.Instruments.get, {}, setStore);
+		useAPI(API.Teachers.getInstruments, {}, setStore);
 	})(true);
 
 	const shapedData = createMemo(() => {
@@ -427,9 +427,13 @@ export default function TeachersTable() {
 					.map((i) => Number(i.value))
 					.filter(Boolean),
 			};
-			const res = await useAPI(setStore, API.Teachers.post, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Teachers.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data) return;
 			const id = res.data.insertId as number;
 			const files = {
@@ -437,15 +441,23 @@ export default function TeachersTable() {
 				cv: await fileToBlob(formData.get("cv") as File),
 			};
 			if (files.picture)
-				await useAPI(setStore, API.Teachers.fileUpload, {
-					RequestObject: files.picture,
-					UrlArgs: { id },
-				});
+				await useAPI(
+					API.Teachers.fileUpload,
+					{
+						RequestObject: files.picture,
+						UrlArgs: { id },
+					},
+					setStore
+				);
 			if (files.cv)
-				await useAPI(setStore, API.Teachers.fileUpload, {
-					RequestObject: files.cv,
-					UrlArgs: { id },
-				});
+				await useAPI(
+					API.Teachers.fileUpload,
+					{
+						RequestObject: files.cv,
+						UrlArgs: { id },
+					},
+					setStore
+				);
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {
@@ -566,54 +578,74 @@ export default function TeachersTable() {
 					.map((i) => Number(i.value))
 					.filter(Boolean),
 			};
-			const res = await useAPI(setStore, API.Teachers.update, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Teachers.update,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			const file = {
 				picture: await fileToBlob(formData.get("picture") as File),
 				cv: await fileToBlob(formData.get("cv") as File),
 			};
 			if (pictureRemoved) {
-				await useAPI(setStore, API.Teachers.fileDelete, {
-					RequestObject: {
-						id: teacher.id,
-						type: "picture",
+				await useAPI(
+					API.Teachers.fileDelete,
+					{
+						RequestObject: {
+							id: teacher.id,
+							type: "picture",
+						},
 					},
-				});
+					setStore
+				);
 			}
 			if (cvRemoved) {
-				await useAPI(setStore, API.Teachers.fileDelete, {
-					RequestObject: { id: teacher.id, type: "cv" },
-				});
+				await useAPI(
+					API.Teachers.fileDelete,
+					{
+						RequestObject: { id: teacher.id, type: "cv" },
+					},
+					setStore
+				);
 			}
 			if (file.picture)
-				await useAPI(setStore, API.Teachers.fileUpload, {
-					RequestObject: file.picture,
-					UrlArgs: { id: teacher.id },
-				});
+				await useAPI(
+					API.Teachers.fileUpload,
+					{
+						RequestObject: file.picture,
+						UrlArgs: { id: teacher.id },
+					},
+					setStore
+				);
 			if (file.cv)
-				await useAPI(setStore, API.Teachers.fileUpload, {
-					RequestObject: file.cv,
-					UrlArgs: { id: teacher.id },
-				});
+				await useAPI(
+					API.Teachers.fileUpload,
+					{
+						RequestObject: file.cv,
+						UrlArgs: { id: teacher.id },
+					},
+					setStore
+				);
 			setActionPressed({
 				action: ActionEnum.MODIFY,
 				mutate: [teacher.id],
 			});
 		});
-		const emptyFileRemove = (e: CustomEvent) => {
+		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();
 			e.stopPropagation();
-			const name = e.detail as string;
+			const name = e.detail;
 			if (name === teacher.picture) pictureRemoved = true;
 			if (name === teacher.cv) cvRemoved = true;
 		};
 
-		const simpleTeacher = JSON.parse(JSON.stringify(teacher)) as Teachers;
-		// @ts-ignore
+		const simpleTeacher = JSON.parse(
+			JSON.stringify(teacher)
+		) as Partial<FullTeachers>;
 		delete simpleTeacher.picture;
-		// @ts-ignore
 		delete simpleTeacher.cv;
 		return {
 			inputs: Omit(
@@ -632,12 +664,10 @@ export default function TeachersTable() {
 				"id"
 			),
 			onMount: () => {
-				//@ts-ignore
 				document.addEventListener("emptyFileRemove", emptyFileRemove);
 				formListener(submit, true, PREFIX);
 			},
 			onCleanup: () => {
-				//@ts-ignore
 				document.removeEventListener(
 					"emptyFileRemove",
 					emptyFileRemove
@@ -660,9 +690,13 @@ export default function TeachersTable() {
 			const data = selectedItems.map(
 				(i) => (teachers.find((p) => p.id === i) as Teachers).id
 			);
-			const res = await useAPI(setStore, API.Teachers.delete, {
-				RequestObject: data,
-			});
+			const res = await useAPI(
+				API.Teachers.delete,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
 		});
@@ -672,7 +706,6 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Καθηγητών",
-
 			icon: ActionIcon.DELETE,
 		};
 	});
@@ -697,10 +730,14 @@ export default function TeachersTable() {
 						.value as string
 				) - 1) as 0 | 1,
 			};
-			const res = await useAPI(setStore, API.Instruments.post, {
-				RequestObject: data,
-			});
-			if (!res.data && !res.message) return;
+			const res = await useAPI(
+				API.Instruments.post,
+				{
+					RequestObject: data,
+				},
+				setStore
+			);
+			if (!res.data) return;
 			setActionPressedInstruments({
 				action: ActionEnum.ADD,
 				mutate: [res.data.insertId],
@@ -752,9 +789,13 @@ export default function TeachersTable() {
 			const name = formData.get("name") as string;
 			const instrument = instruments.find((i) => i.name === name);
 			if (!instrument) return;
-			const res = await useAPI(setStore, API.Instruments.delete, {
-				RequestObject: [instrument.id],
-			});
+			const res = await useAPI(
+				API.Instruments.delete,
+				{
+					RequestObject: [instrument.id],
+				},
+				setStore
+			);
 			if (!res.data && !res.message) return;
 			setActionPressedInstruments({
 				action: ActionEnum.DELETE,
@@ -776,7 +817,6 @@ export default function TeachersTable() {
 			onCleanup: () => formListener(submit, false, "instrument"),
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Οργάνου",
-
 			icon: ActionIcon.DELETE_BOX,
 		};
 	});

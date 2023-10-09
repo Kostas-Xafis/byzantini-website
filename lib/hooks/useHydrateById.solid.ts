@@ -17,9 +17,9 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 
 	const hydrateById = (muts: number[], mutationType: ActionEnum) => {
 		useAPI(
-			setStore,
 			mutationAccessEndpoint,
 			{ RequestObject: muts },
+			setStore,
 			{
 				mutation: muts,
 				mutationType,
