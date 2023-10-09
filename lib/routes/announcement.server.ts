@@ -63,17 +63,17 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
-		// if (imageMIMEType.includes(filetype)) {
-		const imageBuf = await blob.arrayBuffer();
-		const bucketFileName = bucketPrefix + `__${id}__` + name;
-		console.log(bucketFileName);
-		if (announcement.name) await Bucket.delete(ctx, announcement.name);
-		await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
-		let file = await Bucket.get(ctx, bucketFileName);
-		console.log(JSON.stringify(file));
-		return "Image uploaded successfully";
-		// }
-		// throw Error("Invalid filetype");
+		if (imageMIMEType.includes(filetype)) {
+			const imageBuf = await blob.arrayBuffer();
+			const bucketFileName = bucketPrefix + `/${id}/` + name;
+			console.log(bucketFileName);
+			if (announcement.name) await Bucket.delete(ctx, announcement.name);
+			await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
+			let file = await Bucket.get(ctx, bucketFileName);
+			console.log(JSON.stringify(file));
+			return "Image uploaded successfully";
+		}
+		throw Error("Invalid filetype");
 	});
 };
 

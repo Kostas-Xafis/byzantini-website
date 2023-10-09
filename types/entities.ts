@@ -179,7 +179,7 @@ export const v_Announcements = object({
 	id: number([integer(), minValue(0)]),
 	title: string([minLength(1)]),
 	content: string(),
-	date: number([integer(), minValue(0)]),
+	date: number([integer()]),
 	views: number([integer(), minValue(0)]),
 });
 export type Announcements = Output<typeof v_Announcements>;

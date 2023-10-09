@@ -23,7 +23,7 @@ export default defineConfig({
 		}),
 	],
 	output: "server",
-	adapter: cloudflare({ mode: "advanced", runtime: "off" }),
+	adapter: cloudflare({ mode: "advanced" }),
 	vite: {
 		server: {
 			watch: {

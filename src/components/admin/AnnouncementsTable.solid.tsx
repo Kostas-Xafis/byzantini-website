@@ -61,6 +61,7 @@ const AnnouncementsInputs = (): Omit<
 			name: "photos",
 			label: "Φωτογραφίες",
 			iconClasses: "fa-solid fa-images",
+			fileExtension: "image/*",
 		},
 	};
 };

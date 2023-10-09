@@ -4,7 +4,6 @@ import { isDevFromURL } from "../../lib/utils.client";
 
 export async function GET(context: APIContext) {
 	const url = context.params.slug as string;
-	console.log(url);
 	if (isDevFromURL(context.url)) {
 		return new Response(await (await fetch(await import.meta.env.S3_OPEN_BUCKET_URL + url)).arrayBuffer(), { status: 200 });
 	}
