@@ -11,7 +11,7 @@ import type {
 	TeacherInstruments,
 	Teachers,
 } from "../../../types/entities";
-import Input, { type Props as InputProps } from "../Input.solid";
+import Input, { type Props as InputProps } from "../input/Input.solid";
 import {
 	Show,
 	createEffect,
@@ -22,7 +22,7 @@ import {
 	For,
 } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
-import Spinner from "../Spinner.solid";
+import Spinner from "../other/Spinner.solid";
 
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<

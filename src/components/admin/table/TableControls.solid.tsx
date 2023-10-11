@@ -9,7 +9,7 @@ import {
 	For,
 } from "solid-js";
 import Modal from "./Modal.solid";
-import type { Props as InputProps } from "../../Input.solid";
+import type { Props as InputProps } from "../../input/Input.solid";
 import { createStore } from "solid-js/store";
 
 export const enum ActionEnum {

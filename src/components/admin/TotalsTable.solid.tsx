@@ -7,7 +7,7 @@ import {
 import Table, { type ColumnType } from "./table/Table.solid";
 import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import Spinner from "../Spinner.solid";
+import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 
 type TotalsTable = {

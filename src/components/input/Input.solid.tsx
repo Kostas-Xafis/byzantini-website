@@ -6,10 +6,10 @@ import {
 	onMount,
 	createSignal,
 } from "solid-js";
-import { CloseButton } from "./admin/table/CloseButton.solid";
-import type { TooltipProps } from "./Tooltip.solid";
-import Tooltip from "./Tooltip.solid";
-import { FileHandler } from "../../lib/fileHandling.client";
+import { CloseButton } from "../admin/table/CloseButton.solid";
+import type { TooltipProps } from "../Tooltip.solid";
+import Tooltip from "../Tooltip.solid";
+import { FileHandler } from "../../../lib/fileHandling.client";
 
 function disable(input: Props) {
 	input.disabled = true;

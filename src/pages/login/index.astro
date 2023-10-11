@@ -1,5 +1,5 @@
 ---
-import Input from "../../components/Input.astro";
+import Input from "../../components/input/Input.astro";
 import SigninLayout from "../../layouts/SigninLayout.astro";
 export const prerender = true;
 ---
@@ -79,7 +79,7 @@ export const prerender = true;
 		};
 		const res = await useAPI("Authentication.userLogin", { RequestObject: data });
 
-		if ("data" in res && res.data.isValid) {
+		if (res.data && res.data.isValid) {
 			const { session_id } = res.data;
 			setCookie("session_id", session_id || "", 14);
 			window.location.href = "/admin";

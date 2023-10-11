@@ -1,8 +1,8 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
-import type { Props as InputProps } from "../../Input.solid";
-import Input from "../../Input.solid";
+import type { Props as InputProps } from "../../input/Input.solid";
+import Input from "../../input/Input.solid";
 import { CloseButton } from "./CloseButton.solid";
-import Spinner from "../../Spinner.solid";
+import Spinner from "../../other/Spinner.solid";
 
 type Props = {
 	open: boolean;

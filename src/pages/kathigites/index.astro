@@ -1,7 +1,7 @@
 ---
-import { useAPI, API } from "../../../lib/hooks/useAPI.solid";
+import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
 import { isDevFromURL } from "../../../lib/utils.client";
-import type { Instruments, Locations, TeacherInstruments, TeacherLocations, Teachers } from "../../../types/entities";
+import type { Instruments } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
 const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([

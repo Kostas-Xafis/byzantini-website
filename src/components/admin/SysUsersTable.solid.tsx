@@ -19,7 +19,7 @@ import {
 	SelectedItemsContext,
 } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
-import Spinner from "../Spinner.solid";
+import Spinner from "../other/Spinner.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 
 const PREFIX = "sysusers";

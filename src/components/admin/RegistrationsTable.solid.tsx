@@ -18,10 +18,10 @@ import TableControls, {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControls.solid";
-import { type Props as InputProps, Fill } from "../Input.solid";
+import { type Props as InputProps, Fill } from "../input/Input.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
-import Spinner from "../Spinner.solid";
+import Spinner from "../other/Spinner.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
 import {
 	SearchTable,

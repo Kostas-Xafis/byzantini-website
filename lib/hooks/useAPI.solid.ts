@@ -3,6 +3,7 @@ import { API as api, type APIArgs, APIEndpoints, type APIRes } from "../routes/i
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControls.solid";
+import { convertUrlFromArgs } from "../utils.client";
 type APIEndpointKey = keyof typeof APIEndpoints;
 export type APIStore = {
 	[K in APIEndpointKey]?: Extract<APIRes[K]["res"], { type: "data"; }>["data"];
@@ -22,7 +23,6 @@ type StoreMutation = {
 	mutationType: ActionEnum;
 };
 
-// Astro version
 export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, StoreMut?: StoreMutation) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
@@ -40,14 +40,12 @@ export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[
 			body
 		});
 		const { res: response } = (await res.json()) as APIRes[T];
-		console.log(response);
 		if ("error" in response) {
 			console.error(response.error);
 			setStore && setStore(endpoint, response.error);
 			throw new Error(JSON.stringify(response.error));
 		}
 		if ("message" in response) {
-			console.log(response.message);
 			setStore && setStore(response.message as any);
 			return { message: response.message };
 		}
@@ -84,15 +82,4 @@ export const useHydrate = (func: () => void) => {
 		untrack(() => batch(func));
 	});
 	return setHydrate;
-};
-
-const convertUrlFromArgs = (url: string, args: any) => {
-	let newUrl = url.slice();
-	url.split("/")
-		.filter(part => part.startsWith("["))
-		.forEach(part => {
-			const [name, _] = part.slice(1, -1).split(":");
-			newUrl = newUrl.replace(part, args[name]);
-		});
-	return newUrl;
 };

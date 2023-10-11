@@ -23,10 +23,10 @@ import TableControls, {
 	type EmptyAction,
 	ActionIcon,
 } from "./table/TableControls.solid";
-import { type Props as InputProps, Fill, Omit } from "../Input.solid";
+import { type Props as InputProps, Fill, Omit } from "../input/Input.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formListener, formErrorWrap } from "./table/formSubmit";
-import Spinner from "../Spinner.solid";
+import Spinner from "../other/Spinner.solid";
 import {
 	SearchTable,
 	type SearchColumn,

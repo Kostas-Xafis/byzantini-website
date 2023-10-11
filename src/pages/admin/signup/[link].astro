@@ -1,6 +1,6 @@
 ---
 import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
-import Input from "../../../components/Input.astro";
+import Input from "../../../components/input/Input.astro";
 import SigninLayout from "../../../layouts/SigninLayout.astro";
 
 const { link } = Astro.params;
@@ -9,7 +9,7 @@ if (!link) {
 }
 const res = await useAPI(API.SysUsers.validateRegisterLink, { UrlArgs: { link } });
 
-if (!("data" in res) || !res.data?.isValid) {
+if (res.data && !res.data.isValid) {
 	return Astro.redirect("/");
 }
 ---
@@ -90,7 +90,7 @@ if (!("data" in res) || !res.data?.isValid) {
 		const link = window.location.href.split("/").pop() as string;
 		const res = await useAPI(API.SysUsers.registerSysUser, { RequestObject: data, UrlArgs: { link } });
 
-		if ("data" in res) {
+		if (res.data) {
 			const { session_id } = res.data;
 			setCookie("session_id", session_id || "", 14);
 			window.location.href = "/admin";

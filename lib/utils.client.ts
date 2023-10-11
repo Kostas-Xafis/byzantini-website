@@ -11,6 +11,19 @@ export const isOnlineDev = (url: URL | string) => {
 	if (typeof url === "string") url = new URL(url);
 	return url.hostname === 'byzantini-website.pages.dev';
 };
+
+export const convertUrlFromArgs = (url: string, args: any) => {
+	let newUrl = url.slice();
+	url.split("/")
+		.filter(part => part.startsWith("["))
+		.forEach(part => {
+			const [name, _] = part.slice(1, -1).split(":");
+			newUrl = newUrl.replace(part, args[name]);
+		});
+	return newUrl;
+};
+
+
 export const onElementMount = async (target: string, callback: (el: HTMLElement) => any) => {
 	let counter = 0;
 	let el;
@@ -192,3 +205,5 @@ export const fileToBlob = async (file: File): Promise<Blob | null> => {
 		reader.readAsArrayBuffer(file);
 	});
 };
+
+
