@@ -295,4 +295,12 @@ const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_B
 			});
 		});
 	});
+	if (btns.includes(window.location.hash)) {
+		onElementMount("#sxoli", () => {
+			setTimeout(() => {
+				const btn = document.querySelector(`#${window.location.hash}Btn`) as HTMLDivElement;
+				btn.click();
+			}, 200);
+		});
+	}
 </script>
