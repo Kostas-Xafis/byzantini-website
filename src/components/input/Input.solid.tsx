@@ -11,7 +11,6 @@ import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import AirDatepicker from "air-datepicker";
-import "air-datepicker/air-datepicker.css";
 import { setFocusFixed } from "../../../lib/utils.client";
 
 function disable(input: Props) {
