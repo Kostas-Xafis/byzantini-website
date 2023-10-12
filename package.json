@@ -21,6 +21,7 @@
 		"@planetscale/database": "^1.10.0",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@types/node": "^20.6.0",
+		"air-datepicker": "^3.4.0",
 		"astro": "^3.2.3",
 		"astro-seo": "^0.7.5",
 		"astro-seo-schema": "^3.2.1",

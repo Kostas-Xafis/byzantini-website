@@ -1,4 +1,4 @@
-export const isDevFromURL = (url: URL | string) => {
+export function isDevFromURL(url: URL | string) {
 	if (typeof url === "string") url = new URL(url);
 	return (
 		url.hostname === "localhost" ||
@@ -7,12 +7,12 @@ export const isDevFromURL = (url: URL | string) => {
 	);
 };
 
-export const isOnlineDev = (url: URL | string) => {
+export function isOnlineDev(url: URL | string) {
 	if (typeof url === "string") url = new URL(url);
 	return url.hostname === 'byzantini-website.pages.dev';
 };
 
-export const convertUrlFromArgs = (url: string, args: any) => {
+export function convertUrlFromArgs(url: string, args: any) {
 	let newUrl = url.slice();
 	url.split("/")
 		.filter(part => part.startsWith("["))
@@ -24,7 +24,7 @@ export const convertUrlFromArgs = (url: string, args: any) => {
 };
 
 
-export const onElementMount = async (target: string, callback: (el: HTMLElement) => any) => {
+export async function onElementMount(target: string, callback: (el: HTMLElement) => any) {
 	let counter = 0;
 	let el;
 	while (!(el = document.querySelector(target)) && counter++ < 40) {
@@ -34,7 +34,7 @@ export const onElementMount = async (target: string, callback: (el: HTMLElement)
 	callback(el as HTMLElement);
 };
 
-export const swapElementsWithFade = (prev: HTMLElement, curr: HTMLElement, msFadeOut = 300, msFadeIn = 500) => {
+export function swapElementsWithFade(prev: HTMLElement, curr: HTMLElement, msFadeOut = 300, msFadeIn = 500) {
 	prev.classList.add("remove");
 	prev.style.setProperty("--msFadeOut", `${msFadeOut}ms`);
 	curr.style.setProperty("--msFadeIn", `${msFadeIn}ms`);
@@ -49,6 +49,15 @@ export const swapElementsWithFade = (prev: HTMLElement, curr: HTMLElement, msFad
 
 };
 
+export function setFocusFixed(e: HTMLElement) {
+	e.setAttribute('tabindex', '-1');
+	void e.offsetHeight;
+	e.focus();
+	void e.offsetHeight;
+	e.setAttribute('tabindex', "");
+}
+
+
 export const loadImage = (src: string) => {
 	return new Promise((resolve, reject) => {
 		let img = new Image();
@@ -61,11 +70,11 @@ export const loadImage = (src: string) => {
 export const sleep = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
-export const removeAccents = (str: string) => {
+export function removeAccents(str: string) {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
-export const mappedValue = (value: number, min = 0, max = 1, outMin = 0, outMax = 1) => {
+export function mappedValue(value: number, min = 0, max = 1, outMin = 0, outMax = 1) {
 	if (min === max) return outMin;
 	if (outMin === outMax) return outMin;
 	if (value >= max) return outMax;
@@ -79,7 +88,7 @@ export const mappedValue = (value: number, min = 0, max = 1, outMin = 0, outMax 
 	return normalized * outRange + outMin;
 };
 
-export const loadScript = (src: string, res: () => boolean) => {
+export function loadScript(src: string, res: () => boolean) {
 	return new Promise(async (resolve, reject) => {
 		let script = document.createElement("script");
 		script.src = src;
@@ -92,11 +101,11 @@ export const loadScript = (src: string, res: () => boolean) => {
 	});
 };
 
-export const asyncQueue = async <T>(
+export async function asyncQueue<T>(
 	jobs: (() => Promise<T>)[],
 	maxJobs = 1,
 	verb = false
-) => {
+) {
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
 	let queue: any[];

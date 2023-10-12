@@ -10,6 +10,9 @@ import { CloseButton } from "../admin/table/CloseButton.solid";
 import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
 import { FileHandler } from "../../../lib/fileHandling.client";
+import AirDatepicker from "air-datepicker";
+import "air-datepicker/air-datepicker.css";
+import { setFocusFixed } from "../../../lib/utils.client";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -49,6 +52,38 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 	for (const key in inputs) inputs[key] = {};
 	return inputs;
 }
+
+const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
+
+const months = [
+	"Ιαν",
+	"Φεβ",
+	"Μαρ",
+	"Απρ",
+	"Μαι",
+	"Ιουν",
+	"Ιουλ",
+	"Αυγ",
+	"Σεπ",
+	"Οκτ",
+	"Νοε",
+	"Δεκ",
+];
+
+const monthsFull = [
+	"Ιανουάριος",
+	"Φεβρουάριος",
+	"Μάρτιος",
+	"Απρίλιος",
+	"Μάιος",
+	"Ιούνιος",
+	"Ιούλιος",
+	"Αύγουστος",
+	"Σεπτέμβριος",
+	"Οκτώβριος",
+	"Νοέμβριος",
+	"Δεκέμβριος",
+];
 
 export type Props = {
 	type:
@@ -112,9 +147,40 @@ export default function Input(props: Props) {
 		tooltip,
 	} = props;
 	if (type === null) return <></>;
-	if (type === "date" && value) {
+	if (type === "date") {
 		// if date input has value, set it
 		onMount(() => {
+			const hasValue = value !== undefined && value !== null;
+			new AirDatepicker(`input[name='${name}']`, {
+				view: "years",
+				firstDay: 0,
+				dateFormat: "yyyy-mm-dd",
+				autoClose: true,
+				isMobile: document.body.clientWidth < 768,
+				selectedDates: hasValue ? [new Date(value)] : undefined,
+				onSelect({ date, datepicker }) {
+					if (!date || Array.isArray(date)) return;
+					datepicker.hide();
+					const dateInput = document.querySelector(
+						`input[name='${name}']`
+					) as HTMLInputElement;
+					dateInput.valueAsDate = new Date(
+						date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
+					);
+					setFocusFixed(
+						dateInput.parentElement
+							?.nextElementSibling as HTMLElement
+					);
+				},
+				locale: {
+					days: days,
+					daysShort: days,
+					daysMin: days,
+					months: monthsFull,
+					monthsShort: months,
+				},
+			});
+			if (!value) return;
 			let d = document.querySelector(
 				`input[name='${name}']`
 			) as HTMLInputElement;
@@ -158,6 +224,7 @@ export default function Input(props: Props) {
 			fileDiv.classList.remove("show");
 			if (value)
 				document.dispatchEvent(
+					//@ts-ignore
 					new CustomEvent("emptyFileRemove", { detail: value })
 				);
 		};
@@ -229,6 +296,7 @@ export default function Input(props: Props) {
 					: "")
 			}
 		>
+			{/*--------------------------------GENERIC INPUT---------------------------------------- */}
 			<Show
 				when={
 					type !== "select" &&
@@ -246,14 +314,14 @@ export default function Input(props: Props) {
 				></i>
 				<input
 					class={
-						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
+						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10" +
 						(disabled && blurDisabled ? " blur-[1px]" : "")
 					}
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
 					value={value === 0 ? "0" : value || ""}
-					readOnly={disabled || false}
+					readOnly={disabled || type === "date" || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
 					onfocus={(e: FocusEvent) =>
@@ -492,6 +560,7 @@ export default function Input(props: Props) {
 					`}
 				</style>
 			</Show>
+			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>
 				<i
 					class={
