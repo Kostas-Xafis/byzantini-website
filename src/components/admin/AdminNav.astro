@@ -9,18 +9,19 @@ const links = [
 	{ name: "Παραρτήματα", url: "/admin/locations" },
 	{ name: "Ανακοινώσεις", url: "/admin/announcements" },
 	{ name: "Διαχειριστές", url: "/admin/sysusers" },
+	{ name: "Έξοδος", url: "/admin/logout"}
 ];
 const currentPage = links.find(link => link.url === Astro.url.pathname || link.url + "/" === Astro.url.pathname )?.name ?? "Αρχική";
 ---
 
-<nav class={"pt-8 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1  max-sm:gap-y-2 max-sm:flex flex-col max-sm:overflow-visible z-50 max-sm:sticky max-sm:top-0"}>
+<nav class={"pt-4 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex flex-col max-sm:overflow-visible z-50 max-sm:sticky max-sm:top-0"}>
 	<div class="relative grid place-items-center gap-x-4 font-anaktoria">
-		<a href="/" class="logoImg w-[80px] max-sm:w-[50px] row-span-full aspect-square z-20">
+		<a href="/" class="logoImg w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20">
 			<div class="w-full h-full bg-red-50"></div>
 			<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 		</a>
 		<!-- 50% width - 40px (50% of img) - 2px offset -->
-		<div class="logoImg w-[80px] max-sm:w-[50px] aspect-square absolute top-[1px] blur-2xl z-10 left-[calc(50%_-_40px_-_2px)] max-sm:left-[calc(50%_-_25px_-_2px)] ">
+		<div class="logoImg w-[70px] max-sm:w-[50px] aspect-square absolute top-[1px] blur-2xl z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_30px_-_2px)] ">
 			<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]"></div>
 		</div>
 	</div>
@@ -28,11 +29,11 @@ const currentPage = links.find(link => link.url === Astro.url.pathname || link.u
 		{
 			links.map(link => (
 				<a
-					class="group relative py-4 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
+					class="group relative py-3 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
 					href={link.url}
 					rel="prefetch-intent"
 				>
-					<div class="group px-8 font-bold font-anaktoria text-2xl text-red-50 text-center">{link.name}</div>
+					<p class="group px-8 font-bold font-anaktoria text-1.5xl text-red-50 text-center">{link.name}</p>
 				</a>
 			))
 		}
@@ -71,6 +72,14 @@ const currentPage = links.find(link => link.url === Astro.url.pathname || link.u
 			-webkit-mask-size: contain;
 		}
 		/* Subpixel gaps for no reason at all.... */
+		#burgerNav a:nth-child(10) {
+			transition-duration: 0.475s;
+			transform: translateY(-10px);
+		}
+		#burgerNav a:nth-child(9) {
+			transition-duration: 0.5s;
+			transform: translateY(-9px);
+		}
 		#burgerNav a:nth-child(8) {
 			transition-duration: 0.525s;
 			transform: translateY(-8px);
@@ -126,6 +135,12 @@ const currentPage = links.find(link => link.url === Astro.url.pathname || link.u
 		}
 		#burgerNav:is(.open) a:nth-child(8) {
 			transition-duration: 0.775s;
+		}
+		#burgerNav:is(.open) a:nth-child(9) {
+			transition-duration: 0.8s;
+		}
+		#burgerNav:is(.open) a:nth-child(10) {
+			transition-duration: 0.825s;
 		}
 	</style>
 </nav>

@@ -22,7 +22,30 @@ export function convertUrlFromArgs(url: string, args: any) {
 		});
 	return newUrl;
 };
-
+// Cookie functions from w3schools
+export function setCookie(cname: string, cvalue: string | number | boolean = "", exdays = 0, path = "/") {
+	const d = new Date();
+	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+	let expires = "expires=" + d.toUTCString();
+	document.cookie = cname + "=" + cvalue + ";" + expires + ";path=" + path;
+}
+export function deleteCookie(cname: string, path = "/") {
+	document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + path;
+}
+export function getCookie(cname: string) {
+	let name = cname + "=";
+	let ca = document.cookie.split(';');
+	for (let i = 0; i < ca.length; i++) {
+		let c = ca[i];
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		if (c.indexOf(name) == 0) {
+			return c.substring(name.length, c.length);
+		}
+	}
+	return "";
+}
 
 export async function onElementMount(target: string, callback: (el: HTMLElement) => any) {
 	let counter = 0;
@@ -57,16 +80,6 @@ export function setFocusFixed(e: HTMLElement) {
 	e.setAttribute('tabindex', "");
 }
 
-
-export const loadImage = (src: string) => {
-	return new Promise((resolve, reject) => {
-		let img = new Image();
-		img.onload = () => resolve(null);
-		img.onerror = () => reject(null);
-		img.src = src;
-	});
-};
-
 export const sleep = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -86,19 +99,6 @@ export function mappedValue(value: number, min = 0, max = 1, outMin = 0, outMax 
 	let normalized = (value - min) / range;
 
 	return normalized * outRange + outMin;
-};
-
-export function loadScript(src: string, res: () => boolean) {
-	return new Promise(async (resolve, reject) => {
-		let script = document.createElement("script");
-		script.src = src;
-		script.onerror = () => reject(null);
-		document.head.appendChild(script);
-		while (!res()) {
-			await sleep(50);
-			resolve(null);
-		}
-	});
 };
 
 export async function asyncQueue<T>(
@@ -212,6 +212,26 @@ export const fileToBlob = async (file: File): Promise<Blob | null> => {
 			else res(null);
 		};
 		reader.readAsArrayBuffer(file);
+	});
+};
+export function loadScript(src: string, res: () => boolean) {
+	return new Promise(async (resolve, reject) => {
+		let script = document.createElement("script");
+		script.src = src;
+		script.onerror = () => reject(null);
+		document.head.appendChild(script);
+		while (!res()) {
+			await sleep(50);
+			resolve(null);
+		}
+	});
+};
+export const loadImage = (src: string) => {
+	return new Promise((resolve, reject) => {
+		let img = new Image();
+		img.onload = () => resolve(null);
+		img.onerror = () => reject(null);
+		img.src = src;
 	});
 };
 

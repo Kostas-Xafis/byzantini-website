@@ -320,7 +320,7 @@ export default function Input(props: Props) {
 					name={name}
 					placeholder={placeholder || ""}
 					value={value === 0 ? "0" : value || ""}
-					readOnly={disabled || type === "date" || false}
+					readOnly={disabled || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
 					onfocus={(e: FocusEvent) =>

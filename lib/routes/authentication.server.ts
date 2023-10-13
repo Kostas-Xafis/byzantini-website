@@ -32,6 +32,14 @@ serverRoutes.userLogin.func = async (ctx) => {
 	});
 };
 
+serverRoutes.userLogout.func = async (ctx) => {
+	return await execTryCatch(async () => {
+		const { sid } = await ctx.request.json();
+		await executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
+		return "Logged out";
+	});
+};
+
 serverRoutes.authenticateSession.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const isAuthenticated = await authentication(ctx);

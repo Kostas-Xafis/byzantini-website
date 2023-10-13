@@ -1,7 +1,7 @@
 import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_LoginCredentials } from "../../types/entities";
 
-const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: boolean }> = {
+const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: boolean; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/auth/session",
@@ -9,7 +9,7 @@ const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: 
 	func: async ctx => null as any
 };
 
-const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string }> = {
+const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/auth/login",
@@ -18,9 +18,19 @@ const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { 
 	func: async ctx => null as any
 };
 
+
+const userLogout: EndpointRoute<"POST:/auth/logout", { sid: string; }, string> = {
+	authentication: true,
+	method: "POST",
+	path: "/auth/logout",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+
 export const AuthenticationRoutes = {
 	authenticateSession,
 	userLogin,
+	userLogout,
 };
 
 export type APIAuthenticationArgs = APIArguments<"Authentication", typeof AuthenticationRoutes>;
@@ -38,12 +48,18 @@ export const APIAuthenticationEndpoints: APIEndpointsBuilder<"Authentication", t
 		path: "/auth/login",
 		endpoint: "Authentication.userLogin",
 		validation: v_LoginCredentials
+	},
+	"Authentication.userLogout": {
+		method: "POST",
+		path: "/auth/logout",
+		endpoint: "Authentication.userLogout"
 	}
 };
 
 export const APIAuthentication: APIBuilder<"Authentication", typeof AuthenticationRoutes> = {
 	Authentication: {
 		authenticateSession: "Authentication.authenticateSession",
-		userLogin: "Authentication.userLogin"
+		userLogin: "Authentication.userLogin",
+		userLogout: "Authentication.userLogout"
 	}
 };

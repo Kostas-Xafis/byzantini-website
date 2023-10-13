@@ -4,6 +4,10 @@ import type { APIContext } from "astro";
 
 const small_cache = new Map<string, boolean>(); // This actually works! Nice.
 
+export const removeFromCache = (session_id: string) => {
+	small_cache.delete(session_id);
+};
+
 export const getSessionId = (req: Request) => {
 	const cookies = req.headers.get("cookie");
 	if (!cookies) return null;
