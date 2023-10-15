@@ -1,6 +1,7 @@
 ---
 import Links from "../components/headers/Links.astro";
 import AdminNav from "../components/admin/AdminNav.astro";
+import DatepickerCSS from "../components/DatepickerCSS.astro";
 export interface Props {
 	title: string;
 }
@@ -97,5 +98,6 @@ const { title } = Astro.props;
 		</script>
 		<AdminNav/>
 		<slot />
+		<DatepickerCSS />
 	</body>
 </html>

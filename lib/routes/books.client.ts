@@ -38,7 +38,7 @@ const updateQuantity: EndpointRoute<"PUT:/books/updateQuantity", typeof quantity
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/books", number[]> = {
+const del: EndpointRoute<"DELETE:/books", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/books",

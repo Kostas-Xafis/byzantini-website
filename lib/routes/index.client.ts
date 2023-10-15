@@ -9,6 +9,7 @@ import { APIInstruments, type APIInstrumentsArgs, APIInstrumentsEndpoints, type 
 import { APISysUsers, type APISysUsersArgs, APISysUsersEndpoints, type APISysUsersResponse } from "./sysusers.client";
 import { APIRegistrations, type APIRegistrationsArgs, APIRegistrationsEndpoints, type APIRegistrationsResponse } from "./registrations.client";
 import { APIAnnouncements, type APIAnnouncementsArgs, APIAnnouncementsEndpoints, type APIAnnouncementsResponse } from "./announcements.client";
+import { APISpecial, type APISpecialArgs, APISpecialEndpoints, type APISpecialResponse } from "./specialEndpoint.client";
 
 export const API = {
 	...APIBooks,
@@ -22,6 +23,7 @@ export const API = {
 	...APISysUsers,
 	...APIRegistrations,
 	...APIAnnouncements,
+	...APISpecial,
 };
 
 export const APIEndpoints = {
@@ -36,6 +38,7 @@ export const APIEndpoints = {
 	...APISysUsersEndpoints,
 	...APIRegistrationsEndpoints,
 	...APIAnnouncementsEndpoints,
+	...APISpecialEndpoints,
 };
 export type APIArgs = APIBooksArgs &
 	APIAuthenticationArgs &
@@ -47,7 +50,8 @@ export type APIArgs = APIBooksArgs &
 	APIInstrumentsArgs &
 	APISysUsersArgs &
 	APIRegistrationsArgs &
-	APIAnnouncementsArgs;
+	APIAnnouncementsArgs &
+	APISpecialArgs;
 
 export type APIRes = APIBooksResponse &
 	APIAuthenticationResponse &
@@ -59,4 +63,5 @@ export type APIRes = APIBooksResponse &
 	APIInstrumentsResponse &
 	APISysUsersResponse &
 	APIRegistrationsResponse &
-	APIAnnouncementsResponse;
+	APIAnnouncementsResponse &
+	APISpecialResponse;

@@ -8,6 +8,7 @@
 		"start": "astro dev",
 		"build": "astro build",
 		"preview": "astro build && wrangler pages dev ./dist",
+		"previewRemote": "astro build && wrangler pages dev ./dist",
 		"astro": "astro"
 	},
 	"dependencies": {

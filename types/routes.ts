@@ -1,4 +1,4 @@
-import type { IsAny, OptionalBy, ReplaceName, ReplaceValue } from "./helpers";
+import type { IsAny, OptionalBy, ReplaceValue } from "./helpers";
 import type { ArgumentParts, ExpectedArguments, ExtractURLMethod, GetURLMethod, HasUrlParams, Parts } from "./path";
 import type { Output, ObjectSchema, ObjectShape } from "valibot";
 import type { APIContext } from "astro";
@@ -33,7 +33,7 @@ export type EndpointResponse<T> = {
 export type Context = ReplaceValue<APIContext, "request", ReplaceValue<APIContext["request"], "json", () => Promise<any extends AnyObjectSchema ? Output<AnyObjectSchema> : any>>>;
 
 // Use for typing routes, accessible in the frontend
-export type EndpointRoute<URL extends string, Req, Res = undefined> = (IsAny<URL> extends false
+export type EndpointRoute<URL extends string, Req, Res = string> = (IsAny<URL> extends false
 	? {
 		authentication: boolean;
 		method: GetURLMethod<URL>;

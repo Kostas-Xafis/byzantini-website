@@ -11,7 +11,7 @@ import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import AirDatepicker from "air-datepicker";
-import { setFocusFixed } from "../../../lib/utils.client";
+import { setFocusFixed, sleep } from "../../../lib/utils.client";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -152,6 +152,7 @@ export default function Input(props: Props) {
 			const hasValue = value !== undefined && value !== null;
 			new AirDatepicker(`input[name='${name}']`, {
 				view: "years",
+				startDate: new Date(value || Date.now()),
 				firstDay: 0,
 				dateFormat: "yyyy-mm-dd",
 				autoClose: true,
@@ -180,10 +181,14 @@ export default function Input(props: Props) {
 				},
 			});
 			if (!value) return;
-			let d = document.querySelector(
-				`input[name='${name}']`
-			) as HTMLInputElement;
-			d.valueAsDate = new Date(value);
+			// set value after datepicker is initialized because it resets the value
+			sleep(200).then(() => {
+				(
+					document.querySelector(
+						`input[name='${name}']`
+					) as HTMLInputElement
+				).valueAsDate = new Date(value);
+			});
 		});
 	}
 
@@ -320,7 +325,7 @@ export default function Input(props: Props) {
 					name={name}
 					placeholder={placeholder || ""}
 					value={value === 0 ? "0" : value || ""}
-					readOnly={disabled || false}
+					readOnly={disabled || type === "date" || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
 					onfocus={(e: FocusEvent) =>
