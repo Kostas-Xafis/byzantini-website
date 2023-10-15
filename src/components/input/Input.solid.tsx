@@ -255,7 +255,6 @@ export default function Input(props: Props) {
 			setFileList(fileHandler.getFiles().map((f) => f.name));
 		};
 		onFileRemove = (fileId: number = 0) => {
-			console.log("removing file: ", fileId);
 			fileHandler.removeFile(fileId);
 			setFileList(fileHandler.getFiles().map((f) => f.name));
 		};

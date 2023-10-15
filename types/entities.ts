@@ -82,6 +82,8 @@ export const v_Teachers = object({
 	email: optional(string()),
 	telephone: optional(string()),
 	linktree: optional(string()),
+	gender: union([literal("M"), literal("F")]),
+	title: union([literal(0), literal(1), literal(2)]), // 1: Καθηγητής, 2: Δάσκαλος, 3: Επιμελητής
 	visible: boolean(),
 	online: boolean()
 });

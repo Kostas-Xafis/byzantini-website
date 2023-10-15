@@ -1,6 +1,6 @@
 ---
-import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
-import { isDevFromURL } from "../../../lib/utils.client";
+import { API, useAPI } from "../../../lib/hooks/useAPI.astro";
+import { isDevFromURL, teacherTitleByGender } from "../../../lib/utils.client";
 import type { Instruments } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
@@ -55,16 +55,11 @@ const musicOnly = [
 	["Ευρωπαϊκής", MusicType.European]
 ] as const;
 
-const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
-const cvSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/cv/";
+const imgSrc = (isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "") + "kathigites/picture/";
+const cvSrc = (isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "") + "kathigites/cv/";
 
-const femaleTeachers = ["Αθηνά Κουκή", "Ναταλία Χαρίκλεια Ζαχαράκη", "Αικατερίνη Σκρέκη"]
-const notProfessor = ["Ναταλία Χαρίκλεια Ζαχαράκη", "Χρήστος Σαράντης", "Γεώργιος Γιόβας", "Γεώργιος Γεωργακόπουλος"];
-const teachingTitle = (fullname: string) => {
-	const isProfessor = !notProfessor.includes(fullname);
-	const isFemale = femaleTeachers.includes(fullname);
-	return isProfessor ? (isFemale ? "Καθηγήτρια" : "Καθηγητής") : (isFemale ? "Δασκάλα" : "Δάσκαλος");
-}
+// const femaleTeachers = ["Αθηνά Κουκή", "Ναταλία Χαρίκλεια Ζαχαράκη", "Αικατερίνη Σκρέκη"]
+// const notProfessor = ["Ναταλία Χαρίκλεια Ζαχαράκη", "Χρήστος Σαράντης", "Γεώργιος Γιόβας", "Γεώργιος Γεωργακόπουλος"];
 ---
 
 <Layout title="Καθηγητές">
@@ -117,7 +112,7 @@ const teachingTitle = (fullname: string) => {
 											const dot = i === t_locations.length - 1 ? "" : "&";
 											return(<>{str}&thinsp;{dot}&thinsp;</>)
 									})}</p>
-									<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-sm max-2xs:text-xs"><span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1">{teachingTitle(teacher.fullname)+":"}</span><span>{t_classes_str.map((str, i) => {
+									<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-sm:text-sm max-2xs:text-xs"><span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1">{teacherTitleByGender(teacher.title, teacher.gender)+":"}</span><span>{t_classes_str.map((str, i) => {
 											let len = t_classes_str.length;
 											if (len === 1) return(<>{str}&thinsp;Μουσικής</>)
 											else if(len === 2) {
@@ -186,12 +181,6 @@ const teachingTitle = (fullname: string) => {
 </Layout>
 <script>
 	import { onElementMount, UpdateHandler } from "../../../lib/utils.client";
-
-	enum MusicType {
-		byz = "Βυζαντινής Μουσικής",
-		par = "Παραδοσιακής Μουσικής",
-		eur = "Ευρωπαϊκής Μουσικής"
-	}
 
 	document.querySelectorAll("div > button[data-type]").forEach(btnChild => {
 		const btn = btnChild.parentElement as HTMLElement;
@@ -278,18 +267,19 @@ const teachingTitle = (fullname: string) => {
 		teacherImages.forEach((img) => {
 			obsv.observe(img);
 		})
+		let pobsv: PerformanceObserver;
 		const networkCheckHandler = new UpdateHandler(1000, () => {
 			teacherImages.forEach((img) => {
 				ImageLoad(img);
 				obsv.unobserve(img);
 			});
+			pobsv.disconnect();
 		});
-		new PerformanceObserver((list) => {
+		pobsv = new PerformanceObserver((list) => {
 			const entries = list.getEntries();
-			entries.forEach(() => {
-				networkCheckHandler.reset();
-			})
-		}).observe({entryTypes: ["resource"]});
+			if(entries.length) networkCheckHandler.reset();
+		});
+		pobsv.observe({entryTypes: ["resource"]});
 		networkCheckHandler.timeout().catch((e) => {});
 	});
 </script>

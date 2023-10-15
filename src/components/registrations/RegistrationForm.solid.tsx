@@ -1,9 +1,18 @@
+import {
+	For,
+	Show,
+	createEffect,
+	createMemo,
+	createSignal,
+	on,
+	onMount,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 import {
 	API,
-	type APIStore,
-	useHydrate,
 	useAPI,
+	useHydrate,
+	type APIStore,
 } from "../../../lib/hooks/useAPI.solid";
 import type {
 	Instruments,
@@ -11,17 +20,8 @@ import type {
 	TeacherInstruments,
 	Teachers,
 } from "../../../types/entities";
-import Input, { type Props as InputProps } from "../input/Input.solid";
-import {
-	Show,
-	createEffect,
-	createMemo,
-	createSignal,
-	on,
-	onMount,
-	For,
-} from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
+import Input, { type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 
 const isPhone = window.matchMedia("(max-width: 640px)").matches;

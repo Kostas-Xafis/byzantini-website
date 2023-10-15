@@ -65,8 +65,8 @@ CREATE TABLE `teachers` (
     `email` varchar(80),
     `telephone` varchar(80),
     `linktree` varchar(80),
-    `picture` varchar(20),
-    `cv` varchar(20),
+    `picture` varchar(80),
+    `cv` varchar(80),
     `visible` boolean NOT NULL DEFAULT 1,
     `online` boolean NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`)
@@ -118,7 +118,7 @@ INSERT INTO total_registrations (amount, year) VALUES (0, 2023);
 
 CREATE TABLE `registrations`(
     `id` int AUTO_INCREMENT,
-    `am` varchar(4) NOT NULL,
+    `am` varchar(10) NOT NULL,
     `last_name` varchar(80) NOT NULL,
     `first_name` varchar(80) NOT NULL,
     `fathers_name` varchar(80) NOT NULL,

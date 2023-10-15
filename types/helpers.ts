@@ -37,6 +37,12 @@ export type OptionalBy<T, K> = K extends keyof T
 
 export type IsArray<T> = T extends Array<any> ? true : false;
 
+export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>> extends `${infer _A}${S}${infer _B}` ? true : false;
+
+
+// type InUnion<T, U> = T extends U ? true : false;
+
+
 // // For each kv pair, assign the kv pair as the value of the key to separate the object into a "union" of objects
 // type ObjectSplit<T extends Record<any, any>> = { [K in keyof T]: Pick<T, K> };
 

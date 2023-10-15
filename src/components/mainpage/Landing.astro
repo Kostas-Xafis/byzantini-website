@@ -85,16 +85,16 @@
 			background-size: cover;
 		}
 		#welcome-page > h1,
-		#welcome-page > h2 {
+		#welcome-page > h3 {
 			transform: translateY(25px);
 			opacity: 0.0001;
 		}
 		#welcome-page h1 span,
-		#welcome-page h2 span {
+		#welcome-page h3 span {
 			text-shadow: -1px 6px 6px rgba(12 10 9 / 0.6);
 		}
 		#welcome-page > h1 > span:hover + span,
-		#welcome-page > h2 > span:hover + span {
+		#welcome-page > h3 > span:hover + span {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(127 29 29 / 1) 10%, rgb(254, 202, 202));
 			background-clip: text;
@@ -103,7 +103,7 @@
 		}
 
 		#welcome-page > h1 > span:has(+ span:hover),
-		#welcome-page > h2 > span:hover + span {
+		#welcome-page > h3 > span:hover + span {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(254, 202, 202), rgb(127 29 29 / 1) 90%);
 			background-clip: text;
@@ -136,7 +136,7 @@
 <script>
 	import { iOS, onElementMount } from "../../../lib/utils.client";
 	onElementMount("#welcome-page > h1", () => {
-		const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h2")] as HTMLElement[];
+		const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")] as HTMLElement[];
 		heads.forEach((head, i) => {
 			let txt = head.innerText;
 			const txtArr = txt.split("");
@@ -164,7 +164,7 @@
 	});
 	if(iOS()) {
 		onElementMount("#welcome-page > h1", () => {
-			const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h2")] as HTMLElement[];
+			const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")] as HTMLElement[];
 			heads.forEach(head => {
 				head.style.setProperty("letter-spacing", "-1px");
 			});

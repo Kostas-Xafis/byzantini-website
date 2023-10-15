@@ -44,8 +44,8 @@ serverRoutes.getInstruments.func = async ctx => {
 serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
-		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online];
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, visible, online) VALUES (${questionMarks(args)})`, args);
+		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online];
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, gender, title, visible, online) VALUES (${questionMarks(args)})`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority) VALUES (?, ?, ?)`, [id.insertId, class_id, priority]);
@@ -63,8 +63,8 @@ serverRoutes.post.func = async ctx => {
 serverRoutes.update.func = async ctx => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
-		const args = [body.fullname, body.email, body.telephone, body.linktree, body.visible, body.online, body.id];
-		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, visible=?, online=? WHERE id=?`, args);
+		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
+		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, args);
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();

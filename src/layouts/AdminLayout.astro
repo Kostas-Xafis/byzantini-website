@@ -92,7 +92,6 @@ const { title } = Astro.props;
 			try {
 				await useAPI(API.Authentication.authenticateSession, {});
 			} catch(e) {
-				console.log(e);
 				(document.getElementById("redirect") as HTMLElement).click();
 			}
 		</script>

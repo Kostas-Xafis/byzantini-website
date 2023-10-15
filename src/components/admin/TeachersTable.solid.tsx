@@ -1,40 +1,44 @@
+import { Show, createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import {
 	API,
-	type APIStore,
-	useHydrate,
 	useAPI,
+	useHydrate,
+	type APIStore,
 } from "../../../lib/hooks/useAPI.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import {
+	fileToBlob,
+	removeAccents,
+	teacherTitleByGender,
+} from "../../../lib/utils.client";
 import type {
-	SimpleTeacher as Teachers,
-	Teachers as FullTeachers,
 	ClassType,
-	TeacherClasses,
-	Locations,
-	TeacherLocations,
+	Teachers as FullTeachers,
 	Instruments,
+	Locations,
+	TeacherClasses,
 	TeacherInstruments,
+	TeacherLocations,
+	SimpleTeacher as Teachers,
 } from "../../../types/entities";
-import Table, { type ColumnType } from "./table/Table.solid";
-import { createMemo, Show } from "solid-js";
-import { createStore } from "solid-js/store";
-import TableControls, {
-	ActionEnum,
-	type Action,
-	type EmptyAction,
-	ActionIcon,
-} from "./table/TableControls.solid";
-import { type Props as InputProps, Fill, Omit } from "../input/Input.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formListener, formErrorWrap } from "./table/formSubmit";
+import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
 	SearchTable,
 	type SearchColumn,
 	type SearchSetter,
 } from "./SearchTable.solid";
-import { fileToBlob, removeAccents } from "../../../lib/utils.client";
-import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
+import TableControls, {
+	ActionEnum,
+	ActionIcon,
+	type Action,
+	type EmptyAction,
+} from "./table/TableControls.solid";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "teachers";
 
@@ -136,6 +140,33 @@ const TeachersInputs = (
 			label: "Σύνδεσμος",
 			type: "text",
 			iconClasses: "fa-solid fa-link",
+		},
+		gender: {
+			name: "gender",
+			label: "Φύλο",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-venus-mars",
+			multiselectOnce: true,
+			multiselectList: [
+				{ value: 0, label: "Άρρεν", selected: teacher?.gender === "M" },
+				{ value: 1, label: "Θήλυ", selected: teacher?.gender === "F" },
+			],
+		},
+		title: {
+			name: "title",
+			label: "Τίτλος",
+			type: "multiselect",
+			multiselectList: ["Καθηγητής", "Δάσκαλος", "Επιμελητής"].map(
+				(t, i) => {
+					return {
+						value: i,
+						label: t,
+						selected: teacher?.title === i,
+					};
+				}
+			),
+			multiselectOnce: true,
+			iconClasses: "fa-solid fa-user-graduate",
 		},
 		priority_byz: {
 			name: "priority_byz",
@@ -241,7 +272,7 @@ const teachersToTable = (
 		const classes = classList.filter((c) => c.teacher_id === t.id);
 		const columns = Object.values(t) as any[];
 
-		columns[2] = (t.picture && "/kathigites/images/" + t.picture) || "";
+		columns[2] = (t.picture && "/kathigites/picture/" + t.picture) || "";
 		columns[3] = (t.cv && "/kathigites/cv/" + t.cv) || "";
 		columns[4] = t.email || "";
 		columns[5] = t.telephone || "";
@@ -251,8 +282,11 @@ const teachersToTable = (
 		columns[8] = classes.find((c) => c.class_id === 1)?.priority;
 		columns[9] = classes.find((c) => c.class_id === 2)?.priority;
 
-		columns[10] = t.visible;
-		columns[11] = t.online;
+		columns[10] = t.gender === "M" ? "Άρρεν" : "Θήλυ";
+		columns[11] = teacherTitleByGender(t.title, t.gender);
+
+		columns[12] = t.visible;
+		columns[13] = t.online;
 		return columns as unknown as TeachersTable;
 	});
 };
@@ -291,6 +325,8 @@ const columnNames: ColumnType<TeachersTable> = {
 		name: "Προτεραιότητα Ευρωπαϊκής",
 		size: 15,
 	},
+	gender: { type: "string", name: "Φύλο", size: 15 },
+	title: { type: "string", name: "Τίτλος", size: 15 },
 	visible: { type: "boolean", name: "Εμφάνιση", size: 15 },
 	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 15 },
 };
@@ -354,71 +390,41 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
+				gender: [
+					...document.querySelectorAll<HTMLInputElement>(
+						`button[data-specifier='gender'][data-selected='true']`
+					),
+				].map((btn) => (Number(btn.dataset.value) ? "F" : "M"))[0],
+				title: [
+					...document.querySelectorAll<HTMLInputElement>(
+						`button[data-specifier='title'][data-selected='true']`
+					),
+				].map((btn) => Number(btn.dataset.value))[0] as 0 | 1 | 2,
 				visible: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='visible']`
+						`button[data-specifier='visible'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? !!Number(btn.dataset.value)
-								: null; // Convert to boolean or null
-						return id;
-					})
-					.filter((c) => c !== null)[0] as boolean,
+				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
 				online: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='online']`
+						`button[data-specifier='online'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? !!Number(btn.dataset.value)
-								: null; // Convert to boolean or null
-						return id;
-					})
-					.filter((c) => c !== null)[0] as boolean,
+				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
 				teacherClasses: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherClasses']`
+						`button[data-specifier='teacherClasses'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? Number(btn.dataset.value)
-								: null;
-						return id;
-					})
-					.filter((c) => c !== null) as number[],
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				teacherInstruments: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier^='teacherInstruments']`
+						`button[data-specifier^='teacherInstruments'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? Number(btn.dataset.value)
-								: null;
-						return id;
-					})
-					.filter(Boolean) as number[],
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				teacherLocations: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherLocations']`
+						`button[data-specifier='teacherLocations'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? Number(btn.dataset.value)
-								: null;
-						return id;
-					})
-					.filter(Boolean) as number[],
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				priorities: [
 					...document.querySelectorAll<HTMLInputElement>(
 						`input[name^='priority']`
@@ -505,71 +511,41 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
+				gender: [
+					...document.querySelectorAll<HTMLInputElement>(
+						`button[data-specifier='gender'][data-selected='true']`
+					),
+				].map((btn) => (Number(btn.dataset.value) ? "F" : "M"))[0],
+				title: [
+					...document.querySelectorAll<HTMLInputElement>(
+						`button[data-specifier='title'][data-selected='true']`
+					),
+				].map((btn) => Number(btn.dataset.value))[0] as 0 | 1 | 2,
 				visible: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='visible']`
+						`button[data-specifier='visible'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? !!Number(btn.dataset.value)
-								: null; // Convert to boolean or null
-						return id;
-					})
-					.filter((c) => c !== null)[0] as boolean,
+				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
 				online: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='online']`
+						`button[data-specifier='online'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? !!Number(btn.dataset.value)
-								: null; // Convert to boolean or null
-						return id;
-					})
-					.filter((c) => c !== null)[0] as boolean,
+				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
 				teacherClasses: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherClasses']`
+						`button[data-specifier='teacherClasses'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? Number(btn.dataset.value)
-								: null;
-						return id;
-					})
-					.filter((c) => c !== null) as number[],
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				teacherInstruments: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier^='teacherInstruments']`
+						`button[data-specifier^='teacherInstruments'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? Number(btn.dataset.value)
-								: null;
-						return id;
-					})
-					.filter(Boolean) as number[],
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				teacherLocations: [
 					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherLocations']`
+						`button[data-specifier='teacherLocations'][data-selected='true']`
 					),
-				]
-					.map((btn) => {
-						const id =
-							btn.dataset.selected === "true"
-								? Number(btn.dataset.value)
-								: null;
-						return id;
-					})
-					.filter(Boolean) as number[],
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				priorities: [
 					...document.querySelectorAll<HTMLInputElement>(
 						`input[name^='priority']`
