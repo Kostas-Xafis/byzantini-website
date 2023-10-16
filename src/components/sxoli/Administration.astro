@@ -66,7 +66,7 @@ const principalText = [
 οἱ ὁποῖοι πέρα ἀπὸ τὰ εἰδικὰ ἱερατικά τους καθήκοντα, προσφέρουν καὶ ἔργο
 πολύτιμο γιὰ τὴν διάσωση καὶ διάδοση τῆς Ἐθνικῆς μας Μουσικῆς»`
 ];
-const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/images/";
+const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/pictures/";
 ---
 <>
 	<section
@@ -107,7 +107,7 @@ const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_B
 			</div>
 			<div class="flex flex-row max-sm:flex-col items-center max-sm:gap-y-4 bg-red-900 hover:bg-red-950">
 				<img
-					src={imgSrc + "mitropolitis.jpg"}
+					src={"mitropolitis.jpg"}
 					alt="Φωτογραφία Σεβασμιωτάτου Μητροπολίτου"
 					width="300px"
 					class="w-[300px] max-sm:w-[200px] shadow-lg shadow-slate-800 max-sm:shadow-[rgb(210,210,210,0.4)]"
@@ -132,7 +132,7 @@ const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_B
 				Πρωτοπρ. Χρίστος Κυριακόπουλος
 			</p>
 			<img
-				src={imgSrc + "pjcqQA6rQAIi.jpeg"}
+				src={imgSrc + "Πρωτοπρ. Χρίστος Κυριακόπουλος.jpeg"}
 				alt="Φωτογραφία Διευθυντή"
 				width="350px"
 				class="w-[clamp(0px,100%,350px)] max-sm:w-[clamp(0px,100%,250px)] self-center sm:group-[:is(.unfold)]:sticky sm:group-[:is(.unfold)]:self-start object-cover shadow-md shadow-slate-800 max-sm:shadow-slate-100"
