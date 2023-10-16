@@ -66,7 +66,7 @@ const principalText = [
 οἱ ὁποῖοι πέρα ἀπὸ τὰ εἰδικὰ ἱερατικά τους καθήκοντα, προσφέρουν καὶ ἔργο
 πολύτιμο γιὰ τὴν διάσωση καὶ διάδοση τῆς Ἐθνικῆς μας Μουσικῆς»`
 ];
-const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/kathigites/pictures/";
+const imgSrc = (isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "") +  "kathigites/picture/";
 ---
 <>
 	<section
@@ -107,7 +107,7 @@ const imgSrc = isDevFromURL(Astro.request.url) ? await import.meta.env.S3_OPEN_B
 			</div>
 			<div class="flex flex-row max-sm:flex-col items-center max-sm:gap-y-4 bg-red-900 hover:bg-red-950">
 				<img
-					src={"mitropolitis.jpg"}
+					src="/mitropolitis.jpg"
 					alt="Φωτογραφία Σεβασμιωτάτου Μητροπολίτου"
 					width="300px"
 					class="w-[300px] max-sm:w-[200px] shadow-lg shadow-slate-800 max-sm:shadow-[rgb(210,210,210,0.4)]"

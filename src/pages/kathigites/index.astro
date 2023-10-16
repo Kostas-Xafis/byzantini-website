@@ -55,8 +55,8 @@ const musicOnly = [
 	["Ευρωπαϊκής", MusicType.European]
 ] as const;
 
-const imgSrc = (isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "") + "kathigites/picture/";
-const cvSrc = (isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "") + "kathigites/cv/";
+const imgSrc = "kathigites/picture/";
+const cvSrc = "kathigites/cv/";
 ---
 
 <Layout title="Καθηγητές">
@@ -202,7 +202,7 @@ const cvSrc = (isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 				})
 			}, 300);
 		})
-	})
+	});
 	if(window.location.hash) {
 		const hash = window.location.hash.replace("#", "");
 		const type = decodeURI(hash);

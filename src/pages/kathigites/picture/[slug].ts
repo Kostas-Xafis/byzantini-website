@@ -5,6 +5,7 @@ import { isDevFromURL } from "../../../../lib/utils.client";
 const picturePrefix = "kathigites/picture/";
 export async function GET(context: APIContext) {
 	const url = picturePrefix + context.params.slug;
+	console.log(url);
 	if (isDevFromURL(context.url)) {
 		const data = await fetch(import.meta.env.S3_OPEN_BUCKET_URL + url);
 		return new Response(await data.arrayBuffer(), { status: 200 });

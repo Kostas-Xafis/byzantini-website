@@ -4,7 +4,7 @@ import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/other/GMap.astro";
 import { isDevFromURL } from "../../../lib/utils.client";
 let _locations = (await useAPI("Locations.getByPriority", {})).data || [];
-const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/locations/";
+const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
 const schoolLocations = _locations.filter(l => !l.partner);
 const otherLocations = _locations.filter(l => !!l.partner);
 ---
