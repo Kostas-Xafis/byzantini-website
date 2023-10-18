@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_Announcements, type Announcements, v_AnnouncementImages } from "../../types/entities";
 import { omit } from "valibot";
 
@@ -25,6 +25,15 @@ const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements> 
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
+
+const getByTitle: EndpointRoute<"POST:/announcements/title/[title:string]", null, Announcements & { images: string[]; }> = {
+	authentication: false,
+	method: "POST",
+	path: "/announcements/title/[title:string]",
+	hasUrlParams: true,
+	func: async ctx => null as any
+};
+
 
 const postReq = omit(v_Announcements, ["id", "views"]);
 const post: EndpointRoute<"POST:/announcements", typeof postReq, { insertId: number; }> = {
@@ -53,7 +62,7 @@ const imageUpload: EndpointRoute<"POST:/announcements/image/[id:number]/[name:st
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/announcements", number[]> = {
+const del: EndpointRoute<"DELETE:/announcements", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/announcements",
@@ -65,6 +74,7 @@ export const AnnouncementsRoutes = {
 	get,
 	getSimple,
 	getById,
+	getByTitle,
 	post,
 	postImage,
 	imageUpload,
@@ -90,6 +100,11 @@ export const APIAnnouncementsEndpoints: APIEndpointsBuilder<"Announcements", typ
 		method: "POST",
 		path: "/announcements/id",
 		endpoint: "Announcements.getById"
+	},
+	"Announcements.getByTitle": {
+		method: "POST",
+		path: "/announcements/title/[title:string]",
+		endpoint: "Announcements.getByTitle"
 	},
 	"Announcements.post": {
 		method: "POST",
@@ -120,6 +135,7 @@ export const APIAnnouncements: APIBuilder<"Announcements", typeof AnnouncementsR
 		get: "Announcements.get",
 		getSimple: "Announcements.getSimple",
 		getById: "Announcements.getById",
+		getByTitle: "Announcements.getByTitle",
 		post: "Announcements.post",
 		postImage: "Announcements.postImage",
 		imageUpload: "Announcements.imageUpload",

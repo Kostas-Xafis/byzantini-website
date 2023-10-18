@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_Registrations, type Registrations } from "../../types/entities";
 import { object, omit, string } from "valibot";
 
@@ -27,7 +27,7 @@ const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number;
 };
 
 const postReq = omit(v_Registrations, ["id", "payment_amount", "payment_date", "payment_amount", "total_payment"]);
-const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
+const post: EndpointRoute<"POST:/registrations", typeof postReq> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations",
@@ -36,7 +36,7 @@ const post: DefaultEndpointRoute<"POST:/registrations", typeof postReq> = {
 	func: async ctx => null as any
 };
 
-const update: DefaultEndpointRoute<"PUT:/registrations", typeof v_Registrations> = {
+const update: EndpointRoute<"PUT:/registrations", typeof v_Registrations> = {
 	authentication: true,
 	method: "PUT",
 	path: "/registrations",
@@ -45,7 +45,7 @@ const update: DefaultEndpointRoute<"PUT:/registrations", typeof v_Registrations>
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
+const del: EndpointRoute<"DELETE:/registrations", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/registrations",
@@ -54,7 +54,7 @@ const del: DefaultEndpointRoute<"DELETE:/registrations", number[]> = {
 };
 
 const v_Email = object({ email: string() });
-const emailSubscribe: DefaultEndpointRoute<"POST:/registrations/email-subscribe", typeof v_Email> = {
+const emailSubscribe: EndpointRoute<"POST:/registrations/email-subscribe", typeof v_Email> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe",
@@ -64,7 +64,7 @@ const emailSubscribe: DefaultEndpointRoute<"POST:/registrations/email-subscribe"
 };
 
 const v_EmailToken = object({ token: string() });
-const emailUnsubscribe: DefaultEndpointRoute<"POST:/registrations/email-unsubscribe", typeof v_EmailToken> = {
+const emailUnsubscribe: EndpointRoute<"POST:/registrations/email-unsubscribe", typeof v_EmailToken, { isValid: boolean; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-unsubscribe",
@@ -73,7 +73,7 @@ const emailUnsubscribe: DefaultEndpointRoute<"POST:/registrations/email-unsubscr
 	func: async ctx => null as any
 };
 
-const getSubscriptionToken: EndpointRoute<"POST:/registrations/email-subscribe/token", typeof v_Email, { token: string; }> = {
+const getSubscriptionToken: EndpointRoute<"POST:/registrations/email-subscribe/token", typeof v_Email, { token: string | null; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe/token",

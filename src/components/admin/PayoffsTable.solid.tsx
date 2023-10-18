@@ -9,12 +9,12 @@ import type { ReplaceName } from "../../../types/helpers";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, {
+import {
 	ActionEnum,
-	type Action,
-	type EmptyAction,
 	ActionIcon,
-} from "./table/TableControls.solid";
+	type EmptyAction,
+} from "./table/TableControlTypes";
+import TableControls, { type Action } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../input/Input.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";

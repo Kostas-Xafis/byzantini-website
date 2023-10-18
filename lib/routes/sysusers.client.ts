@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
 
 const get: EndpointRoute<"GET:/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
@@ -25,7 +25,7 @@ const getBySid: EndpointRoute<"GET:/sys/sid", null, SysUsers> = {
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/sys", number[]> = {
+const del: EndpointRoute<"DELETE:/sys", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/sys",

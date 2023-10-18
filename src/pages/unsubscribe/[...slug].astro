@@ -6,8 +6,9 @@ import SigninLayout from "../../layouts/SigninLayout.astro";
 let restoredUrl =  new URL(Astro.url.href.replace("/?token", "?token"));
 
 const token = restoredUrl.searchParams.get("token") || "";
+
 const res = await useAPI("Registrations.emailUnsubscribe", {RequestObject: {token}});
-let success = (res.data || res.message) || false;
+let success = (res.data?.isValid  || false);
 ---
 <SigninLayout title="Απεγγραφή">
     <div class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">

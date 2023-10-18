@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_Books, type Books } from "../../types/entities";
 import { omit, pick } from "valibot";
 

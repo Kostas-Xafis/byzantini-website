@@ -1,5 +1,5 @@
 import type { SetStoreFunction } from "solid-js/store";
-import { ActionEnum } from "../../src/components/admin/table/TableControls.solid";
+import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import { useAPI, type APIStore } from "./useAPI.solid";
 import { createEffect, createSignal, on } from "solid-js";
 
@@ -40,6 +40,7 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 			} else {
 				hydrateById(mutate, action);
 			}
+			//@ts-ignore
 			document.dispatchEvent(new Event("RemoveAllRows"));
 		})
 	);

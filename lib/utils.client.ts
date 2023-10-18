@@ -1,5 +1,6 @@
-export function isDevFromURL(url: URL | string) {
+export function isDevFromURL(url: URL | string, localProd = false) {
 	if (typeof url === "string") url = new URL(url);
+	if (localProd) return url.hostname === "localhost";
 	return (
 		url.hostname === "localhost" ||
 		url.hostname === "127.0.0.1" ||

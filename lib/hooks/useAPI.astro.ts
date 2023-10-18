@@ -1,5 +1,5 @@
-import { API as api, type APIArgs, APIEndpoints, type APIRes } from "../routes/index.client";
 import { parse } from "valibot";
+import { API, APIEndpoints, type APIArgs, type APIRes } from "../routes/index.client";
 import { convertUrlFromArgs } from "../utils.client";
 type APIEndpointKey = keyof typeof APIEndpoints;
 export type APIStore = {
@@ -8,7 +8,7 @@ export type APIStore = {
 type APIStoreValue<Key extends keyof APIStore> = APIStore[Key];
 
 
-export const API = api;
+export { API };
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.

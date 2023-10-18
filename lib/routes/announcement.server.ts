@@ -1,9 +1,9 @@
-import type { Announcements, AnnouncementImages } from "../../types/entities";
-import { AnnouncementsRoutes } from "./announcements.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
+import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { AnnouncementsRoutes } from "./announcements.client";
 
-const bucketPrefix = "announcements";
+const bucketPrefix = "anakoinoseis/images/";
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(AnnouncementsRoutes)) as typeof AnnouncementsRoutes; // Copy the routes object to split it into client and server routes
@@ -25,17 +25,17 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-
-// This is getById but for the client side, will fix later
-// serverRoutes.getById.func = async ctx => {
-// 	return await execTryCatch(async () => {
-// 		const ids = await ctx.request.json();
-// 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", ids);
-// 		const imageNames = await executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", ids);
-// 		if (!announcement) throw Error("announcement not found");
-// 		return { ...announcement, images: imageNames.map(({ name }) => name) };
-// 	});
-// };
+serverRoutes.getByTitle.func = async (ctx, slug) => {
+	return await execTryCatch(async () => {
+		const { title } = slug;
+		console.log(title);
+		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
+		console.log(announcement);
+		const imageNames = await executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
+		if (!announcement) throw Error("announcement not found");
+		return { ...announcement, images: imageNames.map(({ name }) => name) };
+	});
+};
 
 serverRoutes.post.func = async ctx => {
 	return await execTryCatch(async () => {
@@ -70,7 +70,7 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 		const filetype = blob.type;
 		if (imageMIMEType.includes(filetype)) {
 			const imageBuf = await blob.arrayBuffer();
-			const bucketFileName = bucketPrefix + `/${id}/` + name;
+			const bucketFileName = bucketPrefix + `${id}/` + name;
 			if (announcement.name) await Bucket.delete(ctx, announcement.name);
 			await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
 			return "Image uploaded successfully";
@@ -90,7 +90,7 @@ serverRoutes.delete.func = async ctx => {
 			if (images.length) {
 				await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ?`, [id]);
 				for (const { name, announcement_id } of images) {
-					await Bucket.delete(ctx, "announcements/" + announcement_id + "/" + name);
+					await Bucket.delete(ctx, "anakoinoseis/" + announcement_id + "/" + name);
 				}
 			}
 		}

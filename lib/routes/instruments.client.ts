@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_Instruments, type Instruments } from "../../types/entities";
 import { omit } from "valibot";
 
@@ -28,7 +28,7 @@ const getById: EndpointRoute<"POST:/instruments/id", number[], Instruments> = {
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/instruments", number[]> = {
+const del: EndpointRoute<"DELETE:/instruments", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/instruments",

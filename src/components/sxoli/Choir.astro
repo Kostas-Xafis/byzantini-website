@@ -135,7 +135,7 @@
 			}
 		);
 		obsv2.observe(choir);
-		const carouselImgs = ["/choir_2.jpg", "/choir_3.jpg", "/choir_4.jpg", "/choir_5.jpg", "/choir_1.jpg"];
+		const carouselImgs = ["choir/choir_2.jpg", "choir/choir_3.jpg", "choir/choir_4.jpg", "choir/choir_5.jpg", "choir/choir_1.jpg"];
 		const loadedImgs = new Set<string>(["choir_1.jpg"]);
 		carouselUpdate.setFunction(async () => {
 			const img = carousel.querySelector("img") as HTMLImageElement;

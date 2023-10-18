@@ -2,14 +2,13 @@
 import { useAPI } from "../../../lib/hooks/useAPI.astro";
 import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/other/GMap.astro";
-import { isDevFromURL } from "../../../lib/utils.client";
 let _locations = (await useAPI("Locations.getByPriority", {})).data || [];
-const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
+const imgSrc = "/";
 const schoolLocations = _locations.filter(l => !l.partner);
 const otherLocations = _locations.filter(l => !!l.partner);
 ---
 
-<Layout title="Παραρτήματα">
+<Layout title="Σπουδαστήρια">
 	<style is:inline>
 		#btsContainer > div {
 			-ms-overflow-style: none !important; /* Internet Explorer 10+ */

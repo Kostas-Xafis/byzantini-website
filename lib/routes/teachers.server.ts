@@ -3,6 +3,8 @@ import { TeachersRoutes } from "./teachers.client";
 import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
 
+const bucketPrefix = "kathigites/picture/";
+
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(TeachersRoutes)) as typeof TeachersRoutes; // Copy the routes object to split it into client and server routes
 
@@ -91,16 +93,19 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
 		const body = await blob.arrayBuffer();
-		const link = generateLink(12) + "." + filetype.split("/")[1];
+
+		const fileName = teacher.fullname + "." + filetype.split("/")[1];
+		const link = bucketPrefix + fileName;
+
 		if (filetype === "application/pdf") {
 			if (teacher.cv) await Bucket.delete(ctx, teacher.cv);
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [link, id]);
+			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [fileName, id]);
 			return "Pdf uploaded successfully";
 		} else if (imageMIMEType.includes(filetype)) {
-			if (teacher.picture) Bucket.delete(ctx, teacher.picture);
+			if (teacher.picture) await Bucket.delete(ctx, teacher.picture);
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [link, id]);
+			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [fileName, id]);
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
@@ -113,11 +118,11 @@ serverRoutes.fileDelete.func = async ctx => {
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
 		if (!teacher) throw Error("Teacher not found");
 		if (body.type === "cv") {
-			if (teacher.cv) await Bucket.delete(ctx, teacher.cv);
+			if (teacher.cv) await Bucket.delete(ctx, bucketPrefix + teacher.cv);
 			await executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
 			return "Pdf deleted successfully";
 		} else if (body.type === "picture") {
-			if (teacher.picture) await Bucket.delete(ctx, teacher.picture);
+			if (teacher.picture) await Bucket.delete(ctx, bucketPrefix + teacher.picture);
 			await executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
 			return "Image deleted successfully";
 		}

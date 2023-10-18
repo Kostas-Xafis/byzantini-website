@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
 import { merge, array, number, integer, object, omit } from "valibot";
@@ -103,7 +103,7 @@ const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" |
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/teachers", number[]> = {
+const del: EndpointRoute<"DELETE:/teachers", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/teachers",

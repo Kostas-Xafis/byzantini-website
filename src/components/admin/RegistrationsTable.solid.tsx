@@ -12,12 +12,12 @@ import type {
 import Table, { type ColumnType } from "./table/Table.solid";
 import { createEffect, createMemo, Show, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
-import TableControls, {
+import {
 	ActionEnum,
-	type Action,
 	ActionIcon,
 	type EmptyAction,
-} from "./table/TableControls.solid";
+} from "./table/TableControlTypes";
+import TableControls, { type Action } from "./table/TableControls.solid";
 import { type Props as InputProps, Fill } from "../input/Input.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";

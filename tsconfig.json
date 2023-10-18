@@ -1,5 +1,6 @@
 {
 	"strict": true,
+	"noImplicitAny": false,
 	"skipLibCheck": true,
 	"extends": "astro/tsconfigs/strict",
 	"exclude": ["./.vscode", "./dist", "./.wrangler", "./pdfWorker"],

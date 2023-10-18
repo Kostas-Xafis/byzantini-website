@@ -1,26 +1,26 @@
+import { Show, createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import {
 	API,
-	type APIStore,
-	useHydrate,
 	useAPI,
+	useHydrate,
+	type APIStore,
 } from "../../../lib/hooks/useAPI.solid";
-import type { Locations } from "../../../types/entities";
-import Table, { type ColumnType } from "./table/Table.solid";
-import { createMemo, Show } from "solid-js";
-import { createStore } from "solid-js/store";
-import TableControls, {
-	ActionEnum,
-	type Action,
-	type EmptyAction,
-	ActionIcon,
-} from "./table/TableControls.solid";
-import { type Props as InputProps, Fill, Omit } from "../input/Input.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
-import Spinner from "../other/Spinner.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { fileToBlob } from "../../../lib/utils.client";
+import type { Locations } from "../../../types/entities";
+import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
+import Spinner from "../other/Spinner.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
+import {
+	ActionEnum,
+	ActionIcon,
+	type EmptyAction,
+} from "./table/TableControlTypes";
+import TableControls, { type Action } from "./table/TableControls.solid";
+import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "locations";
 

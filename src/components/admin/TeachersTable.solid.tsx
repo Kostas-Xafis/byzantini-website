@@ -32,12 +32,12 @@ import {
 } from "./SearchTable.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import TableControls, {
+import {
 	ActionEnum,
 	ActionIcon,
-	type Action,
 	type EmptyAction,
-} from "./table/TableControls.solid";
+} from "./table/TableControlTypes";
+import TableControls, { type Action } from "./table/TableControls.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "teachers";

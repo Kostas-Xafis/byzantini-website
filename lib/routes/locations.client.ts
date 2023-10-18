@@ -1,4 +1,4 @@
-import type { EndpointRoute, DefaultEndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_Locations, type Locations } from "../../types/entities";
 import { omit } from "valibot";
 
@@ -62,7 +62,7 @@ const fileDelete: EndpointRoute<"DELETE:/locations/file/[id:number]", null> = {
 	func: async ctx => null as any
 };
 
-const del: DefaultEndpointRoute<"DELETE:/locations", number[]> = {
+const del: EndpointRoute<"DELETE:/locations", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/locations",

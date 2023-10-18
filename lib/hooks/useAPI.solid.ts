@@ -1,17 +1,17 @@
 import { batch, createEffect, createSignal, untrack } from "solid-js";
-import { API as api, type APIArgs, APIEndpoints, type APIRes } from "../routes/index.client";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
-import { ActionEnum } from "../../src/components/admin/table/TableControls.solid";
+import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
+import { APIEndpoints, API, type APIArgs, type APIRes } from "../routes/index.client";
 import { convertUrlFromArgs } from "../utils.client";
+
 type APIEndpointKey = keyof typeof APIEndpoints;
 export type APIStore = {
 	[K in APIEndpointKey]?: Extract<APIRes[K]["res"], { type: "data"; }>["data"];
 };
 type APIStoreValue<Key extends keyof APIStore> = APIStore[Key];
 
-
-export const API = api;
+export { API };
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.

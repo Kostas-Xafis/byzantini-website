@@ -68,7 +68,7 @@ export type EndpointRoute<URL extends string, Req, Res = string> = (IsAny<URL> e
 		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	};
 
-export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
+// export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
 
 // Use for typing routes, accessible in the frontend
 export type APIEndpointsBuilder<Mount extends string, Routes extends { [k: string]: EndpointRoute<any, any, any>; }> = {
