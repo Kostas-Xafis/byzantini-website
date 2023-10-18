@@ -9,27 +9,35 @@
 		>
 			Άδοντες & Ψάλλοντες
 		</h1>
-		<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-evenly max-sm:justify-center overflow-visible">
+		<div
+			class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-evenly max-sm:justify-center overflow-visible"
+		>
 			<div id="choirText" class="flex flex-col gap-y-2">
 				<div>
-					<h2 class="text-[3vw] max-sm:text-2.5xl sm:leading-[2.5vw] max-sm:font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+					<h2
+						class="text-[3vw] max-sm:text-2.5xl sm:leading-[2.5vw] max-sm:font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+					>
 						Χορωδία Βυζαντινής &
 					</h2>
-					<h2 class="text-[3vw] max-sm:text-2.5xl max-sm:font-bold text-right font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+					<h2
+						class="text-[3vw] max-sm:text-2.5xl max-sm:font-bold text-right font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]"
+					>
 						Παραδοσιακής Μουσικής
 					</h2>
 				</div>
 				<p class="text-xl max-sm:text-lg w-[50ch] max-sm:w-full tracking-wide">
-					Η αγάπη για την βυζαντινή μουσική και η ανάγκη να παραμείνει ζωντανή η ελληνορθόδοξη παράδοσή μας
-					αποτέλεσαν το κίνητρο ίδρυσης της χορωδίας «Άδοντες και Ψάλλοντες» από μια ομάδα νέων συναδέλφων
-					ιεροψαλτών και μαθητών. Αποτελεί την καρδιά της Σχολής μας και σκοπός της είναι η διάσωση και η
-					διάδοση του μουσικού πλούτου της πατρίδας μας. Μέλη της αποτελούν οι Καθηγητές και οι μαθητές της
-					Σχολής με εμπνευστή και καθοδηγητή τον ιδρυτή της Πρωτ. Σωτήριο Αλεβιζάκη.
+					Η αγάπη για την βυζαντινή μουσική και η ανάγκη να παραμείνει ζωντανή η ελληνορθόδοξη παράδοσή μας αποτέλεσαν το κίνητρο
+					ίδρυσης της χορωδίας «Άδοντες και Ψάλλοντες» από μια ομάδα νέων συναδέλφων ιεροψαλτών και μαθητών. Αποτελεί την καρδιά
+					της Σχολής μας και σκοπός της είναι η διάσωση και η διάδοση του μουσικού πλούτου της πατρίδας μας. Μέλη της αποτελούν οι
+					Καθηγητές και οι μαθητές της Σχολής με εμπνευστή και καθοδηγητή τον ιδρυτή της Πρωτ. Σωτήριο Αλεβιζάκη.
 				</p>
 			</div>
-			<div id="choirCarousel" class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
+			<div
+				id="choirCarousel"
+				class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
+			>
 				<img
-					src={"/choir_1.jpg"}
+					src={"/choir/choir_1.jpg"}
 					width="900px"
 					alt="Φωτογραφία Χορωδίας"
 					class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
@@ -81,7 +89,7 @@
 <script>
 	import { onElementMount, UpdateHandler, mappedValue, loadImage } from "../../../lib/utils.client";
 
-	onElementMount("#choir", (choir) => {
+	onElementMount("#choir", choir => {
 		const obsv = new IntersectionObserver(
 			entries => {
 				const entry = entries[0];
@@ -116,32 +124,32 @@
 					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`);
 				}
 
-				if(intersectionRatio >= 0.6  && !choirText.classList.contains("show")) choirText.classList.add("show");
-				else if(intersectionRatio < 0.6  && choirText.classList.contains("show")) {
-					choirText.classList.remove("show")
-					choirText.classList.add("remove")
-				};
+				if (intersectionRatio >= 0.6 && !choirText.classList.contains("show")) choirText.classList.add("show");
+				else if (intersectionRatio < 0.6 && choirText.classList.contains("show")) {
+					choirText.classList.remove("show");
+					choirText.classList.add("remove");
+				}
 				isCarouselVisible = intersectionRatio > 0.4;
-				if(isCarouselVisible && !carouselUpdate.timeoutFired) {
-					carouselUpdate.timeout().catch((e) => {});
-				} else if(!isCarouselVisible && carouselUpdate.timeoutFired) {
+				if (isCarouselVisible && !carouselUpdate.timeoutFired) {
+					carouselUpdate.timeout().catch(e => {});
+				} else if (!isCarouselVisible && carouselUpdate.timeoutFired) {
 					carouselUpdate.abort();
 				}
 			},
 			{
-				root:null,
+				root: null,
 				rootMargin: "0px",
 				threshold: new Array(101).fill(0).map((_, i) => i / 100)
 			}
 		);
 		obsv2.observe(choir);
-		const carouselImgs = ["choir/choir_2.jpg", "choir/choir_3.jpg", "choir/choir_4.jpg", "choir/choir_5.jpg", "choir/choir_1.jpg"];
+		const carouselImgs = ["/choir/choir_2.jpg", "/choir/choir_3.jpg", "/choir/choir_4.jpg", "/choir/choir_5.jpg", "/choir/choir_1.jpg"];
 		const loadedImgs = new Set<string>(["choir_1.jpg"]);
 		carouselUpdate.setFunction(async () => {
 			const img = carousel.querySelector("img") as HTMLImageElement;
 			let imgSrc = carouselImgs.shift() as string;
 			carouselImgs.push(imgSrc);
-			if(!loadedImgs.has(imgSrc)) {
+			if (!loadedImgs.has(imgSrc)) {
 				loadedImgs.add(imgSrc);
 				await loadImage(imgSrc);
 			}
@@ -152,10 +160,10 @@
 				void carousel.clientWidth;
 				carousel.classList.remove("remove");
 				carousel.classList.add("open");
-				if(!isCarouselVisible) carouselUpdate.abort();
+				if (!isCarouselVisible) carouselUpdate.abort();
 				else carouselUpdate.reset();
 			}, 300);
 		});
-		carouselUpdate.timeout().catch((e) => {});
+		carouselUpdate.timeout().catch(e => {});
 	});
 </script>
