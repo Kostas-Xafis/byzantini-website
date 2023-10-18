@@ -1,5 +1,6 @@
 export function isDevFromURL(url: URL | string, localProd = false) {
 	if (typeof url === "string") url = new URL(url);
+	// Only wrangler dev use cf plugins like buckets
 	if (localProd) return url.hostname === "localhost";
 	return (
 		url.hostname === "localhost" ||

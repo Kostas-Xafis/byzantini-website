@@ -1,7 +1,7 @@
 import type { Locations } from "../../types/entities";
-import { LocationsRoutes } from "./locations.client";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { Bucket } from "../bucket";
+import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { LocationsRoutes } from "./locations.client";
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(LocationsRoutes)) as typeof LocationsRoutes; // Copy the routes object to split it into client and server routes

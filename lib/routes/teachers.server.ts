@@ -1,7 +1,7 @@
-import type { TeacherClasses, TeacherLocations, Teachers, TeacherInstruments } from "../../types/entities";
-import { TeachersRoutes } from "./teachers.client";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
+import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { TeachersRoutes } from "./teachers.client";
 
 const bucketPrefix = "kathigites/picture/";
 
