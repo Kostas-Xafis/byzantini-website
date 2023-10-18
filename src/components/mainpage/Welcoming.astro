@@ -1,9 +1,3 @@
----
-import { isDevFromURL } from "../../../lib/utils.client";
-
-const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_URL : "/";
----
-
 <section id="xairetismos-mitropolitou" class="flex flex-col items-center justify-center p-[4vw] max-sm:p-4 gap-y-6">
 	<div class="font-bold">
 		<h2 class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900">
@@ -15,7 +9,7 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 	</div>
 	<div class="flex flex-row max-sm:flex-col items-center max-sm:gap-y-4 bg-red-900 hover:bg-red-950">
 		<img
-			src={imgSrc + "mitropolitis.jpg"}
+			src={"/mitropolitis.jpg"}
 			alt="Φωτογραφία Σεβασμιωτάτου Μητροπολίτου"
 			width="300px"
 			class="w-[300px] max-sm:w-[200px] shadow-lg shadow-slate-800 max-sm:shadow-[rgb(210,210,210,0.4)]"
@@ -37,12 +31,12 @@ const imgSrc = isDevFromURL(Astro.url) ? await import.meta.env.S3_OPEN_BUCKET_UR
 </section>
 <script>
 	import { iOS, onElementMount } from "../../../lib/utils.client";
-	if(iOS()) {
+	if (iOS()) {
 		onElementMount("#xairetismos-mitropolitou", () => {
 			const headers = document.querySelectorAll<HTMLElement>("#xairetismos-mitropolitou h2");
 			headers.forEach(header => {
 				header.style.textShadow = "-1px 1px 2px rgba(12 10 9 / 0.25)";
-			})
-		})
+			});
+		});
 	}
 </script>

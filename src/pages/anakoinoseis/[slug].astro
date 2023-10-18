@@ -24,7 +24,7 @@ const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 				<div class="flex flex-row flex-wrap mt-4">
 					{announcement.images.map((image, i) => (
 						<div class="w-1/2 p-2">
-							<img src={imgSrc + image} alt={announcement?.title as string} class="w-full" />
+							<img data-src={imgSrc + image} alt={announcement?.title as string} class="w-full" />
 						</div>
 					))}
 				</div>

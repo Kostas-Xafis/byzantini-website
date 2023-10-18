@@ -36,5 +36,5 @@ test.exe
 /pdfWorker
 
 .wrangler
-
+.mf
 /dbSnapshots
