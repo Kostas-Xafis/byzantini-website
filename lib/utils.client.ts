@@ -2,13 +2,9 @@ export function isDevFromURL(url: URL | string, localProd = true) {
 	if (typeof url === "string") url = new URL(url);
 
 	// Only wrangler dev use cf plugins like buckets
-	if (!localProd) return url.hostname === "127.0.0.1" ||
-		url.hostname.includes("192.168.2.");
-	else return (
-		url.hostname === "localhost" ||
-		url.hostname === "127.0.0.1" ||
-		url.hostname.includes("192.168.2.")
-	);
+	if (!localProd) return url.hostname === "127.0.0.1" || url.hostname.includes("192.168.2.");
+	else return url.hostname === "localhost";
+
 };
 
 export function isOnlineDev(url: URL | string) {

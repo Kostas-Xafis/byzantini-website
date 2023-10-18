@@ -53,8 +53,8 @@ export class Bucket {
 
 	static async put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
 		try {
-			//Check if it's not local production build that does not support code generation like eval
-			if (!isDevFromURL(context.url, false)) return await Bucket.putDev(file, filename, filetype);
+			//Check if it's not local production build that does not support code generation like eval, but it is still localhost
+			if (isDevFromURL(context.url)) return await Bucket.putDev(file, filename, filetype);
 			//@ts-ignore
 			const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
 			await S3_BUCKET.put(filename, file, { httpMetadata: { "contentType": filetype } });
@@ -65,7 +65,7 @@ export class Bucket {
 
 	static async get(context: APIContext, filename: string) {
 		try {
-			if (!isDevFromURL(context.url, false)) return await Bucket.getDev(filename);
+			if (isDevFromURL(context.url)) return await Bucket.getDev(filename);
 			//@ts-ignore
 			const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
 			return await S3_BUCKET.get(filename);
@@ -77,7 +77,7 @@ export class Bucket {
 
 	static async delete(context: APIContext, filename: string) {
 		try {
-			if (!isDevFromURL(context.url, false)) return await Bucket.deleteDev(filename);
+			if (isDevFromURL(context.url)) return await Bucket.deleteDev(filename);
 			//@ts-ignore
 			const { S3_BUCKET } = context.locals.runtime.env as unknown as { S3_BUCKET: R2Bucket; };
 			await S3_BUCKET.delete(filename);
