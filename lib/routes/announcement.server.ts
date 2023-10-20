@@ -28,11 +28,10 @@ serverRoutes.getById.func = async ctx => {
 serverRoutes.getByTitle.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		const { title } = slug;
-		console.log(title);
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
-		console.log(announcement);
 		const imageNames = await executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
 		if (!announcement) throw Error("announcement not found");
+		executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 		return { ...announcement, images: imageNames.map(({ name }) => name) };
 	});
 };
@@ -63,7 +62,8 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		let { id, name } = slug;
 		name = decodeURIComponent(name);
-		const [announcement] = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ? AND name = ?", [id, name]);
+
+		const [announcement] = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ? AND name = ?", [id, name.replace("thumb_", "")]);
 		if (!announcement) throw Error("announcement not found");
 
 		const blob = await ctx.request.blob();
@@ -90,7 +90,10 @@ serverRoutes.delete.func = async ctx => {
 			if (images.length) {
 				await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ?`, [id]);
 				for (const { name, announcement_id } of images) {
-					await Bucket.delete(ctx, "anakoinoseis/" + announcement_id + "/" + name);
+					await Promise.all([
+						Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
+						Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
+					]);
 				}
 			}
 		}

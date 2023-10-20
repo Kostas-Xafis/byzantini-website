@@ -78,7 +78,7 @@ export default function PayoffsTable() {
 	useHydrate(() => {
 		useAPI(API.Payoffs.get, {}, setStore);
 		useAPI(API.Wholesalers.get, {}, setStore);
-	})(true);
+	});
 
 	const columnNames: ColumnType<SchoolPayoffsTable> = {
 		id: { type: "number", name: "Id" },

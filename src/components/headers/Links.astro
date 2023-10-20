@@ -1,11 +1,12 @@
 ---
 import { isDevFromURL } from "../../../lib/utils.client";
-const isDev = isDevFromURL(Astro.url);
+const isDev = isDevFromURL(Astro.url) || isDevFromURL(Astro.url, false);
 const hasBrandIcons = !Astro.url.pathname.includes("login");
 ---
+
 <>
 	<link rel="sitemap" href="/sitemap-index.xml" />
-	<link rel="preload" href="/fonts/ANAKTORIA.OTF" as="font" crossorigin="">
+	<link rel="preload" href="/fonts/ANAKTORIA.OTF" as="font" crossorigin="" />
 	<style is:inline>
 		@font-face {
 			font-family: "Anaktoria";
@@ -15,17 +16,17 @@ const hasBrandIcons = !Astro.url.pathname.includes("login");
 	<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
 	<link href="/fa/css/solid.min.css" rel="stylesheet" />
 	<link href="/fa/css/regular.min.css" rel="stylesheet" />
-	{
-		hasBrandIcons &&
-		<link href="/fa/css/brands.min.css" rel="stylesheet" />
-	}
+	{hasBrandIcons && <link href="/fa/css/brands.min.css" rel="stylesheet" />}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />
 	{
-        !isDev ?
-        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}'>
-        </script>
-        : <></>
-    }
+		!isDev && (
+			<script
+				defer
+				src="https://static.cloudflareinsights.com/beacon.min.js"
+				data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}'
+			/>
+		)
+	}
 </>

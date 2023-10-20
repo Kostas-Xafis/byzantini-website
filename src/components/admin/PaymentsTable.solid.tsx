@@ -101,7 +101,7 @@ export default function PaymentsTable() {
 	useHydrate(() => {
 		useAPI(API.Payments.get, {}, setStore);
 		useAPI(API.Books.get, {}, setStore);
-	})(true);
+	});
 
 	const columnNames: ColumnType<PaymentsTable> = {
 		id: { type: "number", name: "Id" },

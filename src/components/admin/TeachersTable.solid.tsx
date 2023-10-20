@@ -352,7 +352,7 @@ export default function TeachersTable() {
 
 		useAPI(API.Instruments.get, {}, setStore);
 		useAPI(API.Teachers.getInstruments, {}, setStore);
-	})(true);
+	});
 
 	const shapedData = createMemo(() => {
 		const classList = store[API.Teachers.getClasses];

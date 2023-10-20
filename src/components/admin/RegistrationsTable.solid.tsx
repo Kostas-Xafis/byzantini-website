@@ -1,38 +1,38 @@
+import { Show, createEffect, createMemo, onMount } from "solid-js";
+import { createStore } from "solid-js/store";
 import {
 	API,
-	type APIStore,
-	useHydrate,
 	useAPI,
+	useHydrate,
+	type APIStore,
 } from "../../../lib/hooks/useAPI.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { PDF, loadXLSX } from "../../../lib/pdf.client";
+import { removeAccents } from "../../../lib/utils.client";
 import type {
 	Instruments,
 	Registrations,
 	Teachers,
 } from "../../../types/entities";
+import { Fill, type Props as InputProps } from "../input/Input.solid";
+import Spinner from "../other/Spinner.solid";
+import {
+	CompareList,
+	SearchTable,
+	getCompareFn,
+	type SearchColumn,
+	type SearchSetter,
+} from "./SearchTable.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createEffect, createMemo, Show, onMount } from "solid-js";
-import { createStore } from "solid-js/store";
 import {
 	ActionEnum,
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { type Props as InputProps, Fill } from "../input/Input.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
-import Spinner from "../other/Spinner.solid";
-import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import {
-	SearchTable,
-	type SearchColumn,
-	type SearchSetter,
-	CompareList,
-	getCompareFn,
-} from "./SearchTable.solid";
-import { removeAccents } from "../../../lib/utils.client";
-import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "registrations";
 
@@ -266,7 +266,7 @@ export default function RegistrationsTable() {
 		useAPI(API.Registrations.get, {}, setStore);
 		useAPI(API.Teachers.getByFullnames, {}, setStore);
 		useAPI(API.Instruments.get, {}, setStore);
-	})(true);
+	});
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];

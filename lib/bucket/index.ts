@@ -1,10 +1,10 @@
+import type { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { APIContext } from "astro";
-import type { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { isDevFromURL } from "../utils.client";
 
 
-// Although eval is not needed here, as it build fine without it, it is needed because it adds an additional 500kb to the build size, which is not needed
+// Although eval is not needed here, as it build fine without it, it is needed because it adds an additional 500kb of unused code to the build size
 const createS3Client = async () => {
 	const s3Client = (await eval('import("@aws-sdk/client-s3")')).S3Client as typeof S3Client;
 	return new s3Client({
@@ -54,7 +54,7 @@ export class Bucket {
 	static async put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
 		try {
 			//Check if it's not local production build that does not support code generation like eval, but it is still localhost
-			if (isDevFromURL(context.url)) return await Bucket.putDev(file, filename, filetype);
+			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) return await Bucket.putDev(file, filename, filetype);
 			//@ts-ignore
 			const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
 			await S3_BUCKET.put(filename, file, { httpMetadata: { "contentType": filetype } });
@@ -65,7 +65,7 @@ export class Bucket {
 
 	static async get(context: APIContext, filename: string) {
 		try {
-			if (isDevFromURL(context.url)) return await Bucket.getDev(filename);
+			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) return await Bucket.getDev(filename);
 			//@ts-ignore
 			const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
 			return await S3_BUCKET.get(filename);
@@ -77,7 +77,7 @@ export class Bucket {
 
 	static async delete(context: APIContext, filename: string) {
 		try {
-			if (isDevFromURL(context.url)) return await Bucket.deleteDev(filename);
+			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) return await Bucket.deleteDev(filename);
 			//@ts-ignore
 			const { S3_BUCKET } = context.locals.runtime.env as unknown as { S3_BUCKET: R2Bucket; };
 			await S3_BUCKET.delete(filename);

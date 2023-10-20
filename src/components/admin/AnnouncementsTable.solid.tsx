@@ -1,6 +1,7 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
+import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import {
 	API,
 	useAPI,
@@ -25,7 +26,7 @@ import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "announcements";
 
-type AnnouncementTable = Omit<Announcements, "content">;
+type AnnouncementTable = Omit<Announcements, "content"> & { link: string };
 
 const AnnouncementsInputs = (): Omit<
 	Record<keyof Announcements | "images", InputProps>,
@@ -75,7 +76,8 @@ const announcementsToTable = (
 		) as Partial<Announcements>;
 		delete announcement.content;
 		const columns = Object.values(announcement);
-
+		columns.push(a.views);
+		columns[3] = `/anakoinoseis/${a.title.replace(/ /g, "-")}`;
 		return columns as unknown as AnnouncementTable;
 	});
 };
@@ -84,6 +86,7 @@ const columnNames: ColumnType<AnnouncementTable> = {
 	id: { type: "number", name: "Id" },
 	title: { type: "string", name: "Τίτλος", size: 16 },
 	date: { type: "date", name: "Ημερομηνία", size: 12 },
+	link: { type: "link", name: "Σελίδα", size: 12 },
 	views: { type: "number", name: "Προβολές" },
 };
 
@@ -98,7 +101,7 @@ export default function AnnouncementsTable() {
 	);
 	useHydrate(() => {
 		useAPI(API.Announcements.get, {}, setStore);
-	})(true);
+	});
 
 	let shapedData = createMemo(() => {
 		const announcements = store[API.Announcements.get];
@@ -124,39 +127,53 @@ export default function AnnouncementsTable() {
 			);
 			if (!res.data) return;
 			const id = res.data.insertId;
+			await ThumbnailGenerator.loadFFMPEG();
+
+			const kb20 = 1024 * 20;
+			const thumbCreator = new ThumbnailGenerator();
 			const photos = FileHandler.getFiles("photos").map((file, i) => {
 				return async function () {
 					let blob = await fileToBlob(file);
-					if (!blob) {
-						console.error("Could not load file:", file.name);
-						return;
-					}
+					if (!blob)
+						return console.error("Could not load file:", file.name);
 					try {
-						await useAPI(
-							API.Announcements.postImage,
-							{
-								RequestObject: {
-									announcement_id: id,
-									name: file.name,
-									priority: i + 1,
-								},
+						await useAPI(API.Announcements.postImage, {
+							RequestObject: {
+								announcement_id: id,
+								name: file.name,
+								priority: i + 1,
 							},
-							setStore
-						);
-						await useAPI(
-							API.Announcements.imageUpload,
-							{
+						});
+						await useAPI(API.Announcements.imageUpload, {
+							RequestObject: blob,
+							UrlArgs: { id, name: file.name },
+						});
+						if (file.size <= kb20) {
+							await useAPI(API.Announcements.imageUpload, {
 								RequestObject: blob,
-								UrlArgs: { id, name: file.name },
-							},
-							setStore
+								UrlArgs: {
+									id,
+									name: "thumb_" + file.name,
+								},
+							});
+							return;
+						}
+						const thumbBlob = await fileToBlob(
+							await thumbCreator.createThumbnail(file, file.name)
 						);
+						if (!thumbBlob)
+							throw new Error("Could not create thumbnail");
+						await useAPI(API.Announcements.imageUpload, {
+							RequestObject: thumbBlob,
+							UrlArgs: { id, name: "thumb_" + file.name },
+						});
 					} catch (e) {
 						console.error(e);
 					}
 				};
 			});
 			await asyncQueue(photos, 2, true);
+			await ThumbnailGenerator.cleanup();
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		});
 		return {

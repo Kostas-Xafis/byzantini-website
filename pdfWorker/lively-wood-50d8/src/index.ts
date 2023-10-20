@@ -13,7 +13,7 @@ export default {
 			"Access-Control-Allow-Origin": "*",
 			"Access-Control-Allow-Methods": "GET, OPTIONS",
 			"Access-Control-Allow-Headers": "*",
-		}
+		};
 
 		if (req.method === "OPTIONS") {
 			function handleOptions(request: Request) {
@@ -23,14 +23,14 @@ export default {
 					// Handle CORS pre-flight request.
 					return new Response(null, {
 						headers: corsHeaders
-					})
+					});
 				} else {
 					// Handle standard OPTIONS request.
 					return new Response(null, {
 						headers: {
 							"Allow": "GET, HEAD, POST, OPTIONS",
 						}
-					})
+					});
 				}
 			}
 			return handleOptions(req);
@@ -54,7 +54,7 @@ export default {
 };
 
 export class PDF {
-	private static TemplateFileName = ["byz_template.pdf", "par_template.pdf", "eur_template.pdf"]
+	private static TemplateFileName = ["byz_template.pdf", "par_template.pdf", "eur_template.pdf"];
 	private doc = {} as typeof PDFDocument.prototype;
 	private env = {} as Env;
 	constructor(env: Env) {
@@ -67,7 +67,7 @@ export class PDF {
 				(await this.env.BUCKET.get(this.getTemplateURL(class_id)) as R2ObjectBody).arrayBuffer()
 			)(),
 			DidactGothicFontBuff(),
-			req.json() as Promise<{ student: Registrations; teachersName: string; instrument?: string }>
+			req.json() as Promise<{ student: Registrations; teachersName: string; instrument?: string; }>
 		]);
 		this.doc = await PDFDocument.load(templateBuffer);
 
@@ -114,11 +114,16 @@ export class PDF {
 		p.drawText("23", { x: c.year1.x, y: c.year1.y, size: fontSize, font });
 		p.drawText("24", { x: c.year2.x, y: c.year2.y, size: fontSize, font });
 
-		if (body?.instrument && body.instrument.length > 15) {
-			p.drawText(body.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
+		if (body.instrument && body.instrument.length > 15) {
+			p.drawText(body?.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
 		} else if (body.instrument) {
-			if (s.class_id === 1) p.drawText(body.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
-			else if (body?.student.class_id === 2) p.drawText(body.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
+			if (body.student.class_id === 1) p.drawText(body?.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
+			else if (body.student.class_id === 2) p.drawText(body?.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
+		}
+		if (body.instrument) {
+			p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
+		} else {
+			p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
 		}
 	}
 
@@ -132,32 +137,32 @@ export class PDF {
 }
 
 type TemplateCoords = {
-	am: { x: number, y: number },
-	lastName: { x: number, y: number },
-	firstName: { x: number, y: number },
-	fathersName: { x: number, y: number },
-	road: { x: number, y: number },
-	number: { x: number, y: number },
-	tk: { x: number, y: number },
-	region: { x: number, y: number },
-	birthDate: { x: number, y: number },
-	telephone: { x: number, y: number },
-	cellphone: { x: number, y: number },
-	email: { x: number, y: number },
-	registrationYear: { x: number, y: number },
-	classYear: { x: number, y: number },
-	teachersName: { x: number, y: number },
-	dateDD: { x: number, y: number },
-	dateMM: { x: number, y: number },
-	dateYYYY: { x: number, y: number },
-	year1: { x: number, y: number },
-	year2: { x: number, y: number },
-	instrumentPar: { x: number, y: number },
-	instrumentEur: { x: number, y: number },
-	instrumentLarge: { x: number, y: number },
-	signatureByz: { x: number, y: number },
-	signatureEur: { x: number, y: number },
-}
+	am: { x: number, y: number; },
+	lastName: { x: number, y: number; },
+	firstName: { x: number, y: number; },
+	fathersName: { x: number, y: number; },
+	road: { x: number, y: number; },
+	number: { x: number, y: number; },
+	tk: { x: number, y: number; },
+	region: { x: number, y: number; },
+	birthDate: { x: number, y: number; },
+	telephone: { x: number, y: number; },
+	cellphone: { x: number, y: number; },
+	email: { x: number, y: number; },
+	registrationYear: { x: number, y: number; },
+	classYear: { x: number, y: number; },
+	teachersName: { x: number, y: number; },
+	dateDD: { x: number, y: number; },
+	dateMM: { x: number, y: number; },
+	dateYYYY: { x: number, y: number; },
+	year1: { x: number, y: number; },
+	year2: { x: number, y: number; },
+	instrumentPar: { x: number, y: number; },
+	instrumentEur: { x: number, y: number; },
+	instrumentLarge: { x: number, y: number; },
+	signatureByz: { x: number, y: number; },
+	signatureEur: { x: number, y: number; },
+};
 
 const pdfHeight = 841.89;
 const H = (y: number) => pdfHeight - y;
@@ -187,7 +192,7 @@ const TemplateCoords: TemplateCoords = {
 	instrumentLarge: { x: 325, y: 513 },
 	signatureByz: { x: 360, y: 622 },
 	signatureEur: { x: 360, y: 662 },
-}
+};
 Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
 
 const DidactGothicFontBuff = async () => {

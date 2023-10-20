@@ -6,10 +6,12 @@ import Contact from "../components/contact/Contact.astro";
 import ContactPhone from "../components/contact/ContactPhone.astro";
 export interface Props {
 	title: string;
+	imageUrl?: string;
 }
 
-const { title } = Astro.props;
-const logoUrl = "https://musicschool-metamorfosi.gr/favicon.ico";
+const { title, imageUrl } = Astro.props;
+const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
+
 ---
 
 <!DOCTYPE html>

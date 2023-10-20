@@ -1,6 +1,5 @@
 export function isDevFromURL(url: URL | string, localProd = true) {
 	if (typeof url === "string") url = new URL(url);
-
 	// Only wrangler dev use cf plugins like buckets
 	if (!localProd) return url.hostname === "127.0.0.1" || url.hostname.includes("192.168.2.");
 	else return url.hostname === "localhost";
@@ -53,7 +52,8 @@ export async function onElementMount(target: string, callback: (el: HTMLElement)
 	while (!(el = document.querySelector(target)) && counter++ < 40) {
 		await new Promise((resolve) => setTimeout(resolve, 25));
 	}
-	if (counter >= 10) return;
+	console.log({ counter });
+	if (counter >= 40) return;
 	callback(el as HTMLElement);
 };
 
@@ -202,6 +202,13 @@ export function iOS() {
 	);
 }
 
+export const download = (file: Blob, name: string) => {
+	let a = document.createElement("a");
+	a.href = URL.createObjectURL(file);
+	a.download = name;
+	a.click();
+};
+
 export const fileToBlob = async (file: File): Promise<Blob | null> => {
 	if (!file.name) return null;
 	return new Promise((res) => {
@@ -241,3 +248,5 @@ export const teacherTitleByGender = (title: 0 | 1 | 2, gender: "M" | "F") => {
 	else
 		return title === 0 ? "Καθηγήτρια" : title === 1 ? "Δασκάλα" : "Επιμελήτρια";
 };
+
+export const imageMIMETypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];

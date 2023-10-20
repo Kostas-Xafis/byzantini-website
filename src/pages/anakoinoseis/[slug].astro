@@ -1,6 +1,7 @@
 ---
-import { useAPI, API } from "../../../lib/hooks/useAPI.astro";
-import SigninLayout from "../../layouts/SigninLayout.astro";
+import { API, useAPI } from "../../../lib/hooks/useAPI.astro";
+import Spinner from "../../components/other/Spinner.astro";
+import Layout from "../../layouts/Layout.astro";
 const announcement_title = (Astro.url.pathname.split("/").pop() as string).replace(/-/g, " ");
 let announcement: ({ id: number; title: string; date: number; content: string; views: number } & { images: string[] }) | undefined;
 try {
@@ -10,25 +11,61 @@ try {
 } catch (e) {
 	return Astro.redirect("/404");
 }
-const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
+const imgSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 ---
 
-<SigninLayout title={announcement.title} imageUrl={announcement.images[0]}>
-	<section class="flex flex-col p-8 max-sm:p-2">
-		<h1 class="text-3xl font-bold">{announcement.title}</h1>
-		<div class="text-2xl mt-4">
+<Layout title={announcement.title} imageUrl={announcement.images[0]}>
+	<section class="flex flex-col p-12 max-sm:p-4 overflow-auto">
+		<h1
+			class="heading text-5xl max-sm:text-3xl font-bold self-center text-red-900 font-anaktoria drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]"
+		>
+			{announcement.title}
+		</h1>
+		<div class="text-xl mt-4">
 			{announcement.content}
 		</div>
-		{
-			announcement.images.length >= 1 && (
-				<div class="flex flex-row flex-wrap mt-4">
-					{announcement.images.map((image, i) => (
-						<div class="w-1/2 p-2">
-							<img data-src={imgSrc + image} alt={announcement?.title as string} class="w-full" />
-						</div>
-					))}
-				</div>
-			)
-		}
+		<div id="imgContainer" class="flex items-center">
+			{
+				announcement.images.length >= 1 && (
+					<div class="flex flex-row flex-wrap mt-4 gap-y-6 loading items-center justify-between self-center">
+						{announcement.images.map((image, i) => (
+							<div class="imgLoader group/img">
+								<div class="hidden group-[:is(.loading)]/img:block w-[320px] h-[240px] ">
+									<Spinner />
+								</div>
+								<div class="hidden group-[:is(.loaded)]/img:block max-w-[320px] h-[240px] transition-shadow hover:shadow-lg !shadow-slate-800">
+									<img
+										data-src={imgSrc + image}
+										alt={announcement?.title as string}
+										class="w-[400px] object-cover h-full"
+									/>
+								</div>
+							</div>
+						))}
+					</div>
+				)
+			}
+		</div>
 	</section>
-</SigninLayout>
+	<script>
+		import { onElementMount, asyncQueue, sleep } from "../../../lib/utils.client";
+		onElementMount("#imgContainer", async el => {
+			const imgs = [...el.querySelectorAll("img")];
+			const imgContainers = [...el.querySelectorAll(".imgLoader")];
+			const jobs = imgs.map((img, i) => async () => {
+				let loaded = false;
+				imgContainers[i].classList.add("loading");
+				img.addEventListener("load", () => {
+					loaded = true;
+					imgContainers[i].classList.remove("loading");
+					imgContainers[i].classList.add("loaded");
+				});
+				img.src = img.dataset.src as string;
+				while (!loaded) {
+					await sleep(20);
+				}
+			});
+			await asyncQueue(jobs, 5);
+		});
+	</script>
+</Layout>

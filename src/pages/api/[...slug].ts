@@ -31,7 +31,7 @@ const ResponseWrap = async (ctx: Context, route: EndpointRoute<any, any | AnyObj
 const RequestTemplate = async function (ctx: Context) {
 	const slug = ctx.params.slug?.split("/") ?? [];
 	const route = matchRoute(slug, ctx.request.method.toUpperCase() as HTTPMethods);
-	if (!route) return { status: 404, body: "Not Found" };
+	if (!route) return ctx.redirect("/404");
 	return await ResponseWrap(ctx, route, slug);
 };
 

@@ -24,7 +24,7 @@ export default defineConfig({
 	],
 	output: "server",
 	adapter: cloudflare({
-		mode: "advanced"
+		mode: "advanced",
 	}),
 	vite: {
 		server: {
@@ -43,6 +43,10 @@ export default defineConfig({
 					"**/pdfWorker/**",
 				],
 			},
+		},
+
+		optimizeDeps: {
+			exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
 		},
 		build: {
 			cssMinify: true,

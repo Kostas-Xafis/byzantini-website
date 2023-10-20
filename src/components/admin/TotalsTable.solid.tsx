@@ -22,7 +22,7 @@ export default function TotalsTable() {
 		useAPI(API.Payments.getTotal, {}, setStore);
 		useAPI(API.Payoffs.getTotal, {}, setStore);
 		useAPI(API.Registrations.getTotal, {}, setStore);
-	})(true);
+	});
 	const columnNames: ColumnType<TotalsTable> = {
 		total_payments: {
 			type: "number",

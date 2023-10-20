@@ -353,7 +353,7 @@ export function RegistrationForm() {
 		useAPI(API.Teachers.getClasses, {}, setStore);
 		useAPI(API.Teachers.getInstruments, {}, setStore);
 		useAPI(API.Instruments.get, {}, setStore);
-	})(true);
+	});
 	createEffect(
 		on(formSelected, (type) => {
 			const select = document.querySelector(

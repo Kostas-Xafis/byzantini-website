@@ -49,7 +49,7 @@ export default function SysUsersTable() {
 	useHydrate(() => {
 		useAPI(API.SysUsers.get, {}, setStore);
 		useAPI(API.SysUsers.getBySid, {}, setStore);
-	})(true);
+	});
 
 	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
 	const ROWS = [

@@ -88,7 +88,7 @@ export default function Table(props: Props) {
 			</div>
 			<div
 				id="tableContainer"
-				class="relative z-[1000] min-w-[40%] max-w-[80%] max-sm:max-w-[92.5%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact"
+				class="relative z-[1000] min-w-[40%] max-w-[80%] max-sm:max-w-[92.5%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900"
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}

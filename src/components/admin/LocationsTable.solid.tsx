@@ -162,7 +162,7 @@ export default function LocationsTable() {
 	);
 	useHydrate(() => {
 		useAPI(API.Locations.get, {}, setStore);
-	})(true);
+	});
 
 	const columnNames: ColumnType<LocationsTable> = {
 		id: { type: "number", name: "Id" },

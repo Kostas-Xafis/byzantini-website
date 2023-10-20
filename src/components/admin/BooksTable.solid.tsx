@@ -131,7 +131,7 @@ export default function BooksTable() {
 	useHydrate(() => {
 		useAPI(API.Books.get, {}, setStore);
 		useAPI(API.Wholesalers.get, {}, setStore);
-	})(true);
+	});
 
 	let shapedData = createMemo(() => {
 		const books = store[API.Books.get];

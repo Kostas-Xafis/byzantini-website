@@ -104,6 +104,15 @@ export class PDF {
 		return new Blob([uintArr], { type: "application/pdf" });
 	}
 
+	public async toFile(): Promise<Blob> {
+		let uintArr = await this.doc.save();
+		return new File([uintArr], this.getFileName(), { type: "application/pdf" });
+	}
+
+	public getFileName(): string {
+		return `${this.teachersName}/${this.student.first_name}_${this.student.last_name}.pdf`;
+	}
+
 	public async download(): Promise<void> {
 		let a = document.createElement("a");
 		a.href = URL.createObjectURL(await this.toBlob());
@@ -133,14 +142,14 @@ export class PDF {
 			}
 			if (!res) {
 				await pdf.fillTemplate();
-				let blob = await pdf.toBlob();
-				return { input: blob, name: `${pdf.teachersName}/${pdf.student.first_name}_${pdf.student.last_name}.pdf`, size: blob.size };
+				let file = await pdf.toFile();
+				return { input: file, name: pdf.getFileName(), size: file.size };
 			} else {
-				return { input: res, name: `${pdf.teachersName}/${pdf.student.first_name}_${pdf.student.last_name}.pdf`, size: res.size };
+				return { input: res, name: pdf.getFileName(), size: res.size };
 			}
 		});
 		let t = Date.now();
-		let queueResult = await asyncQueue(requestArr, 6, true)
+		let queueResult = await asyncQueue(requestArr, 6, true);
 		console.log("Queue took", Date.now() - t);
 
 		let z = zip as typeof import("client-zip");
@@ -155,32 +164,32 @@ export class PDF {
 }
 
 type TemplateCoords = {
-	am: { x: number, y: number },
-	lastName: { x: number, y: number },
-	firstName: { x: number, y: number },
-	fathersName: { x: number, y: number },
-	road: { x: number, y: number },
-	number: { x: number, y: number },
-	tk: { x: number, y: number },
-	region: { x: number, y: number },
-	birthDate: { x: number, y: number },
-	telephone: { x: number, y: number },
-	cellphone: { x: number, y: number },
-	email: { x: number, y: number },
-	registrationYear: { x: number, y: number },
-	classYear: { x: number, y: number },
-	teachersName: { x: number, y: number },
-	dateDD: { x: number, y: number },
-	dateMM: { x: number, y: number },
-	dateYYYY: { x: number, y: number },
-	year1: { x: number, y: number },
-	year2: { x: number, y: number },
-	instrumentPar: { x: number, y: number },
-	instrumentEur: { x: number, y: number },
-	instrumentLarge: { x: number, y: number },
-	signatureByz: { x: number, y: number },
-	signatureEur: { x: number, y: number },
-}
+	am: { x: number, y: number; },
+	lastName: { x: number, y: number; },
+	firstName: { x: number, y: number; },
+	fathersName: { x: number, y: number; },
+	road: { x: number, y: number; },
+	number: { x: number, y: number; },
+	tk: { x: number, y: number; },
+	region: { x: number, y: number; },
+	birthDate: { x: number, y: number; },
+	telephone: { x: number, y: number; },
+	cellphone: { x: number, y: number; },
+	email: { x: number, y: number; },
+	registrationYear: { x: number, y: number; },
+	classYear: { x: number, y: number; },
+	teachersName: { x: number, y: number; },
+	dateDD: { x: number, y: number; },
+	dateMM: { x: number, y: number; },
+	dateYYYY: { x: number, y: number; },
+	year1: { x: number, y: number; },
+	year2: { x: number, y: number; },
+	instrumentPar: { x: number, y: number; },
+	instrumentEur: { x: number, y: number; },
+	instrumentLarge: { x: number, y: number; },
+	signatureByz: { x: number, y: number; },
+	signatureEur: { x: number, y: number; },
+};
 
 const pdfHeight = 841.89;
 const H = (y: number) => pdfHeight - y;
@@ -210,7 +219,7 @@ const TemplateCoords: TemplateCoords = {
 	instrumentLarge: { x: 325, y: 513 },
 	signatureByz: { x: 360, y: 622 },
 	signatureEur: { x: 360, y: 662 },
-}
+};
 Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
 
 
@@ -220,4 +229,4 @@ export const loadXLSX = async () => {
 	await loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js", () => !!window["XLSX"]);
 	await sleep(100);
 	return window["XLSX"];
-}
+};

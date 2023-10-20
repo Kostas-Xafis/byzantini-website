@@ -76,7 +76,7 @@ export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[
 };
 
 export const useHydrate = (func: () => void) => {
-	const [hydrate, setHydrate] = createSignal<boolean>(false, { equals: (prev, next) => false });
+	const [hydrate, setHydrate] = createSignal<boolean>(true, { equals: (prev, next) => true });
 	createEffect(() => {
 		hydrate();
 		untrack(() => batch(func));
