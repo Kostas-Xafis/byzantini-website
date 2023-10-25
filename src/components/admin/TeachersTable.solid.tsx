@@ -23,7 +23,12 @@ import type {
 	TeacherLocations,
 	SimpleTeacher as Teachers,
 } from "../../../types/entities";
-import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
+import {
+	Fill,
+	Omit,
+	type Props as InputProps,
+	getMultiSelect,
+} from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
 	SearchTable,
@@ -390,41 +395,27 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
-				gender: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='gender'][data-selected='true']`
-					),
-				].map((btn) => (Number(btn.dataset.value) ? "F" : "M"))[0],
-				title: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='title'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value))[0] as 0 | 1 | 2,
-				visible: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='visible'][data-selected='true']`
-					),
-				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
-				online: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='online'][data-selected='true']`
-					),
-				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
-				teacherClasses: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherClasses'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value)) as number[],
-				teacherInstruments: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier^='teacherInstruments'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value)) as number[],
-				teacherLocations: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherLocations'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value)) as number[],
+				gender: getMultiSelect("gender").map((btn) =>
+					Number(btn.dataset.value) ? "F" : "M"
+				)[0],
+				title: getMultiSelect("title").map((btn) =>
+					Number(btn.dataset.value)
+				)[0] as 0 | 1 | 2,
+				visible: getMultiSelect("visible").map(
+					(btn) => !!Number(btn.dataset.value)
+				)[0] as boolean,
+				online: getMultiSelect("online").map(
+					(btn) => !!Number(btn.dataset.value)
+				)[0] as boolean,
+				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
+					Number(btn.dataset.value)
+				) as number[],
+				teacherInstruments: getMultiSelect("teacherInstruments").map(
+					(btn) => Number(btn.dataset.value)
+				) as number[],
+				teacherLocations: getMultiSelect("teacherLocations").map(
+					(btn) => Number(btn.dataset.value)
+				) as number[],
 				priorities: [
 					...document.querySelectorAll<HTMLInputElement>(
 						`input[name^='priority']`
@@ -511,41 +502,28 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
-				gender: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='gender'][data-selected='true']`
-					),
-				].map((btn) => (Number(btn.dataset.value) ? "F" : "M"))[0],
-				title: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='title'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value))[0] as 0 | 1 | 2,
-				visible: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='visible'][data-selected='true']`
-					),
-				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
-				online: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='online'][data-selected='true']`
-					),
-				].map((btn) => !!Number(btn.dataset.value))[0] as boolean,
-				teacherClasses: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherClasses'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value)) as number[],
-				teacherInstruments: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier^='teacherInstruments'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value)) as number[],
-				teacherLocations: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='teacherLocations'][data-selected='true']`
-					),
-				].map((btn) => Number(btn.dataset.value)) as number[],
+				gender: getMultiSelect("gender").map((btn) =>
+					Number(btn.dataset.value) ? "F" : "M"
+				)[0],
+				title: getMultiSelect("title").map((btn) =>
+					Number(btn.dataset.value)
+				)[0] as 0 | 1 | 2,
+				visible: getMultiSelect("visible").map(
+					(btn) => !!Number(btn.dataset.value)
+				)[0] as boolean,
+				online: getMultiSelect("online").map(
+					(btn) => !!Number(btn.dataset.value)
+				)[0] as boolean,
+				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
+					Number(btn.dataset.value)
+				) as number[],
+				teacherInstruments: getMultiSelect("teacherInstruments").map(
+					(btn) => Number(btn.dataset.value)
+				) as number[],
+				teacherLocations: getMultiSelect("teacherLocations").map(
+					(btn) => Number(btn.dataset.value)
+				) as number[],
+
 				priorities: [
 					...document.querySelectorAll<HTMLInputElement>(
 						`input[name^='priority']`

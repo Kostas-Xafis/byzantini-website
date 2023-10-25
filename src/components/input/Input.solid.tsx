@@ -52,6 +52,16 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 	return inputs;
 }
 
+export function getMultiSelect(prefix: string, isSelected = true) {
+	return [
+		...document.querySelectorAll<HTMLInputElement>(
+			`button[data-specifier='${prefix}'][data-selected='${
+				isSelected ? "true" : "false"
+			}']`
+		),
+	];
+}
+
 const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 
 const months = [
@@ -181,7 +191,7 @@ export default function Input(props: Props) {
 				},
 			});
 			if (!value) return;
-			// set value after datepicker is initialized because it resets the value
+			// set value after datepicker is initialized because it resets the starting value
 			sleep(200).then(() => {
 				(
 					document.querySelector(

@@ -33,8 +33,7 @@ export class ThumbnailGenerator {
 		// ffmpeg - i input.jpg -b:v 200K - vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" output.jpg
 
 		// Find a divisor so that the image is around 20KB
-		const divisor = Math.floor((imgFile.size / 20000) ** 0.5); // using square root because both width and height are divided by the same number
-		console.log('divisor', divisor);
+		const divisor = Math.floor((imgFile.size / 30000) ** 0.5); // using square root because both width and height are divided by the same number
 		if (divisor <= 1) return imgFile;
 
 		await ffmpeg.exec(['-i', inputName, '-vf', `scale=trunc(iw/${divisor}):trunc(ih/${divisor})`, outputName]);

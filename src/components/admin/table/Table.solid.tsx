@@ -56,7 +56,13 @@ export default function Table(props: Props) {
 
 		let columnType = columnTypes[column_index];
 		if (columnType === "date" || columnType === "number") {
-			rows.sort((a, b) => a[column_index] - b[column_index]);
+			rows.sort((a, b) => {
+				if (a[column_index] === undefined || a[column_index] === null)
+					return -1;
+				if (b[column_index] === undefined || b[column_index] === null)
+					return 1;
+				return a[column_index] - b[column_index];
+			});
 		} else {
 			rows.sort((a, b) => {
 				if (a[column_index] === "" || !a[column_index]) return 1;

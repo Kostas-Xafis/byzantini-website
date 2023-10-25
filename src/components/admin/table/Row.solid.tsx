@@ -120,41 +120,51 @@ export default function Row(props: Props) {
 					</div>
 				)}
 				{data.map((item, colIndex) => {
-					let type = (!header && columnType[colIndex]) || ""; // If it's a header row there is no type
-					if (type === "link" && item)
-						return (
-							<a
-								href={item as string}
-								target="_blank"
-								class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1"
-							>
-								<div>Προβολή</div>
-								<i class="fa-solid fa-up-right-from-square"></i>
-							</a>
-						);
-					if (type === "date" && item) {
-						item = new Date(item as number).toLocaleDateString(
-							"el-GR"
-						);
-					} else if (type === "date") item = "-";
-					if (type === "boolean") item = !!item ? "Ναι" : "Όχι";
-					if (
-						type === "number" &&
-						(item === undefined || item === null)
-					)
+					if (item === undefined || item === null) {
 						item = "-";
+					} else {
+						let type = (!header && columnType[colIndex]) || ""; // If it's a header row there is no type
+						if (type === "link" && item) {
+							return (
+								<a
+									href={item as string}
+									target="_blank"
+									class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1"
+								>
+									<div>Προβολή</div>
+									<i class="fa-solid fa-up-right-from-square"></i>
+								</a>
+							);
+						} else if (type === "link") {
+							item = "-";
+						}
+						if (type === "date" && item)
+							item = new Date(item as number).toLocaleDateString(
+								"el-GR"
+							);
+						if (type === "boolean") item = !!item ? "Ναι" : "Όχι";
+						if (type === "string" && item === "") item = "-";
+					}
 					return (
 						<div
 							class={
-								"relative w-full data-[asc]:bg-red-900 data-[asc]:text-white data-[desc]:bg-red-900 data-[desc]:text-white py-2 " +
-								(header ? " group/head" : "")
+								"group/sort relative w-full data-[asc]:bg-red-900 data-[desc]:bg-red-900 data-[asc]:text-white data-[desc]:text-white py-2" +
+								(header
+									? " group/head grid h-full items-center "
+									: "")
 							}
 							data-col-ind={colIndex}
 							onClick={onClickSort}
 						>
-							{item}
-							<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
-							<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
+							<p class="group-data-[asc]/sort:text-white group-data-[desc]/sort:text-white">
+								{item}
+							</p>
+							{props?.header && (
+								<>
+									<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
+									<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
+								</>
+							)}
 						</div>
 					);
 				})}

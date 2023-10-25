@@ -10,7 +10,12 @@ import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { fileToBlob } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
-import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
+import {
+	Fill,
+	Omit,
+	type Props as InputProps,
+	getMultiSelect,
+} from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -203,11 +208,9 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='partner'][data-selected='true']`
-					),
-				].map((i) => Number(i.dataset.value) as 0 | 1)[0],
+				partner: getMultiSelect("partner").map(
+					(i) => Number(i.dataset.value) as 0 | 1
+				)[0],
 			};
 			const res = await useAPI(
 				API.Locations.post,
@@ -265,11 +268,9 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='partner'][data-selected='true']`
-					),
-				].map((i) => Number(i.dataset.value) as 0 | 1)[0],
+				partner: getMultiSelect("partner").map(
+					(i) => Number(i.dataset.value) as 0 | 1
+				)[0],
 			};
 			const res = await useAPI(
 				API.Locations.update,
