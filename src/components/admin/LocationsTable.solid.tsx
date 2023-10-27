@@ -305,6 +305,12 @@ export default function LocationsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [location.id],
 			});
+			document.dispatchEvent(
+				//@ts-ignore
+				new CustomEvent("ModifySelections", {
+					detail: { type: "remove", id: location.id },
+				})
+			);
 		});
 		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();
@@ -323,12 +329,6 @@ export default function LocationsTable() {
 				document.removeEventListener(
 					"emptyFileRemove",
 					emptyFileRemove
-				);
-				document.dispatchEvent(
-					//@ts-ignore
-					new CustomEvent("ModifySelections", {
-						detail: { type: "remove", id: location.id },
-					})
 				);
 				formListener(submit, false, PREFIX);
 			},

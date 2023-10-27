@@ -195,20 +195,18 @@ export default function PaymentsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [payment.id],
 			});
+			document.dispatchEvent(
+				//@ts-ignore
+				new CustomEvent("ModifySelections", {
+					detail: { type: "remove", id: payment.id },
+				})
+			);
 		});
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
 			inputs: Pick(filledInputs, "amount"),
 			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => {
-				document.dispatchEvent(
-					//@ts-ignore
-					new CustomEvent("ModifySelections", {
-						detail: { type: "remove", id: payment.id },
-					})
-				);
-				formListener(submit, false, PREFIX);
-			},
+			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση πληρωμής",
 			icon: ActionIcon.MODIFY,

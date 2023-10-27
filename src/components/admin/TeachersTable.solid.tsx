@@ -592,6 +592,15 @@ export default function TeachersTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [teacher.id],
 			});
+			document.dispatchEvent(
+				//@ts-ignore
+				new CustomEvent("ModifySelections", {
+					detail: {
+						type: "remove",
+						id: teacher.id,
+					},
+				})
+			);
 		});
 		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();
@@ -630,15 +639,6 @@ export default function TeachersTable() {
 				document.removeEventListener(
 					"emptyFileRemove",
 					emptyFileRemove
-				);
-				document.dispatchEvent(
-					//@ts-ignore
-					new CustomEvent("ModifySelections", {
-						detail: {
-							type: "remove",
-							id: teacher.id,
-						},
-					})
 				);
 				formListener(submit, false, PREFIX);
 			},

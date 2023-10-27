@@ -125,20 +125,18 @@ export default function PayoffsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [payoff.id],
 			});
+			document.dispatchEvent(
+				//@ts-ignore
+				new CustomEvent("ModifySelections", {
+					detail: { type: "remove", id: payoff.id },
+				})
+			);
 		});
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 		return {
 			inputs: Pick(filledInputs, "amount"),
 			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => {
-				document.dispatchEvent(
-					//@ts-ignore
-					new CustomEvent("ModifySelections", {
-						detail: { type: "remove", id: payoff.id },
-					})
-				);
-				formListener(submit, false, PREFIX);
-			},
+			onCleanup: () => formListener(submit, false, PREFIX),
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",
 
