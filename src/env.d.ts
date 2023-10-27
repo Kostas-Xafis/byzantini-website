@@ -17,6 +17,22 @@ declare namespace App {
 
 interface CustomEventMap {
 	emptyFileRemove: CustomEvent<string>;
+	hydrate: CustomEvent<undefined>;
+	ModifySelections: CustomEvent<{
+		type: "add";
+		id: number;
+	} | {
+		type: "addMany";
+		ids: number[];
+	} | {
+		type: "remove";
+		id: number;
+	} | {
+		type: "removeMany";
+		ids: number[];
+	} | {
+		type: "removeAll";
+	}>;
 }
 
 // 💖💖💖💖 All the types without the MBytes of added js!!!!!

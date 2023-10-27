@@ -43,18 +43,20 @@ export type SearchColumn = {
 	name: string;
 	type: CellValue;
 };
-export type SearchSetter = Partial<{
-	columnName: string;
+export type SearchSetter<T extends Record<string, any>> = Partial<{
+	columnName: keyof T;
 	value: string;
 	type: CellValue;
 }>;
-type SearchTableProps = {
-	setSearchQuery: SetStoreFunction<SearchSetter>; // returns the ids of the searched result rows
+type SearchTableProps<T extends Record<string, any>> = {
+	setSearchQuery: SetStoreFunction<SearchSetter<T>>; // returns the ids of the searched result rows
 	columns: SearchColumn[];
 };
 
-export function SearchTable(props: SearchTableProps) {
-	let first = props.columns[0];
+export function SearchTable<T extends Record<string, any>>(
+	props: SearchTableProps<T>
+) {
+	let first = props.columns[0]; // default search column
 	const [column, setColumn] = createSignal<SearchColumn>(first, {
 		equals: false,
 	});

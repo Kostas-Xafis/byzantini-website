@@ -272,7 +272,7 @@ const TeachersInputs = (
 const teachersToTable = (
 	teachers: FullTeachers[],
 	classList: TeacherClasses[]
-): TeachersTable[] => {
+) => {
 	return teachers.map((t) => {
 		const classes = classList.filter((c) => c.teacher_id === t.id);
 		const columns = Object.values(t) as any[];
@@ -339,7 +339,9 @@ const columnNames: ColumnType<TeachersTable> = {
 const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function TeachersTable() {
-	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
+	const [searchQuery, setSearchQuery] = createStore<
+		SearchSetter<FullTeachers>
+	>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const [actionPressed, setActionPressed] = useHydrateById(
 		setStore,
@@ -369,8 +371,6 @@ export default function TeachersTable() {
 			.map((x) => x)
 			.filter((r) => {
 				const col = r[columnName as keyof Teachers];
-				if (typeof col === "number")
-					return ("" + col).includes("" + value);
 				if (typeof col === "string") {
 					let nCol = removeAccents(col).toLowerCase();
 					let nVal = removeAccents(value as string).toLowerCase();

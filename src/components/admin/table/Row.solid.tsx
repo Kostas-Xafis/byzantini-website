@@ -16,9 +16,51 @@ interface Props {
 	sortOnClick?: Setter<[SortDirection, number]>;
 }
 
+export function toggleCheckboxes(force?: boolean) {
+	const allCbs = document.querySelectorAll<HTMLElement>(".cb");
+	const mainCb = document.querySelector<HTMLElement>(".mcb");
+	if (mainCb === null || allCbs.length === 0) return;
+	const isSelected = mainCb.classList.contains("selected");
+	const ids = [...allCbs].map((el) => Number(el.dataset.value));
+	if (force === true || force === false) {
+		allCbs.forEach((cb) => {
+			cb.classList.toggle("selected", force);
+			//@ts-ignore
+			cb.parentElement.parentElement.classList.toggle(
+				"selectedRow",
+				force
+			);
+		});
+		mainCb.classList.toggle("selected", force);
+	} else {
+		allCbs.forEach((cb) => {
+			cb.classList.toggle("selected");
+			//@ts-ignore
+			cb.parentElement.parentElement.classList.toggle("selectedRow");
+		});
+		mainCb.classList.toggle("selected");
+	}
+	if (isSelected && (force === false || force === undefined)) {
+		document.dispatchEvent(
+			//@ts-ignore
+			new CustomEvent("ModifySelections", {
+				detail: { type: "removeAll" },
+			})
+		);
+	} else if (!isSelected && (force === true || force === undefined)) {
+		document.dispatchEvent(
+			//@ts-ignore
+			new CustomEvent("ModifySelections", {
+				detail: { type: "addMany", ids },
+			})
+		);
+	}
+}
+
 export default function Row(props: Props) {
-	const [selectedItems, { add, remove, addMany, removeMany, removeAll }] =
-		useContext(SelectedItemsContext) as ContextType;
+	const [selectedItems, { add, remove }] = useContext(
+		SelectedItemsContext
+	) as ContextType;
 	const {
 		data,
 		index = -1,
@@ -44,35 +86,17 @@ export default function Row(props: Props) {
 				?.classList.toggle("selected");
 	};
 	const onClickHeader = header
-		? (e: MouseEvent) => {
-				const allCbs = document.querySelectorAll<HTMLElement>(".cb");
-				const mainCb = document.querySelector<HTMLElement>(
-					".mcb"
-				) as HTMLElement;
-				const ids = [...allCbs].map((el) => Number(el.dataset.value));
-				const isSelected = mainCb.classList.contains("selected");
-				allCbs.forEach((cb) => {
-					cb.classList.toggle("selected", !isSelected);
-					//@ts-ignore
-					cb.parentElement.parentElement.classList.toggle(
-						"selectedRow",
-						!isSelected
-					);
-				});
-				mainCb.classList.toggle("selected");
-				if (isSelected) removeAll();
-				else addMany(ids);
-		  }
+		? (e: MouseEvent) => toggleCheckboxes()
 		: () => {};
 	let onClickSort: (e: MouseEvent) => void;
 	if (header) {
 		onClickSort = (e: MouseEvent) => {
 			const el = e.currentTarget as HTMLElement;
-			const isSorted = document.querySelector("[data-asc], [data-desc]");
+			const sortedCol = document.querySelector("[data-asc], [data-desc]");
 			let direction: SortDirection;
-			if (isSorted && isSorted !== el) {
-				isSorted.removeAttribute("data-asc");
-				isSorted.removeAttribute("data-desc");
+			if (sortedCol && sortedCol !== el) {
+				sortedCol.removeAttribute("data-asc");
+				sortedCol.removeAttribute("data-desc");
 				el.setAttribute("data-asc", "");
 				direction = SortDirection.ASCENDING;
 			} else if (el.dataset.asc === "") {
@@ -161,8 +185,8 @@ export default function Row(props: Props) {
 							</p>
 							{props?.header && (
 								<>
-									<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
-									<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-50%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
+									<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
+									<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
 								</>
 							)}
 						</div>

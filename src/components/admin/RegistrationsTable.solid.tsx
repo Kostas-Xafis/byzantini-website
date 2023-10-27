@@ -9,7 +9,7 @@ import {
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import { removeAccents } from "../../../lib/utils.client";
+import { getKeyIndex, removeAccents } from "../../../lib/utils.client";
 import type {
 	Instruments,
 	Registrations,
@@ -33,6 +33,7 @@ import {
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
+import { toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
 
@@ -199,7 +200,7 @@ const registrationsToTable = (
 	registrations: Registrations[],
 	teachers: Teachers[],
 	instruments: Instruments[]
-): RegistrationsTable[] => {
+) => {
 	return registrations.map((reg) => {
 		const columns = Object.values(reg);
 		columns[15] = [
@@ -242,9 +243,10 @@ const columns: ColumnType<RegistrationsTable> = {
 };
 
 const searchColumns: SearchColumn[] = [
-	{ columnName: "am", name: "ΑΜ", type: "number" },
 	{ columnName: "last_name", name: "Επώνυμο", type: "string" },
 	{ columnName: "first_name", name: "Όνομα", type: "string" },
+	{ columnName: "am", name: "ΑΜ", type: "number" },
+	{ columnName: "teacher_id", name: "Καθηγητής", type: "string" },
 	{ columnName: "telephone", name: "Τηλέφωνο", type: "string" },
 	{ columnName: "cellphone", name: "Κινητό", type: "string" },
 	{ columnName: "email", name: "Email", type: "string" },
@@ -255,7 +257,9 @@ const searchColumns: SearchColumn[] = [
 const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function RegistrationsTable() {
-	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
+	const [searchQuery, setSearchQuery] = createStore<
+		SearchSetter<Registrations>
+	>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const [actionPressed, setActionPressed] = useHydrateById(
 		setStore,
@@ -274,48 +278,49 @@ export default function RegistrationsTable() {
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return [];
 		let { columnName, value, type } = searchQuery;
-		if (!columnName || !value || !type)
+		if (!columnName || !value || !type) {
+			toggleCheckboxes(false);
 			return registrationsToTable(registrations, teachers, instruments);
-		let searchRows: Registrations[] = [];
-
+		}
+		let searchRows = registrationsToTable(
+			registrations,
+			teachers,
+			instruments
+		);
+		const columnIndex = getKeyIndex(columnName, registrations[0]);
 		if (type === "number") {
 			// @ts-ignore value is misstyped....
 			const EqCheck = CompareList.findLast((c) => value.startsWith(c));
 			const fn = EqCheck && getCompareFn(value);
 			const nVal = Number(value.slice((EqCheck || "").length));
-			searchRows = registrations
-				.map((x) => x)
-				.filter((r) => {
-					const nCol = Number(r[columnName as keyof Registrations]); //Converting to number because the column might be a stringified number
-					if (fn) return fn(nCol, nVal);
-					let sCol = "" + nCol;
-					let sVal = "" + nVal;
-					return sCol.includes(sVal);
-				});
+			searchRows = searchRows.filter((r) => {
+				//@ts-ignore
+				const nCol = Number(r[columnIndex]); //Converting to number because the column might be a stringified number
+				if (fn) return fn(nCol, nVal);
+				let sCol = "" + nCol;
+				let sVal = "" + nVal;
+				return sCol.includes(sVal);
+			});
 		} else if (type === "string") {
-			searchRows = registrations
-				.map((x) => x)
-				.filter((r) => {
-					const col = r[columnName as keyof Registrations];
-					const nsCol = removeAccents(col as string).toLowerCase();
-					const nsVal = removeAccents(value as string).toLowerCase();
-					return nsCol.includes(nsVal);
-				});
+			searchRows = searchRows.filter((r) => {
+				//@ts-ignore
+				const col = r[columnIndex] as string;
+				const nsCol = removeAccents(col).toLowerCase();
+				const nsVal = removeAccents(value as string).toLowerCase();
+				return nsCol.includes(nsVal);
+			});
 		} else if (type === "date") {
 			// @ts-ignore
 			const EqCheck = CompareList.findLast((c) => value.startsWith(c));
 			const fn = EqCheck && getCompareFn(value);
 			value = value.replace(EqCheck || "", "");
 			if (EqCheck === "=") {
-				return registrations
-					.map((x) => x)
-					.filter((r) => {
-						const nCol = r[
-							columnName as keyof Registrations
-						] as number;
-						const sCol = new Date(nCol).toLocaleDateString("el-GR");
-						return value === sCol;
-					});
+				return searchRows.filter((r) => {
+					//@ts-ignore
+					const nCol = r[columnIndex] as number;
+					const sCol = new Date(nCol).toLocaleDateString("el-GR");
+					return value === sCol;
+				});
 			}
 
 			let [day, month = 1, year = 1970] = value
@@ -324,23 +329,16 @@ export default function RegistrationsTable() {
 			const dVal = new Date(year, month - 1, day);
 			const nVal = dVal.getTime();
 			const sVal = dVal.toLocaleDateString("el-GR");
-			searchRows = registrations
-				.map((x) => x)
-				.filter((r) => {
-					const nCol = r[columnName as keyof Registrations] as number;
-					if (fn) return fn(nCol, nVal - 1);
-					let sCol = new Date(nCol).toLocaleDateString("el-GR");
-					return sCol.includes(sVal);
-				});
+			searchRows = searchRows.filter((r) => {
+				//@ts-ignore
+				const nCol = r[columnIndex] as number;
+				if (fn) return fn(nCol, nVal - 1);
+				let sCol = new Date(nCol).toLocaleDateString("el-GR");
+				return sCol.includes(sVal);
+			});
 		}
-		if (searchRows.length) {
-			// Reset the checked rows when a search is made
-			setSelectedItems.removeAll();
-			document
-				.querySelectorAll(".mcb, .cb")
-				.forEach((r) => r.classList.remove("selected"));
-		}
-		return registrationsToTable(searchRows, teachers, instruments);
+		if (searchRows.length) toggleCheckboxes(false);
+		return searchRows;
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {

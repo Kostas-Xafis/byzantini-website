@@ -101,6 +101,11 @@ export function mappedValue(value: number, min = 0, max = 1, outMin = 0, outMax 
 	return normalized * outRange + outMin;
 };
 
+export function getKeyIndex<T extends {}>(key: keyof T, obj: T) {
+	let keys = Object.keys(obj);
+	return keys.indexOf(key as string);
+}
+
 export async function asyncQueue<T>(
 	jobs: (() => Promise<T>)[],
 	maxJobs = 1,
@@ -222,6 +227,7 @@ export const fileToBlob = async (file: File): Promise<Blob | null> => {
 	});
 };
 export function loadScript(src: string, res: () => boolean) {
+	console.log("Loading script: ", src);
 	return new Promise(async (resolve, reject) => {
 		let script = document.createElement("script");
 		script.src = src;

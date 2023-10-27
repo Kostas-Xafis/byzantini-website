@@ -41,7 +41,7 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 				hydrateById(mutate, action);
 			}
 			//@ts-ignore
-			document.dispatchEvent(new Event("RemoveAllRows"));
+			document.dispatchEvent(new CustomEvent("ModifySelections", { detail: "removeAll" }));
 		})
 	);
 

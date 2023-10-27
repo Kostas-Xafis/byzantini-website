@@ -1,6 +1,8 @@
+import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid.ts";
 interface CustomEventMap {
 	emptyFileRemove: CustomEvent<string>;
 	hydrate: CustomEvent<undefined>;
+	ModifySelections: CustomEvent<TypeEffect>;
 }
 
 declare global {
