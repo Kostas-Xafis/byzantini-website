@@ -210,15 +210,6 @@ export default function BooksTable() {
 			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.MODIFY, mutate: [book.id] });
-			document.dispatchEvent(
-				//@ts-ignore
-				new CustomEvent("ModifySelections", {
-					detail: {
-						type: "remove",
-						id: book.id,
-					},
-				})
-			);
 		});
 		return {
 			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),

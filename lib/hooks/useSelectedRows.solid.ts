@@ -1,24 +1,24 @@
 import { createStore } from "solid-js/store";
 
+export const enum TypeEffectEnum {
+	ADD = "ADD",
+	ADD_MANY = "ADD_MANY",
+	REMOVE = "REMOVE",
+	REMOVE_MANY = "REMOVE_MANY",
+	REMOVE_ALL = "REMOVE_ALL",
+}
+
 export type TypeEffect =
 	| {
-		type: "add";
+		type: TypeEffectEnum.ADD | TypeEffectEnum.REMOVE;
 		id: number;
 	}
 	| {
-		type: "addMany";
+		type: TypeEffectEnum.ADD_MANY | TypeEffectEnum.REMOVE_MANY;
 		ids: number[];
 	}
 	| {
-		type: "remove";
-		id: number;
-	}
-	| {
-		type: "removeMany";
-		ids: number[];
-	}
-	| {
-		type: "removeAll";
+		type: TypeEffectEnum.REMOVE_ALL;
 	};
 
 
@@ -28,41 +28,36 @@ export function useSelectedRows() {
 	const mutateItems = (effect: TypeEffect) => {
 		const type = effect.type;
 		switch (type) {
-			case "add":
+			case TypeEffectEnum.ADD:
 				setSelectedItems([...selectedItems, effect.id]);
 				break;
-
-			case "addMany":
+			case TypeEffectEnum.ADD_MANY:
 				setSelectedItems([...new Set([...selectedItems, ...effect.ids])]);
 				break;
-
-			case "remove":
+			case TypeEffectEnum.REMOVE:
 				setSelectedItems(selectedItems.filter((i) => i !== effect.id));
 				break;
-
-			case "removeMany":
+			case TypeEffectEnum.REMOVE_MANY:
 				setSelectedItems(selectedItems.filter((i) => !effect.ids.includes(i)));
 				break;
-
-			case "removeAll":
+			case TypeEffectEnum.REMOVE_ALL:
 				setSelectedItems([]);
 				break;
-
 			default:
 				break;
 		}
 	};
 
-	document.addEventListener("ModifySelections", (e) => mutateItems(e.detail));
+	document.addEventListener("ModifySelections", (e) => mutateItems(e.detail)); // For global access
 
 	return [
 		selectedItems,
 		{
-			add: (id: number) => mutateItems({ type: "add", id }),
-			addMany: (ids: number[]) => mutateItems({ type: "addMany", ids }),
-			remove: (id: number) => mutateItems({ type: "remove", id }),
-			removeMany: (ids: number[]) => mutateItems({ type: "removeMany", ids }),
-			removeAll: () => mutateItems({ type: "removeAll" }),
+			add: (id: number) => mutateItems({ type: TypeEffectEnum.ADD, id }),
+			addMany: (ids: number[]) => mutateItems({ type: TypeEffectEnum.ADD_MANY, ids }),
+			remove: (id: number) => mutateItems({ type: TypeEffectEnum.REMOVE, id }),
+			removeMany: (ids: number[]) => mutateItems({ type: TypeEffectEnum.REMOVE_MANY, ids }),
+			removeAll: () => mutateItems({ type: TypeEffectEnum.REMOVE_ALL }),
 		},
 	] as const;
 };

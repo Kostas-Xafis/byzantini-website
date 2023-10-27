@@ -425,7 +425,6 @@ export default function TeachersTable() {
 					.map((i) => Number(i.value))
 					.filter(Boolean),
 			};
-			console.log(data);
 			const res = await useAPI(
 				API.Teachers.post,
 				{
@@ -534,7 +533,6 @@ export default function TeachersTable() {
 					.map((i) => Number(i.value))
 					.filter(Boolean),
 			};
-			console.log(data);
 
 			const res = await useAPI(
 				API.Teachers.update,
@@ -548,7 +546,6 @@ export default function TeachersTable() {
 				picture: await fileToBlob(formData.get("picture") as File),
 				cv: await fileToBlob(formData.get("cv") as File),
 			};
-			console.log(file);
 			if (pictureRemoved)
 				await useAPI(
 					API.Teachers.fileDelete,
@@ -592,15 +589,6 @@ export default function TeachersTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [teacher.id],
 			});
-			document.dispatchEvent(
-				//@ts-ignore
-				new CustomEvent("ModifySelections", {
-					detail: {
-						type: "remove",
-						id: teacher.id,
-					},
-				})
-			);
 		});
 		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();

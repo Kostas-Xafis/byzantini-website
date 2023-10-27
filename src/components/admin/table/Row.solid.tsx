@@ -4,6 +4,10 @@ import {
 	SelectedItemsContext,
 } from "./SelectedRowContext.solid";
 import { SortDirection } from "./Table.solid";
+import {
+	TypeEffectEnum,
+	type TypeEffect,
+} from "../../../../lib/hooks/useSelectedRows.solid";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean";
 
@@ -42,16 +46,14 @@ export function toggleCheckboxes(force?: boolean) {
 	}
 	if (isSelected && (force === false || force === undefined)) {
 		document.dispatchEvent(
-			//@ts-ignore
 			new CustomEvent("ModifySelections", {
-				detail: { type: "removeAll" },
+				detail: { type: TypeEffectEnum.REMOVE_ALL } as TypeEffect,
 			})
 		);
 	} else if (!isSelected && (force === true || force === undefined)) {
 		document.dispatchEvent(
-			//@ts-ignore
 			new CustomEvent("ModifySelections", {
-				detail: { type: "addMany", ids },
+				detail: { type: TypeEffectEnum.ADD_MANY, ids } as TypeEffect,
 			})
 		);
 	}

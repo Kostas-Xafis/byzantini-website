@@ -125,12 +125,6 @@ export default function PayoffsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [payoff.id],
 			});
-			document.dispatchEvent(
-				//@ts-ignore
-				new CustomEvent("ModifySelections", {
-					detail: { type: "remove", id: payoff.id },
-				})
-			);
 		});
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 		return {

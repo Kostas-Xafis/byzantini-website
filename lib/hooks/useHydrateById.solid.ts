@@ -2,6 +2,7 @@ import type { SetStoreFunction } from "solid-js/store";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import { useAPI, type APIStore } from "./useAPI.solid";
 import { createEffect, createSignal, on } from "solid-js";
+import { TypeEffectEnum, type TypeEffect } from "./useSelectedRows.solid";
 
 export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAccessEndpoint: keyof APIStore, mutatedEndpoint: keyof APIStore) {
 	const [actionPressed, setActionPressed] = createSignal<{
@@ -40,8 +41,7 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 			} else {
 				hydrateById(mutate, action);
 			}
-			//@ts-ignore
-			document.dispatchEvent(new CustomEvent("ModifySelections", { detail: "removeAll" }));
+			document.dispatchEvent(new CustomEvent("ModifySelections", { detail: { type: TypeEffectEnum.REMOVE_ALL } as TypeEffect }));
 		})
 	);
 

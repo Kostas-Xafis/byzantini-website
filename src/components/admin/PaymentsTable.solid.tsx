@@ -195,12 +195,6 @@ export default function PaymentsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [payment.id],
 			});
-			document.dispatchEvent(
-				//@ts-ignore
-				new CustomEvent("ModifySelections", {
-					detail: { type: "remove", id: payment.id },
-				})
-			);
 		});
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {

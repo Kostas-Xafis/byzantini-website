@@ -1,4 +1,7 @@
 /// <reference types="astro/client" />
+
+import type { TypeEffect } from '../lib/hooks/useSelectedRows.solid';
+
 type R2Bucket = import('@cloudflare/workers-types').R2Bucket;
 type ENV = {
 	S3_BUCKET: R2Bucket;
@@ -15,27 +18,7 @@ declare namespace App {
 	}
 }
 
-interface CustomEventMap {
-	emptyFileRemove: CustomEvent<string>;
-	hydrate: CustomEvent<undefined>;
-	ModifySelections: CustomEvent<{
-		type: "add";
-		id: number;
-	} | {
-		type: "addMany";
-		ids: number[];
-	} | {
-		type: "remove";
-		id: number;
-	} | {
-		type: "removeMany";
-		ids: number[];
-	} | {
-		type: "removeAll";
-	}>;
-}
-
-// 💖💖💖💖 All the types without the MBytes of added js!!!!!
+// 💖💖💖💖 All the types without the MBytes of added js to the bundle!!!!!
 declare global {
 	interface Window {
 		fontkit: typeof import("@pdf-lib/fontkit");
@@ -44,11 +27,6 @@ declare global {
 	}
 	interface App {
 		ZIP: ZIP;
-	}
-	interface Document { //adds definition to Document, but you can do the same with HTMLElement
-		addEventListener<K extends keyof CustomEventMap>(type: K,
-			listener: (this: Document, ev: CustomEventMap[K]) => void): void;
-		dispatchEvent<K extends keyof CustomEventMap>(ev: CustomEventMap[K]): void;
 	}
 }
 

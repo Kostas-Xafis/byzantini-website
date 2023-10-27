@@ -397,15 +397,6 @@ export default function RegistrationsTable() {
 				setStore
 			);
 			setActionPressed({ action: ActionEnum.MODIFY, mutate: [data.id] });
-			document.dispatchEvent(
-				//@ts-ignore
-				new CustomEvent("ModifySelections", {
-					detail: {
-						type: "remove",
-						id: registration.id,
-					},
-				})
-			);
 		});
 		const filledInputs = Fill(
 			RegistrationsInputs(teachers, instruments) as Record<
