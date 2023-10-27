@@ -413,7 +413,15 @@ export default function RegistrationsTable() {
 		return {
 			inputs: filledInputs,
 			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onCleanup: () => {
+				document.dispatchEvent(
+					//@ts-ignore
+					new CustomEvent("ModifySelections", {
+						detail: { type: "remove", id: registration.id },
+					})
+				);
+				formListener(submit, false, PREFIX);
+			},
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Εγγραφής",
 			icon: ActionIcon.MODIFY,

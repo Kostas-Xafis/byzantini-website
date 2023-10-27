@@ -130,7 +130,15 @@ export default function PayoffsTable() {
 		return {
 			inputs: Pick(filledInputs, "amount"),
 			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onCleanup: () => {
+				document.dispatchEvent(
+					//@ts-ignore
+					new CustomEvent("ModifySelections", {
+						detail: { type: "remove", id: payoff.id },
+					})
+				);
+				formListener(submit, false, PREFIX);
+			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",
 

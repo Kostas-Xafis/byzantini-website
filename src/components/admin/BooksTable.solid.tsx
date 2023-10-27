@@ -214,7 +214,18 @@ export default function BooksTable() {
 		return {
 			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
 			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onCleanup: () => {
+				document.dispatchEvent(
+					//@ts-ignore
+					new CustomEvent("ModifySelections", {
+						detail: {
+							type: "remove",
+							id: book.id,
+						},
+					})
+				);
+				formListener(submit, false, PREFIX);
+			},
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
 			icon: ActionIcon.MODIFY,

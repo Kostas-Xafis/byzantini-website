@@ -410,9 +410,10 @@ export default function TeachersTable() {
 				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
 					Number(btn.dataset.value)
 				) as number[],
-				teacherInstruments: getMultiSelect("teacherInstruments").map(
-					(btn) => Number(btn.dataset.value)
-				) as number[],
+				teacherInstruments: [
+					...getMultiSelect("teacherInstrumentsTraditional"),
+					...getMultiSelect("teacherInstrumentsEuropean"),
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				teacherLocations: getMultiSelect("teacherLocations").map(
 					(btn) => Number(btn.dataset.value)
 				) as number[],
@@ -424,6 +425,7 @@ export default function TeachersTable() {
 					.map((i) => Number(i.value))
 					.filter(Boolean),
 			};
+			console.log(data);
 			const res = await useAPI(
 				API.Teachers.post,
 				{
@@ -517,13 +519,13 @@ export default function TeachersTable() {
 				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
 					Number(btn.dataset.value)
 				) as number[],
-				teacherInstruments: getMultiSelect("teacherInstruments").map(
-					(btn) => Number(btn.dataset.value)
-				) as number[],
+				teacherInstruments: [
+					...getMultiSelect("teacherInstrumentsTraditional"),
+					...getMultiSelect("teacherInstrumentsEuropean"),
+				].map((btn) => Number(btn.dataset.value)) as number[],
 				teacherLocations: getMultiSelect("teacherLocations").map(
 					(btn) => Number(btn.dataset.value)
 				) as number[],
-
 				priorities: [
 					...document.querySelectorAll<HTMLInputElement>(
 						`input[name^='priority']`
@@ -532,6 +534,8 @@ export default function TeachersTable() {
 					.map((i) => Number(i.value))
 					.filter(Boolean),
 			};
+			console.log(data);
+
 			const res = await useAPI(
 				API.Teachers.update,
 				{
@@ -544,7 +548,8 @@ export default function TeachersTable() {
 				picture: await fileToBlob(formData.get("picture") as File),
 				cv: await fileToBlob(formData.get("cv") as File),
 			};
-			if (pictureRemoved) {
+			console.log(file);
+			if (pictureRemoved)
 				await useAPI(
 					API.Teachers.fileDelete,
 					{
@@ -555,8 +560,8 @@ export default function TeachersTable() {
 					},
 					setStore
 				);
-			}
-			if (cvRemoved) {
+
+			if (cvRemoved)
 				await useAPI(
 					API.Teachers.fileDelete,
 					{
@@ -564,7 +569,7 @@ export default function TeachersTable() {
 					},
 					setStore
 				);
-			}
+
 			if (file.picture)
 				await useAPI(
 					API.Teachers.fileUpload,
@@ -625,6 +630,15 @@ export default function TeachersTable() {
 				document.removeEventListener(
 					"emptyFileRemove",
 					emptyFileRemove
+				);
+				document.dispatchEvent(
+					//@ts-ignore
+					new CustomEvent("ModifySelections", {
+						detail: {
+							type: "remove",
+							id: teacher.id,
+						},
+					})
 				);
 				formListener(submit, false, PREFIX);
 			},

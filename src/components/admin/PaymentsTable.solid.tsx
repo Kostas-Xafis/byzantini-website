@@ -200,7 +200,15 @@ export default function PaymentsTable() {
 		return {
 			inputs: Pick(filledInputs, "amount"),
 			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onCleanup: () => {
+				document.dispatchEvent(
+					//@ts-ignore
+					new CustomEvent("ModifySelections", {
+						detail: { type: "remove", id: payment.id },
+					})
+				);
+				formListener(submit, false, PREFIX);
+			},
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση πληρωμής",
 			icon: ActionIcon.MODIFY,

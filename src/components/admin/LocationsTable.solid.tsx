@@ -324,6 +324,12 @@ export default function LocationsTable() {
 					"emptyFileRemove",
 					emptyFileRemove
 				);
+				document.dispatchEvent(
+					//@ts-ignore
+					new CustomEvent("ModifySelections", {
+						detail: { type: "remove", id: location.id },
+					})
+				);
 				formListener(submit, false, PREFIX);
 			},
 			submitText: "Ενημέρωση",

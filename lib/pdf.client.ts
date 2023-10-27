@@ -95,15 +95,12 @@ export class PDF {
 		if (PDF.loadingScript === 0) return new Promise((resolve) => setTimeout(async () => resolve(await PDF.createInstance()), 500));
 		else if (PDF.loadingScript === 1) return new PDF();
 
-		console.log("Creating PDF instance");
 		if (window.PDFLib) return new PDF();
 		PDF.loadingScript = 0;
-		console.log("Loading PDFLib");
 		await Promise.all([
 			loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js", () => !!window["PDFLib"]),
 			loadScript("https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js", () => !!window["fontkit"]),
 		]);
-		console.log("PDFLib loaded");
 		PDF.loadingScript = 1;
 		return new PDF();
 	}

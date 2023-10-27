@@ -65,6 +65,7 @@ serverRoutes.post.func = async ctx => {
 serverRoutes.update.func = async ctx => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
+		console.log(body);
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
 		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, args);
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
@@ -77,6 +78,8 @@ serverRoutes.update.func = async ctx => {
 			await T.executeQuery(`INSERT INTO teacher_locations (teacher_id, location_id) VALUES (?, ?)`, [body.id, location_id]);
 		}
 		await T.executeQuery("DELETE FROM teacher_instruments WHERE teacher_id=?", [body.id]);
+
+		console.log(body.teacherInstruments);
 		for (const instrument_id of body.teacherInstruments) {
 			await T.executeQuery(`INSERT INTO teacher_instruments (teacher_id, instrument_id) VALUES (?, ?)`, [body.id, instrument_id]);
 		}
