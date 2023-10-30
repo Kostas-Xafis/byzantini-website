@@ -57,6 +57,15 @@ export async function onElementMount(target: string, callback: (el: HTMLElement)
 	callback(el as HTMLElement);
 };
 
+export function getParent(el: HTMLElement, selector: string, maxHeight = 10) {
+	while (!el.matches(selector) && maxHeight-- > 0) {
+		el = el.parentElement as HTMLElement;
+		if (el === document.body.parentElement) return null;
+	}
+	if (maxHeight <= 0) return null;
+	return el;
+}
+
 export function swapElementsWithFade(prev: HTMLElement, curr: HTMLElement, msFadeOut = 300, msFadeIn = 500) {
 	prev.classList.add("remove");
 	prev.style.setProperty("--msFadeOut", `${msFadeOut}ms`);

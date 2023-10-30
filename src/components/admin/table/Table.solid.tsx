@@ -1,6 +1,11 @@
 import Row, { type CellValue } from "./Row.solid";
-import { For, createMemo, createSignal } from "solid-js";
+import { For, createMemo, createSignal, useContext } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
+import {
+	SelectedItemsContext,
+	type ContextType,
+} from "./SelectedRowContext.solid";
+import { getParent } from "../../../../lib/utils.client";
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>;
 	data: Accessor<any[]>;
@@ -41,7 +46,41 @@ const move = (e: MouseEvent) => {
 	(e.currentTarget as HTMLElement).scrollLeft = scrollLeft - walk;
 };
 
+// const getChunkPosition = (arrSize: number): [number, number] => {
+// 	// This will load chunkSize * 3 items at a time
+
+// 	// No need to chunk if there are less than 50 items
+// 	if (arrSize < 50) return [0, arrSize];
+// 	const table = document.querySelector(
+// 		"#tableContainer .data-container"
+// 	) as HTMLElement;
+
+// 	const chunkSize = 50;
+// 	const totalChunks = Math.ceil(arrSize / chunkSize);
+
+// 	const tableHeight = table.scrollHeight;
+// 	const chunkHeight = tableHeight / totalChunks;
+
+// 	const tableTopPosition = table.scrollTop;
+// 	const chunkIndex = Math.floor(tableTopPosition / chunkHeight) + 1;
+
+// 	if (tableTopPosition % chunkHeight < chunkHeight * 0.25 && chunkIndex > 1) {
+// 		return [(chunkIndex - 1) * chunkSize, chunkIndex * chunkSize].map((n) =>
+// 			Math.min(n, arrSize)
+// 		) as [number, number];
+// 	} else if (tableTopPosition % chunkHeight > chunkHeight * 0.75) {
+// 		return [chunkIndex * chunkSize, (chunkIndex + 1) * chunkSize].map((n) =>
+// 			Math.min(n, arrSize)
+// 		) as [number, number];
+// 	}
+// 	// return
+// };
+
 export default function Table(props: Props) {
+	const [selectedItems, { add, remove }] = useContext(
+		SelectedItemsContext
+	) as ContextType;
+
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>(
 		[SortDirection.NONE, -1],
 		{ equals: false }
@@ -51,26 +90,41 @@ export default function Table(props: Props) {
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = createMemo(() => {
 		const [direction, column_index] = sorted();
-		if (direction === SortDirection.NONE || column_index < 0) return data();
+		if (direction === SortDirection.NONE || column_index < 0) {
+			return data();
+		}
+
 		const rows = data().slice(); // Remove any solid-js proxies
 
 		let columnType = columnTypes[column_index];
-		if (columnType === "date" || columnType === "number") {
+		let revOrder = direction === SortDirection.DESCENDING ? -1 : 1;
+		if (
+			columnType === "date" ||
+			columnType === "number" ||
+			columnType === "boolean"
+		) {
 			rows.sort((a, b) => {
 				if (a[column_index] === undefined || a[column_index] === null)
-					return -1;
-				if (b[column_index] === undefined || b[column_index] === null)
-					return 1;
-				return a[column_index] - b[column_index];
+					return -1 * revOrder;
+				else if (
+					b[column_index] === undefined ||
+					b[column_index] === null
+				)
+					return 1 * revOrder;
+				return (a[column_index] - b[column_index]) * revOrder;
 			});
-		} else {
+		} else if (columnType === "link" || columnType === "string") {
 			rows.sort((a, b) => {
-				if (a[column_index] === "" || !a[column_index]) return 1;
-				if (b[column_index] === "" || !b[column_index]) return -1;
-				return a[column_index].localeCompare(b[column_index]);
+				if (a[column_index] === "" || !a[column_index])
+					return 1 * revOrder;
+				else if (b[column_index] === "" || !b[column_index])
+					return -1 * revOrder;
+				return (
+					a[column_index].localeCompare(b[column_index]) * revOrder
+				);
 			});
 		}
-		return direction === SortDirection.ASCENDING ? rows : rows.reverse();
+		return rows;
 	});
 
 	let columnWidths =
@@ -81,6 +135,25 @@ export default function Table(props: Props) {
 		return name;
 	});
 	columnWidths += ";";
+	if (props.hasSelectBox) columnWidths += "padding-left: 1.5rem;";
+
+	const onClick = (e: MouseEvent) => {
+		const row = getParent(e.target as HTMLElement, ".row");
+		if (!row) return;
+
+		const item_id = Number(row.dataset.id as string);
+		const isSelected = selectedItems.includes(item_id);
+
+		if (isSelected) remove && remove(item_id);
+		else add && add(item_id);
+		row.classList.toggle("selectedRow");
+
+		if (props.hasSelectBox)
+			document
+				.querySelector(`.cb[data-value="${item_id}"]`)
+				?.classList.toggle("selected");
+	};
+
 	return (
 		<div
 			class={
@@ -107,7 +180,10 @@ export default function Table(props: Props) {
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
 				/>
-				<div class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+				<div
+					onClick={onClick}
+					class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg"
+				>
 					<For each={readRowData()}>
 						{(item, index) => {
 							return (

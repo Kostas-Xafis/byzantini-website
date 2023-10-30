@@ -19,7 +19,10 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 	const { DB_PWD, DB_HOST, DB_USERNAME, CONNECTOR, DB_NAME, DB_PORT } = await import.meta.env;
 	try {
 		if (CONNECTOR === "mysql") {
-			// This is the worst & most shameful line of code I've ever written
+			// Exposing mysql2/promise package in dev as an api, wrapped with the functions of @planetscale/database
+			// to allow for quick local development
+
+			// This is the worst, ugliest, most stupid & most shameful line of code I've ever written
 			const mysql = await eval(`import("mysql2/promise")`);
 			const db = await mysql.createConnection({
 				user: DB_USERNAME,
@@ -52,8 +55,13 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 				},
 				transaction: async (func) => {
 					await db.beginTransaction();
-					const res = await func({ execute } as Transaction);
-					await db.commit();
+					let res;
+					try {
+						res = await func({ execute } as Transaction);
+						await db.commit();
+					} catch (error) {
+						await db.rollback();
+					}
 					db.end();
 					return res;
 				}
