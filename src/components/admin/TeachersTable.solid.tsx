@@ -44,6 +44,7 @@ import {
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
 import { formErrorWrap, formListener } from "./table/formSubmit";
+import { toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "teachers";
 
@@ -367,7 +368,10 @@ export default function TeachersTable() {
 		const teachers = store[API.Teachers.get];
 		if (!classList || !teachers) return [];
 		const { columnName, value } = searchQuery;
-		if (!columnName || !value) return teachersToTable(teachers, classList);
+		if (!columnName || !value) {
+			toggleCheckboxes(false);
+			return teachersToTable(teachers, classList);
+		}
 		let searchRows: FullTeachers[];
 		if (columnName === "teacherInstruments") {
 			const teachersInstruments = store[API.Teachers.getInstruments];
@@ -376,7 +380,11 @@ export default function TeachersTable() {
 				return teachersToTable(teachers, classList);
 			const searchedInstruments = instruments
 				.map((x) => x)
-				?.filter((i) => i.name.includes(value as string))
+				?.filter((i) =>
+					removeAccents(i.name)
+						.toLowerCase()
+						.includes(removeAccents(value as string).toLowerCase())
+				)
 				.map((i) => i.id);
 			// inside a set because there might be multiple instruments per teacher and we don't want duplicates
 			searchRows = [
@@ -402,6 +410,7 @@ export default function TeachersTable() {
 					return false;
 				});
 		}
+		if (searchRows.length) toggleCheckboxes(false);
 		return teachersToTable(searchRows, classList);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {

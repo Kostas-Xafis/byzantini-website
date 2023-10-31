@@ -19,25 +19,26 @@ interface Props {
 export function toggleCheckboxes(force?: boolean) {
 	const allCbs = document.querySelectorAll<HTMLElement>(".cb");
 	const mainCb = document.querySelector<HTMLElement>(".mcb");
-	if (mainCb === null || allCbs.length === 0) return;
 	const ids = [...allCbs].map((el) => Number(el.dataset.value));
-	if (force === true || force === false) {
-		allCbs.forEach((cb) => {
-			cb.classList.toggle("selected", force);
-			//@ts-ignore
-			cb.parentElement.parentElement.classList.toggle(
-				"selectedRow",
-				force
-			);
-		});
-		mainCb.classList.toggle("selected", force);
-	} else {
-		allCbs.forEach((cb) => {
-			cb.classList.toggle("selected");
-			//@ts-ignore
-			cb.parentElement.parentElement.classList.toggle("selectedRow");
-		});
-		mainCb.classList.toggle("selected");
+	if (mainCb !== null && allCbs.length !== 0) {
+		if (force === true || force === false) {
+			allCbs.forEach((cb) => {
+				cb.classList.toggle("selected", force);
+				//@ts-ignore
+				cb.parentElement.parentElement.classList.toggle(
+					"selectedRow",
+					force
+				);
+			});
+			mainCb.classList.toggle("selected", force);
+		} else {
+			allCbs.forEach((cb) => {
+				cb.classList.toggle("selected");
+				//@ts-ignore
+				cb.parentElement.parentElement.classList.toggle("selectedRow");
+			});
+			mainCb.classList.toggle("selected");
+		}
 	}
 	if (force === false) {
 		document.dispatchEvent(
