@@ -305,6 +305,7 @@ const class_types = [
 const searchColumns: SearchColumn[] = [
 	{ columnName: "fullname", name: "Ονοματεπώνυμο", type: "string" },
 	{ columnName: "email", name: "Email", type: "string" },
+	{ columnName: "teacherInstruments", name: "Όργανο", type: "string" },
 ];
 
 const columnNames: ColumnType<TeachersTable> = {
@@ -340,7 +341,7 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function TeachersTable() {
 	const [searchQuery, setSearchQuery] = createStore<
-		SearchSetter<FullTeachers>
+		SearchSetter<FullTeachers & TeacherJoins>
 	>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const [actionPressed, setActionPressed] = useHydrateById(
@@ -364,20 +365,43 @@ export default function TeachersTable() {
 	const shapedData = createMemo(() => {
 		const classList = store[API.Teachers.getClasses];
 		const teachers = store[API.Teachers.get];
-		if (!classList || !teachers || !teachers) return [];
+		if (!classList || !teachers) return [];
 		const { columnName, value } = searchQuery;
 		if (!columnName || !value) return teachersToTable(teachers, classList);
-		let searchRows: FullTeachers[] = teachers
-			.map((x) => x)
-			.filter((r) => {
-				const col = r[columnName as keyof Teachers];
-				if (typeof col === "string") {
-					let nCol = removeAccents(col).toLowerCase();
-					let nVal = removeAccents(value as string).toLowerCase();
-					return nCol.includes(nVal);
-				}
-				return false;
-			});
+		let searchRows: FullTeachers[];
+		if (columnName === "teacherInstruments") {
+			const teachersInstruments = store[API.Teachers.getInstruments];
+			const instruments = store[API.Instruments.get];
+			if (!teachersInstruments || !instruments)
+				return teachersToTable(teachers, classList);
+			const searchedInstruments = instruments
+				.map((x) => x)
+				?.filter((i) => i.name.includes(value as string))
+				.map((i) => i.id);
+			// inside a set because there might be multiple instruments per teacher and we don't want duplicates
+			searchRows = [
+				...new Set(
+					teachersInstruments
+						.map((x) => x)
+						.filter((t) =>
+							searchedInstruments.includes(t.instrument_id)
+						)
+						.map((t) => teachers.find((x) => x.id === t.teacher_id))
+				),
+			] as FullTeachers[];
+		} else {
+			searchRows = teachers
+				.map((x) => x)
+				.filter((r) => {
+					const col = r[columnName as keyof Teachers];
+					if (typeof col === "string") {
+						let nCol = removeAccents(col).toLowerCase();
+						let nVal = removeAccents(value as string).toLowerCase();
+						return nCol.includes(nVal);
+					}
+					return false;
+				});
+		}
 		return teachersToTable(searchRows, classList);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
