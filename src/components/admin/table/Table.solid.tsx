@@ -77,7 +77,7 @@ const move = (e: MouseEvent) => {
 // };
 
 export default function Table(props: Props) {
-	const [selectedItems, { add, remove }] = useContext(
+	const [selectedItems, { add, addMany, remove, removeAll }] = useContext(
 		SelectedItemsContext
 	) as ContextType;
 
@@ -141,17 +141,34 @@ export default function Table(props: Props) {
 		const row = getParent(e.target as HTMLElement, ".row");
 		if (!row) return;
 
-		const item_id = Number(row.dataset.id as string);
-		const isSelected = selectedItems.includes(item_id);
+		// const removedAllAction = false;
+		if (row.classList.contains("header")) {
+			const hasSelection = selectedItems.length > 0;
+			if (hasSelection) {
+				removeAll && removeAll();
+			} else {
+				const ids = data().map((el) => Number(el[0]));
+				addMany && addMany(ids);
+			}
+			if (props.hasSelectBox)
+				document
+					.querySelectorAll(`.cb`)
+					.forEach((cb) =>
+						cb.classList.toggle("selected", !hasSelection)
+					);
+		} else {
+			const item_id = Number(row.dataset.id as string);
+			const isSelected = selectedItems.includes(item_id);
 
-		if (isSelected) remove && remove(item_id);
-		else add && add(item_id);
-		row.classList.toggle("selectedRow");
+			if (isSelected) remove && remove(item_id);
+			else add && add(item_id);
+			row.classList.toggle("selectedRow");
 
-		if (props.hasSelectBox)
-			document
-				.querySelector(`.cb[data-value="${item_id}"]`)
-				?.classList.toggle("selected");
+			if (props.hasSelectBox)
+				document
+					.querySelector(`.cb[data-value="${item_id}"]`)
+					?.classList.toggle("selected");
+		}
 	};
 
 	return (
@@ -172,6 +189,7 @@ export default function Table(props: Props) {
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
 				onMouseLeave={stopDragging}
+				onClick={onClick}
 			>
 				<Row
 					data={columns}
@@ -180,10 +198,7 @@ export default function Table(props: Props) {
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
 				/>
-				<div
-					onClick={onClick}
-					class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg"
-				>
+				<div class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item, index) => {
 							return (
