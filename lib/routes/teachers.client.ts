@@ -1,7 +1,7 @@
 import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
-import { merge, array, number, integer, object, omit } from "valibot";
+import { merge, array, number, integer, object, omit, string } from "valibot";
 
 
 const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
@@ -63,7 +63,8 @@ const teacherJoins = object({
 	teacherClasses: array(number([integer()])),
 	teacherLocations: array(number([integer()])),
 	teacherInstruments: array(number([integer()])),
-	priorities: array(number([integer()]))
+	priorities: array(number([integer()])),
+	am: array(string())
 });
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);

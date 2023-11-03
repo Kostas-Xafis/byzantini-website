@@ -2,8 +2,9 @@ import { type Setter, For } from "solid-js";
 import { SortDirection } from "./Table.solid";
 import {
 	TypeEffectEnum,
-	type TypeEffect,
+	selectedRowsEvent,
 } from "../../../../lib/hooks/useSelectedRows.solid";
+import { getParent } from "../../../../lib/utils.client";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean";
 
@@ -16,10 +17,46 @@ interface Props {
 	sortOnClick?: Setter<[SortDirection, number]>;
 }
 
+export function toggleCheckbox(id: number, force?: boolean) {
+	const cb = document.querySelector(`.cb[data-value="${id}"]`) as HTMLElement;
+	if (cb !== null) {
+		// Toggling when there is a checkbox visible
+		const row = getParent(cb, ".row") as HTMLElement;
+		if (!row) return;
+		const isSelected = row.classList.contains("selectedRow");
+		if (force === true || force === false) {
+			cb.classList.toggle("selected", force);
+			row.classList.toggle("selectedRow", force);
+			if (force === false) {
+				selectedRowsEvent({ type: TypeEffectEnum.REMOVE, id });
+			} else if (force === true) {
+				selectedRowsEvent({ type: TypeEffectEnum.ADD, id });
+			}
+		} else {
+			cb.classList.toggle("selected");
+			row.classList.toggle("selectedRow");
+			if (isSelected) {
+				selectedRowsEvent({ type: TypeEffectEnum.REMOVE, id });
+			} else {
+				selectedRowsEvent({ type: TypeEffectEnum.ADD, id });
+			}
+		}
+	} else {
+		const row = document.querySelector(`.row[data-id='${id}']`);
+		if (!row) return;
+		const isSelected = row.classList.contains("selectedRow");
+		if (isSelected && force !== false) {
+			selectedRowsEvent({ type: TypeEffectEnum.REMOVE, id });
+		} else if (!isSelected && force !== true) {
+			selectedRowsEvent({ type: TypeEffectEnum.ADD, id });
+		}
+		row.classList.toggle("selectedRow");
+	}
+}
+
 export function toggleCheckboxes(force?: boolean) {
 	const allCbs = document.querySelectorAll<HTMLElement>(".cb");
 	const mainCb = document.querySelector<HTMLElement>(".mcb");
-	const ids = [...allCbs].map((el) => Number(el.dataset.value));
 	if (mainCb !== null && allCbs.length !== 0) {
 		if (force === true || force === false) {
 			allCbs.forEach((cb) => {
@@ -31,27 +68,40 @@ export function toggleCheckboxes(force?: boolean) {
 				);
 			});
 			mainCb.classList.toggle("selected", force);
+			if (force === false) {
+				selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
+			} else if (force === true) {
+				const ids = [...allCbs].map((el) => Number(el.dataset.value));
+				selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
+			}
 		} else {
+			const isSelected = mainCb.classList.contains("selected");
 			allCbs.forEach((cb) => {
-				cb.classList.toggle("selected");
+				cb.classList.toggle("selected", !isSelected);
 				//@ts-ignore
-				cb.parentElement.parentElement.classList.toggle("selectedRow");
+				cb.parentElement.parentElement.classList.toggle(
+					"selectedRow",
+					!isSelected
+				);
 			});
-			mainCb.classList.toggle("selected");
+			mainCb.classList.toggle("selected", !isSelected);
+			if (isSelected) {
+				selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
+			} else {
+				const ids = [...allCbs].map((el) => Number(el.dataset.value));
+				selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
+			}
 		}
-	}
-	if (force === false) {
-		document.dispatchEvent(
-			new CustomEvent("ModifySelections", {
-				detail: { type: TypeEffectEnum.REMOVE_ALL } as TypeEffect,
-			})
+	} else {
+		// Toggling all checkboxes too true should not be possible,
+		// and therefore this is only available, when removing all selections after a search
+		const allRows = document.querySelectorAll<HTMLElement>(
+			".data-container .row"
 		);
-	} else if (force === true) {
-		document.dispatchEvent(
-			new CustomEvent("ModifySelections", {
-				detail: { type: TypeEffectEnum.ADD_MANY, ids } as TypeEffect,
-			})
-		);
+		selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
+		allRows.forEach((row) => {
+			row.classList.toggle("selectedRow", false);
+		});
 	}
 }
 
@@ -65,9 +115,6 @@ export default function Row(props: Props) {
 		hasSelectBox,
 	} = props;
 
-	const onClickHeader = header
-		? (e: MouseEvent) => toggleCheckboxes()
-		: undefined;
 	let onClickSort: ((e: MouseEvent) => void) | undefined;
 	if (header) {
 		onClickSort = (e: MouseEvent) => {
@@ -111,7 +158,6 @@ export default function Row(props: Props) {
 				{hasSelectBox && (
 					<div class="relative w-full">
 						<div
-							onClick={onClickHeader}
 							class={
 								"group/checkbox relative items-center" +
 								(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox

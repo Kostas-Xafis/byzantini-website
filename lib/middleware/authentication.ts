@@ -26,7 +26,6 @@ export async function authentication(ctx: APIContext) {
 	const session_id = getSessionId(ctx.request);
 	if (!session_id) return false;
 	if (small_cache.has(session_id)) {
-		// console.log("small cache hit");
 		// executeQuery("UPDATE cache_hits SET hits = hits + 1 WHERE cache_name = 'small_cache'");
 		return true;
 	}

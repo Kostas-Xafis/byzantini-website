@@ -25,6 +25,7 @@ export type TypeEffect =
 export function useSelectedRows() {
 	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
 
+
 	const mutateItems = (effect: TypeEffect) => {
 		const type = effect.type;
 		switch (type) {
@@ -61,3 +62,7 @@ export function useSelectedRows() {
 		},
 	] as const;
 };
+
+export function selectedRowsEvent<T extends TypeEffect>(detail: T) {
+	return document.dispatchEvent(new CustomEvent("ModifySelections", { detail }));
+}

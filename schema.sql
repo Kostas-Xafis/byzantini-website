@@ -65,6 +65,8 @@ CREATE TABLE `teachers` (
     `email` varchar(80),
     `telephone` varchar(80),
     `linktree` varchar(80),
+	`gender` varchar(1) DEFAULT 'M',
+	`title` int DEFAULT 0,
     `picture` varchar(80),
     `cv` varchar(80),
     `visible` boolean NOT NULL DEFAULT 1,
@@ -102,6 +104,7 @@ CREATE TABLE `teacher_classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
     `priority` int NOT NULL DEFAULT 1,
+	`am` varchar(40),
     PRIMARY KEY (`teacher_id`, `class_id`)
 );
 

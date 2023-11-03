@@ -83,7 +83,7 @@ export const v_Teachers = object({
 	telephone: optional(string()),
 	linktree: optional(string()),
 	gender: union([literal("M"), literal("F")]),
-	title: union([literal(0), literal(1), literal(2)]), // 1: Καθηγητής, 2: Δάσκαλος, 3: Επιμελητής
+	title: union([literal(0), literal(1), literal(2)]), // 0: Καθηγητής, 1: Δάσκαλος, 2: Επιμελητής
 	visible: boolean(),
 	online: boolean()
 });
@@ -101,7 +101,8 @@ export type TeacherLocations = Output<typeof v_TeacherLocations>;
 export const v_TeacherClasses = object({
 	teacher_id: number([integer(), minValue(0)]),
 	class_id: number([integer(), minValue(0)]),
-	priority: number([integer(), minValue(1)])
+	priority: number([integer(), minValue(1)]),
+	am: optional(string()),
 });
 export type TeacherClasses = Output<typeof v_TeacherClasses>;
 

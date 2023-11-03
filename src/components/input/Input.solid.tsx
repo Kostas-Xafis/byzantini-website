@@ -62,6 +62,21 @@ export function getMultiSelect(prefix: string, isSelected = true) {
 	];
 }
 
+export function getByName(name:string, strCmp?: "startsWith" | "endsWith" | "includes") {
+	if (!strCmp) {
+		return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
+	} else {
+		switch (strCmp) {
+			case "startsWith":
+				return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
+			case "endsWith":
+				return [...document.querySelectorAll(`input[name$='${name}']`)] as HTMLInputElement[];
+			case "includes":
+				return [...document.querySelectorAll(`input[name*='${name}']`)] as HTMLInputElement[];
+		}
+	}
+}
+
 const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 
 const months = [
@@ -415,7 +430,7 @@ export default function Input(props: Props) {
 						(iconClasses || "")
 					}
 				></i>
-				<div class="m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-x-hidden z-10">
+				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-x-hidden z-10">
 					<For each={multiselectList}>
 						{(selectItem, index) =>
 							selectItem.value !== null ||

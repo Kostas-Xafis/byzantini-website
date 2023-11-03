@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, onMount } from "solid-js";
+import { Show, createEffect, createMemo, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import {
 	API,
@@ -279,7 +279,7 @@ export default function RegistrationsTable() {
 		if (!registrations || !teachers || !instruments) return [];
 		let { columnName, value, type } = searchQuery;
 		if (!columnName || !value || !type) {
-			toggleCheckboxes(false);
+			untrack(() => toggleCheckboxes(false));
 			return registrationsToTable(registrations, teachers, instruments);
 		}
 		let searchRows = registrationsToTable(
@@ -337,7 +337,8 @@ export default function RegistrationsTable() {
 				return sCol.includes(sVal);
 			});
 		}
-		if (searchRows.length) toggleCheckboxes(false);
+		// 🤯🤯🤯 Solid-js is actually insane: UI bugfix due to state change after toggleCheckboxes was being called
+		untrack(() => toggleCheckboxes(false));
 		return searchRows;
 	});
 

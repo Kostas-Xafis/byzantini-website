@@ -1,10 +1,10 @@
-import Row, { type CellValue } from "./Row.solid";
+import Row, {
+	toggleCheckboxes,
+	type CellValue,
+	toggleCheckbox,
+} from "./Row.solid";
 import { For, createMemo, createSignal, useContext } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
-import {
-	SelectedItemsContext,
-	type ContextType,
-} from "./SelectedRowContext.solid";
 import { getParent } from "../../../../lib/utils.client";
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>;
@@ -77,10 +77,6 @@ const move = (e: MouseEvent) => {
 // };
 
 export default function Table(props: Props) {
-	const [selectedItems, { add, addMany, remove, removeAll }] = useContext(
-		SelectedItemsContext
-	) as ContextType;
-
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>(
 		[SortDirection.NONE, -1],
 		{ equals: false }
@@ -143,31 +139,12 @@ export default function Table(props: Props) {
 
 		// const removedAllAction = false;
 		if (row.classList.contains("header")) {
-			const hasSelection = selectedItems.length > 0;
-			if (hasSelection) {
-				removeAll && removeAll();
-			} else {
-				const ids = data().map((el) => Number(el[0]));
-				addMany && addMany(ids);
-			}
-			if (props.hasSelectBox)
-				document
-					.querySelectorAll(`.cb`)
-					.forEach((cb) =>
-						cb.classList.toggle("selected", !hasSelection)
-					);
+			const mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
+			if (!mainCheckbox) return;
+			toggleCheckboxes();
 		} else {
 			const item_id = Number(row.dataset.id as string);
-			const isSelected = selectedItems.includes(item_id);
-
-			if (isSelected) remove && remove(item_id);
-			else add && add(item_id);
-			row.classList.toggle("selectedRow");
-
-			if (props.hasSelectBox)
-				document
-					.querySelector(`.cb[data-value="${item_id}"]`)
-					?.classList.toggle("selected");
+			toggleCheckbox(item_id);
 		}
 	};
 

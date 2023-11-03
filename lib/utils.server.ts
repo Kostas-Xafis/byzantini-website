@@ -6,8 +6,10 @@ import { CreateDbConnection, type Transaction } from "./db";
  * @param arg
  * @returns Return the number of question marks needed for a query
  */
-export const questionMarks = (arg: number | any[]) => Array.isArray(arg) ? "?".repeat(arg.length).split("").join(", ") : "?".repeat(arg).split("").join(", ");
-
+export const questionMarks = (arg: number | any[] | {}) => {
+	const length = Array.isArray(arg) ? arg.length : typeof arg === "number" ? arg : Object.keys(arg).length;
+	return "?".repeat(length).split("").join(", ");
+};
 export const createSessionId = (size = 32) => {
 	const hexLookup = "0123456789abcdef";
 	let session_id = "";

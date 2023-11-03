@@ -1,4 +1,4 @@
-import { Show, createMemo } from "solid-js";
+import { Show, createMemo, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import {
 	API,
@@ -28,6 +28,7 @@ import {
 	Omit,
 	type Props as InputProps,
 	getMultiSelect,
+	getByName,
 } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
@@ -48,7 +49,7 @@ import { toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "teachers";
 
-type TeachersTable = Omit<FullTeachers, "instruments"> & {
+type TeachersTableType = Omit<FullTeachers, "instruments"> & {
 	priority_byz: number;
 	priority_par: number;
 	priority_eur: number;
@@ -58,6 +59,7 @@ type TeacherJoins = {
 	teacherInstruments: number[];
 	teacherLocations: number[];
 	priorities: number[];
+	am: string[];
 };
 
 type ExtraInputs =
@@ -67,7 +69,10 @@ type ExtraInputs =
 	| "teacherInstrumentsEuropean"
 	| "priority_byz"
 	| "priority_par"
-	| "priority_eur";
+	| "priority_eur"
+	| "am_byz"
+	| "am_par"
+	| "am_eur";
 const TeachersInputs = (
 	class_types: ClassType[],
 	locations: Locations[],
@@ -81,6 +86,9 @@ const TeachersInputs = (
 		classList?.filter((c) => c.teacher_id === teacher?.id) || [];
 	const teacherPriorities = teacherClasses.map((c) => {
 		return { priority: c.priority, class_id: c.class_id };
+	});
+	const teacherAms = teacherClasses.map((c) => {
+		return { am: c.am, class_id: c.class_id };
 	});
 	const multiselectClasses = class_types?.map((ct) => {
 		let c =
@@ -141,12 +149,6 @@ const TeachersInputs = (
 			type: "text",
 			iconClasses: "fa-solid fa-phone",
 		},
-		linktree: {
-			name: "linktree",
-			label: "Σύνδεσμος",
-			type: "text",
-			iconClasses: "fa-solid fa-link",
-		},
 		gender: {
 			name: "gender",
 			label: "Φύλο",
@@ -173,6 +175,27 @@ const TeachersInputs = (
 			),
 			multiselectOnce: true,
 			iconClasses: "fa-solid fa-user-graduate",
+		},
+		am_byz: {
+			name: "am_byz",
+			label: "ΑΜ Βυζαντινής",
+			type: "text",
+			iconClasses: "fa-solid fa-id-card",
+			value: teacherAms.find((p) => p.class_id === 0)?.am || "",
+		},
+		am_par: {
+			name: "am_par",
+			label: "ΑΜ Παραδοσιακής",
+			type: "text",
+			iconClasses: "fa-solid fa-id-card",
+			value: teacherAms.find((p) => p.class_id === 1)?.am || "",
+		},
+		am_eur: {
+			name: "am_eur",
+			label: "ΑΜ Ευρωπαϊκής",
+			type: "text",
+			iconClasses: "fa-solid fa-id-card",
+			value: teacherAms.find((p) => p.class_id === 2)?.am || "",
 		},
 		priority_byz: {
 			name: "priority_byz",
@@ -216,6 +239,12 @@ const TeachersInputs = (
 			iconClasses: "fa-solid fa-file-pdf",
 			fileExtension: ".pdf",
 			value: teacher?.cv,
+		},
+		linktree: {
+			name: "linktree",
+			label: "Σύνδεσμος",
+			type: "text",
+			iconClasses: "fa-solid fa-link",
 		},
 		visible: {
 			name: "visible",
@@ -293,7 +322,7 @@ const teachersToTable = (
 
 		columns[12] = t.visible;
 		columns[13] = t.online;
-		return columns as unknown as TeachersTable;
+		return columns as unknown as TeachersTableType;
 	});
 };
 
@@ -309,7 +338,7 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "teacherInstruments", name: "Όργανο", type: "string" },
 ];
 
-const columnNames: ColumnType<TeachersTable> = {
+const columnNames: ColumnType<TeachersTableType> = {
 	id: { type: "number", name: "Id" },
 	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 25 },
 	picture: { type: "link", name: "Φωτογραφία" },
@@ -369,7 +398,7 @@ export default function TeachersTable() {
 		if (!classList || !teachers) return [];
 		const { columnName, value } = searchQuery;
 		if (!columnName || !value) {
-			toggleCheckboxes(false);
+			untrack(() => toggleCheckboxes(false));
 			return teachersToTable(teachers, classList);
 		}
 		let searchRows: FullTeachers[];
@@ -410,7 +439,7 @@ export default function TeachersTable() {
 					return false;
 				});
 		}
-		if (searchRows.length) toggleCheckboxes(false);
+		untrack(() => toggleCheckboxes(false));
 		return teachersToTable(searchRows, classList);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
@@ -450,12 +479,11 @@ export default function TeachersTable() {
 				teacherLocations: getMultiSelect("teacherLocations").map(
 					(btn) => Number(btn.dataset.value)
 				) as number[],
-				priorities: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`input[name^='priority']`
-					),
-				]
+				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
+					.filter(Boolean),
+				am: getByName("am_", "startsWith")
+					.map((i) => i.value)
 					.filter(Boolean),
 			};
 			const res = await useAPI(
@@ -558,15 +586,13 @@ export default function TeachersTable() {
 				teacherLocations: getMultiSelect("teacherLocations").map(
 					(btn) => Number(btn.dataset.value)
 				) as number[],
-				priorities: [
-					...document.querySelectorAll<HTMLInputElement>(
-						`input[name^='priority']`
-					),
-				]
+				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
 					.filter(Boolean),
+				am: getByName("am_", "startsWith")
+					.map((i) => i.value)
+					.filter(Boolean),
 			};
-
 			const res = await useAPI(
 				API.Teachers.update,
 				{
@@ -824,7 +850,12 @@ export default function TeachersTable() {
 				}
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
-				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
+				<Table
+					prefix={PREFIX}
+					data={shapedData}
+					columns={columnNames}
+					hasSelectBox
+				>
 					<TableControls
 						pressedAction={actionPressed}
 						onActionsArray={[onAdd, onModify, onDelete]}
