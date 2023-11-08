@@ -21,7 +21,10 @@ import type {
 	Teachers,
 } from "../../../types/entities";
 import { CloseButton } from "../admin/table/CloseButton.solid";
-import Input, { type Props as InputProps } from "../input/Input.solid";
+import Input, {
+	getMultiSelect,
+	type Props as InputProps,
+} from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -492,11 +495,7 @@ export function RegistrationForm() {
 			class_id: btns.findIndex((btn) => btn[1] === formSelected()),
 			teacher_id: Number(formData.get("teacher_id")) || -1,
 			instrument_id:
-				[
-					...document.querySelectorAll<HTMLInputElement>(
-						`button[data-specifier='instruments'][data-selected='true']`
-					),
-				].map((btn) => {
+				getMultiSelect("instruments").map((btn) => {
 					const id = Number(btn.dataset.value) || null;
 					return id;
 				})[0] || 0,
@@ -509,6 +508,10 @@ export function RegistrationForm() {
 			}
 			if (data.instrument_id === 0 && data.class_id > 0) {
 				alert("Παρακαλώ επιλέξτε όργανο / μάθημα");
+				throw Error("");
+			}
+			if (data.class_year === "undefined") {
+				alert("Παρακαλώ επιλέξτε έτος φοίτησης");
 				throw Error("");
 			}
 			const res = await useAPI(

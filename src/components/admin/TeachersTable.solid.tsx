@@ -1,4 +1,4 @@
-import { Show, createMemo, untrack } from "solid-js";
+import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import {
 	API,
@@ -8,6 +8,7 @@ import {
 } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { loadXLSX } from "../../../lib/pdf.client";
 import {
 	fileToBlob,
 	removeAccents,
@@ -26,9 +27,9 @@ import type {
 import {
 	Fill,
 	Omit,
-	type Props as InputProps,
-	getMultiSelect,
 	getByName,
+	getMultiSelect,
+	type Props as InputProps,
 } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
@@ -36,6 +37,7 @@ import {
 	type SearchColumn,
 	type SearchSetter,
 } from "./SearchTable.solid";
+import { toggleCheckboxes } from "./table/Row.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import {
@@ -44,8 +46,6 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
-import { toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "teachers";
 
@@ -59,7 +59,7 @@ type TeacherJoins = {
 	teacherInstruments: number[];
 	teacherLocations: number[];
 	priorities: number[];
-	am: string[];
+	registrations_number: string[];
 };
 
 type ExtraInputs =
@@ -70,9 +70,9 @@ type ExtraInputs =
 	| "priority_byz"
 	| "priority_par"
 	| "priority_eur"
-	| "am_byz"
-	| "am_par"
-	| "am_eur";
+	| "ae_byz"
+	| "ae_par"
+	| "ae_eur";
 const TeachersInputs = (
 	class_types: ClassType[],
 	locations: Locations[],
@@ -87,8 +87,11 @@ const TeachersInputs = (
 	const teacherPriorities = teacherClasses.map((c) => {
 		return { priority: c.priority, class_id: c.class_id };
 	});
-	const teacherAms = teacherClasses.map((c) => {
-		return { am: c.am, class_id: c.class_id };
+	const teacherRegNumber = teacherClasses.map((c) => {
+		return {
+			registration_number: c.registration_number,
+			class_id: c.class_id,
+		};
 	});
 	const multiselectClasses = class_types?.map((ct) => {
 		let c =
@@ -176,26 +179,32 @@ const TeachersInputs = (
 			multiselectOnce: true,
 			iconClasses: "fa-solid fa-user-graduate",
 		},
-		am_byz: {
-			name: "am_byz",
-			label: "ΑΜ Βυζαντινής",
+		ae_byz: {
+			name: "ae-byz",
+			label: "Α.Έκγρισης Βυζαντινής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
-			value: teacherAms.find((p) => p.class_id === 0)?.am || "",
+			value:
+				teacherRegNumber.find((p) => p.class_id === 0)
+					?.registration_number || "",
 		},
-		am_par: {
-			name: "am_par",
-			label: "ΑΜ Παραδοσιακής",
+		ae_par: {
+			name: "ae-par",
+			label: "Α.Έκγρισης Παραδοσιακής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
-			value: teacherAms.find((p) => p.class_id === 1)?.am || "",
+			value:
+				teacherRegNumber.find((p) => p.class_id === 1)
+					?.registration_number || "",
 		},
-		am_eur: {
-			name: "am_eur",
-			label: "ΑΜ Ευρωπαϊκής",
+		ae_eur: {
+			name: "ae-eur",
+			label: "Α.Έκγρισης Ευρωπαϊκής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
-			value: teacherAms.find((p) => p.class_id === 2)?.am || "",
+			value:
+				teacherRegNumber.find((p) => p.class_id === 2)
+					?.registration_number || "",
 		},
 		priority_byz: {
 			name: "priority_byz",
@@ -398,7 +407,7 @@ export default function TeachersTable() {
 		if (!classList || !teachers) return [];
 		const { columnName, value } = searchQuery;
 		if (!columnName || !value) {
-			untrack(() => toggleCheckboxes(false));
+			toggleCheckboxes(false);
 			return teachersToTable(teachers, classList);
 		}
 		let searchRows: FullTeachers[];
@@ -439,19 +448,20 @@ export default function TeachersTable() {
 					return false;
 				});
 		}
-		untrack(() => toggleCheckboxes(false));
+		toggleCheckboxes(false);
 		return teachersToTable(searchRows, classList);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
+		const addModal = {
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD,
+		};
 		const locations = store[API.Locations.get];
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
-		if (!locations || !locationsList || !instruments)
-			return { icon: ActionIcon.ADD };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		if (!locations || !locationsList || !instruments) return addModal;
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
@@ -482,7 +492,7 @@ export default function TeachersTable() {
 				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
 					.filter(Boolean),
-				am: getByName("am_", "startsWith")
+				registrations_number: getByName("ae-", "startsWith")
 					.map((i) => i.value)
 					.filter(Boolean),
 			};
@@ -518,24 +528,25 @@ export default function TeachersTable() {
 					setStore
 				);
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
-		});
+		};
 		return {
 			inputs: Omit(
 				TeachersInputs(class_types, locations, instruments),
 				"id"
 			),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Καθηγητή",
-
-			icon: ActionIcon.ADD,
+			...addModal,
 		};
 	});
 	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
 		const teachers = store[API.Teachers.get];
-		if (!teachers || selectedItems.length !== 1)
-			return { icon: ActionIcon.MODIFY };
+		if (!teachers || selectedItems.length !== 1) return modifyModal;
 		const teacher = teachers.find((p) => p.id === selectedItems[0]);
 		const classList = store[API.Teachers.getClasses];
 		const locations = store[API.Locations.get];
@@ -550,14 +561,12 @@ export default function TeachersTable() {
 			!instruments ||
 			!teacherInstruments
 		)
-			return { icon: ActionIcon.MODIFY };
+			return modifyModal;
 
 		let pictureRemoved = false;
 		let cvRemoved = false;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
@@ -589,7 +598,7 @@ export default function TeachersTable() {
 				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
 					.filter(Boolean),
-				am: getByName("am_", "startsWith")
+				registrations_number: getByName("ae-", "startsWith")
 					.map((i) => i.value)
 					.filter(Boolean),
 			};
@@ -648,7 +657,7 @@ export default function TeachersTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [teacher.id],
 			});
-		});
+		};
 		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -678,30 +687,23 @@ export default function TeachersTable() {
 				),
 				"id"
 			),
-			onMount: () => {
-				document.addEventListener("emptyFileRemove", emptyFileRemove);
-				formListener(submit, true, PREFIX);
-			},
-			onCleanup: () => {
-				document.removeEventListener(
-					"emptyFileRemove",
-					emptyFileRemove
-				);
-				formListener(submit, false, PREFIX);
+			onSubmit: async (form: HTMLFormElement) => {
+				form.addEventListener("emptyFileRemove", emptyFileRemove);
+				submit(form);
 			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Καθηγητή",
-
-			icon: ActionIcon.MODIFY,
+			...modifyModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
 		const teachers = store[API.Teachers.get];
-		if (!teachers || selectedItems.length < 1)
-			return { icon: ActionIcon.DELETE };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		if (!teachers || selectedItems.length < 1) return deleteModal;
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.map(
 				(i) => (teachers.find((p) => p.id === i) as Teachers).id
 			);
@@ -714,22 +716,19 @@ export default function TeachersTable() {
 			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Καθηγητών",
-			icon: ActionIcon.DELETE,
+			...deleteModal,
 		};
 	});
 
 	const onAddInstrument = createMemo((): Action | EmptyAction => {
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Instruments, "id"> = {
 				name: formData.get("name") as string,
 				type:
@@ -757,7 +756,7 @@ export default function TeachersTable() {
 				action: ActionEnum.ADD,
 				mutate: [res.data.insertId],
 			});
-		});
+		};
 		return {
 			inputs: {
 				name: {
@@ -786,21 +785,18 @@ export default function TeachersTable() {
 					multiselectOnce: true,
 				} as InputProps,
 			},
-			onMount: () => formListener(submit, true, "instrument"),
-			onCleanup: () => formListener(submit, false, "instrument"),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Οργάνου",
-
+			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_BOX,
 		};
 	});
 	const onDeleteInstrument = createMemo((): Action | EmptyAction => {
 		const instruments = store[API.Instruments.get];
 		if (!instruments) return { icon: ActionIcon.DELETE_BOX };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const name = formData.get("name") as string;
 			const instrument = instruments.find((i) => i.name === name);
 			if (!instrument) return;
@@ -816,7 +812,7 @@ export default function TeachersTable() {
 				action: ActionEnum.DELETE,
 				mutate: [instrument.id],
 			});
-		});
+		};
 		return {
 			inputs: {
 				name: {
@@ -828,13 +824,117 @@ export default function TeachersTable() {
 					valueLiteral: true,
 				} as InputProps,
 			},
-			onMount: () => formListener(submit, true, "instrument"),
-			onCleanup: () => formListener(submit, false, "instrument"),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Οργάνου",
+			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE_BOX,
 		};
 	});
+
+	const onDownloadExcel = createMemo(() => {
+		const excelModal = {
+			type: ActionEnum.DOWNLOAD_EXCEL,
+			icon: ActionIcon.DOWNLOAD_EXCEL,
+		};
+		const teachers = store[API.Teachers.get];
+		const classes = store[API.Teachers.getClasses];
+		const instrumentsByTeacher = store[API.Teachers.getInstruments];
+		const instruments = store[API.Instruments.get];
+		if (
+			!teachers ||
+			!classes ||
+			!instrumentsByTeacher ||
+			!instruments ||
+			selectedItems.length <= 0
+		)
+			return excelModal;
+		const submit = async function (form: HTMLFormElement) {
+			const byzTeachers: Teachers[] = [],
+				parTeachers: Teachers[] = [],
+				eurTeachers: Teachers[] = [];
+			selectedItems.forEach((id) => {
+				const teacher = teachers.find((t) => t.id === id);
+				if (!teacher) return;
+				const teacherClasses = classes.filter(
+					(c) => c.teacher_id === id
+				);
+				teacherClasses.forEach((c) => {
+					if (c.class_id === 0) byzTeachers.push(teacher);
+					if (c.class_id === 1) parTeachers.push(teacher);
+					if (c.class_id === 2) eurTeachers.push(teacher);
+				});
+			});
+
+			const xlsx = await loadXLSX();
+			const wb = xlsx.utils.book_new();
+			const wsStudentsBook = xlsx.utils.aoa_to_sheet(
+				[
+					[
+						"Ονοματεπώνυμο",
+						"Ιδιότητα",
+						"Αριθμός Έγκρισης",
+						"Υπογραφή",
+					],
+				].concat(
+					byzTeachers.map((t) => {
+						const ao = classes.find(
+							(c) => c.teacher_id === t.id && c.class_id === 0
+						)?.registration_number;
+						return [
+							t.fullname.includes("π.")
+								? t.fullname
+										.replace("π. ", "")
+										.split(" ")
+										.reverse()
+										.join(" π. ")
+								: t.fullname.split(" ").reverse().join(" "),
+							teacherTitleByGender(t.title, t.gender),
+							ao ?? "",
+							"",
+						];
+					}),
+					[""],
+					parTeachers.map((t) => {
+						const ao = classes.find(
+							(c) => c.teacher_id === t.id && c.class_id === 0
+						)?.registration_number;
+						const teacherInstruments = instrumentsByTeacher
+							.filter((i) => i.teacher_id === t.id)
+							.map(
+								(i) =>
+									instruments.find(
+										(x) => x.id === i.instrument_id
+									)?.name
+							)
+							.join(", ");
+						return [
+							t.fullname.includes("π.")
+								? t.fullname
+										.replace("π. ", "")
+										.split(" ")
+										.reverse()
+										.join("π.")
+								: t.fullname.split(" ").reverse().join(" "),
+							teacherInstruments,
+							ao ?? "",
+							"",
+						];
+					})
+				)
+			);
+			xlsx.utils.book_append_sheet(wb, wsStudentsBook, "Καθηγητές");
+			xlsx.writeFile(wb, "Καθηγητές.xlsx");
+		};
+		return {
+			inputs: {},
+			onSubmit: submit,
+			submitText: "Λήψη",
+			headerText: "Λήψη Καθηγητών σε Excel",
+			...excelModal,
+		};
+	});
+
 	return (
 		<SelectedItemsContext.Provider
 			value={[selectedItems, setSelectedItems]}
@@ -857,14 +957,16 @@ export default function TeachersTable() {
 					hasSelectBox
 				>
 					<TableControls
-						pressedAction={actionPressed}
 						onActionsArray={[onAdd, onModify, onDelete]}
 						prefix={PREFIX}
 					/>
 					<TableControls
-						pressedAction={actionPressedInstruments}
 						onActionsArray={[onAddInstrument, onDeleteInstrument]}
 						prefix={"instrument"}
+					/>
+					<TableControls
+						onActionsArray={[onDownloadExcel]}
+						prefix={PREFIX}
 					/>
 					<SearchTable
 						columns={searchColumns}

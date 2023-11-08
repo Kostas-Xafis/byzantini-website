@@ -25,7 +25,6 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "locations";
 
@@ -158,6 +157,23 @@ const locationsToTable = (locations: Locations[]): LocationsTable[] => {
 
 const [selectedItems, setSelectedItems] = useSelectedRows();
 
+const columnNames: ColumnType<LocationsTable> = {
+	id: { type: "number", name: "Id" },
+	name: { type: "string", name: "Όνομα Παραρτήματος", size: 15 },
+	address: { type: "string", name: "Διεύθυνση", size: 15 },
+	areacode: { type: "number", name: "Ταχ. Κώδικας" },
+	municipality: { type: "string", name: "Δήμος", size: 12 },
+	manager: { type: "string", name: "Υπεύθυνος", size: 15 },
+	email: { type: "string", name: "Email", size: 25 },
+	priority: { type: "number", name: "Προτεραιότητα" },
+	image: { type: "link", name: "Φωτογραφία", size: 15 },
+	partner: {
+		type: "boolean",
+		name: "Συνεργαζόμενο Σπουδαστήριο",
+		size: 10,
+	},
+};
+
 export default function LocationsTable() {
 	const [store, setStore] = createStore<APIStore>({});
 	const [actionPressed, setActionPressed] = useHydrateById(
@@ -169,33 +185,14 @@ export default function LocationsTable() {
 		useAPI(API.Locations.get, {}, setStore);
 	});
 
-	const columnNames: ColumnType<LocationsTable> = {
-		id: { type: "number", name: "Id" },
-		name: { type: "string", name: "Όνομα Παραρτήματος", size: 15 },
-		address: { type: "string", name: "Διεύθυνση", size: 15 },
-		areacode: { type: "number", name: "Ταχ. Κώδικας" },
-		municipality: { type: "string", name: "Δήμος", size: 12 },
-		manager: { type: "string", name: "Υπεύθυνος", size: 15 },
-		email: { type: "string", name: "Email", size: 25 },
-		priority: { type: "number", name: "Προτεραιότητα" },
-		image: { type: "link", name: "Φωτογραφία", size: 15 },
-		partner: {
-			type: "boolean",
-			name: "Συνεργαζόμενο Σπουδαστήριο",
-			size: 10,
-		},
-	};
-
 	let shapedData = createMemo(() => {
 		const locations = store[API.Locations.get];
 		if (!locations) return [];
 		return locations ? locationsToTable(locations) : [];
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Locations, "id" | "image"> = {
 				name: formData.get("name") as string,
 				address: formData.get("address") as string,
@@ -234,27 +231,30 @@ export default function LocationsTable() {
 					setStore
 				);
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
-		});
+		};
 		return {
 			inputs: Omit(LocationsInputs(), "id"),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Παραρτήματος",
+			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD,
 		};
 	});
 	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
+
 		const locations = store[API.Locations.get];
-		if (!locations || selectedItems.length !== 1)
-			return { icon: ActionIcon.MODIFY };
+		if (!locations || selectedItems.length !== 1) return modifyModal;
 		const location = locations.find((p) => p.id === selectedItems[0]);
-		if (!location) return { icon: ActionIcon.MODIFY };
+		if (!location) return modifyModal;
+
 		let imageRemoved = false;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Locations, "image"> = {
 				id: location.id,
 				name: formData.get("name") as string,
@@ -305,7 +305,7 @@ export default function LocationsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [location.id],
 			});
-		});
+		};
 		const emptyFileRemove = (e: CustomEvent<string>) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -315,30 +315,23 @@ export default function LocationsTable() {
 
 		return {
 			inputs: Omit(Fill(LocationsInputs(location), location), "id"),
-			onMount: () => {
+			onSubmit: async (form: HTMLFormElement) => {
 				document.addEventListener("emptyFileRemove", emptyFileRemove);
-				formListener(submit, true, PREFIX);
-			},
-			onCleanup: () => {
-				document.removeEventListener(
-					"emptyFileRemove",
-					emptyFileRemove
-				);
-				formListener(submit, false, PREFIX);
+				submit(form);
 			},
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Παραρτήματος",
-			icon: ActionIcon.MODIFY,
+			...modifyModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
 		const locations = store[API.Locations.get];
-		if (!locations || selectedItems.length < 1)
-			return { icon: ActionIcon.DELETE };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-
+		if (!locations || selectedItems.length < 1) return deleteModal;
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.slice();
 			const res = await useAPI(
 				API.Locations.delete,
@@ -349,14 +342,13 @@ export default function LocationsTable() {
 			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Παραρτήματος",
-			icon: ActionIcon.DELETE,
+			...deleteModal,
 		};
 	});
 

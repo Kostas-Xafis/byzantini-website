@@ -7,6 +7,7 @@ import { TypeEffectEnum, selectedRowsEvent } from "./useSelectedRows.solid";
 export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAccessEndpoint: keyof APIStore, mutatedEndpoint: keyof APIStore) {
 	const [actionPressed, setActionPressed] = createSignal<{
 		action: ActionEnum;
+		// mutations: { endpoint: keyof APIStore, ids: number[], primary?: boolean; }[];
 		mutate: number[]; //Array of mutated ids
 		mutatedEndpoint?: keyof APIStore; // In case that the endpoint is different from the mutateEndpoint needs to be mutated
 	}>(
@@ -15,23 +16,23 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAcc
 			equals: false,
 		}
 	);
-
 	const hydrateById = (muts: number[], mutationType: ActionEnum) => {
+		const mutations = {
+			endpoint: actionPressed().mutatedEndpoint || mutatedEndpoint,
+			ids: muts,
+			type: mutationType,
+		};
 		useAPI(
 			mutationAccessEndpoint,
 			{ RequestObject: muts },
 			setStore,
-			{
-				mutation: muts,
-				mutationType,
-				mutatedEndpoint: actionPressed().mutatedEndpoint || mutatedEndpoint,
-			}
+			mutations
 		);
 	};
 
 	createEffect(
 		on(actionPressed, ({ action, mutate, mutatedEndpoint: mutEndpoint }) => {
-			if (action === ActionEnum.NONE || action === ActionEnum.DOWNLOAD)
+			if (action === ActionEnum.NONE || action === ActionEnum.DOWNLOAD_PDF || action === ActionEnum.DOWNLOAD_EXCEL)
 				return;
 			if (action === ActionEnum.DELETE) {
 				setStore(mutEndpoint || mutatedEndpoint, (prev) => {

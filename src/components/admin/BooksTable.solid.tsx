@@ -25,7 +25,6 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "books";
 
@@ -140,12 +139,16 @@ export default function BooksTable() {
 		return books && wholesalers ? booksToTable(books, wholesalers) : [];
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
+		const addModal = {
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD,
+		};
 		const wholesalers = store["Wholesalers.get"];
-		if (!wholesalers) return { icon: ActionIcon.ADD };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		if (!wholesalers) {
+			return addModal;
+		}
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Books, "id"> = {
 				title: formData.get("title") as string,
 				wholesaler_id: Number(formData.get("wholesaler")),
@@ -176,27 +179,27 @@ export default function BooksTable() {
 				action: ActionEnum.ADD,
 				mutate: [res.data.insertId],
 			});
-		});
+		};
 		return {
 			inputs: Omit(BooksInputs(wholesalers), "id"),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Βιβλίου",
-
-			icon: ActionIcon.ADD,
+			...addModal,
 		};
 	});
 	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers || !books) return { icon: ActionIcon.MODIFY };
-		if (selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
+		if (!wholesalers || !books || selectedItems.length !== 1)
+			return modifyModal;
 		const book = books.find((b) => b.id === selectedItems[0]) as Books;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Pick<Books, "id" | "quantity"> = {
 				id: book.id,
 				quantity: Number(formData.get("quantity") as string),
@@ -210,24 +213,26 @@ export default function BooksTable() {
 			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.MODIFY, mutate: [book.id] });
-		});
+		};
 		return {
 			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
-			icon: ActionIcon.MODIFY,
+			...modifyModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
+
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers || !books) return { icon: ActionIcon.DELETE };
-		if (selectedItems.length < 1) return { icon: ActionIcon.DELETE };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		if (!wholesalers || !books || selectedItems.length < 1)
+			return deleteModal;
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.map(
 				(id) => books.find((b) => b.id === id)?.id || -1
 			);
@@ -243,22 +248,19 @@ export default function BooksTable() {
 				action: ActionEnum.DELETE,
 				mutate: selectedItems.slice(),
 			});
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Βιβλίων",
-			icon: ActionIcon.DELETE,
+			...deleteModal,
 		};
 	});
 
 	const onAddWholesaler = createMemo((): Action | EmptyAction => {
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data = {
 				name: formData.get("name") as string,
 			};
@@ -274,7 +276,7 @@ export default function BooksTable() {
 				action: ActionEnum.ADD,
 				mutate: [res.data.insertId],
 			});
-		});
+		};
 		return {
 			inputs: {
 				name: {
@@ -284,20 +286,17 @@ export default function BooksTable() {
 					iconClasses: "fa-solid fa-feather",
 				} as InputProps,
 			},
-			onMount: () => formListener(submit, true, "wholesalers"),
-			onCleanup: () => formListener(submit, false, "wholesalers"),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Χονδρέμπορου",
+			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_USER,
 		};
 	});
 	const onDeleteWholesaler = createMemo((): Action | EmptyAction => {
-		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers) return { icon: ActionIcon.DELETE_USER };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const wholesalers = store[API.Wholesalers.get] || [];
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data = [Number(formData.get("name"))];
 			const res = await useAPI(
 				API.Wholesalers.delete,
@@ -311,7 +310,7 @@ export default function BooksTable() {
 				action: ActionEnum.DELETE,
 				mutate: data,
 			});
-		});
+		};
 		return {
 			inputs: {
 				name: {
@@ -323,11 +322,10 @@ export default function BooksTable() {
 					valueList: wholesalers.map((w) => w.id),
 				} as InputProps,
 			},
-			onMount: () => formListener(submit, true, "wholesalers"),
-			onCleanup: () => formListener(submit, false, "wholesalers"),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Χονδρέμπορου",
-
+			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE_USER,
 		};
 	});

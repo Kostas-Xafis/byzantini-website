@@ -20,7 +20,6 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "payoffs";
 
@@ -96,17 +95,19 @@ export default function PayoffsTable() {
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
 		if (!payoffs || !wholesalers || selectedItems.length !== 1)
-			return { icon: ActionIcon.MODIFY };
+			return modifyModal;
 		const payoff = payoffs.find(
 			(p) => p.id === selectedItems[0]
 		) as Payoffs;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Payoffs, "wholesaler_id"> = {
 				id: payoff.id,
 				amount: Number(formData.get("amount") as string),
@@ -125,26 +126,26 @@ export default function PayoffsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [payoff.id],
 			});
-		});
+		};
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 		return {
 			inputs: Pick(filledInputs, "amount"),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",
-
-			icon: ActionIcon.MODIFY,
+			...modifyModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
-		const wholesalers = store[API.Wholesalers.get];
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
 		const payoffs = store[API.Payoffs.get];
-		if (!payoffs || !wholesalers || selectedItems.length < 1)
-			return { icon: ActionIcon.CHECK };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		if (!payoffs || selectedItems.length < 1) {
+			return deleteModal;
+		}
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.map(
 				(i) => (payoffs.find((p) => p.id === i) as Payoffs).id
 			);
@@ -160,15 +161,13 @@ export default function PayoffsTable() {
 				action: ActionEnum.DELETE,
 				mutate: selectedItems.slice(),
 			});
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Ολοκλήρωση",
 			headerText: "Ολοκλήρωση Οφειλών",
-
-			icon: ActionIcon.CHECK,
+			...deleteModal,
 		};
 	});
 

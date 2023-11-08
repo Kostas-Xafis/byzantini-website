@@ -104,7 +104,7 @@ CREATE TABLE `teacher_classes` (
     `teacher_id` int NOT NULL,
     `class_id` int NOT NULL,
     `priority` int NOT NULL DEFAULT 1,
-	`am` varchar(40),
+	`registration_number` varchar(40),
     PRIMARY KEY (`teacher_id`, `class_id`)
 );
 

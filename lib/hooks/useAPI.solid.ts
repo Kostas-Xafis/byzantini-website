@@ -17,13 +17,13 @@ export { API };
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
 const URL = (import.meta.env.URL as string) ?? "";
 
-type StoreMutation = {
-	mutatedEndpoint?: APIEndpointKey,
-	mutation: number[];
-	mutationType: ActionEnum;
+export type StoreMutation = {
+	endpoint?: APIEndpointKey,
+	ids: number[];
+	type: ActionEnum;
 };
 
-export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, StoreMut?: StoreMutation) => {
+export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, Mutations?: StoreMutation) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
 		parse(Route.validation, req.RequestObject);
@@ -50,19 +50,19 @@ export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[
 			return { message: response.message };
 		}
 		if (setStore && "data" in response) {
-			if (StoreMut && StoreMut.mutatedEndpoint) {
-				setStore(StoreMut.mutatedEndpoint as APIEndpointKey, (prev) => {
+			if (Mutations && Mutations.endpoint) {
+				setStore(Mutations.endpoint as APIEndpointKey, (prev) => {
 					let data = response.data;
 					if (!data) return prev;
 					const isArr = Array.isArray(data);
 					let prevData = prev as any[] || [];
-					if (StoreMut.mutationType === ActionEnum.ADD)
+					if (Mutations.type === ActionEnum.ADD)
 						return isArr ? [...prevData, ...(response.data as any[])] : [...prevData, response.data];
 
 					if (Array.isArray(data)) {
-						return prevData.map(item => StoreMut.mutation.includes(item.id) ? (data as any[]).find(d => d.id === item.id) || item : item);
+						return prevData.map(item => Mutations.ids.includes(item.id) ? (data as any[]).find(d => d.id === item.id) || item : item);
 					} else {
-						return prevData.map(item => StoreMut.mutation.includes(item.id) ? response.data : item);
+						return prevData.map(item => Mutations.ids.includes(item.id) ? response.data : item);
 					}
 				});
 			} else setStore(endpoint, response.data as APIStoreValue<T>);
@@ -82,4 +82,5 @@ export const useHydrate = (func: () => void) => {
 		untrack(() => batch(func));
 	});
 	return setHydrate;
+
 };

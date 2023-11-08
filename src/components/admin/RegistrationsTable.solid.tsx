@@ -32,7 +32,6 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
 import { toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
@@ -279,7 +278,7 @@ export default function RegistrationsTable() {
 		if (!registrations || !teachers || !instruments) return [];
 		let { columnName, value, type } = searchQuery;
 		if (!columnName || !value || !type) {
-			untrack(() => toggleCheckboxes(false));
+			toggleCheckboxes(false);
 			return registrationsToTable(registrations, teachers, instruments);
 		}
 		let searchRows = registrationsToTable(
@@ -337,27 +336,33 @@ export default function RegistrationsTable() {
 				return sCol.includes(sVal);
 			});
 		}
-		// 🤯🤯🤯 Solid-js is actually insane: UI bugfix due to state change after toggleCheckboxes was being called
-		untrack(() => toggleCheckboxes(false));
+		toggleCheckboxes(false);
 		return searchRows;
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (!teachers || !registrations || !instruments)
-			return { icon: ActionIcon.MODIFY };
-		if (selectedItems.length !== 1) return { icon: ActionIcon.MODIFY };
+		if (
+			!teachers ||
+			!registrations ||
+			!instruments ||
+			selectedItems.length !== 1
+		)
+			return modifyModal;
+
 		const registration = JSON.parse(
 			JSON.stringify(
 				registrations.find((r) => r.id === selectedItems[0]) as any
 			)
 		) as Registrations;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const class_id = Number(formData.get("class_id") as string);
 			const data: Registrations = {
 				id: registration.id,
@@ -398,7 +403,7 @@ export default function RegistrationsTable() {
 				setStore
 			);
 			setActionPressed({ action: ActionEnum.MODIFY, mutate: [data.id] });
-		});
+		};
 		const filledInputs = Fill(
 			RegistrationsInputs(teachers, instruments) as Record<
 				keyof Registrations,
@@ -413,20 +418,21 @@ export default function RegistrationsTable() {
 			0; // findIndex because the instruments are sorted by name
 		return {
 			inputs: filledInputs,
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Εγγραφής",
-			icon: ActionIcon.MODIFY,
+			...modifyModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
 		const registrations = store[API.Registrations.get];
-		if (!registrations || selectedItems.length < 1)
-			return { icon: ActionIcon.DELETE };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		if (!registrations || selectedItems.length < 1) return deleteModal;
+
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.map((id) => id);
 			const res = await useAPI(
 				API.Registrations.delete,
@@ -437,14 +443,13 @@ export default function RegistrationsTable() {
 			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Εγγραφής",
-			icon: ActionIcon.DELETE,
+			...deleteModal,
 		};
 	});
 
@@ -458,14 +463,15 @@ export default function RegistrationsTable() {
 			!instruments ||
 			selectedItems.length <= 0
 		)
-			return { icon: ActionIcon.DOWNLOAD_SINGLE };
+			return {
+				type: ActionEnum.DOWNLOAD_PDF,
+				icon: ActionIcon.DOWNLOAD_SINGLE,
+			};
 
 		let bulk = selectedItems.length > 1;
 
-		const onSubmit = !bulk
-			? formErrorWrap(async function (e: Event) {
-					e.preventDefault();
-					e.stopPropagation();
+		const submit = !bulk
+			? async function (form: HTMLFormElement) {
 					const student = registrations.find(
 						(r) => r.id === selectedItems[0]
 					) as Registrations;
@@ -489,13 +495,11 @@ export default function RegistrationsTable() {
 						await pdf.download();
 					} catch (error) {}
 					setActionPressed({
-						action: ActionEnum.DOWNLOAD,
+						action: ActionEnum.DOWNLOAD_PDF,
 						mutate: [],
 					});
-			  })
-			: formErrorWrap(async function (e: Event) {
-					e.preventDefault();
-					e.stopPropagation();
+			  }
+			: async function (form: HTMLFormElement) {
 					const items = selectedItems.map((id) => {
 						const student = registrations.find(
 							(r) => r.id === id
@@ -525,17 +529,16 @@ export default function RegistrationsTable() {
 						await PDF.downloadBulk(pdfArr);
 					} catch (error) {}
 					setActionPressed({
-						action: ActionEnum.DOWNLOAD,
+						action: ActionEnum.DOWNLOAD_PDF,
 						mutate: [],
 					});
-			  });
+			  };
 		return {
 			inputs: {},
-			onMount: () => formListener(onSubmit, true, PREFIX),
-			onCleanup: () => formListener(onSubmit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Λήψη",
 			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγράφης σε PDF",
-
+			type: ActionEnum.DOWNLOAD_PDF,
 			icon:
 				selectedItems.length > 1
 					? ActionIcon.DOWNLOAD_ZIP
@@ -544,6 +547,10 @@ export default function RegistrationsTable() {
 	});
 
 	const onDownloadExcel = createMemo(() => {
+		const excelModal = {
+			type: ActionEnum.DOWNLOAD_EXCEL,
+			icon: ActionIcon.DOWNLOAD_EXCEL,
+		};
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
@@ -553,11 +560,8 @@ export default function RegistrationsTable() {
 			!instruments ||
 			selectedItems.length <= 0
 		)
-			return { icon: ActionIcon.DOWNLOAD_EXCEL };
-
-		const onSubmit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+			return excelModal;
+		const submit = async function (form: HTMLFormElement) {
 			const items = selectedItems
 				.map((id) => {
 					const student = registrations.find((r) => r.id === id);
@@ -617,6 +621,52 @@ export default function RegistrationsTable() {
 					})
 				)
 			);
+			const byzStudents = items.filter((i) => i.student.class_id === 0);
+			const parStudents = items.filter((i) => i.student.class_id === 1);
+			//FIXME
+			// const wsStudentsBookForMinistry = xlsx.utils.aoa_to_sheet([
+			// 	[
+			// 		"Αριθμός Μητρώου",
+			// 		"Επώνυμο",
+			// 		"Όνομα",
+			// 		"Όνομα Πατρός",
+			// 		"Έτος Γέννησης",
+			// 		"Διεύθυνση",
+			// 		"Ημερομηνία Εγγραφής",
+			// 		"Διδάσκων Καθηγητής",
+			// 		"Email",
+			// 		"Τηλέφωνα",
+			// 	],
+			// 	byzStudents.map((s) => {
+			// 		return [
+			// 			s.student.am,
+			// 			s.student.last_name,
+			// 			s.student.first_name,
+			// 			s.student.fathers_name,
+			// 			"" + new Date(s.student.birth_date).getFullYear(),
+			// 			`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
+			// 			new Date(s.student.date).toLocaleDateString("el-GR"),
+			// 			s.teacher.fullname,
+			// 			s.student.email,
+			// 			s.student.telephone + "-" + s.student.cellphone,
+			// 		];
+			// 	}),
+			// 	[""],
+			// 	parStudents.map((s) => {
+			// 		return [
+			// 			s.student.am,
+			// 			s.student.last_name,
+			// 			s.student.first_name,
+			// 			s.student.fathers_name,
+			// 			"" + new Date(s.student.birth_date).getFullYear(),
+			// 			`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
+			// 			new Date(s.student.date).toLocaleDateString("el-GR"),
+			// 			s.teacher.fullname,
+			// 			s.student.email,
+			// 			s.student.telephone + "-" + s.student.cellphone,
+			// 		];
+			// 	}),
+			// ]);
 			const wsSchoolYearBook = xlsx.utils.aoa_to_sheet(
 				[
 					[
@@ -695,20 +745,23 @@ export default function RegistrationsTable() {
 			});
 			xlsx.utils.book_append_sheet(wb, wsStudentsBook, "Γενικό Μητρώο");
 			xlsx.utils.book_append_sheet(wb, wsSchoolYearBook, "Μαθητολόγιο");
+			// xlsx.utils.book_append_sheet(
+			// 	wb,
+			// 	wsStudentsBookForMinistry,
+			// 	"Μαθητολόγιο Χωριστά"
+			// );
 			wsBookByTeacher.forEach((ws, i) => {
 				if (!ws) return;
 				xlsx.utils.book_append_sheet(wb, ws, teachers[i].fullname);
 			});
 			xlsx.writeFile(wb, "Εγγραφές.xlsx");
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(onSubmit, true, PREFIX),
-			onCleanup: () => formListener(onSubmit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Λήψη",
 			headerText: "Λήψη Εγγραφών σε Excel",
-
-			icon: ActionIcon.DOWNLOAD_EXCEL,
+			...excelModal,
 		};
 	});
 
@@ -729,38 +782,42 @@ export default function RegistrationsTable() {
 	onMount(() => {
 		document.addEventListener("hydrate", (e) => {
 			e.stopPropagation();
-			let registrations = store[API.Registrations.get];
-			if (!registrations) return;
-			let rows = [
-				...document.querySelectorAll<HTMLElement>(".row[data-id]"),
-			];
-			let result = rows
-				.map((row) => {
-					const id = Number(row.dataset.id);
-					//@ts-ignore
-					let reg = registrations.find((r) => r.id === id);
-					if (reg) return { row, registration: reg };
-					return null;
-				})
-				.filter((x) => !!x) as {
-				row: HTMLElement;
-				registration: Registrations;
-			}[];
-			result.forEach(({ row, registration }) => {
-				const payment_status =
-					registration.total_payment - registration.payment_amount;
-				if (
-					registration.payment_amount === 0 &&
-					registration.total_payment === 0
-				)
-					return;
-				if (payment_status === 0) row.setAttribute("data-paid", "");
-				else if (
-					payment_status > 0 ||
-					(registration.payment_amount > registration.total_payment &&
-						registration.total_payment === 0)
-				)
-					row.setAttribute("data-partially-paid", "");
+			untrack(() => {
+				let registrations = store[API.Registrations.get];
+				if (!registrations) return;
+				let rows = [
+					...document.querySelectorAll<HTMLElement>(".row[data-id]"),
+				];
+				let result = rows
+					.map((row) => {
+						const id = Number(row.dataset.id);
+						//@ts-ignore
+						let reg = registrations.find((r) => r.id === id);
+						if (reg) return { row, registration: reg };
+						return null;
+					})
+					.filter((x) => !!x) as {
+					row: HTMLElement;
+					registration: Registrations;
+				}[];
+				result.forEach(({ row, registration }) => {
+					const payment_status =
+						registration.total_payment -
+						registration.payment_amount;
+					if (
+						registration.payment_amount === 0 &&
+						registration.total_payment === 0
+					)
+						return;
+					if (payment_status === 0) row.setAttribute("data-paid", "");
+					else if (
+						payment_status > 0 ||
+						(registration.payment_amount >
+							registration.total_payment &&
+							registration.total_payment === 0)
+					)
+						row.setAttribute("data-partially-paid", "");
+				});
 			});
 		});
 	});

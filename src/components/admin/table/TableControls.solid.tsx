@@ -1,135 +1,75 @@
-import {
-	type Accessor,
-	Show,
-	batch,
-	createEffect,
-	createMemo,
-	createSignal,
-	on,
-	For,
-} from "solid-js";
+import { type Accessor } from "solid-js";
 import Modal from "./Modal.solid";
 import type { Props as InputProps } from "../../input/Input.solid";
-import { createStore } from "solid-js/store";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
+import { useModalOpen } from "./Modal.solid";
 
 export type Action = {
 	inputs: Record<string, InputProps>;
-	onMount: () => void;
-	onCleanup: () => void;
+	onSubmit: (form: HTMLFormElement) => Promise<void>;
 	submitText: string;
 	headerText: string;
 	icon: ActionIcon;
+	type: ActionEnum;
 };
 
 type Props = {
 	onActionsArray: Accessor<Action | EmptyAction>[];
-	pressedAction: Accessor<{ action: ActionEnum; mutate: number[] }>;
+	pressedAction?: Accessor<{ action: ActionEnum; mutate: number[] }>;
 	prefix: string;
+};
+const [isModalOpen, openModal] = useModalOpen();
+
+const onActionsArrayClick = (prefix: string, action: Action) => {
+	openModal(prefix + action.type);
 };
 
 export default function TableControls(props: Props) {
-	const { onActionsArray, pressedAction, prefix } = props;
-	const [open, setOpen] = createSignal(false, { equals: false });
-	const [cleanup, setCleanup] = createSignal(() => {}, { equals: false });
-	const [inputs, setInputs] = createStore<{
-		inputs: [Record<string, InputProps>];
-	}>({ inputs: [{}] });
-	const [submitText, setSubmitText] = createSignal("", { equals: false });
-	const [headerText, setHeaderText] = createSignal("", { equals: false });
-
-	createEffect(
-		on(pressedAction, ({ action }) => {
-			if (action === ActionEnum.NONE) return;
-			batch(() => {
-				cleanup()();
-				setOpen(false);
-			});
-		})
-	);
-
-	const batchUpdate = (action: Action | EmptyAction) => {
-		if (!action || Object.values(action).length === 1) return;
-		batch(() => {
-			let a = action as Action;
-			setOpen(true);
-			setInputs("inputs", [a.inputs]);
-			setSubmitText(a.submitText);
-			setHeaderText(a.headerText);
-			setCleanup((prev) => a.onCleanup);
-			a.onMount();
-		});
-	};
-	const onActionsArrayClick = (action: Action | EmptyAction) =>
-		batchUpdate(action);
-
-	const modalProps = createMemo(() => {
-		return {
-			open: open(),
-			inputs: inputs.inputs[0],
-			submitText: submitText(),
-			headerText: headerText(),
-			prefix,
-			close: () => {
-				batch(() => {
-					setOpen(false);
-					cleanup()();
-					setInputs((prev) => ({}));
-				});
-			},
-		};
-	});
-	const actionsArrayMemo = createMemo(() => {
-		const actions = onActionsArray;
-		return actions.map((accessor) => {
-			const a = accessor();
-			return {
-				active: !!("inputs" in a),
-				icon: a.icon,
-				action: a,
-			};
-		});
-	});
+	const { onActionsArray, prefix } = props;
 	return (
 		<>
 			<div
 				data-prefix={prefix}
 				class="controlsContainer w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent"
 			>
-				<For each={actionsArrayMemo()}>
-					{(action) => {
-						return (
-							<Show
-								when={action.active}
-								fallback={
-									<button class="controlBtn py-2 px-4 text-neutral-500 blur-[1px] first-of-type:rounded-l-xl last-of-type:rounded-r-xl">
-										<i
-											class={
-												"text-lg max-sm:text-base " +
-												(action?.icon || ActionIcon.ADD)
-											}
-										></i>
-									</button>
+				{onActionsArray.map((actionAccessor) => {
+					const action = actionAccessor();
+					const active = !!("inputs" in action);
+					const icon = action.icon;
+					return (
+						<>
+							<button
+								class={
+									"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl" +
+									(active
+										? " hover:shadow-gray-600 hover:bg-red-200"
+										: " text-neutral-500 blur-[1px]")
+								}
+								onclick={() =>
+									active &&
+									onActionsArrayClick(prefix, action)
 								}
 							>
-								<button
-									class="controlBtn py-2 px-4 hover:shadow-gray-600 hover:bg-red-200 first-of-type:rounded-l-xl last-of-type:rounded-r-xl"
-									onClick={() =>
-										onActionsArrayClick(action.action)
+								<i
+									class={
+										"text-lg max-sm:text-base " +
+										(icon || ActionIcon.ADD)
 									}
-								>
-									<i
-										class={
-											"text-lg max-sm:text-base " +
-											(action?.icon || ActionIcon.ADD)
-										}
-									></i>
-								</button>
-							</Show>
-						);
-					}}
-				</For>
-				<Modal {...modalProps()}></Modal>
+								></i>
+							</button>
+							<Modal
+								prefix={prefix}
+								type={(action as Action).type}
+								headerText={(action as Action).headerText || ""}
+								submitText={(action as Action).submitText || ""}
+								inputs={(action as Action).inputs || {}}
+								onSubmit={
+									(action as Action).onSubmit || undefined
+								}
+							></Modal>
+						</>
+					);
+				})}
 			</div>
 		</>
 	);

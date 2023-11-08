@@ -22,7 +22,6 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
 
 const PREFIX = "announcements";
 
@@ -109,10 +108,8 @@ export default function AnnouncementsTable() {
 		return announcementsToTable(announcements);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Announcements, "id" | "views"> = {
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
@@ -175,24 +172,24 @@ export default function AnnouncementsTable() {
 			await asyncQueue(photos, 2, true);
 			await ThumbnailGenerator.cleanup();
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
-		});
+		};
 		return {
 			inputs: Omit(AnnouncementsInputs(), "id"),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Ανακοίνωσης",
+			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
 		const announcements = store[API.Announcements.get];
-		if (!announcements || selectedItems.length < 1)
-			return { icon: ActionIcon.DELETE };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-
+		if (!announcements || selectedItems.length < 1) return deleteModal;
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.slice();
 			const res = await useAPI(
 				API.Announcements.delete,
@@ -203,14 +200,13 @@ export default function AnnouncementsTable() {
 			);
 			if (!res.data && !res.message) return;
 			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Ανακοίνωσης",
-			icon: ActionIcon.DELETE,
+			...deleteModal,
 		};
 	});
 

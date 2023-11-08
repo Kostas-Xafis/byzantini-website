@@ -3,7 +3,8 @@ export const enum ActionEnum {
 	MODIFY = "MODIFY",
 	DELETE = "DELETE",
 	CHECK = "CHECK",
-	DOWNLOAD = "DOWNLOAD",
+	DOWNLOAD_PDF = "PDF",
+	DOWNLOAD_EXCEL = "EXCEL",
 	NONE = "",
 }
 

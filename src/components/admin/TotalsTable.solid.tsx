@@ -8,7 +8,6 @@ import Table, { type ColumnType } from "./table/Table.solid";
 import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 
 type TotalsTable = {
 	total_payments: number;
@@ -51,19 +50,17 @@ export default function TotalsTable() {
 		];
 	});
 	return (
-		<SelectedItemsContext.Provider value={[[], {}]}>
-			<Show
-				when={
-					store[API.Payoffs.getTotal] &&
-					store[API.Payments.getTotal] &&
-					store[API.Registrations.getTotal]
-				}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
-				<Table data={shapedData} columns={columnNames}>
-					<div></div>
-				</Table>
-			</Show>
-		</SelectedItemsContext.Provider>
+		<Show
+			when={
+				store[API.Payoffs.getTotal] &&
+				store[API.Payments.getTotal] &&
+				store[API.Registrations.getTotal]
+			}
+			fallback={<Spinner classes="max-sm:h-[100svh]" />}
+		>
+			<Table data={shapedData} columns={columnNames}>
+				<div></div>
+			</Table>
+		</Show>
 	);
 }

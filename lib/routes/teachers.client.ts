@@ -64,7 +64,7 @@ const teacherJoins = object({
 	teacherLocations: array(number([integer()])),
 	teacherInstruments: array(number([integer()])),
 	priorities: array(number([integer()])),
-	am: array(string())
+	registrations_number: array(string())
 });
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);

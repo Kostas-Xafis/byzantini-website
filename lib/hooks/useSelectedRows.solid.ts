@@ -1,4 +1,5 @@
 import { createStore } from "solid-js/store";
+import { untrack } from "solid-js";
 
 export const enum TypeEffectEnum {
 	ADD = "ADD",
@@ -24,7 +25,6 @@ export type TypeEffect =
 
 export function useSelectedRows() {
 	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-
 
 	const mutateItems = (effect: TypeEffect) => {
 		const type = effect.type;
@@ -64,5 +64,9 @@ export function useSelectedRows() {
 };
 
 export function selectedRowsEvent<T extends TypeEffect>(detail: T) {
-	return document.dispatchEvent(new CustomEvent("ModifySelections", { detail }));
+	// 🤯🤯🤯 Solid-js is actually insane: UI bugfix due to state change after toggleCheckboxes was being called
+	// It also makes more sense, as I wouldn't want any state recalcuations to happen after a event dispatch
+	untrack(() =>
+		document.dispatchEvent(new CustomEvent("ModifySelections", { detail }))
+	);
 }

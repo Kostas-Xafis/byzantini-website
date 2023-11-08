@@ -50,8 +50,8 @@ serverRoutes.post.func = async ctx => {
 		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, gender, title, visible, online) VALUES (${questionMarks(args)})`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
-			const am = body.am.shift();
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, am) VALUES (${questionMarks(4)})`, [id.insertId, class_id, priority, am]);
+			const registration_number = body.registrations_number.shift() || null;
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (${questionMarks(4)})`, [id.insertId, class_id, priority, registration_number]);
 		}
 		for (const location_id of body.teacherLocations) {
 			await T.executeQuery(`INSERT INTO teacher_locations (teacher_id, location_id) VALUES (?, ?)`, [id.insertId, location_id]);
@@ -72,8 +72,8 @@ serverRoutes.update.func = async ctx => {
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
-			const am = body.am.shift();
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, am) VALUES (${questionMarks(4)})`, [body.id, class_id, priority, am]);
+			const registration_number = body.registrations_number.shift() || null;
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (${questionMarks(4)})`, [body.id, class_id, priority, registration_number]);
 		}
 
 		await T.executeQuery("DELETE FROM teacher_locations WHERE teacher_id=?", [body.id]);

@@ -102,7 +102,7 @@ export const v_TeacherClasses = object({
 	teacher_id: number([integer(), minValue(0)]),
 	class_id: number([integer(), minValue(0)]),
 	priority: number([integer(), minValue(1)]),
-	am: optional(string()),
+	registration_number: optional(string()), //Αριθμός Έγκρισης
 });
 export type TeacherClasses = Output<typeof v_TeacherClasses>;
 

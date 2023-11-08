@@ -62,17 +62,28 @@ export function getMultiSelect(prefix: string, isSelected = true) {
 	];
 }
 
-export function getByName(name:string, strCmp?: "startsWith" | "endsWith" | "includes") {
+export function getByName(
+	name: string,
+	strCmp?: "startsWith" | "endsWith" | "includes"
+) {
 	if (!strCmp) {
-		return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
+		return [
+			...document.querySelectorAll(`input[name^='${name}']`),
+		] as HTMLInputElement[];
 	} else {
 		switch (strCmp) {
 			case "startsWith":
-				return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
+				return [
+					...document.querySelectorAll(`input[name^='${name}']`),
+				] as HTMLInputElement[];
 			case "endsWith":
-				return [...document.querySelectorAll(`input[name$='${name}']`)] as HTMLInputElement[];
+				return [
+					...document.querySelectorAll(`input[name$='${name}']`),
+				] as HTMLInputElement[];
 			case "includes":
-				return [...document.querySelectorAll(`input[name*='${name}']`)] as HTMLInputElement[];
+				return [
+					...document.querySelectorAll(`input[name*='${name}']`),
+				] as HTMLInputElement[];
 		}
 	}
 }
@@ -229,6 +240,7 @@ export default function Input(props: Props) {
 		};
 		onFileChange = async (e: Event) => {
 			const input = e.currentTarget as HTMLInputElement;
+			if (!input) return;
 			const file = input.files?.[0];
 			const fileDiv = document.querySelector(
 				`div[data-name='${name}']`
@@ -251,7 +263,7 @@ export default function Input(props: Props) {
 				`div[data-name='${name}']`
 			) as HTMLDivElement;
 			fileDiv.classList.remove("show");
-			if (value)
+			if (typeof value === "string")
 				document.dispatchEvent(
 					//@ts-ignore
 					new CustomEvent("emptyFileRemove", { detail: value })

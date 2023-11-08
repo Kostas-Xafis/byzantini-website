@@ -17,7 +17,6 @@ import {
 import TableControls, { type Action } from "./table/TableControls.solid";
 import { type Props as InputProps, Pick, Fill } from "../input/Input.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
 import Spinner from "../other/Spinner.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
@@ -121,11 +120,8 @@ export default function PaymentsTable() {
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get];
-		if (!books) return { icon: ActionIcon.ADD };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Omit<Payments, "id" | "amount"> = {
 				student_name: formData.get("student_name") as string,
 				book_id: Number(formData.get("book_id") as string),
@@ -145,7 +141,7 @@ export default function PaymentsTable() {
 				action: ActionEnum.ADD,
 				mutate: [res.data.id],
 			});
-		});
+		};
 		return {
 			inputs: Pick(
 				PaymentsInputs(books),
@@ -154,25 +150,29 @@ export default function PaymentsTable() {
 				"book_amount",
 				"date"
 			),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Πληρωμής",
+			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD,
 		};
 	});
 	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
+
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
 		if (!payments || !books || selectedItems.length !== 1)
-			return { icon: ActionIcon.MODIFY };
+			return modifyModal;
+
 		const payment = payments.find(
 			(p) => p.id === selectedItems[0]
 		) as Payments;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
-			const formData = new FormData(e.currentTarget as HTMLFormElement);
+		const submit = async function (form: HTMLFormElement) {
+			const formData = new FormData(form);
 			const data: Pick<Payments, "id" | "amount"> = {
 				id: payment.id,
 				amount: Number(formData.get("amount") as string) as number,
@@ -181,8 +181,10 @@ export default function PaymentsTable() {
 				data.amount > payment.amount ||
 				data.amount === 0 ||
 				!data.amount
-			)
-				return alert("Καταχώρηση μη επιτρεπτού ποσού!");
+			) {
+				alert("Καταχώρηση μη επιτρεπτού ποσού!");
+				throw new Error("Invalid amount");
+			}
 			const res = await useAPI(
 				API.Payments.updatePayment,
 				{
@@ -195,25 +197,27 @@ export default function PaymentsTable() {
 				action: ActionEnum.MODIFY,
 				mutate: [payment.id],
 			});
-		});
+		};
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
 			inputs: Pick(filledInputs, "amount"),
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση πληρωμής",
-			icon: ActionIcon.MODIFY,
+			...modifyModal,
 		};
 	});
 	const onComplete = createMemo((): Action | EmptyAction => {
+		const completeModal = {
+			type: ActionEnum.CHECK,
+			icon: ActionIcon.CHECK,
+		};
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
-		if (!payments || !books || selectedItems.length < 1)
-			return { icon: ActionIcon.CHECK };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		if (!payments || !books || selectedItems.length < 1) {
+			return completeModal;
+		}
+		const submit = async function (form: HTMLFormElement) {
 			let data = selectedItems.map(
 				(id) => payments.find((p) => p.id === id) as Payments
 			);
@@ -233,24 +237,26 @@ export default function PaymentsTable() {
 				action: ActionEnum.CHECK,
 				mutate: selectedItems.slice(),
 			});
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Ολοκλήρωση",
 			headerText: "Ολοκλήρωση πληρωμών",
-			icon: ActionIcon.CHECK,
+			...completeModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE,
+		};
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
-		if (!payments || !books || selectedItems.length < 1)
-			return { icon: ActionIcon.DELETE };
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		if (!payments || !books || selectedItems.length < 1) {
+			return deleteModal;
+		}
+		const submit = async function (form: HTMLFormElement) {
 			let data = selectedItems.map(
 				(id) => payments.find((p) => p.id === id) as Payments
 			);
@@ -270,14 +276,13 @@ export default function PaymentsTable() {
 				action: ActionEnum.DELETE,
 				mutate: selectedItems.slice(),
 			});
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή πληρωμών",
-			icon: ActionIcon.DELETE,
+			...deleteModal,
 		};
 	});
 
@@ -291,7 +296,6 @@ export default function PaymentsTable() {
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls
-						pressedAction={actionPressed}
 						onActionsArray={[onAdd, onModify, onComplete, onDelete]}
 						prefix={PREFIX}
 					/>

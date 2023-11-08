@@ -9,10 +9,7 @@ import {
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import type { SysUsers as FullSysUser } from "../../../types/entities";
 import Spinner from "../other/Spinner.solid";
-import {
-	SelectedItemsContext,
-	type ContextType,
-} from "./table/SelectedRowContext.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import {
 	ActionEnum,
@@ -20,7 +17,7 @@ import {
 	type EmptyAction,
 } from "./table/TableControlTypes";
 import TableControls, { type Action } from "./table/TableControls.solid";
-import { formErrorWrap, formListener } from "./table/formSubmit";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "sysusers";
 
@@ -38,6 +35,7 @@ const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
 		return columns as unknown as SysUsers;
 	});
 };
+const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function SysUsersTable() {
 	const [store, setStore] = createStore<APIStore>({});
@@ -51,21 +49,6 @@ export default function SysUsersTable() {
 		useAPI(API.SysUsers.getBySid, {}, setStore);
 	});
 
-	const [selectedItems, setSelectedItems] = createStore<number[]>([]);
-	const ROWS = [
-		selectedItems,
-		{
-			add: (id: number) => {
-				setSelectedItems([...selectedItems, id]);
-			},
-			remove: (id: number) => {
-				setSelectedItems(selectedItems.filter((i) => i !== id));
-			},
-			removeAll: () => {
-				setSelectedItems([]);
-			},
-		},
-	] as const;
 	const columnNames: ColumnType<SysUsers> = {
 		id: { type: "number", name: "Id" },
 		email: { type: "string", name: "Email", size: 25 },
@@ -79,38 +62,31 @@ export default function SysUsersTable() {
 
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const link = store[API.SysUsers.createRegisterLink]?.link;
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		const submit = async function (form: HTMLFormElement) {
 			if (!link)
 				await useAPI(API.SysUsers.createRegisterLink, {}, setStore);
-			setTimeout(() => {
-				document
-					.querySelector<HTMLElement>(
-						"div[data-prefix='sysusers'] button:first-child"
-					)
-					?.click();
-			}, 200);
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
 			headerText: !link
 				? "Δημιουργία link εγγραφής"
 				: "Link εγγραφής:\n https://musicschool-metamorfosi.gr/admin/signup/" +
 				  link,
-
+			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_USER,
 		};
 	});
 
+	const deleteModal = {
+		type: ActionEnum.DELETE,
+		icon: ActionIcon.DELETE_USER,
+	};
 	const onDelete = createMemo((): Action | EmptyAction => {
 		const sysusers = store[API.SysUsers.get];
 		const self = store[API.SysUsers.getBySid];
-		if (!sysusers || selectedItems.length < 1 || !self)
-			return { icon: ActionIcon.DELETE_USER };
+		if (!sysusers || selectedItems.length < 1 || !self) return deleteModal;
 
 		const selectedSysUsers = selectedItems.map(
 			(i) => sysusers.find((p) => p.id === i) as SysUsers
@@ -122,11 +98,9 @@ export default function SysUsersTable() {
 					(s.privilege === self.privilege && s.id === self.id)
 			)
 		)
-			return { icon: ActionIcon.DELETE_USER };
+			return deleteModal;
 
-		const submit = formErrorWrap(async function (e: Event) {
-			e.preventDefault();
-			e.stopPropagation();
+		const submit = async function (form: HTMLFormElement) {
 			const data = selectedItems.map(
 				(i) => (sysusers.find((p) => p.id === i) as SysUsers).id
 			);
@@ -142,27 +116,26 @@ export default function SysUsersTable() {
 				action: ActionEnum.DELETE,
 				mutate: selectedItems.slice(),
 			});
-		});
+		};
 		return {
 			inputs: {},
-			onMount: () => formListener(submit, true, PREFIX),
-			onCleanup: () => formListener(submit, false, PREFIX),
+			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Διαχειριστή/ών",
-
-			icon: ActionIcon.DELETE_USER,
+			...deleteModal,
 		};
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={ROWS as ContextType}>
+		<SelectedItemsContext.Provider
+			value={[selectedItems, setSelectedItems]}
+		>
 			<Show
 				when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]}
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControls
-						pressedAction={actionPressed}
 						onActionsArray={[onAdd, onDelete]}
 						prefix={PREFIX}
 					/>

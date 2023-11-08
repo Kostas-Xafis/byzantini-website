@@ -1,7 +1,5 @@
 /// <reference types="astro/client" />
 
-import type { TypeEffect } from '../lib/hooks/useSelectedRows.solid';
-
 type R2Bucket = import('@cloudflare/workers-types').R2Bucket;
 type ENV = {
 	S3_BUCKET: R2Bucket;
