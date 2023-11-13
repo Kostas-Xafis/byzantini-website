@@ -45,7 +45,11 @@ import {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	type Action,
+	TableControlsGroup,
+} from "./table/TableControls.solid";
 
 const PREFIX = "teachers";
 
@@ -956,18 +960,27 @@ export default function TeachersTable() {
 					columns={columnNames}
 					hasSelectBox
 				>
-					<TableControls
-						onActionsArray={[onAdd, onModify, onDelete]}
-						prefix={PREFIX}
-					/>
-					<TableControls
-						onActionsArray={[onAddInstrument, onDeleteInstrument]}
-						prefix={"instrument"}
-					/>
-					<TableControls
-						onActionsArray={[onDownloadExcel]}
-						prefix={PREFIX}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+					<TableControlsGroup prefix={"instrument"}>
+						<TableControl
+							action={onAddInstrument}
+							prefix={"instrument"}
+						/>
+						<TableControl
+							action={onDeleteInstrument}
+							prefix={"instrument"}
+						/>
+					</TableControlsGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl
+							action={onDownloadExcel}
+							prefix={PREFIX}
+						/>
+					</TableControlsGroup>
 					<SearchTable
 						columns={searchColumns}
 						setSearchQuery={setSearchQuery}

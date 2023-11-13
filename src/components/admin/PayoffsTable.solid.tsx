@@ -19,7 +19,11 @@ import {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	type Action,
+	TableControlsGroup,
+} from "./table/TableControls.solid";
 
 const PREFIX = "payoffs";
 
@@ -180,11 +184,10 @@ export default function PayoffsTable() {
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControls
-						pressedAction={actionPressed}
-						onActionsArray={[onModify, onDelete]}
-						prefix={PREFIX}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

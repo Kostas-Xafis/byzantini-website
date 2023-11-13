@@ -1,7 +1,6 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
-import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import {
 	API,
 	useAPI,
@@ -14,6 +13,7 @@ import { asyncQueue, fileToBlob } from "../../../lib/utils.client";
 import type { Announcements } from "../../../types/entities";
 import { Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
+import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import {
@@ -21,7 +21,11 @@ import {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	TableControlsGroup,
+	type Action,
+} from "./table/TableControls.solid";
 
 const PREFIX = "announcements";
 
@@ -219,11 +223,10 @@ export default function AnnouncementsTable() {
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControls
-						pressedAction={actionPressed}
-						onActionsArray={[onAdd, onDelete]}
-						prefix={PREFIX}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

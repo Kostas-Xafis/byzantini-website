@@ -1,25 +1,29 @@
+import { Show, createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import {
 	API,
-	type APIStore,
-	useHydrate,
 	useAPI,
+	useHydrate,
+	type APIStore,
 } from "../../../lib/hooks/useAPI.solid";
+import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
+import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
+import Spinner from "../other/Spinner.solid";
+import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { createMemo, Show } from "solid-js";
-import { createStore } from "solid-js/store";
+import {
+	TableControl,
+	type Action,
+	TableControlsGroup,
+} from "./table/TableControls.solid";
 import {
 	ActionEnum,
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
-import { type Props as InputProps, Pick, Fill } from "../input/Input.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
-import Spinner from "../other/Spinner.solid";
-import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "payments";
 
@@ -119,7 +123,7 @@ export default function PaymentsTable() {
 		return books && payments ? paymentsToTable(payments, books) : [];
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const books = store[API.Books.get];
+		const books = store[API.Books.get] || [];
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
 			const data: Omit<Payments, "id" | "amount"> = {
@@ -295,10 +299,12 @@ export default function PaymentsTable() {
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControls
-						onActionsArray={[onAdd, onModify, onComplete, onDelete]}
-						prefix={PREFIX}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+						<TableControl action={onComplete} prefix={PREFIX} />
+					</TableControlsGroup>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

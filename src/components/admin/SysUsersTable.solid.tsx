@@ -16,7 +16,11 @@ import {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	type Action,
+	TableControlsGroup,
+} from "./table/TableControls.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "sysusers";
@@ -79,11 +83,11 @@ export default function SysUsersTable() {
 		};
 	});
 
-	const deleteModal = {
-		type: ActionEnum.DELETE,
-		icon: ActionIcon.DELETE_USER,
-	};
 	const onDelete = createMemo((): Action | EmptyAction => {
+		const deleteModal = {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE_USER,
+		};
 		const sysusers = store[API.SysUsers.get];
 		const self = store[API.SysUsers.getBySid];
 		if (!sysusers || selectedItems.length < 1 || !self) return deleteModal;
@@ -135,10 +139,10 @@ export default function SysUsersTable() {
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControls
-						onActionsArray={[onAdd, onDelete]}
-						prefix={PREFIX}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

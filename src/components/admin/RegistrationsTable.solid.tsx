@@ -31,7 +31,12 @@ import {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	type Action,
+	TableControlsGroup,
+} from "./table/TableControls.solid";
+
 import { toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
@@ -840,16 +845,17 @@ export default function RegistrationsTable() {
 					columns={columns}
 					hasSelectBox
 				>
-					<TableControls
-						pressedAction={actionPressed}
-						onActionsArray={[onModify, onDelete]}
-						prefix={PREFIX}
-					/>
-					<TableControls
-						pressedAction={actionPressed}
-						onActionsArray={[onDownloadPDf, onDownloadExcel]}
-						prefix={PREFIX}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onDownloadPDf} prefix={PREFIX} />
+						<TableControl
+							action={onDownloadExcel}
+							prefix={PREFIX}
+						/>
+					</TableControlsGroup>
 					<SearchTable
 						columns={searchColumns}
 						setSearchQuery={setSearchQuery}

@@ -24,7 +24,11 @@ import {
 	ActionIcon,
 	type EmptyAction,
 } from "./table/TableControlTypes";
-import TableControls, { type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	type Action,
+	TableControlsGroup,
+} from "./table/TableControls.solid";
 
 const PREFIX = "books";
 
@@ -339,16 +343,21 @@ export default function BooksTable() {
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControls
-						pressedAction={actionPressed}
-						onActionsArray={[onAdd, onModify, onDelete]}
-						prefix={PREFIX}
-					/>
-					<TableControls
-						pressedAction={actionPressedWholesalers}
-						onActionsArray={[onAddWholesaler, onDeleteWholesaler]}
-						prefix={"wholesalers"}
-					/>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl
+							action={onAddWholesaler}
+							prefix={"wholesalers"}
+						/>
+						<TableControl
+							action={onDeleteWholesaler}
+							prefix={"wholesalers"}
+						/>
+					</TableControlsGroup>
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

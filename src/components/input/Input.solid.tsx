@@ -1,17 +1,17 @@
+import AirDatepicker from "air-datepicker";
 import {
-	type Setter,
-	type Accessor,
 	For,
 	Show,
-	onMount,
 	createSignal,
+	onMount,
+	type Accessor,
+	type Setter,
 } from "solid-js";
-import { CloseButton } from "../admin/table/CloseButton.solid";
+import { FileHandler } from "../../../lib/fileHandling.client";
+import { setFocusFixed, sleep } from "../../../lib/utils.client";
 import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
-import { FileHandler } from "../../../lib/fileHandling.client";
-import AirDatepicker from "air-datepicker";
-import { setFocusFixed, sleep } from "../../../lib/utils.client";
+import { CloseButton } from "../admin/table/CloseButton.solid";
 
 function disable(input: Props) {
 	input.disabled = true;

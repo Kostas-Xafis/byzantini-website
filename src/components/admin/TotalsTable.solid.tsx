@@ -58,9 +58,7 @@ export default function TotalsTable() {
 			}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}
 		>
-			<Table data={shapedData} columns={columnNames}>
-				<div></div>
-			</Table>
+			<Table data={shapedData} columns={columnNames} />
 		</Show>
 	);
 }

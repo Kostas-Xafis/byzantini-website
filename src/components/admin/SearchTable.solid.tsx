@@ -73,7 +73,7 @@ export function SearchTable<T extends Record<string, any>>(
 	let debounce = new UpdateHandler();
 	const searchHandler = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		debounce.reset(150, () => {
+		debounce.reset(250, () => {
 			const inputValue = target.value;
 			const c = column();
 			props.setSearchQuery("columnName", c.columnName);
