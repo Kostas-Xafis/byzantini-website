@@ -7,11 +7,15 @@ import {
 	type Accessor,
 	type Setter,
 } from "solid-js";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import {
+	FileHandler,
+	type FileListProxy,
+} from "../../../lib/fileHandling.client";
 import { setFocusFixed, sleep } from "../../../lib/utils.client";
 import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
 import { CloseButton } from "../admin/table/CloseButton.solid";
+import FileInput from "./FileInput.solid";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -228,51 +232,11 @@ export default function Input(props: Props) {
 		});
 	}
 
+	let fileList: Accessor<string[]> = () => [],
+		setFileList: Setter<string[]>;
 	let onFileClick;
 	let onFileChange;
 	let onFileRemove: (fileId?: number) => void;
-	if (type === "file") {
-		onFileClick = (e: MouseEvent) => {
-			const input = document.querySelector(
-				`input[name='${name}']`
-			) as HTMLInputElement;
-			input.click();
-		};
-		onFileChange = async (e: Event) => {
-			const input = e.currentTarget as HTMLInputElement;
-			if (!input) return;
-			const file = input.files?.[0];
-			const fileDiv = document.querySelector(
-				`div[data-name='${name}']`
-			) as HTMLDivElement;
-			if (file) {
-				fileDiv.classList.add("show");
-				(
-					document.querySelector(
-						`div[data-name='${name}'] > p`
-					) as HTMLElement
-				).innerText = file.name;
-			} else fileDiv.classList.remove("show");
-		};
-		onFileRemove = () => {
-			const input = document.querySelector(
-				`input[name='${name}']`
-			) as HTMLInputElement;
-			input.value = "";
-			const fileDiv = document.querySelector(
-				`div[data-name='${name}']`
-			) as HTMLDivElement;
-			fileDiv.classList.remove("show");
-			if (typeof value === "string")
-				document.dispatchEvent(
-					//@ts-ignore
-					new CustomEvent("emptyFileRemove", { detail: value })
-				);
-		};
-	}
-
-	let fileList: Accessor<string[]> = () => [],
-		setFileList: Setter<string[]>;
 	if (type === "multifile") {
 		[fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
 		const fileHandler = new FileHandler(name);
@@ -286,7 +250,7 @@ export default function Input(props: Props) {
 		};
 		onFileChange = async (e: Event) => {
 			const input = e.currentTarget as HTMLInputElement;
-			const { files } = input;
+			const files = input?.files as FileListProxy;
 			if (!files) return;
 			fileHandler.addFiles(files);
 			setFileList(fileHandler.getFiles().map((f) => f.name));
@@ -336,7 +300,7 @@ export default function Input(props: Props) {
 					: "")
 			}
 		>
-			{/*--------------------------------GENERIC INPUT---------------------------------------- */}
+			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show
 				when={
 					type !== "select" &&
@@ -380,7 +344,7 @@ export default function Input(props: Props) {
 					}
 				/>
 			</Show>
-			{/*--------------------------------SELECT INPUT---------------------------------------- */}
+			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>
 				<i
 					class={
@@ -434,7 +398,7 @@ export default function Input(props: Props) {
 					</For>
 				</select>
 			</Show>
-			{/*--------------------------------MULTISELECT INPUT---------------------------------------- */}
+			{/*-------------------------------MULTISELECT INPUT------------------------------------ */}
 			<Show when={type === "multiselect"}>
 				<i
 					class={
@@ -494,50 +458,9 @@ export default function Input(props: Props) {
 					</For>
 				</div>
 			</Show>
-			{/*--------------------------------FILE INPUT---------------------------------------- */}
+			{/*----------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
-				<div
-					data-name={name}
-					class={
-						"peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-3 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden z-10" +
-						(value ? " show" : "")
-					}
-				>
-					<CloseButton
-						onClick={() => onFileRemove()}
-						classes="text-lg w-[1.4rem] h-[1.4rem]"
-					></CloseButton>
-					<p>{value}</p>
-				</div>
-				<div
-					data-name={name}
-					onclick={onFileClick}
-					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-min my-3 py-3 justify-self-center self-center flex flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600 z-10"
-				>
-					<i
-						class={
-							"text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-							(iconClasses || "")
-						}
-					></i>
-					<p class="text-xl text-gray-400  group-hover/file:text-gray-50">
-						Drag&Drop
-					</p>
-				</div>
-				<input
-					class="hidden"
-					type="file"
-					name={name}
-					required={required || false}
-					readOnly={disabled || false}
-					onchange={onFileChange}
-					accept={fileExtension || undefined}
-				/>
-				<style>
-					{`.show {
-					display: flex;
-				}`}
-				</style>
+				<FileInput {...props} />
 			</Show>
 			{/*--------------------------------MULTIFILE INPUT---------------------------------------- */}
 			<Show when={type === "multifile"}>

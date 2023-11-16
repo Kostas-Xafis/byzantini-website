@@ -95,22 +95,24 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 		const { id } = slug;
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
+
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
 		const body = await blob.arrayBuffer();
 
-		const fileName = teacher.fullname + "." + filetype.split("/")[1];
-		const link = bucketPrefix + fileName;
+		const filename = teacher.fullname + "." + filetype.split("/")[1];
+		const link = bucketPrefix + filename;
 
+		console.log({ filetype, filename });
 		if (filetype === "application/pdf") {
 			if (teacher.cv) await Bucket.delete(ctx, teacher.cv);
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [fileName, id]);
+			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
 		} else if (imageMIMEType.includes(filetype)) {
 			if (teacher.picture) await Bucket.delete(ctx, teacher.picture);
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [fileName, id]);
+			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");

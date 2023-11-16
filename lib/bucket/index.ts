@@ -4,9 +4,11 @@ import type { APIContext } from "astro";
 import { isDevFromURL } from "../utils.client";
 
 
-// Although eval is not needed here, as it build fine without it, it is needed because it adds an additional 500kb of unused code to the build size
+// Although eval is not needed here, as it build fine without it, it is needed because it adds an
+// additional 500kb of unused code to the production build size
 const createS3Client = async () => {
 	const s3Client = (await eval('import("@aws-sdk/client-s3")')).S3Client as typeof S3Client;
+
 	return new s3Client({
 		region: "auto",
 		endpoint: await import.meta.env.S3_ENDPOINT,

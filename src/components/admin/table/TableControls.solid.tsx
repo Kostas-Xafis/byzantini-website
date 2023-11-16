@@ -20,19 +20,18 @@ export type Action = {
 };
 
 type Props = {
-	onActionsArray?: Accessor<Action | EmptyAction>[];
-	action?: Accessor<Action | EmptyAction>;
+	action: Accessor<Action | EmptyAction>;
 	prefix: string;
 };
 
 const onActionClick = (prefix: string) => setGlobalOpen(prefix, true);
 
 export function TableControl(props: Props) {
+	const { prefix } = props;
 	const [tableAction, setTableAction] = createSignal<Action | EmptyAction>(
 		// @ts-ignore
 		props.action() || {}
 	);
-	const { prefix } = props;
 
 	createEffect(() => {
 		if (props.action) setTableAction(props.action() || {});
