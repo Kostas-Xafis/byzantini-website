@@ -1,4 +1,4 @@
-import type { IsAny, OptionalBy, ReplaceValue } from "./helpers";
+import type { IsAny, PartialBy, ReplaceValue } from "./helpers";
 import type { ArgumentParts, ExpectedArguments, ExtractURLMethod, GetURLMethod, HasUrlParams, Parts } from "./path";
 import type { Output, ObjectSchema, ObjectShape } from "valibot";
 import type { APIContext } from "astro";
@@ -95,8 +95,8 @@ export type APIBuilder<Mount extends string, Routes extends { [k: string]: Endpo
 
 // Use for typing API Request params in the frontend
 export type APIArguments<Mount extends string, Routes extends { [k: string]: EndpointRoute<any, any, any>; }> = {
-	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : ""]: OptionalBy<
-		OptionalBy<
+	[K in keyof Routes as K extends `${infer k}` ? `${Mount}.${k}` : ""]: PartialBy<
+		PartialBy<
 			{
 				RequestObject: Parameters<Routes[K]["func"]>[0]["request"] extends { json: () => Promise<infer T>; } ? T : never;
 				UrlArgs: Parameters<Routes[K]["func"]>[1];

@@ -29,9 +29,16 @@ export type ArrayToString<Arr, Separator = ""> = Arr extends [infer A, ...infer 
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
-export type OptionalBy<T, K> = K extends keyof T
+export type PartialBy<T, K> = K extends keyof T
 	? Omit<T, K> & {
 		[Key in K]?: T[Key];
+	}
+	: T;
+
+export type RequiredBy<T, K> = K extends keyof T
+	? Omit<T, K> & {
+		// NonNullable is used to remove undefined from the type that is automatically passed when using the optional operator (?)
+		[Key in K]: NonNullable<T[Key]>;
 	}
 	: T;
 

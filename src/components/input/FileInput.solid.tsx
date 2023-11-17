@@ -1,4 +1,4 @@
-import { on, createSignal, createEffect, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import {
 	FileHandler,
 	type FileListProxy,
@@ -7,6 +7,7 @@ import { CloseButton } from "../admin/table/CloseButton.solid";
 
 export type Props = {
 	name: string;
+	prefix: string;
 	value?: string | number;
 	required?: boolean;
 	iconClasses?: string;
@@ -15,19 +16,20 @@ export type Props = {
 };
 
 export default function FileInput(props: Props) {
-	const { name, value, required, iconClasses, disabled, fileExtension } =
-		props;
-
+	const {
+		name,
+		prefix,
+		value,
+		required,
+		iconClasses,
+		disabled,
+		fileExtension,
+	} = props;
 	const [filename, setFilename] = createSignal<string>(
 		(value as string) || "",
 		{
 			equals: false,
 		}
-	);
-	createEffect(
-		on(filename, (fname) => {
-			console.log("fileName", fname);
-		})
 	);
 	const fileHandler = new FileHandler(name, {
 		isSingleFile: true,
@@ -35,7 +37,7 @@ export default function FileInput(props: Props) {
 	});
 	const onFileClick = (e: MouseEvent) => {
 		const input = document.querySelector<HTMLInputElement>(
-			`input[name='${name}']`
+			`form[data-prefix=${prefix}] input[name='${name}']`
 		);
 		if (input) input.click();
 	};
@@ -46,11 +48,13 @@ export default function FileInput(props: Props) {
 
 		fileHandler.addFiles([files[0]]);
 		setFilename(files[0].name);
+
+		console.log(1, { [name]: FileHandler.getFiles(name) });
 	};
 
 	const onFileRemove = () => {
 		const input = document.querySelector<HTMLInputElement>(
-			`input[name='${name}']`
+			`form[data-prefix=${prefix}] input[name='${name}']`
 		);
 		if (!input) return;
 
@@ -59,20 +63,32 @@ export default function FileInput(props: Props) {
 		setFilename("");
 	};
 
+	document.addEventListener("ModalClose", (e) => {
+		const modalPrefix = e.detail.prefix;
+		if (modalPrefix !== prefix) return;
+		console.log(2, { [name]: FileHandler.getFiles(name) });
+		if (prefix.includes("ADD")) {
+			fileHandler.removeFile(0);
+			setFilename("");
+			console.log(3, { [name]: FileHandler.getFiles(name) });
+		}
+	});
+
 	return (
 		<>
-			<Show when={filename() !== ""}>
-				<div
-					data-file={name}
-					class="peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-3 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden z-10 show"
-				>
-					<CloseButton
-						onClick={() => onFileRemove()}
-						classes="text-lg w-[1.4rem] h-[1.4rem]"
-					></CloseButton>
-					<p>{filename()}</p>
-				</div>
-			</Show>
+			<div
+				data-file={name}
+				class={
+					"peer/file group/file hidden w-[90%] max-w-[30ch] h-min my-3 py-3 justify-self-center self-center flex-col place-items-center font-didact border-dashed border-2 border-gray-600 rounded-md overflow-x-hidden z-10" +
+					(filename()?.length ? " show" : "")
+				}
+			>
+				<CloseButton
+					onClick={() => onFileRemove()}
+					classes="text-lg w-[1.4rem] h-[1.4rem]"
+				></CloseButton>
+				<p>{filename()}</p>
+			</div>
 			<div
 				data-name={name}
 				onclick={onFileClick}

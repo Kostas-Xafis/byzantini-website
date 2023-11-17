@@ -50,6 +50,7 @@ import {
 	type Action,
 	TableControlsGroup,
 } from "./table/TableControls.solid";
+import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "teachers";
 
@@ -567,8 +568,6 @@ export default function TeachersTable() {
 		)
 			return modifyModal;
 
-		let pictureRemoved = false;
-		let cvRemoved = false;
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
 			const data: Teachers & TeacherJoins = {
@@ -614,60 +613,61 @@ export default function TeachersTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
+
 			const file = {
-				picture: await fileToBlob(formData.get("picture") as File),
-				cv: await fileToBlob(formData.get("cv") as File),
+				picture: FileHandler.getFiles("picture"),
+				cv: FileHandler.getFiles("cv"),
 			};
-			if (pictureRemoved)
-				await useAPI(
-					API.Teachers.fileDelete,
-					{
-						RequestObject: {
-							id: teacher.id,
-							type: "picture",
-						},
-					},
-					setStore
-				);
+			console.log("Submit", file);
 
-			if (cvRemoved)
-				await useAPI(
-					API.Teachers.fileDelete,
-					{
-						RequestObject: { id: teacher.id, type: "cv" },
-					},
-					setStore
-				);
+			// const file = {
+			// 	picture: await fileToBlob(formData.get("picture") as File),
+			// 	cv: await fileToBlob(formData.get("cv") as File),
+			// };
 
-			if (file.picture)
-				await useAPI(
-					API.Teachers.fileUpload,
-					{
-						RequestObject: file.picture,
-						UrlArgs: { id: teacher.id },
-					},
-					setStore
-				);
-			if (file.cv)
-				await useAPI(
-					API.Teachers.fileUpload,
-					{
-						RequestObject: file.cv,
-						UrlArgs: { id: teacher.id },
-					},
-					setStore
-				);
+			// if (pictureRemoved)
+			// 	await useAPI(
+			// 		API.Teachers.fileDelete,
+			// 		{
+			// 			RequestObject: {
+			// 				id: teacher.id,
+			// 				type: "picture",
+			// 			},
+			// 		},
+			// 		setStore
+			// 	);
+
+			// if (cvRemoved)
+			// 	await useAPI(
+			// 		API.Teachers.fileDelete,
+			// 		{
+			// 			RequestObject: { id: teacher.id, type: "cv" },
+			// 		},
+			// 		setStore
+			// 	);
+
+			// if (file.picture)
+			// 	await useAPI(
+			// 		API.Teachers.fileUpload,
+			// 		{
+			// 			RequestObject: file.picture,
+			// 			UrlArgs: { id: teacher.id },
+			// 		},
+			// 		setStore
+			// 	);
+			// if (file.cv)
+			// 	await useAPI(
+			// 		API.Teachers.fileUpload,
+			// 		{
+			// 			RequestObject: file.cv,
+			// 			UrlArgs: { id: teacher.id },
+			// 		},
+			// 		setStore
+			// 	);
 			setActionPressed({
 				action: ActionEnum.MODIFY,
 				mutate: [teacher.id],
 			});
-		};
-		const emptyFileRemove = (e: CustomEvent<string>) => {
-			e.preventDefault();
-			e.stopPropagation();
-			const name = e.detail;
-			if (name === teacher.picture) pictureRemoved = true;
-			if (name === teacher.cv) cvRemoved = true;
 		};
 
 		const simpleTeacher = JSON.parse(
@@ -691,10 +691,7 @@ export default function TeachersTable() {
 				),
 				"id"
 			),
-			onSubmit: async (form: HTMLFormElement) => {
-				form.addEventListener("emptyFileRemove", emptyFileRemove);
-				submit(form);
-			},
+			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Καθηγητή",
 			...modifyModal,

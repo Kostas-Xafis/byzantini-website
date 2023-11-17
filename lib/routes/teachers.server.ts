@@ -103,7 +103,6 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 		const filename = teacher.fullname + "." + filetype.split("/")[1];
 		const link = bucketPrefix + filename;
 
-		console.log({ filetype, filename });
 		if (filetype === "application/pdf") {
 			if (teacher.cv) await Bucket.delete(ctx, teacher.cv);
 			await Bucket.put(ctx, body, link, filetype);

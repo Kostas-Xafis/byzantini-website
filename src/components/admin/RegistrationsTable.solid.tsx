@@ -718,6 +718,7 @@ export default function RegistrationsTable() {
 					],
 				].concat(
 					items.map((s) => {
+						// @ts-ignore
 						return [
 							s.student.am,
 							s.student.last_name,
@@ -726,8 +727,8 @@ export default function RegistrationsTable() {
 							s.teacher.fullname,
 							s.student.email,
 							s.student.telephone + "-" + s.student.cellphone,
-							s.student.payment_amount + "",
-							s.student.total_payment + "",
+							s.student.payment_amount as string,
+							s.student.total_payment as string,
 						];
 					})
 				)

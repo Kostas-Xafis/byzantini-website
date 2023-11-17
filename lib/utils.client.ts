@@ -52,7 +52,6 @@ export async function onElementMount(target: string, callback: (el: HTMLElement)
 	while (!(el = document.querySelector(target)) && counter++ < 40) {
 		await new Promise((resolve) => setTimeout(resolve, 25));
 	}
-	console.log({ counter });
 	if (counter >= 40) return;
 	callback(el as HTMLElement);
 };

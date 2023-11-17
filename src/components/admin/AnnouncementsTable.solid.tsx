@@ -1,6 +1,6 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { FileHandler, type FileProxy } from "../../../lib/fileHandling.client";
 import {
 	API,
 	useAPI,
@@ -133,6 +133,7 @@ export default function AnnouncementsTable() {
 			const kb20 = 1024 * 20;
 			const thumbCreator = new ThumbnailGenerator();
 			const photos = FileHandler.getFiles("photos").map((file, i) => {
+				if (file.isProxy) return async () => {};
 				return async function () {
 					let blob = await fileToBlob(file);
 					if (!blob)

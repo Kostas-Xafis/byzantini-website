@@ -16,6 +16,7 @@ import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 import FileInput from "./FileInput.solid";
+import type { PartialBy } from "../../../types/helpers";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -124,7 +125,7 @@ const monthsFull = [
 	"Δεκέμβριος",
 ];
 
-export type Props = {
+type InputProps = {
 	type:
 		| null
 		| "checkbox"
@@ -145,6 +146,7 @@ export type Props = {
 		| "url";
 	name: string;
 	label: string;
+	prefix: string;
 	placeholder?: string;
 	value?: string | number;
 	required?: boolean;
@@ -165,11 +167,14 @@ export type Props = {
 	tooltip?: TooltipProps;
 };
 
-export default function Input(props: Props) {
+export type Props = PartialBy<InputProps, "prefix">;
+
+export default function Input(props: InputProps) {
 	const {
 		type,
 		name,
 		label,
+		prefix,
 		placeholder,
 		value,
 		required,
@@ -239,7 +244,7 @@ export default function Input(props: Props) {
 	let onFileRemove: (fileId?: number) => void;
 	if (type === "multifile") {
 		[fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
-		const fileHandler = new FileHandler(name);
+		const fileHandler = new FileHandler(prefix);
 		onFileClick = (e: MouseEvent) => {
 			e.stopPropagation();
 			e.preventDefault();

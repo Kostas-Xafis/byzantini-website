@@ -22,6 +22,7 @@ declare global {
 		ModifySelections: CustomEvent<TypeEffect>;
 		FormCleanup: CustomEvent<{ prefix: string; }>;
 		FormMount: CustomEvent<{ prefix: string; }>;
+		ModalClose: CustomEvent<{ prefix: string; }>;
 	}
 }
 

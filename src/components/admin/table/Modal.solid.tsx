@@ -115,6 +115,9 @@ export default function Modal(props: Props) {
 	const onClose = () => {
 		setLoadingState(MODAL_PREFIX, false);
 		setOpenState(MODAL_PREFIX, false);
+		document.dispatchEvent(
+			new CustomEvent("ModalClose", { detail: { prefix: MODAL_PREFIX } })
+		);
 	};
 
 	return (
@@ -135,7 +138,10 @@ export default function Modal(props: Props) {
 					<For each={Object.values(action.inputs)}>
 						{(input) => (
 							<Show when={input.name !== ""}>
-								<Input {...(input as InputProps)}></Input>
+								<Input
+									{...(input as InputProps)}
+									prefix={MODAL_PREFIX}
+								></Input>
 							</Show>
 						)}
 					</For>
