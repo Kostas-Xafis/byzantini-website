@@ -3,7 +3,8 @@ import { Bucket } from "../bucket";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
-const bucketPrefix = "kathigites/picture/";
+const bucketPicturePrefix = "kathigites/picture/";
+const bucketCVPrefix = "kathigites/cv/";
 
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(TeachersRoutes)) as typeof TeachersRoutes; // Copy the routes object to split it into client and server routes
@@ -101,15 +102,14 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 		const body = await blob.arrayBuffer();
 
 		const filename = teacher.fullname + "." + filetype.split("/")[1];
-		const link = bucketPrefix + filename;
 
 		if (filetype === "application/pdf") {
-			if (teacher.cv) await Bucket.delete(ctx, teacher.cv);
+			const link = bucketCVPrefix + filename;
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
 		} else if (imageMIMEType.includes(filetype)) {
-			if (teacher.picture) await Bucket.delete(ctx, teacher.picture);
+			const link = bucketPicturePrefix + filename;
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 			return "Image uploaded successfully";
@@ -124,11 +124,11 @@ serverRoutes.fileDelete.func = async ctx => {
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
 		if (!teacher) throw Error("Teacher not found");
 		if (body.type === "cv") {
-			if (teacher.cv) await Bucket.delete(ctx, bucketPrefix + teacher.cv);
+			if (teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
 			await executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
 			return "Pdf deleted successfully";
 		} else if (body.type === "picture") {
-			if (teacher.picture) await Bucket.delete(ctx, bucketPrefix + teacher.picture);
+			if (teacher.picture) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
 			await executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
 			return "Image deleted successfully";
 		}
@@ -148,8 +148,8 @@ serverRoutes.delete.func = async ctx => {
 			body
 		);
 		for (const file of files) {
-			if (file.cv) await Bucket.delete(ctx, file.cv);
-			if (file.picture) await Bucket.delete(ctx, file.picture);
+			if (file.cv) await Bucket.delete(ctx, bucketCVPrefix + file.cv);
+			if (file.picture) await Bucket.delete(ctx, bucketPicturePrefix + file.picture);
 		}
 		await T.executeQuery(`DELETE FROM teachers WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";

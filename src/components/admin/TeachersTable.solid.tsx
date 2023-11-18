@@ -509,29 +509,44 @@ export default function TeachersTable() {
 				setStore
 			);
 			if (!res.data) return;
-			const id = res.data.insertId as number;
+			const id = res.data.insertId;
 			const files = {
-				picture: await fileToBlob(formData.get("picture") as File),
-				cv: await fileToBlob(formData.get("cv") as File),
+				picture: FileHandler.getFiles("picture"),
+				cv: FileHandler.getFiles("cv"),
 			};
-			if (files.picture)
-				await useAPI(
-					API.Teachers.fileUpload,
-					{
-						RequestObject: files.picture,
-						UrlArgs: { id },
-					},
-					setStore
-				);
-			if (files.cv)
-				await useAPI(
-					API.Teachers.fileUpload,
-					{
-						RequestObject: files.cv,
-						UrlArgs: { id },
-					},
-					setStore
-				);
+			const blobs = {
+				picture:
+					files.picture.length && !files.picture[0].isProxy
+						? await fileToBlob(files.picture[0].file)
+						: null,
+				cv:
+					files.cv.length && !files.cv[0].isProxy
+						? await fileToBlob(files.cv[0].file)
+						: null,
+			};
+			await Promise.all([
+				blobs.picture
+					? useAPI(
+							API.Teachers.fileUpload,
+							{
+								RequestObject: blobs.picture,
+								UrlArgs: { id },
+							},
+							setStore
+					  )
+					: Promise.resolve(),
+				blobs.cv
+					? useAPI(
+							API.Teachers.fileUpload,
+							{
+								RequestObject: blobs.cv,
+								UrlArgs: { id },
+							},
+							setStore
+					  )
+					: Promise.resolve(),
+			]);
+
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		};
 		return {
@@ -614,56 +629,69 @@ export default function TeachersTable() {
 			);
 			if (!res.data && !res.message) return;
 
-			const file = {
+			const files = {
 				picture: FileHandler.getFiles("picture"),
 				cv: FileHandler.getFiles("cv"),
 			};
-			console.log("Submit", file);
+			const blobs = {
+				picture:
+					files.picture.length && !files.picture[0].isProxy
+						? await fileToBlob(files.picture[0].file)
+						: null,
+				cv:
+					files.cv.length && !files.cv[0].isProxy
+						? await fileToBlob(files.cv[0].file)
+						: null,
+			};
+			const deletedFiles = {
+				picture: FileHandler.getDeletedFiles("picture"),
+				cv: FileHandler.getDeletedFiles("cv"),
+			};
+			await Promise.all([
+				deletedFiles.picture.length
+					? useAPI(
+							API.Teachers.fileDelete,
+							{
+								RequestObject: {
+									id: teacher.id,
+									type: "picture",
+								},
+							},
+							setStore
+					  )
+					: Promise.resolve(),
+				deletedFiles.cv.length
+					? useAPI(
+							API.Teachers.fileDelete,
+							{ RequestObject: { id: teacher.id, type: "cv" } },
+							setStore
+					  )
+					: Promise.resolve(),
+			]);
 
-			// const file = {
-			// 	picture: await fileToBlob(formData.get("picture") as File),
-			// 	cv: await fileToBlob(formData.get("cv") as File),
-			// };
+			await Promise.all([
+				blobs.picture
+					? useAPI(
+							API.Teachers.fileUpload,
+							{
+								RequestObject: blobs.picture,
+								UrlArgs: { id: teacher.id },
+							},
+							setStore
+					  )
+					: Promise.resolve(),
+				blobs.cv
+					? useAPI(
+							API.Teachers.fileUpload,
+							{
+								RequestObject: blobs.cv,
+								UrlArgs: { id: teacher.id },
+							},
+							setStore
+					  )
+					: Promise.resolve(),
+			]);
 
-			// if (pictureRemoved)
-			// 	await useAPI(
-			// 		API.Teachers.fileDelete,
-			// 		{
-			// 			RequestObject: {
-			// 				id: teacher.id,
-			// 				type: "picture",
-			// 			},
-			// 		},
-			// 		setStore
-			// 	);
-
-			// if (cvRemoved)
-			// 	await useAPI(
-			// 		API.Teachers.fileDelete,
-			// 		{
-			// 			RequestObject: { id: teacher.id, type: "cv" },
-			// 		},
-			// 		setStore
-			// 	);
-
-			// if (file.picture)
-			// 	await useAPI(
-			// 		API.Teachers.fileUpload,
-			// 		{
-			// 			RequestObject: file.picture,
-			// 			UrlArgs: { id: teacher.id },
-			// 		},
-			// 		setStore
-			// 	);
-			// if (file.cv)
-			// 	await useAPI(
-			// 		API.Teachers.fileUpload,
-			// 		{
-			// 			RequestObject: file.cv,
-			// 			UrlArgs: { id: teacher.id },
-			// 		},
-			// 		setStore
-			// 	);
 			setActionPressed({
 				action: ActionEnum.MODIFY,
 				mutate: [teacher.id],

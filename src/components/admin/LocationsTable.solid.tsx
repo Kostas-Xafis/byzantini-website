@@ -29,6 +29,7 @@ import {
 	type Action,
 	TableControlsGroup,
 } from "./table/TableControls.solid";
+import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "locations";
 
@@ -222,18 +223,21 @@ export default function LocationsTable() {
 			);
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const files = {
-				image: await fileToBlob(formData.get("image") as File),
-			};
-			if (files.image)
+			const files = FileHandler.getFiles("image");
+			const imgBlob =
+				files.length && !files[0].isProxy
+					? await fileToBlob(files[0].file)
+					: null;
+			if (imgBlob) {
 				await useAPI(
 					API.Locations.fileUpload,
 					{
-						RequestObject: files.image,
+						RequestObject: imgBlob,
 						UrlArgs: { id },
 					},
 					setStore
 				);
+			}
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
 		};
 		return {
@@ -256,7 +260,6 @@ export default function LocationsTable() {
 		const location = locations.find((p) => p.id === selectedItems[0]);
 		if (!location) return modifyModal;
 
-		let imageRemoved = false;
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
 			const data: Omit<Locations, "image"> = {
@@ -284,45 +287,41 @@ export default function LocationsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			const file = {
-				image: await fileToBlob(formData.get("image") as File),
-			};
-			if (imageRemoved) {
+			const files = FileHandler.getFiles("image");
+			const imgBlob =
+				files.length && !files[0].isProxy
+					? await fileToBlob(files[0].file)
+					: null;
+			const deletedImage = FileHandler.getDeletedFiles("image");
+			if (imgBlob) {
 				await useAPI(
-					API.Locations.fileDelete,
+					API.Locations.fileUpload,
 					{
+						RequestObject: imgBlob,
 						UrlArgs: { id: location.id },
 					},
 					setStore
 				);
 			}
-			if (file.image)
+			if (deletedImage.length) {
 				await useAPI(
-					API.Locations.fileUpload,
+					API.Locations.fileDelete,
 					{
-						RequestObject: file.image,
-						UrlArgs: { id: location.id },
+						UrlArgs: {
+							id: location.id,
+						},
 					},
 					setStore
 				);
+			}
 			setActionPressed({
 				action: ActionEnum.MODIFY,
 				mutate: [location.id],
 			});
 		};
-		const emptyFileRemove = (e: CustomEvent<string>) => {
-			e.preventDefault();
-			e.stopPropagation();
-			const name = e.detail;
-			if (name === location.image) imageRemoved = true;
-		};
-
 		return {
 			inputs: Omit(Fill(LocationsInputs(location), location), "id"),
-			onSubmit: async (form: HTMLFormElement) => {
-				document.addEventListener("emptyFileRemove", emptyFileRemove);
-				submit(form);
-			},
+			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Παραρτήματος",
 			...modifyModal,

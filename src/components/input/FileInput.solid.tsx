@@ -1,8 +1,5 @@
-import { createSignal, Show } from "solid-js";
-import {
-	FileHandler,
-	type FileListProxy,
-} from "../../../lib/fileHandling.client";
+import { createSignal } from "solid-js";
+import { FileHandler } from "../../../lib/fileHandling.client";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 export type Props = {
@@ -33,7 +30,7 @@ export default function FileInput(props: Props) {
 	);
 	const fileHandler = new FileHandler(name, {
 		isSingleFile: true,
-		files: (value ? [value] : []) as string[],
+		file: value ? FileHandler.createFileProxy(value as string) : undefined,
 	});
 	const onFileClick = (e: MouseEvent) => {
 		const input = document.querySelector<HTMLInputElement>(
@@ -43,13 +40,11 @@ export default function FileInput(props: Props) {
 	};
 	const onFileChange = (e: Event) => {
 		const input = e.currentTarget as HTMLInputElement;
-		const files = input?.files as FileListProxy;
+		const files = input?.files;
 		if (!files) return;
 
 		fileHandler.addFiles([files[0]]);
 		setFilename(files[0].name);
-
-		console.log(1, { [name]: FileHandler.getFiles(name) });
 	};
 
 	const onFileRemove = () => {
@@ -66,11 +61,9 @@ export default function FileInput(props: Props) {
 	document.addEventListener("ModalClose", (e) => {
 		const modalPrefix = e.detail.prefix;
 		if (modalPrefix !== prefix) return;
-		console.log(2, { [name]: FileHandler.getFiles(name) });
 		if (prefix.includes("ADD")) {
 			fileHandler.removeFile(0);
 			setFilename("");
-			console.log(3, { [name]: FileHandler.getFiles(name) });
 		}
 	});
 

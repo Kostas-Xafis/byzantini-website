@@ -4,10 +4,18 @@ import { useAPI, type APIStore } from "./useAPI.solid";
 import { createEffect, createSignal, on } from "solid-js";
 import { TypeEffectEnum, selectedRowsEvent } from "./useSelectedRows.solid";
 
+// type Mutation<S extends keyof APIStore> = {
+// 	endpoint: S;
+// 	foreighKey: keyof S;
+// 	ids: number[];
+// 	type: ActionEnum;
+// };
+
+
 export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAccessEndpoint: keyof APIStore, mutatedEndpoint: keyof APIStore) {
 	const [actionPressed, setActionPressed] = createSignal<{
 		action: ActionEnum;
-		// mutations: { endpoint: keyof APIStore, ids: number[], primary?: boolean; }[];
+		// mutations: { endpoint: keyof APIStore, foreignKey:string, ids: number[], primary?: boolean; }[];
 		mutate: number[]; //Array of mutated ids
 		mutatedEndpoint?: keyof APIStore; // In case that the endpoint is different from the mutateEndpoint needs to be mutated
 	}>(

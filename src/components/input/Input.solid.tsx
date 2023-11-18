@@ -7,10 +7,7 @@ import {
 	type Accessor,
 	type Setter,
 } from "solid-js";
-import {
-	FileHandler,
-	type FileListProxy,
-} from "../../../lib/fileHandling.client";
+import { FileHandler } from "../../../lib/fileHandling.client";
 import { setFocusFixed, sleep } from "../../../lib/utils.client";
 import type { TooltipProps } from "../Tooltip.solid";
 import Tooltip from "../Tooltip.solid";
@@ -255,7 +252,7 @@ export default function Input(props: InputProps) {
 		};
 		onFileChange = async (e: Event) => {
 			const input = e.currentTarget as HTMLInputElement;
-			const files = input?.files as FileListProxy;
+			const files = input?.files;
 			if (!files) return;
 			fileHandler.addFiles(files);
 			setFileList(fileHandler.getFiles().map((f) => f.name));

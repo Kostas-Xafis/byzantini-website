@@ -132,48 +132,50 @@ export default function AnnouncementsTable() {
 
 			const kb20 = 1024 * 20;
 			const thumbCreator = new ThumbnailGenerator();
-			const photos = FileHandler.getFiles("photos").map((file, i) => {
-				if (file.isProxy) return async () => {};
-				return async function () {
-					let blob = await fileToBlob(file);
-					if (!blob)
-						return console.error("Could not load file:", file.name);
-					try {
-						await useAPI(API.Announcements.postImage, {
-							RequestObject: {
-								announcement_id: id,
-								name: file.name,
-								priority: i + 1,
-							},
-						});
-						await useAPI(API.Announcements.imageUpload, {
-							RequestObject: blob,
-							UrlArgs: { id, name: file.name },
-						});
-						if (file.size <= kb20) {
-							await useAPI(API.Announcements.imageUpload, {
-								RequestObject: blob,
-								UrlArgs: {
-									id,
-									name: "thumb_" + file.name,
+			const photos = FileHandler.getFiles("photos").map(
+				({ isProxy, name, file }, i) => {
+					if (isProxy) return async () => {};
+					return async function () {
+						let blob = await fileToBlob(file);
+						if (!blob)
+							return console.error("Could not load file:", name);
+						try {
+							await useAPI(API.Announcements.postImage, {
+								RequestObject: {
+									announcement_id: id,
+									name,
+									priority: i + 1,
 								},
 							});
-							return;
+							await useAPI(API.Announcements.imageUpload, {
+								RequestObject: blob,
+								UrlArgs: { id, name },
+							});
+							if (file.size <= kb20) {
+								await useAPI(API.Announcements.imageUpload, {
+									RequestObject: blob,
+									UrlArgs: {
+										id,
+										name: "thumb_" + name,
+									},
+								});
+								return;
+							}
+							const thumbBlob = await fileToBlob(
+								await thumbCreator.createThumbnail(file, name)
+							);
+							if (!thumbBlob)
+								throw new Error("Could not create thumbnail");
+							await useAPI(API.Announcements.imageUpload, {
+								RequestObject: thumbBlob,
+								UrlArgs: { id, name: "thumb_" + name },
+							});
+						} catch (e) {
+							console.error(e);
 						}
-						const thumbBlob = await fileToBlob(
-							await thumbCreator.createThumbnail(file, file.name)
-						);
-						if (!thumbBlob)
-							throw new Error("Could not create thumbnail");
-						await useAPI(API.Announcements.imageUpload, {
-							RequestObject: thumbBlob,
-							UrlArgs: { id, name: "thumb_" + file.name },
-						});
-					} catch (e) {
-						console.error(e);
-					}
-				};
-			});
+					};
+				}
+			);
 			await asyncQueue(photos, 2, true);
 			await ThumbnailGenerator.cleanup();
 			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });

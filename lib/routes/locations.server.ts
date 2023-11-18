@@ -3,8 +3,11 @@ import { Bucket } from "../bucket";
 import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { LocationsRoutes } from "./locations.client";
 
+
+const bucketPrefix = "spoudastiria/";
+
 // Include this in all .server.ts files
-let serverRoutes = JSON.parse(JSON.stringify(LocationsRoutes)) as typeof LocationsRoutes; // Copy the routes object to split it into client and server routes
+const serverRoutes = JSON.parse(JSON.stringify(LocationsRoutes)) as typeof LocationsRoutes; // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations"));
@@ -59,7 +62,6 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 		const body = await blob.arrayBuffer();
 		const link = generateLink(12) + "." + filetype.split("/")[1];
 		if (imageMIMEType.includes(filetype)) {
-			if (location.image) await Bucket.delete(ctx, location.image);
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [link, id]);
 			return "Image uploaded successfully";

@@ -703,36 +703,35 @@ export default function RegistrationsTable() {
 					];
 				}),
 			]);
-			const wsStudentsBookPayments = xlsx.utils.aoa_to_sheet(
+			const wsStudentsBookPayments = xlsx.utils.aoa_to_sheet<
+				string | number
+			>([
 				[
-					[
-						"Αριθμός Μητρώου",
-						"Επώνυμο",
-						"Όνομα",
-						"Όνομα Πατρός",
-						"Διδάσκων Καθηγητής",
-						"Email",
-						"Τηλέφωνα",
-						"Ποσό Πληρωμής",
-						"Σύνολο Πληρωμής",
-					],
-				].concat(
-					items.map((s) => {
-						// @ts-ignore
-						return [
-							s.student.am,
-							s.student.last_name,
-							s.student.first_name,
-							s.student.fathers_name,
-							s.teacher.fullname,
-							s.student.email,
-							s.student.telephone + "-" + s.student.cellphone,
-							s.student.payment_amount as string,
-							s.student.total_payment as string,
-						];
-					})
-				)
-			);
+					"Αριθμός Μητρώου",
+					"Επώνυμο",
+					"Όνομα",
+					"Όνομα Πατρός",
+					"Διδάσκων Καθηγητής",
+					"Email",
+					"Τηλέφωνα",
+					"Ποσό Πληρωμής",
+					"Σύνολο Πληρωμής",
+				],
+				...items.map((s) => {
+					// @ts-ignore
+					return [
+						s.student.am,
+						s.student.last_name,
+						s.student.first_name,
+						s.student.fathers_name,
+						s.teacher.fullname,
+						s.student.email,
+						s.student.telephone + "-" + s.student.cellphone,
+						s.student.payment_amount,
+						s.student.total_payment,
+					];
+				}),
+			]);
 			const wsBookByTeacher = teachers.map((teacher) => {
 				const students = items.filter(
 					(item) => item.teacher.id === teacher.id
