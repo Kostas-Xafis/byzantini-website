@@ -62,10 +62,7 @@ export function toggleCheckboxes(force?: boolean) {
 			allCbs.forEach((cb) => {
 				cb.classList.toggle("selected", force);
 				//@ts-ignore
-				cb.parentElement.parentElement.classList.toggle(
-					"selectedRow",
-					force
-				);
+				cb.parentElement.classList.toggle("selectedRow", force);
 			});
 			mainCb.classList.toggle("selected", force);
 			if (force === false) {
@@ -79,10 +76,7 @@ export function toggleCheckboxes(force?: boolean) {
 			allCbs.forEach((cb) => {
 				cb.classList.toggle("selected", !isSelected);
 				//@ts-ignore
-				cb.parentElement.parentElement.classList.toggle(
-					"selectedRow",
-					!isSelected
-				);
+				cb.parentElement.classList.toggle("selectedRow", !isSelected);
 			});
 			mainCb.classList.toggle("selected", !isSelected);
 			if (isSelected) {
@@ -148,25 +142,22 @@ export default function Row(props: Props) {
 				data-id={data[0]}
 				data-index={index}
 				class={
-					"row relative grid grid-flow-col justify-between justify-items-center items-center h-min px-8 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent" +
-					" hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100" +
-					(props?.header
-						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500"
+					"row max-sm:text-sm" +
+					(header
+						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500  before:!bg-white border-b-2 border-b-red-900"
 						: "")
 				}
 			>
 				{hasSelectBox && (
-					<div class="relative w-full">
-						<div
-							class={
-								"group/checkbox relative items-center" +
-								(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
-							}
-							data-value={data[0]}
-						>
-							<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
-							<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
-						</div>
+					<div
+						class={
+							"group/checkbox relative w-full items-center" +
+							(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
+						}
+						data-value={data[0]}
+					>
+						<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
+						<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
 					</div>
 				)}
 				<For each={data}>
@@ -201,22 +192,22 @@ export default function Row(props: Props) {
 						return (
 							<div
 								class={
-									"group/sort relative w-full data-[asc]:bg-red-900 data-[desc]:bg-red-900 data-[asc]:text-white data-[desc]:text-white py-2" +
+									"relative w-full py-2" +
 									(header
-										? " group/head grid h-full items-center "
+										? " group/head grid h-full items-center data-[asc]:bg-red-900 data-[desc]:bg-red-900 data-[asc]:text-white data-[desc]:text-white"
 										: "")
 								}
 								data-col-ind={colIndex()}
 								onClick={onClickSort}
 							>
-								<p class="group-data-[asc]/sort:text-white group-data-[desc]/sort:text-white">
-									{item}
-								</p>
-								{props?.header && (
+								{header ? (
 									<>
+										{item}
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
 									</>
+								) : (
+									item
 								)}
 							</div>
 						);

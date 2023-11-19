@@ -1,19 +1,9 @@
-import AirDatepicker from "air-datepicker";
-import {
-	For,
-	Show,
-	createSignal,
-	onMount,
-	type Accessor,
-	type Setter,
-} from "solid-js";
-import { FileHandler } from "../../../lib/fileHandling.client";
-import { setFocusFixed, sleep } from "../../../lib/utils.client";
-import type { TooltipProps } from "../Tooltip.solid";
-import Tooltip from "../Tooltip.solid";
-import { CloseButton } from "../admin/table/CloseButton.solid";
-import FileInput from "./FileInput.solid";
+import { For, Show } from "solid-js";
 import type { PartialBy } from "../../../types/helpers";
+import Tooltip, { type TooltipProps } from "../Tooltip.solid";
+import DateInput from "./DateInput.solid";
+import FileInput from "./FileInput.solid";
+import MultiFileInput from "./MultiFileInput.solid";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -90,38 +80,6 @@ export function getByName(
 	}
 }
 
-const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
-
-const months = [
-	"Ιαν",
-	"Φεβ",
-	"Μαρ",
-	"Απρ",
-	"Μαι",
-	"Ιουν",
-	"Ιουλ",
-	"Αυγ",
-	"Σεπ",
-	"Οκτ",
-	"Νοε",
-	"Δεκ",
-];
-
-const monthsFull = [
-	"Ιανουάριος",
-	"Φεβρουάριος",
-	"Μάρτιος",
-	"Απρίλιος",
-	"Μάιος",
-	"Ιούνιος",
-	"Ιούλιος",
-	"Αύγουστος",
-	"Σεπτέμβριος",
-	"Οκτώβριος",
-	"Νοέμβριος",
-	"Δεκέμβριος",
-];
-
 type InputProps = {
 	type:
 		| null
@@ -171,7 +129,6 @@ export default function Input(props: InputProps) {
 		type,
 		name,
 		label,
-		prefix,
 		placeholder,
 		value,
 		required,
@@ -183,102 +140,10 @@ export default function Input(props: InputProps) {
 		valueLiteral = false,
 		multiselectList,
 		multiselectOnce,
-		fileExtension,
 		minmax,
 		tooltip,
 	} = props;
 	if (type === null) return <></>;
-	if (type === "date") {
-		// if date input has value, set it
-		onMount(() => {
-			const hasValue = value !== undefined && value !== null;
-			new AirDatepicker(`input[name='${name}']`, {
-				view: "years",
-				startDate: new Date(value || Date.now()),
-				firstDay: 0,
-				dateFormat: "yyyy-mm-dd",
-				autoClose: true,
-				isMobile: document.body.clientWidth < 768,
-				selectedDates: hasValue ? [new Date(value)] : undefined,
-				onSelect({ date, datepicker }) {
-					if (!date || Array.isArray(date)) return;
-					datepicker.hide();
-					const dateInput = document.querySelector(
-						`input[name='${name}']`
-					) as HTMLInputElement;
-					dateInput.valueAsDate = new Date(
-						date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
-					);
-					setFocusFixed(
-						dateInput.parentElement
-							?.nextElementSibling as HTMLElement
-					);
-				},
-				locale: {
-					days: days,
-					daysShort: days,
-					daysMin: days,
-					months: monthsFull,
-					monthsShort: months,
-				},
-			});
-			if (!value) return;
-			// set value after datepicker is initialized because it resets the starting value
-			sleep(200).then(() => {
-				(
-					document.querySelector(
-						`input[name='${name}']`
-					) as HTMLInputElement
-				).valueAsDate = new Date(value);
-			});
-		});
-	}
-
-	let fileList: Accessor<string[]> = () => [],
-		setFileList: Setter<string[]>;
-	let onFileClick;
-	let onFileChange;
-	let onFileRemove: (fileId?: number) => void;
-	if (type === "multifile") {
-		[fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
-		const fileHandler = new FileHandler(prefix);
-		onFileClick = (e: MouseEvent) => {
-			e.stopPropagation();
-			e.preventDefault();
-			const input = document.querySelector(
-				`input[name='${name}']`
-			) as HTMLInputElement;
-			input.click();
-		};
-		onFileChange = async (e: Event) => {
-			const input = e.currentTarget as HTMLInputElement;
-			const files = input?.files;
-			if (!files) return;
-			fileHandler.addFiles(files);
-			setFileList(fileHandler.getFiles().map((f) => f.name));
-		};
-		onFileRemove = (fileId: number = 0) => {
-			fileHandler.removeFile(fileId);
-			setFileList(fileHandler.getFiles().map((f) => f.name));
-		};
-		onMount(() => {
-			const fileDiv = document.querySelector(
-				"#multifileDropZone"
-			) as HTMLElement;
-			fileHandler.mountDragAndDrop(fileDiv, {
-				enterEvent: (e) => {
-					fileDiv.classList.add("bg-gray-600", "z-10", "unblur");
-				},
-				leaveEvent: (e) => {
-					fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
-				},
-				dropEvent: (e) => {
-					fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
-					setFileList(fileHandler.getFiles().map((f) => f.name));
-				},
-			});
-		});
-	}
 
 	document.querySelectorAll(".formInputs").forEach((inp) => {
 		(inp as HTMLElement).addEventListener("focus", (e: FocusEvent) => {
@@ -305,10 +170,11 @@ export default function Input(props: InputProps) {
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show
 				when={
-					type !== "select" &&
+					type !== "date" &&
 					type !== "file" &&
 					type !== "multiselect" &&
 					type !== "multifile" &&
+					type !== "select" &&
 					type !== "textarea"
 				}
 			>
@@ -345,6 +211,9 @@ export default function Input(props: InputProps) {
 						)
 					}
 				/>
+			</Show>
+			<Show when={type === "date"}>
+				<DateInput {...props} />
 			</Show>
 			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>
@@ -460,70 +329,13 @@ export default function Input(props: InputProps) {
 					</For>
 				</div>
 			</Show>
-			{/*----------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
+				{/*----------------------------------FILE INPUT---------------------------------------- */}
 				<FileInput {...props} />
 			</Show>
 			{/*--------------------------------MULTIFILE INPUT---------------------------------------- */}
 			<Show when={type === "multifile"}>
-				<div
-					data-name={name}
-					onclick={onFileClick}
-					class="relative peer peer-[:is(.show)]/file:hidden show w-[95%] h-[85%] justify-self-center self-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer z-10 overflow-y-auto"
-				>
-					<div
-						id="multifileDropZone"
-						class={
-							"absolute inset-0 grid items-center" +
-							((fileList().length > 0 && " -z-10 blur-[2px]") ||
-								" hover:bg-gray-600 group/file")
-						}
-					>
-						<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
-							<i
-								class={
-									"text-5xl text-gray-400 group-hover/file:text-gray-50  " +
-									(iconClasses || "")
-								}
-							></i>
-							<p class="text-2xl text-gray-400  group-hover/file:text-gray-50">
-								Drag&thinsp; & Drop
-							</p>
-						</div>
-					</div>
-					<div class="flex flex-row flex-wrap gap-4 p-4 self-start">
-						<For each={fileList()}>
-							{(fname, index) => (
-								<div class="flex flex-row items-center h-min px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
-									<CloseButton
-										onClick={() => onFileRemove(index())}
-										classes="text-lg w-[1.4rem] h-[1.4rem] mt-1 hover:bg-white"
-									></CloseButton>
-									<p>{fname}</p>
-								</div>
-							)}
-						</For>
-					</div>
-				</div>
-				<input
-					class="hidden"
-					type="file"
-					name={name}
-					required={required || false}
-					readOnly={disabled || false}
-					onchange={onFileChange}
-					accept={fileExtension || undefined}
-					multiple
-				/>
-				<style>
-					{`.show {
-						display: flex;
-					}
-					.unblur {
-						filter: blur(0);
-					}
-					`}
-				</style>
+				<MultiFileInput {...props} />
 			</Show>
 			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>

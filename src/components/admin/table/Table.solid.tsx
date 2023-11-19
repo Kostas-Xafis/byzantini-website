@@ -3,7 +3,7 @@ import Row, {
 	type CellValue,
 	toggleCheckbox,
 } from "./Row.solid";
-import { For, createMemo, createSignal, useContext } from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 import { getParent } from "../../../../lib/utils.client";
 export type Props = {
@@ -45,36 +45,6 @@ const move = (e: MouseEvent) => {
 	const walk = (x - startX) * 4; //scroll-fast
 	(e.currentTarget as HTMLElement).scrollLeft = scrollLeft - walk;
 };
-
-// const getChunkPosition = (arrSize: number): [number, number] => {
-// 	// This will load chunkSize * 3 items at a time
-
-// 	// No need to chunk if there are less than 50 items
-// 	if (arrSize < 50) return [0, arrSize];
-// 	const table = document.querySelector(
-// 		"#tableContainer .data-container"
-// 	) as HTMLElement;
-
-// 	const chunkSize = 50;
-// 	const totalChunks = Math.ceil(arrSize / chunkSize);
-
-// 	const tableHeight = table.scrollHeight;
-// 	const chunkHeight = tableHeight / totalChunks;
-
-// 	const tableTopPosition = table.scrollTop;
-// 	const chunkIndex = Math.floor(tableTopPosition / chunkHeight) + 1;
-
-// 	if (tableTopPosition % chunkHeight < chunkHeight * 0.25 && chunkIndex > 1) {
-// 		return [(chunkIndex - 1) * chunkSize, chunkIndex * chunkSize].map((n) =>
-// 			Math.min(n, arrSize)
-// 		) as [number, number];
-// 	} else if (tableTopPosition % chunkHeight > chunkHeight * 0.75) {
-// 		return [chunkIndex * chunkSize, (chunkIndex + 1) * chunkSize].map((n) =>
-// 			Math.min(n, arrSize)
-// 		) as [number, number];
-// 	}
-// 	// return
-// };
 
 export default function Table(props: Props) {
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>(
@@ -194,7 +164,40 @@ export default function Table(props: Props) {
 				{`
 	.row {
 		${columnWidths}
+		position: relative;
+		display: grid;
+		grid-auto-flow: column;
+		justify-content: space-between;
+		place-items: center;
+		height: min-content;
+		padding-left: 2rem/* 32px */;
+   		padding-right: 2rem/* 32px */;
+		column-gap: 0.5rem/* 8px */;
+		font-size: 1.125rem/* 18px */;
+   		line-height: 1.75rem/* 28px */;
+		text-align: center;
+		background-color: transparent;
 	}
+	/* shorthand for this:
+		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-8 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
+	*/
+	.row::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -10;
+	}
+	.row:hover {
+		--tw-shadow-color: #9ca3af;
+		--tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+    	--tw-shadow: var(--tw-shadow-colored);
+
+		box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+	}
+	.row:nth-child(odd)::before {
+		background-color: rgb(243,244,246);
+	}
+
 	.row:is(.selectedRow):nth-child(odd)::before,
 	.row:is(.selectedRow)::before {
 		background-color: rgb(254,202,202);

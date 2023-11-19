@@ -1,4 +1,11 @@
-import { Show, createEffect, createMemo, onMount, untrack } from "solid-js";
+import {
+	Show,
+	createEffect,
+	createMemo,
+	createSignal,
+	onMount,
+	untrack,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 import {
 	API,
@@ -9,7 +16,11 @@ import {
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import { getKeyIndex, removeAccents } from "../../../lib/utils.client";
+import {
+	getKeyIndex,
+	mappedValue,
+	removeAccents,
+} from "../../../lib/utils.client";
 import type {
 	Instruments,
 	Registrations,
@@ -259,6 +270,9 @@ const searchColumns: SearchColumn[] = [
 ];
 
 const [selectedItems, setSelectedItems] = useSelectedRows();
+const [chunkLoading, setChunkLoading] = createSignal<number>(1);
+const chunkSize = 100;
+let timeDropdown = 0;
 
 export default function RegistrationsTable() {
 	const [searchQuery, setSearchQuery] = createStore<
@@ -277,7 +291,26 @@ export default function RegistrationsTable() {
 	});
 
 	const shapedData = createMemo(() => {
-		const registrations = store[API.Registrations.get];
+		let registrations = store[API.Registrations.get];
+		console.log(
+			mappedValue(
+				chunkLoading() * chunkSize,
+				0,
+				registrations?.length || 0,
+				0,
+				registrations?.length || 0
+			)
+		);
+		registrations = registrations?.slice(
+			0,
+			mappedValue(
+				chunkLoading() * chunkSize,
+				0,
+				registrations?.length || 0,
+				0,
+				registrations?.length || 0
+			)
+		);
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return [];
@@ -828,19 +861,15 @@ export default function RegistrationsTable() {
 				let rows = [
 					...document.querySelectorAll<HTMLElement>(".row[data-id]"),
 				];
-				let result = rows
-					.map((row) => {
-						const id = Number(row.dataset.id);
-						//@ts-ignore
-						let reg = registrations.find((r) => r.id === id);
-						if (reg) return { row, registration: reg };
-						return null;
-					})
-					.filter((x) => !!x) as {
-					row: HTMLElement;
-					registration: Registrations;
-				}[];
-				result.forEach(({ row, registration }) => {
+				let resultArray = [];
+				for (let i = 0; i < rows.length; i++) {
+					const row = rows[i];
+					const id = Number(row.dataset.id);
+					let reg = registrations.find((r) => r.id === id);
+					if (reg) resultArray.push({ row, registration: reg });
+				}
+				for (let i = 0; i < resultArray.length; i++) {
+					const { row, registration } = resultArray[i];
 					const payment_status =
 						registration.total_payment -
 						registration.payment_amount;
@@ -848,19 +877,34 @@ export default function RegistrationsTable() {
 						registration.payment_amount === 0 &&
 						registration.total_payment === 0
 					)
-						return;
-					if (payment_status === 0) row.setAttribute("data-paid", "");
-					else if (
+						continue;
+					if (payment_status === 0) {
+						row.setAttribute("data-paid", "");
+					} else if (
 						payment_status > 0 ||
 						(registration.payment_amount >
 							registration.total_payment &&
 							registration.total_payment === 0)
-					)
+					) {
 						row.setAttribute("data-partially-paid", "");
-				});
+					}
+				}
 			});
 		});
 	});
+
+	let InterId: any;
+	InterId = setInterval(() => {
+		const registrations = store[API.Registrations.get];
+		if (!registrations) return;
+		if (chunkLoading() * chunkSize >= registrations.length) {
+			clearInterval(InterId);
+			return;
+		}
+		setChunkLoading((x) => x + 1);
+		timeDropdown += 250;
+		document.dispatchEvent(new CustomEvent("hydrate") as CustomEvent);
+	}, 250 - timeDropdown);
 
 	return (
 		<SelectedItemsContext.Provider
@@ -901,7 +945,7 @@ export default function RegistrationsTable() {
 			<style>
 				{`
 /* Paid rows */
-.row[data-paid]:nth-child(odd)::before {
+.row[data-paid]:nth-of-type(odd)::before {
 	background: linear-gradient(to right, #6FD286, 80px, rgb(243,244,246) 160px);
 }
 .row[data-paid]::before {
@@ -912,7 +956,7 @@ export default function RegistrationsTable() {
 }
 
 /* Partially-Paid rows */
-.row[data-partially-paid]:nth-child(odd)::before {
+.row[data-partially-paid]:nth-of-type(odd)::before {
 	background: linear-gradient(to right, #FDE85A, 80px, rgb(243,244,246) 160px);
 }
 .row[data-partially-paid]::before {

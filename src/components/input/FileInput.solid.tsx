@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
-export type Props = {
+export type FileInputProps = {
 	name: string;
 	prefix: string;
 	value?: string | number;
@@ -12,7 +12,7 @@ export type Props = {
 	fileExtension?: string;
 };
 
-export default function FileInput(props: Props) {
+export default function FileInput(props: FileInputProps) {
 	const {
 		name,
 		prefix,
