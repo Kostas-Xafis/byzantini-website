@@ -17,13 +17,14 @@ export { API };
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
 const URL = (import.meta.env.URL as string) ?? "";
 
-export type StoreMutation = {
-	endpoint?: APIEndpointKey,
+export type StoreMutation<T extends keyof APIStore> = {
+	endpoint?: T,
+	foreignKey?: APIStoreValue<T>,
 	ids: number[];
 	type: ActionEnum;
 };
 
-export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, Mutations?: StoreMutation) => {
+export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, Mutations?: StoreMutation<any>) => {
 	const Route = APIEndpoints[endpoint];
 	if ("validation" in Route && Route.validation && req.RequestObject) {
 		parse(Route.validation, req.RequestObject);
@@ -51,20 +52,24 @@ export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[
 		}
 		if (setStore && "data" in response) {
 			if (Mutations && Mutations.endpoint) {
+				// If a mutation is assigned then do an in place replacement of the data in the store.
 				setStore(Mutations.endpoint as APIEndpointKey, (prev) => {
 					let data = response.data;
 					if (!data) return prev;
+
 					const isArr = Array.isArray(data);
 					let prevData = prev as any[] || [];
 					if (Mutations.type === ActionEnum.ADD)
 						return isArr ? [...prevData, ...(response.data as any[])] : [...prevData, response.data];
 
-					if (Array.isArray(data)) {
-						return prevData.map(item => Mutations.ids.includes(item.id) ? (data as any[]).find(d => d.id === item.id) || item : item);
-					} else {
-						return prevData.map(item => Mutations.ids.includes(item.id) ? response.data : item);
-					}
+					let accessor = Mutations.foreignKey || "id";
+					prevData = prevData.filter(item => !Mutations.ids.includes(item[accessor]));
+					if (Array.isArray(data))
+						prevData = [...prevData, ...data];
+					prevData = [...prevData, data];
+					return prevData.sort((a, b) => a[accessor] - b[accessor]);
 				});
+				// Else do a full replacement of the data in the store.
 			} else setStore(endpoint, response.data as APIStoreValue<T>);
 		}
 		return { data: response.data as APIStoreValue<T> };

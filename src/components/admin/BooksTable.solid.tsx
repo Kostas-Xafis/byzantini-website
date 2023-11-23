@@ -123,13 +123,18 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function BooksTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Books.getById,
-		API.Books.get
-	);
-	const [actionPressedWholesalers, setActionPressedWholesalers] =
-		useHydrateById(setStore, API.Wholesalers.getById, API.Wholesalers.get);
+	const setBookHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Books.getById,
+			destEndpoint: API.Books.get,
+		},
+	]);
+	const setWholesalerHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Wholesalers.getById,
+			destEndpoint: API.Wholesalers.get,
+		},
+	]);
 
 	useHydrate(() => {
 		useAPI(API.Books.get, {}, setStore);
@@ -179,9 +184,9 @@ export default function BooksTable() {
 				setStore
 			);
 			if (!res.data) return;
-			setActionPressed({
+			setBookHydrate({
 				action: ActionEnum.ADD,
-				mutate: [res.data.insertId],
+				ids: [res.data.insertId],
 			});
 		};
 		return {
@@ -216,7 +221,7 @@ export default function BooksTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({ action: ActionEnum.MODIFY, mutate: [book.id] });
+			setBookHydrate({ action: ActionEnum.MODIFY, ids: [book.id] });
 		};
 		return {
 			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
@@ -248,9 +253,9 @@ export default function BooksTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setBookHydrate({
 				action: ActionEnum.DELETE,
-				mutate: selectedItems.slice(),
+				ids: selectedItems.slice(),
 			});
 		};
 		return {
@@ -276,9 +281,9 @@ export default function BooksTable() {
 				setStore
 			);
 			if (!res.data) return;
-			setActionPressedWholesalers({
+			setWholesalerHydrate({
 				action: ActionEnum.ADD,
-				mutate: [res.data.insertId],
+				ids: [res.data.insertId],
 			});
 		};
 		return {
@@ -310,9 +315,9 @@ export default function BooksTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressedWholesalers({
+			setWholesalerHydrate({
 				action: ActionEnum.DELETE,
-				mutate: data,
+				ids: data,
 			});
 		};
 		return {

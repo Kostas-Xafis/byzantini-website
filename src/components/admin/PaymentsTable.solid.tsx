@@ -96,11 +96,12 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function PaymentsTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Payments.getById,
-		API.Payments.get
-	);
+	const setPaymentHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Payments.getById,
+			destEndpoint: API.Payments.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.Payments.get, {}, setStore);
 		useAPI(API.Books.get, {}, setStore);
@@ -141,9 +142,9 @@ export default function PaymentsTable() {
 				setStore
 			);
 			if (!res.data) return;
-			setActionPressed({
+			setPaymentHydrate({
 				action: ActionEnum.ADD,
-				mutate: [res.data.id],
+				ids: [res.data.id],
 			});
 		};
 		return {
@@ -197,9 +198,9 @@ export default function PaymentsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setPaymentHydrate({
 				action: ActionEnum.MODIFY,
-				mutate: [payment.id],
+				ids: [payment.id],
 			});
 		};
 		const filledInputs = Fill(PaymentsInputs(books), payment);
@@ -237,9 +238,9 @@ export default function PaymentsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setPaymentHydrate({
 				action: ActionEnum.CHECK,
-				mutate: selectedItems.slice(),
+				ids: selectedItems.slice(),
 			});
 		};
 		return {
@@ -276,9 +277,9 @@ export default function PaymentsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setPaymentHydrate({
 				action: ActionEnum.DELETE,
-				mutate: selectedItems.slice(),
+				ids: selectedItems.slice(),
 			});
 		};
 		return {

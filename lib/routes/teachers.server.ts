@@ -35,13 +35,31 @@ serverRoutes.getByFullnames.func = async _ctx => {
 serverRoutes.getClasses.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
 };
+serverRoutes.getClassesById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const id = await ctx.request.json();
+		return await executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", id);
+	});
+};
 
 serverRoutes.getLocations.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations"));
 };
+serverRoutes.getLocationsById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const id = await ctx.request.json();
+		return await executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id = ?", id);
+	});
+};
 
 serverRoutes.getInstruments.func = async ctx => {
 	return await execTryCatch(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments"));
+};
+serverRoutes.getInstrumentsById.func = async ctx => {
+	return await execTryCatch(async () => {
+		const id = await ctx.request.json();
+		return await executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id = ?", id);
+	});
 };
 
 serverRoutes.post.func = async ctx => {

@@ -1,6 +1,6 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FileHandler, type FileProxy } from "../../../lib/fileHandling.client";
+import { FileHandler } from "../../../lib/fileHandling.client";
 import {
 	API,
 	useAPI,
@@ -97,11 +97,12 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function AnnouncementsTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Announcements.getById,
-		API.Announcements.get
-	);
+	const setAnnouncementHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Announcements.getById,
+			destEndpoint: API.Announcements.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.Announcements.get, {}, setStore);
 	});
@@ -178,7 +179,7 @@ export default function AnnouncementsTable() {
 			);
 			await asyncQueue(photos, 2, true);
 			await ThumbnailGenerator.cleanup();
-			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
+			setAnnouncementHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
 		return {
 			inputs: Omit(AnnouncementsInputs(), "id"),
@@ -206,7 +207,7 @@ export default function AnnouncementsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
+			setAnnouncementHydrate({ action: ActionEnum.DELETE, ids: data });
 		};
 		return {
 			inputs: {},

@@ -42,11 +42,24 @@ const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherCla
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
-
+const getClassesById: EndpointRoute<"POST:/teachers/teacherClassesById", number[], TeacherClasses[]> = {
+	authentication: true,
+	method: "POST",
+	path: "/teachers/teacherClassesById",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
 const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocations[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/locations",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+const getLocationsById: EndpointRoute<"POST:/teachers/locationsById", number[], TeacherLocations[]> = {
+	authentication: true,
+	method: "POST",
+	path: "/teachers/locationsById",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
@@ -55,6 +68,13 @@ const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherIn
 	authentication: false,
 	method: "GET",
 	path: "/teachers/instruments",
+	hasUrlParams: false,
+	func: async ctx => null as any
+};
+const getInstrumentsById: EndpointRoute<"POST:/teachers/instrumentsById", number[], TeacherInstruments[]> = {
+	authentication: true,
+	method: "POST",
+	path: "/teachers/instrumentsById",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
@@ -118,8 +138,11 @@ export const TeachersRoutes = {
 	getByPriorityClasses,
 	getByFullnames,
 	getClasses,
+	getClassesById,
 	getLocations,
+	getLocationsById,
 	getInstruments,
+	getInstrumentsById,
 	post,
 	update,
 	fileUpload,
@@ -152,21 +175,35 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		path: "/teachers/fullnames",
 		endpoint: "Teachers.getByFullnames"
 	},
-
 	"Teachers.getClasses": {
 		method: "GET",
 		path: "/teachers/teacherClasses",
 		endpoint: "Teachers.getClasses"
+	},
+	"Teachers.getClassesById": {
+		method: "POST",
+		path: "/teachers/teacherClassesById",
+		endpoint: "Teachers.getClassesById"
 	},
 	"Teachers.getLocations": {
 		method: "GET",
 		path: "/teachers/locations",
 		endpoint: "Teachers.getLocations"
 	},
+	"Teachers.getLocationsById": {
+		method: "POST",
+		path: "/teachers/locationsById",
+		endpoint: "Teachers.getLocationsById"
+	},
 	"Teachers.getInstruments": {
 		method: "GET",
 		path: "/teachers/instruments",
 		endpoint: "Teachers.getInstruments",
+	},
+	"Teachers.getInstrumentsById": {
+		method: "POST",
+		path: "/teachers/instrumentsById",
+		endpoint: "Teachers.getInstrumentsById"
 	},
 	"Teachers.post": {
 		method: "POST",
@@ -204,8 +241,11 @@ export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 		getByPriorityClasses: "Teachers.getByPriorityClasses",
 		getByFullnames: "Teachers.getByFullnames",
 		getClasses: "Teachers.getClasses",
+		getClassesById: "Teachers.getClassesById",
 		getLocations: "Teachers.getLocations",
+		getLocationsById: "Teachers.getLocationsById",
 		getInstruments: "Teachers.getInstruments",
+		getInstrumentsById: "Teachers.getInstrumentsById",
 		post: "Teachers.post",
 		update: "Teachers.update",
 		fileUpload: "Teachers.fileUpload",

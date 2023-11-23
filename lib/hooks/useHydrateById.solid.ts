@@ -1,58 +1,51 @@
+import { batch } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import { useAPI, type APIStore } from "./useAPI.solid";
 import { createEffect, createSignal, on } from "solid-js";
 import { TypeEffectEnum, selectedRowsEvent } from "./useSelectedRows.solid";
 
-// type Mutation<S extends keyof APIStore> = {
-// 	endpoint: S;
-// 	foreighKey: keyof S;
-// 	ids: number[];
-// 	type: ActionEnum;
-// };
+type Mutation<S extends keyof APIStore> = {
+	srcEndpoint: keyof APIStore; // Basically the get by id endpoint
+	destEndpoint: S; // The endpoint in the store to mutate
+	foreignKey?: keyof S; // The foreign key to match the id to
+};
 
-
-export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutationAccessEndpoint: keyof APIStore, mutatedEndpoint: keyof APIStore) {
+export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutations: Mutation<any>[]) {
 	const [actionPressed, setActionPressed] = createSignal<{
 		action: ActionEnum;
-		// mutations: { endpoint: keyof APIStore, foreignKey:string, ids: number[], primary?: boolean; }[];
-		mutate: number[]; //Array of mutated ids
-		mutatedEndpoint?: keyof APIStore; // In case that the endpoint is different from the mutateEndpoint needs to be mutated
+		ids: number[];
 	}>(
-		{ action: ActionEnum.NONE, mutate: [] },
+		{ action: ActionEnum.NONE, ids: [] },
 		{
 			equals: false,
 		}
 	);
-	const hydrateById = (muts: number[], mutationType: ActionEnum) => {
-		const mutations = {
-			endpoint: actionPressed().mutatedEndpoint || mutatedEndpoint,
-			ids: muts,
-			type: mutationType,
-		};
-		useAPI(
-			mutationAccessEndpoint,
-			{ RequestObject: muts },
-			setStore,
-			mutations
-		);
+	const hydrateById = (ids: number[], mutationType: ActionEnum) => {
+		if (mutationType === ActionEnum.DELETE) {
+			batch(() => {
+				mutations.forEach((mut) => {
+					setStore(mut.destEndpoint, (prev) => {
+						if (!prev) return;
+						return (prev as any[]).filter((item) => !ids.includes(mut.foreignKey ? item[mut.foreignKey] : item.id));
+					});
+				});
+			});
+		} else {
+			mutations.forEach((mut) => {
+				useAPI(mut.srcEndpoint, { RequestObject: ids }, setStore, { type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
+			});
+		}
 	};
 
 	createEffect(
-		on(actionPressed, ({ action, mutate, mutatedEndpoint: mutEndpoint }) => {
+		on(actionPressed, ({ action, ids }) => {
 			if (action === ActionEnum.NONE || action === ActionEnum.DOWNLOAD_PDF || action === ActionEnum.DOWNLOAD_EXCEL)
 				return;
-			if (action === ActionEnum.DELETE) {
-				setStore(mutEndpoint || mutatedEndpoint, (prev) => {
-					if (!prev) return;
-					return (prev as any[]).filter((item) => !mutate.includes(item.id));
-				});
-			} else {
-				hydrateById(mutate, action);
-			}
+			hydrateById(ids, action);
 			selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 		})
 	);
 
-	return [actionPressed, setActionPressed] as const;
+	return setActionPressed;
 }

@@ -181,11 +181,12 @@ const columnNames: ColumnType<LocationsTable> = {
 
 export default function LocationsTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Locations.getById,
-		API.Locations.get
-	);
+	const setLocationHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Locations.getById,
+			destEndpoint: API.Locations.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.Locations.get, {}, setStore);
 	});
@@ -238,7 +239,7 @@ export default function LocationsTable() {
 					setStore
 				);
 			}
-			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
+			setLocationHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
 		return {
 			inputs: Omit(LocationsInputs(), "id"),
@@ -314,9 +315,9 @@ export default function LocationsTable() {
 					setStore
 				);
 			}
-			setActionPressed({
+			setLocationHydrate({
 				action: ActionEnum.MODIFY,
-				mutate: [location.id],
+				ids: [location.id],
 			});
 		};
 		return {
@@ -344,7 +345,7 @@ export default function LocationsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
+			setLocationHydrate({ action: ActionEnum.DELETE, ids: data });
 		};
 		return {
 			inputs: {},

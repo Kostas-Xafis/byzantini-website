@@ -388,13 +388,33 @@ export default function TeachersTable() {
 		SearchSetter<FullTeachers & TeacherJoins>
 	>({});
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Teachers.getById,
-		API.Teachers.get
-	);
-	const [actionPressedInstruments, setActionPressedInstruments] =
-		useHydrateById(setStore, API.Instruments.getById, API.Instruments.get);
+	const setTeacherHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Teachers.getById,
+			destEndpoint: API.Teachers.get,
+		},
+		{
+			srcEndpoint: API.Teachers.getClassesById,
+			destEndpoint: API.Teachers.getClasses,
+			foreignKey: "teacher_id",
+		},
+		{
+			srcEndpoint: API.Teachers.getLocationsById,
+			destEndpoint: API.Teachers.getLocations,
+			foreignKey: "teacher_id",
+		},
+		{
+			srcEndpoint: API.Teachers.getInstrumentsById,
+			destEndpoint: API.Teachers.getInstruments,
+			foreignKey: "teacher_id",
+		},
+	]);
+	const setActionPressedInstruments = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Instruments.getById,
+			destEndpoint: API.Instruments.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.Teachers.get, {}, setStore);
 		useAPI(API.Teachers.getClasses, {}, setStore);
@@ -524,6 +544,7 @@ export default function TeachersTable() {
 						? await fileToBlob(files.cv[0].file)
 						: null,
 			};
+			console.log({ files, blobs });
 			await Promise.all([
 				blobs.picture
 					? useAPI(
@@ -547,7 +568,7 @@ export default function TeachersTable() {
 					: Promise.resolve(),
 			]);
 
-			setActionPressed({ action: ActionEnum.ADD, mutate: [id] });
+			setTeacherHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
 		return {
 			inputs: Omit(
@@ -585,6 +606,9 @@ export default function TeachersTable() {
 
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
+			const classes = getMultiSelect("teacherClasses").map((btn) =>
+				Number(btn.dataset.value)
+			) as number[];
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
@@ -603,13 +627,17 @@ export default function TeachersTable() {
 				online: getMultiSelect("online").map(
 					(btn) => !!Number(btn.dataset.value)
 				)[0] as boolean,
-				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
-					Number(btn.dataset.value)
-				) as number[],
-				teacherInstruments: [
-					...getMultiSelect("teacherInstrumentsTraditional"),
-					...getMultiSelect("teacherInstrumentsEuropean"),
-				].map((btn) => Number(btn.dataset.value)) as number[],
+				teacherClasses: classes,
+				teacherInstruments: (
+					[
+						classes.find((c) => c === 1) &&
+							getMultiSelect("teacherInstrumentsTraditional"),
+						classes.find((c) => c === 2) &&
+							getMultiSelect("teacherInstrumentsEuropean"),
+					].flat() as (HTMLInputElement | undefined)[]
+				)
+					.map((btn) => btn && Number(btn.dataset.value))
+					.filter((btn) => !!btn) as number[],
 				teacherLocations: getMultiSelect("teacherLocations").map(
 					(btn) => Number(btn.dataset.value)
 				) as number[],
@@ -692,9 +720,9 @@ export default function TeachersTable() {
 					: Promise.resolve(),
 			]);
 
-			setActionPressed({
+			setTeacherHydrate({
 				action: ActionEnum.MODIFY,
-				mutate: [teacher.id],
+				ids: [teacher.id],
 			});
 		};
 
@@ -733,18 +761,18 @@ export default function TeachersTable() {
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length < 1) return deleteModal;
 		const submit = async function (form: HTMLFormElement) {
-			const data = selectedItems.map(
+			const ids = selectedItems.map(
 				(i) => (teachers.find((p) => p.id === i) as Teachers).id
 			);
 			const res = await useAPI(
 				API.Teachers.delete,
 				{
-					RequestObject: data,
+					RequestObject: ids,
 				},
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
+			setTeacherHydrate({ action: ActionEnum.DELETE, ids: ids });
 		};
 		return {
 			inputs: {},
@@ -783,7 +811,7 @@ export default function TeachersTable() {
 			if (!res.data) return;
 			setActionPressedInstruments({
 				action: ActionEnum.ADD,
-				mutate: [res.data.insertId],
+				ids: [res.data.insertId],
 			});
 		};
 		return {
@@ -839,7 +867,7 @@ export default function TeachersTable() {
 			if (!res.data && !res.message) return;
 			setActionPressedInstruments({
 				action: ActionEnum.DELETE,
-				mutate: [instrument.id],
+				ids: [instrument.id],
 			});
 		};
 		return {

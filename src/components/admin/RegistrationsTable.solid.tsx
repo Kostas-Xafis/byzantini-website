@@ -279,11 +279,12 @@ export default function RegistrationsTable() {
 		SearchSetter<Registrations>
 	>({});
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Registrations.getById,
-		API.Registrations.get
-	);
+	const setRegistrationHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Registrations.getById,
+			destEndpoint: API.Registrations.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.Registrations.get, {}, setStore);
 		useAPI(API.Teachers.getByFullnames, {}, setStore);
@@ -440,7 +441,10 @@ export default function RegistrationsTable() {
 				},
 				setStore
 			);
-			setActionPressed({ action: ActionEnum.MODIFY, mutate: [data.id] });
+			setRegistrationHydrate({
+				action: ActionEnum.MODIFY,
+				ids: [data.id],
+			});
 		};
 		const filledInputs = Fill(
 			RegistrationsInputs(teachers, instruments) as Record<
@@ -480,7 +484,7 @@ export default function RegistrationsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({ action: ActionEnum.DELETE, mutate: data });
+			setRegistrationHydrate({ action: ActionEnum.DELETE, ids: data });
 		};
 		return {
 			inputs: {},
@@ -532,10 +536,6 @@ export default function RegistrationsTable() {
 						await pdf.fillTemplate();
 						await pdf.download();
 					} catch (error) {}
-					setActionPressed({
-						action: ActionEnum.DOWNLOAD_PDF,
-						mutate: [],
-					});
 			  }
 			: async function (form: HTMLFormElement) {
 					const items = selectedItems.map((id) => {
@@ -566,10 +566,6 @@ export default function RegistrationsTable() {
 						}
 						await PDF.downloadBulk(pdfArr);
 					} catch (error) {}
-					setActionPressed({
-						action: ActionEnum.DOWNLOAD_PDF,
-						mutate: [],
-					});
 			  };
 		return {
 			inputs: {},

@@ -73,11 +73,12 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function PayoffsTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.Payoffs.getById,
-		API.Payoffs.get
-	);
+	const setPayoffHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.Payoffs.getById,
+			destEndpoint: API.Payoffs.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.Payoffs.get, {}, setStore);
 		useAPI(API.Wholesalers.get, {}, setStore);
@@ -126,9 +127,9 @@ export default function PayoffsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setPayoffHydrate({
 				action: ActionEnum.MODIFY,
-				mutate: [payoff.id],
+				ids: [payoff.id],
 			});
 		};
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
@@ -161,9 +162,9 @@ export default function PayoffsTable() {
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
+			setPayoffHydrate({
 				action: ActionEnum.DELETE,
-				mutate: selectedItems.slice(),
+				ids: selectedItems.slice(),
 			});
 		};
 		return {
