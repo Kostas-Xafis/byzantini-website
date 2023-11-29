@@ -67,7 +67,9 @@ export function toggleCheckboxes(force?: boolean) {
 			if (force === false) {
 				selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 			} else if (force === true) {
-				const ids = [...allCbs].map((el) => Number(el.dataset.value));
+				const ids = [...allCbs].map(
+					(el) => Number((el.parentElement as HTMLElement).dataset.id) //Get the id of the row;
+				);
 				selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
 			}
 		} else {
@@ -81,7 +83,9 @@ export function toggleCheckboxes(force?: boolean) {
 			if (isSelected) {
 				selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 			} else {
-				const ids = [...allCbs].map((el) => Number(el.dataset.value));
+				const ids = [...allCbs].map(
+					(el) => Number((el.parentElement as HTMLElement).dataset.id) //Get the id of the row
+				);
 				selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
 			}
 		}
