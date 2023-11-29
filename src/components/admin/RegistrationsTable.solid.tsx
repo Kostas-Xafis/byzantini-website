@@ -293,15 +293,6 @@ export default function RegistrationsTable() {
 
 	const shapedData = createMemo(() => {
 		let registrations = store[API.Registrations.get];
-		console.log(
-			mappedValue(
-				chunkLoading() * chunkSize,
-				0,
-				registrations?.length || 0,
-				0,
-				registrations?.length || 0
-			)
-		);
 		registrations = registrations?.slice(
 			0,
 			mappedValue(

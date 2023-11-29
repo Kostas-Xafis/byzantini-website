@@ -115,6 +115,10 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
 
+		// If the teacher's name is not included in the filename, then delete the old file (Happens when the teacher's name is changed)
+		if (teacher.cv && !teacher.fullname.includes(teacher.cv.split(".")[0])) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
+		if (teacher.picture && !teacher.fullname.includes(teacher.picture.split(".")[0])) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
+
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
 		const body = await blob.arrayBuffer();

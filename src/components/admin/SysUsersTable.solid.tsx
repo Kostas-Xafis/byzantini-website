@@ -43,11 +43,12 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function SysUsersTable() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [actionPressed, setActionPressed] = useHydrateById(
-		setStore,
-		API.SysUsers.getById,
-		API.SysUsers.get
-	);
+	const setSysUserHydrate = useHydrateById(setStore, [
+		{
+			srcEndpoint: API.SysUsers.getById,
+			destEndpoint: API.SysUsers.get,
+		},
+	]);
 	useHydrate(() => {
 		useAPI(API.SysUsers.get, {}, setStore);
 		useAPI(API.SysUsers.getBySid, {}, setStore);
@@ -67,8 +68,9 @@ export default function SysUsersTable() {
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const link = store[API.SysUsers.createRegisterLink]?.link;
 		const submit = async function (form: HTMLFormElement) {
-			if (!link)
+			if (!link) {
 				await useAPI(API.SysUsers.createRegisterLink, {}, setStore);
+			}
 		};
 		return {
 			inputs: {},
@@ -105,21 +107,18 @@ export default function SysUsersTable() {
 			return deleteModal;
 
 		const submit = async function (form: HTMLFormElement) {
-			const data = selectedItems.map(
+			const ids = selectedItems.map(
 				(i) => (sysusers.find((p) => p.id === i) as SysUsers).id
 			);
 			const res = await useAPI(
 				API.SysUsers.delete,
 				{
-					RequestObject: data,
+					RequestObject: ids,
 				},
 				setStore
 			);
 			if (!res.data && !res.message) return;
-			setActionPressed({
-				action: ActionEnum.DELETE,
-				mutate: selectedItems.slice(),
-			});
+			setSysUserHydrate({ action: ActionEnum.DELETE, ids });
 		};
 		return {
 			inputs: {},

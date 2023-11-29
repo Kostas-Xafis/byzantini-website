@@ -10,15 +10,14 @@ export type CellValue = "string" | "number" | "date" | "link" | "boolean";
 
 interface Props {
 	data: (number | string)[]; // data[0] must always be the id of the item
-	columnType: CellValue[];
+	columnTypes: CellValue[];
 	hasSelectBox: boolean;
-	index?: number;
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
 }
 
 export function toggleCheckbox(id: number, force?: boolean) {
-	const cb = document.querySelector(`.cb[data-value="${id}"]`) as HTMLElement;
+	const cb = document.querySelector(`[data-id="${id}"] > .cb`) as HTMLElement;
 	if (cb !== null) {
 		// Toggling when there is a checkbox visible
 		const row = getParent(cb, ".row") as HTMLElement;
@@ -100,14 +99,7 @@ export function toggleCheckboxes(force?: boolean) {
 }
 
 export default function Row(props: Props) {
-	const {
-		data,
-		index = -1,
-		columnType,
-		header,
-		sortOnClick,
-		hasSelectBox,
-	} = props;
+	const { data, columnTypes, header, sortOnClick, hasSelectBox } = props;
 
 	let onClickSort: ((e: MouseEvent) => void) | undefined;
 	if (header) {
@@ -140,7 +132,6 @@ export default function Row(props: Props) {
 		<>
 			<div
 				data-id={data[0]}
-				data-index={index}
 				class={
 					"row max-sm:text-sm" +
 					(header
@@ -154,10 +145,9 @@ export default function Row(props: Props) {
 							"group/checkbox relative w-full items-center" +
 							(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
 						}
-						data-value={data[0]}
 					>
-						<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
-						<i class="absolute top-[50%] translate-y-[-50%] left-0 width-[16px] text-gray-700 fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
+						<i class="selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
+						<i class="selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
 					</div>
 				)}
 				<For each={data}>
@@ -166,7 +156,7 @@ export default function Row(props: Props) {
 							item = "-";
 						} else {
 							let type =
-								(!header && columnType[colIndex()]) || ""; // If it's a header row there is no type
+								(!header && columnTypes[colIndex()]) || ""; // If it's a header row there is no type
 							if (type === "link" && item) {
 								return (
 									<a
@@ -174,8 +164,7 @@ export default function Row(props: Props) {
 										target="_blank"
 										class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1"
 									>
-										<div>Προβολή</div>
-										<i class="fa-solid fa-up-right-from-square"></i>
+										<i class="fa-solid fa-up-right-from-square text-red-900"></i>
 									</a>
 								);
 							} else if (type === "link") {
@@ -192,12 +181,12 @@ export default function Row(props: Props) {
 						return (
 							<div
 								class={
-									"relative w-full py-2" +
+									"cell" +
 									(header
 										? " group/head grid h-full items-center data-[asc]:bg-red-900 data-[desc]:bg-red-900 data-[asc]:text-white data-[desc]:text-white"
 										: "")
 								}
-								data-col-ind={colIndex()}
+								data-col-ind={header && colIndex()}
 								onClick={onClickSort}
 							>
 								{header ? (

@@ -123,7 +123,7 @@ export default function Modal(props: Props) {
 	return (
 		<div
 			class={
-				"modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.2)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)]" +
+				"modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)] backdrop-blur-sm" +
 				(!globalOpen[MODAL_PREFIX] ? " hidden" : "")
 			}
 		>
@@ -135,14 +135,16 @@ export default function Modal(props: Props) {
 					data-prefix={MODAL_PREFIX}
 					class="peer/form group/form grid grid-cols-3 auto-rows-max gap-10 py-4 overflow-y-auto max-sm:grid-cols-1"
 				>
-					<For each={Object.values(action.inputs)}>
+					<For
+						each={Object.values(action.inputs).filter(
+							(input) => !!input.name
+						)}
+					>
 						{(input) => (
-							<Show when={input.name !== ""}>
-								<Input
-									{...(input as InputProps)}
-									prefix={MODAL_PREFIX}
-								></Input>
-							</Show>
+							<Input
+								{...(input as InputProps)}
+								prefix={MODAL_PREFIX}
+							></Input>
 						)}
 					</For>
 				</form>

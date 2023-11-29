@@ -140,19 +140,18 @@ export default function Table(props: Props) {
 			>
 				<Row
 					data={columns}
-					columnType={columnTypes}
+					columnTypes={columnTypes}
 					header
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
 				/>
 				<div class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
-						{(item, index) => {
+						{(item) => {
 							return (
 								<Row
 									data={item}
-									index={index()}
-									columnType={columnTypes}
+									columnTypes={columnTypes}
 									hasSelectBox={!!props.hasSelectBox}
 								/>
 							);
@@ -204,6 +203,20 @@ export default function Table(props: Props) {
 	}
 	.row:is(.selectedRow):hover {
 		--tw-shadow-color: #1f2937 !important;
+	}
+	.cell {
+		position: relative;
+		width: 100%;
+		padding-top: 0.5rem/* 8px */;
+		padding-bottom: 0.5rem/* 8px */;
+	}
+	.selectBox {
+		position: absolute;
+		top: 50%;
+		left: 0;
+		width: 16px;
+		transform: translateY(-50%);
+		color: rgb(55 65 81);
 	}
 	@keyframes ShakeAnimation {
 		0% {

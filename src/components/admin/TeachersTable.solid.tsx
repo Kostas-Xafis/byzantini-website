@@ -415,6 +415,17 @@ export default function TeachersTable() {
 			destEndpoint: API.Instruments.get,
 		},
 	]);
+	const fileUpload = (file: Blob, id: number) => {
+		return useAPI(
+			API.Teachers.fileUpload,
+			{
+				RequestObject: file,
+				UrlArgs: { id },
+			},
+			setStore
+		);
+	};
+
 	useHydrate(() => {
 		useAPI(API.Teachers.get, {}, setStore);
 		useAPI(API.Teachers.getClasses, {}, setStore);
@@ -544,29 +555,8 @@ export default function TeachersTable() {
 						? await fileToBlob(files.cv[0].file)
 						: null,
 			};
-			console.log({ files, blobs });
-			await Promise.all([
-				blobs.picture
-					? useAPI(
-							API.Teachers.fileUpload,
-							{
-								RequestObject: blobs.picture,
-								UrlArgs: { id },
-							},
-							setStore
-					  )
-					: Promise.resolve(),
-				blobs.cv
-					? useAPI(
-							API.Teachers.fileUpload,
-							{
-								RequestObject: blobs.cv,
-								UrlArgs: { id },
-							},
-							setStore
-					  )
-					: Promise.resolve(),
-			]);
+			if (blobs.picture) await fileUpload(blobs.picture, id);
+			if (blobs.cv) await fileUpload(blobs.cv, id);
 
 			setTeacherHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
@@ -697,28 +687,8 @@ export default function TeachersTable() {
 					: Promise.resolve(),
 			]);
 
-			await Promise.all([
-				blobs.picture
-					? useAPI(
-							API.Teachers.fileUpload,
-							{
-								RequestObject: blobs.picture,
-								UrlArgs: { id: teacher.id },
-							},
-							setStore
-					  )
-					: Promise.resolve(),
-				blobs.cv
-					? useAPI(
-							API.Teachers.fileUpload,
-							{
-								RequestObject: blobs.cv,
-								UrlArgs: { id: teacher.id },
-							},
-							setStore
-					  )
-					: Promise.resolve(),
-			]);
+			if (blobs.picture) await fileUpload(blobs.picture, teacher.id);
+			if (blobs.cv) await fileUpload(blobs.cv, teacher.id);
 
 			setTeacherHydrate({
 				action: ActionEnum.MODIFY,

@@ -64,9 +64,11 @@ export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[
 
 					let accessor = Mutations.foreignKey || "id";
 					prevData = prevData.filter(item => !Mutations.ids.includes(item[accessor]));
-					if (Array.isArray(data))
-						prevData = [...prevData, ...data];
-					prevData = [...prevData, data];
+					if (Array.isArray(data)) {
+						prevData.push(...data);
+					} else {
+						prevData.push(data);
+					}
 					return prevData.sort((a, b) => a[accessor] - b[accessor]);
 				});
 				// Else do a full replacement of the data in the store.
