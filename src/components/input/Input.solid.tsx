@@ -9,30 +9,21 @@ function disable(input: Props) {
 	input.disabled = true;
 }
 
-export function Pick<T>(
-	inputs: { [key in keyof T]: Props },
-	...keys: (keyof T)[]
-) {
+export function Pick<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
 	for (const key in inputs) {
 		if (!keys.includes(key)) disable(inputs[key]);
 	}
 	return inputs;
 }
 
-export function Omit<T>(
-	inputs: { [key in keyof T]: Props },
-	...keys: (keyof T)[]
-) {
+export function Omit<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
 	for (const key of keys) {
 		disable(inputs[key]);
 	}
 	return inputs;
 }
 
-export function Fill<T extends {}>(
-	inputs: { [key in keyof T]: Props },
-	obj: T
-) {
+export function Fill<T extends {}>(inputs: { [key in keyof T]: Props }, obj: T) {
 	for (const key in obj) {
 		if (key in inputs) inputs[key].value = obj[key] as string;
 	}
@@ -47,21 +38,14 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 export function getMultiSelect(prefix: string, isSelected = true) {
 	return [
 		...document.querySelectorAll<HTMLInputElement>(
-			`button[data-specifier='${prefix}'][data-selected='${
-				isSelected ? "true" : "false"
-			}']`
+			`button[data-specifier='${prefix}'][data-selected='${isSelected ? "true" : "false"}']`
 		),
 	];
 }
 
-export function getByName(
-	name: string,
-	strCmp?: "startsWith" | "endsWith" | "includes"
-) {
+export function getByName(name: string, strCmp?: "startsWith" | "endsWith" | "includes") {
 	if (!strCmp) {
-		return [
-			...document.querySelectorAll(`input[name^='${name}']`),
-		] as HTMLInputElement[];
+		return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
 	} else {
 		switch (strCmp) {
 			case "startsWith":
@@ -162,11 +146,8 @@ export default function Input(props: InputProps) {
 			for={name}
 			class={
 				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
-				(isExtended
-					? " col-span-full max-w-full !h-[300px] max-h-[300px]"
-					: "")
-			}
-		>
+				(isExtended ? " col-span-full max-w-full !h-[300px] max-h-[300px]" : "")
+			}>
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show
 				when={
@@ -176,14 +157,12 @@ export default function Input(props: InputProps) {
 					type !== "multifile" &&
 					type !== "select" &&
 					type !== "textarea"
-				}
-			>
+				}>
 				<i
 					class={
 						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
-					}
-				></i>
+					}></i>
 				<input
 					class={
 						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10" +
@@ -197,18 +176,12 @@ export default function Input(props: InputProps) {
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
 					onfocus={(e: FocusEvent) =>
-						required &&
-						(e.currentTarget as HTMLElement).removeAttribute(
-							"required"
-						)
+						required && (e.currentTarget as HTMLElement).removeAttribute("required")
 					}
 					onblur={(e: FocusEvent) =>
 						required &&
 						(e.currentTarget as HTMLInputElement).value === "" &&
-						(e.currentTarget as HTMLElement).setAttribute(
-							"required",
-							""
-						)
+						(e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
 				/>
 			</Show>
@@ -221,8 +194,7 @@ export default function Input(props: InputProps) {
 					class={
 						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
-					}
-				></i>
+					}></i>
 				<select
 					class={
 						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
@@ -230,20 +202,12 @@ export default function Input(props: InputProps) {
 					}
 					name={name}
 					onblur={(e: FocusEvent) =>
-						required &&
-						(e.currentTarget as HTMLElement).removeAttribute(
-							"required"
-						)
+						required && (e.currentTarget as HTMLElement).removeAttribute("required")
 					}
 					onfocus={(e: FocusEvent) =>
-						required &&
-						(e.currentTarget as HTMLElement).setAttribute(
-							"required",
-							""
-						)
+						required && (e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
-					disabled={disabled || false}
-				>
+					disabled={disabled || false}>
 					<option value="undefined"></option>
 					<For each={selectList}>
 						{(selectItem, index) => (
@@ -261,8 +225,7 @@ export default function Input(props: InputProps) {
 										: valueList
 										? valueList[index()]
 										: index()
-								}
-							>
+								}>
 								{selectItem}
 							</option>
 						)}
@@ -275,13 +238,11 @@ export default function Input(props: InputProps) {
 					class={
 						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
-					}
-				></i>
+					}></i>
 				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-x-hidden z-10">
 					<For each={multiselectList}>
 						{(selectItem, index) =>
-							selectItem.value !== null ||
-							selectItem.value !== undefined ? (
+							selectItem.value !== null || selectItem.value !== undefined ? (
 								<button
 									data-specifier={name}
 									data-selected={selectItem.selected}
@@ -289,36 +250,27 @@ export default function Input(props: InputProps) {
 									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 									onClick={(e: MouseEvent) => {
 										if (multiselectOnce) {
-											const buttons =
-												document.querySelectorAll(
-													`button[data-specifier=${name}][data-selected='true']`
-												);
+											const buttons = document.querySelectorAll(
+												`button[data-specifier=${name}][data-selected='true']`
+											);
 											buttons.forEach((button) => {
-												button.setAttribute(
-													"data-selected",
-													"false"
-												);
+												button.setAttribute("data-selected", "false");
 											});
 										}
-										const button =
-											e.currentTarget as HTMLButtonElement;
+										const button = e.currentTarget as HTMLButtonElement;
 										button.setAttribute(
 											"data-selected",
-											button.getAttribute(
-												"data-selected"
-											) === "true"
+											button.getAttribute("data-selected") === "true"
 												? "false"
 												: "true"
 										);
 									}}
-									type="button"
-								>
+									type="button">
 									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
 									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
 									<p
 										class="p-2 font-didact text-start"
-										style={{ "grid-column": "2 / 3" }}
-									>
+										style={{ "grid-column": "2 / 3" }}>
 										{selectItem.label}
 									</p>
 								</button>
@@ -343,8 +295,7 @@ export default function Input(props: InputProps) {
 					class={
 						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
-					}
-				></i>
+					}></i>
 				<textarea
 					class={
 						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
@@ -355,18 +306,12 @@ export default function Input(props: InputProps) {
 					value={value === 0 ? "0" : value || ""}
 					readOnly={disabled || false}
 					onfocus={(e: FocusEvent) =>
-						required &&
-						(e.currentTarget as HTMLElement).removeAttribute(
-							"required"
-						)
+						required && (e.currentTarget as HTMLElement).removeAttribute("required")
 					}
 					onblur={(e: FocusEvent) =>
 						required &&
 						(e.currentTarget as HTMLInputElement).value === "" &&
-						(e.currentTarget as HTMLElement).setAttribute(
-							"required",
-							""
-						)
+						(e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
 				/>
 			</Show>

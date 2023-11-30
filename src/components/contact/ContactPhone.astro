@@ -15,21 +15,31 @@
 		</p>
 		<p class="text-lg text-red-50">
 			<i class="text-base pr-1 fa-solid fa-map-location-dot"></i>
-			Χάρτης:
-			<a class="text-red-50 underline decoration-1 underline-offset-2 pl-2" target="_blank" href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8">Έδρα Μεταμόρφωσης</a>
+			 Χάρτης:
+			<a
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				target="_blank"
+				href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8">Έδρα Μεταμόρφωσης</a
+			>
 		</p>
 		<div class="rounded-md bg-red-950 flex flex-col">
-			<p class="text-lg text-red-50 underline underline-offset-2 self-center">Ωράριο επικοινωνίας</p>
+			<p class="text-lg text-red-50 underline underline-offset-2 self-center">
+				Ωράριο επικοινωνίας
+			</p>
 			<p class="text-lg text-red-50 self-center">Καθημερινά 9πμ - 2μμ & 4:30μμ - 9μμ</p>
 		</div>
-		<a class="text-red-50 self-center" target="_blank" href="https://www.facebook.com/profile.php?id=100032307446762">
+		<a
+			class="text-red-50 self-center"
+			target="_blank"
+			href="https://www.facebook.com/profile.php?id=100032307446762">
 			<i class="fa-brands fa-facebook text-2xl"></i>
 		</a>
 		<button
 			id="showPhoneContacts"
-			class="group/btn absolute inset-x-[-1px] top-0 h-[44px] -translate-y-[42px] flex flex-col tracking-wider bg-red-900"
-		>
-			<i class="text-red-50 h-0 my-1 pt-1 fa-solid fa-chevron-up font-bold text-sm leading-[1.5vw] self-center"></i>
+			class="group/btn absolute inset-x-[-1px] top-0 h-[44px] -translate-y-[42px] flex flex-col tracking-wider bg-red-900">
+			<i
+				class="text-red-50 h-0 my-1 pt-1 fa-solid fa-chevron-up font-bold text-sm leading-[1.5vw] self-center"
+			></i>
 			<p class="text-2xl text-red-50 font-anaktoria self-center">Επικοινωνία</p>
 		</button>
 	</div>
@@ -59,7 +69,7 @@
 			let onElementMount = async (target, callback) => {
 				let count = 0;
 				while (!document.querySelector(target) && count++ < 50) {
-					await new Promise(resolve => setTimeout(resolve, 50));
+					await new Promise((resolve) => setTimeout(resolve, 50));
 				}
 				if (count >= 10) return;
 				callback();

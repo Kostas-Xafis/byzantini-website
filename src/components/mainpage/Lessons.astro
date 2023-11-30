@@ -3,18 +3,16 @@ const lessons = ["Βυζαντινή Μουσική", "Παραδοσιακή Μ
 const text = [
 	"Σπούδασε στη Σχολή μας την ιερά τέχνη του Ιωάννου του Δαμασκηνού και του Ρωμανού του Μελωδού. Απόκτησε Πτυχίο και Δίπλωμα Βυζαντινής Μουσικής αναγνωρισμένο από το κράτος και γίνε θεματοφύλακας της ελληνορθόδοξης μουσικής μας παραδόσεως.",
 	`Από το 2022 με σχετικό ΦΕΚ  προστέθηκαν επισήμως στην Σχολή μας Τμήματα παραδοσιακής μουσικής. Πλέον, δίνεται σε όλους η ευκαιρία, ανεξαρτήτως ηλικίας, να εντρυφήσουν στα νάματα της εθνικής μας παραδοσιακής μουσικής, με τα οποία γαλουχήθηκαν γενεές γενεών.`,
-	`Στη Σχολή μας λειτουργεί τμήμα Ευρωπαϊκής μουσικής. Απευθύνεται τόσο στους μαθητές βυζαντινής μουσικής, όσο και σε υποψήφιους μαθητές σε μουσικά σχολεία και υποψήφιους φοιτητές σε τμήματα Μουσικών Σπουδών ΑΕΙ.`
+	`Στη Σχολή μας λειτουργεί τμήμα Ευρωπαϊκής μουσικής. Απευθύνεται τόσο στους μαθητές βυζαντινής μουσικής, όσο και σε υποψήφιους μαθητές σε μουσικά σχολεία και υποψήφιους φοιτητές σε τμήματα Μουσικών Σπουδών ΑΕΙ.`,
 ];
 ---
 
 <div
 	id="lessons"
-	class="h-max w-full grid grid-rows-[max-content_1fr] max-sm:flex flex-col grid-cols-3 gap-[4vw] p-[4vw] py-[10vh] max-sm:grid-rows-[max-content_repeat(3,_1fr)] max-sm:grid-cols-[66%] max-sm:justify-center"
->
+	class="h-max w-full grid grid-rows-[max-content_1fr] max-sm:flex flex-col grid-cols-3 gap-[4vw] p-[4vw] py-[10vh] max-sm:grid-rows-[max-content_repeat(3,_1fr)] max-sm:grid-cols-[66%] max-sm:justify-center">
 	<h1
 		id="lessonsHead"
-		class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5vw] max-sm:text-3xl leading-[3.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]"
-	>
+		class="heading relative p-2 text-center w-[9ch] flex-grow-2 place-self-center text-[3.5vw] max-sm:text-3xl leading-[3.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[0px]">
 		Μαθήματα
 	</h1>
 	{
@@ -31,12 +29,14 @@ const text = [
 	}
 	<style is:inline>
 		.lessonCard:nth-of-type(1)::after {
-			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/byz3.jpg");
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)),
+				url("/byz3.jpg");
 			background-size: cover;
 			background-position: center;
 		}
 		.lessonCard:nth-of-type(2)::after {
-			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/par.jpg");
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)),
+				url("/par.jpg");
 			background-size: cover;
 			background-position: center;
 		}
@@ -63,16 +63,20 @@ const text = [
 	import { onElementMount } from "../../../lib/utils.client";
 	onElementMount("#lessons", () => {
 		const obsv = new IntersectionObserver(
-			entries => {
+			(entries) => {
 				const entry = entries[0];
-				if (entry.intersectionRatio >= 0.4) document.querySelector<HTMLElement>("#lessonsHead")?.classList.add("emphasis");
-				else document.querySelector<HTMLElement>("#lessonsHead")?.classList.remove("emphasis");
+				if (entry.intersectionRatio >= 0.4)
+					document.querySelector<HTMLElement>("#lessonsHead")?.classList.add("emphasis");
+				else
+					document
+						.querySelector<HTMLElement>("#lessonsHead")
+						?.classList.remove("emphasis");
 			},
 			{
 				root: null,
 				rootMargin: "0px",
-				threshold: [0.4]
-			}
+				threshold: [0.4],
+			},
 		);
 		obsv.observe(document.querySelector("#lessons") as HTMLElement);
 	});
@@ -80,7 +84,7 @@ const text = [
 		onElementMount("#lessons", () => {
 			const lessonCards = document.querySelectorAll(".lessonCard");
 			const obsv = new IntersectionObserver(
-				entries => {
+				(entries) => {
 					const entry = entries[0];
 					if (entry.intersectionRatio >= 0.95) entry.target.classList.add("show");
 					else if (entry.intersectionRatio <= 0.1) entry.target.classList.remove("show");
@@ -88,8 +92,8 @@ const text = [
 				{
 					root: null,
 					rootMargin: "0px",
-					threshold: [0.1, 0.95]
-				}
+					threshold: [0.1, 0.95],
+				},
 			);
 			lessonCards.forEach((card, i) => {
 				obsv.observe(card);

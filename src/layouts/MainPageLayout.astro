@@ -13,7 +13,7 @@ const { title } = Astro.props;
 const logoUrl = "https://musicschool-metamorfosi.gr/favicon.ico";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta name="viewport" content="width=device-width" />
@@ -28,41 +28,43 @@ const logoUrl = "https://musicschool-metamorfosi.gr/favicon.ico";
 					title,
 					url: "https://musicschool-metamorfosi.gr",
 					image: logoUrl,
-					type: "website"
+					type: "website",
 				},
 				image: {
-					url: logoUrl
+					url: logoUrl,
 				},
 				optional: {
-					locale: "el_GR"
-				}
+					locale: "el_GR",
+				},
 			}}
 			extend={{
 				link: [
 					{ rel: "icon", href: "/logo_small.png" },
 					{ rel: "sitemap", href: "/sitemap-index.xml" },
-					{ rel: "robots", href: "/robots.txt" }
+					{ rel: "robots", href: "/robots.txt" },
 				],
 				meta: [
 					{
 						name: "facebook:image",
-						content: logoUrl
+						content: logoUrl,
 					},
 					{
 						name: "messenger:image",
-						content: logoUrl
+						content: logoUrl,
 					},
 					{
 						name: "viber:image",
-						content: logoUrl
-					}
-				]
+						content: logoUrl,
+					},
+				],
 			}}
 		/>
 		<Links />
 		<style is:inline>
 			html {
-				font-family: "Gothic Didact" system-ui, sans-serif;
+				font-family:
+					"Gothic Didact" system-ui,
+					sans-serif;
 				height: 100dvh;
 			}
 			p,
@@ -134,7 +136,8 @@ const logoUrl = "https://musicschool-metamorfosi.gr/favicon.ico";
 			}
 		</style>
 	</head>
-	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:grid-rows-[calc(100dvh_-_40px)_40px] max-sm:overflow-y-auto">
+	<body
+		class="box-border h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:grid-rows-[calc(100dvh_-_40px)_40px] max-sm:overflow-y-auto">
 		<Navbar />
 		<div class="relative w-full h-full sm:overflow-auto grid grid-rows-[100%]">
 			<slot />

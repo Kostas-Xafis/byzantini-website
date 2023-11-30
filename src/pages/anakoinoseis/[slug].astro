@@ -4,9 +4,15 @@ import Spinner from "../../components/other/Spinner.astro";
 import Layout from "../../layouts/Layout.astro";
 
 const announcement_title = (Astro.url.pathname.split("/").pop() as string).replace(/-/g, " ");
-let announcement: ({ id: number; title: string; date: number; content: string; views: number } & { images: string[] }) | undefined;
+let announcement:
+	| ({ id: number; title: string; date: number; content: string; views: number } & {
+			images: string[];
+	  })
+	| undefined;
 try {
-	const res_announcement = await useAPI(API.Announcements.getByTitle, { UrlArgs: { title: announcement_title } });
+	const res_announcement = await useAPI(API.Announcements.getByTitle, {
+		UrlArgs: { title: announcement_title },
+	});
 	announcement = res_announcement.data;
 	if (!announcement) return Astro.redirect("/404");
 } catch (e) {
@@ -19,18 +25,22 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 <Layout title={announcement.title} imageUrl={announcement.images[0]}>
 	<section class="relative flex flex-col p-12 max-sm:p-4 overflow-auto items-center gap-y-6">
 		<h1
-			class="heading w-[25ch] max-sm:w-[25ch] text-5xl max-sm:text-3xl text-center font-bold text-red-900 font-anaktoria drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]"
-		>
+			class="heading w-[25ch] max-sm:w-[25ch] text-5xl max-sm:text-3xl text-center font-bold text-red-900 font-anaktoria drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 			{announcement.title}
 		</h1>
 		<div class="max-w-[720px] h-[360px] shadow-lg shadow-slate-800">
-			<img src={imgSrc + announcement.images[1]} alt={announcement?.title as string} class="w-[720px] object-cover h-full" />
+			<img
+				src={imgSrc + announcement.images[1]}
+				alt={announcement?.title as string}
+				class="w-[720px] object-cover h-full"
+			/>
 		</div>
 		<div class="text-xl mt-4 self-start">
 			{announcement.content}
 		</div>
 		<div id="imgContainer" class="flex items-center">
-			<div class="flex flex-row flex-wrap mt-4 gap-y-6 loading items-center justify-evenly self-center">
+			<div
+				class="flex flex-row flex-wrap mt-4 gap-y-6 loading items-center justify-evenly self-center">
 				{
 					announcement.images.map((image, i) => (
 						<div class="imgLoader group/img">
@@ -81,7 +91,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 </Layout>
 <script>
 	import { onElementMount, asyncQueue, sleep } from "../../../lib/utils.client";
-	onElementMount("#imgContainer", async el => {
+	onElementMount("#imgContainer", async (el) => {
 		const imgs = [...el.querySelectorAll("img")];
 		const imgContainers = [...el.querySelectorAll(".imgLoader")];
 		const jobs = imgs.map((img, i) => async () => {

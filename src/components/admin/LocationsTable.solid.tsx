@@ -1,46 +1,23 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { fileToBlob } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
-import {
-	Fill,
-	Omit,
-	type Props as InputProps,
-	getMultiSelect,
-} from "../input/Input.solid";
+import { Fill, Omit, type Props as InputProps, getMultiSelect } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "locations";
 
-type LocationsTable = Omit<
-	Locations,
-	"telephones" | "link" | "map" | "youtube"
->;
+type LocationsTable = Omit<Locations, "telephones" | "link" | "map" | "youtube">;
 
-const LocationsInputs = (
-	location?: Locations
-): Record<keyof Locations, InputProps> => {
+const LocationsInputs = (location?: Locations): Record<keyof Locations, InputProps> => {
 	return {
 		id: {
 			name: "id",
@@ -161,7 +138,7 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 const columnNames: ColumnType<LocationsTable> = {
 	id: { type: "number", name: "Id" },
-	name: { type: "string", name: "Όνομα Παραρτήματος", size: 15 },
+	name: { type: "string", name: "Τοποθεσία", size: 15 },
 	address: { type: "string", name: "Διεύθυνση", size: 15 },
 	areacode: { type: "number", name: "Ταχ. Κώδικας" },
 	municipality: { type: "string", name: "Δήμος", size: 12 },
@@ -172,7 +149,7 @@ const columnNames: ColumnType<LocationsTable> = {
 	partner: {
 		type: "boolean",
 		name: "Συνεργαζόμενο Σπουδαστήριο",
-		size: 10,
+		size: 12,
 	},
 };
 
@@ -208,9 +185,7 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner").map(
-					(i) => Number(i.dataset.value) as 0 | 1
-				)[0],
+				partner: getMultiSelect("partner").map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
 			const res = await useAPI(
 				API.Locations.post,
@@ -223,9 +198,7 @@ export default function LocationsTable() {
 			const id = res.data.insertId;
 			const files = FileHandler.getFiles("image");
 			const imgBlob =
-				files.length && !files[0].isProxy
-					? await fileToBlob(files[0].file)
-					: null;
+				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
 			if (imgBlob) {
 				await useAPI(
 					API.Locations.fileUpload,
@@ -273,9 +246,7 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner").map(
-					(i) => Number(i.dataset.value) as 0 | 1
-				)[0],
+				partner: getMultiSelect("partner").map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
 			const res = await useAPI(
 				API.Locations.update,
@@ -287,9 +258,7 @@ export default function LocationsTable() {
 			if (!res.data && !res.message) return;
 			const files = FileHandler.getFiles("image");
 			const imgBlob =
-				files.length && !files[0].isProxy
-					? await fileToBlob(files[0].file)
-					: null;
+				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
 			const deletedImage = FileHandler.getDeletedFiles("image");
 			if (imgBlob) {
 				await useAPI(
@@ -354,13 +323,10 @@ export default function LocationsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={store[API.Locations.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

@@ -53,9 +53,7 @@ type SearchTableProps<T extends Record<string, any>> = {
 	columns: SearchColumn[];
 };
 
-export function SearchTable<T extends Record<string, any>>(
-	props: SearchTableProps<T>
-) {
+export function SearchTable<T extends Record<string, any>>(props: SearchTableProps<T>) {
 	let first = props.columns[0]; // default search column
 	const [column, setColumn] = createSignal<SearchColumn>(first, {
 		equals: false,

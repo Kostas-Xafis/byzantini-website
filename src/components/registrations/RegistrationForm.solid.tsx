@@ -1,19 +1,6 @@
-import {
-	For,
-	Show,
-	createEffect,
-	createMemo,
-	createSignal,
-	on,
-	onMount,
-} from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import type {
 	Instruments,
 	Registrations,
@@ -21,10 +8,7 @@ import type {
 	Teachers,
 } from "../../../types/entities";
 import { CloseButton } from "../admin/table/CloseButton.solid";
-import Input, {
-	getMultiSelect,
-	type Props as InputProps,
-} from "../input/Input.solid";
+import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -78,9 +62,7 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
-			message: [
-				"Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας.",
-			],
+			message: ["Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας."],
 			position: isPhone ? "top" : "left",
 		},
 	},
@@ -160,10 +142,7 @@ const genericInputs: Record<
 
 const byzantineInputs = (
 	teachers: Teachers[]
-): Record<
-	keyof Pick<Registrations, "class_year" | "teacher_id">,
-	InputProps
-> => {
+): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -202,10 +181,7 @@ const byzantineInputs = (
 
 const traditionalInputs = (
 	teachers: Teachers[]
-): Record<
-	keyof Pick<Registrations, "class_year" | "teacher_id">,
-	InputProps
-> => {
+): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -245,10 +221,7 @@ const traditionalInputs = (
 
 const europeanInputs = (
 	teachers: Teachers[]
-): Record<
-	keyof Pick<Registrations, "class_year" | "teacher_id">,
-	InputProps
-> => {
+): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -297,16 +270,9 @@ const instrumentsInput = ({
 	instruments?: Instruments[];
 	instrumentsList?: TeacherInstruments[];
 }): { instruments: InputProps } => {
-	if (
-		!type ||
-		!teacher ||
-		!instruments ||
-		!instrumentsList ||
-		instruments.length === 0
-	)
+	if (!type || !teacher || !instruments || !instrumentsList || instruments.length === 0)
 		return { instruments: { type: null, label: "", name: "" } };
-	const teacherInstruments =
-		instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
+	const teacherInstruments = instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
 	const multiselectInstruments = teacherInstruments?.map((ti) => {
 		const i = instruments.find((i) => i.id === ti.instrument_id);
 		if (!i) return { value: 0, label: "", selected: false };
@@ -346,9 +312,7 @@ const heading = {
 
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [formSelected, setFormSelected] = createSignal<MusicType>(
-		MusicType.None
-	);
+	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	useHydrate(() => {
@@ -359,15 +323,11 @@ export function RegistrationForm() {
 	});
 	createEffect(
 		on(formSelected, (type) => {
-			const select = document.querySelector(
-				"select[name='teacher_id']"
-			) as HTMLSelectElement;
+			const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
 			const teachers = store[API.Teachers.get];
 			if (!select || !teachers) return;
 			select.addEventListener("change", (e: Event) => {
-				setSelectedTeacher(
-					TeachersByType().find((t) => t.id === Number(select.value))
-				);
+				setSelectedTeacher(TeachersByType().find((t) => t.id === Number(select.value)));
 			});
 			setSelectedTeacher();
 		})
@@ -401,9 +361,7 @@ export function RegistrationForm() {
 
 	const TeachersByType = createMemo(() => {
 		let teacher_store = store[API.Teachers.get]?.slice();
-		const teachers =
-			teacher_store &&
-			(JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
+		const teachers = teacher_store && (JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
 		const teacher_classes = store[API.Teachers.getClasses];
 		if (!teachers || !teacher_classes) return [];
 		const id = btns.findIndex((btn) => btn[1] === formSelected());
@@ -415,8 +373,7 @@ export function RegistrationForm() {
 		return teachers.filter((teacher) =>
 			teacher_classes.find(
 				(teacher_class) =>
-					teacher_class.teacher_id === teacher.id &&
-					teacher_class.class_id === id
+					teacher_class.teacher_id === teacher.id && teacher_class.class_id === id
 			)
 		);
 	});
@@ -441,9 +398,7 @@ export function RegistrationForm() {
 		const curType = formSelected();
 		if (curType === type) return;
 		if (curType === MusicType.None) {
-			const regContainer = document.querySelector(
-				"#registrationContainer"
-			) as HTMLElement;
+			const regContainer = document.querySelector("#registrationContainer") as HTMLElement;
 			regContainer.classList.add("remove");
 			void regContainer.offsetWidth;
 			setTimeout(() => {
@@ -452,9 +407,7 @@ export function RegistrationForm() {
 				setFormSelected(type);
 			}, 500);
 		} else {
-			const form = document.querySelector(
-				"#registrationForm"
-			) as HTMLElement;
+			const form = document.querySelector("#registrationForm") as HTMLElement;
 			form.classList.add("remove");
 			void form.offsetWidth;
 			setTimeout(() => {
@@ -472,10 +425,7 @@ export function RegistrationForm() {
 		setSpinner(true);
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
-		const data: Omit<
-			Registrations,
-			"id" | "payment_amount" | "total_payment"
-		> = {
+		const data: Omit<Registrations, "id" | "payment_amount" | "total_payment"> = {
 			last_name: formData.get("last_name") as string,
 			first_name: formData.get("first_name") as string,
 			am: formData.get("am") as string,
@@ -483,9 +433,7 @@ export function RegistrationForm() {
 			telephone: (formData.get("telephone") as string) || "-",
 			cellphone: formData.get("cellphone") as string,
 			email: formData.get("email") as string,
-			birth_date: new Date(
-				formData.get("birth_date") as string
-			).getTime(),
+			birth_date: new Date(formData.get("birth_date") as string).getTime(),
 			road: formData.get("road") as string,
 			number: Number(formData.get("number") as string),
 			tk: Number(formData.get("tk") as string),
@@ -522,16 +470,12 @@ export function RegistrationForm() {
 				setStore
 			);
 			if (res.message) {
-				const messageDialog = document.querySelector(
-					"#submitMessage"
-				) as HTMLElement;
+				const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 				messageDialog.classList.remove("hidden");
 				messageDialog.classList.add("flex");
 			}
 		} catch (err) {
-			const form = document.querySelector(
-				"#registrationForm"
-			) as HTMLElement;
+			const form = document.querySelector("#registrationForm") as HTMLElement;
 			setSpinner(false);
 			setTimeout(() => {
 				form.classList.add("animate-shake");
@@ -551,25 +495,19 @@ export function RegistrationForm() {
 					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
 					<div
 						id="registrationContainer"
-						class="w-full h-full max-sm:h-[calc(100dvh_-_8rem)]  place-items-center font-dicact"
-					>
+						class="w-full h-full max-sm:h-[calc(100dvh_-_8rem)]  place-items-center font-dicact">
 						<div
 							id="firstSelect"
-							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col"
-						>
+							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
 							<For each={btns}>
 								{([str, type], index) => (
 									<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
 										<div
 											id={type}
-											class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md"
-										>
+											class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md">
 											<button
 												class="p-6 text-5xl max-sm:text-3xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
-												onClick={(e) =>
-													onSelectClick(type)
-												}
-											>
+												onClick={(e) => onSelectClick(type)}>
 												{str}
 											</button>
 										</div>
@@ -583,17 +521,14 @@ export function RegistrationForm() {
 							</For>
 						</div>
 					</div>
-				}
-			>
+				}>
 				<div class="h-max pb-20">
 					<div
 						id="registrationContainer"
-						class="w-full h-full flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact max-sm:gap-y-12"
-					>
+						class="w-full h-full flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact max-sm:gap-y-12">
 						<div
 							id="registrationSelect"
-							class="py-6 max-sm:py-1 max-sm:w-full flex flex-row gap-x-16 max-sm:gap-x-0 max-sm:pt-0 place-items-center z-[100]"
-						>
+							class="py-6 max-sm:py-1 max-sm:w-full flex flex-row gap-x-16 max-sm:gap-x-0 max-sm:pt-0 place-items-center z-[100]">
 							{btns.map(([str, type]) => (
 								<div
 									class={
@@ -602,16 +537,14 @@ export function RegistrationForm() {
 											? "bg-red-900"
 											: "hover:bg-red-900")
 									}
-									onClick={(e) => onSelectClick(type)}
-								>
+									onClick={(e) => onSelectClick(type)}>
 									<button
 										class={
 											"p-6 max-sm:p-2 text-2xl font-didact font-medium bg-transparent group-hover:text-white transition-colors ease-in-out max-sm:text-base" +
 											(type === formSelected()
 												? " text-white"
 												: " group-hover:text-white")
-										}
-									>
+										}>
 										{str}
 									</button>
 								</div>
@@ -620,30 +553,29 @@ export function RegistrationForm() {
 						<form
 							id="registrationForm"
 							class="group/form px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
-							onSubmit={onSubmit}
-						>
+							onSubmit={onSubmit}>
 							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
 							</h1>
 							{Object.values(genericInputs).map((input) => (
-								<Input {...input} />
+								<Input {...input} prefix="RegForm" />
 							))}
 							{formSelected() === MusicType.Byzantine
-								? Object.values(
-										byzantineInputs(TeachersByType())
-								  ).map((input) => <Input {...input} />)
+								? Object.values(byzantineInputs(TeachersByType())).map((input) => (
+										<Input {...input} prefix="RegForm" />
+								  ))
 								: formSelected() === MusicType.Traditional
-								? Object.values(
-										traditionalInputs(TeachersByType())
-								  ).map((input) => <Input {...input} />)
-								: Object.values(
-										europeanInputs(TeachersByType())
-								  ).map((input) => <Input {...input} />)}
+								? Object.values(traditionalInputs(TeachersByType())).map(
+										(input) => <Input {...input} prefix="RegForm" />
+								  )
+								: Object.values(europeanInputs(TeachersByType())).map((input) => (
+										<Input {...input} prefix="RegForm" />
+								  ))}
 							{formSelected() === MusicType.Traditional ||
 							formSelected() === MusicType.European
-								? Object.values(
-										instrumentsInput(InstrumentsByTeacher())
-								  ).map((input) => <Input {...input} />)
+								? Object.values(instrumentsInput(InstrumentsByTeacher())).map(
+										(input) => <Input {...input} prefix="RegForm" />
+								  )
 								: ""}
 							<Show
 								when={!spinner()}
@@ -651,12 +583,10 @@ export function RegistrationForm() {
 									<div class="col-span-full w-max place-self-center p-2 px-6">
 										<Spinner />
 									</div>
-								}
-							>
+								}>
 								<button
 									class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
-									type="submit"
-								>
+									type="submit">
 									Εγγραφή
 								</button>
 							</Show>
@@ -664,31 +594,26 @@ export function RegistrationForm() {
 					</div>
 					<div
 						id="submitMessage"
-						class="hidden fixed inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]"
-					>
+						class="hidden fixed inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]">
 						<div
 							id="messageBox"
-							class="relative p-12 max-sm:p-6 w-[500px] max-sm:w-[450px] max-[420px]:320px max-2xs:280px h-max rounded-xl flex flex-col justify-center gap-y-4 shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100"
-						>
+							class="relative p-12 max-sm:p-6 w-[500px] max-sm:w-[450px] max-[420px]:320px max-2xs:280px h-max rounded-xl flex flex-col justify-center gap-y-4 shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100">
 							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 								Επιτυχής Εγγραφή
 							</p>
 							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνήστε
-								με τη Γραμματεία της Σχολής για περαιτέρω
-								πληροφορίες
+								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνήστε με τη Γραμματεία της
+								Σχολής για περαιτέρω πληροφορίες
 							</p>
 							<CloseButton
 								classes="absolute top-4 right-4 w-10 h-10 text-xl"
 								onClick={() => {
-									const messageDialog =
-										document.querySelector(
-											"#submitMessage"
-										) as HTMLElement;
+									const messageDialog = document.querySelector(
+										"#submitMessage"
+									) as HTMLElement;
 									messageDialog.classList.add("hidden");
 									messageDialog.classList.remove("flex");
-								}}
-							></CloseButton>
+								}}></CloseButton>
 						</div>
 					</div>
 				</div>

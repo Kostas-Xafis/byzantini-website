@@ -1,15 +1,12 @@
 import { type Setter, For } from "solid-js";
 import { SortDirection } from "./Table.solid";
-import {
-	TypeEffectEnum,
-	selectedRowsEvent,
-} from "../../../../lib/hooks/useSelectedRows.solid";
+import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
 import { getParent } from "../../../../lib/utils.client";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean";
 
 interface Props {
-	data: (number | string)[]; // data[0] must always be the id of the item
+	data: (number | string | undefined | null)[]; // data[0] must always be the id of the item
 	columnTypes: CellValue[];
 	hasSelectBox: boolean;
 	header?: boolean;
@@ -92,9 +89,7 @@ export function toggleCheckboxes(force?: boolean) {
 	} else {
 		// Toggling all checkboxes too true should not be possible,
 		// and therefore this is only available, when removing all selections after a search
-		const allRows = document.querySelectorAll<HTMLElement>(
-			".data-container .row"
-		);
+		const allRows = document.querySelectorAll<HTMLElement>(".data-container .row");
 		selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 		allRows.forEach((row) => {
 			row.classList.toggle("selectedRow", false);
@@ -141,49 +136,39 @@ export default function Row(props: Props) {
 					(header
 						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500  before:!bg-white border-b-2 border-b-red-900"
 						: "")
-				}
-			>
+				}>
 				{hasSelectBox && (
 					<div
 						class={
 							"group/checkbox relative w-full items-center" +
 							(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
-						}
-					>
+						}>
 						<i class="selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
 						<i class="selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
 					</div>
 				)}
 				<For each={data}>
 					{(item, colIndex) => {
-						if (item === undefined || item === null) {
+						if (item === undefined || item === null || item === "") {
 							item = "-";
 						} else {
-							let type =
-								(!header && columnTypes[colIndex()]) || ""; // If it's a header row there is no type
-							if (type === "link" && item) {
+							let type = (!header && columnTypes[colIndex()]) || ""; // If it's a header row there is no type
+							if (type === "link") {
 								return (
 									<a
 										href={item as string}
 										target="_blank"
-										class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1"
-									>
+										class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
 										<i class="fa-solid fa-up-right-from-square text-red-900"></i>
 									</a>
 								);
-							} else if (type === "link") {
-								item = "-";
 							}
-							if (type === "date" && item)
-								item = new Date(
-									item as number
-								).toLocaleDateString("el-GR");
-							if (type === "boolean")
-								item = !!item ? "Ναι" : "Όχι";
-							if (type === "string" && item === "") item = "-";
+							if (type === "date" && item !== 0)
+								item = new Date(item as number).toLocaleDateString("el-GR");
+							if (type === "boolean") item = !!item ? "Ναι" : "Όχι";
 						}
 						return (
-							<div
+							<p
 								class={
 									"cell" +
 									(header
@@ -191,18 +176,19 @@ export default function Row(props: Props) {
 										: "")
 								}
 								data-col-ind={header && colIndex()}
-								onClick={onClickSort}
-							>
+								onClick={onClickSort}>
 								{header ? (
 									<>
-										{item}
+										<span class="group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">
+											{item}
+										</span>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
 									</>
 								) : (
 									item
 								)}
-							</div>
+							</p>
 						);
 					}}
 				</For>

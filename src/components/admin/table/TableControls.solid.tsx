@@ -1,11 +1,4 @@
-import {
-	Show,
-	type Accessor,
-	type JSX,
-	createMemo,
-	createSignal,
-	createEffect,
-} from "solid-js";
+import { Show, type Accessor, type JSX, createMemo, createSignal, createEffect } from "solid-js";
 import type { Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
@@ -46,32 +39,17 @@ export function TableControl(props: Props) {
 				<button
 					class={
 						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 blur-[1px]"
-					}
-				>
-					<i
-						class={
-							"text-lg max-sm:text-base " +
-							(action().icon || ActionIcon.ADD)
-						}
-					></i>
+					}>
+					<i class={"text-lg max-sm:text-base " + (action().icon || ActionIcon.ADD)}></i>
 				</button>
-			}
-		>
+			}>
 			<>
 				<button
 					class={
 						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl hover:shadow-gray-600 hover:bg-red-200"
 					}
-					onclick={() =>
-						onActionClick(prefix + (action() as Action).type)
-					}
-				>
-					<i
-						class={
-							"text-lg max-sm:text-base " +
-							(action().icon || ActionIcon.ADD)
-						}
-					></i>
+					onclick={() => onActionClick(prefix + (action() as Action).type)}>
+					<i class={"text-lg max-sm:text-base " + (action().icon || ActionIcon.ADD)}></i>
 				</button>
 				<Modal prefix={prefix} action={action() as Action} />
 			</>
@@ -79,15 +57,11 @@ export function TableControl(props: Props) {
 	);
 }
 
-export function TableControlsGroup(props: {
-	prefix: string;
-	children: Element | JSX.Element;
-}) {
+export function TableControlsGroup(props: { prefix: string; children: Element | JSX.Element }) {
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="controlsContainer w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent"
-		>
+			class="controlsContainer w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent">
 			{props.children}
 		</div>
 	);

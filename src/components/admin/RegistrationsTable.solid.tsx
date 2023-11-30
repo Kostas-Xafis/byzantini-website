@@ -1,31 +1,11 @@
-import {
-	Show,
-	createEffect,
-	createMemo,
-	createSignal,
-	onMount,
-	untrack,
-} from "solid-js";
+import { Show, createEffect, createMemo, createSignal, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import {
-	getKeyIndex,
-	mappedValue,
-	removeAccents,
-} from "../../../lib/utils.client";
-import type {
-	Instruments,
-	Registrations,
-	Teachers,
-} from "../../../types/entities";
+import { getKeyIndex, mappedValue, removeAccents } from "../../../lib/utils.client";
+import type { Instruments, Registrations, Teachers } from "../../../types/entities";
 import { Fill, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
@@ -37,16 +17,8 @@ import {
 } from "./SearchTable.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 
 import { toggleCheckboxes } from "./table/Row.solid";
 
@@ -155,11 +127,7 @@ const RegistrationsInputs = (
 			label: "Τύπος Μουσικής",
 			name: "class_id",
 			type: "select",
-			selectList: [
-				"Βυζαντινή Μουσική",
-				"Παραδοσιακή Μουσική",
-				"Ευρωπαϊκή Μουσική",
-			],
+			selectList: ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
 			iconClasses: "fa-solid fa-graduation-cap",
 		},
 		teacher_id: {
@@ -218,11 +186,9 @@ const registrationsToTable = (
 ) => {
 	return registrations.map((reg) => {
 		const columns = Object.values(reg) as any[];
-		columns[15] = [
-			"Βυζαντινή Μουσική",
-			"Παραδοσιακή Μουσική",
-			"Ευρωπαϊκή Μουσική",
-		][columns[15] as number];
+		columns[15] = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"][
+			columns[15] as number
+		];
 		columns[16] = teachers.find((t) => t.id === columns[16])?.fullname;
 		columns[17] = instruments.find((i) => i.id === columns[17])?.name;
 		if (columns[19] === 0 || !columns[19]) columns[19] = null;
@@ -233,7 +199,7 @@ const registrationsToTable = (
 
 const columns: ColumnType<RegistrationsTable> = {
 	id: { type: "number", name: "Id" },
-	am: { type: "number", name: "Αριθμός Μητρώου", size: 6 },
+	am: { type: "number", name: "Αριθμός Μητρώου", size: 7 },
 	last_name: { type: "string", name: "Επώνυμο", size: 15 },
 	first_name: { type: "string", name: "Όνομα", size: 15 },
 	fathers_name: { type: "string", name: "Πατρώνυμο", size: 15 },
@@ -274,9 +240,7 @@ const chunkSize = 100;
 let timeDropdown = 0;
 
 export default function RegistrationsTable() {
-	const [searchQuery, setSearchQuery] = createStore<
-		SearchSetter<Registrations>
-	>({});
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const setRegistrationHydrate = useHydrateById(setStore, [
 		{
@@ -310,11 +274,7 @@ export default function RegistrationsTable() {
 			toggleCheckboxes(false);
 			return registrationsToTable(registrations, teachers, instruments);
 		}
-		let searchRows = registrationsToTable(
-			registrations,
-			teachers,
-			instruments
-		);
+		let searchRows = registrationsToTable(registrations, teachers, instruments);
 		const columnIndex = getKeyIndex(columnName, registrations[0]);
 		if (type === "number") {
 			// @ts-ignore value is misstyped....
@@ -351,9 +311,7 @@ export default function RegistrationsTable() {
 				});
 			}
 
-			let [day, month = 1, year = 1970] = value
-				.split("/")
-				.map((x) => Number(x));
+			let [day, month = 1, year = 1970] = value.split("/").map((x) => Number(x));
 			const dVal = new Date(year, month - 1, day);
 			const nVal = dVal.getTime();
 			const sVal = dVal.toLocaleDateString("el-GR");
@@ -377,18 +335,11 @@ export default function RegistrationsTable() {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (
-			!teachers ||
-			!registrations ||
-			!instruments ||
-			selectedItems.length !== 1
-		)
+		if (!teachers || !registrations || !instruments || selectedItems.length !== 1)
 			return modifyModal;
 
 		const registration = JSON.parse(
-			JSON.stringify(
-				registrations.find((r) => r.id === selectedItems[0]) as any
-			)
+			JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)
 		) as Registrations;
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
@@ -402,9 +353,7 @@ export default function RegistrationsTable() {
 				telephone: (formData.get("telephone") as string) || "-",
 				cellphone: formData.get("cellphone") as string,
 				email: formData.get("email") as string,
-				birth_date: new Date(
-					formData.get("birth_date") as string
-				).getTime(),
+				birth_date: new Date(formData.get("birth_date") as string).getTime(),
 				road: formData.get("road") as string,
 				number: Number(formData.get("number") as string),
 				tk: Number(formData.get("tk") as string),
@@ -413,13 +362,10 @@ export default function RegistrationsTable() {
 				class_year: formData.get("class_year") as string,
 				class_id,
 				teacher_id: Number(formData.get("teacher_id")) || 0,
-				instrument_id:
-					(class_id && Number(formData.get("instrument_id"))) || 0,
+				instrument_id: (class_id && Number(formData.get("instrument_id"))) || 0,
 				date: new Date(formData.get("date") as string).getTime(),
-				payment_amount:
-					Number(formData.get("payment_amount") as string) || 0,
-				total_payment:
-					Number(formData.get("total_payment") as string) || 0,
+				payment_amount: Number(formData.get("payment_amount") as string) || 0,
+				total_payment: Number(formData.get("total_payment") as string) || 0,
 				payment_date: formData.get("payment_date")
 					? new Date(formData.get("payment_date") as string).getTime()
 					: null,
@@ -437,17 +383,13 @@ export default function RegistrationsTable() {
 			});
 		};
 		const filledInputs = Fill(
-			RegistrationsInputs(teachers, instruments) as Record<
-				keyof Registrations,
-				InputProps
-			>,
+			RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>,
 			registration
 		);
 		filledInputs.class_id.value = registration.class_id;
 		filledInputs.teacher_id.value = registration.teacher_id;
 		filledInputs.instrument_id.value =
-			instruments.find((i) => i.id === registration.instrument_id)?.id ||
-			0; // findIndex because the instruments are sorted by name
+			instruments.find((i) => i.id === registration.instrument_id)?.id || 0; // findIndex because the instruments are sorted by name
 		return {
 			inputs: filledInputs,
 			onSubmit: submit,
@@ -489,12 +431,7 @@ export default function RegistrationsTable() {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (
-			!teachers ||
-			!registrations ||
-			!instruments ||
-			selectedItems.length <= 0
-		)
+		if (!teachers || !registrations || !instruments || selectedItems.length <= 0)
 			return {
 				type: ActionEnum.DOWNLOAD_PDF,
 				icon: ActionIcon.DOWNLOAD_SINGLE,
@@ -507,9 +444,7 @@ export default function RegistrationsTable() {
 					const student = registrations.find(
 						(r) => r.id === selectedItems[0]
 					) as Registrations;
-					const teacher = teachers.find(
-						(t) => t.id === student.teacher_id
-					) as Teachers;
+					const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
 					const instrument =
 						(student.class_id &&
 							(instruments.find(
@@ -518,20 +453,14 @@ export default function RegistrationsTable() {
 						null;
 					try {
 						const pdf = await PDF.createInstance();
-						pdf.setTemplateData(
-							student,
-							teacher.fullname,
-							instrument?.name || ""
-						);
+						pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
 						await pdf.fillTemplate();
 						await pdf.download();
 					} catch (error) {}
 			  }
 			: async function (form: HTMLFormElement) {
 					const items = selectedItems.map((id) => {
-						const student = registrations.find(
-							(r) => r.id === id
-						) as Registrations;
+						const student = registrations.find((r) => r.id === id) as Registrations;
 						const teacher = teachers.find(
 							(t) => t.id === student.teacher_id
 						) as Teachers;
@@ -563,10 +492,7 @@ export default function RegistrationsTable() {
 			submitText: "Λήψη",
 			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγράφης σε PDF",
 			type: ActionEnum.DOWNLOAD_PDF,
-			icon:
-				selectedItems.length > 1
-					? ActionIcon.DOWNLOAD_ZIP
-					: ActionIcon.DOWNLOAD_SINGLE,
+			icon: selectedItems.length > 1 ? ActionIcon.DOWNLOAD_ZIP : ActionIcon.DOWNLOAD_SINGLE,
 		};
 	});
 
@@ -578,12 +504,7 @@ export default function RegistrationsTable() {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (
-			!teachers ||
-			!registrations ||
-			!instruments ||
-			selectedItems.length <= 0
-		)
+		if (!teachers || !registrations || !instruments || selectedItems.length <= 0)
 			return excelModal;
 		const submit = async function (form: HTMLFormElement) {
 			let items = (
@@ -591,9 +512,7 @@ export default function RegistrationsTable() {
 					.map((id) => {
 						const student = registrations.find((r) => r.id === id);
 						if (!student) return;
-						const teacher = teachers.find(
-							(t) => t.id === student.teacher_id
-						);
+						const teacher = teachers.find((t) => t.id === student.teacher_id);
 						if (!teacher) return;
 						const instrument =
 							(student.class_id &&
@@ -608,9 +527,7 @@ export default function RegistrationsTable() {
 					teacher: Teachers;
 					instrument: Instruments | null;
 				}[]
-			).sort((a, b) =>
-				Number(a?.student.am) < Number(b?.student.am) ? -1 : 1
-			);
+			).sort((a, b) => (Number(a?.student.am) < Number(b?.student.am) ? -1 : 1));
 			const xlsx = await loadXLSX();
 			const wb = xlsx.utils.book_new();
 			const wsStudentsBook = xlsx.utils.aoa_to_sheet(
@@ -636,9 +553,7 @@ export default function RegistrationsTable() {
 							s.student.fathers_name,
 							"" + new Date(s.student.birth_date).getFullYear(),
 							`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
-							new Date(s.student.date).toLocaleDateString(
-								"el-GR"
-							),
+							new Date(s.student.date).toLocaleDateString("el-GR"),
 							s.teacher.fullname,
 							s.student.email,
 							s.student.telephone + "-" + s.student.cellphone,
@@ -666,8 +581,7 @@ export default function RegistrationsTable() {
 							item.student.last_name,
 							item.student.first_name,
 							item.student.fathers_name,
-							"" +
-								new Date(item.student.birth_date).getFullYear(),
+							"" + new Date(item.student.birth_date).getFullYear(),
 							`${item.student.road} ${item.student.number}, ${item.student.region}, ${item.student.tk}`,
 							item.student.class_year,
 							item.teacher.fullname,
@@ -676,9 +590,7 @@ export default function RegistrationsTable() {
 					})
 				)
 			);
-			items = items.sort((a, b) =>
-				a?.teacher.fullname < b?.teacher.fullname ? -1 : 1
-			);
+			items = items.sort((a, b) => (a?.teacher.fullname < b?.teacher.fullname ? -1 : 1));
 
 			const byzStudents = items.filter((i) => i.student.class_id === 0);
 			const parStudents = items.filter((i) => i.student.class_id === 1);
@@ -722,9 +634,7 @@ export default function RegistrationsTable() {
 					];
 				}),
 			]);
-			const wsStudentsBookPayments = xlsx.utils.aoa_to_sheet<
-				string | number
-			>([
+			const wsStudentsBookPayments = xlsx.utils.aoa_to_sheet<string | number>([
 				[
 					"Αριθμός Μητρώου",
 					"Επώνυμο",
@@ -752,9 +662,7 @@ export default function RegistrationsTable() {
 				}),
 			]);
 			const wsBookByTeacher = teachers.map((teacher) => {
-				const students = items.filter(
-					(item) => item.teacher.id === teacher.id
-				);
+				const students = items.filter((item) => item.teacher.id === teacher.id);
 				if (!students.length) return;
 				return xlsx.utils.aoa_to_sheet(
 					[
@@ -778,20 +686,13 @@ export default function RegistrationsTable() {
 								item.student.last_name,
 								item.student.first_name,
 								item.student.fathers_name,
-								"" +
-									new Date(
-										item.student.birth_date
-									).getFullYear(),
+								"" + new Date(item.student.birth_date).getFullYear(),
 								`${item.student.road} ${item.student.number}, ${item.student.region}, ${item.student.tk}`,
-								new Date(item.student.date).toLocaleDateString(
-									"el-GR"
-								),
+								new Date(item.student.date).toLocaleDateString("el-GR"),
 								item.student.class_year,
 								item.teacher.fullname,
 								item.student.email,
-								item.student.telephone +
-									"-" +
-									item.student.cellphone,
+								item.student.telephone + "-" + item.student.cellphone,
 							];
 						})
 					)
@@ -799,16 +700,8 @@ export default function RegistrationsTable() {
 			});
 			xlsx.utils.book_append_sheet(wb, wsStudentsBook, "Γενικό Μητρώο");
 			xlsx.utils.book_append_sheet(wb, wsSchoolYearBook, "Μαθητολόγιο");
-			xlsx.utils.book_append_sheet(
-				wb,
-				wsStudentsBookForMinistry,
-				"Μαθητολόγιο Χωριστά"
-			);
-			xlsx.utils.book_append_sheet(
-				wb,
-				wsStudentsBookPayments,
-				"Πληρωμές"
-			);
+			xlsx.utils.book_append_sheet(wb, wsStudentsBookForMinistry, "Μαθητολόγιο Χωριστά");
+			xlsx.utils.book_append_sheet(wb, wsStudentsBookPayments, "Πληρωμές");
 			wsBookByTeacher.forEach((ws, i) => {
 				if (!ws) return;
 				xlsx.utils.book_append_sheet(wb, ws, teachers[i].fullname);
@@ -844,9 +737,7 @@ export default function RegistrationsTable() {
 			untrack(() => {
 				let registrations = store[API.Registrations.get];
 				if (!registrations) return;
-				let rows = [
-					...document.querySelectorAll<HTMLElement>(".row[data-id]"),
-				];
+				let rows = [...document.querySelectorAll<HTMLElement>(".row[data-id]")];
 				let resultArray = [];
 				for (let i = 0; i < rows.length; i++) {
 					const row = rows[i];
@@ -856,20 +747,14 @@ export default function RegistrationsTable() {
 				}
 				for (let i = 0; i < resultArray.length; i++) {
 					const { row, registration } = resultArray[i];
-					const payment_status =
-						registration.total_payment -
-						registration.payment_amount;
-					if (
-						registration.payment_amount === 0 &&
-						registration.total_payment === 0
-					)
+					const payment_status = registration.total_payment - registration.payment_amount;
+					if (registration.payment_amount === 0 && registration.total_payment === 0)
 						continue;
 					if (payment_status === 0) {
 						row.setAttribute("data-paid", "");
 					} else if (
 						payment_status > 0 ||
-						(registration.payment_amount >
-							registration.total_payment &&
+						(registration.payment_amount > registration.total_payment &&
 							registration.total_payment === 0)
 					) {
 						row.setAttribute("data-partially-paid", "");
@@ -893,38 +778,24 @@ export default function RegistrationsTable() {
 	}, 250 - timeDropdown);
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={
 					store[API.Registrations.get] &&
 					store[API.Teachers.getByFullnames] &&
 					store[API.Instruments.get]
 				}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
-				<Table
-					prefix={PREFIX}
-					data={shapedData}
-					columns={columns}
-					hasSelectBox
-				>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+				<Table prefix={PREFIX} data={shapedData} columns={columns} hasSelectBox>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onModify} prefix={PREFIX} />
 						<TableControl action={onDelete} prefix={PREFIX} />
 					</TableControlsGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onDownloadPDf} prefix={PREFIX} />
-						<TableControl
-							action={onDownloadExcel}
-							prefix={PREFIX}
-						/>
+						<TableControl action={onDownloadExcel} prefix={PREFIX} />
 					</TableControlsGroup>
-					<SearchTable
-						columns={searchColumns}
-						setSearchQuery={setSearchQuery}
-					/>
+					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 				</Table>
 			</Show>
 			{/* Registration specific row styles */}

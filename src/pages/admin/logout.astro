@@ -7,6 +7,7 @@ const sid = getSessionId(Astro.request);
 if (!sid) return Astro.redirect("/admin");
 removeFromCache(sid);
 ---
+
 <SigninLayout title="Αποσύνδεση">
 	<h1>Αποσύνδεση...</h1>
 	<script>
@@ -16,12 +17,12 @@ removeFromCache(sid);
 		try {
 			await useAPI("Authentication.userLogout", {
 				RequestObject: {
-					sid
+					sid,
 				},
-			})
+			});
 			setCookie("session_id", "", -1);
 			document.location.pathname = "/login";
-		} catch(e) {
+		} catch (e) {
 			document.location.pathname = "/admin";
 		}
 	</script>

@@ -1,12 +1,12 @@
 ---
+
 ---
 
 <div class="h-max w-full gap-16">
 	<div id="teachers" class="w-full grid grid-rows-[max-content_1fr] p-16">
 		<h1
 			id="teachersHead"
-			class="heading relative p-2 text-center w-[9ch] self-center text-6xl font-bold font-anaktoria text-red-50 overflow-x-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] !after:translate-x-0 after:bg-red-50"
-		>
+			class="heading relative p-2 text-center w-[9ch] self-center text-6xl font-bold font-anaktoria text-red-50 overflow-x-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] !after:translate-x-0 after:bg-red-50">
 			Καθηγητές
 		</h1>
 	</div>
@@ -19,17 +19,21 @@
 <script>
 	window.addEventListener("load", () => {
 		const obsv = new IntersectionObserver(
-			entries => {
+			(entries) => {
 				const entry = entries[0];
 				if (entry.intersectionRatio >= 0.4) {
-					(document.querySelector("#teachersHead") as HTMLElement).classList.add("after:translate-x-0");
+					(document.querySelector("#teachersHead") as HTMLElement).classList.add(
+						"after:translate-x-0",
+					);
 				} else {
-					(document.querySelector("#teachersHead") as HTMLElement).classList.remove("after:translate-x-0");
+					(document.querySelector("#teachersHead") as HTMLElement).classList.remove(
+						"after:translate-x-0",
+					);
 				}
 			},
 			{
-				threshold: [0.4]
-			}
+				threshold: [0.4],
+			},
 		);
 		obsv.observe(document.querySelector("#teachers") as HTMLElement);
 	});

@@ -15,7 +15,8 @@ if (res.data && !res.data.isValid) {
 ---
 
 <SigninLayout title="Διαχείρηση">
-	<div class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
+	<div
+		class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
@@ -28,8 +29,20 @@ if (res.data && !res.data.isValid) {
 		</div>
 		<h2 class="text-3xl font-didact text-center">Εγγραφή Διαχειρηστή</h2>
 		<form id="signupForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
-			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" required />
-			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+			<Input
+				type="email"
+				name="email"
+				label="Email"
+				iconClasses="fa-solid fa-envelope"
+				required
+			/>
+			<Input
+				type="password"
+				name="password"
+				label="Κωδικός"
+				iconClasses="fa-solid fa-lock"
+				required
+			/>
 			<button
 				class="text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]:bg-red-500"
 				type="submit">Εγγραφή</button
@@ -79,16 +92,19 @@ if (res.data && !res.data.isValid) {
 	}
 
 	let tid: number | null = null;
-	document.getElementById("signupForm")?.addEventListener("submit", async e => {
+	document.getElementById("signupForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const form = e.currentTarget as HTMLFormElement;
 		const formData = new FormData(e.currentTarget as HTMLFormElement);
 		const data = {
 			email: formData.get("email") as string,
-			password: formData.get("password") as string
+			password: formData.get("password") as string,
 		};
 		const link = window.location.href.split("/").pop() as string;
-		const res = await useAPI(API.SysUsers.registerSysUser, { RequestObject: data, UrlArgs: { link } });
+		const res = await useAPI(API.SysUsers.registerSysUser, {
+			RequestObject: data,
+			UrlArgs: { link },
+		});
 
 		if (res.data) {
 			const { session_id } = res.data;

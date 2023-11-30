@@ -1,8 +1,4 @@
-import Row, {
-	toggleCheckboxes,
-	type CellValue,
-	toggleCheckbox,
-} from "./Row.solid";
+import Row, { toggleCheckboxes, type CellValue, toggleCheckbox } from "./Row.solid";
 import { For, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 import { getParent } from "../../../../lib/utils.client";
@@ -20,10 +16,7 @@ export const enum SortDirection {
 	NONE,
 }
 
-export type ColumnType<T> = Record<
-	keyof T,
-	{ type: CellValue; name: string; size?: number }
->;
+export type ColumnType<T> = Record<keyof T, { type: CellValue; name: string; size?: number }>;
 
 // Horizontal Scrolling for table from https://codepen.io/toddwebdev/pen/yExKoj
 let isDown = false;
@@ -47,10 +40,9 @@ const move = (e: MouseEvent) => {
 };
 
 export default function Table(props: Props) {
-	const [sorted, setSorted] = createSignal<[SortDirection, number]>(
-		[SortDirection.NONE, -1],
-		{ equals: false }
-	);
+	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], {
+		equals: false,
+	});
 	const { columns: columnNames, prefix = "", data } = props;
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
@@ -66,11 +58,7 @@ export default function Table(props: Props) {
 		let revOrder = direction === SortDirection.DESCENDING ? -1 : 1;
 
 		// By not applying the revOrder to the undefined/null values, they will always be at the end of the list
-		if (
-			columnType === "date" ||
-			columnType === "number" ||
-			columnType === "boolean"
-		) {
+		if (columnType === "date" || columnType === "number" || columnType === "boolean") {
 			rows.sort((a, b) => {
 				if (a[col_ind] === undefined || a[col_ind] === null) return 1;
 				if (b[col_ind] === undefined || b[col_ind] === null) return -1;
@@ -86,10 +74,9 @@ export default function Table(props: Props) {
 		return rows;
 	});
 
-	let columnWidths =
-		"grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
+	let columnWidths = "grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
-		let len = size || name.length;
+		let len = (size || name.length) + 1;
 		columnWidths += ` calc(${len}ch + 2ch)`;
 		return name;
 	});
@@ -117,8 +104,7 @@ export default function Table(props: Props) {
 				"w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4 z-[1]" +
 				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4"
 			}
-			data-prefix={prefix}
-		>
+			data-prefix={prefix}>
 			<div class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
 				{props.children}
 			</div>
@@ -129,8 +115,7 @@ export default function Table(props: Props) {
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
 				onMouseLeave={stopDragging}
-				onClick={onClick}
-			>
+				onClick={onClick}>
 				<Row
 					data={columns}
 					columnTypes={columnTypes}
@@ -162,8 +147,8 @@ export default function Table(props: Props) {
 		justify-content: space-between;
 		place-items: center;
 		height: min-content;
-		padding-left: 2rem/* 32px */;
-   		padding-right: 2rem/* 32px */;
+		padding-left: 1.5rem/* 24px */;
+   		padding-right: 1.5rem/* 24px */;
 		column-gap: 0.5rem/* 8px */;
 		font-size: 1.125rem/* 18px */;
    		line-height: 1.75rem/* 28px */;
@@ -171,7 +156,7 @@ export default function Table(props: Props) {
 		background-color: transparent;
 	}
 	/* shorthand for this:
-		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-8 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
+		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
 	*/
 	.row::before {
 		content: "";

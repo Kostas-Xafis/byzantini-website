@@ -1,11 +1,6 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Books, Payments } from "../../../types/entities";
@@ -14,16 +9,8 @@ import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 
 const PREFIX = "payments";
 
@@ -79,10 +66,7 @@ const PaymentsInputs = (books: Books[]): Record<keyof Payments, InputProps> => {
 	};
 };
 
-const paymentsToTable = (
-	payments: Payments[],
-	books: Books[]
-): PaymentsTable[] => {
+const paymentsToTable = (payments: Payments[], books: Books[]): PaymentsTable[] => {
 	return payments.map((p) => {
 		const columns = Object.values(p) as any[];
 		columns[2] = books.find((b) => b.id === p.book_id)?.title;
@@ -147,13 +131,7 @@ export default function PaymentsTable() {
 			});
 		};
 		return {
-			inputs: Pick(
-				PaymentsInputs(books),
-				"book_id",
-				"student_name",
-				"book_amount",
-				"date"
-			),
+			inputs: Pick(PaymentsInputs(books), "book_id", "student_name", "book_amount", "date"),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Πληρωμής",
@@ -169,23 +147,16 @@ export default function PaymentsTable() {
 
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
-		if (!payments || !books || selectedItems.length !== 1)
-			return modifyModal;
+		if (!payments || !books || selectedItems.length !== 1) return modifyModal;
 
-		const payment = payments.find(
-			(p) => p.id === selectedItems[0]
-		) as Payments;
+		const payment = payments.find((p) => p.id === selectedItems[0]) as Payments;
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
 			const data: Pick<Payments, "id" | "amount"> = {
 				id: payment.id,
 				amount: Number(formData.get("amount") as string) as number,
 			};
-			if (
-				data.amount > payment.amount ||
-				data.amount === 0 ||
-				!data.amount
-			) {
+			if (data.amount > payment.amount || data.amount === 0 || !data.amount) {
 				alert("Καταχώρηση μη επιτρεπτού ποσού!");
 				throw new Error("Invalid amount");
 			}
@@ -222,13 +193,9 @@ export default function PaymentsTable() {
 			return completeModal;
 		}
 		const submit = async function (form: HTMLFormElement) {
-			let data = selectedItems.map(
-				(id) => payments.find((p) => p.id === id) as Payments
-			);
+			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
 			if (data.filter((p) => p.payment_date !== 0).length > 0)
-				return alert(
-					"Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!"
-				);
+				return alert("Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!");
 			const res = await useAPI(
 				API.Payments.complete,
 				{
@@ -261,13 +228,9 @@ export default function PaymentsTable() {
 			return deleteModal;
 		}
 		const submit = async function (form: HTMLFormElement) {
-			let data = selectedItems.map(
-				(id) => payments.find((p) => p.id === id) as Payments
-			);
+			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
 			if (data.filter((p) => p.payment_date === 0).length)
-				return alert(
-					"Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!"
-				);
+				return alert("Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!");
 			const res = await useAPI(
 				API.Payments.delete,
 				{
@@ -291,13 +254,10 @@ export default function PaymentsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={store[API.Books.get] && store[API.Payments.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

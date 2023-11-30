@@ -1,34 +1,16 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import {
-	Fill,
-	Omit,
-	Pick,
-	type Props as InputProps,
-} from "../input/Input.solid";
+import { Fill, Omit, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 
 const PREFIX = "books";
 
@@ -36,9 +18,7 @@ type BooksTable = ReplaceName<Books, "wholesaler_id", "wholesaler"> & {
 	reserved: number;
 };
 
-const BooksInputs = (
-	wholesalers: Wholesalers[]
-): Record<keyof Books, InputProps> => {
+const BooksInputs = (wholesalers: Wholesalers[]): Record<keyof Books, InputProps> => {
 	return {
 		id: {
 			name: "id",
@@ -87,10 +67,7 @@ const BooksInputs = (
 	};
 };
 
-const booksToTable = (
-	books: Books[],
-	wholesalers: Wholesalers[]
-): BooksTable[] => {
+const booksToTable = (books: Books[], wholesalers: Wholesalers[]): BooksTable[] => {
 	return books.map((book) => {
 		const columns = Object.values(book) as any[];
 		columns[2] = wholesalers.find((w) => w.id === book.wholesaler_id)?.name;
@@ -109,9 +86,8 @@ const columnNames: ColumnType<BooksTable> = {
 	wholesale_price: {
 		type: "string",
 		name: "Χονδρική Τιμή",
-		size: 9,
 	},
-	price: { type: "string", name: "Λιανική Τιμή", size: 9 },
+	price: { type: "string", name: "Λιανική Τιμή" },
 	quantity: { type: "number", name: "Ποσότητα" },
 	sold: { type: "number", name: "Πωλήσεις" },
 	reserved: { type: "number", name: "Απόθεμα" },
@@ -159,17 +135,13 @@ export default function BooksTable() {
 			const data: Omit<Books, "id"> = {
 				title: formData.get("title") as string,
 				wholesaler_id: Number(formData.get("wholesaler")),
-				wholesale_price: parseInt(
-					formData.get("wholesale_price") as string
-				),
+				wholesale_price: parseInt(formData.get("wholesale_price") as string),
 				price: parseInt(formData.get("price") as string),
 				quantity: parseInt(formData.get("quantity") as string),
 				sold: parseInt(formData.get("sold") as string),
 			};
 			if (data.wholesale_price > data.price)
-				return alert(
-					"Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική"
-				);
+				return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική");
 			if (data.quantity < data.sold)
 				return alert(
 					"Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων"
@@ -202,8 +174,7 @@ export default function BooksTable() {
 		};
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers || !books || selectedItems.length !== 1)
-			return modifyModal;
+		if (!wholesalers || !books || selectedItems.length !== 1) return modifyModal;
 		const book = books.find((b) => b.id === selectedItems[0]) as Books;
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
@@ -237,12 +208,9 @@ export default function BooksTable() {
 
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
-		if (!wholesalers || !books || selectedItems.length < 1)
-			return deleteModal;
+		if (!wholesalers || !books || selectedItems.length < 1) return deleteModal;
 		const submit = async function (form: HTMLFormElement) {
-			const data = selectedItems.map(
-				(id) => books.find((b) => b.id === id)?.id || -1
-			);
+			const data = selectedItems.map((id) => books.find((b) => b.id === id)?.id || -1);
 			const res = await useAPI(
 				API.Books.delete,
 				{
@@ -338,13 +306,10 @@ export default function BooksTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={store[API.Books.get] && store[API.Wholesalers.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />
@@ -352,14 +317,8 @@ export default function BooksTable() {
 						<TableControl action={onDelete} prefix={PREFIX} />
 					</TableControlsGroup>
 					<TableControlsGroup prefix={PREFIX}>
-						<TableControl
-							action={onAddWholesaler}
-							prefix={"wholesalers"}
-						/>
-						<TableControl
-							action={onDeleteWholesaler}
-							prefix={"wholesalers"}
-						/>
+						<TableControl action={onAddWholesaler} prefix={"wholesalers"} />
+						<TableControl action={onDeleteWholesaler} prefix={"wholesalers"} />
 					</TableControlsGroup>
 				</Table>
 			</Show>

@@ -1,12 +1,7 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { asyncQueue, fileToBlob } from "../../../lib/utils.client";
@@ -16,16 +11,8 @@ import Spinner from "../other/Spinner.solid";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	type Action,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "announcements";
 
@@ -70,13 +57,9 @@ const AnnouncementsInputs = (): Omit<
 	};
 };
 
-const announcementsToTable = (
-	announcements: Announcements[]
-): AnnouncementTable[] => {
+const announcementsToTable = (announcements: Announcements[]): AnnouncementTable[] => {
 	return announcements.map((a) => {
-		let announcement = JSON.parse(
-			JSON.stringify(a)
-		) as Partial<Announcements>;
+		let announcement = JSON.parse(JSON.stringify(a)) as Partial<Announcements>;
 		delete announcement.content;
 		const columns = Object.values(announcement);
 		columns.push(a.views);
@@ -133,50 +116,46 @@ export default function AnnouncementsTable() {
 
 			const kb20 = 1024 * 20;
 			const thumbCreator = new ThumbnailGenerator();
-			const photos = FileHandler.getFiles("photos").map(
-				({ isProxy, name, file }, i) => {
-					if (isProxy) return async () => {};
-					return async function () {
-						let blob = await fileToBlob(file);
-						if (!blob)
-							return console.error("Could not load file:", name);
-						try {
-							await useAPI(API.Announcements.postImage, {
-								RequestObject: {
-									announcement_id: id,
-									name,
-									priority: i + 1,
-								},
-							});
+			const photos = FileHandler.getFiles("photos").map(({ isProxy, name, file }, i) => {
+				if (isProxy) return async () => {};
+				return async function () {
+					let blob = await fileToBlob(file);
+					if (!blob) return console.error("Could not load file:", name);
+					try {
+						await useAPI(API.Announcements.postImage, {
+							RequestObject: {
+								announcement_id: id,
+								name,
+								priority: i + 1,
+							},
+						});
+						await useAPI(API.Announcements.imageUpload, {
+							RequestObject: blob,
+							UrlArgs: { id, name },
+						});
+						if (file.size <= kb20) {
 							await useAPI(API.Announcements.imageUpload, {
 								RequestObject: blob,
-								UrlArgs: { id, name },
+								UrlArgs: {
+									id,
+									name: "thumb_" + name,
+								},
 							});
-							if (file.size <= kb20) {
-								await useAPI(API.Announcements.imageUpload, {
-									RequestObject: blob,
-									UrlArgs: {
-										id,
-										name: "thumb_" + name,
-									},
-								});
-								return;
-							}
-							const thumbBlob = await fileToBlob(
-								await thumbCreator.createThumbnail(file, name)
-							);
-							if (!thumbBlob)
-								throw new Error("Could not create thumbnail");
-							await useAPI(API.Announcements.imageUpload, {
-								RequestObject: thumbBlob,
-								UrlArgs: { id, name: "thumb_" + name },
-							});
-						} catch (e) {
-							console.error(e);
+							return;
 						}
-					};
-				}
-			);
+						const thumbBlob = await fileToBlob(
+							await thumbCreator.createThumbnail(file, name)
+						);
+						if (!thumbBlob) throw new Error("Could not create thumbnail");
+						await useAPI(API.Announcements.imageUpload, {
+							RequestObject: thumbBlob,
+							UrlArgs: { id, name: "thumb_" + name },
+						});
+					} catch (e) {
+						console.error(e);
+					}
+				};
+			});
 			await asyncQueue(photos, 2, true);
 			await ThumbnailGenerator.cleanup();
 			setAnnouncementHydrate({ action: ActionEnum.ADD, ids: [id] });
@@ -219,13 +198,10 @@ export default function AnnouncementsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={store[API.Announcements.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

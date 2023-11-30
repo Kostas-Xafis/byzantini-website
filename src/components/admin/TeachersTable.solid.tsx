@@ -1,19 +1,10 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { loadXLSX } from "../../../lib/pdf.client";
-import {
-	fileToBlob,
-	removeAccents,
-	teacherTitleByGender,
-} from "../../../lib/utils.client";
+import { fileToBlob, removeAccents, teacherTitleByGender } from "../../../lib/utils.client";
 import type {
 	ClassType,
 	Teachers as FullTeachers,
@@ -32,24 +23,12 @@ import {
 	type Props as InputProps,
 } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import {
-	SearchTable,
-	type SearchColumn,
-	type SearchSetter,
-} from "./SearchTable.solid";
+import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
 import { toggleCheckboxes } from "./table/Row.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "teachers";
@@ -87,8 +66,7 @@ const TeachersInputs = (
 	locationsList?: TeacherLocations[],
 	instrumentsList?: TeacherInstruments[]
 ): Record<keyof FullTeachers | ExtraInputs, InputProps> => {
-	const teacherClasses =
-		classList?.filter((c) => c.teacher_id === teacher?.id) || [];
+	const teacherClasses = classList?.filter((c) => c.teacher_id === teacher?.id) || [];
 	const teacherPriorities = teacherClasses.map((c) => {
 		return { priority: c.priority, class_id: c.class_id };
 	});
@@ -99,37 +77,28 @@ const TeachersInputs = (
 		};
 	});
 	const multiselectClasses = class_types?.map((ct) => {
-		let c =
-			teacherClasses && teacherClasses.find((t) => t.class_id === ct.id);
+		let c = teacherClasses && teacherClasses.find((t) => t.class_id === ct.id);
 		return { value: ct.id, label: ct.name, selected: !!c };
 	});
 
-	const teacherLocations =
-		locationsList?.filter((l) => l.teacher_id === teacher?.id) || [];
+	const teacherLocations = locationsList?.filter((l) => l.teacher_id === teacher?.id) || [];
 	const multiselectLocations = locations?.map((l) => {
-		let c =
-			teacherLocations &&
-			teacherLocations.find((t) => t.location_id === l.id);
+		let c = teacherLocations && teacherLocations.find((t) => t.location_id === l.id);
 		return { value: l.id, label: l.name, selected: !!c };
 	});
 
-	const teacherInstruments =
-		instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
+	const teacherInstruments = instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
 
 	const multiselectInstrumentsTraditional = instruments
 		?.filter((i) => i.type === "par")
 		.map((i) => {
-			let c =
-				teacherInstruments &&
-				teacherInstruments.find((t) => t.instrument_id === i.id);
+			let c = teacherInstruments && teacherInstruments.find((t) => t.instrument_id === i.id);
 			return { value: i.id, label: i.name, selected: !!c };
 		});
 	const multiselectInstrumentsEuropean = instruments
 		?.filter((i) => i.type === "eur")
 		.map((i) => {
-			let c =
-				teacherInstruments &&
-				teacherInstruments.find((t) => t.instrument_id === i.id);
+			let c = teacherInstruments && teacherInstruments.find((t) => t.instrument_id === i.id);
 			return { value: i.id, label: i.name, selected: !!c };
 		});
 	return {
@@ -172,15 +141,13 @@ const TeachersInputs = (
 			name: "title",
 			label: "Τίτλος",
 			type: "multiselect",
-			multiselectList: ["Καθηγητής", "Δάσκαλος", "Επιμελητής"].map(
-				(t, i) => {
-					return {
-						value: i,
-						label: t,
-						selected: teacher?.title === i,
-					};
-				}
-			),
+			multiselectList: ["Καθηγητής", "Δάσκαλος", "Επιμελητής"].map((t, i) => {
+				return {
+					value: i,
+					label: t,
+					selected: teacher?.title === i,
+				};
+			}),
 			multiselectOnce: true,
 			iconClasses: "fa-solid fa-user-graduate",
 		},
@@ -189,35 +156,28 @@ const TeachersInputs = (
 			label: "Α.Έκγρισης Βυζαντινής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
-			value:
-				teacherRegNumber.find((p) => p.class_id === 0)
-					?.registration_number || "",
+			value: teacherRegNumber.find((p) => p.class_id === 0)?.registration_number || "",
 		},
 		ae_par: {
 			name: "ae-par",
 			label: "Α.Έκγρισης Παραδοσιακής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
-			value:
-				teacherRegNumber.find((p) => p.class_id === 1)
-					?.registration_number || "",
+			value: teacherRegNumber.find((p) => p.class_id === 1)?.registration_number || "",
 		},
 		ae_eur: {
 			name: "ae-eur",
 			label: "Α.Έκγρισης Ευρωπαϊκής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
-			value:
-				teacherRegNumber.find((p) => p.class_id === 2)
-					?.registration_number || "",
+			value: teacherRegNumber.find((p) => p.class_id === 2)?.registration_number || "",
 		},
 		priority_byz: {
 			name: "priority_byz",
 			label: "Προτεραιότητα Βυζαντινής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			value:
-				teacherPriorities.find((p) => p.class_id === 0)?.priority || "",
+			value: teacherPriorities.find((p) => p.class_id === 0)?.priority || "",
 			minmax: [1, 1000],
 		},
 		priority_par: {
@@ -225,8 +185,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Παραδοσιακής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			value:
-				teacherPriorities.find((p) => p.class_id === 1)?.priority || "",
+			value: teacherPriorities.find((p) => p.class_id === 1)?.priority || "",
 			minmax: [1, 1000],
 		},
 		priority_eur: {
@@ -234,8 +193,7 @@ const TeachersInputs = (
 			label: "Προτεραιότητα Ευρωπαϊκής",
 			type: "number",
 			iconClasses: "fa-solid fa-arrow-up-9-1",
-			value:
-				teacherPriorities.find((p) => p.class_id === 2)?.priority || "",
+			value: teacherPriorities.find((p) => p.class_id === 2)?.priority || "",
 			minmax: [1, 1000],
 		},
 		picture: {
@@ -313,10 +271,7 @@ const TeachersInputs = (
 	};
 };
 
-const teachersToTable = (
-	teachers: FullTeachers[],
-	classList: TeacherClasses[]
-) => {
+const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]) => {
 	return teachers.map((t) => {
 		const classes = classList.filter((c) => c.teacher_id === t.id);
 		// const columns = Object.values(t) as any[];
@@ -324,8 +279,7 @@ const teachersToTable = (
 
 		columns[0] = t.id;
 		columns[1] = t.fullname;
-		columns[2] =
-			(t.picture && "/kathigites/picture/" + t.picture) || undefined;
+		columns[2] = (t.picture && "/kathigites/picture/" + t.picture) || undefined;
 		columns[3] = (t.cv && "/kathigites/cv/" + t.cv) || undefined;
 		columns[4] = t?.email;
 		columns[5] = t?.telephone;
@@ -388,9 +342,9 @@ const columnNames: ColumnType<TeachersTableType> = {
 const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function TeachersTable() {
-	const [searchQuery, setSearchQuery] = createStore<
-		SearchSetter<FullTeachers & TeacherJoins>
-	>({});
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>(
+		{}
+	);
 	const [store, setStore] = createStore<APIStore>({});
 	const setTeacherHydrate = useHydrateById(setStore, [
 		{
@@ -454,8 +408,7 @@ export default function TeachersTable() {
 		if (columnName === "teacherInstruments") {
 			const teachersInstruments = store[API.Teachers.getInstruments];
 			const instruments = store[API.Instruments.get];
-			if (!teachersInstruments || !instruments)
-				return teachersToTable(teachers, classList);
+			if (!teachersInstruments || !instruments) return teachersToTable(teachers, classList);
 			const searchedInstruments = instruments
 				.map((x) => x)
 				?.filter((i) =>
@@ -469,9 +422,7 @@ export default function TeachersTable() {
 				...new Set(
 					teachersInstruments
 						.map((x) => x)
-						.filter((t) =>
-							searchedInstruments.includes(t.instrument_id)
-						)
+						.filter((t) => searchedInstruments.includes(t.instrument_id))
 						.map((t) => teachers.find((x) => x.id === t.teacher_id))
 				),
 			] as FullTeachers[];
@@ -510,9 +461,10 @@ export default function TeachersTable() {
 				gender: getMultiSelect("gender").map((btn) =>
 					Number(btn.dataset.value) ? "F" : "M"
 				)[0],
-				title: getMultiSelect("title").map((btn) =>
-					Number(btn.dataset.value)
-				)[0] as 0 | 1 | 2,
+				title: getMultiSelect("title").map((btn) => Number(btn.dataset.value))[0] as
+					| 0
+					| 1
+					| 2,
 				visible: getMultiSelect("visible").map(
 					(btn) => !!Number(btn.dataset.value)
 				)[0] as boolean,
@@ -526,8 +478,8 @@ export default function TeachersTable() {
 					...getMultiSelect("teacherInstrumentsTraditional"),
 					...getMultiSelect("teacherInstrumentsEuropean"),
 				].map((btn) => Number(btn.dataset.value)) as number[],
-				teacherLocations: getMultiSelect("teacherLocations").map(
-					(btn) => Number(btn.dataset.value)
+				teacherLocations: getMultiSelect("teacherLocations").map((btn) =>
+					Number(btn.dataset.value)
 				) as number[],
 				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
@@ -565,10 +517,7 @@ export default function TeachersTable() {
 			setTeacherHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
 		return {
-			inputs: Omit(
-				TeachersInputs(class_types, locations, instruments),
-				"id"
-			),
+			inputs: Omit(TeachersInputs(class_types, locations, instruments), "id"),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Καθηγητή",
@@ -612,9 +561,10 @@ export default function TeachersTable() {
 				gender: getMultiSelect("gender").map((btn) =>
 					Number(btn.dataset.value) ? "F" : "M"
 				)[0],
-				title: getMultiSelect("title").map((btn) =>
-					Number(btn.dataset.value)
-				)[0] as 0 | 1 | 2,
+				title: getMultiSelect("title").map((btn) => Number(btn.dataset.value))[0] as
+					| 0
+					| 1
+					| 2,
 				visible: getMultiSelect("visible").map(
 					(btn) => !!Number(btn.dataset.value)
 				)[0] as boolean,
@@ -632,8 +582,8 @@ export default function TeachersTable() {
 				)
 					.map((btn) => btn && Number(btn.dataset.value))
 					.filter((btn) => !!btn) as number[],
-				teacherLocations: getMultiSelect("teacherLocations").map(
-					(btn) => Number(btn.dataset.value)
+				teacherLocations: getMultiSelect("teacherLocations").map((btn) =>
+					Number(btn.dataset.value)
 				) as number[],
 				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
@@ -700,9 +650,7 @@ export default function TeachersTable() {
 			});
 		};
 
-		const simpleTeacher = JSON.parse(
-			JSON.stringify(teacher)
-		) as Partial<FullTeachers>;
+		const simpleTeacher = JSON.parse(JSON.stringify(teacher)) as Partial<FullTeachers>;
 		delete simpleTeacher.picture;
 		delete simpleTeacher.cv;
 		return {
@@ -735,9 +683,7 @@ export default function TeachersTable() {
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length < 1) return deleteModal;
 		const submit = async function (form: HTMLFormElement) {
-			const ids = selectedItems.map(
-				(i) => (teachers.find((p) => p.id === i) as Teachers).id
-			);
+			const ids = selectedItems.map((i) => (teachers.find((p) => p.id === i) as Teachers).id);
 			const res = await useAPI(
 				API.Teachers.delete,
 				{
@@ -762,17 +708,13 @@ export default function TeachersTable() {
 			const formData = new FormData(form);
 			const data: Omit<Instruments, "id"> = {
 				name: formData.get("name") as string,
-				type:
-					(formData.get("type") as string) === "Παραδοσιακή Μουσική"
-						? "par"
-						: "eur",
+				type: (formData.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur",
 				isInstrument: (Number(
 					[
 						...document.querySelectorAll<HTMLInputElement>(
 							`button[data-specifier='isInstrument']`
 						),
-					].filter((i) => i.dataset.selected === "true")[0].dataset
-						.value as string
+					].filter((i) => i.dataset.selected === "true")[0].dataset.value as string
 				) - 1) as 0 | 1,
 			};
 			const res = await useAPI(
@@ -887,9 +829,7 @@ export default function TeachersTable() {
 			selectedItems.forEach((id) => {
 				const teacher = teachers.find((t) => t.id === id);
 				if (!teacher) return;
-				const teacherClasses = classes.filter(
-					(c) => c.teacher_id === id
-				);
+				const teacherClasses = classes.filter((c) => c.teacher_id === id);
 				teacherClasses.forEach((c) => {
 					if (c.class_id === 0) byzTeachers.push(teacher);
 					if (c.class_id === 1) parTeachers.push(teacher);
@@ -900,25 +840,14 @@ export default function TeachersTable() {
 			const xlsx = await loadXLSX();
 			const wb = xlsx.utils.book_new();
 			const wsStudentsBook = xlsx.utils.aoa_to_sheet(
-				[
-					[
-						"Ονοματεπώνυμο",
-						"Ιδιότητα",
-						"Αριθμός Έγκρισης",
-						"Υπογραφή",
-					],
-				].concat(
+				[["Ονοματεπώνυμο", "Ιδιότητα", "Αριθμός Έγκρισης", "Υπογραφή"]].concat(
 					byzTeachers.map((t) => {
 						const ao = classes.find(
 							(c) => c.teacher_id === t.id && c.class_id === 0
 						)?.registration_number;
 						return [
 							t.fullname.includes("π.")
-								? t.fullname
-										.replace("π. ", "")
-										.split(" ")
-										.reverse()
-										.join(" π. ")
+								? t.fullname.replace("π. ", "").split(" ").reverse().join(" π. ")
 								: t.fullname.split(" ").reverse().join(" "),
 							teacherTitleByGender(t.title, t.gender),
 							ao ?? "",
@@ -932,20 +861,11 @@ export default function TeachersTable() {
 						)?.registration_number;
 						const teacherInstruments = instrumentsByTeacher
 							.filter((i) => i.teacher_id === t.id)
-							.map(
-								(i) =>
-									instruments.find(
-										(x) => x.id === i.instrument_id
-									)?.name
-							)
+							.map((i) => instruments.find((x) => x.id === i.instrument_id)?.name)
 							.join(", ");
 						return [
 							t.fullname.includes("π.")
-								? t.fullname
-										.replace("π. ", "")
-										.split(" ")
-										.reverse()
-										.join("π.")
+								? t.fullname.replace("π. ", "").split(" ").reverse().join("π.")
 								: t.fullname.split(" ").reverse().join(" "),
 							teacherInstruments,
 							ao ?? "",
@@ -967,9 +887,7 @@ export default function TeachersTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={
 					store[API.Teachers.get] &&
@@ -981,37 +899,20 @@ export default function TeachersTable() {
 				}
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
 			>
-				<Table
-					prefix={PREFIX}
-					data={shapedData}
-					columns={columnNames}
-					hasSelectBox
-				>
+				<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />
 						<TableControl action={onModify} prefix={PREFIX} />
 						<TableControl action={onDelete} prefix={PREFIX} />
 					</TableControlsGroup>
 					<TableControlsGroup prefix={"instrument"}>
-						<TableControl
-							action={onAddInstrument}
-							prefix={"instrument"}
-						/>
-						<TableControl
-							action={onDeleteInstrument}
-							prefix={"instrument"}
-						/>
+						<TableControl action={onAddInstrument} prefix={"instrument"} />
+						<TableControl action={onDeleteInstrument} prefix={"instrument"} />
 					</TableControlsGroup>
 					<TableControlsGroup prefix={PREFIX}>
-						<TableControl
-							action={onDownloadExcel}
-							prefix={PREFIX}
-						/>
+						<TableControl action={onDownloadExcel} prefix={PREFIX} />
 					</TableControlsGroup>
-					<SearchTable
-						columns={searchColumns}
-						setSearchQuery={setSearchQuery}
-					/>
+					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 				</Table>
 			</Show>
 		</SelectedItemsContext.Provider>

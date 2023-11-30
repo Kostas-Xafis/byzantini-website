@@ -1,26 +1,13 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import type { SysUsers as FullSysUser } from "../../../types/entities";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "sysusers";
@@ -78,8 +65,7 @@ export default function SysUsersTable() {
 			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
 			headerText: !link
 				? "Δημιουργία link εγγραφής"
-				: "Link εγγραφής:\n https://musicschool-metamorfosi.gr/admin/signup/" +
-				  link,
+				: "Link εγγραφής:\n https://musicschool-metamorfosi.gr/admin/signup/" + link,
 			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_USER,
 		};
@@ -107,9 +93,7 @@ export default function SysUsersTable() {
 			return deleteModal;
 
 		const submit = async function (form: HTMLFormElement) {
-			const ids = selectedItems.map(
-				(i) => (sysusers.find((p) => p.id === i) as SysUsers).id
-			);
+			const ids = selectedItems.map((i) => (sysusers.find((p) => p.id === i) as SysUsers).id);
 			const res = await useAPI(
 				API.SysUsers.delete,
 				{
@@ -130,13 +114,10 @@ export default function SysUsersTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

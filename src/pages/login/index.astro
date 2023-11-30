@@ -5,7 +5,8 @@ export const prerender = true;
 ---
 
 <SigninLayout title="Είσοδος Διαχειριστή">
-	<div class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
+	<div
+		class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
@@ -19,7 +20,13 @@ export const prerender = true;
 		<h2 class="text-3xl font-didact text-center">Είσοδος Διαχειρηστή</h2>
 		<form id="loginForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
 			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
-			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+			<Input
+				type="password"
+				name="password"
+				label="Κωδικός"
+				iconClasses="fa-solid fa-lock"
+				required
+			/>
 			<button
 				class="text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]:bg-red-500"
 				type="submit">Είσοδος</button
@@ -64,13 +71,13 @@ export const prerender = true;
 	import { setCookie } from "../../../lib/utils.client";
 
 	let tid: number | null = null;
-	document.getElementById("loginForm")?.addEventListener("submit", async e => {
+	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
 		const inputs = form.elements as any;
 		const data = {
 			email: inputs.email.value,
-			password: inputs.password.value
+			password: inputs.password.value,
 		};
 		const res = await useAPI("Authentication.userLogin", { RequestObject: data });
 

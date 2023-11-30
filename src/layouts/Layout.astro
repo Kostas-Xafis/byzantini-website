@@ -11,10 +11,9 @@ export interface Props {
 
 const { title, imageUrl } = Astro.props;
 const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
-
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta name="viewport" content="width=device-width" />
@@ -29,36 +28,35 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 					title,
 					url: Astro.url,
 					image: logoUrl,
-					type: "website"
+					type: "website",
 				},
 				image: {
-					url: logoUrl
-
+					url: logoUrl,
 				},
 				optional: {
-					locale: "el_GR"
-				}
+					locale: "el_GR",
+				},
 			}}
 			extend={{
 				link: [
 					{ rel: "icon", href: "/logo_small.png" },
 					{ rel: "sitemap", href: "/sitemap-index.xml" },
-					{ rel: "robots", href: "/sitemap-index.xml" }
+					{ rel: "robots", href: "/sitemap-index.xml" },
 				],
 				meta: [
 					{
 						name: "facebook:image",
-						content: logoUrl
+						content: logoUrl,
 					},
 					{
 						name: "messenger:image",
-						content: logoUrl
+						content: logoUrl,
 					},
 					{
 						name: "viber:image",
-						content: logoUrl
-					}
-				]
+						content: logoUrl,
+					},
+				],
 			}}
 		/>
 		<Links />
@@ -156,7 +154,8 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 	</head>
 	<body class="box-border relative h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:overflow-auto">
 		<Navbar />
-		<div class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4.5vw] max-sm:pt-[6rem]">
+		<div
+			class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4.5vw] max-sm:pt-[6rem]">
 			<slot />
 		</div>
 		<Contact />

@@ -5,8 +5,7 @@ export default function Spinner(props: { classes?: string }) {
 				class={
 					"w-full h-full grid grid-rows-[1fr] place-items-center" +
 					(" " + (props.classes || ""))
-				}
-			>
+				}>
 				<div class="spinner w-[50px] aspect-square rounded-[50%] bg-red-900"></div>
 			</div>
 			<style>

@@ -1,9 +1,4 @@
-import {
-	API,
-	type APIStore,
-	useHydrate,
-	useAPI,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, type APIStore, useHydrate, useAPI } from "../../../lib/hooks/useAPI.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { createMemo, Show } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -45,9 +40,7 @@ export default function TotalsTable() {
 		const payoffs = store[API.Payoffs.getTotal];
 		const registrations = store[API.Registrations.getTotal];
 		if (!payments || !payoffs || !registrations) return [];
-		return [
-			[payments.total + "€", payoffs.total + "€", registrations.total],
-		];
+		return [[payments.total + "€", payoffs.total + "€", registrations.total]];
 	});
 	return (
 		<Show
@@ -56,8 +49,7 @@ export default function TotalsTable() {
 				store[API.Payments.getTotal] &&
 				store[API.Registrations.getTotal]
 			}
-			fallback={<Spinner classes="max-sm:h-[100svh]" />}
-		>
+			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table data={shapedData} columns={columnNames} />
 		</Show>
 	);

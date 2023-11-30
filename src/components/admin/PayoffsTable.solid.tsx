@@ -1,11 +1,6 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import {
-	API,
-	useAPI,
-	useHydrate,
-	type APIStore,
-} from "../../../lib/hooks/useAPI.solid";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Payoffs, Wholesalers } from "../../../types/entities";
@@ -14,29 +9,14 @@ import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import {
-	ActionEnum,
-	ActionIcon,
-	type EmptyAction,
-} from "./table/TableControlTypes";
-import {
-	TableControl,
-	type Action,
-	TableControlsGroup,
-} from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 
 const PREFIX = "payoffs";
 
-type SchoolPayoffsTable = ReplaceName<
-	Payoffs,
-	"wholesaler_id",
-	"wholesaler",
-	number
->;
+type SchoolPayoffsTable = ReplaceName<Payoffs, "wholesaler_id", "wholesaler", number>;
 
-const SchoolPayoffsInputs = (
-	wholesalers: Wholesalers[]
-): Record<keyof Payoffs, InputProps> => {
+const SchoolPayoffsInputs = (wholesalers: Wholesalers[]): Record<keyof Payoffs, InputProps> => {
 	return {
 		id: {
 			name: "id",
@@ -61,10 +41,7 @@ const SchoolPayoffsInputs = (
 	};
 };
 
-const payoffsToTable = (
-	payoffs: Payoffs[],
-	wholesalers: Wholesalers[]
-): SchoolPayoffsTable[] => {
+const payoffsToTable = (payoffs: Payoffs[], wholesalers: Wholesalers[]): SchoolPayoffsTable[] => {
 	return payoffs.map((p) => {
 		const columns = Object.values(p) as any[];
 		columns[1] = wholesalers.find((w) => w.id === p.wholesaler_id)?.name;
@@ -98,9 +75,7 @@ export default function PayoffsTable() {
 		const wholesalers = store[API.Wholesalers.get];
 		const payements = store[API.Payoffs.get];
 		if (!wholesalers || !payements) return [];
-		return wholesalers && payements
-			? payoffsToTable(payements, wholesalers)
-			: [];
+		return wholesalers && payements ? payoffsToTable(payements, wholesalers) : [];
 	});
 
 	const onModify = createMemo((): Action | EmptyAction => {
@@ -110,19 +85,15 @@ export default function PayoffsTable() {
 		};
 		const wholesalers = store[API.Wholesalers.get];
 		const payoffs = store[API.Payoffs.get];
-		if (!payoffs || !wholesalers || selectedItems.length !== 1)
-			return modifyModal;
-		const payoff = payoffs.find(
-			(p) => p.id === selectedItems[0]
-		) as Payoffs;
+		if (!payoffs || !wholesalers || selectedItems.length !== 1) return modifyModal;
+		const payoff = payoffs.find((p) => p.id === selectedItems[0]) as Payoffs;
 		const submit = async function (form: HTMLFormElement) {
 			const formData = new FormData(form);
 			const data: Omit<Payoffs, "wholesaler_id"> = {
 				id: payoff.id,
 				amount: Number(formData.get("amount") as string),
 			};
-			if (data.amount > payoff.amount || data.amount === 0)
-				throw Error("Invalid amount");
+			if (data.amount > payoff.amount || data.amount === 0) throw Error("Invalid amount");
 			const res = await useAPI(
 				API.Payoffs.updateAmount,
 				{
@@ -155,9 +126,7 @@ export default function PayoffsTable() {
 			return deleteModal;
 		}
 		const submit = async function (form: HTMLFormElement) {
-			const data = selectedItems.map(
-				(i) => (payoffs.find((p) => p.id === i) as Payoffs).id
-			);
+			const data = selectedItems.map((i) => (payoffs.find((p) => p.id === i) as Payoffs).id);
 			const res = await useAPI(
 				API.Payoffs.complete,
 				{
@@ -181,9 +150,7 @@ export default function PayoffsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider
-			value={[selectedItems, setSelectedItems]}
-		>
+		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
 				when={store[API.Wholesalers.get] && store[API.Payoffs.get]}
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}
