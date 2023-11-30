@@ -217,15 +217,14 @@ const registrationsToTable = (
 	instruments: Instruments[]
 ) => {
 	return registrations.map((reg) => {
-		const columns = Object.values(reg);
+		const columns = Object.values(reg) as any[];
 		columns[15] = [
 			"Βυζαντινή Μουσική",
 			"Παραδοσιακή Μουσική",
 			"Ευρωπαϊκή Μουσική",
 		][columns[15] as number];
-		columns[16] =
-			teachers.find((t) => t.id === columns[16])?.fullname || "";
-		columns[17] = instruments.find((i) => i.id === columns[17])?.name || "";
+		columns[16] = teachers.find((t) => t.id === columns[16])?.fullname;
+		columns[17] = instruments.find((i) => i.id === columns[17])?.name;
 		if (columns[19] === 0 || !columns[19]) columns[19] = null;
 		if (columns[20] === 0 || !columns[20]) columns[20] = null;
 		return columns as unknown as RegistrationsTable;

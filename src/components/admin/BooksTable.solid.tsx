@@ -92,13 +92,11 @@ const booksToTable = (
 	wholesalers: Wholesalers[]
 ): BooksTable[] => {
 	return books.map((book) => {
-		const columns = Object.values(book);
-		columns[2] =
-			wholesalers.find((w) => w.id === book.wholesaler_id)?.name || "";
+		const columns = Object.values(book) as any[];
+		columns[2] = wholesalers.find((w) => w.id === book.wholesaler_id)?.name;
 		columns[3] = columns[3] + "€";
 		columns[4] = columns[4] + "€";
 
-		//@ts-ignore
 		columns.push(columns[5] - columns[6]);
 		return columns as unknown as BooksTable;
 	});
@@ -109,11 +107,11 @@ const columnNames: ColumnType<BooksTable> = {
 	title: { type: "string", name: "Τίτλος", size: 15 },
 	wholesaler: { type: "string", name: "Χονδρέμπορος", size: 15 },
 	wholesale_price: {
-		type: "number",
+		type: "string",
 		name: "Χονδρική Τιμή",
 		size: 9,
 	},
-	price: { type: "number", name: "Λιανική Τιμή", size: 9 },
+	price: { type: "string", name: "Λιανική Τιμή", size: 9 },
 	quantity: { type: "number", name: "Ποσότητα" },
 	sold: { type: "number", name: "Πωλήσεις" },
 	reserved: { type: "number", name: "Απόθεμα" },

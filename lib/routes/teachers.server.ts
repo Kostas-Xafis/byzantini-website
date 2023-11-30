@@ -22,16 +22,18 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
+//
 serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");
-	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC, fullname ASC", [class_id]));
+	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id]));
 };
 
 serverRoutes.getByFullnames.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"));
 };
 
+// TeachersClasses endpoints
 serverRoutes.getClasses.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
 };
@@ -42,6 +44,7 @@ serverRoutes.getClassesById.func = async ctx => {
 	});
 };
 
+// TeachersLocations endpoints
 serverRoutes.getLocations.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations"));
 };
@@ -52,6 +55,7 @@ serverRoutes.getLocationsById.func = async ctx => {
 	});
 };
 
+// TeachersInstruments endpoints
 serverRoutes.getInstruments.func = async ctx => {
 	return await execTryCatch(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments"));
 };

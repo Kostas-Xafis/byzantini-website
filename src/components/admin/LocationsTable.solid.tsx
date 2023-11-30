@@ -141,21 +141,18 @@ const LocationsInputs = (
 };
 
 const locationsToTable = (locations: Locations[]): LocationsTable[] => {
-	return locations.map((p) => {
-		let location = JSON.parse(JSON.stringify(p)) as Partial<Locations>;
-		delete location.telephones;
-		delete location?.link;
-		delete location.map;
-		delete location?.youtube;
-
-		const columns = Object.values(location) as (
-			| string
-			| number
-			| boolean
-		)[];
-		columns[8] =
-			(location.image && "/spoudastiria/" + location.image) || "";
-		columns[9] = !!location.partner;
+	return locations.map((loc) => {
+		const columns: any[] = Array(10).fill(null);
+		columns[0] = loc.id;
+		columns[1] = loc.name;
+		columns[2] = loc.address;
+		columns[3] = loc.areacode;
+		columns[4] = loc.municipality;
+		columns[5] = loc.priority;
+		columns[6] = loc.manager;
+		columns[7] = loc?.email;
+		columns[8] = (loc.image && "/spoudastiria/" + loc.image) || undefined;
+		columns[9] = !!loc.partner;
 		return columns as unknown as LocationsTable;
 	});
 };
@@ -168,9 +165,9 @@ const columnNames: ColumnType<LocationsTable> = {
 	address: { type: "string", name: "Διεύθυνση", size: 15 },
 	areacode: { type: "number", name: "Ταχ. Κώδικας" },
 	municipality: { type: "string", name: "Δήμος", size: 12 },
+	priority: { type: "number", name: "Προτεραιότητα" },
 	manager: { type: "string", name: "Υπεύθυνος", size: 15 },
 	email: { type: "string", name: "Email", size: 25 },
-	priority: { type: "number", name: "Προτεραιότητα" },
 	image: { type: "link", name: "Φωτογραφία", size: 15 },
 	partner: {
 		type: "boolean",

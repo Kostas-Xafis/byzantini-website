@@ -9,7 +9,7 @@ export function requestValidation(validation: () => AnyObjectSchema) {
 		try {
 			parse(validation(), ctx.request.body);
 		} catch (err) {
-			return new Response("Invalid request body: " + JSON.stringify(err), { status: 400 });
+			return new Response("Invalid request body shape: " + JSON.stringify(err), { status: 400 });
 		}
 		ctx.request.json = () => Promise.resolve(body);
 	};

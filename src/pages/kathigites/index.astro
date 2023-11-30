@@ -83,7 +83,7 @@ const cvSrc = "kathigites/cv/";
 			<h1 class="group-[:is(:not(.par))]/type:hidden text-[3vw] max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Παραδοσιακής Μουσικής</h1>
 			<h1 class="group-[:is(:not(.eur))]/type:hidden text-[3vw] max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Ευρωπαϊκής Μουσικής</h1>
 			{
-				teachers.map(([teachersByType, type], i) => {
+				teachers.map(([teachersByType, type]) => {
 					return teachersByType.map(teacher => {
 						const t_classes_str = teacher_classes.filter(c => c.teacher_id === teacher.id)?.map(c => musicOnly[c.class_id][0]);
 						const t_locations = teacher_locations.filter(l => l.teacher_id === teacher.id)?.map(l => locations.find((loc) => loc.id === l.location_id)?.name || "");

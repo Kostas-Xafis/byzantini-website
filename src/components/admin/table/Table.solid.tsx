@@ -55,39 +55,32 @@ export default function Table(props: Props) {
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = createMemo(() => {
-		const [direction, column_index] = sorted();
-		if (direction === SortDirection.NONE || column_index < 0) {
+		const [direction, col_ind] = sorted();
+		if (direction === SortDirection.NONE || col_ind < 0) {
 			return data();
 		}
 
 		const rows = data().slice(); // Remove any solid-js proxies
 
-		let columnType = columnTypes[column_index];
+		let columnType = columnTypes[col_ind];
 		let revOrder = direction === SortDirection.DESCENDING ? -1 : 1;
+
+		// By not applying the revOrder to the undefined/null values, they will always be at the end of the list
 		if (
 			columnType === "date" ||
 			columnType === "number" ||
 			columnType === "boolean"
 		) {
 			rows.sort((a, b) => {
-				if (a[column_index] === undefined || a[column_index] === null)
-					return -1 * revOrder;
-				else if (
-					b[column_index] === undefined ||
-					b[column_index] === null
-				)
-					return 1 * revOrder;
-				return (a[column_index] - b[column_index]) * revOrder;
+				if (a[col_ind] === undefined || a[col_ind] === null) return 1;
+				if (b[col_ind] === undefined || b[col_ind] === null) return -1;
+				return (a[col_ind] - b[col_ind]) * revOrder;
 			});
 		} else if (columnType === "link" || columnType === "string") {
 			rows.sort((a, b) => {
-				if (a[column_index] === "" || !a[column_index])
-					return 1 * revOrder;
-				else if (b[column_index] === "" || !b[column_index])
-					return -1 * revOrder;
-				return (
-					a[column_index].localeCompare(b[column_index]) * revOrder
-				);
+				if (a[col_ind] === "" || !a[col_ind]) return 1;
+				if (b[col_ind] === "" || !b[col_ind]) return -1;
+				return a[col_ind].localeCompare(b[col_ind]) * revOrder;
 			});
 		}
 		return rows;
@@ -97,7 +90,7 @@ export default function Table(props: Props) {
 		"grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
 		let len = size || name.length;
-		columnWidths += `calc(${len}ch + 2ch)`;
+		columnWidths += ` calc(${len}ch + 2ch)`;
 		return name;
 	});
 	columnWidths += ";";

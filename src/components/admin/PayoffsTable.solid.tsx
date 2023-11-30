@@ -9,7 +9,7 @@ import {
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Payoffs, Wholesalers } from "../../../types/entities";
-import type { ReplaceName } from "../../../types/helpers";
+import type { ReplaceName, ReplaceValue } from "../../../types/helpers";
 import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
@@ -27,7 +27,12 @@ import {
 
 const PREFIX = "payoffs";
 
-type SchoolPayoffsTable = ReplaceName<Payoffs, "wholesaler_id", "wholesaler">;
+type SchoolPayoffsTable = ReplaceName<
+	Payoffs,
+	"wholesaler_id",
+	"wholesaler",
+	number
+>;
 
 const SchoolPayoffsInputs = (
 	wholesalers: Wholesalers[]
@@ -61,9 +66,8 @@ const payoffsToTable = (
 	wholesalers: Wholesalers[]
 ): SchoolPayoffsTable[] => {
 	return payoffs.map((p) => {
-		const columns = Object.values(p) as (string | number)[];
-		columns[1] =
-			wholesalers.find((w) => w.id === p.wholesaler_id)?.name || "";
+		const columns = Object.values(p) as any[];
+		columns[1] = wholesalers.find((w) => w.id === p.wholesaler_id)?.name;
 		columns[2] = columns[2] + "€";
 		return columns as unknown as SchoolPayoffsTable;
 	});

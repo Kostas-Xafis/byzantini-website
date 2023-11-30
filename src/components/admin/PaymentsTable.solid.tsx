@@ -84,12 +84,21 @@ const paymentsToTable = (
 	books: Books[]
 ): PaymentsTable[] => {
 	return payments.map((p) => {
-		const columns = Object.values(p);
-		columns[2] =
-			books.find((b) => b.id === p.book_id)?.title || "Δεν βρέθηκε!";
+		const columns = Object.values(p) as any[];
+		columns[2] = books.find((b) => b.id === p.book_id)?.title;
 		columns[3] = columns[3] + "€";
 		return columns as unknown as PaymentsTable;
 	});
+};
+
+const columnNames: ColumnType<PaymentsTable> = {
+	id: { type: "number", name: "Id" },
+	student_name: { type: "string", name: "Μαθητής", size: 15 },
+	title: { type: "string", name: "Βιβλίο", size: 25 },
+	amount: { type: "number", name: "Οφειλή" },
+	book_amount: { type: "number", name: "Ποσότητα" },
+	date: { type: "date", name: "Ημερομηνία Παραλαβής" },
+	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής" },
 };
 
 const [selectedItems, setSelectedItems] = useSelectedRows();
@@ -106,16 +115,6 @@ export default function PaymentsTable() {
 		useAPI(API.Payments.get, {}, setStore);
 		useAPI(API.Books.get, {}, setStore);
 	});
-
-	const columnNames: ColumnType<PaymentsTable> = {
-		id: { type: "number", name: "Id" },
-		student_name: { type: "string", name: "Μαθητής", size: 15 },
-		title: { type: "string", name: "Βιβλίο", size: 25 },
-		amount: { type: "number", name: "Οφειλή" },
-		book_amount: { type: "number", name: "Ποσότητα" },
-		date: { type: "date", name: "Ημερομηνία Παραλαβής" },
-		payment_date: { type: "date", name: "Ημερομηνία Πληρωμής" },
-	};
 
 	let shapedData = createMemo(() => {
 		const books = store[API.Books.get];

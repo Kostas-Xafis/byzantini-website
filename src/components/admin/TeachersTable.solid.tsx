@@ -319,13 +319,17 @@ const teachersToTable = (
 ) => {
 	return teachers.map((t) => {
 		const classes = classList.filter((c) => c.teacher_id === t.id);
-		const columns = Object.values(t) as any[];
+		// const columns = Object.values(t) as any[];
+		const columns = Array(14).fill(null) as any[];
 
-		columns[2] = (t.picture && "/kathigites/picture/" + t.picture) || "";
-		columns[3] = (t.cv && "/kathigites/cv/" + t.cv) || "";
-		columns[4] = t.email || "";
-		columns[5] = t.telephone || "";
-		columns[6] = t.linktree || "";
+		columns[0] = t.id;
+		columns[1] = t.fullname;
+		columns[2] =
+			(t.picture && "/kathigites/picture/" + t.picture) || undefined;
+		columns[3] = (t.cv && "/kathigites/cv/" + t.cv) || undefined;
+		columns[4] = t?.email;
+		columns[5] = t?.telephone;
+		columns[6] = t?.linktree;
 
 		columns[7] = classes.find((c) => c.class_id === 0)?.priority;
 		columns[8] = classes.find((c) => c.class_id === 1)?.priority;

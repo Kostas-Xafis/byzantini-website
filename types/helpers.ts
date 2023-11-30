@@ -67,9 +67,12 @@ export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>>
 
 // export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
 
-export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol> = {
-	[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
-};
+export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol, Value = any> =
+	IsAny<Value> extends false ? Omit<T, Replaced> & {
+		[P in Replacement]: Value
+	} : {
+		[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
+	};
 
 export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
 	[P in Replaced]: Value
