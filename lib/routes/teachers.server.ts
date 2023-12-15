@@ -22,7 +22,6 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-//
 serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");

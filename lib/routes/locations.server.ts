@@ -23,7 +23,7 @@ serverRoutes.getById.func = async ctx => {
 };
 
 serverRoutes.getByPriority.func = async _ctx => {
-	return await execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations ORDER BY priority ASC, name ASC"));
+	return await execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations ORDER BY priority ASC"));
 };
 
 

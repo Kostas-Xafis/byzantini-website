@@ -54,7 +54,7 @@ export class FileHandler {
 		if (this.isSingleFile) {
 			this.files = [proxyFiles[0]];
 			return;
-		};
+		}
 
 		const newFiles = [];
 		for (const file of proxyFiles) {

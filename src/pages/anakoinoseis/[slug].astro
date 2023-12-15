@@ -36,9 +36,9 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			/>
 		</div>
 		<div class="text-xl mt-4 self-start">
-			{announcement.content}
+			{announcement.content.split("\n").map((p) => <p class="pb-2">{p}</p>)}
 		</div>
-		<div id="imgContainer" class="flex items-center">
+		<!-- <div id="imgContainer" class="flex items-center">
 			<div
 				class="flex flex-row flex-wrap mt-4 gap-y-6 loading items-center justify-evenly self-center">
 				{
@@ -58,39 +58,72 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					))
 				}
 			</div>
-		</div>
+		</div> -->
 	</section>
-	<!-- <div id="imageCarouselContainer" class="fixed inset-0 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center">
+	<div
+		id="imageCarouselContainer"
+		class="fixed inset-0 top-[60px] bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center">
 		<div
 			id="controlsContainer"
-			class="grid grid-cols-[max-content,1fr,max-content] justify-center items-center p-8 bg-[rgba(40,10,10,0.75)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[3px]"
-		>
-			<i class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white max-sm:text-xs max-sm:px-2 max-3xs:text-xs"></i>
+			class="grid grid-cols-[max-content,1fr,max-content] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
+			<i
+				data-direction="left"
+				class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+			></i>
 			<div id="imageCarousel" data-index="0">
-				<div class="imgLoader group/img">
+				<div class="imgLoader group/img flex flex-col items-center">
 					<div class="hidden group-[:is(.loading)]/img:block w-[320px] h-[240px]">
 						<Spinner />
 					</div>
 					<div
-						class="hidden group-[:is(.loaded)]/img:block max-w-[320px] h-[240px] transition-shadow hover:shadow-lg !shadow-slate-800"
-					>
-						<img alt={announcement.title} class="w-[400px] object-cover h-full" />
+						class="group-[:is(.loaded)]/img:block max-w-[1024px] max-h-[520px] flex items-center">
+						<img
+							alt={announcement.title}
+							class="block object-cover hover:shadow-lg !shadow-red-950"
+							src={imgSrc + announcement.images[1]}
+						/>
 					</div>
 				</div>
-				<div id="thumbContainer" class="flex flex-row pt-8">
-					<img alt={announcement.title}/>
-					<img alt={announcement.title}/>
-					<img alt={announcement.title}/>
-					<img alt={announcement.title}/>
-					<img alt={announcement.title}/>
+				<div id="thumbContainer" class="flex flex-row pt-8 gap-x-4 items-center">
+					<img
+						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:shadow-lg !shadow-red-950"
+						alt={announcement.title}
+						src={imgThumbSrc + announcement.images.at(-2)}
+					/>
+					<img
+						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
+						alt={announcement.title}
+						src={imgThumbSrc + announcement.images.at(-1)}
+					/>
+					<img
+						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
+						alt={announcement.title}
+						src={imgThumbSrc + announcement.images.at(0)}
+					/>
+					<img
+						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
+						alt={announcement.title}
+						src={imgThumbSrc + announcement.images.at(1)}
+					/>
+					<img
+						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
+						alt={announcement.title}
+						src={imgThumbSrc + announcement.images.at(2)}
+					/>
 				</div>
 			</div>
-			<i class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white max-sm:text-xs max-sm:px-2 max-3xs:text-xs"></i>
+			<i
+				data-direction="right"
+				class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+			></i>
 		</div>
-	</div> -->
+	</div>
 </Layout>
 <script>
 	import { onElementMount, asyncQueue, sleep } from "../../../lib/utils.client";
+	const imgSrcArr = (
+		[...document.querySelectorAll("#imgContainer > img")] as HTMLImageElement[]
+	).map((img) => img.src);
 	onElementMount("#imgContainer", async (el) => {
 		const imgs = [...el.querySelectorAll("img")];
 		const imgContainers = [...el.querySelectorAll(".imgLoader")];
@@ -108,5 +141,19 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			}
 		});
 		await asyncQueue(jobs, 5);
+	});
+	onElementMount("i[data-direction]", () => {
+		const leftBtn = document.querySelector("i[data-direction='left']") as HTMLElement;
+		const rightBtn = document.querySelector("i[data-direction='right']") as HTMLElement;
+		const carousel = document.querySelector("#imageCarousel") as HTMLElement;
+		const thumbContainer = document.querySelector("#thumbContainer") as HTMLImageElement;
+
+		const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
+
+		let currIndex = Number(carousel.dataset.index || 0);
+		// thumbCarouselImgs.forEach((img, i) => {
+		// 	const nextIndex = (currIndex + i - 1) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+		// 	img.src = "thumb_" + imgSrcArr[nextIndex];
+		// });
 	});
 </script>

@@ -224,7 +224,7 @@ export const download = (file: Blob, name: string) => {
 };
 
 export const fileToBlob = async (file: File): Promise<Blob | null> => {
-	if (!file.name) return null;
+	if (!file || !file.name) return null;
 	return new Promise((res) => {
 		const reader = new FileReader();
 		reader.onload = () => {
@@ -235,17 +235,23 @@ export const fileToBlob = async (file: File): Promise<Blob | null> => {
 		reader.readAsArrayBuffer(file);
 	});
 };
-export function loadScript(src: string, res: () => boolean) {
-	console.log("Loading script: ", src);
+export function loadScript(src: string, res?: () => boolean) {
 	return new Promise(async (resolve, reject) => {
 		let script = document.createElement("script");
 		script.src = src;
 		script.onerror = () => reject(null);
-		document.head.appendChild(script);
-		while (!res()) {
-			await sleep(50);
+		script.onload = async () => {
+			let counter = 0;
+			if (res) {
+				while (!res() && counter++ < 20) {
+					await sleep(200);
+					resolve(null);
+				}
+			}
 			resolve(null);
-		}
+		};
+		document.head.appendChild(script);
+
 	});
 };
 export const loadImage = (src: string) => {

@@ -37,7 +37,7 @@ serverRoutes.post.func = async ctx => {
 				book_amount,
 				Date.now()
 			]),
-			executeQuery("UPDATE books SET sold = sold + ? WHERE id = ? AND sold + ? < quantity LIMIT 1", [book_amount, book_id, book_amount]),
+			executeQuery("UPDATE books SET sold = sold + ? WHERE id = ? LIMIT 1", [book_amount, book_id, book_amount]),
 			executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]),
 		]);
 		if (result1.status === "rejected" || result2.status === "rejected") throw Error("Failed database insertion and/or update");

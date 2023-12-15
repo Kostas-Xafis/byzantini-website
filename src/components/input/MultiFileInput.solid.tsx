@@ -12,10 +12,10 @@ type MultiFileInputProps = {
 };
 
 export default function MultiFileInput(props: MultiFileInputProps) {
-	const { name, prefix, required, iconClasses, disabled, fileExtension } = props;
+	const { name, required, iconClasses, disabled, fileExtension } = props;
 
 	const [fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
-	const fileHandler = new FileHandler(prefix);
+	const fileHandler = new FileHandler(name);
 	const onFileClick = (e: MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();

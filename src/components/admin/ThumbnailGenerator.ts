@@ -1,54 +1,32 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { toBlobURL, fetchFile } from "@ffmpeg/util";
-import { imageMIMETypes } from "../../../lib/utils.client";
+import { loadScript } from "../../../lib/utils.client";
 
-const ffmpeg = new FFmpeg();
 export class ThumbnailGenerator {
-	private static ffmpegLoaded: boolean = false;
-	private static storedFiles: string[] = [];
+	private static compressorLoaded: boolean = false;
 
 	constructor() { }
 
-	static async loadFFMPEG() {
-		if (this.ffmpegLoaded) return;
-		const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm";
-		await ffmpeg.load({
-			coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-			wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-		});
-		this.ffmpegLoaded = true;
+	static async loadCompressor() {
+		if (this.compressorLoaded) return;
+
+		await loadScript("https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js");
+		this.compressorLoaded = true;
 	}
 
-	async createThumbnail(imgFile: File, imgName: string) {
-		if (!ThumbnailGenerator.ffmpegLoaded) await ThumbnailGenerator.loadFFMPEG();
+	async createThumbnail(imageFile: File, imgName: string) {
+		if (!ThumbnailGenerator.compressorLoaded) await ThumbnailGenerator.loadCompressor();
 
 		const type = imgName.split('.').pop();
 		if (!type) throw Error('Invalid image type');
-		const inputName = 'input.' + type;
-		const outputName = 'output.' + type;
-		ThumbnailGenerator.storedFiles.push(inputName, outputName);
 
-		const file = await fetchFile(imgFile);
-		await ffmpeg.writeFile(inputName, file);
-		// ffmpeg - i input.jpg -b:v 200K - vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" output.jpg
+		const options = {
+			maxSizeMB: 0.04,
+		};
 
-		// Find a divisor so that the image is around 20KB
-		const divisor = Math.floor((imgFile.size / 30000) ** 0.5); // using square root because both width and height are divided by the same number
-		if (divisor <= 1) return imgFile;
+		// @ts-ignore
+		const compressedFile = await imageCompression(imageFile, options);
+		console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+		console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
 
-		await ffmpeg.exec(['-i', inputName, '-vf', `scale=trunc(iw/${divisor}):trunc(ih/${divisor})`, outputName]);
-		const data = await ffmpeg.readFile(outputName);
-		let mime = imageMIMETypes.find(mime => mime.includes(type));
-
-		return new File([data], outputName, { type: mime });
-	}
-
-	static async cleanup() {
-		if (!this.ffmpegLoaded) return;
-		await Promise.allSettled(this.storedFiles.map(file => {
-			return ffmpeg.deleteFile(file);
-		}));
-		ffmpeg.terminate();
-		this.ffmpegLoaded = false;
+		return compressedFile as File;
 	}
 }

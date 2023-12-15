@@ -112,9 +112,9 @@ export default function AnnouncementsTable() {
 			);
 			if (!res.data) return;
 			const id = res.data.insertId;
-			await ThumbnailGenerator.loadFFMPEG();
+			await ThumbnailGenerator.loadCompressor();
 
-			const kb20 = 1024 * 20;
+			const kb40 = 1024 * 40;
 			const thumbCreator = new ThumbnailGenerator();
 			const photos = FileHandler.getFiles("photos").map(({ isProxy, name, file }, i) => {
 				if (isProxy) return async () => {};
@@ -133,7 +133,7 @@ export default function AnnouncementsTable() {
 							RequestObject: blob,
 							UrlArgs: { id, name },
 						});
-						if (file.size <= kb20) {
+						if (file.size <= kb40) {
 							await useAPI(API.Announcements.imageUpload, {
 								RequestObject: blob,
 								UrlArgs: {
@@ -156,8 +156,7 @@ export default function AnnouncementsTable() {
 					}
 				};
 			});
-			await asyncQueue(photos, 2, true);
-			await ThumbnailGenerator.cleanup();
+			await asyncQueue(photos, 4, true);
 			setAnnouncementHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
 		return {
