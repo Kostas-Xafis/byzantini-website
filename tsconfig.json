@@ -7,6 +7,6 @@
 	"compilerOptions": {
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
-		"types": ["@types/node"]
+		"types": ["@types/node", "@cloudflare/workers-types"]
 	}
 }

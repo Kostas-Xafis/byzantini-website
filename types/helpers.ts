@@ -29,11 +29,11 @@ export type ArrayToString<Arr, Separator = ""> = Arr extends [infer A, ...infer 
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
-export type PartialBy<T, K> = K extends keyof T
-	? Omit<T, K> & {
-		[Key in K]?: T[Key];
+export type PartialBy<Obj, OKey> = OKey extends keyof Obj
+	? Omit<Obj, OKey> & {
+		[Key in OKey]?: Obj[Key];
 	}
-	: T;
+	: Obj;
 
 export type RequiredBy<T, K> = K extends keyof T
 	? Omit<T, K> & {
@@ -46,6 +46,7 @@ export type IsArray<T> = T extends Array<any> ? true : false;
 
 export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>> extends `${infer _A}${S}${infer _B}` ? true : false;
 
+export type IsNull<T> = TypeGuard<T> extends true ? false : true;
 
 // type InUnion<T, U> = T extends U ? true : false;
 
@@ -77,3 +78,16 @@ export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Re
 export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
 	[P in Replaced]: Value
 };
+
+
+type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
+
+// let t1: TypeGuard<"A"> = true;
+// let t2: TypeGuard<1> = true;
+// let t3: TypeGuard<true> = true;
+// let t4: TypeGuard<{}> = true;
+// let t5: TypeGuard<[]> = true;
+// let t6: TypeGuard<undefined> = false;
+// let t7: TypeGuard<null> = false;
+// let t8: TypeGuard<never> = false;
+// let t9: TypeGuard<unknown> = false;

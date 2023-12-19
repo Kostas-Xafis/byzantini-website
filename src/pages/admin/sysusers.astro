@@ -1,9 +1,0 @@
----
-import AdminLayout from "../../layouts/AdminLayout.astro";
-import SysUserTable from "../../components/admin/SysUsersTable.solid";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<SysUserTable client:only="solid-js" />
-</AdminLayout>

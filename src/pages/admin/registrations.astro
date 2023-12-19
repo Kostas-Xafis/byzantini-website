@@ -1,9 +1,0 @@
----
-import RegistrationsTable from "../../components/admin/RegistrationsTable.solid";
-import AdminLayout from "../../layouts/AdminLayout.astro";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<RegistrationsTable client:only="solid-js" />
-</AdminLayout>

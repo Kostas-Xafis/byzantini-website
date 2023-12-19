@@ -1,9 +1,0 @@
----
-import PayoffsTable from "../../components/admin/PayoffsTable.solid";
-import AdminLayout from "../../layouts/AdminLayout.astro";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<PayoffsTable client:only="solid-js" />
-</AdminLayout>

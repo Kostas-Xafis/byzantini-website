@@ -1,9 +1,0 @@
----
-import BooksTable from "../../components/admin/BooksTable.solid";
-import AdminLayout from "../../layouts/AdminLayout.astro";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<BooksTable client:only="solid-js" />
-</AdminLayout>

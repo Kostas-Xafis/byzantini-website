@@ -24,14 +24,18 @@ export type StoreMutation<T extends keyof APIStore> = {
 	type: ActionEnum;
 };
 
+function assertOwnPropCheat<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> {
+}
+
 export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, Mutations?: StoreMutation<any>) => {
 	const Route = APIEndpoints[endpoint];
-	if ("validation" in Route && Route.validation && req.RequestObject) {
+	assertOwnPropCheat(req, "RequestObject");
+	if ("validation" in Route && Route.validation) {
 		parse(Route.validation, req.RequestObject);
 	}
-	const url = URL + "/api" + (req.UrlArgs ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
+	const url = URL + "/api" + ("UrlArgs" in req ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
 	const { RequestObject } = req;
-	const body = RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null;
+	const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
 	try {
 		const res = await fetch(url, {
 			method: Route.method,
@@ -86,7 +90,7 @@ export const useHydrate = (func: () => void) => {
 	const [hydrate, setHydrate] = createSignal<boolean>(true, { equals: (prev, next) => true });
 	createEffect(() => {
 		hydrate();
-		untrack(() => batch(func));
+		batch(func);
 	});
 	return setHydrate;
 

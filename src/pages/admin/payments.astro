@@ -1,9 +1,0 @@
----
-import PaymentsTable from "../../components/admin/PaymentsTable.solid";
-import AdminLayout from "../../layouts/AdminLayout.astro";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<PaymentsTable client:only="solid-js" />
-</AdminLayout>

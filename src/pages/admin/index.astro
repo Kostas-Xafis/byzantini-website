@@ -1,9 +1,0 @@
----
-import AdminLayout from "../../layouts/AdminLayout.astro";
-import TotalsTable from "../../components/admin/TotalsTable.solid";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<TotalsTable client:only="solid-js" />
-</AdminLayout>

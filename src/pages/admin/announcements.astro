@@ -1,9 +1,0 @@
----
-import AnnouncementsTable from "../../components/admin/AnnouncementsTable.solid";
-import AdminLayout from "../../layouts/AdminLayout.astro";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<AnnouncementsTable client:only="solid-js" />
-</AdminLayout>

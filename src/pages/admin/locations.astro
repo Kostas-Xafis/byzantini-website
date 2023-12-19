@@ -1,9 +1,0 @@
----
-import LocationsTable from "../../components/admin/LocationsTable.solid";
-import AdminLayout from "../../layouts/AdminLayout.astro";
-export const prerender = true;
----
-
-<AdminLayout title="Διαχείρηση">
-	<LocationsTable client:only="solid-js" />
-</AdminLayout>

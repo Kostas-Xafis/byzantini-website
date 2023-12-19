@@ -1,6 +1,5 @@
 ---
 import Links from "../components/headers/Links.astro";
-import AdminNav from "../components/admin/AdminNav.astro";
 import DatepickerCSS from "../components/DatepickerCSS.astro";
 export interface Props {
 	title: string;
@@ -92,14 +91,35 @@ const { title } = Astro.props;
 			style="width: 0px; height: 0px; position: absolute;"
 			class="hidden"></a>
 		<script>
-			import { API, useAPI } from "../../lib/hooks/useAPI.astro";
+			import { onElementMount } from "../../lib/utils.client";
+			import { API, useAPI } from "../../lib/hooks/useAPI.solid";
+
+			window.matchMedia("(max-width: 640px)").matches &&
+				onElementMount("#burgerNav", () => {
+					document
+						.querySelector<HTMLElement>("#burgerNav")
+						?.addEventListener("click", () => {
+							const menu = document.querySelector("#burgerNav > div") as HTMLElement;
+							const isOpen = menu.parentElement?.classList.contains("open");
+							if (isOpen) {
+								menu.parentElement?.classList.remove("open");
+								setTimeout(() => {
+									menu.classList.add("hidden", "flex");
+								}, 700);
+							} else {
+								menu.classList.toggle("hidden");
+								menu.classList.toggle("flex");
+								void menu.offsetWidth;
+								menu.parentElement?.classList.toggle("open");
+							}
+						});
+				});
 			try {
 				await useAPI(API.Authentication.authenticateSession, {});
 			} catch (e) {
 				(document.getElementById("redirect") as HTMLElement).click();
 			}
 		</script>
-		<AdminNav />
 		<slot />
 		<DatepickerCSS />
 	</body>
