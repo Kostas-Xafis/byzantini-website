@@ -1,5 +1,5 @@
 import type { AnyObjectSchema, EndpointRoute, HTTPMethods } from "../../types/routes";
-import { AuthenticationServerRoutes } from "./authentication.server";
+import { AuthenticationServerRoutes, authentication } from "./authentication.server";
 import { BooksServerRoutes } from "./books.server";
 import { PaymentsServerRoutes } from "./payments.server";
 import { PayoffsServerRoutes } from "./payoffs.server";
@@ -12,7 +12,6 @@ import { RegistrationsServerRoutes } from "./registrations.server";
 import { AnnouncementsServerRoutes } from "./announcement.server";
 import { SpecialServerRoutes } from "./specialEndpoint.server";
 
-import { authentication } from "../middleware/authentication";
 import { requestValidation } from "../middleware/requestValidation";
 
 const routes = (function () {

@@ -85,11 +85,6 @@ const { title } = Astro.props;
 		</style>
 	</head>
 	<body class="box-border p-0 grid max-sm:flex flex-col max-sm:h-max">
-		<a
-			id="redirect"
-			href="/login"
-			style="width: 0px; height: 0px; position: absolute;"
-			class="hidden"></a>
 		<script>
 			import { onElementMount } from "../../lib/utils.client";
 			import { API, useAPI } from "../../lib/hooks/useAPI.solid";
@@ -115,9 +110,10 @@ const { title } = Astro.props;
 						});
 				});
 			try {
-				await useAPI(API.Authentication.authenticateSession, {});
+				const res = await useAPI(API.Authentication.authenticateSession, {});
+				if (!res?.data?.isValid) throw new Error("Invalid Session");
 			} catch (e) {
-				(document.getElementById("redirect") as HTMLElement).click();
+				window.location.href = "/login";
 			}
 		</script>
 		<slot />

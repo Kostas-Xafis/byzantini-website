@@ -38,7 +38,9 @@ const {
 } = Astro.props;
 ---
 
-<label for={name} class={"relative h-min max-w-[30ch] grid text-xl rounded-md font-didact z-10 "}>
+<label
+	for={name}
+	class={"relative h-min max-w-[30ch] max-sm:w-[27.5ch] grid text-xl rounded-md font-didact z-10 "}>
 	{
 		type !== "select" ? (
 			<>
@@ -49,7 +51,7 @@ const {
 					}
 				/>
 				<input
-					class="formInputs peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="formInputs max-sm:w-[calc(27.5ch_-_1rem)] peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}

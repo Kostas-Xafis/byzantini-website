@@ -36,7 +36,7 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 		/>
 		<Links />
 	</head>
-	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100%] overflow-hidden">
+	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100dvh] overflow-hidden">
 		<slot />
 		<style is:inline>
 			html {
@@ -53,6 +53,7 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 			}
 			body {
 				background: radial-gradient(ellipse at top, rgb(153 27 27 / 0.45), white);
+				background-repeat: no-repeat;
 			}
 		</style>
 	</body>

@@ -19,7 +19,7 @@ const isMainPage = Astro.url.pathname === "/";
 
 <>
 	<nav
-		class={"fixed top-0 left-0 w-full md:h-[4.5vw] md:grid grid-rows-[4.4vw] grid-cols-[max-content_1fr] z-[1000] transition-colors border-t-[0px]" +
+		class={"fixed top-0 left-0 w-full md:h-[4.2vw] md:grid grid-rows-[4.1vw] grid-cols-[max-content_1fr] z-[1000] transition-colors border-t-[0px]" +
 			" max-sm:flex flex-col max-sm:align-center max-sm:h-min max-sm:pt-2 max-sm:pb-0 max-sm:gap-y-0" +
 			(!isMainPage ? " bg-red-900" : " glass")}>
 		<div
@@ -27,19 +27,20 @@ const isMainPage = Astro.url.pathname === "/";
 				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-1 max-sm:gap-x-2 max-3xs:gap-x-1"}>
 			<a
 				href="/"
-				class="logoImg sm:w-[4vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-3xs:w-[2.5rem] max-sm:self-center">
+				class="logoImg sm:w-[3.75vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-3xs:w-[2.5rem] max-sm:self-center">
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
 			<div
 				class={"absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10" +
 					" max-sm:top-[2px] max-sm:translate-y-0 max-sm:left-[6px]"}>
-				<div class="logoImg sm:w-[4vw] aspect-square max-sm:w-[3.5rem] max-3xs:w-[2.5rem]">
+				<div
+					class="logoImg sm:w-[3.75vw] aspect-square max-sm:w-[3.5rem] max-3xs:w-[2.5rem]">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>
 			<p
-				class="navTitle mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.75vw] max-sm:text-lg max-[380px]:text-base max-sm:text-center max-2xs:text-sm">
+				class="navTitle mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[1.75vw] leading-8 max-sm:text-lg max-[380px]:text-base max-sm:text-center max-2xs:text-sm">
 				Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 			</p>
 			<p
@@ -55,13 +56,15 @@ const isMainPage = Astro.url.pathname === "/";
 						class="group relative grid grid-rows-[minmax(min-content, 60px)] place-content-center @[1536px]/nav:px-4  @6xl/nav:px-2 px-1"
 						href={link.url}
 						rel={!isDev ? "prefetch-intent" : ""}>
-						<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-[1.5vw]">
+						<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-2px_1px_0px_rgba(0,0,0,0.25)] text-[1.5vw]">
 							{link.name}
 						</div>
 						<div
 							class={
-								"absolute left-1 right-1 bottom-0 h-[4px] rounded-t-[4px]" +
-								(highlight(link.url) ? " bg-red-100" : " group-hover:bg-red-100")
+								"absolute left-2 right-2 bottom-[10%] translate-y-[-1px] h-[2px] rounded-[2px] drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.25)]" +
+								(highlight(link.url)
+									? " bg-[radial-gradient(50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))]"
+									: " scale-x-0 transition-transform duration-300 group-hover:bg-[radial-gradient(50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))] group-hover:scale-x-100")
 							}
 						/>
 					</a>

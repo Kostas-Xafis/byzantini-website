@@ -14,9 +14,7 @@ const links = [
 ];
 
 // force pathname change
-const forceURLChange = (pathname: string) => {
-	window.location.pathname = pathname;
-};
+const forceURLChange = (pathname: string) => (window.location.pathname = pathname);
 
 export default function AdminNav(props: RouterProps) {
 	const currentPage =
@@ -32,14 +30,13 @@ export default function AdminNav(props: RouterProps) {
 				}>
 				<div class="relative grid place-items-center gap-x-4 font-anaktoria">
 					<a
-						href="/"
 						class="logoImg w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20"
 						onClick={() => forceURLChange("/")}>
 						<div class="w-full h-full bg-red-50"></div>
 						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 					</a>
 					{/* <!-- 50% width - 40px (50% of img) - 2px offset --> */}
-					<div class="logoImg w-[70px] max-sm:w-[50px] aspect-square absolute top-[1px] blur-2xl z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_30px_-_2px)]">
+					<div class="logoImg w-[70px] max-sm:w-[50px] aspect-square absolute top-[6px] blur-2xl z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px]">
 						<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]"></div>
 					</div>
 				</div>
@@ -50,7 +47,7 @@ export default function AdminNav(props: RouterProps) {
 							class="group relative py-3 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
 							href={link.url}
 							rel="prefetch-intent"
-							onClick={(link.force && (() => forceURLChange("/"))) || undefined}>
+							onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>
 							<p class="group px-8 font-bold font-anaktoria text-1.5xl text-red-50 text-center">
 								{link.name}
 							</p>
@@ -70,7 +67,9 @@ export default function AdminNav(props: RouterProps) {
 						{links.map((link) => (
 							<A
 								class="relative grid py-4 bg-red-900 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
-								onClick={(link.force && (() => forceURLChange("/"))) || undefined}
+								onClick={
+									(link.force && (() => forceURLChange(link.url))) || undefined
+								}
 								href={link.url}>
 								<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 									{link.name}
