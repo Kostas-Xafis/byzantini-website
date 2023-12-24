@@ -23,137 +23,252 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 ---
 
 <Layout title={announcement.title} imageUrl={announcement.images[0]}>
-	<section class="relative flex flex-col p-12 max-sm:p-4 overflow-auto items-center gap-y-6">
+	<section
+		id="announcementSection"
+		data-announcement-id={announcement.id}
+		class="relative flex flex-col p-12 max-sm:p-4 overflow-auto items-center gap-y-6">
 		<h1
 			class="heading w-[25ch] max-sm:w-[25ch] text-5xl max-sm:text-3xl text-center font-bold text-red-900 font-anaktoria drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 			{announcement.title}
 		</h1>
-		<div class="max-w-[720px] h-[360px] shadow-lg shadow-slate-800">
-			<img
-				src={imgSrc + announcement.images[1]}
-				alt={announcement?.title as string}
-				class="w-[720px] object-cover h-full"
-			/>
+		<div class="imgLoader group/img">
+			<div class="hidden group-[:is(.loading)]/img:block w-[780px] h-[320px] overflow-hidden">
+				<Spinner />
+			</div>
+			<div class="group-[:is(.loaded)]/img:block max-w-[780px]">
+				<img
+					data-src={imgSrc + announcement.images[0]}
+					src={imgSrc + announcement.images[0]}
+					alt={announcement?.title as string}
+					width="780"
+					class="w-[780px] object-cover max-h-[clamp(0px,100vh,640px)]"
+				/>
+			</div>
 		</div>
-		<div class="text-xl mt-4 self-start">
+		<div class="text-xl mt-4 self-start pl-8 max-sm:pl-2 max-sm:text-base">
 			{announcement.content.split("\n").map((p) => <p class="pb-2">{p}</p>)}
 		</div>
-		<!-- <div id="imgContainer" class="flex items-center">
+		<div id="imgContainer" class="flex w-full items-center">
 			<div
-				class="flex flex-row flex-wrap mt-4 gap-y-6 loading items-center justify-evenly self-center">
+				class="flex flex-row flex-wrap w-full mt-4 gap-y-6 loading items-center justify-evenly self-center">
 				{
 					announcement.images.map((image, i) => (
-						<div class="imgLoader group/img">
+						<div class="imgLoader group/img" data-imgIndex={i}>
 							<div class="hidden group-[:is(.loading)]/img:block w-[320px] h-[240px] ">
 								<Spinner />
 							</div>
-							<div class="hidden group-[:is(.loaded)]/img:block max-w-[320px] h-[240px] transition-shadow hover:shadow-lg !shadow-slate-800">
+							<button
+								type="button"
+								class="hidden group-[:is(.loaded)]/img:block max-w-[320px] h-[240px] transition-shadow hover:shadow-lg !shadow-slate-800 cursor-pointer">
 								<img
 									data-src={imgThumbSrc + image}
 									alt={announcement?.title as string}
 									class="w-[400px] object-cover h-full"
 								/>
-							</div>
+							</button>
 						</div>
 					))
 				}
 			</div>
-		</div> -->
+		</div>
 	</section>
 	<div
 		id="imageCarouselContainer"
-		class="fixed inset-0 top-[60px] bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center">
+		class={"fixed inset-0 pt-12 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" +
+			" hidden"}>
 		<div
 			id="controlsContainer"
-			class="grid grid-cols-[max-content,1fr,max-content] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
+			class="grid grid-cols-[max-content,1fr,max-content] grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
+			<div class="col-[1/4] flex flex-row justify-end">
+				<button id="carouselClose" type="button" class="rounded-xl text-2xl">
+					<i class="fa-solid fa-xmark text-white hover:text-red-100"></i>
+				</button>
+			</div>
 			<i
 				data-direction="left"
-				class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+				class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
 			></i>
-			<div id="imageCarousel" data-index="0">
-				<div class="imgLoader group/img flex flex-col items-center">
-					<div class="hidden group-[:is(.loading)]/img:block w-[320px] h-[240px]">
-						<Spinner />
-					</div>
+			<div id="imageCarousel" data-index="0" class="flex flex-col">
+				<div class="imgLoader group/img flex flex-col items-center h-full">
 					<div
-						class="group-[:is(.loaded)]/img:block max-w-[1024px] max-h-[520px] flex items-center">
+						class="relative max-w-[1080px] max-h-[640px] flex items-center pt-4 overflow-hidden">
+						<div
+							class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
+							<Spinner />
+						</div>
 						<img
+							id="mainCarouselImg"
 							alt={announcement.title}
-							class="block object-cover hover:shadow-lg !shadow-red-950"
-							src={imgSrc + announcement.images[1]}
+							class="object-cover h-[clamp(0px,100vh,640px)] hover:shadow-lg !shadow-red-950"
+							src={imgSrc + announcement.images.at(0)}
 						/>
 					</div>
 				</div>
-				<div id="thumbContainer" class="flex flex-row pt-8 gap-x-4 items-center">
-					<img
-						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:shadow-lg !shadow-red-950"
-						alt={announcement.title}
-						src={imgThumbSrc + announcement.images.at(-2)}
-					/>
-					<img
-						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
-						alt={announcement.title}
-						src={imgThumbSrc + announcement.images.at(-1)}
-					/>
-					<img
-						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
-						alt={announcement.title}
-						src={imgThumbSrc + announcement.images.at(0)}
-					/>
-					<img
-						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
-						alt={announcement.title}
-						src={imgThumbSrc + announcement.images.at(1)}
-					/>
-					<img
-						class="w-[120px] object-fill h-full opacity-60 hover:opacity-90 hover:hover:shadow-lg !shadow-red-950"
-						alt={announcement.title}
-						src={imgThumbSrc + announcement.images.at(2)}
-					/>
+				<div
+					id="thumbContainer"
+					class="flex flex-row pt-8 gap-x-4 items-center self-center">
+					{
+						// Have at least up to 5 preview thumbnails in the carousel
+						announcement.images
+							.slice(0, 5)
+							.map((image, i) => (
+								<img
+									class="w-[90px] aspect-square object-cover h-full opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
+									alt={announcement?.title}
+									src={imgThumbSrc + image}
+								/>
+							))
+					}
 				</div>
 			</div>
 			<i
 				data-direction="right"
-				class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+				class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
 			></i>
 		</div>
 	</div>
-</Layout>
-<script>
-	import { onElementMount, asyncQueue, sleep } from "../../../lib/utils.client";
-	const imgSrcArr = (
-		[...document.querySelectorAll("#imgContainer > img")] as HTMLImageElement[]
-	).map((img) => img.src);
-	onElementMount("#imgContainer", async (el) => {
-		const imgs = [...el.querySelectorAll("img")];
-		const imgContainers = [...el.querySelectorAll(".imgLoader")];
-		const jobs = imgs.map((img, i) => async () => {
-			let loaded = false;
-			imgContainers[i].classList.add("loading");
-			img.addEventListener("load", () => {
-				loaded = true;
-				imgContainers[i].classList.remove("loading");
-				imgContainers[i].classList.add("loaded");
+	<script>
+		import { onElementMount, asyncQueue, sleep } from "../../../lib/utils.client";
+		onElementMount("#announcementSection", async (el) => {
+			const imgs = [...el.querySelectorAll("img")];
+			const imgContainers = [...el.querySelectorAll(".imgLoader")] as HTMLElement[];
+			const jobs = imgs.map((img, i) => async () => {
+				let loaded = false;
+				imgContainers[i].classList.add("loading");
+				img.addEventListener("load", () => {
+					loaded = true;
+					if (i === 0) {
+						// Change object-fit to object-contain if the first poster image is has vertical aspect ratio
+						if (img.naturalHeight > img.naturalWidth) {
+							img.classList.remove("object-cover");
+							img.style.setProperty("object-fit", "contain");
+						}
+					}
+					imgContainers[i].classList.remove("loading");
+					imgContainers[i].classList.add("loaded");
+				});
+				img.src = img.dataset.src as string;
+				while (!loaded) {
+					await sleep(20);
+				}
 			});
-			img.src = img.dataset.src as string;
-			while (!loaded) {
-				await sleep(20);
-			}
+			await asyncQueue(jobs, 5);
+			imgContainers.forEach((imgContainer, i) => {
+				if (i === 0) return;
+				imgContainer.addEventListener("click", () => {
+					document.dispatchEvent(
+						new CustomEvent("openCarousel", {
+							detail: { index: Number(imgContainer.dataset.imgindex as string) },
+						}),
+					);
+				});
+			});
 		});
-		await asyncQueue(jobs, 5);
-	});
-	onElementMount("i[data-direction]", () => {
-		const leftBtn = document.querySelector("i[data-direction='left']") as HTMLElement;
-		const rightBtn = document.querySelector("i[data-direction='right']") as HTMLElement;
-		const carousel = document.querySelector("#imageCarousel") as HTMLElement;
-		const thumbContainer = document.querySelector("#thumbContainer") as HTMLImageElement;
+		onElementMount("i[data-direction]", () => {
+			const imgSrcArr = (
+				[...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]
+			).map((img) =>
+				(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
+			) as string[];
 
-		const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
+			const announcementId = (
+				document.querySelector("section[data-announcement-id]") as HTMLElement
+			).dataset.announcementId as string;
+			const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
+			const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
 
-		let currIndex = Number(carousel.dataset.index || 0);
-		// thumbCarouselImgs.forEach((img, i) => {
-		// 	const nextIndex = (currIndex + i - 1) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-		// 	img.src = "thumb_" + imgSrcArr[nextIndex];
-		// });
-	});
-</script>
+			const leftBtn = document.querySelector("i[data-direction='left']") as HTMLElement;
+			const rightBtn = document.querySelector("i[data-direction='right']") as HTMLElement;
+			const carousel = document.querySelector("#imageCarousel") as HTMLElement;
+			const thumbContainer = document.querySelector("#thumbContainer") as HTMLImageElement;
+
+			const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
+			const carouselLength = imgSrcArr.length >= 5 ? 5 : imgSrcArr.length;
+			const totalLength = imgSrcArr.length;
+			const mainCarouselImg = document.querySelector("#mainCarouselImg") as HTMLImageElement;
+
+			function transitionToNextImage(nextIndex: number) {
+				const imgLoader = carousel.querySelector(".imgLoader") as HTMLElement;
+				imgLoader.classList.add("loading");
+				imgLoader.classList.remove("loaded");
+				let timer = Date.now();
+				mainCarouselImg.addEventListener(
+					"load",
+					async () => {
+						if (Date.now() - timer < 300) {
+							await sleep(200); // To avoid the image flickering
+						}
+						imgLoader.classList.remove("loading");
+						imgLoader.classList.add("loaded");
+					},
+					{ once: true },
+				);
+				mainCarouselImg.src = imgSrc + imgSrcArr.at(nextIndex);
+			}
+			function carouselShift(direction: "left" | "right") {
+				currIndex =
+					(direction === "left" ? currIndex - 1 : currIndex + 1) % imgSrcArr.length;
+				transitionToNextImage(currIndex);
+				if (totalLength <= 5) return;
+				for (let i = 0; i < carouselLength; i++) {
+					const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+					thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+				}
+			}
+			function carouselGoto(index: number) {
+				console.log(index);
+				currIndex = index;
+				transitionToNextImage(currIndex);
+				if (totalLength <= 5) return;
+				for (let i = 0; i < carouselLength; i++) {
+					const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+					thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+				}
+			}
+
+			let currIndex = Number(carousel.dataset.index || 0);
+			leftBtn.addEventListener("click", () => {
+				carouselShift("left");
+				carousel.dataset.index = currIndex.toString();
+			});
+			rightBtn.addEventListener("click", () => {
+				carouselShift("right");
+				carousel.dataset.index = currIndex.toString();
+			});
+			thumbCarouselImgs.forEach((thumb, i) => {
+				thumb.addEventListener("click", () => {
+					let index = totalLength <= 5 ? i : (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+					carouselGoto(index);
+					carousel.dataset.index = currIndex.toString();
+				});
+			});
+
+			const carouselContainer = document.querySelector(
+				"#imageCarouselContainer",
+			) as HTMLElement;
+
+			document.addEventListener("openCarousel", (e) => {
+				carouselGoto(Number(e.detail.index || 0));
+				carousel.dataset.index = currIndex.toString();
+				carouselContainer.classList.remove("hidden");
+			});
+			document.addEventListener("closeCarousel", () => {
+				carouselContainer.classList.add("hidden");
+			});
+			document.addEventListener("keydown", (e) => {
+				if (e.key === "ArrowLeft") {
+					carouselShift("left");
+				} else if (e.key === "ArrowRight") {
+					carouselShift("right");
+				} else if (e.key === "Escape") {
+					carouselContainer.classList.add("hidden");
+				}
+			});
+		});
+		onElementMount("#carouselClose", (el) => {
+			el.addEventListener("click", () => {
+				document.dispatchEvent(new CustomEvent("closeCarousel"));
+			});
+		});
+	</script>
+</Layout>

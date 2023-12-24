@@ -77,7 +77,7 @@ export default function Table(props: Props) {
 	let columnWidths = "grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
 		let len = (size || name.length) + 1;
-		columnWidths += ` calc(${len}ch + 2ch)`;
+		columnWidths += ` ${len + 2}ch`;
 		return name;
 	});
 	columnWidths += ";";
@@ -101,7 +101,7 @@ export default function Table(props: Props) {
 	return (
 		<div
 			class={
-				"w-[calc(90dvw_-_80px)] h-[95vh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4 z-[1]" +
+				"h-[95dvh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4 z-[1]" +
 				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4"
 			}
 			data-prefix={prefix}>
@@ -110,7 +110,7 @@ export default function Table(props: Props) {
 			</div>
 			<div
 				id="tableContainer"
-				class="relative z-[1000] min-w-[40%] max-w-[80%] max-sm:max-w-[92.5%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900"
+				class="relative z-[1000] min-w-[40%] max-w-[90%] max-sm:max-w-[92.5%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900"
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
@@ -123,7 +123,7 @@ export default function Table(props: Props) {
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
 				/>
-				<div class="data-container relative -z-10 max-h-[calc(82.5vh_-_3.75rem)] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+				<div class="data-container relative -z-10 max-h-[80dvh] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readRowData()}>
 						{(item) => {
 							return (

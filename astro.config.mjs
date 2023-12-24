@@ -5,8 +5,7 @@ import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
 
-const unmappedRoutes = (page) =>
-	page.includes("admin") || page.includes("login");
+const unmappedRoutes = (page) => page.includes("admin") || page.includes("login");
 
 // https://astro.build/config
 export default defineConfig({
@@ -44,10 +43,7 @@ export default defineConfig({
 				],
 			},
 		},
-
-		optimizeDeps: {
-			exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
-		},
+		logLevel: "error",
 		build: {
 			cssMinify: true,
 			minify: true,

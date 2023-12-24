@@ -30,8 +30,12 @@ export default function AdminNav(props: RouterProps) {
 				}>
 				<div class="relative grid place-items-center gap-x-4 font-anaktoria">
 					<a
+						href="/"
 						class="logoImg w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20"
-						onClick={() => forceURLChange("/")}>
+						onClick={(e) => {
+							e.preventDefault(); // prevent router from changing url
+							forceURLChange("/");
+						}}>
 						<div class="w-full h-full bg-red-50"></div>
 						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 					</a>

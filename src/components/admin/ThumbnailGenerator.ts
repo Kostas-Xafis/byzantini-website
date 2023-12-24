@@ -24,8 +24,6 @@ export class ThumbnailGenerator {
 
 		// @ts-ignore
 		const compressedFile = await imageCompression(imageFile, options);
-		console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-		console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
 
 		return compressedFile as File;
 	}

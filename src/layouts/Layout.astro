@@ -151,6 +151,21 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 				}
 			}
 		</style>
+		<style is:inline>
+			.spinner {
+				background:
+					radial-gradient(farthest-side, rgb(127, 29, 29) 94%, #0000) top/8px 8px
+						no-repeat,
+					conic-gradient(#0000 30%, rgb(127, 29, 29));
+				-webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+				animation: spin 1s infinite linear;
+			}
+			@keyframes spin {
+				100% {
+					transform: rotate(1turn);
+				}
+			}
+		</style>
 	</head>
 	<body class="box-border relative h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:overflow-auto">
 		<Navbar />

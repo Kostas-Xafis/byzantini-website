@@ -103,6 +103,8 @@ export default function AnnouncementsTable() {
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
 			};
+			if (data.title.includes("/"))
+				return alert('Ο τίτλος δεν μπορεί να περιέχει τον χαρακτήρα "/"');
 			const res = await useAPI(
 				API.Announcements.post,
 				{

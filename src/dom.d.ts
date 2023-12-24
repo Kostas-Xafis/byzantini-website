@@ -19,6 +19,8 @@ declare global {
 	interface GlobalEventHandlersEventMap {
 		emptyFileRemove: CustomEvent<string>;
 		hydrate: CustomEvent<undefined>;
+		openCarousel: CustomEvent<{ index: number; }>;
+		closeCarousel: CustomEvent<undefined>;
 		ModifySelections: CustomEvent<TypeEffect>;
 		FormCleanup: CustomEvent<{ prefix: string; }>;
 		FormMount: CustomEvent<{ prefix: string; }>;

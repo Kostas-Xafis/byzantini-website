@@ -126,10 +126,10 @@
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
 		}
 		#fek:hover i {
-			animation: fadeInLeft 0.3s ease-in forwards;
+			animation: fadeInLeft 0.4s ease-out forwards;
 		}
 		#eggrafesLink a:hover > i {
-			animation: fadeInLeft 0.3s ease-in-out forwards;
+			animation: fadeInLeft 0.4s ease-out forwards;
 		}
 		#xairetismos-btn {
 			background: radial-gradient(ellipse at 50% 200%, rgb(69 10 10 / 1), transparent);
@@ -149,11 +149,10 @@
 				if (char === " ") {
 					txtArr[j] = "&nbsp;";
 				}
-				txtArr[
-					j
-				] = `<span class="hover:text-red-900" style="opacity:0.0001; animation: fadeIn 0.5s ease-in-out forwards ${
-					(j + i * 10) * 12
-				}ms">${txtArr[j]}</span>`;
+				txtArr[j] =
+					`<span class="hover:text-red-900" style="opacity:0.0001; animation: fadeIn 0.5s ease-in-out forwards ${
+						(j + i * 10) * 12
+					}ms">${txtArr[j]}</span>`;
 			});
 			txt = txtArr.join("");
 			head.innerHTML = txt;
