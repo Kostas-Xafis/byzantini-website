@@ -97,6 +97,7 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function BooksTable() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const setBookHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.Books.getById,
@@ -111,8 +112,8 @@ export default function BooksTable() {
 	]);
 
 	useHydrate(() => {
-		useAPI(API.Books.get, {}, setStore);
-		useAPI(API.Wholesalers.get, {}, setStore);
+		apiHook(API.Books.get);
+		apiHook(API.Wholesalers.get);
 	});
 
 	let shapedData = createMemo(() => {
@@ -130,8 +131,7 @@ export default function BooksTable() {
 		if (!wholesalers) {
 			return addModal;
 		}
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Books, "id"> = {
 				title: formData.get("title") as string,
 				wholesaler_id: Number(formData.get("wholesaler")),
@@ -146,13 +146,9 @@ export default function BooksTable() {
 				return alert(
 					"Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων"
 				);
-			const res = await useAPI(
-				API.Books.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Books.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			setBookHydrate({
 				action: ActionEnum.ADD,
@@ -176,19 +172,14 @@ export default function BooksTable() {
 		const wholesalers = store[API.Wholesalers.get];
 		if (!wholesalers || !books || selectedItems.length !== 1) return modifyModal;
 		const book = books.find((b) => b.id === selectedItems[0]) as Books;
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Pick<Books, "id" | "quantity"> = {
 				id: book.id,
 				quantity: Number(formData.get("quantity") as string),
 			};
-			const res = await useAPI(
-				API.Books.updateQuantity,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Books.updateQuantity, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setBookHydrate({ action: ActionEnum.MODIFY, ids: [book.id] });
 		};
@@ -209,15 +200,11 @@ export default function BooksTable() {
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
 		if (!wholesalers || !books || selectedItems.length < 1) return deleteModal;
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const data = selectedItems.map((id) => books.find((b) => b.id === id)?.id || -1);
-			const res = await useAPI(
-				API.Books.delete,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Books.delete, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setBookHydrate({
 				action: ActionEnum.DELETE,
@@ -234,18 +221,13 @@ export default function BooksTable() {
 	});
 
 	const onAddWholesaler = createMemo((): Action | EmptyAction => {
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data = {
 				name: formData.get("name") as string,
 			};
-			const res = await useAPI(
-				API.Wholesalers.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Wholesalers.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			setWholesalerHydrate({
 				action: ActionEnum.ADD,
@@ -270,16 +252,11 @@ export default function BooksTable() {
 	});
 	const onDeleteWholesaler = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get] || [];
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data = [Number(formData.get("name"))];
-			const res = await useAPI(
-				API.Wholesalers.delete,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Wholesalers.delete, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setWholesalerHydrate({
 				action: ActionEnum.DELETE,

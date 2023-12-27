@@ -2,7 +2,7 @@ import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpoints
 import { v_Locations, type Locations } from "../../types/entities";
 import { omit } from "valibot";
 
-const get: EndpointRoute<"GET:/locations", null, Locations[]> = {
+const get: EndpointRoute<"/locations", null, Locations[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/locations",
@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/locations", null, Locations[]> = {
 	func: async ctx => null as any
 };
 
-const getByPriority: EndpointRoute<"GET:/locations/priority", null, Locations[]> = {
+const getByPriority: EndpointRoute<"/locations/priority", null, Locations[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/locations/priority",
@@ -18,7 +18,7 @@ const getByPriority: EndpointRoute<"GET:/locations/priority", null, Locations[]>
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/locations/id", number[], Locations> = {
+const getById: EndpointRoute<"/locations/id", number[], Locations> = {
 	authentication: true,
 	method: "POST",
 	path: "/locations/id",
@@ -27,7 +27,7 @@ const getById: EndpointRoute<"POST:/locations/id", number[], Locations> = {
 };
 
 const postReq = omit(v_Locations, ["id", "image"]);
-const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/locations", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/locations",
@@ -37,7 +37,7 @@ const post: EndpointRoute<"POST:/locations", typeof postReq, { insertId: number;
 };
 
 const quantityReq = omit(v_Locations, ["image"]);
-const update: EndpointRoute<"PUT:/locations", typeof quantityReq> = {
+const update: EndpointRoute<"/locations", typeof quantityReq> = {
 	authentication: true,
 	method: "PUT",
 	path: "/locations",
@@ -46,7 +46,7 @@ const update: EndpointRoute<"PUT:/locations", typeof quantityReq> = {
 	func: async ctx => null as any
 };
 
-const fileUpload: EndpointRoute<"PUT:/locations/file/[id:number]", Blob> = {
+const fileUpload: EndpointRoute<"/locations/file/[id:number]", Blob> = {
 	authentication: true,
 	method: "PUT",
 	path: "/locations/file/[id:number]",
@@ -54,7 +54,7 @@ const fileUpload: EndpointRoute<"PUT:/locations/file/[id:number]", Blob> = {
 	func: async ctx => null as any
 };
 
-const fileDelete: EndpointRoute<"DELETE:/locations/file/[id:number]", null> = {
+const fileDelete: EndpointRoute<"/locations/file/[id:number]", null> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/locations/file/[id:number]",
@@ -62,7 +62,7 @@ const fileDelete: EndpointRoute<"DELETE:/locations/file/[id:number]", null> = {
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/locations", number[]> = {
+const del: EndpointRoute<"/locations", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/locations",

@@ -312,18 +312,21 @@ const heading = {
 
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	useHydrate(() => {
-		useAPI(API.Teachers.get, {}, setStore);
-		useAPI(API.Teachers.getClasses, {}, setStore);
-		useAPI(API.Teachers.getInstruments, {}, setStore);
-		useAPI(API.Instruments.get, {}, setStore);
+		apiHook(API.Teachers.get);
+		apiHook(API.Teachers.getClasses);
+		apiHook(API.Teachers.getInstruments);
+		apiHook(API.Instruments.get);
 	});
 	createEffect(
 		on(formSelected, (type) => {
-			const select = document.querySelector("select[name='teacher_id']") as HTMLSelectElement;
+			const select = document.querySelector(
+				"select[name='teacher_id']"
+			) as unknown as HTMLSelectElement;
 			const teachers = store[API.Teachers.get];
 			if (!select || !teachers) return;
 			select.addEventListener("change", (e: Event) => {
@@ -462,13 +465,7 @@ export function RegistrationForm() {
 				alert("Παρακαλώ επιλέξτε έτος φοίτησης");
 				throw Error("");
 			}
-			const res = await useAPI(
-				API.Registrations.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Registrations.post, { RequestObject: data });
 			if (res.message) {
 				const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
 				messageDialog.classList.remove("hidden");

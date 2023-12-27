@@ -1,7 +1,7 @@
 import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
 
-const get: EndpointRoute<"GET:/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
+const get: EndpointRoute<"/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys",
@@ -9,7 +9,7 @@ const get: EndpointRoute<"GET:/sys", null, Pick<SysUsers, "id" | "email" | "priv
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/sys/id", number[], SysUsers> = {
+const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/id",
@@ -17,7 +17,7 @@ const getById: EndpointRoute<"POST:/sys/id", number[], SysUsers> = {
 	func: async ctx => null as any
 };
 
-const getBySid: EndpointRoute<"GET:/sys/sid", null, SysUsers> = {
+const getBySid: EndpointRoute<"/sys/sid", null, SysUsers> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys/sid",
@@ -25,7 +25,7 @@ const getBySid: EndpointRoute<"GET:/sys/sid", null, SysUsers> = {
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/sys", number[]> = {
+const del: EndpointRoute<"/sys", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/sys",
@@ -33,7 +33,7 @@ const del: EndpointRoute<"DELETE:/sys", number[]> = {
 	func: async ctx => null as any
 };
 
-const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; }> = {
+const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/[link:string]",
@@ -42,7 +42,7 @@ const registerSysUser: EndpointRoute<"POST:/sys/register/[link:string]", typeof 
 	func: async ctx => null as any
 };
 
-const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: string; }> = {
+const createRegisterLink: EndpointRoute<"/sys/register", null, { link: string; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/register",
@@ -50,7 +50,7 @@ const createRegisterLink: EndpointRoute<"POST:/sys/register", null, { link: stri
 	func: async ctx => null as any
 };
 
-const validateRegisterLink: EndpointRoute<"POST:/sys/register/validate/[link:string]", null, { isValid: boolean; }> = {
+const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", null, { isValid: boolean; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/validate/[link:string]",

@@ -2,7 +2,7 @@
 import { useAPI } from "../../../lib/hooks/useAPI.astro";
 import Layout from "../../layouts/Layout.astro";
 import GMap from "../../components/other/GMap.astro";
-let _locations = (await useAPI("Locations.getByPriority", {})).data || [];
+let _locations = (await useAPI("Locations.getByPriority")).data || [];
 const imgSrc = "/";
 const schoolLocations = _locations.filter((l) => !l.partner);
 const otherLocations = _locations.filter((l) => !!l.partner);
@@ -266,7 +266,7 @@ const otherLocations = _locations.filter((l) => !!l.partner);
 		onElementMount("#locationsContainer", async function () {
 			const select = document.querySelector(
 				"#btsMobileContainer select",
-			) as HTMLSelectElement;
+			) as unknown as HTMLSelectElement;
 			select.addEventListener("change", (e) => {
 				const locationName = select?.value as string;
 				const container = document.querySelector("#locationsContainer") as HTMLElement;

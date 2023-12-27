@@ -14,17 +14,11 @@ export type UnionToArray<T, A extends unknown[] = []> = IsUnion<T> extends true
 	? UnionToArray<Exclude<T, PopUnion<T>>, [PopUnion<T>, ...A]>
 	: [T, ...A];
 
-export type ConcatStrings<A, B, Separator = ""> = A extends `${infer _A}`
-	? B extends `${infer _B}`
-	? Separator extends `${infer _S}`
-	? `${_A}${_S}${_B}`
-	: never
-	: never
-	: never;
-export type ArrayToString<Arr, Separator = ""> = Arr extends [infer A, ...infer B]
+export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
+export type ArrayToString<Arr, Separator extends string = ""> = Arr extends [infer A, ...infer B]
 	? B extends []
 	? A
-	: ConcatStrings<A, ArrayToString<B, Separator>, Separator>
+	: ConcatStrings<Extract<A, string>, ArrayToString<Extract<B, string[]>, Separator>, Separator>
 	: never;
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -47,6 +41,7 @@ export type IsArray<T> = T extends Array<any> ? true : false;
 export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>> extends `${infer _A}${S}${infer _B}` ? true : false;
 
 export type IsNull<T> = TypeGuard<T> extends true ? false : true;
+
 
 // type InUnion<T, U> = T extends U ? true : false;
 

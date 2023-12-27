@@ -4,7 +4,7 @@ import { pick } from "valibot";
 
 export type PayoffGetResponse = Pick<Payoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
 
-const get: EndpointRoute<"GET:/payoffs", null, PayoffGetResponse[]> = {
+const get: EndpointRoute<"/payoffs", null, PayoffGetResponse[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/payoffs",
@@ -12,7 +12,7 @@ const get: EndpointRoute<"GET:/payoffs", null, PayoffGetResponse[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/payoffs/id", number[], Payoffs[]> = {
+const getById: EndpointRoute<"/payoffs/id", number[], Payoffs[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/payoffs/id",
@@ -20,7 +20,7 @@ const getById: EndpointRoute<"POST:/payoffs/id", number[], Payoffs[]> = {
 	func: async ctx => null as any
 };
 
-const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number; }> = {
+const getTotal: EndpointRoute<"/payoffs/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payoffs/total",
@@ -29,7 +29,7 @@ const getTotal: EndpointRoute<"GET:/payoffs/total", null, { total: number; }> = 
 };
 
 let updateAmountReq = pick(v_Payoffs, ["id", "amount"]);
-const updateAmount: EndpointRoute<"PUT:/payoffs", typeof updateAmountReq> = {
+const updateAmount: EndpointRoute<"/payoffs", typeof updateAmountReq> = {
 	authentication: true,
 	method: "PUT",
 	path: "/payoffs",
@@ -38,7 +38,7 @@ const updateAmount: EndpointRoute<"PUT:/payoffs", typeof updateAmountReq> = {
 	func: async ctx => null as any
 };
 
-const complete: EndpointRoute<"DELETE:/payoffs", number[]> = {
+const complete: EndpointRoute<"/payoffs", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/payoffs",

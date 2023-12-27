@@ -8,10 +8,10 @@ const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_r
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}),
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "par"}}),
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "eur"}}),
-	useAPI(API.Teachers.getLocations, {}),
-	useAPI(API.Locations.get, {}),
-	useAPI(API.Teachers.getInstruments, {}),
-	useAPI(API.Instruments.get, {}),
+	useAPI(API.Teachers.getLocations),
+	useAPI(API.Locations.get),
+	useAPI(API.Teachers.getInstruments),
+	useAPI(API.Instruments.get),
 ]);
 
 let byz_teachers = "data" in byz_teachers_res && byz_teachers_res.data || [],

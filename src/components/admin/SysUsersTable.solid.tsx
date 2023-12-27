@@ -30,6 +30,7 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function SysUsersTable() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const setSysUserHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.SysUsers.getById,
@@ -37,8 +38,8 @@ export default function SysUsersTable() {
 		},
 	]);
 	useHydrate(() => {
-		useAPI(API.SysUsers.get, {}, setStore);
-		useAPI(API.SysUsers.getBySid, {}, setStore);
+		apiHook(API.SysUsers.get);
+		apiHook(API.SysUsers.getBySid);
 	});
 
 	const columnNames: ColumnType<SysUsers> = {
@@ -54,10 +55,9 @@ export default function SysUsersTable() {
 
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const link = store[API.SysUsers.createRegisterLink]?.link;
-		const submit = async function (form: HTMLFormElement) {
-			if (!link) {
-				await useAPI(API.SysUsers.createRegisterLink, {}, setStore);
-			}
+		const submit = async function () {
+			if (link) return;
+			await apiHook(API.SysUsers.createRegisterLink);
 		};
 		return {
 			inputs: {},
@@ -92,15 +92,11 @@ export default function SysUsersTable() {
 		)
 			return deleteModal;
 
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const ids = selectedItems.map((i) => (sysusers.find((p) => p.id === i) as SysUsers).id);
-			const res = await useAPI(
-				API.SysUsers.delete,
-				{
-					RequestObject: ids,
-				},
-				setStore
-			);
+			const res = await apiHook(API.SysUsers.delete, {
+				RequestObject: ids,
+			});
 			if (!res.data && !res.message) return;
 			setSysUserHydrate({ action: ActionEnum.DELETE, ids });
 		};

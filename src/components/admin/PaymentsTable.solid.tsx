@@ -89,6 +89,8 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function PaymentsTable() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
+
 	const setPaymentHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.Payments.getById,
@@ -96,8 +98,8 @@ export default function PaymentsTable() {
 		},
 	]);
 	useHydrate(() => {
-		useAPI(API.Payments.get, {}, setStore);
-		useAPI(API.Books.get, {}, setStore);
+		apiHook(API.Payments.get);
+		apiHook(API.Books.get);
 	});
 
 	let shapedData = createMemo(() => {
@@ -108,8 +110,7 @@ export default function PaymentsTable() {
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get] || [];
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Payments, "id" | "amount"> = {
 				student_name: formData.get("student_name") as string,
 				book_id: Number(formData.get("book_id") as string),
@@ -117,13 +118,9 @@ export default function PaymentsTable() {
 				date: new Date(formData.get("date") as string).getTime() / 1000,
 			};
 
-			const res = await useAPI(
-				API.Payments.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Payments.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			setPaymentHydrate({
 				action: ActionEnum.ADD,
@@ -150,8 +147,7 @@ export default function PaymentsTable() {
 		if (!payments || !books || selectedItems.length !== 1) return modifyModal;
 
 		const payment = payments.find((p) => p.id === selectedItems[0]) as Payments;
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Pick<Payments, "id" | "amount"> = {
 				id: payment.id,
 				amount: Number(formData.get("amount") as string) as number,
@@ -160,13 +156,9 @@ export default function PaymentsTable() {
 				alert("Καταχώρηση μη επιτρεπτού ποσού!");
 				throw new Error("Invalid amount");
 			}
-			const res = await useAPI(
-				API.Payments.updatePayment,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Payments.updatePayment, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({
 				action: ActionEnum.MODIFY,
@@ -192,17 +184,13 @@ export default function PaymentsTable() {
 		if (!payments || !books || selectedItems.length < 1) {
 			return completeModal;
 		}
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
 			if (data.filter((p) => p.payment_date !== 0).length > 0)
 				return alert("Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!");
-			const res = await useAPI(
-				API.Payments.complete,
-				{
-					RequestObject: data.map((p) => p.id),
-				},
-				setStore
-			);
+			const res = await apiHook(API.Payments.complete, {
+				RequestObject: data.map((p) => p.id),
+			});
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({
 				action: ActionEnum.CHECK,
@@ -227,17 +215,13 @@ export default function PaymentsTable() {
 		if (!payments || !books || selectedItems.length < 1) {
 			return deleteModal;
 		}
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
 			if (data.filter((p) => p.payment_date === 0).length)
 				return alert("Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!");
-			const res = await useAPI(
-				API.Payments.delete,
-				{
-					RequestObject: data.map((p) => p.id),
-				},
-				setStore
-			);
+			const res = await apiHook(API.Payments.delete, {
+				RequestObject: data.map((p) => p.id),
+			});
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({
 				action: ActionEnum.DELETE,

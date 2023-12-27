@@ -2,7 +2,7 @@ import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpoints
 import { v_Books, type Books } from "../../types/entities";
 import { omit, pick } from "valibot";
 
-const get: EndpointRoute<"GET:/books", null, Books[]> = {
+const get: EndpointRoute<"/books", null, Books[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/books",
@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/books", null, Books[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/books/id", number[], Books> = {
+const getById: EndpointRoute<"/books/id", number[], Books> = {
 	authentication: true,
 	method: "POST",
 	path: "/books/id",
@@ -19,7 +19,7 @@ const getById: EndpointRoute<"POST:/books/id", number[], Books> = {
 };
 
 const postReq = omit(v_Books, ["id"]);
-const post: EndpointRoute<"POST:/books", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/books", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/books",
@@ -29,7 +29,7 @@ const post: EndpointRoute<"POST:/books", typeof postReq, { insertId: number; }> 
 };
 
 const quantityReq = pick(v_Books, ["id", "quantity"]);
-const updateQuantity: EndpointRoute<"PUT:/books/updateQuantity", typeof quantityReq> = {
+const updateQuantity: EndpointRoute<"/books/updateQuantity", typeof quantityReq> = {
 	authentication: true,
 	method: "PUT",
 	path: "/books/updateQuantity",
@@ -38,7 +38,7 @@ const updateQuantity: EndpointRoute<"PUT:/books/updateQuantity", typeof quantity
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/books", number[]> = {
+const del: EndpointRoute<"/books", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/books",

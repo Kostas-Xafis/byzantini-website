@@ -24,26 +24,32 @@ export type StoreMutation<T extends keyof APIStore> = {
 	type: ActionEnum;
 };
 
-function assertOwnPropCheat<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> {
-}
+function assertOwnPropCheat<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 
-export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req: APIArgs[T], setStore?: SetStoreFunction<APIStore>, Mutations?: StoreMutation<any>) => {
+export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends APIEndpointKey>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<any>) => {
 	const Route = APIEndpoints[endpoint];
-	assertOwnPropCheat(req, "RequestObject");
-	if ("validation" in Route && Route.validation) {
-		parse(Route.validation, req.RequestObject);
-	}
-	const url = URL + "/api" + ("UrlArgs" in req ? convertUrlFromArgs(Route.path, req.UrlArgs) : Route.path);
-	const { RequestObject } = req;
-	const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
 	try {
-		const res = await fetch(url, {
-			method: Route.method,
-			headers: {
-				"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"
-			},
-			body
-		});
+		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
+		if (req === undefined) {
+			const url = URL + "/api" + Route.path;
+			fetcher = fetch(url, { method: Route.method });
+		} else {
+			assertOwnPropCheat(req, "RequestObject");
+			assertOwnPropCheat(req, "UrlArgs");
+			if ("validation" in Route && Route.validation) {
+				parse(Route.validation, req.RequestObject);
+			}
+			const { RequestObject } = req;
+			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
+			fetcher = fetch(URL + "/api" + convertUrlFromArgs(Route.path, req.UrlArgs), {
+				method: Route.method,
+				headers: {
+					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"
+				},
+				body
+			});
+		}
+		const res = await fetcher;
 		const { res: response } = (await res.json()) as APIRes[T];
 		if ("error" in response) {
 			console.error(response.error);

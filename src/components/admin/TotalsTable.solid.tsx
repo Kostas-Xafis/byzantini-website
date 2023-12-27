@@ -12,10 +12,11 @@ type TotalsTable = {
 
 export default function TotalsTable() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	useHydrate(() => {
-		useAPI(API.Payments.getTotal, {}, setStore);
-		useAPI(API.Payoffs.getTotal, {}, setStore);
-		useAPI(API.Registrations.getTotal, {}, setStore);
+		apiHook(API.Payments.getTotal);
+		apiHook(API.Payoffs.getTotal);
+		apiHook(API.Registrations.getTotal);
 	});
 	const columnNames: ColumnType<TotalsTable> = {
 		total_payments: {

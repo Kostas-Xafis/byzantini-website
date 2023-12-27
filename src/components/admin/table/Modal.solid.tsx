@@ -57,7 +57,7 @@ const submitWrapper = (
 	return async function (form: HTMLFormElement, e: Event) {
 		try {
 			setModalLoading(true);
-			await onSubmit(form);
+			await onSubmit(new FormData(form));
 			setModalLoading(false);
 			setModalOpen(false);
 		} catch (error) {

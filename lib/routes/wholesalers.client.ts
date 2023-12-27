@@ -2,7 +2,7 @@ import { type Wholesalers, v_Wholesalers } from "../../types/entities";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
 import { omit } from "valibot";
 
-const get: EndpointRoute<"GET:/wholesalers", null, Wholesalers[]> = {
+const get: EndpointRoute<"/wholesalers", null, Wholesalers[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/wholesalers",
@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/wholesalers", null, Wholesalers[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/wholesalers/id", number[], Wholesalers> = {
+const getById: EndpointRoute<"/wholesalers/id", number[], Wholesalers> = {
 	authentication: true,
 	method: "POST",
 	path: "/wholesalers/id",
@@ -19,7 +19,7 @@ const getById: EndpointRoute<"POST:/wholesalers/id", number[], Wholesalers> = {
 };
 
 const postReq = omit(v_Wholesalers, ["id"]);
-const post: EndpointRoute<"POST:/wholesalers", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/wholesalers", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/wholesalers",
@@ -27,7 +27,7 @@ const post: EndpointRoute<"POST:/wholesalers", typeof postReq, { insertId: numbe
 	validation: () => postReq,
 	func: async ctx => null as any
 };
-const remove: EndpointRoute<"DELETE:/wholesalers", number[]> = {
+const remove: EndpointRoute<"/wholesalers", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/wholesalers",

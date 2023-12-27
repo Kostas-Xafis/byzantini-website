@@ -2,7 +2,7 @@ import { v_Payments, type Payments } from "../../types/entities";
 import { omit, pick } from "valibot";
 import type { APIArguments, APIBuilder, APIEndpointsBuilder, APIResponse, EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
+const get: EndpointRoute<"/payments", null, Payments[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/payments",
@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/payments", null, Payments[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/payments/id", number[], Payments[]> = {
+const getById: EndpointRoute<"/payments/id", number[], Payments[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/payments/id",
@@ -18,7 +18,7 @@ const getById: EndpointRoute<"POST:/payments/id", number[], Payments[]> = {
 	func: async ctx => null as any
 };
 
-const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number; }> = {
+const getTotal: EndpointRoute<"/payments/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payments/total",
@@ -27,7 +27,7 @@ const getTotal: EndpointRoute<"GET:/payments/total", null, { total: number; }> =
 };
 
 let postReq = omit(v_Payments, ["id", "amount", "date"]);
-const post: EndpointRoute<"POST:/payments", typeof postReq, Payments> = {
+const post: EndpointRoute<"/payments", typeof postReq, Payments> = {
 	authentication: true,
 	method: "POST",
 	path: "/payments",
@@ -37,7 +37,7 @@ const post: EndpointRoute<"POST:/payments", typeof postReq, Payments> = {
 };
 
 let updatePaymentReq = pick(v_Payments, ["id", "amount"]);
-const updatePayment: EndpointRoute<"PUT:/payments", typeof updatePaymentReq> = {
+const updatePayment: EndpointRoute<"/payments", typeof updatePaymentReq> = {
 	authentication: true,
 	method: "PUT",
 	path: "/payments",
@@ -45,7 +45,7 @@ const updatePayment: EndpointRoute<"PUT:/payments", typeof updatePaymentReq> = {
 	validation: () => updatePaymentReq,
 	func: async ctx => null as any
 };
-const complete: EndpointRoute<"POST:/payments/complete", number[]> = {
+const complete: EndpointRoute<"/payments/complete", number[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/payments/complete",
@@ -53,7 +53,7 @@ const complete: EndpointRoute<"POST:/payments/complete", number[]> = {
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/payments", number[]> = {
+const del: EndpointRoute<"/payments", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/payments",

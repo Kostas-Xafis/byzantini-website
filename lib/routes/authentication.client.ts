@@ -1,7 +1,7 @@
 import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
 import { v_LoginCredentials } from "../../types/entities";
 
-const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: boolean; }> = {
+const authenticateSession: EndpointRoute<"/auth/session", null, { isValid: boolean; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/auth/session",
@@ -9,7 +9,7 @@ const authenticateSession: EndpointRoute<"POST:/auth/session", null, { isValid: 
 	func: async ctx => null as any
 };
 
-const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string; }> = {
+const userLogin: EndpointRoute<"/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/auth/login",
@@ -19,7 +19,7 @@ const userLogin: EndpointRoute<"POST:/auth/login", typeof v_LoginCredentials, { 
 };
 
 
-const userLogout: EndpointRoute<"POST:/auth/logout", { sid: string; }, string> = {
+const userLogout: EndpointRoute<"/auth/logout", { sid: string; }, string> = {
 	authentication: true,
 	method: "POST",
 	path: "/auth/logout",

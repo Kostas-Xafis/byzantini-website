@@ -242,6 +242,7 @@ let timeDropdown = 0;
 export default function RegistrationsTable() {
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const setRegistrationHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.Registrations.getById,
@@ -249,9 +250,9 @@ export default function RegistrationsTable() {
 		},
 	]);
 	useHydrate(() => {
-		useAPI(API.Registrations.get, {}, setStore);
-		useAPI(API.Teachers.getByFullnames, {}, setStore);
-		useAPI(API.Instruments.get, {}, setStore);
+		apiHook(API.Registrations.get);
+		apiHook(API.Teachers.getByFullnames);
+		apiHook(API.Instruments.get);
 	});
 
 	const shapedData = createMemo(() => {
@@ -341,8 +342,7 @@ export default function RegistrationsTable() {
 		const registration = JSON.parse(
 			JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)
 		) as Registrations;
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const class_id = Number(formData.get("class_id") as string);
 			const data: Registrations = {
 				id: registration.id,
@@ -370,13 +370,9 @@ export default function RegistrationsTable() {
 					? new Date(formData.get("payment_date") as string).getTime()
 					: null,
 			};
-			await useAPI(
-				API.Registrations.update,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			await apiHook(API.Registrations.update, {
+				RequestObject: data,
+			});
 			setRegistrationHydrate({
 				action: ActionEnum.MODIFY,
 				ids: [data.id],
@@ -406,15 +402,11 @@ export default function RegistrationsTable() {
 		const registrations = store[API.Registrations.get];
 		if (!registrations || selectedItems.length < 1) return deleteModal;
 
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const data = selectedItems.map((id) => id);
-			const res = await useAPI(
-				API.Registrations.delete,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Registrations.delete, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setRegistrationHydrate({ action: ActionEnum.DELETE, ids: data });
 		};
@@ -440,7 +432,7 @@ export default function RegistrationsTable() {
 		let bulk = selectedItems.length > 1;
 
 		const submit = !bulk
-			? async function (form: HTMLFormElement) {
+			? async function () {
 					const student = registrations.find(
 						(r) => r.id === selectedItems[0]
 					) as Registrations;
@@ -458,7 +450,7 @@ export default function RegistrationsTable() {
 						await pdf.download();
 					} catch (error) {}
 			  }
-			: async function (form: HTMLFormElement) {
+			: async function () {
 					const items = selectedItems.map((id) => {
 						const student = registrations.find((r) => r.id === id) as Registrations;
 						const teacher = teachers.find(
@@ -506,7 +498,7 @@ export default function RegistrationsTable() {
 		const instruments = store[API.Instruments.get];
 		if (!teachers || !registrations || !instruments || selectedItems.length <= 0)
 			return excelModal;
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			let items = (
 				selectedItems
 					.map((id) => {

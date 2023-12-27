@@ -5,7 +5,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
 
 export type Action = {
 	inputs: Record<string, InputProps>;
-	onSubmit: (form: HTMLFormElement) => Promise<void>;
+	onSubmit: (formData: FormData) => Promise<void>;
 	submitText: string;
 	headerText: string;
 	icon: ActionIcon;

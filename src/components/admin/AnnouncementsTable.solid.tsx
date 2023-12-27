@@ -80,6 +80,7 @@ const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function AnnouncementsTable() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const setAnnouncementHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.Announcements.getById,
@@ -87,7 +88,7 @@ export default function AnnouncementsTable() {
 		},
 	]);
 	useHydrate(() => {
-		useAPI(API.Announcements.get, {}, setStore);
+		apiHook(API.Announcements.get);
 	});
 
 	let shapedData = createMemo(() => {
@@ -96,8 +97,7 @@ export default function AnnouncementsTable() {
 		return announcementsToTable(announcements);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Announcements, "id" | "views"> = {
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
@@ -105,13 +105,9 @@ export default function AnnouncementsTable() {
 			};
 			if (data.title.includes("/"))
 				return alert('Ο τίτλος δεν μπορεί να περιέχει τον χαρακτήρα "/"');
-			const res = await useAPI(
-				API.Announcements.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Announcements.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			const id = res.data.insertId;
 			await ThumbnailGenerator.loadCompressor();
@@ -124,19 +120,19 @@ export default function AnnouncementsTable() {
 					let blob = await fileToBlob(file);
 					if (!blob) return console.error("Could not load file:", name);
 					try {
-						await useAPI(API.Announcements.postImage, {
+						await apiHook(API.Announcements.postImage, {
 							RequestObject: {
 								announcement_id: id,
 								name,
 								priority: i + 1,
 							},
 						});
-						await useAPI(API.Announcements.imageUpload, {
+						await apiHook(API.Announcements.imageUpload, {
 							RequestObject: blob,
 							UrlArgs: { id, name },
 						});
 						if (file.size <= kb40) {
-							await useAPI(API.Announcements.imageUpload, {
+							await apiHook(API.Announcements.imageUpload, {
 								RequestObject: blob,
 								UrlArgs: {
 									id,
@@ -149,7 +145,7 @@ export default function AnnouncementsTable() {
 							await thumbCreator.createThumbnail(file, name)
 						);
 						if (!thumbBlob) throw new Error("Could not create thumbnail");
-						await useAPI(API.Announcements.imageUpload, {
+						await apiHook(API.Announcements.imageUpload, {
 							RequestObject: thumbBlob,
 							UrlArgs: { id, name: "thumb_" + name },
 						});
@@ -177,15 +173,11 @@ export default function AnnouncementsTable() {
 		};
 		const announcements = store[API.Announcements.get];
 		if (!announcements || selectedItems.length < 1) return deleteModal;
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const data = selectedItems.slice();
-			const res = await useAPI(
-				API.Announcements.delete,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Announcements.delete, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setAnnouncementHydrate({ action: ActionEnum.DELETE, ids: data });
 		};

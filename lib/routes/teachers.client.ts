@@ -4,7 +4,7 @@ import { v_SimpleTeacher } from "../../types/entities";
 import { merge, array, number, integer, object, omit, string } from "valibot";
 
 
-const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
+const get: EndpointRoute<"/teachers", null, Teachers[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers",
@@ -12,14 +12,14 @@ const get: EndpointRoute<"GET:/teachers", null, Teachers[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/teachers/id", number[], Teachers> = {
+const getById: EndpointRoute<"/teachers/id", number[], Teachers> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/id",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
-const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:string]", null, Teachers[]> = {
+const getByPriorityClasses: EndpointRoute<"/teachers/priority/[class_type:string]", null, Teachers[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/priority/[class_type:string]",
@@ -27,7 +27,7 @@ const getByPriorityClasses: EndpointRoute<"GET:/teachers/priority/[class_type:st
 	func: async ctx => null as any
 };
 
-const getByFullnames: EndpointRoute<"GET:/teachers/fullnames", null, Teachers[]> = {
+const getByFullnames: EndpointRoute<"/teachers/fullnames", null, Teachers[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/fullnames",
@@ -35,28 +35,28 @@ const getByFullnames: EndpointRoute<"GET:/teachers/fullnames", null, Teachers[]>
 	func: async ctx => null as any
 };
 
-const getClasses: EndpointRoute<"GET:/teachers/teacherClasses", null, TeacherClasses[]> = {
+const getClasses: EndpointRoute<"/teachers/teacherClasses", null, TeacherClasses[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/teacherClasses",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
-const getClassesById: EndpointRoute<"POST:/teachers/teacherClassesById", number[], TeacherClasses[]> = {
+const getClassesById: EndpointRoute<"/teachers/teacherClassesById", number[], TeacherClasses[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/teacherClassesById",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
-const getLocations: EndpointRoute<"GET:/teachers/locations", null, TeacherLocations[]> = {
+const getLocations: EndpointRoute<"/teachers/locations", null, TeacherLocations[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/locations",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
-const getLocationsById: EndpointRoute<"POST:/teachers/locationsById", number[], TeacherLocations[]> = {
+const getLocationsById: EndpointRoute<"/teachers/locationsById", number[], TeacherLocations[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/locationsById",
@@ -64,14 +64,14 @@ const getLocationsById: EndpointRoute<"POST:/teachers/locationsById", number[], 
 	func: async ctx => null as any
 };
 
-const getInstruments: EndpointRoute<"GET:/teachers/instruments", null, TeacherInstruments[]> = {
+const getInstruments: EndpointRoute<"/teachers/instruments", null, TeacherInstruments[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/instruments",
 	hasUrlParams: false,
 	func: async ctx => null as any
 };
-const getInstrumentsById: EndpointRoute<"POST:/teachers/instrumentsById", number[], TeacherInstruments[]> = {
+const getInstrumentsById: EndpointRoute<"/teachers/instrumentsById", number[], TeacherInstruments[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/instrumentsById",
@@ -89,7 +89,7 @@ const teacherJoins = object({
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);
 let postReq = omit(JoinedTeacher, ["id"]);
-const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/teachers", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers",
@@ -99,7 +99,7 @@ const post: EndpointRoute<"POST:/teachers", typeof postReq, { insertId: number; 
 };
 
 let updateReq = JoinedTeacher;
-const update: EndpointRoute<"PUT:/teachers", typeof updateReq> = {
+const update: EndpointRoute<"/teachers", typeof updateReq> = {
 	authentication: true,
 	method: "PUT",
 	path: "/teachers",
@@ -108,7 +108,7 @@ const update: EndpointRoute<"PUT:/teachers", typeof updateReq> = {
 	func: async ctx => null as any
 };
 
-const fileUpload: EndpointRoute<"PUT:/teachers/file/[id:number]", Blob> = {
+const fileUpload: EndpointRoute<"/teachers/file/[id:number]", Blob> = {
 	authentication: true,
 	method: "PUT",
 	path: "/teachers/file/[id:number]",
@@ -116,7 +116,7 @@ const fileUpload: EndpointRoute<"PUT:/teachers/file/[id:number]", Blob> = {
 	func: async ctx => null as any
 };
 
-const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" | "picture"; }> = {
+const fileDelete: EndpointRoute<"/teachers/file", { id: number; type: "cv" | "picture"; }> = {
 	authentication: true,
 	method: "PUT",
 	path: "/teachers/file",
@@ -124,7 +124,7 @@ const fileDelete: EndpointRoute<"PUT:/teachers/file", { id: number; type: "cv" |
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/teachers", number[]> = {
+const del: EndpointRoute<"/teachers", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/teachers",

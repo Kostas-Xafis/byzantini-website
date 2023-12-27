@@ -1,17 +1,17 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
+import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { fileToBlob } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
-import { Fill, Omit, type Props as InputProps, getMultiSelect } from "../input/Input.solid";
+import { Fill, Omit, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "locations";
 
@@ -155,6 +155,7 @@ const columnNames: ColumnType<LocationsTable> = {
 
 export default function LocationsTable() {
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const setLocationHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.Locations.getById,
@@ -162,7 +163,7 @@ export default function LocationsTable() {
 		},
 	]);
 	useHydrate(() => {
-		useAPI(API.Locations.get, {}, setStore);
+		apiHook(API.Locations.get);
 	});
 
 	let shapedData = createMemo(() => {
@@ -171,8 +172,7 @@ export default function LocationsTable() {
 		return locations ? locationsToTable(locations) : [];
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Locations, "id" | "image"> = {
 				name: formData.get("name") as string,
 				address: formData.get("address") as string,
@@ -187,27 +187,19 @@ export default function LocationsTable() {
 				youtube: formData.get("youtube") as string,
 				partner: getMultiSelect("partner").map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
-			const res = await useAPI(
-				API.Locations.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Locations.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const files = FileHandler.getFiles("image");
 			const imgBlob =
 				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
 			if (imgBlob) {
-				await useAPI(
-					API.Locations.fileUpload,
-					{
-						RequestObject: imgBlob,
-						UrlArgs: { id },
-					},
-					setStore
-				);
+				await apiHook(API.Locations.fileUpload, {
+					RequestObject: imgBlob,
+					UrlArgs: { id },
+				});
 			}
 			setLocationHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
@@ -231,8 +223,7 @@ export default function LocationsTable() {
 		const location = locations.find((p) => p.id === selectedItems[0]);
 		if (!location) return modifyModal;
 
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Locations, "image"> = {
 				id: location.id,
 				name: formData.get("name") as string,
@@ -248,38 +239,26 @@ export default function LocationsTable() {
 				youtube: formData.get("youtube") as string,
 				partner: getMultiSelect("partner").map((i) => Number(i.dataset.value) as 0 | 1)[0],
 			};
-			const res = await useAPI(
-				API.Locations.update,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Locations.update, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			const files = FileHandler.getFiles("image");
 			const imgBlob =
 				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
 			const deletedImage = FileHandler.getDeletedFiles("image");
 			if (imgBlob) {
-				await useAPI(
-					API.Locations.fileUpload,
-					{
-						RequestObject: imgBlob,
-						UrlArgs: { id: location.id },
-					},
-					setStore
-				);
+				await apiHook(API.Locations.fileUpload, {
+					RequestObject: imgBlob,
+					UrlArgs: { id: location.id },
+				});
 			}
 			if (deletedImage.length) {
-				await useAPI(
-					API.Locations.fileDelete,
-					{
-						UrlArgs: {
-							id: location.id,
-						},
+				await apiHook(API.Locations.fileDelete, {
+					UrlArgs: {
+						id: location.id,
 					},
-					setStore
-				);
+				});
 			}
 			setLocationHydrate({
 				action: ActionEnum.MODIFY,
@@ -301,15 +280,11 @@ export default function LocationsTable() {
 		};
 		const locations = store[API.Locations.get];
 		if (!locations || selectedItems.length < 1) return deleteModal;
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const data = selectedItems.slice();
-			const res = await useAPI(
-				API.Locations.delete,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Locations.delete, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 			setLocationHydrate({ action: ActionEnum.DELETE, ids: data });
 		};

@@ -2,7 +2,7 @@ import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpoints
 import { v_Announcements, type Announcements, v_AnnouncementImages } from "../../types/entities";
 import { omit } from "valibot";
 
-const get: EndpointRoute<"GET:/announcements", null, Announcements[]> = {
+const get: EndpointRoute<"/announcements", null, Announcements[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/announcements",
@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/announcements", null, Announcements[]> = {
 	func: async ctx => null as any
 };
 
-const getSimple: EndpointRoute<"GET:/announcements/no-content", null, Omit<Announcements, "content">[]> = {
+const getSimple: EndpointRoute<"/announcements/no-content", null, Omit<Announcements, "content">[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/announcements/no-content",
@@ -18,7 +18,7 @@ const getSimple: EndpointRoute<"GET:/announcements/no-content", null, Omit<Annou
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements> = {
+const getById: EndpointRoute<"/announcements/id", number[], Announcements> = {
 	authentication: false,
 	method: "POST",
 	path: "/announcements/id",
@@ -26,7 +26,7 @@ const getById: EndpointRoute<"POST:/announcements/id", number[], Announcements> 
 	func: async ctx => null as any
 };
 
-const getByTitle: EndpointRoute<"POST:/announcements/title/[title:string]", null, Announcements & { images: string[]; }> = {
+const getByTitle: EndpointRoute<"/announcements/title/[title:string]", null, Announcements & { images: string[]; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/announcements/title/[title:string]",
@@ -36,7 +36,7 @@ const getByTitle: EndpointRoute<"POST:/announcements/title/[title:string]", null
 
 
 const postReq = omit(v_Announcements, ["id", "views"]);
-const post: EndpointRoute<"POST:/announcements", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/announcements", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements",
@@ -45,7 +45,7 @@ const post: EndpointRoute<"POST:/announcements", typeof postReq, { insertId: num
 	func: async ctx => null as any
 };
 
-const postImage: EndpointRoute<"POST:/announcements/image", typeof v_AnnouncementImages, { insertId: number; }> = {
+const postImage: EndpointRoute<"/announcements/image", typeof v_AnnouncementImages, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements/image",
@@ -54,7 +54,7 @@ const postImage: EndpointRoute<"POST:/announcements/image", typeof v_Announcemen
 	func: async ctx => null as any
 };
 
-const imageUpload: EndpointRoute<"POST:/announcements/image/[id:number]/[name:string]", Blob> = {
+const imageUpload: EndpointRoute<"/announcements/image/[id:number]/[name:string]", Blob> = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements/image/[id:number]/[name:string]",
@@ -62,7 +62,7 @@ const imageUpload: EndpointRoute<"POST:/announcements/image/[id:number]/[name:st
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/announcements", number[]> = {
+const del: EndpointRoute<"/announcements", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/announcements",

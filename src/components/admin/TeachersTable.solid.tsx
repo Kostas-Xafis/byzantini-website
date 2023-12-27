@@ -346,6 +346,7 @@ export default function TeachersTable() {
 		{}
 	);
 	const [store, setStore] = createStore<APIStore>({});
+	const apiHook = useAPI(setStore);
 	const setTeacherHydrate = useHydrateById(setStore, [
 		{
 			srcEndpoint: API.Teachers.getById,
@@ -374,25 +375,21 @@ export default function TeachersTable() {
 		},
 	]);
 	const fileUpload = (file: Blob, id: number) => {
-		return useAPI(
-			API.Teachers.fileUpload,
-			{
-				RequestObject: file,
-				UrlArgs: { id },
-			},
-			setStore
-		);
+		return apiHook(API.Teachers.fileUpload, {
+			RequestObject: file,
+			UrlArgs: { id },
+		});
 	};
 
 	useHydrate(() => {
-		useAPI(API.Teachers.get, {}, setStore);
-		useAPI(API.Teachers.getClasses, {}, setStore);
+		apiHook(API.Teachers.get);
+		apiHook(API.Teachers.getClasses);
 
-		useAPI(API.Locations.get, {}, setStore);
-		useAPI(API.Teachers.getLocations, {}, setStore);
+		apiHook(API.Locations.get);
+		apiHook(API.Teachers.getLocations);
 
-		useAPI(API.Instruments.get, {}, setStore);
-		useAPI(API.Teachers.getInstruments, {}, setStore);
+		apiHook(API.Instruments.get);
+		apiHook(API.Teachers.getInstruments);
 	});
 
 	const shapedData = createMemo(() => {
@@ -451,8 +448,7 @@ export default function TeachersTable() {
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
 		if (!locations || !locationsList || !instruments) return addModal;
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
 				email: formData.get("email") as string,
@@ -488,13 +484,9 @@ export default function TeachersTable() {
 					.map((i) => i.value)
 					.filter(Boolean),
 			};
-			const res = await useAPI(
-				API.Teachers.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Teachers.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const files = {
@@ -547,8 +539,7 @@ export default function TeachersTable() {
 		)
 			return modifyModal;
 
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const classes = getMultiSelect("teacherClasses").map((btn) =>
 				Number(btn.dataset.value)
 			) as number[];
@@ -592,13 +583,9 @@ export default function TeachersTable() {
 					.map((i) => i.value)
 					.filter(Boolean),
 			};
-			const res = await useAPI(
-				API.Teachers.update,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Teachers.update, {
+				RequestObject: data,
+			});
 			if (!res.data && !res.message) return;
 
 			const files = {
@@ -621,23 +608,17 @@ export default function TeachersTable() {
 			};
 			await Promise.all([
 				deletedFiles.picture.length
-					? useAPI(
-							API.Teachers.fileDelete,
-							{
-								RequestObject: {
-									id: teacher.id,
-									type: "picture",
-								},
+					? apiHook(API.Teachers.fileDelete, {
+							RequestObject: {
+								id: teacher.id,
+								type: "picture",
 							},
-							setStore
-					  )
+					  })
 					: Promise.resolve(),
 				deletedFiles.cv.length
-					? useAPI(
-							API.Teachers.fileDelete,
-							{ RequestObject: { id: teacher.id, type: "cv" } },
-							setStore
-					  )
+					? apiHook(API.Teachers.fileDelete, {
+							RequestObject: { id: teacher.id, type: "cv" },
+					  })
 					: Promise.resolve(),
 			]);
 
@@ -682,15 +663,11 @@ export default function TeachersTable() {
 		};
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length < 1) return deleteModal;
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const ids = selectedItems.map((i) => (teachers.find((p) => p.id === i) as Teachers).id);
-			const res = await useAPI(
-				API.Teachers.delete,
-				{
-					RequestObject: ids,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Teachers.delete, {
+				RequestObject: ids,
+			});
 			if (!res.data && !res.message) return;
 			setTeacherHydrate({ action: ActionEnum.DELETE, ids: ids });
 		};
@@ -704,8 +681,7 @@ export default function TeachersTable() {
 	});
 
 	const onAddInstrument = createMemo((): Action | EmptyAction => {
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const data: Omit<Instruments, "id"> = {
 				name: formData.get("name") as string,
 				type: (formData.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur",
@@ -717,13 +693,9 @@ export default function TeachersTable() {
 					].filter((i) => i.dataset.selected === "true")[0].dataset.value as string
 				) - 1) as 0 | 1,
 			};
-			const res = await useAPI(
-				API.Instruments.post,
-				{
-					RequestObject: data,
-				},
-				setStore
-			);
+			const res = await apiHook(API.Instruments.post, {
+				RequestObject: data,
+			});
 			if (!res.data) return;
 			setActionPressedInstruments({
 				action: ActionEnum.ADD,
@@ -768,18 +740,13 @@ export default function TeachersTable() {
 	const onDeleteInstrument = createMemo((): Action | EmptyAction => {
 		const instruments = store[API.Instruments.get];
 		if (!instruments) return { icon: ActionIcon.DELETE_BOX };
-		const submit = async function (form: HTMLFormElement) {
-			const formData = new FormData(form);
+		const submit = async function (formData: FormData) {
 			const name = formData.get("name") as string;
 			const instrument = instruments.find((i) => i.name === name);
 			if (!instrument) return;
-			const res = await useAPI(
-				API.Instruments.delete,
-				{
-					RequestObject: [instrument.id],
-				},
-				setStore
-			);
+			const res = await apiHook(API.Instruments.delete, {
+				RequestObject: [instrument.id],
+			});
 			if (!res.data && !res.message) return;
 			setActionPressedInstruments({
 				action: ActionEnum.DELETE,
@@ -822,7 +789,7 @@ export default function TeachersTable() {
 			selectedItems.length <= 0
 		)
 			return excelModal;
-		const submit = async function (form: HTMLFormElement) {
+		const submit = async function () {
 			const byzTeachers: Teachers[] = [],
 				parTeachers: Teachers[] = [],
 				eurTeachers: Teachers[] = [];
@@ -897,8 +864,7 @@ export default function TeachersTable() {
 					store[API.Instruments.get] &&
 					store[API.Teachers.getInstruments]
 				}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}
-			>
+				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

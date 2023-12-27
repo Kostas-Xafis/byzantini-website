@@ -1,10 +1,12 @@
 {
 	"strict": true,
-	"noImplicitAny": false,
 	"skipLibCheck": true,
 	"extends": "astro/tsconfigs/strict",
 	"exclude": ["./.vscode", "./dist", "./.wrangler", "./pdfWorker"],
 	"compilerOptions": {
+		"noImplicitAny": true,
+		"skipLibCheck": true,
+		"alwaysStrict": true,
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
 		"types": ["@types/node", "@cloudflare/workers-types"]

@@ -16,8 +16,8 @@ export type Parts<URL> = URL extends `${infer HTTPMethod}:/${infer Path}`
 	? (A extends `` ? never : A) | Parts<B>
 	: URL;
 
-export type ExtractURLMethod<URL> = URL extends `${infer _}:${infer fullPath}` ? fullPath : never;
-export type GetURLMethod<URL> = URL extends `${infer Method}:${infer _}` ? Method : never;
+// export type ExtractURLMethod<URL> = URL extends `${infer _}:${infer fullPath}` ? fullPath : URL;
+// export type GetURLMethod<URL> = URL extends `${infer Method}:${infer _}` ? Method : never;
 export type HasUrlParams<URL> = URL extends `${infer _}/[${infer _}:${infer _}]${infer _}` ? true : false;
 export type ArgumentParts<Parts> = Parts extends `[${infer _}:${infer _}]` ? Parts : never;
 export type ExpectedArguments<Parts extends string> = {

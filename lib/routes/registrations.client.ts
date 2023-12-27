@@ -2,7 +2,7 @@ import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpoints
 import { v_Registrations, type Registrations } from "../../types/entities";
 import { object, omit, string } from "valibot";
 
-const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
+const get: EndpointRoute<"/registrations", null, Registrations[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/registrations",
@@ -10,7 +10,7 @@ const get: EndpointRoute<"GET:/registrations", null, Registrations[]> = {
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/registrations/id", number[], Registrations> = {
+const getById: EndpointRoute<"/registrations/id", number[], Registrations> = {
 	authentication: true,
 	method: "POST",
 	path: "/registrations/id",
@@ -18,7 +18,7 @@ const getById: EndpointRoute<"POST:/registrations/id", number[], Registrations> 
 	func: async ctx => null as any
 };
 
-const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number; }> = {
+const getTotal: EndpointRoute<"/registrations/total", null, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/registrations/total",
@@ -27,7 +27,7 @@ const getTotal: EndpointRoute<"GET:/registrations/total", null, { total: number;
 };
 
 const postReq = omit(v_Registrations, ["id", "payment_amount", "payment_date", "payment_amount", "total_payment"]);
-const post: EndpointRoute<"POST:/registrations", typeof postReq> = {
+const post: EndpointRoute<"/registrations", typeof postReq> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations",
@@ -36,7 +36,7 @@ const post: EndpointRoute<"POST:/registrations", typeof postReq> = {
 	func: async ctx => null as any
 };
 
-const update: EndpointRoute<"PUT:/registrations", typeof v_Registrations> = {
+const update: EndpointRoute<"/registrations", typeof v_Registrations> = {
 	authentication: true,
 	method: "PUT",
 	path: "/registrations",
@@ -45,7 +45,7 @@ const update: EndpointRoute<"PUT:/registrations", typeof v_Registrations> = {
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/registrations", number[]> = {
+const del: EndpointRoute<"/registrations", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/registrations",
@@ -54,7 +54,7 @@ const del: EndpointRoute<"DELETE:/registrations", number[]> = {
 };
 
 const v_Email = object({ email: string() });
-const emailSubscribe: EndpointRoute<"POST:/registrations/email-subscribe", typeof v_Email> = {
+const emailSubscribe: EndpointRoute<"/registrations/email-subscribe", typeof v_Email> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe",
@@ -64,7 +64,7 @@ const emailSubscribe: EndpointRoute<"POST:/registrations/email-subscribe", typeo
 };
 
 const v_EmailToken = object({ token: string() });
-const emailUnsubscribe: EndpointRoute<"POST:/registrations/email-unsubscribe", typeof v_EmailToken, { isValid: boolean; }> = {
+const emailUnsubscribe: EndpointRoute<"/registrations/email-unsubscribe", typeof v_EmailToken, { isValid: boolean; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-unsubscribe",
@@ -73,7 +73,7 @@ const emailUnsubscribe: EndpointRoute<"POST:/registrations/email-unsubscribe", t
 	func: async ctx => null as any
 };
 
-const getSubscriptionToken: EndpointRoute<"POST:/registrations/email-subscribe/token", typeof v_Email, { token: string | null; }> = {
+const getSubscriptionToken: EndpointRoute<"/registrations/email-subscribe/token", typeof v_Email, { token: string | null; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe/token",

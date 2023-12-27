@@ -2,7 +2,7 @@ import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpoints
 import { v_Instruments, type Instruments } from "../../types/entities";
 import { omit } from "valibot";
 
-const get: EndpointRoute<"GET:/instruments", null, Instruments[]> = {
+const get: EndpointRoute<"/instruments", null, Instruments[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/instruments",
@@ -11,7 +11,7 @@ const get: EndpointRoute<"GET:/instruments", null, Instruments[]> = {
 };
 
 let postReq = omit(v_Instruments, ["id"]);
-const post: EndpointRoute<"POST:/instruments", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/instruments", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/instruments",
@@ -20,7 +20,7 @@ const post: EndpointRoute<"POST:/instruments", typeof postReq, { insertId: numbe
 	func: async ctx => null as any
 };
 
-const getById: EndpointRoute<"POST:/instruments/id", number[], Instruments> = {
+const getById: EndpointRoute<"/instruments/id", number[], Instruments> = {
 	authentication: false,
 	method: "POST",
 	path: "/instruments/id",
@@ -28,7 +28,7 @@ const getById: EndpointRoute<"POST:/instruments/id", number[], Instruments> = {
 	func: async ctx => null as any
 };
 
-const del: EndpointRoute<"DELETE:/instruments", number[]> = {
+const del: EndpointRoute<"/instruments", number[]> = {
 	authentication: true,
 	method: "DELETE",
 	path: "/instruments",
