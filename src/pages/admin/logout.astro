@@ -14,11 +14,7 @@ if (!sid) return Astro.redirect("/admin");
 		import { getCookie, setCookie } from "../../../lib/utils.client";
 		const sid = getCookie("session_id");
 		try {
-			await useAPI("Authentication.userLogout", {
-				RequestObject: {
-					sid,
-				},
-			});
+			await useAPI("Authentication.userLogout", { RequestObject: { sid } });
 			setCookie("session_id", "", -1);
 			document.location.pathname = "/login";
 		} catch (e) {

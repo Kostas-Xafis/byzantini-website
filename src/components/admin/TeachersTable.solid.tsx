@@ -484,9 +484,7 @@ export default function TeachersTable() {
 					.map((i) => i.value)
 					.filter(Boolean),
 			};
-			const res = await apiHook(API.Teachers.post, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const files = {
@@ -583,9 +581,7 @@ export default function TeachersTable() {
 					.map((i) => i.value)
 					.filter(Boolean),
 			};
-			const res = await apiHook(API.Teachers.update, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 
 			const files = {
@@ -665,9 +661,7 @@ export default function TeachersTable() {
 		if (!teachers || selectedItems.length < 1) return deleteModal;
 		const submit = async function () {
 			const ids = selectedItems.map((i) => (teachers.find((p) => p.id === i) as Teachers).id);
-			const res = await apiHook(API.Teachers.delete, {
-				RequestObject: ids,
-			});
+			const res = await apiHook(API.Teachers.delete, { RequestObject: ids });
 			if (!res.data && !res.message) return;
 			setTeacherHydrate({ action: ActionEnum.DELETE, ids: ids });
 		};
@@ -693,9 +687,7 @@ export default function TeachersTable() {
 					].filter((i) => i.dataset.selected === "true")[0].dataset.value as string
 				) - 1) as 0 | 1,
 			};
-			const res = await apiHook(API.Instruments.post, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Instruments.post, { RequestObject: data });
 			if (!res.data) return;
 			setActionPressedInstruments({
 				action: ActionEnum.ADD,
@@ -744,9 +736,8 @@ export default function TeachersTable() {
 			const name = formData.get("name") as string;
 			const instrument = instruments.find((i) => i.name === name);
 			if (!instrument) return;
-			const res = await apiHook(API.Instruments.delete, {
-				RequestObject: [instrument.id],
-			});
+
+			const res = await apiHook(API.Instruments.delete, { RequestObject: [instrument.id] });
 			if (!res.data && !res.message) return;
 			setActionPressedInstruments({
 				action: ActionEnum.DELETE,

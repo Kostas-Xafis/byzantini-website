@@ -33,7 +33,7 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutations: 
 			});
 		} else {
 			mutations.forEach((mut) => {
-				useAPI(mut.srcEndpoint, { RequestObject: ids }, setStore, { type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
+				useAPI(setStore)(mut.srcEndpoint, { RequestObject: ids }, { type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
 			});
 		}
 	};

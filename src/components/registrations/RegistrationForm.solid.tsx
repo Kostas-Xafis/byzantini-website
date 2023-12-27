@@ -591,7 +591,7 @@ export function RegistrationForm() {
 					</div>
 					<div
 						id="submitMessage"
-						class="hidden fixed inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px]">
+						class="hidden fixed inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px] z-[100]">
 						<div
 							id="messageBox"
 							class="relative p-12 max-sm:p-6 w-[500px] max-sm:w-[450px] max-[420px]:320px max-2xs:280px h-max rounded-xl flex flex-col justify-center gap-y-4 shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100">
