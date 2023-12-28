@@ -45,10 +45,10 @@ export default function AdminNav(props: RouterProps) {
 					</div>
 				</div>
 				<div
-					class={`h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start py-2 content-evenly max-sm:hidden`}>
+					class={`h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start py-1 content-evenly max-sm:hidden`}>
 					{links.map((link) => (
 						<A
-							class="group relative py-3 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
+							class="group relative py-2 grid grid-rows-[minmax(min-content, 70px)] place-content-center hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
 							href={link.url}
 							rel="prefetch-intent"
 							onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>

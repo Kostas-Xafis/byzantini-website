@@ -758,8 +758,7 @@ export default function RegistrationsTable() {
 					prefix={PREFIX}
 					data={shapedData}
 					columns={columns}
-					// Commenting it out for know to push a more stable version
-					// paginate={100}
+					paginate={50}
 					hasSelectBox>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onModify} prefix={PREFIX} />

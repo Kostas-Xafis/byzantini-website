@@ -1,5 +1,5 @@
 import Row, { toggleCheckboxes, type CellValue, toggleCheckbox } from "./Row.solid";
-import { For, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 import { getParent, mappedValue } from "../../../../lib/utils.client";
 import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
@@ -41,14 +41,32 @@ const move = (e: MouseEvent) => {
 	(e.currentTarget as HTMLElement).scrollLeft = scrollLeft - walk;
 };
 
+const computeColumns = (
+	columnNames: Record<string, { type: CellValue; name: string; size?: number }>,
+	hasSelectBox: boolean
+) => {
+	let columnWidths = "grid-template-columns: " + (hasSelectBox ? "2ch " : "");
+	const columns = Object.values(columnNames).map(({ name, size }) => {
+		let len = (size || name.length) + 1;
+		columnWidths += ` ${len + 2}ch`;
+		return name;
+	});
+	columnWidths += ";";
+	if (hasSelectBox) columnWidths += "padding-left: 1.5rem;";
+	return { columnWidths, columns };
+};
+
 export default function Table(props: Props) {
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], {
 		equals: false,
 	});
-	const { columns: columnNames, prefix = "", data } = props;
-	const [paginate, setPaginate] =
-		(props.paginate && createSignal({ page: 0, size: props.paginate }, { equals: false })) ||
-		[];
+	const { columns: columnNames, prefix = "", data, paginate } = props;
+	const [pagination, setPagination] =
+		(paginate && createSignal({ page: 0, size: paginate }, { equals: false })) || [];
+	//@ts-ignore
+	const maxPage = createMemo(() =>
+		Math.ceil(data().length / ((pagination && pagination().size) || data().length))
+	);
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = createMemo(() => {
@@ -80,24 +98,20 @@ export default function Table(props: Props) {
 	});
 	const readPageData = createMemo(() => {
 		const data = readRowData();
-		if (!paginate) return data;
-		const { page, size } = paginate();
-		return data.slice(
+		if (!pagination) return data;
+		const { page, size } = pagination();
+		let res = data.slice(
 			page * size,
 			mappedValue((page + 1) * size, 0, data.length, 0, data.length)
 		);
+		// In case of table sorting with pagination, the payment status of each row must be updated
+		setTimeout(() => document.dispatchEvent(new CustomEvent("hydrate")), 0);
+		return res;
 	});
 
-	let columnWidths = "grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
-	const columns = Object.values(columnNames).map(({ name, size }) => {
-		let len = (size || name.length) + 1;
-		columnWidths += ` ${len + 2}ch`;
-		return name;
-	});
-	columnWidths += ";";
-	if (props.hasSelectBox) columnWidths += "padding-left: 1.5rem;";
+	const { columnWidths, columns } = computeColumns(columnNames, !!props.hasSelectBox);
 
-	const onClick = (e: MouseEvent) => {
+	const onClickRow = (e: MouseEvent) => {
 		const row = getParent(e.target as HTMLElement, ".row");
 		if (!row) return;
 
@@ -107,7 +121,7 @@ export default function Table(props: Props) {
 			let mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
 			if (!mainCheckbox) return;
 			toggleCheckboxes();
-			if (props.paginate) {
+			if (paginate) {
 				let tableHasSelected = document.querySelector(".selectedRow") !== null;
 				if (tableHasSelected) {
 					const ids = data().map((row) => row[0]) as number[];
@@ -120,11 +134,25 @@ export default function Table(props: Props) {
 		}
 	};
 
+	const onClickPagination = (e: MouseEvent) => {
+		const btn = getParent(e.target as HTMLElement, "button");
+		if (!btn || btn.dataset.active === "false") return;
+		const pageTurn = Number(btn.dataset["pageturn"]);
+		if (pageTurn === 0) return;
+		setPagination &&
+			setPagination((prev) => {
+				const page = prev.page + pageTurn;
+				return { ...prev, page };
+			});
+		document.dispatchEvent(new CustomEvent("hydrate"));
+	};
+
 	return (
 		<div
 			class={
-				"h-[95dvh] mt-[2.5vh] grid grid-cols-[100%] justify-center content-start items-center gap-y-4 z-[1]" +
-				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4"
+				"h-[100dvh] pt-[1.5vh] grid grid-cols-[100%] grid-rows-[max-content,1fr] justify-center content-start items-start gap-y-3 z-[1]" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4" +
+				((paginate && " grid-rows-[max-content,1fr,max-content]") || "")
 			}
 			data-prefix={prefix}>
 			<div class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
@@ -132,21 +160,24 @@ export default function Table(props: Props) {
 			</div>
 			<div
 				id="tableContainer"
-				class="relative z-[1000] min-w-[40%] max-w-[90%] max-sm:max-w-[92.5%] overflow-x-auto h-min justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900"
+				class={
+					"relative z-[1000] min-w-[40%] max-w-[90%] max-sm:max-w-[92.5%] overflow-x-auto max-h-[88.5dvh] justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
+					(paginate ? " max-h-[85dvh]" : "")
+				}
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
 				onMouseLeave={stopDragging}
-				onClick={onClick}>
+				onClick={onClickRow}>
 				<Row
 					data={columns}
 					columnTypes={columnTypes}
 					header
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
-					hasPaginate={!!props.paginate}
+					hasPaginate={!!paginate}
 				/>
-				<div class="data-container relative -z-10 max-h-[77.5dvh] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readPageData()}>
 						{(item) => {
 							return (
@@ -160,6 +191,60 @@ export default function Table(props: Props) {
 					</For>
 				</div>
 			</div>
+			<Show when={paginate && paginate < props.data().length}>
+				<div
+					class="w-full pb-4 flex flex-row justify-center gap-x-2 font-didact text-2xl text-red-950"
+					onClick={onClickPagination}>
+					<button
+						// @ts-ignore
+						data-active={pagination().page - 1 >= 0}
+						class="group/pgBtn transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
+						data-pageTurn="-1"
+						type="button">
+						<i class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-gray-300"></i>
+					</button>
+					{/* @ts-ignore */}
+					{maxPage() > 1 && pagination().page - 1 >= 0 && (
+						<button
+							class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white"
+							data-pageTurn="-1"
+							type="button">
+							{/* @ts-ignore */}
+							{pagination().page}
+						</button>
+					)}
+					<button
+						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white"
+						data-pageTurn="0"
+						type="button">
+						{/* @ts-ignore */}
+						{pagination().page + 1}
+					</button>
+					{
+						//@ts-ignore
+						maxPage() > 2 && pagination().page + 1 < maxPage() && (
+							<button
+								class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white"
+								data-pageTurn="1"
+								type="button">
+								{/* @ts-ignore */}
+								{pagination().page + 2}
+							</button>
+						)
+					}
+					{/* @ts-ignore */}
+					{pagination().page !== maxPage() && (
+						<button
+							// @ts-ignore
+							data-active={pagination().page + 1 < maxPage()}
+							class="group/pgBtn transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
+							data-pageTurn="1"
+							type="button">
+							<i class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-gray-300"></i>
+						</button>
+					)}
+				</div>
+			</Show>
 			<style>
 				{`
 	.row {
@@ -177,6 +262,7 @@ export default function Table(props: Props) {
    		line-height: 1.75rem/* 28px */;
 		text-align: center;
 		background-color: transparent;
+		transition: box-shadow 0.4s cubic-bezier(.06,.87,0,.82);
 	}
 	/* shorthand for this:
 		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
@@ -190,9 +276,10 @@ export default function Table(props: Props) {
 	.row:hover {
 		--tw-shadow-color: #9ca3af;
 		--tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+		--tw-shadow-colored-top: 0 -2px 3px 0px var(--tw-shadow-color);
     	--tw-shadow: var(--tw-shadow-colored);
 
-		box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+		box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow), var(--tw-shadow-colored-top);
 	}
 	.row:nth-child(odd)::before {
 		background-color: rgb(243,244,246);
@@ -203,7 +290,7 @@ export default function Table(props: Props) {
 		background-color: rgb(254,202,202);
 	}
 	.row:is(.selectedRow):hover {
-		--tw-shadow-color: #1f2937 !important;
+		--tw-shadow-color: #6b7280 !important;
 	}
 	.cell {
 		position: relative;
