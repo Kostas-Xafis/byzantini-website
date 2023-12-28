@@ -150,9 +150,10 @@ export default function Table(props: Props) {
 	return (
 		<div
 			class={
-				"h-[100dvh] pt-[1.5vh] grid grid-cols-[100%] grid-rows-[max-content,1fr] justify-center content-start items-start gap-y-3 z-[1]" +
+				"h-[100dvh] pt-[1.5vh] grid grid-cols-[100%] justify-center content-start items-start gap-y-3 z-[1]" +
 				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4" +
-				((paginate && " grid-rows-[max-content,1fr,max-content]") || "")
+				((paginate && " grid-rows-[max-content,1fr,max-content]") ||
+					" grid-rows-[max-content,1fr]")
 			}
 			data-prefix={prefix}>
 			<div class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
@@ -160,10 +161,8 @@ export default function Table(props: Props) {
 			</div>
 			<div
 				id="tableContainer"
-				class={
-					"relative z-[1000] min-w-[40%] max-w-[90%] max-sm:max-w-[92.5%] overflow-x-auto max-h-[88.5dvh] justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
-					(paginate ? " max-h-[85dvh]" : "")
-				}
+				style={{ "--paginate": paginate ? "1" : "0" }}
+				class="relative z-[1000] min-w-[40%] max-w-[90%] max-sm:max-w-[92.5%] overflow-x-auto justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900"
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
@@ -214,7 +213,7 @@ export default function Table(props: Props) {
 						</button>
 					)}
 					<button
-						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white"
+						class="relative transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-red-950 before:z-[10]"
 						data-pageTurn="0"
 						type="button">
 						{/* @ts-ignore */}
@@ -247,6 +246,16 @@ export default function Table(props: Props) {
 			</Show>
 			<style>
 				{`
+	@media (min-height: 860px) {
+		#tableContainer {
+			max-height: calc(var(--paginate) * 85vh + (1 - var(--paginate)) * 88.5vh);
+		}
+	}
+	@media (max-height: 859px) {
+		#tableContainer {
+			max-height: calc(var(--paginate) * 80vh + (1 - var(--paginate)) * 88.5vh);
+		}
+	}
 	.row {
 		${columnWidths}
 		position: relative;
