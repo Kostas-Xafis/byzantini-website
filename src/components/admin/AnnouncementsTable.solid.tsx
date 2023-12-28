@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { asyncQueue, fileToBlob } from "../../../lib/utils.client";
 import type { Announcements } from "../../../types/entities";
 import { Omit, type Props as InputProps } from "../input/Input.solid";
@@ -76,17 +76,19 @@ const columnNames: ColumnType<AnnouncementTable> = {
 	views: { type: "number", name: "Προβολές" },
 };
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-
 export default function AnnouncementsTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setAnnouncementHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Announcements.getById,
-			destEndpoint: API.Announcements.get,
-		},
-	]);
+	const setAnnouncementHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Announcements.getById,
+				destEndpoint: API.Announcements.get,
+			},
+		],
+	});
 	useHydrate(() => {
 		apiHook(API.Announcements.get);
 	});

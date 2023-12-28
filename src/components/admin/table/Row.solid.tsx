@@ -8,7 +8,8 @@ export type CellValue = "string" | "number" | "date" | "link" | "boolean";
 interface Props {
 	data: (number | string | undefined | null)[]; // data[0] must always be the id of the item
 	columnTypes: CellValue[];
-	hasSelectBox: boolean;
+	hasSelectBox?: boolean;
+	hasPaginate?: boolean;
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
 }
@@ -53,7 +54,8 @@ export function toggleCheckbox(id: number, force?: boolean) {
 export function toggleCheckboxes(force?: boolean) {
 	const allCbs = document.querySelectorAll<HTMLElement>(".cb");
 	const mainCb = document.querySelector<HTMLElement>(".mcb");
-	if (mainCb !== null && allCbs.length !== 0) {
+	if (mainCb && allCbs.length) {
+		//! If force toggling is specified
 		if (force === true || force === false) {
 			allCbs.forEach((cb) => {
 				cb.classList.toggle("selected", force);
@@ -87,8 +89,8 @@ export function toggleCheckboxes(force?: boolean) {
 			}
 		}
 	} else {
-		// Toggling all checkboxes too true should not be possible,
-		// and therefore this is only available, when removing all selections after a search
+		//? Toggling all checkboxes too false should not be possible when there is not main checkbox,
+		//? and therefore this is only available, when removing all selections after a search
 		const allRows = document.querySelectorAll<HTMLElement>(".data-container .row");
 		selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 		allRows.forEach((row) => {
@@ -98,7 +100,7 @@ export function toggleCheckboxes(force?: boolean) {
 }
 
 export default function Row(props: Props) {
-	const { data, columnTypes, header, sortOnClick, hasSelectBox } = props;
+	const { data, columnTypes, header, sortOnClick, hasSelectBox, hasPaginate } = props;
 
 	let onClickSort: ((e: MouseEvent) => void) | undefined;
 	if (header) {

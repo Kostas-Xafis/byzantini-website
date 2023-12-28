@@ -2,7 +2,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Payoffs, Wholesalers } from "../../../types/entities";
 import type { ReplaceName, ReplaceValue } from "../../../types/helpers";
 import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
@@ -50,17 +50,19 @@ const payoffsToTable = (payoffs: Payoffs[], wholesalers: Wholesalers[]): SchoolP
 	});
 };
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-
 export default function PayoffsTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setPayoffHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Payoffs.getById,
-			destEndpoint: API.Payoffs.get,
-		},
-	]);
+	const setPayoffHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Payoffs.getById,
+				destEndpoint: API.Payoffs.get,
+			},
+		],
+	});
 	useHydrate(() => {
 		apiHook(API.Payoffs.get);
 		apiHook(API.Wholesalers.get);

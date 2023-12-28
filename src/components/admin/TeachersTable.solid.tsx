@@ -2,7 +2,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { loadXLSX } from "../../../lib/pdf.client";
 import { fileToBlob, removeAccents, teacherTitleByGender } from "../../../lib/utils.client";
 import type {
@@ -339,41 +339,46 @@ const columnNames: ColumnType<TeachersTableType> = {
 	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 15 },
 };
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-
 export default function TeachersTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>(
 		{}
 	);
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setTeacherHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Teachers.getById,
-			destEndpoint: API.Teachers.get,
-		},
-		{
-			srcEndpoint: API.Teachers.getClassesById,
-			destEndpoint: API.Teachers.getClasses,
-			foreignKey: "teacher_id",
-		},
-		{
-			srcEndpoint: API.Teachers.getLocationsById,
-			destEndpoint: API.Teachers.getLocations,
-			foreignKey: "teacher_id",
-		},
-		{
-			srcEndpoint: API.Teachers.getInstrumentsById,
-			destEndpoint: API.Teachers.getInstruments,
-			foreignKey: "teacher_id",
-		},
-	]);
-	const setActionPressedInstruments = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Instruments.getById,
-			destEndpoint: API.Instruments.get,
-		},
-	]);
+	const setTeacherHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Teachers.getById,
+				destEndpoint: API.Teachers.get,
+			},
+			{
+				srcEndpoint: API.Teachers.getClassesById,
+				destEndpoint: API.Teachers.getClasses,
+				foreignKey: "teacher_id",
+			},
+			{
+				srcEndpoint: API.Teachers.getLocationsById,
+				destEndpoint: API.Teachers.getLocations,
+				foreignKey: "teacher_id",
+			},
+			{
+				srcEndpoint: API.Teachers.getInstrumentsById,
+				destEndpoint: API.Teachers.getInstruments,
+				foreignKey: "teacher_id",
+			},
+		],
+	});
+	const setActionPressedInstruments = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Instruments.getById,
+				destEndpoint: API.Instruments.get,
+			},
+		],
+	});
 	const fileUpload = (file: Blob, id: number) => {
 		return apiHook(API.Teachers.fileUpload, {
 			RequestObject: file,

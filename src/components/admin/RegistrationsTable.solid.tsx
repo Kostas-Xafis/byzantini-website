@@ -2,7 +2,7 @@ import { Show, createEffect, createMemo, createSignal, onMount, untrack } from "
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
 import { getKeyIndex, mappedValue, removeAccents } from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
@@ -234,21 +234,20 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "class_year", name: "Έτος Φοίτησης", type: "string" },
 ];
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-const [chunkLoading, setChunkLoading] = createSignal<number>(1);
-const chunkSize = 100;
-let timeDropdown = 0;
-
 export default function RegistrationsTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setRegistrationHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Registrations.getById,
-			destEndpoint: API.Registrations.get,
-		},
-	]);
+	const setRegistrationHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Registrations.getById,
+				destEndpoint: API.Registrations.get,
+			},
+		],
+	});
 	useHydrate(() => {
 		apiHook(API.Registrations.get);
 		apiHook(API.Teachers.getByFullnames);
@@ -256,17 +255,7 @@ export default function RegistrationsTable() {
 	});
 
 	const shapedData = createMemo(() => {
-		let registrations = store[API.Registrations.get];
-		registrations = registrations?.slice(
-			0,
-			mappedValue(
-				chunkLoading() * chunkSize,
-				0,
-				registrations?.length || 0,
-				0,
-				registrations?.length || 0
-			)
-		);
+		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return [];
@@ -279,16 +268,16 @@ export default function RegistrationsTable() {
 		const columnIndex = getKeyIndex(columnName, registrations[0]);
 		if (type === "number") {
 			// @ts-ignore value is misstyped....
-			const EqCheck = CompareList.findLast((c) => value.startsWith(c));
-			const fn = EqCheck && getCompareFn(value);
+			const EqCheck = CompareList.findLast((col) => value.startsWith(col));
 			const nVal = Number(value.slice((EqCheck || "").length));
-			searchRows = searchRows.filter((r) => {
+			const fn = EqCheck && getCompareFn(value);
+			searchRows = searchRows.filter((row) => {
 				//@ts-ignore
-				const nCol = Number(r[columnIndex]); //Converting to number because the column might be a stringified number
+				const nCol = Number(row[columnIndex]); //Converting to number because the column might be a stringified number
 				if (fn) return fn(nCol, nVal);
 				let sCol = "" + nCol;
 				let sVal = "" + nVal;
-				return sCol.includes(sVal);
+				return sCol.includes(sVal) || sVal === sCol;
 			});
 		} else if (type === "string") {
 			searchRows = searchRows.filter((r) => {
@@ -756,19 +745,6 @@ export default function RegistrationsTable() {
 		});
 	});
 
-	let InterId: any;
-	InterId = setInterval(() => {
-		const registrations = store[API.Registrations.get];
-		if (!registrations) return;
-		if (chunkLoading() * chunkSize >= registrations.length) {
-			clearInterval(InterId);
-			return;
-		}
-		setChunkLoading((x) => x + 1);
-		timeDropdown += 250;
-		document.dispatchEvent(new CustomEvent("hydrate") as CustomEvent);
-	}, 250 - timeDropdown);
-
 	return (
 		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
 			<Show
@@ -778,7 +754,13 @@ export default function RegistrationsTable() {
 					store[API.Instruments.get]
 				}
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-				<Table prefix={PREFIX} data={shapedData} columns={columns} hasSelectBox>
+				<Table
+					prefix={PREFIX}
+					data={shapedData}
+					columns={columns}
+					// Commenting it out for know to push a more stable version
+					// paginate={100}
+					hasSelectBox>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onModify} prefix={PREFIX} />
 						<TableControl action={onDelete} prefix={PREFIX} />

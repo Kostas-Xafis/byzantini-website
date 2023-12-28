@@ -46,10 +46,15 @@ export function TableControl(props: Props) {
 			<>
 				<button
 					class={
-						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl hover:shadow-gray-600 hover:bg-red-200"
+						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl transition-colors duration-300 hover:bg-red-200"
 					}
 					onclick={() => onActionClick(prefix + (action() as Action).type)}>
-					<i class={"text-lg max-sm:text-base " + (action().icon || ActionIcon.ADD)}></i>
+					<i
+						style={{ "backface-visibility": "hidden" }}
+						class={
+							"text-lg max-sm:text-base will-change-transform transition-transform duration-300 group-hover/ctrlBtn:scale-[1.096] origin-center " +
+							(action().icon || ActionIcon.ADD)
+						}></i>
 				</button>
 				<Modal prefix={prefix} action={action() as Action} />
 			</>

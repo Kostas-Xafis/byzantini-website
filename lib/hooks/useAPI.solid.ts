@@ -20,6 +20,7 @@ const URL = (import.meta.env.URL as string) ?? "";
 export type StoreMutation<T extends keyof APIStore> = {
 	endpoint?: T,
 	foreignKey?: APIStoreValue<T>,
+	sort?: "ascending" | "descending",
 	ids: number[];
 	type: ActionEnum;
 };
@@ -63,24 +64,39 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 		if (setStore && "data" in response) {
 			if (Mutations && Mutations.endpoint) {
 				// If a mutation is assigned then do an in place replacement of the data in the store.
-				setStore(Mutations.endpoint as APIEndpointKey, (prev) => {
-					let data = response.data;
-					if (!data) return prev;
+				if (Mutations.type === ActionEnum.ADD) {
+					setStore(Mutations.endpoint as APIEndpointKey, (prev) => {
+						let data = response.data;
+						if (!data) return prev;
 
-					const isArr = Array.isArray(data);
-					let prevData = prev as any[] || [];
-					if (Mutations.type === ActionEnum.ADD)
-						return isArr ? [...prevData, ...(response.data as any[])] : [...prevData, response.data];
+						const isArr = Array.isArray(data);
+						let prevData = prev as any[] || [];
+						let result = isArr ? [...prevData, ...(response.data as any[])] : [...prevData, response.data];
+						if (Mutations.sort === "descending")
+							result.unshift(result.pop());
 
-					let accessor = Mutations.foreignKey || "id";
-					prevData = prevData.filter(item => !Mutations.ids.includes(item[accessor]));
-					if (Array.isArray(data)) {
-						prevData.push(...data);
-					} else {
-						prevData.push(data);
-					}
-					return prevData.sort((a, b) => a[accessor] - b[accessor]);
-				});
+						return result;
+					});
+				} else {
+					setStore(Mutations.endpoint as APIEndpointKey, (prev) => {
+						let data = response.data;
+						if (!data) return prev;
+
+						let prevData = prev as any[] || [];
+						let accessor = Mutations.foreignKey || "id";
+						prevData = prevData.filter(item => !Mutations.ids.includes(item[accessor]));
+						if (Array.isArray(data)) {
+							prevData.push(...data);
+						} else {
+							prevData.push(data);
+						}
+
+						if (Mutations.sort === "descending") {
+							return prevData.sort((a, b) => b[accessor] - a[accessor]);
+						}
+						return prevData.sort((a, b) => a[accessor] - b[accessor]);
+					});
+				}
 				// Else do a full replacement of the data in the store.
 			} else setStore(endpoint, response.data as APIStoreValue<T>);
 		}

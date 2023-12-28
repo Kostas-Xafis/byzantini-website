@@ -8,7 +8,7 @@ import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 
 const PREFIX = "sysusers";
 
@@ -26,17 +26,20 @@ const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
 		return columns as unknown as SysUsers;
 	});
 };
-const [selectedItems, setSelectedItems] = useSelectedRows();
 
 export default function SysUsersTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setSysUserHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.SysUsers.getById,
-			destEndpoint: API.SysUsers.get,
-		},
-	]);
+	const setSysUserHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.SysUsers.getById,
+				destEndpoint: API.SysUsers.get,
+			},
+		],
+	});
 	useHydrate(() => {
 		apiHook(API.SysUsers.get);
 		apiHook(API.SysUsers.getBySid);

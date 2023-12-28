@@ -1,13 +1,15 @@
 import Row, { toggleCheckboxes, type CellValue, toggleCheckbox } from "./Row.solid";
 import { For, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
-import { getParent } from "../../../../lib/utils.client";
+import { getParent, mappedValue } from "../../../../lib/utils.client";
+import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
 export type Props = {
-	columns: Record<string, { type: CellValue; name: string; size?: number }>;
-	data: Accessor<any[]>;
-	prefix?: string;
+	columns: Record<string, { type: CellValue; name: string; size?: number }>; // The column names and types
+	data: Accessor<any[]>; // The data to be displayed
+	prefix?: string; // Prefix for the data- attribute on the table
 	children?: JSX.Element | JSX.Element[];
-	hasSelectBox?: boolean;
+	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
+	paginate?: number; // Number of items per page
 };
 
 export const enum SortDirection {
@@ -44,6 +46,9 @@ export default function Table(props: Props) {
 		equals: false,
 	});
 	const { columns: columnNames, prefix = "", data } = props;
+	const [paginate, setPaginate] =
+		(props.paginate && createSignal({ page: 0, size: props.paginate }, { equals: false })) ||
+		[];
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = createMemo(() => {
@@ -73,6 +78,15 @@ export default function Table(props: Props) {
 		}
 		return rows;
 	});
+	const readPageData = createMemo(() => {
+		const data = readRowData();
+		if (!paginate) return data;
+		const { page, size } = paginate();
+		return data.slice(
+			page * size,
+			mappedValue((page + 1) * size, 0, data.length, 0, data.length)
+		);
+	});
 
 	let columnWidths = "grid-template-columns: " + (props.hasSelectBox ? "2ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
@@ -89,9 +103,17 @@ export default function Table(props: Props) {
 
 		// const removedAllAction = false;
 		if (row.classList.contains("header")) {
-			const mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
+			// If user actually clicked on the main checkbox
+			let mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
 			if (!mainCheckbox) return;
 			toggleCheckboxes();
+			if (props.paginate) {
+				let tableHasSelected = document.querySelector(".selectedRow") !== null;
+				if (tableHasSelected) {
+					const ids = data().map((row) => row[0]) as number[];
+					selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
+				}
+			}
 		} else {
 			const item_id = Number(row.dataset.id as string);
 			toggleCheckbox(item_id);
@@ -122,9 +144,10 @@ export default function Table(props: Props) {
 					header
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
+					hasPaginate={!!props.paginate}
 				/>
-				<div class="data-container relative -z-10 max-h-[80dvh] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
-					<For each={readRowData()}>
+				<div class="data-container relative -z-10 max-h-[77.5dvh] grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+					<For each={readPageData()}>
 						{(item) => {
 							return (
 								<Row

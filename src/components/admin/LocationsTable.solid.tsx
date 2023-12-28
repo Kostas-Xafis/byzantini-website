@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { fileToBlob } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
 import { Fill, Omit, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
@@ -134,8 +134,6 @@ const locationsToTable = (locations: Locations[]): LocationsTable[] => {
 	});
 };
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-
 const columnNames: ColumnType<LocationsTable> = {
 	id: { type: "number", name: "Id" },
 	name: { type: "string", name: "Τοποθεσία", size: 15 },
@@ -154,14 +152,18 @@ const columnNames: ColumnType<LocationsTable> = {
 };
 
 export default function LocationsTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setLocationHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Locations.getById,
-			destEndpoint: API.Locations.get,
-		},
-	]);
+	const setLocationHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Locations.getById,
+				destEndpoint: API.Locations.get,
+			},
+		],
+	});
 	useHydrate(() => {
 		apiHook(API.Locations.get);
 	});

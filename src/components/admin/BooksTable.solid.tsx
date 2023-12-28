@@ -2,7 +2,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Omit, Pick, type Props as InputProps } from "../input/Input.solid";
@@ -93,23 +93,28 @@ const columnNames: ColumnType<BooksTable> = {
 	reserved: { type: "number", name: "Απόθεμα" },
 };
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-
 export default function BooksTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
-	const setBookHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Books.getById,
-			destEndpoint: API.Books.get,
-		},
-	]);
-	const setWholesalerHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Wholesalers.getById,
-			destEndpoint: API.Wholesalers.get,
-		},
-	]);
+	const setBookHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Books.getById,
+				destEndpoint: API.Books.get,
+			},
+		],
+	});
+	const setWholesalerHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Wholesalers.getById,
+				destEndpoint: API.Wholesalers.get,
+			},
+		],
+	});
 
 	useHydrate(() => {
 		apiHook(API.Books.get);

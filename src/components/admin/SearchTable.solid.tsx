@@ -1,4 +1,4 @@
-import { createSignal, For } from "solid-js";
+import { batch, createSignal, For } from "solid-js";
 import { UpdateHandler } from "../../../lib/utils.client";
 import type { SetStoreFunction } from "solid-js/store";
 import type { CellValue } from "./table/Row.solid";
@@ -25,6 +25,8 @@ export const getCompareFn = (value: string) => {
 			return (nCol: number, nVal: number) => nCol < nVal;
 		case Compare.Eq:
 			return (nCol: number, nVal: number) => nCol === nVal;
+		// default:
+		// 	return (nCol: number, nVal: number) => nCol === nVal;
 	}
 };
 
@@ -72,18 +74,21 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 	const searchHandler = (e: Event) => {
 		const target = e.target as HTMLInputElement;
 		debounce.reset(250, () => {
-			const inputValue = target.value;
 			const c = column();
-			props.setSearchQuery("columnName", c.columnName);
-			props.setSearchQuery("value", inputValue);
-			props.setSearchQuery("type", c.type);
+			batch(() => {
+				props.setSearchQuery("columnName", c.columnName);
+				props.setSearchQuery("value", target.value);
+				props.setSearchQuery("type", c.type);
+			});
 		});
 	};
 
 	const clearSearch = () => {
 		(document.getElementById("search") as HTMLInputElement).value = "";
-		props.setSearchQuery("columnName", "");
-		props.setSearchQuery("value", "");
+		batch(() => {
+			props.setSearchQuery("columnName", "");
+			props.setSearchQuery("value", "=");
+		});
 	};
 
 	return (
@@ -91,8 +96,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md"></i>
 			<div
 				class="group relative w-max flex flex-row !font-didact"
-				onClick={(e) => columnSelect(e)}
-			>
+				onClick={(e) => columnSelect(e)}>
 				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-sm cursor-pointer rounded-md shadow-md">
 					{column().name} :
 				</p>
@@ -103,8 +107,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 								class="py-1 px-3 bg-red-50 hover:bg-red-200 text-red-900 cursor-pointer"
 								data-colname={c.columnName}
 								data-name={c.name}
-								data-type={c.type}
-							>
+								data-type={c.type}>
 								{c.name}
 							</p>
 						)}
@@ -122,8 +125,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 			/>
 			<i
 				class="absolute fa-solid fa-xmark text-red-900 drop-shadow-md right-4 translate-x-[-25%] hover:bg-red-200 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
-				onClick={(e) => clearSearch()}
-			></i>
+				onClick={(e) => clearSearch()}></i>
 		</div>
 	);
 }

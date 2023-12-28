@@ -11,7 +11,9 @@ type Mutation<S extends keyof APIStore> = {
 	foreignKey?: keyof S; // The foreign key to match the id to
 };
 
-export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutations: Mutation<any>[]) {
+export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>, mutations: Mutation<any>[]; sort?: "ascending" | "descending"; }) {
+	let { setStore, mutations, sort } = args;
+	const apiHook = useAPI(setStore);
 	const [actionPressed, setActionPressed] = createSignal<{
 		action: ActionEnum;
 		ids: number[];
@@ -33,7 +35,7 @@ export function useHydrateById(setStore: SetStoreFunction<APIStore>, mutations: 
 			});
 		} else {
 			mutations.forEach((mut) => {
-				useAPI(setStore)(mut.srcEndpoint, { RequestObject: ids }, { type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
+				apiHook(mut.srcEndpoint, { RequestObject: ids }, { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
 			});
 		}
 	};

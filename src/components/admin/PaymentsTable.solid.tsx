@@ -2,7 +2,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { useSelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
@@ -85,18 +85,21 @@ const columnNames: ColumnType<PaymentsTable> = {
 	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής" },
 };
 
-const [selectedItems, setSelectedItems] = useSelectedRows();
-
 export default function PaymentsTable() {
+	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 
-	const setPaymentHydrate = useHydrateById(setStore, [
-		{
-			srcEndpoint: API.Payments.getById,
-			destEndpoint: API.Payments.get,
-		},
-	]);
+	const setPaymentHydrate = useHydrateById({
+		setStore,
+		mutations: [
+			{
+				srcEndpoint: API.Payments.getById,
+				destEndpoint: API.Payments.get,
+			},
+		],
+		sort: "descending",
+	});
 	useHydrate(() => {
 		apiHook(API.Payments.get);
 		apiHook(API.Books.get);
