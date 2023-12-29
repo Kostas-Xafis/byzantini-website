@@ -312,7 +312,7 @@ const searchColumns: SearchColumn[] = [
 
 const columnNames: ColumnType<TeachersTableType> = {
 	id: { type: "number", name: "Id" },
-	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 25 },
+	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 20 },
 	picture: { type: "link", name: "Φωτογραφία" },
 	cv: { type: "link", name: "Βιογραφικό" },
 	email: { type: "string", name: "Email", size: 25 },
@@ -321,22 +321,22 @@ const columnNames: ColumnType<TeachersTableType> = {
 	priority_byz: {
 		type: "number",
 		name: "Προτεραιότητα Βυζαντινής",
-		size: 15,
+		size: 12,
 	},
 	priority_par: {
 		type: "number",
 		name: "Προτεραιότητα Παραδοσιακής",
-		size: 15,
+		size: 12,
 	},
 	priority_eur: {
 		type: "number",
 		name: "Προτεραιότητα Ευρωπαϊκής",
-		size: 15,
+		size: 12,
 	},
-	gender: { type: "string", name: "Φύλο", size: 15 },
-	title: { type: "string", name: "Τίτλος", size: 15 },
-	visible: { type: "boolean", name: "Εμφάνιση", size: 15 },
-	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 15 },
+	gender: { type: "string", name: "Φύλο", size: 5 },
+	title: { type: "string", name: "Τίτλος", size: 10 },
+	visible: { type: "boolean", name: "Εμφάνιση" },
+	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 10 },
 };
 
 export default function TeachersTable() {

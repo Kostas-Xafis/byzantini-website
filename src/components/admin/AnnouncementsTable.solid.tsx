@@ -72,7 +72,7 @@ const columnNames: ColumnType<AnnouncementTable> = {
 	id: { type: "number", name: "Id" },
 	title: { type: "string", name: "Τίτλος", size: 16 },
 	date: { type: "date", name: "Ημερομηνία", size: 12 },
-	link: { type: "link", name: "Σελίδα", size: 12 },
+	link: { type: "link", name: "Σελίδα" },
 	views: { type: "number", name: "Προβολές" },
 };
 

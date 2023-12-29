@@ -9,7 +9,6 @@ interface Props {
 	data: (number | string | undefined | null)[]; // data[0] must always be the id of the item
 	columnTypes: CellValue[];
 	hasSelectBox?: boolean;
-	hasPaginate?: boolean;
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
 }
@@ -100,7 +99,7 @@ export function toggleCheckboxes(force?: boolean) {
 }
 
 export default function Row(props: Props) {
-	const { data, columnTypes, header, sortOnClick, hasSelectBox, hasPaginate } = props;
+	const { data, columnTypes, header, sortOnClick, hasSelectBox } = props;
 
 	let onClickSort: ((e: MouseEvent) => void) | undefined;
 	if (header) {

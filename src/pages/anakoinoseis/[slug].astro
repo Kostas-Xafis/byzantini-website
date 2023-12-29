@@ -26,7 +26,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}
-		class="relative flex flex-col p-12 max-sm:p-4 overflow-auto items-center gap-y-6">
+		class="relative flex flex-col p-12 max-sm:p-4 max-sm:pb-20 overflow-auto items-center gap-y-6">
 		<h1
 			class="heading w-[25ch] max-sm:w-[25ch] text-5xl max-sm:text-3xl text-center font-bold text-red-900 font-anaktoria drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 			{announcement.title}
@@ -41,7 +41,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					src={imgSrc + announcement.images[0]}
 					alt={announcement?.title as string}
 					width="780"
-					class="w-[780px] object-cover max-h-[clamp(0px,100vh,640px)]"
+					class="w-[780px] object-cover max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px]"
 				/>
 			</div>
 		</div>
@@ -59,7 +59,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 							</div>
 							<button
 								type="button"
-								class="hidden group-[:is(.loaded)]/img:block max-w-[320px] h-[240px] transition-shadow hover:shadow-lg !shadow-slate-800 cursor-pointer">
+								class="hidden group-[:is(.loaded)]/img:block max-w-[320px] max-sm:max-w-[350px] h-[240px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 cursor-pointer overflow-hidden">
 								<img
 									data-src={imgThumbSrc + image}
 									alt={announcement?.title as string}
@@ -74,12 +74,12 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 	</section>
 	<div
 		id="imageCarouselContainer"
-		class={"fixed inset-0 pt-12 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" +
+		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" +
 			" hidden"}>
 		<div
 			id="controlsContainer"
-			class="grid grid-cols-[max-content,1fr,max-content] grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
-			<div class="col-[1/4] flex flex-row justify-end">
+			class="grid grid-cols-[max-content,1fr,max-content] grid-rows-[min-content,1fr] justify-center items-center p-4 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
+			<div class="col-[1/4] flex flex-row justify-end pr-2">
 				<button id="carouselClose" type="button" class="rounded-xl text-2xl">
 					<i class="fa-solid fa-xmark text-white hover:text-red-100"></i>
 				</button>
@@ -88,10 +88,13 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				data-direction="left"
 				class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
 			></i>
-			<div id="imageCarousel" data-index="0" class="flex flex-col">
+			<div
+				id="imageCarousel"
+				data-index="0"
+				class="max-h-[calc(95dvh_-_32px)] grid grid-rows-[calc(95dvh_-_118px),91px] justify-items-center gap-y-2">
 				<div class="imgLoader group/img flex flex-col items-center h-full">
 					<div
-						class="relative max-w-[1080px] max-h-[640px] flex items-center pt-4 overflow-hidden">
+						class="relative max-w-[90dvw] max-h-[calc(95dvh_-_118px)] flex items-center overflow-hidden">
 						<div
 							class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
 							<Spinner />
@@ -99,21 +102,19 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 						<img
 							id="mainCarouselImg"
 							alt={announcement.title}
-							class="object-cover h-[clamp(0px,100vh,640px)] hover:shadow-lg !shadow-red-950"
+							class="object-cover h-[clamp(0px,100vh,calc(95dvh_-_118px))] hover:shadow-lg !shadow-red-950"
 							src={imgSrc + announcement.images.at(0)}
 						/>
 					</div>
 				</div>
-				<div
-					id="thumbContainer"
-					class="flex flex-row pt-8 gap-x-4 items-center self-center">
+				<div id="thumbContainer" class="flex flex-row gap-x-4 items-center self-center">
 					{
 						// Have at least up to 5 preview thumbnails in the carousel
 						announcement.images
 							.slice(0, 5)
 							.map((image, i) => (
 								<img
-									class="w-[90px] aspect-square object-cover h-full opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
+									class="w-[75px] aspect-square object-cover h-full opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
 									alt={announcement?.title}
 									src={imgThumbSrc + image}
 								/>
@@ -164,111 +165,128 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				});
 			});
 		});
-		onElementMount("i[data-direction]", () => {
-			const imgSrcArr = (
-				[...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]
-			).map((img) =>
-				(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
-			) as string[];
+		!!window.matchMedia("(min-width: 640px)").matches &&
+			onElementMount("i[data-direction]", () => {
+				const imgSrcArr = (
+					[...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]
+				).map((img) =>
+					(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
+				) as string[];
 
-			const announcementId = (
-				document.querySelector("section[data-announcement-id]") as HTMLElement
-			).dataset.announcementId as string;
-			const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
-			const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
+				const announcementId = (
+					document.querySelector("section[data-announcement-id]") as HTMLElement
+				).dataset.announcementId as string;
+				const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
+				const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
 
-			const leftBtn = document.querySelector("i[data-direction='left']") as HTMLElement;
-			const rightBtn = document.querySelector("i[data-direction='right']") as HTMLElement;
-			const carousel = document.querySelector("#imageCarousel") as HTMLElement;
-			const thumbContainer = document.querySelector("#thumbContainer") as HTMLImageElement;
+				const leftBtn = document.querySelector("i[data-direction='left']") as HTMLElement;
+				const rightBtn = document.querySelector("i[data-direction='right']") as HTMLElement;
+				const carousel = document.querySelector("#imageCarousel") as HTMLElement;
+				const thumbContainer = document.querySelector(
+					"#thumbContainer",
+				) as HTMLImageElement;
 
-			const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
-			const carouselLength = imgSrcArr.length >= 5 ? 5 : imgSrcArr.length;
-			const totalLength = imgSrcArr.length;
-			const mainCarouselImg = document.querySelector("#mainCarouselImg") as HTMLImageElement;
+				const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
+				const carouselLength = imgSrcArr.length >= 5 ? 5 : imgSrcArr.length;
+				const totalLength = imgSrcArr.length;
+				const mainCarouselImg = document.querySelector(
+					"#mainCarouselImg",
+				) as HTMLImageElement;
 
-			function transitionToNextImage(nextIndex: number) {
-				const imgLoader = carousel.querySelector(".imgLoader") as HTMLElement;
-				imgLoader.classList.add("loading");
-				imgLoader.classList.remove("loaded");
-				let timer = Date.now();
-				mainCarouselImg.addEventListener(
-					"load",
-					async () => {
-						if (Date.now() - timer < 300) {
-							await sleep(200); // To avoid the image flickering
-						}
-						imgLoader.classList.remove("loading");
-						imgLoader.classList.add("loaded");
-					},
-					{ once: true },
-				);
-				mainCarouselImg.src = imgSrc + imgSrcArr.at(nextIndex);
-			}
-			function carouselShift(direction: "left" | "right") {
-				currIndex =
-					(direction === "left" ? currIndex - 1 : currIndex + 1) % imgSrcArr.length;
-				transitionToNextImage(currIndex);
-				if (totalLength <= 5) return;
-				for (let i = 0; i < carouselLength; i++) {
-					const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-					thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+				function transitionToNextImage(nextIndex: number) {
+					const imgLoader = carousel.querySelector(".imgLoader") as HTMLElement;
+					imgLoader.classList.add("loading");
+					imgLoader.classList.remove("loaded");
+					let timer = Date.now();
+					mainCarouselImg.addEventListener(
+						"load",
+						async () => {
+							if (Date.now() - timer < 300) {
+								await sleep(200); // To avoid the image flickering
+							}
+							imgLoader.classList.remove("loading");
+							imgLoader.classList.add("loaded");
+						},
+						{ once: true },
+					);
+					mainCarouselImg.src = imgSrc + imgSrcArr.at(nextIndex);
 				}
-			}
-			function carouselGoto(index: number) {
-				console.log(index);
-				currIndex = index;
-				transitionToNextImage(currIndex);
-				if (totalLength <= 5) return;
-				for (let i = 0; i < carouselLength; i++) {
-					const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-					thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+				function carouselShift(direction: "left" | "right") {
+					currIndex =
+						(direction === "left" ? currIndex - 1 : currIndex + 1) % imgSrcArr.length;
+					transitionToNextImage(currIndex);
+					if (totalLength <= 5) return;
+					for (let i = 0; i < carouselLength; i++) {
+						const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+						thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+					}
 				}
-			}
+				function carouselGoto(index: number) {
+					console.log(index);
+					currIndex = index;
+					transitionToNextImage(currIndex);
+					if (totalLength <= 5) return;
+					for (let i = 0; i < carouselLength; i++) {
+						const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+						thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+					}
+				}
 
-			let currIndex = Number(carousel.dataset.index || 0);
-			leftBtn.addEventListener("click", () => {
-				carouselShift("left");
-				carousel.dataset.index = currIndex.toString();
-			});
-			rightBtn.addEventListener("click", () => {
-				carouselShift("right");
-				carousel.dataset.index = currIndex.toString();
-			});
-			thumbCarouselImgs.forEach((thumb, i) => {
-				thumb.addEventListener("click", () => {
-					let index = totalLength <= 5 ? i : (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-					carouselGoto(index);
+				let currIndex = Number(carousel.dataset.index || 0);
+				leftBtn.addEventListener("click", () => {
+					carouselShift("left");
 					carousel.dataset.index = currIndex.toString();
 				});
-			});
-
-			const carouselContainer = document.querySelector(
-				"#imageCarouselContainer",
-			) as HTMLElement;
-
-			document.addEventListener("openCarousel", (e) => {
-				carouselGoto(Number(e.detail.index || 0));
-				carousel.dataset.index = currIndex.toString();
-				carouselContainer.classList.remove("hidden");
-			});
-			document.addEventListener("closeCarousel", () => {
-				carouselContainer.classList.add("hidden");
-			});
-			document.addEventListener("keydown", (e) => {
-				if (e.key === "ArrowLeft") {
-					carouselShift("left");
-				} else if (e.key === "ArrowRight") {
+				rightBtn.addEventListener("click", () => {
 					carouselShift("right");
-				} else if (e.key === "Escape") {
+					carousel.dataset.index = currIndex.toString();
+				});
+				thumbCarouselImgs.forEach((thumb, i) => {
+					thumb.addEventListener("click", () => {
+						let index = totalLength <= 5 ? i : (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
+						carouselGoto(index);
+						carousel.dataset.index = currIndex.toString();
+					});
+				});
+
+				const carouselContainer = document.querySelector(
+					"#imageCarouselContainer",
+				) as HTMLElement;
+
+				document.addEventListener("openCarousel", (e) => {
+					carouselGoto(Number(e.detail.index || 0));
+					carousel.dataset.index = currIndex.toString();
+					carouselContainer.classList.remove("hidden");
+				});
+				document.addEventListener("closeCarousel", () => {
 					carouselContainer.classList.add("hidden");
-				}
+				});
+				document.addEventListener("keydown", (e) => {
+					if (e.key === "ArrowLeft") {
+						carouselShift("left");
+					} else if (e.key === "ArrowRight") {
+						carouselShift("right");
+					} else if (e.key === "Escape") {
+						carouselContainer.classList.add("hidden");
+					}
+				});
 			});
-		});
-		onElementMount("#carouselClose", (el) => {
-			el.addEventListener("click", () => {
-				document.dispatchEvent(new CustomEvent("closeCarousel"));
+		!!window.matchMedia("(min-width: 640px)").matches &&
+			onElementMount("#carouselClose", (el) => {
+				el.addEventListener("click", () => {
+					document.dispatchEvent(new CustomEvent("closeCarousel"));
+				});
 			});
-		});
+		window.matchMedia("(max-width: 640px)").matches &&
+			onElementMount("#imgContainer", () => {
+				const imgs = [
+					...document.querySelectorAll("#imgContainer img"),
+				] as HTMLImageElement[];
+				imgs.forEach((img, i) => {
+					img.addEventListener("click", (e) => {
+						window.location.href = img.src.replace("thumb_", "");
+					});
+				});
+			});
 	</script>
 </Layout>

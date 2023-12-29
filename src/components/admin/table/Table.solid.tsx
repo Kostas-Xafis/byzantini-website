@@ -174,7 +174,6 @@ export default function Table(props: Props) {
 					header
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
-					hasPaginate={!!paginate}
 				/>
 				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
 					<For each={readPageData()}>

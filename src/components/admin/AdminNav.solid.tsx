@@ -1,4 +1,5 @@
 import { A, type RouterProps } from "@solidjs/router";
+import { createSignal } from "solid-js";
 
 const links = [
 	{ name: "Αρχική", url: "/admin", force: false },
@@ -17,11 +18,12 @@ const links = [
 const forceURLChange = (pathname: string) => (window.location.pathname = pathname);
 
 export default function AdminNav(props: RouterProps) {
-	const currentPage =
+	const firstPage =
 		links.find(
 			(link) =>
 				link.url === window.location.pathname || link.url + "/" === window.location.pathname
 		)?.name ?? "Αρχική";
+	const [currentPage, setCurrentPage] = createSignal(firstPage);
 	return (
 		<>
 			<nav
@@ -64,7 +66,7 @@ export default function AdminNav(props: RouterProps) {
 					<p class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]">
 						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
 						<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
-							{currentPage}
+							{currentPage()}
 						</span>
 					</p>
 					<div class="hidden absolute top-[2.25rem] h-max flex-col w-full z-[5000]">
@@ -72,7 +74,8 @@ export default function AdminNav(props: RouterProps) {
 							<A
 								class="relative grid py-4 bg-red-900 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
 								onClick={
-									(link.force && (() => forceURLChange(link.url))) || undefined
+									(link.force && (() => forceURLChange(link.url))) ||
+									(() => setCurrentPage(link.name))
 								}
 								href={link.url}>
 								<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
