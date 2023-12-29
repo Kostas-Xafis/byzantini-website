@@ -78,23 +78,19 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			" hidden"}>
 		<div
 			id="controlsContainer"
-			class="grid grid-cols-[max-content,1fr,max-content] grid-rows-[min-content,1fr] justify-center items-center p-4 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
-			<div class="col-[1/4] flex flex-row justify-end pr-2">
+			class="grid grid-rows-[min-content,1fr] justify-center items-center p-4 px-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
+			<div class="col-[1/4] flex flex-row justify-end">
 				<button id="carouselClose" type="button" class="rounded-xl text-2xl">
 					<i class="fa-solid fa-xmark text-white hover:text-red-100"></i>
 				</button>
 			</div>
-			<i
-				data-direction="left"
-				class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
-			></i>
 			<div
 				id="imageCarousel"
 				data-index="0"
 				class="max-h-[calc(95dvh_-_32px)] grid grid-rows-[calc(95dvh_-_118px),91px] justify-items-center gap-y-2">
-				<div class="imgLoader group/img flex flex-col items-center h-full">
+				<div class="imgLoader group/img flex flex-col items-center">
 					<div
-						class="relative max-w-[90dvw] max-h-[calc(95dvh_-_118px)] flex items-center overflow-hidden">
+						class="relative max-w-[90dvw] max-h-[calc(95dvh_-_118px)] flex items-center rounded-lg overflow-hidden">
 						<div
 							class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
 							<Spinner />
@@ -108,24 +104,28 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					</div>
 				</div>
 				<div id="thumbContainer" class="flex flex-row gap-x-4 items-center self-center">
+					<i
+						data-direction="left"
+						class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
+					></i>
 					{
 						// Have at least up to 5 preview thumbnails in the carousel
 						announcement.images
 							.slice(0, 5)
 							.map((image, i) => (
 								<img
-									class="w-[75px] aspect-square object-cover h-full opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
+									class="w-[75px] aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
 									alt={announcement?.title}
 									src={imgThumbSrc + image}
 								/>
 							))
 					}
+					<i
+						data-direction="right"
+						class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
+					></i>
 				</div>
 			</div>
-			<i
-				data-direction="right"
-				class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
-			></i>
 		</div>
 	</div>
 	<script>
