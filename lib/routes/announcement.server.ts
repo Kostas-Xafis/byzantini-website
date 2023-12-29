@@ -12,6 +12,10 @@ serverRoutes.get.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"));
 };
 
+serverRoutes.getImages.func = async _ctx => {
+	return await execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"));
+};
+
 serverRoutes.getSimple.func = async _ctx => {
 	return await execTryCatch(() => executeQuery<Omit<Announcements, "content">>("SELECT id, title, date, views FROM announcements"));
 };
@@ -25,7 +29,7 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-serverRoutes.getByTitle.func = async (ctx, slug) => {
+serverRoutes.getByTitle.func = async (_ctx, slug) => {
 	return await execTryCatch(async () => {
 		const { title } = slug;
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
@@ -45,6 +49,17 @@ serverRoutes.post.func = async ctx => {
 			args
 		);
 		return { insertId };
+	});
+};
+
+serverRoutes.update.func = async ctx => {
+	return await execTryCatch(async () => {
+		const body = await ctx.request.json();
+		let args = Object.values(body) as any[];
+		args.push(args.shift());
+
+		await executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ? WHERE id = ?`, args);
+		return "Announcement updated successfully";
 	});
 };
 
@@ -76,6 +91,24 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
+	});
+};
+serverRoutes.imagesDelete.func = async (ctx, slug) => {
+	return await execTryCatch(async () => {
+		const { announcement_id } = slug;
+		const ids = await ctx.request.json();
+		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND priority IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
+		if (!images || !images.length) throw Error("images not found");
+		await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND priority IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
+		const promisesArr = [];
+		for (const { name } of images) {
+			promisesArr.push(
+				Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
+				Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
+			);
+		}
+		await Promise.all(promisesArr);
+		return "Images deleted successfully";
 	});
 };
 

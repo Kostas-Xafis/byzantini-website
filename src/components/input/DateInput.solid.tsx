@@ -36,6 +36,7 @@ const monthsFull = [
 
 type DateInputProps = {
 	name: string;
+	prefix: string;
 	placeholder?: string;
 	value?: string | number;
 	required?: boolean;
@@ -50,20 +51,20 @@ export default function DateInput(props: DateInputProps) {
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
-		new AirDatepicker(`input[name='${name}']`, {
-			view: "years",
+		const dateInput = document.querySelector(
+			`form[data-prefix='${props.prefix}'] input[name='${name}']`
+		) as HTMLInputElement;
+		new AirDatepicker(dateInput, {
+			view: "days",
 			startDate: new Date(value || Date.now()),
 			firstDay: 0,
 			dateFormat: "yyyy-mm-dd",
 			autoClose: true,
 			isMobile: document.body.clientWidth < 768,
-			selectedDates: hasValue ? [new Date(value)] : undefined,
+			selectedDates: hasValue ? [value] : undefined,
 			onSelect({ date, datepicker }) {
 				if (!date || Array.isArray(date)) return;
 				datepicker.hide();
-				const dateInput = document.querySelector(
-					`input[name='${name}']`
-				) as HTMLInputElement;
 				dateInput.valueAsDate = new Date(
 					date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
 				);
@@ -80,8 +81,7 @@ export default function DateInput(props: DateInputProps) {
 		if (!value) return;
 		// set value after datepicker is initialized because it resets the starting value
 		sleep(200).then(() => {
-			(document.querySelector(`input[name='${name}']`) as HTMLInputElement).valueAsDate =
-				new Date(value);
+			dateInput.valueAsDate = new Date(value);
 		});
 	});
 	return (

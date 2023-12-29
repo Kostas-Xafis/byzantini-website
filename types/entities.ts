@@ -187,6 +187,7 @@ export const v_Announcements = object({
 });
 export type Announcements = Output<typeof v_Announcements>;
 
+//! Later on rename the priority column to id
 export const v_AnnouncementImages = object({
 	announcement_id: number([integer(), minValue(0)]),
 	name: string(),

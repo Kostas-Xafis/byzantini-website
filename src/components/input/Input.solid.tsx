@@ -87,7 +87,7 @@ type InputProps = {
 	label: string;
 	prefix: string;
 	placeholder?: string;
-	value?: string | number;
+	value?: string[] | string | number;
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
@@ -186,7 +186,7 @@ export default function Input(props: InputProps) {
 				/>
 			</Show>
 			<Show when={type === "date"}>
-				<DateInput {...props} />
+				<DateInput {...(props as InputProps & { value?: string | number })} />
 			</Show>
 			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>
@@ -283,11 +283,11 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*----------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
-				<FileInput {...props} />
+				<FileInput {...(props as InputProps & { value?: string | number })} />
 			</Show>
 			{/*--------------------------------MULTIFILE INPUT---------------------------------------- */}
 			<Show when={type === "multifile"}>
-				<MultiFileInput {...props} />
+				<MultiFileInput {...(props as InputProps & { value?: string[] })} />
 			</Show>
 			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>

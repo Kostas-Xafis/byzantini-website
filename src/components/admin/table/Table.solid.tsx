@@ -270,7 +270,7 @@ export default function Table(props: Props) {
    		line-height: 1.75rem/* 28px */;
 		text-align: center;
 		background-color: transparent;
-		transition: box-shadow 0.4s cubic-bezier(.06,.87,0,.82);
+		transition: box-shadow 0.2s cubic-bezier(0,.8,.43,.64);
 	}
 	/* shorthand for this:
 		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100

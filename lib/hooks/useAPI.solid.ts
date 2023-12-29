@@ -1,4 +1,4 @@
-import { batch, createEffect, createSignal, untrack } from "solid-js";
+import { batch, createEffect, createSignal } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
@@ -24,6 +24,7 @@ export type StoreMutation<T extends keyof APIStore> = {
 	ids: number[];
 	type: ActionEnum;
 };
+
 
 function assertOwnPropCheat<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 

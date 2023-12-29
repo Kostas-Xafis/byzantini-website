@@ -5,6 +5,7 @@ import { CloseButton } from "../admin/table/CloseButton.solid";
 type MultiFileInputProps = {
 	name: string;
 	prefix: string;
+	value?: string[];
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
@@ -12,14 +13,27 @@ type MultiFileInputProps = {
 };
 
 export default function MultiFileInput(props: MultiFileInputProps) {
-	const { name, required, iconClasses, disabled, fileExtension } = props;
+	const {
+		name,
+		value: initFiles = [],
+		prefix,
+		required,
+		iconClasses,
+		disabled,
+		fileExtension,
+	} = props;
 
-	const [fileList, setFileList] = createSignal<string[]>([]); // Need to be a signal to update the component
-	const fileHandler = new FileHandler(name);
+	const [fileList, setFileList] = createSignal<string[]>(initFiles); // Need to be a signal to update the component
+	const fileHandler = new FileHandler(prefix + name, {
+		isSingleFile: false,
+		files: initFiles.map((f) => FileHandler.createFileProxy(f)),
+	});
 	const onFileClick = (e: MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
-		const input = document.querySelector(`input[name='${name}']`) as HTMLInputElement;
+		const input = document.querySelector(
+			`form[data-prefix='${prefix}'] input[name='${name}']`
+		) as HTMLInputElement;
 		input.click();
 	};
 	const onFileChange = async (e: Event) => {
@@ -79,7 +93,7 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 							<div class="flex flex-row items-center h-min px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
 								<CloseButton
 									onClick={() => onFileRemove(index())}
-									classes="text-lg w-[1.4rem] h-[1.4rem] mt-1 hover:bg-white"></CloseButton>
+									classes="text-lg w-[1.4rem] h-[1.4rem] hover:bg-white"></CloseButton>
 								<p>{fname}</p>
 							</div>
 						)}

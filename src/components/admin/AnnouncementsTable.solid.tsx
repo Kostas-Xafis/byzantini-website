@@ -1,12 +1,12 @@
 import { Show, createMemo } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createStore, type SetStoreFunction } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { asyncQueue, fileToBlob } from "../../../lib/utils.client";
-import type { Announcements } from "../../../types/entities";
-import { Omit, type Props as InputProps } from "../input/Input.solid";
+import type { AnnouncementImages, Announcements } from "../../../types/entities";
+import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
@@ -76,6 +76,80 @@ const columnNames: ColumnType<AnnouncementTable> = {
 	views: { type: "number", name: "Προβολές" },
 };
 
+function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> {}
+
+async function UploadImages(args: {
+	announcement_id: number;
+	setStore: SetStoreFunction<APIStore>;
+	imagesPrefix: string;
+	images?: AnnouncementImages[]; // Include images only when modifying
+}) {
+	const { announcement_id, imagesPrefix, images } = args;
+	const apiHook = useAPI(args.setStore);
+	await ThumbnailGenerator.loadCompressor();
+
+	const kb40 = 1024 * 40;
+	const thumbCreator = new ThumbnailGenerator();
+	const photos = FileHandler.getFiles(imagesPrefix)
+		.filter((f) => !f.isProxy)
+		.map(({ name, file }, i) => {
+			assertNotNull(file);
+			return async function () {
+				let blob = await fileToBlob(file);
+				if (!blob) return console.error("Could not load file:", name);
+				try {
+					await apiHook(API.Announcements.postImage, {
+						RequestObject: {
+							announcement_id,
+							name,
+							priority: i + 1,
+						},
+					});
+					await apiHook(API.Announcements.imageUpload, {
+						RequestObject: blob,
+						UrlArgs: { id: announcement_id, name },
+					});
+					if (file.size <= kb40) {
+						await apiHook(API.Announcements.imageUpload, {
+							RequestObject: blob,
+							UrlArgs: {
+								id: announcement_id,
+								name: "thumb_" + name,
+							},
+						});
+						return;
+					}
+					const thumbBlob = await fileToBlob(
+						await thumbCreator.createThumbnail(file, name)
+					);
+					if (!thumbBlob) throw new Error("Could not create thumbnail");
+					await apiHook(API.Announcements.imageUpload, {
+						RequestObject: thumbBlob,
+						UrlArgs: { id: announcement_id, name: "thumb_" + name },
+					});
+				} catch (e) {
+					console.error(e);
+				}
+			};
+		});
+	await asyncQueue(photos, 4, true);
+
+	if (!images) return;
+	const deletedFiles = FileHandler.getDeletedFiles(imagesPrefix);
+	if (deletedFiles.length === 0) return;
+
+	let ids = images
+		.filter((img) => img.announcement_id === announcement_id)
+		?.map((img) => (deletedFiles.find((f) => f.name === img.name) ? img.priority : undefined))
+		.filter((id) => id !== undefined) as number[];
+	if (ids.length === 0) return;
+
+	await apiHook(API.Announcements.imagesDelete, {
+		RequestObject: ids,
+		UrlArgs: { announcement_id },
+	});
+}
+
 export default function AnnouncementsTable() {
 	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
@@ -91,6 +165,7 @@ export default function AnnouncementsTable() {
 	});
 	useHydrate(() => {
 		apiHook(API.Announcements.get);
+		apiHook(API.Announcements.getImages);
 	});
 
 	let shapedData = createMemo(() => {
@@ -112,51 +187,11 @@ export default function AnnouncementsTable() {
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
-			await ThumbnailGenerator.loadCompressor();
-
-			const kb40 = 1024 * 40;
-			const thumbCreator = new ThumbnailGenerator();
-			const photos = FileHandler.getFiles("photos").map(({ isProxy, name, file }, i) => {
-				if (isProxy) return async () => {};
-				return async function () {
-					let blob = await fileToBlob(file);
-					if (!blob) return console.error("Could not load file:", name);
-					try {
-						await apiHook(API.Announcements.postImage, {
-							RequestObject: {
-								announcement_id: id,
-								name,
-								priority: i + 1,
-							},
-						});
-						await apiHook(API.Announcements.imageUpload, {
-							RequestObject: blob,
-							UrlArgs: { id, name },
-						});
-						if (file.size <= kb40) {
-							await apiHook(API.Announcements.imageUpload, {
-								RequestObject: blob,
-								UrlArgs: {
-									id,
-									name: "thumb_" + name,
-								},
-							});
-							return;
-						}
-						const thumbBlob = await fileToBlob(
-							await thumbCreator.createThumbnail(file, name)
-						);
-						if (!thumbBlob) throw new Error("Could not create thumbnail");
-						await apiHook(API.Announcements.imageUpload, {
-							RequestObject: thumbBlob,
-							UrlArgs: { id, name: "thumb_" + name },
-						});
-					} catch (e) {
-						console.error(e);
-					}
-				};
+			await UploadImages({
+				announcement_id: id,
+				setStore,
+				imagesPrefix: PREFIX + ActionEnum.ADD + "photos",
 			});
-			await asyncQueue(photos, 4, true);
 			setAnnouncementHydrate({ action: ActionEnum.ADD, ids: [id] });
 		};
 		return {
@@ -166,6 +201,53 @@ export default function AnnouncementsTable() {
 			headerText: "Εισαγωγή Ανακοίνωσης",
 			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD,
+		};
+	});
+	const onModify = createMemo((): Action | EmptyAction => {
+		const modifyModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
+		const announcements = store[API.Announcements.get];
+		const images = store[API.Announcements.getImages];
+		if (!announcements || !images || selectedItems.length !== 1) return modifyModal;
+
+		const submit = async function (formData: FormData) {
+			const data: Omit<Announcements, "views"> = {
+				id: selectedItems[0],
+				title: formData.get("title") as string,
+				content: formData.get("content") as string,
+				date: new Date(formData.get("date") as string).getTime(),
+			};
+			if (data.title.includes("/"))
+				return alert('Ο τίτλος δεν μπορεί να περιέχει τον χαρακτήρα "/"');
+			const res = await apiHook(API.Announcements.update, {
+				RequestObject: data,
+			});
+			if (!res.message) return;
+			await UploadImages({
+				announcement_id: data.id,
+				setStore,
+				imagesPrefix: PREFIX + modifyModal.type + "photos",
+				images,
+			});
+
+			setAnnouncementHydrate({ action: ActionEnum.MODIFY, ids: [data.id] });
+		};
+		const anc = announcements.find((a) => a.id === selectedItems[0]);
+		const copyAnc = JSON.parse(JSON.stringify(anc)) as Record<
+			keyof ReturnType<typeof AnnouncementsInputs>,
+			any
+		>;
+		// @ts-ignore
+		delete copyAnc.views;
+		copyAnc.images = images.filter((i) => i.announcement_id === copyAnc.id).map((i) => i.name);
+		return {
+			inputs: Fill(AnnouncementsInputs(), copyAnc),
+			onSubmit: submit,
+			submitText: "Ενημέρωση",
+			headerText: "Ενημέρωση Ανακοίνωσης",
+			...modifyModal,
 		};
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
@@ -200,6 +282,7 @@ export default function AnnouncementsTable() {
 				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
 						<TableControl action={onDelete} prefix={PREFIX} />
 					</TableControlsGroup>
 				</Table>
