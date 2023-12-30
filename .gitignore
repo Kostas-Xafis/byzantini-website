@@ -19,22 +19,25 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
+tsconfig.tsbuildinfo
+
 .vscode
 test.exe
 *.txt
 
 /getData
 
-/functions
-/package-lock.json
+package-lock.json
 
 /public/images
 /public/fek-*.pdf
-
 /notAssets
 
 /pdfWorker
 
 .wrangler
 .mf
+
 /dbSnapshots
+/functions
+/trace

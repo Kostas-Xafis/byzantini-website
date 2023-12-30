@@ -1,9 +1,10 @@
-import type { AnyObjectSchema, Context, EndpointRoute, HTTPMethods } from "../../../types/routes";
+import type { AnyObjectSchema, EndpointRoute, HTTPMethods } from "../../../types/routes";
 import { matchRoute } from "../../../lib/routes/index.server";
+import type { APIContext } from "astro";
 
 export const prerender = false;
 
-const generateResponse = async (ctx: Context, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
+const generateResponse = async (ctx: APIContext, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
 	let { func, path } = route;
 	if (route.hasUrlParams === false) return await func(ctx, {});
 	const slugData = {} as any;
@@ -18,7 +19,7 @@ const generateResponse = async (ctx: Context, route: EndpointRoute<any, any | An
 	return await func(ctx, slugData);
 };
 
-const ResponseWrap = async (ctx: Context, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
+const ResponseWrap = async (ctx: APIContext, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
 	for (const middleware of route.middleware ?? []) {
 		const response = await middleware(ctx);
 		if (response) return response;
@@ -28,13 +29,13 @@ const ResponseWrap = async (ctx: Context, route: EndpointRoute<any, any | AnyObj
 	return new Response(JSON.stringify(res), { status: 200 });
 };
 
-const RequestTemplate = async function (ctx: Context) {
+const RequestTemplate = async function (ctx: APIContext) {
 	const slug = ctx.params.slug?.split("/") ?? [];
 	const route = matchRoute(slug, ctx.request.method.toUpperCase() as HTTPMethods);
 	if (!route) return ctx.redirect("/404");
 	return await ResponseWrap(ctx, route, slug);
 };
 
-export async function ALL(context: Context) {
+export async function ALL(context: APIContext) {
 	return await RequestTemplate(context);
 }

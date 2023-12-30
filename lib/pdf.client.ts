@@ -158,7 +158,7 @@ export class PDF {
 		let queueResult = await asyncQueue(requestArr, 6, true);
 		console.log("Queue took", Date.now() - t);
 
-		let z = zip as typeof import("client-zip");
+		let z = zip as typeof zip;
 		const zipFile = await z.downloadZip(queueResult).blob();
 
 		let a = document.createElement("a");

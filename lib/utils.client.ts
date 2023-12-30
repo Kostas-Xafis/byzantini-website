@@ -1,17 +1,16 @@
-export function isDevFromURL(url: URL | string, localProd = true) {
+export function isDevFromURL(url: URL | string, localProd = true): boolean {
 	if (typeof url === "string") url = new URL(url);
 	// Only wrangler dev use cf plugins like buckets
 	if (!localProd) return url.hostname === "127.0.0.1" || url.hostname.includes("192.168.2.");
 	else return url.hostname === "localhost";
-
 };
 
-export function isOnlineDev(url: URL | string) {
+export function isOnlineDev(url: URL | string): boolean {
 	if (typeof url === "string") url = new URL(url);
 	return url.hostname === 'byzantini-website.pages.dev';
 };
 
-export function convertUrlFromArgs(url: string, args: any) {
+export function convertUrlFromArgs(url: string, args: any): string {
 	let newUrl = url.slice();
 	url.split("/")
 		.filter(part => part.startsWith("["))
@@ -31,7 +30,7 @@ export function setCookie(cname: string, cvalue: string | number | boolean = "",
 export function deleteCookie(cname: string, path = "/") {
 	document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + path;
 }
-export function getCookie(cname: string) {
+export function getCookie(cname: string): string {
 	let name = cname + "=";
 	let ca = document.cookie.split(';');
 	for (let i = 0; i < ca.length; i++) {
@@ -56,7 +55,7 @@ export async function onElementMount(target: string, callback: (el: HTMLElement)
 	callback(el as HTMLElement);
 };
 
-export function getParent(el: HTMLElement | null, selector: string, maxHeight = 10) {
+export function getParent(el: HTMLElement | null, selector: string, maxHeight = 10): HTMLElement | null {
 	if (!el) return null;
 	while (!el.matches(selector) && maxHeight-- > 0) {
 		el = el.parentElement as HTMLElement;
@@ -89,14 +88,14 @@ export function setFocusFixed(e: HTMLElement) {
 	e.setAttribute('tabindex', "");
 }
 
-export const sleep = (ms: number) =>
+export const sleep = (ms: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
-export function removeAccents(str: string) {
+export function removeAccents(str: string): string {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
-export function mappedValue(value: number, min = 0, max = 1, outMin = 0, outMax = 1) {
+export function mappedValue(value: number, min = 0, max = 1, outMin = 0, outMax = 1): number {
 	if (min === max) return outMin;
 	if (outMin === outMax) return outMin;
 	if (value >= max) return outMax;
@@ -119,7 +118,7 @@ export async function asyncQueue<T>(
 	jobs: (() => Promise<T>)[],
 	maxJobs = 1,
 	verb = false
-) {
+): Promise<T[]> {
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
 	let queue: any[];
@@ -163,13 +162,13 @@ export class UpdateHandler {
 		this.func = func;
 	}
 	timer: number;
-	timeout(ms = 0) {
+	timeout(ms = 0): Promise<void> {
 		this.timeoutFired = true;
 		return new Promise((res, rej) => {
 			let tId = setTimeout(() => {
 				this.timeoutFired = false;
 				this.func.call(null);
-				res(null);
+				res();
 			}, ms || this.timer);
 			this.abortController.signal.onabort = () => {
 				clearTimeout(tId);
@@ -182,7 +181,7 @@ export class UpdateHandler {
 		if (this.timeoutFired) this.abortController.abort();
 		this.timeoutFired = false;
 	};
-	reset(ms = 0, func?: Function, catchAbort = false) {
+	reset(ms = 0, func?: Function, catchAbort = false): Promise<void> {
 		this.abort();
 		func && (this.func = func);
 		if (catchAbort) return this.timeout(ms || this.timer).catch(() => { });
@@ -193,7 +192,7 @@ export class UpdateHandler {
 		this.func = func;
 	}
 
-	static createInstance(timer = 0, func = () => { }) {
+	static createInstance(timer = 0, func = () => { }): UpdateHandler {
 		return new UpdateHandler(timer, func);
 	}
 }
@@ -235,30 +234,30 @@ export const fileToBlob = async (file: File): Promise<Blob | null> => {
 		reader.readAsArrayBuffer(file);
 	});
 };
-export function loadScript(src: string, res?: () => boolean) {
+export function loadScript(src: string, res?: () => boolean): Promise<void> {
 	return new Promise(async (resolve, reject) => {
 		let script = document.createElement("script");
 		script.src = src;
-		script.onerror = () => reject(null);
+		script.onerror = () => reject();
 		script.onload = async () => {
 			let counter = 0;
 			if (res) {
 				while (!res() && counter++ < 20) {
 					await sleep(200);
-					resolve(null);
+					resolve();
 				}
 			}
-			resolve(null);
+			resolve();
 		};
 		document.head.appendChild(script);
 
 	});
 };
-export const loadImage = (src: string) => {
+export const loadImage = (src: string): Promise<void> => {
 	return new Promise((resolve, reject) => {
 		let img = new Image();
-		img.onload = () => resolve(null);
-		img.onerror = () => reject(null);
+		img.onload = () => resolve();
+		img.onerror = () => reject();
 		img.src = src;
 	});
 };

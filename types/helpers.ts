@@ -1,26 +1,26 @@
 //FROM https://catchts.com/union-array
 
 // credits goes to https://stackoverflow.com/a/50375286
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+// type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
 // Converts union to overloaded function
-type UnionToOvlds<U> = UnionToIntersection<U extends any ? (f: U) => void : never>;
+// type UnionToOvlds<U> = UnionToIntersection<U extends any ? (f: U) => void : never>;
 
-type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : never;
+// type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : never;
 
-type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
+// type IsUnion<T> = [T] extends [UnionToIntersection<T>] ? false : true;
 
-export type UnionToArray<T, A extends unknown[] = []> = IsUnion<T> extends true
-	? UnionToArray<Exclude<T, PopUnion<T>>, [PopUnion<T>, ...A]>
-	: [T, ...A];
+// export type UnionToArray<T, A extends unknown[] = []> = IsUnion<T> extends true
+// 	? UnionToArray<Exclude<T, PopUnion<T>>, [PopUnion<T>, ...A]>
+// 	: [T, ...A];
 
 export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
 export type ArrayToString<Arr, Separator extends string = ""> = Arr extends [infer A, ...infer B]
 	? B extends []
 	? A
 	: ConcatStrings<Extract<A, string>, ArrayToString<Extract<B, string[]>, Separator>, Separator>
-	: never;
 
+	: never;
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
 export type PartialBy<Obj, OKey> = OKey extends keyof Obj
@@ -29,16 +29,16 @@ export type PartialBy<Obj, OKey> = OKey extends keyof Obj
 	}
 	: Obj;
 
-export type RequiredBy<T, K> = K extends keyof T
-	? Omit<T, K> & {
-		// NonNullable is used to remove undefined from the type that is automatically passed when using the optional operator (?)
-		[Key in K]: NonNullable<T[Key]>;
-	}
-	: T;
+// export type RequiredBy<T, K> = K extends keyof T
+// 	? Omit<T, K> & {
+// 		// NonNullable is used to remove undefined from the type that is automatically passed when using the optional operator (?)
+// 		[Key in K]: NonNullable<T[Key]>;
+// 	}
+// 	: T;
 
-export type IsArray<T> = T extends Array<any> ? true : false;
+// export type IsArray<T> = T extends Array<any> ? true : false;
 
-export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>> extends `${infer _A}${S}${infer _B}` ? true : false;
+// export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>> extends `${infer _A}${S}${infer _B}` ? true : false;
 
 export type IsNull<T> = TypeGuard<T> extends true ? false : true;
 
@@ -64,15 +64,12 @@ export type IsNull<T> = TypeGuard<T> extends true ? false : true;
 // export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
 
 export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol, Value = any> =
-	IsAny<Value> extends false ? Omit<T, Replaced> & {
-		[P in Replacement]: Value
-	} : {
-		[P in keyof T as P extends Replaced ? Replacement : P]: T[P];
+	Omit<T, Replaced> & {
+		[K in Replacement]: Value;
 	};
-
-export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
-	[P in Replaced]: Value
-};
+// export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
+// 	[P in Replaced]: Value
+// };
 
 
 type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;

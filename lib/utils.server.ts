@@ -1,4 +1,4 @@
-import type { EndpointResponse } from "../types/routes";
+import type { EndpointResponse, EndpointResponseError } from "../types/routes";
 import { CreateDbConnection, type Transaction } from "./db";
 
 /**
@@ -65,9 +65,9 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 
 export const execTryCatch = async <T>(
 	func: (t: Transaction) => Promise<T>
-): Promise<EndpointResponse<T>> => {
+): Promise<EndpointResponse<T> | EndpointResponseError> => {
 	// This is a work around because if I return inside the try-catch blocks, the return type is not inferred correctly
-	let res: EndpointResponse<T>;
+	let res: EndpointResponse<T> | EndpointResponseError;
 	const hasTransaction: boolean = func.length === 1;
 	try {
 		let response;
@@ -86,20 +86,24 @@ export const execTryCatch = async <T>(
 		else res = DataWrapper(response);
 	} catch (error: Error | any) {
 		if (error instanceof Error) {
-			res = { res: { type: "error", error: { message: error?.message } } };
+			res = ErrorWrapper(error.message);
 		} else {
-			res = { res: { type: "error", error: { message: error } } };
+			res = ErrorWrapper(error);
 		}
 	}
 	return res;
 };
 
-export const MessageWrapper = (msg: string) => {
-	return {
-		res: { type: "message", message: msg }
-	} as EndpointResponse<string>;
+export const ErrorWrapper = (error: any): EndpointResponseError => {
+	return { res: { type: "error", error } };
 };
 
-export const DataWrapper = <T = object>(data: T) => {
+export const MessageWrapper = (msg: string): EndpointResponse<string> => {
+	return {
+		res: { type: "message", message: msg }
+	};
+};
+
+export const DataWrapper = <T>(data: T) => {
 	return { res: { type: "data", data } } as EndpointResponse<T>;
 };

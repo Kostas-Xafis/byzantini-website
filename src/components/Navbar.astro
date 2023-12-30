@@ -55,7 +55,7 @@ const isMainPage = Astro.url.pathname === "/";
 					<a
 						class="group relative grid grid-rows-[minmax(min-content, 60px)] place-content-center @[1536px]/nav:px-4  @6xl/nav:px-2 px-1"
 						href={link.url}
-						rel={!isDev ? "prefetch-intent" : ""}>
+						data-astro-prefetch="hover">
 						<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-2px_1px_0px_rgba(0,0,0,0.25)] text-[1.5vw]">
 							{link.name}
 						</div>

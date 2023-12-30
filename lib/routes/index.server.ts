@@ -10,7 +10,7 @@ import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
 import { RegistrationsServerRoutes } from "./registrations.server";
 import { AnnouncementsServerRoutes } from "./announcement.server";
-import { SpecialServerRoutes } from "./specialEndpoint.server";
+// import { SpecialServerRoutes } from "./specialEndpoint.server";
 
 import { requestValidation } from "../middleware/requestValidation";
 
@@ -29,7 +29,6 @@ const routes = (function () {
 		SysUsersServerRoutes,
 		RegistrationsServerRoutes,
 		AnnouncementsServerRoutes,
-		SpecialServerRoutes
 	).flat() as (EndpointRoute<any, AnyObjectSchema, any> | EndpointRoute<any, any, any>)[];
 	allRoutes.forEach(route => {
 		route.middleware = [];

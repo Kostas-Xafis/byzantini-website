@@ -9,7 +9,15 @@ const authenticateSession: EndpointRoute<"/auth/session", null, { isValid: boole
 	func: async ctx => null as any
 };
 
-const userLogin: EndpointRoute<"/auth/login", typeof v_LoginCredentials, { isValid: boolean; session_id?: string; }> = {
+type UserLoginRes = {
+	isValid: true;
+	session_id: string;
+} | {
+	isValid: false;
+};
+
+
+const userLogin: EndpointRoute<"/auth/login", typeof v_LoginCredentials, UserLoginRes> = {
 	authentication: false,
 	method: "POST",
 	path: "/auth/login",

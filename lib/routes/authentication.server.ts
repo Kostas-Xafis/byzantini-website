@@ -49,17 +49,15 @@ serverRoutes.userLogin.func = async (ctx) => {
 			credentials.password
 		]);
 		const isValid = user !== undefined;
-		if (isValid) {
-			const { session_exp_date, session_id } = createSessionId();
-			await executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
-				session_id,
-				session_exp_date,
-				credentials.email
-			]);
-			return { isValid, session_id };
-		} else {
-			return { isValid };
-		}
+		if (!isValid) return { isValid };
+
+		const { session_exp_date, session_id } = createSessionId();
+		await executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
+			session_id,
+			session_exp_date,
+			credentials.email
+		]);
+		return { isValid, session_id };
 	});
 };
 

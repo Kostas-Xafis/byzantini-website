@@ -28,4 +28,5 @@ declare global {
 }
 
 export { default as imageCompression } from "browser-image-compression";
+export { default as zip } from "client-zip";
 export { };

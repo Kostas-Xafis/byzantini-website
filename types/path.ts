@@ -23,21 +23,3 @@ export type ArgumentParts<Parts> = Parts extends `[${infer _}:${infer _}]` ? Par
 export type ExpectedArguments<Parts extends string> = {
 	[K in Parts as ExtractName<K>]: ExtractType<K> extends keyof StringType ? StringType[ExtractType<K>] : never;
 };
-
-// type CheckArguments<URL, URLArgs> = URL extends `${infer A}/${infer B}`
-// 	? URLArgs extends `${infer C}/${infer D}`
-// 		? (ExtractType<C> extends `number` ? `/[${ExtractName<C>}:${IsNumber<A>}]` : `/[${ExtractName<C>}:${true}]`) | CheckArguments<B, D>
-// 		: true
-// 	: ExtractType<URLArgs> extends `number`
-// 	? `/[${ExtractName<URLArgs>}:${IsNumber<URL>}]`
-// 	: never;
-
-// type Check = ExpectedArguments<Parts<ArrayToString<UnionToArray<CheckArguments<"/Bob/ab123c/123a", "/Bob/[name:string]/[age:number]">>>>>;
-
-// export type ValidateURL<URL, URLArgs> = ArrayToString<UnionToArray<CheckArguments<URL, URLArgs>>> extends `${infer _}false${infer _}`
-// 	? false
-// 	: true;
-
-// type Check = ValidateURL<"/Bob/123", "/Bob/[age:number]">;
-
-// export type IsNumber<Part> = Part extends `${number}` ? true : false;

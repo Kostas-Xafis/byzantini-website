@@ -151,7 +151,7 @@ serverRoutes.fileDelete.func = async ctx => {
 		if (body.type === "cv") {
 			if (teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
 			await executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
-			return "Pdf deleted successfully";
+			return "Pdf deleted successfully" as string;
 		} else if (body.type === "picture") {
 			if (teacher.picture) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
 			await executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);

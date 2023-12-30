@@ -615,6 +615,7 @@ export default function RegistrationsTable() {
 					];
 				}),
 			]);
+			//@ts-ignore
 			const wsStudentsBookPayments = xlsx.utils.aoa_to_sheet<string | number>([
 				[
 					"Αριθμός Μητρώου",

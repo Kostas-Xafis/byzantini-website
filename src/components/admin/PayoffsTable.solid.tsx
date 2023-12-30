@@ -4,7 +4,7 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Payoffs, Wholesalers } from "../../../types/entities";
-import type { ReplaceName, ReplaceValue } from "../../../types/helpers";
+import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";

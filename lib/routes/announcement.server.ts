@@ -83,14 +83,13 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
-		if (imageMIMEType.includes(filetype)) {
-			const imageBuf = await blob.arrayBuffer();
-			const bucketFileName = bucketPrefix + `${id}/` + name;
-			if (announcement.name) await Bucket.delete(ctx, announcement.name);
-			await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
-			return "Image uploaded successfully";
-		}
-		throw Error("Invalid filetype");
+		if (!imageMIMEType.includes(filetype)) throw Error("Invalid filetype");
+
+		const imageBuf = await blob.arrayBuffer();
+		const bucketFileName = bucketPrefix + `${id}/` + name;
+		if (announcement.name) await Bucket.delete(ctx, announcement.name);
+		await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
+		return "Image uploaded successfully";
 	});
 };
 serverRoutes.imagesDelete.func = async (ctx, slug) => {

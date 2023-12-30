@@ -1,12 +1,10 @@
 import { parse } from "valibot";
-import { API, APIEndpoints, type APIArgs, type APIRes } from "../routes/index.client";
+import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIRes } from "../routes/index.client";
 import { convertUrlFromArgs } from "../utils.client";
-type APIEndpointKey = keyof typeof APIEndpoints;
-export type APIStore = {
-	[K in APIEndpointKey]?: Extract<APIRes[K]["res"], { type: "data"; }>["data"];
-};
-type APIStoreValue<Key extends keyof APIStore> = APIStore[Key];
 
+export type APIStore = {
+	[K in keyof APIEndpointNames]?: Extract<APIRes[K]["res"], { type: "data"; }>["data"];
+};
 
 export { API };
 
@@ -17,10 +15,10 @@ const URL = (import.meta.env.URL as string) ?? "";
 function assertOwnPropCheat<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 
 // Astro version
-export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req?: APIArgs[T]) => {
+export const useAPI = async<T extends keyof APIEndpointNames>(endpoint: T, req?: APIArgs[T]) => {
 	const Route = APIEndpoints[endpoint];
 	try {
-		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
+		let fetcher: any = undefined;
 		if (req === undefined) {
 			const url = URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method });
@@ -49,7 +47,7 @@ export const useAPI = async<T extends APIEndpointKey>(endpoint: T, req?: APIArgs
 		if ("message" in response) {
 			return { message: response.message };
 		}
-		return { data: response.data as APIStoreValue<T> };
+		return { data: response.data as APIStore[T] };
 	} catch (err) {
 		console.error(err);
 		throw new Error(JSON.stringify(err as {}));

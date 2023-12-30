@@ -1,7 +1,6 @@
 import { defineConfig } from "astro/config";
 import tailwind from "@astrojs/tailwind";
 import solidJs from "@astrojs/solid-js";
-import prefetch from "@astrojs/prefetch";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
 
@@ -10,10 +9,12 @@ const unmappedRoutes = (page) => page.includes("admin") || page.includes("login"
 // https://astro.build/config
 export default defineConfig({
 	site: "https://musicschool-metamorfosi.gr",
+	build: {
+		inlineStylesheets: "always",
+	},
 	integrations: [
 		tailwind(),
 		solidJs(),
-		prefetch(),
 		sitemap({
 			filter: (page) => !unmappedRoutes(page),
 			changefreq: "weekly",
@@ -25,6 +26,10 @@ export default defineConfig({
 	adapter: cloudflare({
 		mode: "advanced",
 	}),
+	prefetch: {
+		prefetchAll: false,
+		defaultStrategy: "hover",
+	},
 	vite: {
 		server: {
 			watch: {
