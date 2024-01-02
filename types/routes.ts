@@ -1,9 +1,7 @@
 import type { ConcatStrings, IsAny, IsNull } from "./helpers";
 import type {
-	ArgumentParts,
 	ExpectedArguments,
 	HasUrlParams,
-	Parts,
 } from "./path";
 import type { Output, ObjectSchema, ObjectShape } from "valibot";
 import type { APIContext } from "astro";
@@ -66,7 +64,7 @@ export type EndpointRoute<URL extends string, Req = null, Res = string> = (IsAny
 			req: Req extends {}
 				? Context<Req>
 				: APIContext,
-			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
+			slug: ExpectedArguments<URL>
 		) => Promise<DefaultEndpointResponse<Res>>
 		: (
 			req: Req extends {}

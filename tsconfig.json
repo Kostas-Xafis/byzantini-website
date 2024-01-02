@@ -2,13 +2,13 @@
 	"extends": "astro/tsconfigs/strict",
 	"exclude": [
 		"./.vscode",
-		"./dist",
-		"./.wrangler",
-		"./pdfWorker",
-		"./node_modules",
-		"./tests",
-		"./getData",
-		"./pdfWorker"
+		"./dist/**",
+		"./.wrangler/**",
+		"./pdfWorker/**",
+		"./node_modules/**",
+		"./tests/**",
+		"./getData/**",
+		"./pdfWorker/**"
 	],
 	"compilerOptions": {
 		"noErrorTruncation": true,
@@ -18,7 +18,6 @@
 		"extendedDiagnostics": true,
 		"noImplicitAny": true,
 		"skipLibCheck": true,
-		"skipDefaultLibCheck": true,
 		"alwaysStrict": true,
 		"noUncheckedIndexedAccess": false,
 		"noEmit": true,

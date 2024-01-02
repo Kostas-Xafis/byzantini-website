@@ -24,6 +24,7 @@ export type StoreMutation<T extends keyof APIEndpointNames> = {
 
 export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends keyof APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<T>) => {
 	const Route = APIEndpoints[endpoint];
+	console.log(Route);
 	try {
 		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
 		if (req === undefined) {
@@ -45,7 +46,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 				body
 			});
 		}
-		const response = (await (await fetcher).json()) as DefaultEndpointResponse["res"];
+		const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.type === "error") {
 			console.error(response.error);
 			setStore && setStore(endpoint, response.error);
