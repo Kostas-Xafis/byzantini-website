@@ -1,4 +1,4 @@
-import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIEndpointsBuilder, APIResponse } from "../../types/routes";
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
 
 const get: EndpointRoute<"/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {

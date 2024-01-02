@@ -12,7 +12,6 @@ import {
 	union,
 	nullable,
 	boolean,
-	type Output
 } from "valibot";
 
 export const v_Books = object({
@@ -43,7 +42,6 @@ export const v_Payments = object({
 	date: number([integer(), minValue(0)]),
 	payment_date: optional(number([integer(), minValue(0)]))
 });
-type bob = Output<typeof v_Payments>;
 export interface Payments {
 	id: number;
 	student_name: string;

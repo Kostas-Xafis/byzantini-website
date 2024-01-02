@@ -10,12 +10,11 @@ import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
 import { RegistrationsServerRoutes } from "./registrations.server";
 import { AnnouncementsServerRoutes } from "./announcement.server";
-// import { SpecialServerRoutes } from "./specialEndpoint.server";
 
 import { requestValidation } from "../middleware/requestValidation";
 
 const routes = (function () {
-	const allRoutes = (function (...routesArr) {
+	const allRoutes = (function (...routesArr: any[]) {
 		return routesArr.map(routes => Object.values(routes));
 	})(
 		BooksServerRoutes,

@@ -5,10 +5,12 @@ import { useAPI, type APIStore } from "./useAPI.solid";
 import { createEffect, createSignal, on } from "solid-js";
 import { TypeEffectEnum, selectedRowsEvent } from "./useSelectedRows.solid";
 
+
+
 type Mutation<S extends keyof APIStore> = {
 	srcEndpoint: keyof APIStore; // Basically the get by id endpoint
 	destEndpoint: S; // The endpoint in the store to mutate
-	foreignKey?: keyof S; // The foreign key to match the id to
+	foreignKey?: keyof APIStore[S]; // The foreign key to match the id to
 };
 
 export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>, mutations: Mutation<any>[]; sort?: "ascending" | "descending"; }) {

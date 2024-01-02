@@ -11,12 +11,14 @@
 		"./pdfWorker"
 	],
 	"compilerOptions": {
+		"noErrorTruncation": true,
 		"strict": true,
 		"allowUnusedLabels": true,
 		"diagnostics": true,
 		"extendedDiagnostics": true,
 		"noImplicitAny": true,
 		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
 		"alwaysStrict": true,
 		"noUncheckedIndexedAccess": false,
 		"noEmit": true,

@@ -1,4 +1,4 @@
-import type { EndpointRoute, APIBuilder, APIArguments, APIResponse, APIEndpointsBuilder } from "../../types/routes";
+import type { EndpointRoute, APIBuilder, APIArguments, APIEndpointsBuilder, APIResponse } from "../../types/routes";
 import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
 import { merge, array, number, integer, object, omit, string } from "valibot";
@@ -154,7 +154,7 @@ export type APITeachersArgs = APIArguments<"Teachers", typeof TeachersRoutes>;
 
 export type APITeachersResponse = APIResponse<"Teachers", typeof TeachersRoutes>;
 
-export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof TeachersRoutes> = {
+export const APITeachersEndpoints = {
 	"Teachers.get": {
 		method: "GET",
 		path: "/teachers",
@@ -232,7 +232,7 @@ export const APITeachersEndpoints: APIEndpointsBuilder<"Teachers", typeof Teache
 		path: "/teachers",
 		endpoint: "Teachers.delete"
 	}
-};
+} satisfies APIEndpointsBuilder<"Teachers", typeof TeachersRoutes>;
 
 export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
 	Teachers: {

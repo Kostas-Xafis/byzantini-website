@@ -1,6 +1,10 @@
 import type { EndpointResponse, EndpointResponseError } from "../types/routes";
 import { CreateDbConnection, type Transaction } from "./db";
 
+
+// This is a cheat to use whenever I know better than the type checker if an object has a property or not
+export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
+
 /**
  *
  * @param arg
@@ -38,6 +42,7 @@ const queryLogger = async (queryId: string, query: string, args: any[]) => {
 		console.log(error);
 	}
 };
+
 
 export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? await CreateDbConnection();

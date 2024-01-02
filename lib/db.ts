@@ -91,5 +91,4 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 		console.log(error);
 		throw new Error(error as any);
 	}
-
 };

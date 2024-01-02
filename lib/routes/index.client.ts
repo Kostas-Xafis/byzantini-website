@@ -52,7 +52,7 @@ export interface APIArgs extends APIBooksArgs,
 	APIRegistrationsArgs,
 	APIAnnouncementsArgs { }
 
-export interface APIRes extends APIBooksResponse,
+export interface APIResponse extends APIBooksResponse,
 	APIAuthenticationResponse,
 	APIPaymentsResponse,
 	APIPayoffsResponse,

@@ -2,12 +2,12 @@ import { batch, createEffect, createSignal } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
-import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIRes } from "../routes/index.client";
+import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIResponse } from "../routes/index.client";
 import { convertUrlFromArgs } from "../utils.client";
+import { assertOwnProp } from "../utils.server";
+import type { DefaultEndpointResponse } from "../../types/routes";
 
-export type APIStore = {
-	[K in keyof APIEndpointNames]?: Extract<APIRes[K]["res"], { type: "data"; }>["data"];
-};
+export type APIStore = Partial<APIResponse>;
 export { API };
 
 // IMPORTANT: The useAPI can be called from the server or the client.
@@ -16,15 +16,13 @@ const URL = (import.meta.env.URL as string) ?? "";
 
 export type StoreMutation<T extends keyof APIEndpointNames> = {
 	endpoint?: T,
-	foreignKey?: keyof APIStore[T],
+	foreignKey?: keyof APIResponse[T],
 	sort?: "ascending" | "descending",
 	ids: number[];
 	type: ActionEnum;
 };
 
-function assertOwnPropCheat<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
-
-export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends keyof APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<keyof APIEndpointNames>) => {
+export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends keyof APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<T>) => {
 	const Route = APIEndpoints[endpoint];
 	try {
 		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
@@ -32,8 +30,8 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			const url = URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method });
 		} else {
-			assertOwnPropCheat(req, "RequestObject");
-			assertOwnPropCheat(req, "UrlArgs");
+			assertOwnProp(req, "RequestObject");
+			assertOwnProp(req, "UrlArgs");
 			if ("validation" in Route && Route.validation) {
 				parse(Route.validation, req.RequestObject);
 			}
@@ -47,18 +45,15 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 				body
 			});
 		}
-		const res = await fetcher;
-		const { res: response } = (await res.json()) as APIRes[T];
-		if ("error" in response) {
+		const response = (await (await fetcher).json()) as DefaultEndpointResponse["res"];
+		if (response.type === "error") {
 			console.error(response.error);
 			setStore && setStore(endpoint, response.error);
 			throw new Error(JSON.stringify(response.error));
-		}
-		if ("message" in response) {
+		} else if (response.type === "message") {
 			setStore && setStore(response.message as any);
 			return { message: response.message };
-		}
-		if (setStore && "data" in response) {
+		} else if (setStore && response.type === "data") {
 			if (Mutations && Mutations.endpoint) {
 				// If a mutation is assigned then do an in place replacement of the data in the store.
 				if (Mutations.type === ActionEnum.ADD) {
@@ -95,9 +90,9 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 					});
 				}
 				// Else do a full replacement of the data in the store.
-			} else setStore(endpoint, response.data as APIStore[T]);
+			} else setStore(endpoint, response.data as APIResponse[T]);
 		}
-		return { data: response.data as APIStore[T] };
+		return { data: response.data as APIResponse[T] };
 	} catch (err) {
 		setStore && setStore(endpoint, err as any);
 		console.error(err);
@@ -112,5 +107,4 @@ export const useHydrate = (func: () => void) => {
 		batch(func);
 	});
 	return setHydrate;
-
 };

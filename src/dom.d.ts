@@ -1,11 +1,4 @@
 import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid.ts";
-type CustomEventMap = {
-	emptyFileRemove: CustomEvent<string>;
-	hydrate: CustomEvent<undefined>;
-	ModifySelections: CustomEvent<TypeEffect>;
-	FormCleanup: CustomEvent<{ prefix: string; }>;
-	FormMount: CustomEvent<{ prefix: string; }>;
-};
 
 declare global {
 	// interface Document { //adds definition to Document, but you can do the same with HTMLElement

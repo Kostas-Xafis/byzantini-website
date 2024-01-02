@@ -18,14 +18,13 @@ type IsValibotSchema<T> = T extends (infer K)[]
 
 export type HTTPMethods = "GET" | "POST" | "PUT" | "DELETE";
 
-export type EndpointResponse<T> = {
-	res: T extends string ?
-	{
+export type EndpointResponse<T = string> = {
+	res: T extends {}
+	? T extends string ? {
 		type: "message";
 		message: string;
 	}
-	: T extends {}
-	? {
+	: {
 		type: "data";
 		data: T;
 	}
@@ -41,11 +40,12 @@ export type EndpointResponseError = {
 	};
 };
 
+export type DefaultEndpointResponse<T = any> = EndpointResponse<T> | EndpointResponseError;
+
 
 interface ContextRequest<Req extends {}> extends Omit<APIContext["request"], "json"> {
 	json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>;
 }
-
 export interface Context<Req extends {}> extends APIContext {
 	request: ContextRequest<Req>;
 }
@@ -67,12 +67,12 @@ export type EndpointRoute<URL extends string, Req = null, Res = string> = (IsAny
 				? Context<Req>
 				: APIContext,
 			slug: ExpectedArguments<ArgumentParts<Parts<URL>>>
-		) => Promise<EndpointResponse<Res> | EndpointResponseError>
+		) => Promise<DefaultEndpointResponse<Res>>
 		: (
 			req: Req extends {}
 				? Context<Req>
 				: APIContext
-		) => Promise<EndpointResponse<Res> | EndpointResponseError>;
+		) => Promise<DefaultEndpointResponse<Res>>;
 		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	}
 	: {
@@ -81,7 +81,7 @@ export type EndpointRoute<URL extends string, Req = null, Res = string> = (IsAny
 		method: HTTPMethods;
 		path: string;
 		hasUrlParams: boolean;
-		func: (req: Context<any>, slug: any) => Promise<any>;
+		func: (req: Context<any>, slug: any) => Promise<DefaultEndpointResponse<any>>;
 		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	}) & (IsValibotSchema<Req> extends true
 		? ValidationAttribute<Req>
@@ -94,10 +94,10 @@ export type APIEndpointsBuilder<
 	Mount extends string,
 	Routes extends { [k: string]: EndpointRoute<any, any, any>; }
 > = {
-		[K in keyof Routes as ConcatStrings<Mount, Extract<K, string>, ".">]: {
+		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]: {
 			method: Routes[K]["method"];
 			path: Routes[K]["path"];
-			endpoint: ConcatStrings<Mount, Extract<K, string>, ".">;
+			endpoint: ConcatStrings<Mount, K & string, ".">;
 		} & (Routes[K] extends ValidationAttribute<any> ? {
 			validation: ReturnType<Routes[K]["validation"]>;
 		} : {});
@@ -105,10 +105,10 @@ export type APIEndpointsBuilder<
 
 // Use for an object of routes, accessible in the frontend
 export type APIBuilder<Mount extends string, Routes extends {
-	[k: string]: EndpointRoute<any, any, any>;
+	[k: string]: any;
 }> = {
 		[m in Mount]: {
-			[K in keyof Routes]: ConcatStrings<Mount, Extract<K, string>, ".">;
+			[K in keyof Routes]: ConcatStrings<Mount, K & string, ".">;
 		};
 	};
 
@@ -119,7 +119,7 @@ export type APIArguments<Mount extends string, Routes extends {
 	[k: string]: EndpointRoute<any, any, any>;
 }> =
 	{
-		[K in keyof Routes as ConcatStrings<Mount, Extract<K, string>, ".">]: ConvertEmptyObjectArgToUndefined<(Parameters<
+		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]: ConvertEmptyObjectArgToUndefined<(Parameters<
 			Routes[K]["func"]
 		>[0]["request"] extends { json: () => Promise<infer T>; }
 			? IsNull<T> extends false
@@ -133,11 +133,13 @@ export type APIArguments<Mount extends string, Routes extends {
 				: {})>
 	};
 
+
+type ExtractData<T extends DefaultEndpointResponse<{}>> = Extract<T, EndpointResponse<{}>>["res"]["data"];
 // Use for typing API Response in frontend
 export type APIResponse<
 	Mount extends string,
 	Routes extends { [k: string]: EndpointRoute<any, any, any>; }
 > = {
-		[K in keyof Routes as ConcatStrings<Mount, Extract<K, string>, ".">]:
-		Routes[K] extends { func: (...args: any[]) => Promise<infer T>; } ? T : undefined;
+		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]:
+		Routes[K]["func"] extends (...args: any) => Promise<infer T> ? T extends DefaultEndpointResponse ? ExtractData<T> : string : string;
 	};

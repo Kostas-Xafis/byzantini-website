@@ -9,8 +9,8 @@ import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "payments";
 
@@ -121,9 +121,7 @@ export default function PaymentsTable() {
 				date: new Date(formData.get("date") as string).getTime() / 1000,
 			};
 
-			const res = await apiHook(API.Payments.post, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Payments.post, { RequestObject: data });
 			if (!res.data) return;
 			setPaymentHydrate({
 				action: ActionEnum.ADD,
@@ -159,9 +157,7 @@ export default function PaymentsTable() {
 				alert("Καταχώρηση μη επιτρεπτού ποσού!");
 				throw new Error("Invalid amount");
 			}
-			const res = await apiHook(API.Payments.updatePayment, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Payments.updatePayment, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({
 				action: ActionEnum.MODIFY,
