@@ -492,7 +492,7 @@ export function RegistrationForm() {
 					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
 					<div
 						id="registrationContainer"
-						class="w-full h-full max-sm:h-[calc(100dvh_-_8rem)]  place-items-center font-dicact">
+						class="w-full max-sm:w-[100dvw] h-full max-sm:h-[calc(100dvh_-_8rem)] max-3xs:h-[calc(100dvh_-_6rem)] place-items-center font-dicact">
 						<div
 							id="firstSelect"
 							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
@@ -503,7 +503,7 @@ export function RegistrationForm() {
 											id={type}
 											class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md">
 											<button
-												class="p-6 text-5xl max-sm:text-3xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
+												class="p-6 text-5xl max-sm:text-3xl max-3xs:text-2xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
 												onClick={(e) => onSelectClick(type)}>
 												{str}
 											</button>

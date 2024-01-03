@@ -161,6 +161,9 @@ export default function AnnouncementsTable() {
 				srcEndpoint: API.Announcements.getById,
 				destEndpoint: API.Announcements.get,
 			},
+			// {
+			// 	srcEndpoint: API.Announcements.get
+			// }
 		],
 	});
 	useHydrate(() => {

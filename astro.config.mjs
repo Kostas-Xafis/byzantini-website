@@ -9,9 +9,6 @@ const unmappedRoutes = (page) => page.includes("admin") || page.includes("login"
 // https://astro.build/config
 export default defineConfig({
 	site: "https://musicschool-metamorfosi.gr",
-	build: {
-		inlineStylesheets: "always",
-	},
 	integrations: [
 		tailwind(),
 		solidJs(),
