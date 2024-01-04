@@ -14,20 +14,12 @@
 // 	? UnionToArray<Exclude<T, PopUnion<T>>, [PopUnion<T>, ...A]>
 // 	: [T, ...A];
 
-export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
 // export type ArrayToString<Arr, Separator extends string = ""> = Arr extends [infer A, ...infer B]
 // 	? B extends []
 // 	? A
 // 	: ConcatStrings<Extract<A, string>, ArrayToString<Extract<B, string[]>, Separator>, Separator>
 
 // 	: never;
-export type IsAny<T> = 0 extends 1 & T ? true : false;
-
-export type PartialBy<Obj, OKey> = OKey extends keyof Obj
-	? Omit<Obj, OKey> & {
-		[Key in OKey]?: Obj[Key];
-	}
-	: Obj;
 
 // export type RequiredBy<T, K> = K extends keyof T
 // 	? Omit<T, K> & {
@@ -39,9 +31,6 @@ export type PartialBy<Obj, OKey> = OKey extends keyof Obj
 // export type IsArray<T> = T extends Array<any> ? true : false;
 
 // export type IncludesString<T, S extends string> = ArrayToString<UnionToArray<T>> extends `${infer _A}${S}${infer _B}` ? true : false;
-
-export type IsNull<T> = TypeGuard<T> extends true ? false : true;
-
 
 // type InUnion<T, U> = T extends U ? true : false;
 
@@ -63,13 +52,28 @@ export type IsNull<T> = TypeGuard<T> extends true ? false : true;
 
 // export type ObjectValues<T extends Record<any, any>> = ObjectArrToTypedArray<ObjectSplitToArray<T>>;
 
+// export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
+// 	[P in Replaced]: Value
+// };
+
+
+export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
+export type IsAny<T> = 0 extends 1 & T ? true : false;
+
+export type PartialBy<Obj, OKey> = OKey extends keyof Obj
+	? Omit<Obj, OKey> & {
+		[Key in OKey]?: Obj[Key];
+	}
+	: Obj;
+export type RemovePartial<T extends Record<string, any>, KeyUnion extends keyof T> = Omit<T, KeyUnion> & {
+	[K in KeyUnion]-?: Exclude<T[K], undefined>;
+};
+export type IsNull<T> = TypeGuard<T> extends true ? false : true;
+
 export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol, Value = any> =
 	Omit<T, Replaced> & {
 		[K in Replacement]: Value;
 	};
-// export type ReplaceValue<T extends Record<any, any>, Replaced extends keyof T, Value extends any> = Omit<T, Replaced> & {
-// 	[P in Replaced]: Value
-// };
 
 
 type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;

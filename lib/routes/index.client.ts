@@ -24,6 +24,7 @@ export const API = {
 	...APIAnnouncements,
 };
 
+
 export const APIEndpoints = {
 	...APIBooksEndpoints,
 	...APIAuthenticationEndpoints,

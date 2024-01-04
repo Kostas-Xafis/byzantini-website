@@ -5,7 +5,7 @@
 // 	method: "GET",
 // 	path: "/special/[func:string]",
 // 	hasUrlParams: true,
-// 	func: async ctx => null as any
+//
 // };
 
 // export const SpecialRoutes = {

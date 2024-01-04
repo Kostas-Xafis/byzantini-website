@@ -35,13 +35,13 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			<div class="hidden group-[:is(.loading)]/img:block w-[780px] h-[320px] overflow-hidden">
 				<Spinner />
 			</div>
-			<div class="group-[:is(.loaded)]/img:block max-w-[780px] shadow-md shadow-slate-600">
+			<div class="group-[:is(.loaded)]/img:block max-w-[780px]">
 				<img
 					data-src={imgSrc + announcement.images[0]}
 					src={imgSrc + announcement.images[0]}
 					alt={announcement?.title as string}
-					width="780"
-					class="w-[780px] object-cover max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px]"
+					width=""
+					class="w-full max-w-[780px] object-cover max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px] shadow-md shadow-slate-600"
 				/>
 			</div>
 		</div>

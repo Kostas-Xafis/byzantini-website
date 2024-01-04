@@ -1,4 +1,4 @@
-import type { AnyObjectSchema, EndpointRoute, HTTPMethods } from "../../types/routes";
+import type { AnyEndpoint, AnyObjectSchema, HTTPMethods } from "../../types/routes";
 import { AuthenticationServerRoutes, authentication } from "./authentication.server";
 import { BooksServerRoutes } from "./books.server";
 import { PaymentsServerRoutes } from "./payments.server";
@@ -12,6 +12,7 @@ import { RegistrationsServerRoutes } from "./registrations.server";
 import { AnnouncementsServerRoutes } from "./announcement.server";
 
 import { requestValidation } from "../middleware/requestValidation";
+import type { RemovePartial } from "../../types/helpers";
 
 const routes = (function () {
 	const allRoutes = (function (...routesArr: any[]) {
@@ -28,14 +29,16 @@ const routes = (function () {
 		SysUsersServerRoutes,
 		RegistrationsServerRoutes,
 		AnnouncementsServerRoutes,
-	).flat() as (EndpointRoute<any, AnyObjectSchema, any> | EndpointRoute<any, any, any>)[];
+	).flat() as (RemovePartial<AnyEndpoint, "func">)[];
 	allRoutes.forEach(route => {
 		route.middleware = [];
 		if (route.authentication) route.middleware?.push(async (ctx) => {
 			let isAuthenticated = await authentication(ctx);
 			if (!isAuthenticated) return new Response("Unauthorized", { status: 401 });
 		});
-		if ("validation" in route) route.middleware?.push(requestValidation(route.validation));
+		if ("validation" in route && route.validation) {
+			route.middleware?.push(requestValidation(route.validation as (() => AnyObjectSchema)));
+		}
 	});
 
 	return {

@@ -89,7 +89,7 @@ export const execTryCatch = async <T>(
 		// @ts-ignore
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);
-	} catch (error: Error | any) {
+	} catch (error: any) {
 		if (error instanceof Error) {
 			res = ErrorWrapper(error.message);
 		} else {

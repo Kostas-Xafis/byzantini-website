@@ -1,21 +1,10 @@
-import type { ConcatStrings, IsAny, IsNull } from "./helpers";
-import type {
-	ExpectedArguments,
-	HasUrlParams,
-} from "./path";
-import type { Output, ObjectSchema, ObjectShape } from "valibot";
 import type { APIContext } from "astro";
-
-export type AnyObjectSchema = ObjectSchema<ObjectShape, any>;
-
-type IsValibotSchema<T> = T extends (infer K)[]
-	? IsValibotSchema<K>
-	: T extends AnyObjectSchema
-	? true
-	: false;
+import type { ObjectSchema, ObjectShape, Output } from "valibot";
+import type { ConcatStrings, IsAny, IsNull, RemovePartial } from "./helpers";
+import type { ExpectedArguments, HasUrlParams } from "./path";
 
 export type HTTPMethods = "GET" | "POST" | "PUT" | "DELETE";
-
+export type AnyObjectSchema = ObjectSchema<ObjectShape, any>;
 export type EndpointResponse<T = string> = {
 	res: T extends {}
 	? T extends string ? {
@@ -37,9 +26,7 @@ export type EndpointResponseError = {
 		error: any;
 	};
 };
-
 export type DefaultEndpointResponse<T = any> = EndpointResponse<T> | EndpointResponseError;
-
 
 interface ContextRequest<Req extends {}> extends Omit<APIContext["request"], "json"> {
 	json: () => Promise<Req extends AnyObjectSchema ? Output<Req> : Req>;
@@ -52,6 +39,12 @@ interface ValidationAttribute<Req> {
 	validation: () => Req;
 }
 
+type IsValibotSchema<T> = T extends (infer K)[]
+	? IsValibotSchema<K>
+	: T extends AnyObjectSchema
+	? true
+	: false;
+
 // Use for typing routes, accessible in the frontend
 export type EndpointRoute<URL extends string, Req = null, Res = string> = (IsAny<URL> extends false
 	? {
@@ -59,7 +52,7 @@ export type EndpointRoute<URL extends string, Req = null, Res = string> = (IsAny
 		method: HTTPMethods;
 		path: URL;
 		hasUrlParams: HasUrlParams<URL>;
-		func: HasUrlParams<URL> extends true
+		func?: HasUrlParams<URL> extends true
 		? (
 			req: Req extends {}
 				? Context<Req>
@@ -79,18 +72,19 @@ export type EndpointRoute<URL extends string, Req = null, Res = string> = (IsAny
 		method: HTTPMethods;
 		path: string;
 		hasUrlParams: boolean;
-		func: (req: Context<any>, slug: any) => Promise<DefaultEndpointResponse<any>>;
+		func?: (req: Context<any>, slug: any) => Promise<DefaultEndpointResponse<any>>;
 		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	}) & (IsValibotSchema<Req> extends true
 		? ValidationAttribute<Req>
 		: {});
+export type AnyEndpoint = EndpointRoute<any, any, any> | EndpointRoute<any, AnyObjectSchema, any>;
 
 // export type DefaultEndpointRoute<URL extends string, RequestObject = null> = EndpointRoute<URL, RequestObject>;
 
 // Use for typing routes, accessible in the frontend
 export type APIEndpointsBuilder<
 	Mount extends string,
-	Routes extends { [k: string]: EndpointRoute<any, any, any>; }
+	Routes extends { [k: string]: AnyEndpoint; }
 > = {
 		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]: {
 			method: Routes[K]["method"];
@@ -114,11 +108,11 @@ type ConvertEmptyObjectArgToUndefined<T> = T extends { [k: string]: never; } ? u
 
 // Use for typing API Request params in the frontend
 export type APIArguments<Mount extends string, Routes extends {
-	[k: string]: EndpointRoute<any, any, any>;
+	[k: string]: AnyEndpoint;
 }> =
 	{
 		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]: ConvertEmptyObjectArgToUndefined<(Parameters<
-			Routes[K]["func"]
+			RemovePartial<Routes[K], "func">["func"]
 		>[0]["request"] extends { json: () => Promise<infer T>; }
 			? IsNull<T> extends false
 			? {
@@ -127,7 +121,7 @@ export type APIArguments<Mount extends string, Routes extends {
 			: {}
 			: {}) &
 			(Routes[K]["hasUrlParams"] extends true
-				? { UrlArgs: Parameters<Routes[K]["func"]>[1]; }
+				? { UrlArgs: Parameters<RemovePartial<Routes[K], "func">["func"]>[1]; }
 				: {})>
 	};
 
@@ -136,8 +130,8 @@ type ExtractData<T extends DefaultEndpointResponse<{}>> = Extract<T, EndpointRes
 // Use for typing API Response in frontend
 export type APIResponse<
 	Mount extends string,
-	Routes extends { [k: string]: EndpointRoute<any, any, any>; }
+	Routes extends { [k: string]: AnyEndpoint; }
 > = {
 		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]:
-		Routes[K]["func"] extends (...args: any) => Promise<infer T> ? T extends DefaultEndpointResponse ? ExtractData<T> : string : string;
+		RemovePartial<Routes[K], "func">["func"] extends (...args: any) => Promise<infer T> ? T extends DefaultEndpointResponse ? ExtractData<T> : string : string;
 	};

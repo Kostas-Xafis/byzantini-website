@@ -32,6 +32,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
+			console.log({ parse, Route, obj: req.RequestObject });
 			if ("validation" in Route && Route.validation) {
 				parse(Route.validation, req.RequestObject);
 			}

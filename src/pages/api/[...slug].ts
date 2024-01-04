@@ -1,10 +1,11 @@
-import type { AnyObjectSchema, EndpointRoute, HTTPMethods } from "../../../types/routes";
-import { matchRoute } from "../../../lib/routes/index.server";
 import type { APIContext } from "astro";
+import { matchRoute } from "../../../lib/routes/index.server";
+import type { RemovePartial } from "../../../types/helpers";
+import type { AnyEndpoint, HTTPMethods } from "../../../types/routes";
 
 export const prerender = false;
 
-const generateResponse = async (ctx: APIContext, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
+const generateResponse = async (ctx: APIContext, route: RemovePartial<AnyEndpoint, "func">, urlSlug: string[]) => {
 	let { func, path } = route;
 	if (route.hasUrlParams === false) return await func(ctx, {});
 	const slugData = {} as any;
@@ -19,7 +20,7 @@ const generateResponse = async (ctx: APIContext, route: EndpointRoute<any, any |
 	return await func(ctx, slugData);
 };
 
-const ResponseWrap = async (ctx: APIContext, route: EndpointRoute<any, any | AnyObjectSchema, any>, urlSlug: string[]) => {
+const ResponseWrap = async (ctx: APIContext, route: RemovePartial<AnyEndpoint, "func">, urlSlug: string[]) => {
 	for (const middleware of route.middleware ?? []) {
 		const response = await middleware(ctx);
 		if (response) return response;

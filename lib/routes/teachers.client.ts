@@ -1,7 +1,8 @@
-import type { EndpointRoute, APIBuilder, APIArguments, APIEndpointsBuilder, APIResponse } from "../../types/routes";
-import type { Teachers, TeacherClasses, TeacherLocations, TeacherInstruments } from "../../types/entities";
+import { array, integer, merge, number, object, omit, string } from "valibot";
+import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
-import { merge, array, number, integer, object, omit, string } from "valibot";
+import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
+import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
 
 const get: EndpointRoute<"/teachers", null, Teachers[]> = {
@@ -9,7 +10,6 @@ const get: EndpointRoute<"/teachers", null, Teachers[]> = {
 	method: "GET",
 	path: "/teachers",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getById: EndpointRoute<"/teachers/id", number[], Teachers> = {
@@ -17,14 +17,12 @@ const getById: EndpointRoute<"/teachers/id", number[], Teachers> = {
 	method: "POST",
 	path: "/teachers/id",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 const getByPriorityClasses: EndpointRoute<"/teachers/priority/[class_type:string]", null, Teachers[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/priority/[class_type:string]",
 	hasUrlParams: true,
-	func: async ctx => null as any
 };
 
 const getByFullnames: EndpointRoute<"/teachers/fullnames", null, Teachers[]> = {
@@ -32,7 +30,6 @@ const getByFullnames: EndpointRoute<"/teachers/fullnames", null, Teachers[]> = {
 	method: "GET",
 	path: "/teachers/fullnames",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getClasses: EndpointRoute<"/teachers/teacherClasses", null, TeacherClasses[]> = {
@@ -40,28 +37,24 @@ const getClasses: EndpointRoute<"/teachers/teacherClasses", null, TeacherClasses
 	method: "GET",
 	path: "/teachers/teacherClasses",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 const getClassesById: EndpointRoute<"/teachers/teacherClassesById", number[], TeacherClasses[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/teacherClassesById",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 const getLocations: EndpointRoute<"/teachers/locations", null, TeacherLocations[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/teachers/locations",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 const getLocationsById: EndpointRoute<"/teachers/locationsById", number[], TeacherLocations[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/locationsById",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getInstruments: EndpointRoute<"/teachers/instruments", null, TeacherInstruments[]> = {
@@ -69,14 +62,12 @@ const getInstruments: EndpointRoute<"/teachers/instruments", null, TeacherInstru
 	method: "GET",
 	path: "/teachers/instruments",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 const getInstrumentsById: EndpointRoute<"/teachers/instrumentsById", number[], TeacherInstruments[]> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers/instrumentsById",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const teacherJoins = object({
@@ -95,7 +86,6 @@ const post: EndpointRoute<"/teachers", typeof postReq, { insertId: number; }> = 
 	path: "/teachers",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async ctx => null as any
 };
 
 let updateReq = JoinedTeacher;
@@ -105,7 +95,6 @@ const update: EndpointRoute<"/teachers", typeof updateReq> = {
 	path: "/teachers",
 	hasUrlParams: false,
 	validation: () => updateReq,
-	func: async ctx => null as any
 };
 
 const fileUpload: EndpointRoute<"/teachers/file/[id:number]", Blob> = {
@@ -113,7 +102,6 @@ const fileUpload: EndpointRoute<"/teachers/file/[id:number]", Blob> = {
 	method: "PUT",
 	path: "/teachers/file/[id:number]",
 	hasUrlParams: true,
-	func: async ctx => null as any
 };
 
 const fileDelete: EndpointRoute<"/teachers/file", { id: number; type: "cv" | "picture"; }> = {
@@ -121,7 +109,6 @@ const fileDelete: EndpointRoute<"/teachers/file", { id: number; type: "cv" | "pi
 	method: "PUT",
 	path: "/teachers/file",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const del: EndpointRoute<"/teachers", number[]> = {
@@ -129,7 +116,6 @@ const del: EndpointRoute<"/teachers", number[]> = {
 	method: "DELETE",
 	path: "/teachers",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 export const TeachersRoutes = {
@@ -154,102 +140,6 @@ export type APITeachersArgs = APIArguments<"Teachers", typeof TeachersRoutes>;
 
 export type APITeachersResponse = APIResponse<"Teachers", typeof TeachersRoutes>;
 
-export const APITeachersEndpoints = {
-	"Teachers.get": {
-		method: "GET",
-		path: "/teachers",
-		endpoint: "Teachers.get"
-	},
-	"Teachers.getById": {
-		method: "POST",
-		path: "/teachers/id",
-		endpoint: "Teachers.getById"
-	},
-	"Teachers.getByPriorityClasses": {
-		method: "GET",
-		path: "/teachers/priority/[class_type:string]",
-		endpoint: "Teachers.getByPriorityClasses"
-	},
-	"Teachers.getByFullnames": {
-		method: "GET",
-		path: "/teachers/fullnames",
-		endpoint: "Teachers.getByFullnames"
-	},
-	"Teachers.getClasses": {
-		method: "GET",
-		path: "/teachers/teacherClasses",
-		endpoint: "Teachers.getClasses"
-	},
-	"Teachers.getClassesById": {
-		method: "POST",
-		path: "/teachers/teacherClassesById",
-		endpoint: "Teachers.getClassesById"
-	},
-	"Teachers.getLocations": {
-		method: "GET",
-		path: "/teachers/locations",
-		endpoint: "Teachers.getLocations"
-	},
-	"Teachers.getLocationsById": {
-		method: "POST",
-		path: "/teachers/locationsById",
-		endpoint: "Teachers.getLocationsById"
-	},
-	"Teachers.getInstruments": {
-		method: "GET",
-		path: "/teachers/instruments",
-		endpoint: "Teachers.getInstruments",
-	},
-	"Teachers.getInstrumentsById": {
-		method: "POST",
-		path: "/teachers/instrumentsById",
-		endpoint: "Teachers.getInstrumentsById"
-	},
-	"Teachers.post": {
-		method: "POST",
-		path: "/teachers",
-		endpoint: "Teachers.post",
-		validation: postReq
-	},
-	"Teachers.update": {
-		method: "PUT",
-		path: "/teachers",
-		endpoint: "Teachers.update",
-		validation: updateReq
-	},
-	"Teachers.fileUpload": {
-		method: "PUT",
-		path: "/teachers/file/[id:number]",
-		endpoint: "Teachers.fileUpload"
-	},
-	"Teachers.fileDelete": {
-		method: "PUT",
-		path: "/teachers/file",
-		endpoint: "Teachers.fileDelete"
-	},
-	"Teachers.delete": {
-		method: "DELETE",
-		path: "/teachers",
-		endpoint: "Teachers.delete"
-	}
-} satisfies APIEndpointsBuilder<"Teachers", typeof TeachersRoutes>;
+export const APITeachersEndpoints = EndpointsConstructor("Teachers", TeachersRoutes);
 
-export const APITeachers: APIBuilder<"Teachers", typeof TeachersRoutes> = {
-	Teachers: {
-		get: "Teachers.get",
-		getById: "Teachers.getById",
-		getByPriorityClasses: "Teachers.getByPriorityClasses",
-		getByFullnames: "Teachers.getByFullnames",
-		getClasses: "Teachers.getClasses",
-		getClassesById: "Teachers.getClassesById",
-		getLocations: "Teachers.getLocations",
-		getLocationsById: "Teachers.getLocationsById",
-		getInstruments: "Teachers.getInstruments",
-		getInstrumentsById: "Teachers.getInstrumentsById",
-		post: "Teachers.post",
-		update: "Teachers.update",
-		fileUpload: "Teachers.fileUpload",
-		fileDelete: "Teachers.fileDelete",
-		delete: "Teachers.delete"
-	}
-};
+export const APITeachers = APIBuilderConstructor("Teachers", TeachersRoutes);

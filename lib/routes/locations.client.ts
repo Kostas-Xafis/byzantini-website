@@ -1,13 +1,13 @@
-import type { EndpointRoute, APIBuilder, APIArguments, APIEndpointsBuilder, APIResponse } from "../../types/routes";
-import { v_Locations, type Locations } from "../../types/entities";
 import { omit } from "valibot";
+import { v_Locations, type Locations } from "../../types/entities";
+import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
+import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
 const get: EndpointRoute<"/locations", null, Locations[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/locations",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getByPriority: EndpointRoute<"/locations/priority", null, Locations[]> = {
@@ -15,7 +15,6 @@ const getByPriority: EndpointRoute<"/locations/priority", null, Locations[]> = {
 	method: "GET",
 	path: "/locations/priority",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getById: EndpointRoute<"/locations/id", number[], Locations> = {
@@ -23,7 +22,6 @@ const getById: EndpointRoute<"/locations/id", number[], Locations> = {
 	method: "POST",
 	path: "/locations/id",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const postReq = omit(v_Locations, ["id", "image"]);
@@ -33,7 +31,6 @@ const post: EndpointRoute<"/locations", typeof postReq, { insertId: number; }> =
 	path: "/locations",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async ctx => null as any
 };
 
 const quantityReq = omit(v_Locations, ["image"]);
@@ -43,7 +40,6 @@ const update: EndpointRoute<"/locations", typeof quantityReq> = {
 	path: "/locations",
 	hasUrlParams: false,
 	validation: () => quantityReq,
-	func: async ctx => null as any
 };
 
 const fileUpload: EndpointRoute<"/locations/file/[id:number]", Blob> = {
@@ -51,7 +47,6 @@ const fileUpload: EndpointRoute<"/locations/file/[id:number]", Blob> = {
 	method: "PUT",
 	path: "/locations/file/[id:number]",
 	hasUrlParams: true,
-	func: async ctx => null as any
 };
 
 const fileDelete: EndpointRoute<"/locations/file/[id:number]", null> = {
@@ -59,7 +54,6 @@ const fileDelete: EndpointRoute<"/locations/file/[id:number]", null> = {
 	method: "DELETE",
 	path: "/locations/file/[id:number]",
 	hasUrlParams: true,
-	func: async ctx => null as any
 };
 
 const del: EndpointRoute<"/locations", number[]> = {
@@ -67,7 +61,6 @@ const del: EndpointRoute<"/locations", number[]> = {
 	method: "DELETE",
 	path: "/locations",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 export const LocationsRoutes = {
@@ -78,67 +71,13 @@ export const LocationsRoutes = {
 	update,
 	fileUpload,
 	fileDelete,
-	delete: del
+	delete: del,
 };
 
 export type APILocationsArgs = APIArguments<"Locations", typeof LocationsRoutes>;
 
 export type APILocationsResponse = APIResponse<"Locations", typeof LocationsRoutes>;
 
-export const APILocationsEndpoints: APIEndpointsBuilder<"Locations", typeof LocationsRoutes> = {
-	"Locations.get": {
-		method: "GET",
-		path: "/locations",
-		endpoint: "Locations.get"
-	},
-	"Locations.getById": {
-		method: "POST",
-		path: "/locations/id",
-		endpoint: "Locations.getById"
-	},
-	"Locations.getByPriority": {
-		method: "GET",
-		path: "/locations/priority",
-		endpoint: "Locations.getByPriority"
-	},
-	"Locations.post": {
-		method: "POST",
-		path: "/locations",
-		endpoint: "Locations.post",
-		validation: postReq
-	},
-	"Locations.update": {
-		method: "PUT",
-		path: "/locations",
-		endpoint: "Locations.update",
-		validation: quantityReq
-	},
-	"Locations.fileUpload": {
-		method: "PUT",
-		path: "/locations/file/[id:number]",
-		endpoint: "Locations.fileUpload"
-	},
-	"Locations.fileDelete": {
-		method: "DELETE",
-		path: "/locations/file/[id:number]",
-		endpoint: "Locations.fileDelete"
-	},
-	"Locations.delete": {
-		method: "DELETE",
-		path: "/locations",
-		endpoint: "Locations.delete"
-	}
-};
+export const APILocationsEndpoints = EndpointsConstructor("Locations", LocationsRoutes);
 
-export const APILocations: APIBuilder<"Locations", typeof LocationsRoutes> = {
-	Locations: {
-		get: "Locations.get",
-		getById: "Locations.getById",
-		getByPriority: "Locations.getByPriority",
-		post: "Locations.post",
-		update: "Locations.update",
-		fileUpload: "Locations.fileUpload",
-		fileDelete: "Locations.fileDelete",
-		delete: "Locations.delete"
-	}
-};
+export const APILocations = APIBuilderConstructor("Locations", LocationsRoutes);

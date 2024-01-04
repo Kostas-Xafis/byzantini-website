@@ -1,6 +1,6 @@
-import type { AnyObjectSchema } from "../../types/routes";
-import { parse } from "valibot";
 import type { APIContext } from "astro";
+import { parse } from "valibot";
+import type { AnyObjectSchema } from "../../types/routes";
 
 export function requestValidation(validation: () => AnyObjectSchema) {
 	return async function (ctx: APIContext) {

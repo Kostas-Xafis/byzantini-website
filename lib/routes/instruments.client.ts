@@ -1,13 +1,13 @@
-import type { EndpointRoute, APIBuilder, APIArguments, APIEndpointsBuilder, APIResponse } from "../../types/routes";
-import { v_Instruments, type Instruments } from "../../types/entities";
 import { omit } from "valibot";
+import { v_Instruments, type Instruments } from "../../types/entities";
+import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
+import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
 const get: EndpointRoute<"/instruments", null, Instruments[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/instruments",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 let postReq = omit(v_Instruments, ["id"]);
@@ -17,7 +17,6 @@ const post: EndpointRoute<"/instruments", typeof postReq, { insertId: number; }>
 	path: "/instruments",
 	hasUrlParams: false,
 	validation: () => postReq,
-	func: async ctx => null as any
 };
 
 const getById: EndpointRoute<"/instruments/id", number[], Instruments> = {
@@ -25,7 +24,6 @@ const getById: EndpointRoute<"/instruments/id", number[], Instruments> = {
 	method: "POST",
 	path: "/instruments/id",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const del: EndpointRoute<"/instruments", number[]> = {
@@ -33,49 +31,19 @@ const del: EndpointRoute<"/instruments", number[]> = {
 	method: "DELETE",
 	path: "/instruments",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 export const InstrumentsRoutes = {
 	get,
 	post,
 	getById,
-	delete: del
+	delete: del,
 };
 
 export type APIInstrumentsArgs = APIArguments<"Instruments", typeof InstrumentsRoutes>;
 
 export type APIInstrumentsResponse = APIResponse<"Instruments", typeof InstrumentsRoutes>;
 
-export const APIInstrumentsEndpoints: APIEndpointsBuilder<"Instruments", typeof InstrumentsRoutes> = {
-	"Instruments.get": {
-		method: "GET",
-		path: "/instruments",
-		endpoint: "Instruments.get"
-	},
-	"Instruments.post": {
-		method: "POST",
-		path: "/instruments",
-		endpoint: "Instruments.post",
-		validation: postReq
-	},
-	"Instruments.getById": {
-		method: "POST",
-		path: "/instruments/id",
-		endpoint: "Instruments.getById"
-	},
-	"Instruments.delete": {
-		method: "DELETE",
-		path: "/instruments",
-		endpoint: "Instruments.delete"
-	}
-};
+export const APIInstrumentsEndpoints = EndpointsConstructor("Instruments", InstrumentsRoutes);
 
-export const APIInstruments: APIBuilder<"Instruments", typeof InstrumentsRoutes> = {
-	Instruments: {
-		get: "Instruments.get",
-		post: "Instruments.post",
-		getById: "Instruments.getById",
-		delete: "Instruments.delete"
-	}
-};
+export const APIInstruments = APIBuilderConstructor("Instruments", InstrumentsRoutes);

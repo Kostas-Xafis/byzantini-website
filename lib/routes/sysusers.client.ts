@@ -1,12 +1,12 @@
-import type { EndpointRoute, APIBuilder, APIArguments, APIEndpointsBuilder, APIResponse } from "../../types/routes";
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
+import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
+import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
 const get: EndpointRoute<"/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
@@ -14,7 +14,6 @@ const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
 	method: "POST",
 	path: "/sys/id",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const getBySid: EndpointRoute<"/sys/sid", null, SysUsers> = {
@@ -22,7 +21,6 @@ const getBySid: EndpointRoute<"/sys/sid", null, SysUsers> = {
 	method: "GET",
 	path: "/sys/sid",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const del: EndpointRoute<"/sys", number[]> = {
@@ -30,7 +28,6 @@ const del: EndpointRoute<"/sys", number[]> = {
 	method: "DELETE",
 	path: "/sys",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; }> = {
@@ -39,7 +36,6 @@ const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_Log
 	path: "/sys/register/[link:string]",
 	hasUrlParams: true,
 	validation: () => v_LoginCredentials,
-	func: async ctx => null as any
 };
 
 const createRegisterLink: EndpointRoute<"/sys/register", null, { link: string; }> = {
@@ -47,7 +43,6 @@ const createRegisterLink: EndpointRoute<"/sys/register", null, { link: string; }
 	method: "POST",
 	path: "/sys/register",
 	hasUrlParams: false,
-	func: async ctx => null as any
 };
 
 const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", null, { isValid: boolean; }> = {
@@ -55,7 +50,6 @@ const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]"
 	method: "POST",
 	path: "/sys/register/validate/[link:string]",
 	hasUrlParams: true,
-	func: async ctx => null as any
 };
 
 
@@ -73,53 +67,6 @@ export type APISysUsersArgs = APIArguments<"SysUsers", typeof SysUsersRoutes>;
 
 export type APISysUsersResponse = APIResponse<"SysUsers", typeof SysUsersRoutes>;
 
-export const APISysUsersEndpoints: APIEndpointsBuilder<"SysUsers", typeof SysUsersRoutes> = {
-	"SysUsers.get": {
-		method: "GET",
-		path: "/sys",
-		endpoint: "SysUsers.get"
-	},
-	"SysUsers.getById": {
-		method: "POST",
-		path: "/sys/id",
-		endpoint: "SysUsers.getById"
-	},
-	"SysUsers.getBySid": {
-		method: "GET",
-		path: "/sys/sid",
-		endpoint: "SysUsers.getBySid"
-	},
-	"SysUsers.delete": {
-		method: "DELETE",
-		path: "/sys",
-		endpoint: "SysUsers.delete"
-	},
-	"SysUsers.registerSysUser": {
-		method: "POST",
-		path: "/sys/register/[link:string]",
-		endpoint: "SysUsers.registerSysUser",
-		validation: v_LoginCredentials
-	},
-	"SysUsers.createRegisterLink": {
-		method: "POST",
-		path: "/sys/register",
-		endpoint: "SysUsers.createRegisterLink"
-	},
-	"SysUsers.validateRegisterLink": {
-		method: "POST",
-		path: "/sys/register/validate/[link:string]",
-		endpoint: "SysUsers.validateRegisterLink"
-	}
-};
+export const APISysUsersEndpoints = EndpointsConstructor("SysUsers", SysUsersRoutes);
 
-export const APISysUsers: APIBuilder<"SysUsers", typeof SysUsersRoutes> = {
-	SysUsers: {
-		get: "SysUsers.get",
-		getById: "SysUsers.getById",
-		getBySid: "SysUsers.getBySid",
-		delete: "SysUsers.delete",
-		registerSysUser: "SysUsers.registerSysUser",
-		createRegisterLink: "SysUsers.createRegisterLink",
-		validateRegisterLink: "SysUsers.validateRegisterLink"
-	}
-};
+export const APISysUsers = APIBuilderConstructor("SysUsers", SysUsersRoutes);

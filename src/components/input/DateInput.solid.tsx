@@ -55,7 +55,7 @@ export default function DateInput(props: DateInputProps) {
 			`form[data-prefix='${props.prefix}'] input[name='${name}']`
 		) as HTMLInputElement;
 		new AirDatepicker(dateInput, {
-			view: "days",
+			view: "years",
 			startDate: new Date(value || Date.now()),
 			firstDay: 0,
 			dateFormat: "yyyy-mm-dd",
