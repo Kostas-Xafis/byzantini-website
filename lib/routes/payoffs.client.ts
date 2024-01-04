@@ -1,7 +1,6 @@
 import { v_Payoffs, type Payoffs, type Wholesalers } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
+import type { EndpointRoute } from "../../types/routes";
 import { pick } from "valibot";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
 export type PayoffGetResponse = Pick<Payoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
 
@@ -49,11 +48,3 @@ export const PayoffsRoutes = {
 	updateAmount,
 	complete,
 };
-
-export type APIPayoffsArgs = APIArguments<"Payoffs", typeof PayoffsRoutes>;
-
-export type APIPayoffsResponse = APIResponse<"Payoffs", typeof PayoffsRoutes>;
-
-export const APIPayoffsEndpoints = EndpointsConstructor("Payoffs", PayoffsRoutes);
-
-export const APIPayoffs = APIBuilderConstructor("Payoffs", PayoffsRoutes);

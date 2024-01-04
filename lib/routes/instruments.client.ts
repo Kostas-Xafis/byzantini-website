@@ -1,7 +1,6 @@
 import { omit } from "valibot";
 import { v_Instruments, type Instruments } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/instruments", null, Instruments[]> = {
 	authentication: false,
@@ -39,11 +38,3 @@ export const InstrumentsRoutes = {
 	getById,
 	delete: del,
 };
-
-export type APIInstrumentsArgs = APIArguments<"Instruments", typeof InstrumentsRoutes>;
-
-export type APIInstrumentsResponse = APIResponse<"Instruments", typeof InstrumentsRoutes>;
-
-export const APIInstrumentsEndpoints = EndpointsConstructor("Instruments", InstrumentsRoutes);
-
-export const APIInstruments = APIBuilderConstructor("Instruments", InstrumentsRoutes);

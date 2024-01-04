@@ -1,8 +1,7 @@
 import { array, integer, merge, number, object, omit, string } from "valibot";
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 
 const get: EndpointRoute<"/teachers", null, Teachers[]> = {
@@ -135,11 +134,3 @@ export const TeachersRoutes = {
 	fileDelete,
 	delete: del
 };
-
-export type APITeachersArgs = APIArguments<"Teachers", typeof TeachersRoutes>;
-
-export type APITeachersResponse = APIResponse<"Teachers", typeof TeachersRoutes>;
-
-export const APITeachersEndpoints = EndpointsConstructor("Teachers", TeachersRoutes);
-
-export const APITeachers = APIBuilderConstructor("Teachers", TeachersRoutes);

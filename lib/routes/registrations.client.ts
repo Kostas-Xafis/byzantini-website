@@ -1,7 +1,6 @@
-import type { EndpointRoute, APIArguments, APIResponse } from "../../types/routes";
-import { v_Registrations, type Registrations } from "../../types/entities";
 import { object, omit, string } from "valibot";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import { v_Registrations, type Registrations } from "../../types/entities";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/registrations", null, Registrations[]> = {
 	authentication: true,
@@ -99,11 +98,3 @@ export const RegistrationsRoutes = {
 	emailUnsubscribe,
 	getSubscriptionToken,
 };
-
-export type APIRegistrationsArgs = APIArguments<"Registrations", typeof RegistrationsRoutes>;
-
-export type APIRegistrationsResponse = APIResponse<"Registrations", typeof RegistrationsRoutes>;
-
-export const APIRegistrationsEndpoints = EndpointsConstructor("Registrations", RegistrationsRoutes);
-
-export const APIRegistrations = APIBuilderConstructor("Registrations", RegistrationsRoutes);

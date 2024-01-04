@@ -1,7 +1,6 @@
 import { omit, pick } from "valibot";
 import { v_Payments, type Payments } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/payments", null, Payments[]> = {
 	authentication: true,
@@ -64,11 +63,3 @@ export const PaymentsRoutes = {
 	complete,
 	delete: del
 };
-
-export type APIPaymentsArgs = APIArguments<"Payments", typeof PaymentsRoutes>;
-
-export type APIPaymentsResponse = APIResponse<"Payments", typeof PaymentsRoutes>;
-
-export const APIPaymentsEndpoints = EndpointsConstructor("Payments", PaymentsRoutes);
-
-export const APIPayments = APIBuilderConstructor("Payments", PaymentsRoutes);

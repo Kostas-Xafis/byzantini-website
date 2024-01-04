@@ -11,7 +11,7 @@ const URL = (import.meta.env.URL as string) ?? "";
 
 
 // Astro version
-export const useAPI = async<T extends keyof APIEndpointNames>(endpoint: T, req?: APIArgs[T]) => {
+export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T]) => {
 	const Route = APIEndpoints[endpoint];
 	try {
 		let fetcher: any = undefined;

@@ -1,7 +1,6 @@
 import { omit, pick } from "valibot";
 import { v_Books, type Books } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/books", null, Books[]> = {
 	authentication: true,
@@ -49,11 +48,3 @@ export const BooksRoutes = {
 	updateQuantity,
 	delete: del
 };
-
-export type APIBooksArgs = APIArguments<"Books", typeof BooksRoutes>;
-
-export type APIBooksResponse = APIResponse<"Books", typeof BooksRoutes>;
-
-export const APIBooksEndpoints = EndpointsConstructor("Books", BooksRoutes);
-
-export const APIBooks = APIBuilderConstructor("Books", BooksRoutes);

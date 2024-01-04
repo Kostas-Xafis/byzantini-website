@@ -14,7 +14,7 @@ export { API };
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
 const URL = (import.meta.env.URL as string) ?? "";
 
-export type StoreMutation<T extends keyof APIEndpointNames> = {
+export type StoreMutation<T extends APIEndpointNames> = {
 	endpoint?: T,
 	foreignKey?: keyof APIResponse[T],
 	sort?: "ascending" | "descending",
@@ -22,7 +22,7 @@ export type StoreMutation<T extends keyof APIEndpointNames> = {
 	type: ActionEnum;
 };
 
-export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends keyof APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<T>) => {
+export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<T>) => {
 	const Route = APIEndpoints[endpoint];
 	try {
 		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
@@ -58,7 +58,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			if (Mutations && Mutations.endpoint) {
 				// If a mutation is assigned then do an in place replacement of the data in the store.
 				if (Mutations.type === ActionEnum.ADD) {
-					setStore(Mutations.endpoint as keyof APIEndpointNames, (prev) => {
+					setStore(Mutations.endpoint as APIEndpointNames, (prev) => {
 						let data = response.data;
 						if (!data) return prev;
 
@@ -71,7 +71,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 						return result;
 					});
 				} else {
-					setStore(Mutations.endpoint as keyof APIEndpointNames, (prev) => {
+					setStore(Mutations.endpoint as APIEndpointNames, (prev) => {
 						let data = response.data;
 						if (!data) return prev;
 

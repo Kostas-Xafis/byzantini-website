@@ -1,6 +1,5 @@
-import type { EndpointRoute, APIArguments, APIResponse } from "../../types/routes";
 import { v_LoginCredentials } from "../../types/entities";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute, } from "../../types/routes";
 
 const authenticateSession: EndpointRoute<"/auth/session", null, { isValid: boolean; }> = {
 	authentication: true,
@@ -38,14 +37,3 @@ export const AuthenticationRoutes = {
 	userLogin,
 	userLogout,
 };
-
-export type APIAuthenticationArgs = APIArguments<"Authentication", typeof AuthenticationRoutes>;
-
-export type APIAuthenticationResponse = APIResponse<"Authentication", typeof AuthenticationRoutes>;
-
-export const APIAuthenticationEndpoints = EndpointsConstructor(
-	"Authentication",
-	AuthenticationRoutes
-);
-
-export const APIAuthentication = APIBuilderConstructor("Authentication", AuthenticationRoutes);

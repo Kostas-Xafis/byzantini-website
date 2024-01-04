@@ -1,7 +1,6 @@
 import { omit } from "valibot";
 import { v_Locations, type Locations } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/locations", null, Locations[]> = {
 	authentication: false,
@@ -73,11 +72,3 @@ export const LocationsRoutes = {
 	fileDelete,
 	delete: del,
 };
-
-export type APILocationsArgs = APIArguments<"Locations", typeof LocationsRoutes>;
-
-export type APILocationsResponse = APIResponse<"Locations", typeof LocationsRoutes>;
-
-export const APILocationsEndpoints = EndpointsConstructor("Locations", LocationsRoutes);
-
-export const APILocations = APIBuilderConstructor("Locations", LocationsRoutes);

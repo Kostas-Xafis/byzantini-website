@@ -74,7 +74,10 @@ export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Re
 	Omit<T, Replaced> & {
 		[K in Replacement]: Value;
 	};
+export type ObjectValuesToUnion<T extends Record<any, any>> = T[keyof T];
 
+
+type t1 = ObjectValuesToUnion<{ a: 1, b: 2, c: 3; }>;
 
 type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
 

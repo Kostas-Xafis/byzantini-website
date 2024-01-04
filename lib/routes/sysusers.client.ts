@@ -1,6 +1,5 @@
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
 	authentication: true,
@@ -62,11 +61,3 @@ export const SysUsersRoutes = {
 	createRegisterLink,
 	validateRegisterLink
 };
-
-export type APISysUsersArgs = APIArguments<"SysUsers", typeof SysUsersRoutes>;
-
-export type APISysUsersResponse = APIResponse<"SysUsers", typeof SysUsersRoutes>;
-
-export const APISysUsersEndpoints = EndpointsConstructor("SysUsers", SysUsersRoutes);
-
-export const APISysUsers = APIBuilderConstructor("SysUsers", SysUsersRoutes);

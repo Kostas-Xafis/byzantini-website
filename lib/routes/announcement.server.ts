@@ -35,7 +35,7 @@ serverRoutes.getByTitle.func = async (_ctx, slug) => {
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
 		const imageNames = await executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
 		if (!announcement) throw Error("announcement not found");
-		executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
+		await executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 		return { ...announcement, images: imageNames.map(({ name }) => name) };
 	});
 };

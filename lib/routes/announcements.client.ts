@@ -110,11 +110,3 @@ export const AnnouncementsRoutes = {
 	delete: del,
 	imagesDelete,
 };
-
-export type APIAnnouncementsArgs = APIArguments<"Announcements", typeof AnnouncementsRoutes>;
-
-export type APIAnnouncementsResponse = APIResponse<"Announcements", typeof AnnouncementsRoutes>;
-
-export const APIAnnouncementsEndpoints = EndpointsConstructor("Announcements", AnnouncementsRoutes);
-
-export const APIAnnouncements = APIBuilderConstructor("Announcements", AnnouncementsRoutes);

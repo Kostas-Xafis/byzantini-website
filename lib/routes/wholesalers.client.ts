@@ -1,7 +1,6 @@
 import { omit } from "valibot";
 import { v_Wholesalers, type Wholesalers } from "../../types/entities";
-import type { APIArguments, APIResponse, EndpointRoute } from "../../types/routes";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/wholesalers", null, Wholesalers[]> = {
 	authentication: true,
@@ -33,11 +32,3 @@ const remove: EndpointRoute<"/wholesalers", number[]> = {
 };
 
 export const WholesalersRoutes = { get, post, getById, delete: remove };
-
-export type APIWholesalersArgs = APIArguments<"Wholesalers", typeof WholesalersRoutes>;
-
-export type APIWholesalersResponse = APIResponse<"Wholesalers", typeof WholesalersRoutes>;
-
-export const APIWholesalersEndpoints = EndpointsConstructor("Wholesalers", WholesalersRoutes);
-
-export const APIWholesalers = APIBuilderConstructor("Wholesalers", WholesalersRoutes);
