@@ -10,7 +10,8 @@ export interface Props {
 }
 
 const { title, imageUrl } = Astro.props;
-const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
+
+const logoUrl = new URL(Astro.request.url).origin + (imageUrl || "/logo.png");
 ---
 
 <!doctype html>

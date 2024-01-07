@@ -22,7 +22,7 @@ const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 ---
 
-<Layout title={announcement.title} imageUrl={announcement.images[0]}>
+<Layout title={announcement.title} imageUrl={imgThumbSrc + announcement.images[0]}>
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}
