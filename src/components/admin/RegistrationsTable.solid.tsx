@@ -90,7 +90,7 @@ const RegistrationsInputs = (
 			label: "Ημερομηνία Γέννησης",
 			name: "birth_date",
 			type: "date",
-			iconClasses: "fa-regular fa-calendar",
+			iconClasses: "fa-regular fa-calendar-days",
 		},
 		road: {
 			label: "Οδός",
@@ -120,7 +120,7 @@ const RegistrationsInputs = (
 			label: "Σχολικό Έτος",
 			name: "registration_year",
 			type: "text",
-			iconClasses: "fa-solid fa-calendar",
+			iconClasses: "fa-solid fa-calendar-days",
 			value: "2023-2024",
 		},
 		class_id: {
@@ -156,7 +156,7 @@ const RegistrationsInputs = (
 			label: "Ημερομηνία Εγγραφής",
 			name: "date",
 			type: "date",
-			iconClasses: "fa-regular fa-calendar",
+			iconClasses: "fa-regular fa-calendar-day",
 		},
 		payment_amount: {
 			label: "Ποσό Πληρωμής",
@@ -174,7 +174,7 @@ const RegistrationsInputs = (
 			label: "Ημερομηνία Πληρωμής",
 			name: "payment_date",
 			type: "date",
-			iconClasses: "fa-regular fa-calendar",
+			iconClasses: "fa-regular fa-calendar-days",
 		},
 	};
 };

@@ -148,6 +148,8 @@ export default function PaymentsTable() {
 		if (!payments || !books || selectedItems.length !== 1) return modifyModal;
 
 		const payment = payments.find((p) => p.id === selectedItems[0]) as Payments;
+		if (payment.payment_date !== 0) return modifyModal;
+
 		const submit = async function (formData: FormData) {
 			const data: Pick<Payments, "id" | "amount"> = {
 				id: payment.id,
@@ -180,15 +182,16 @@ export default function PaymentsTable() {
 		};
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
-		if (!payments || !books || selectedItems.length < 1) {
-			return completeModal;
-		}
+		if (!payments || !books || selectedItems.length < 1) return completeModal;
+
+		const selectedPayments = selectedItems.map(
+			(id) => payments.find((p) => p.id === id) as Payments
+		);
+		if (selectedPayments.filter((p) => p.payment_date !== 0).length > 0) return completeModal;
+
 		const submit = async function () {
-			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
-			if (data.filter((p) => p.payment_date !== 0).length > 0)
-				return alert("Δεν μπορείτε να ολοκληρώσετε πληρωμές που έχουν ήδη πληρωθεί!");
 			const res = await apiHook(API.Payments.complete, {
-				RequestObject: data.map((p) => p.id),
+				RequestObject: selectedPayments.map((p) => p.id),
 			});
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({

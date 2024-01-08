@@ -48,36 +48,39 @@ type DateInputProps = {
 
 export default function DateInput(props: DateInputProps) {
 	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
+	console.log(props);
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
 		const dateInput = document.querySelector(
 			`form[data-prefix='${props.prefix}'] input[name='${name}']`
 		) as HTMLInputElement;
-		new AirDatepicker(dateInput, {
-			view: "years",
-			startDate: new Date(value || Date.now()),
-			firstDay: 0,
-			dateFormat: "yyyy-mm-dd",
-			autoClose: true,
-			isMobile: document.body.clientWidth < 768,
-			selectedDates: hasValue ? [value] : undefined,
-			onSelect({ date, datepicker }) {
-				if (!date || Array.isArray(date)) return;
-				datepicker.hide();
-				dateInput.valueAsDate = new Date(
-					date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
-				);
-				setFocusFixed(dateInput.parentElement?.nextElementSibling as HTMLElement);
-			},
-			locale: {
-				days: days,
-				daysShort: days,
-				daysMin: days,
-				months: monthsFull,
-				monthsShort: months,
-			},
-		});
+		if (!disabled) {
+			new AirDatepicker(dateInput, {
+				view: "years",
+				startDate: new Date(value || Date.now()),
+				firstDay: 0,
+				dateFormat: "yyyy-mm-dd",
+				autoClose: true,
+				isMobile: document.body.clientWidth < 768,
+				selectedDates: hasValue ? [value] : undefined,
+				onSelect({ date, datepicker }) {
+					if (!date || Array.isArray(date)) return;
+					datepicker.hide();
+					dateInput.valueAsDate = new Date(
+						date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
+					);
+					setFocusFixed(dateInput.parentElement?.nextElementSibling as HTMLElement);
+				},
+				locale: {
+					days: days,
+					daysShort: days,
+					daysMin: days,
+					months: monthsFull,
+					monthsShort: months,
+				},
+			});
+		}
 		if (!value) return;
 		// set value after datepicker is initialized because it resets the starting value
 		sleep(200).then(() => {

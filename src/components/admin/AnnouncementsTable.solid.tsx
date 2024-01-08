@@ -39,7 +39,7 @@ const AnnouncementsInputs = (): Omit<
 			name: "date",
 			label: "Ημερομηνία",
 			type: "date",
-			iconClasses: "fa-solid fa-calendar",
+			iconClasses: "fa-solid fa-calendar-days",
 		},
 		content: {
 			type: "textarea",

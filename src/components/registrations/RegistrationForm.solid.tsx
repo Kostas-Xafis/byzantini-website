@@ -11,6 +11,7 @@ import { CloseButton } from "../admin/table/CloseButton.solid";
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 
+const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
 	keyof Omit<
@@ -98,7 +99,7 @@ const genericInputs: Record<
 		name: "birth_date",
 		type: "date",
 		required: true,
-		iconClasses: "fa-regular fa-calendar",
+		iconClasses: "fa-regular fa-calendar-days",
 	},
 	road: {
 		label: "Οδός",
@@ -133,7 +134,7 @@ const genericInputs: Record<
 		name: "registration_year",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-calendar",
+		iconClasses: "fa-solid fa-calendar-days",
 		disabled: true,
 		blurDisabled: false,
 		value: "2023-2024",
@@ -549,29 +550,30 @@ export function RegistrationForm() {
 						</div>
 						<form
 							id="registrationForm"
+							data-prefix={PREFIX}
 							class="group/form px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
 							onSubmit={onSubmit}>
 							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
 							</h1>
 							{Object.values(genericInputs).map((input) => (
-								<Input {...input} prefix="RegForm" />
+								<Input {...input} prefix={PREFIX} />
 							))}
 							{formSelected() === MusicType.Byzantine
 								? Object.values(byzantineInputs(TeachersByType())).map((input) => (
-										<Input {...input} prefix="RegForm" />
+										<Input {...input} prefix={PREFIX} />
 								  ))
 								: formSelected() === MusicType.Traditional
 								? Object.values(traditionalInputs(TeachersByType())).map(
-										(input) => <Input {...input} prefix="RegForm" />
+										(input) => <Input {...input} prefix={PREFIX} />
 								  )
 								: Object.values(europeanInputs(TeachersByType())).map((input) => (
-										<Input {...input} prefix="RegForm" />
+										<Input {...input} prefix={PREFIX} />
 								  ))}
 							{formSelected() === MusicType.Traditional ||
 							formSelected() === MusicType.European
 								? Object.values(instrumentsInput(InstrumentsByTeacher())).map(
-										(input) => <Input {...input} prefix="RegForm" />
+										(input) => <Input {...input} prefix={PREFIX} />
 								  )
 								: ""}
 							<Show
