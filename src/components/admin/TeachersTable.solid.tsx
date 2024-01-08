@@ -202,7 +202,7 @@ const TeachersInputs = (
 			type: "file",
 			iconClasses: "fa-regular fa-file-image",
 			fileExtension: "image/*",
-			value: teacher?.picture,
+			value: teacher?.picture || undefined,
 		},
 		cv: {
 			name: "cv",
@@ -210,7 +210,7 @@ const TeachersInputs = (
 			type: "file",
 			iconClasses: "fa-solid fa-file-pdf",
 			fileExtension: ".pdf",
-			value: teacher?.cv,
+			value: teacher?.cv || undefined,
 		},
 		linktree: {
 			name: "linktree",
@@ -383,6 +383,11 @@ export default function TeachersTable() {
 		return apiHook(API.Teachers.fileUpload, {
 			RequestObject: file,
 			UrlArgs: { id },
+		});
+	};
+	const fileDelete = (id: number, type: "picture" | "cv") => {
+		return apiHook(API.Teachers.fileDelete, {
+			RequestObject: { id, type },
 		});
 	};
 
@@ -593,45 +598,36 @@ export default function TeachersTable() {
 				picture: FileHandler.getFiles("picture"),
 				cv: FileHandler.getFiles("cv"),
 			};
-			const blobs = {
-				picture:
-					files.picture.length && !files.picture[0].isProxy
-						? await fileToBlob(files.picture[0].file)
-						: null,
-				cv:
-					files.cv.length && !files.cv[0].isProxy
-						? await fileToBlob(files.cv[0].file)
-						: null,
-			};
-			const deletedFiles = {
-				picture: FileHandler.getDeletedFiles("picture"),
-				cv: FileHandler.getDeletedFiles("cv"),
-			};
-			await Promise.all([
-				deletedFiles.picture.length
-					? apiHook(API.Teachers.fileDelete, {
-							RequestObject: {
-								id: teacher.id,
-								type: "picture",
-							},
-					  })
-					: Promise.resolve(),
-				deletedFiles.cv.length
-					? apiHook(API.Teachers.fileDelete, {
-							RequestObject: { id: teacher.id, type: "cv" },
-					  })
-					: Promise.resolve(),
-			]);
+			console.log(files);
+			const didUpdateFiles =
+				(files.picture.length && !files.picture[0].isProxy) ||
+				(files.cv.length && !files.cv[0].isProxy);
+			if (didUpdateFiles) {
+				const blobs = {
+					picture: await fileToBlob(files.picture.at(0)?.file),
+					cv: await fileToBlob(files.cv.at(0)?.file),
+				};
+				const deletedFiles = {
+					picture: FileHandler.getDeletedFiles("picture"),
+					cv: FileHandler.getDeletedFiles("cv"),
+				};
 
-			if (blobs.picture) await fileUpload(blobs.picture, teacher.id);
-			if (blobs.cv) await fileUpload(blobs.cv, teacher.id);
+				// Store the new file atop of the old one if it exists, else delete the old one if it needs to.
+				if (blobs.picture) await fileUpload(blobs.picture, teacher.id);
+				else if (deletedFiles.picture.length) await fileDelete(teacher.id, "picture");
+
+				if (blobs.cv) await fileUpload(blobs.cv, teacher.id);
+				else if (deletedFiles.cv.length) await fileDelete(teacher.id, "cv");
+			}
+			if (teacher.fullname !== data.fullname) {
+				await apiHook(API.Teachers.fileRename, { UrlArgs: { id: teacher.id } });
+			}
 
 			setTeacherHydrate({
 				action: ActionEnum.MODIFY,
 				ids: [teacher.id],
 			});
 		};
-
 		const simpleTeacher = JSON.parse(JSON.stringify(teacher)) as Partial<FullTeachers>;
 		delete simpleTeacher.picture;
 		delete simpleTeacher.cv;

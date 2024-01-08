@@ -111,16 +111,20 @@ serverRoutes.update.func = async ctx => {
 	});
 };
 
+const imageMIMETypeMap: Record<string, string> = {
+	"jpeg": "image/jpeg",
+	"png": "image/png",
+	"webp": "image/webp",
+	"gif": "image/gif",
+	"jfif": "image/jfif",
+	"jpg:": "image/jpg"
+};
 const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
 serverRoutes.fileUpload.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		const { id } = slug;
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
-
-		// If the teacher's name is not included in the filename, then delete the old file (Happens when the teacher's name is changed)
-		if (teacher.cv && !teacher.fullname.includes(teacher.cv.split(".")[0])) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
-		if (teacher.picture && !teacher.fullname.includes(teacher.picture.split(".")[0])) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
 
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
@@ -130,16 +134,44 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 
 		if (filetype === "application/pdf") {
 			const link = bucketCVPrefix + filename;
+			if (teacher.cv && filename !== teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv); // Delete the old file if the new one has a different extension
+
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
 		} else if (imageMIMEType.includes(filetype)) {
 			const link = bucketPicturePrefix + filename;
+			if (teacher.picture && filename !== teacher.picture) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
+
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
+	});
+};
+
+serverRoutes.fileRename.func = async (ctx, slug) => {
+	return await execTryCatch(async () => {
+		const { id } = slug;
+		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
+		if (!teacher) throw Error("Teacher not found");
+
+		const oldNameCV = (teacher.cv) && teacher.cv.split(".")[0];
+		const oldNameImg = (teacher.picture) && teacher.picture.split(".")[0];
+		const newName = teacher.fullname;
+		if (teacher.cv && oldNameCV !== newName) {
+			const newFileName = newName + "." + teacher.cv.split(".").at(-1);
+			await Bucket.rename(ctx, bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName, "application/pdf");
+			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [newFileName, id]);
+		}
+		if (teacher.picture && oldNameImg !== newName) {
+			const imageFileType = teacher.picture.split(".").at(-1) as string;
+			const newFileName = newName + "." + imageFileType;
+			await Bucket.rename(ctx, bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName, imageMIMETypeMap[imageFileType]);
+			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
+		}
+		return "Files renamed successfully";
 	});
 };
 

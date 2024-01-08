@@ -45,7 +45,6 @@ export default defineConfig({
 				],
 			},
 		},
-		logLevel: "error",
 		build: {
 			cssMinify: true,
 			minify: true,

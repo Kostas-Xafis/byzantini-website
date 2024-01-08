@@ -21,6 +21,11 @@ const createS3Client = async () => {
 
 export class Bucket {
 
+	static getS3Bucket(context: APIContext) {
+		//@ts-ignore
+		return (context.locals.runtime.env as { S3_BUCKET: R2Bucket; }).S3_BUCKET;
+	}
+
 	static async putDev(file: ArrayBuffer, filename: string, filetype: string) {
 		const putObjectCommand = (await eval('import("@aws-sdk/client-s3")')).PutObjectCommand as typeof PutObjectCommand;
 		let client = await createS3Client();
@@ -57,9 +62,8 @@ export class Bucket {
 		try {
 			//Check if it's not local production build that does not support code generation like eval, but it is still localhost
 			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) return await Bucket.putDev(file, filename, filetype);
-			//@ts-ignore
-			const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
-			await S3_BUCKET.put(filename, file, { httpMetadata: { "contentType": filetype } });
+			const S3 = Bucket.getS3Bucket(context);
+			await S3.put(filename, file, { httpMetadata: { "contentType": filetype } });
 		} catch (error) {
 			console.error(error);
 		}
@@ -68,23 +72,40 @@ export class Bucket {
 	static async get(context: APIContext, filename: string) {
 		try {
 			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) return await Bucket.getDev(filename);
-			//@ts-ignore
-			const { S3_BUCKET } = context.locals.runtime.env as { S3_BUCKET: R2Bucket; };
-			return await S3_BUCKET.get(filename);
+			const S3 = Bucket.getS3Bucket(context);
+			return await S3.get(filename);
 		} catch (error) {
 			console.error(error);
-			return null;
 		}
 	};
 
 	static async delete(context: APIContext, filename: string) {
 		try {
 			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) return await Bucket.deleteDev(filename);
-			//@ts-ignore
-			const { S3_BUCKET } = context.locals.runtime.env as unknown as { S3_BUCKET: R2Bucket; };
-			await S3_BUCKET.delete(filename);
+			const S3 = Bucket.getS3Bucket(context);
+			await S3.delete(filename);
 		} catch (error) {
 			console.error(error);
 		}
 	};
+
+	static async rename(context: APIContext, oldFilename: string, newFilename: string, filetype: string) {
+		try {
+			if (isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env)) {
+				const file = await Bucket.getDev(oldFilename);
+				if (!file) return null;
+				await Bucket.putDev(file, newFilename, filetype);
+				await Bucket.deleteDev(oldFilename);
+			}
+			const S3 = Bucket.getS3Bucket(context);
+			const file = await Bucket.get(context, oldFilename);
+			if (!file) return null;
+
+			if ("byteLength" in file) await S3.put(newFilename, file, { httpMetadata: { "contentType": filetype } });
+			else await S3.put(newFilename, await file.arrayBuffer(), { httpMetadata: { "contentType": filetype } });
+			await S3.delete(oldFilename);
+		} catch (error) {
+			console.error(error);
+		}
+	}
 }

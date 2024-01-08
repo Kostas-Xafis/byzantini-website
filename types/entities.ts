@@ -113,8 +113,8 @@ export interface LoginCredentials {
 export const v_Teachers = object({
 	id: number([integer(), minValue(0)]),
 	fullname: string([minLength(1)]),
-	picture: string(),
-	cv: string(),
+	picture: nullable(string()),
+	cv: nullable(string()),
 	email: optional(string()),
 	telephone: optional(string()),
 	linktree: optional(string()),
@@ -126,8 +126,8 @@ export const v_Teachers = object({
 export interface Teachers {
 	id: number;
 	fullname: string;
-	picture: string;
-	cv: string;
+	picture: string | null;
+	cv: string | null;
 	email?: string | undefined;
 	telephone?: string | undefined;
 	linktree?: string | undefined;

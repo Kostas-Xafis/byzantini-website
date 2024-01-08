@@ -103,6 +103,14 @@ const fileUpload: EndpointRoute<"/teachers/file/[id:number]", Blob> = {
 	hasUrlParams: true,
 };
 
+// Renames the cv and the picture files in the bucket when the teacher is renamed
+const fileRename: EndpointRoute<"/teachers/file/rename/[id:number]"> = {
+	authentication: true,
+	method: "PUT",
+	path: "/teachers/file/rename/[id:number]",
+	hasUrlParams: true,
+};
+
 const fileDelete: EndpointRoute<"/teachers/file", { id: number; type: "cv" | "picture"; }> = {
 	authentication: true,
 	method: "PUT",
@@ -131,6 +139,7 @@ export const TeachersRoutes = {
 	post,
 	update,
 	fileUpload,
+	fileRename,
 	fileDelete,
 	delete: del
 };

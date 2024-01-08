@@ -426,7 +426,7 @@ export function RegistrationForm() {
 		e.preventDefault();
 		const teachers = store[API.Teachers.get];
 		if (!teachers) return;
-		setSpinner(true);
+
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
 		const data: Omit<Registrations, "id" | "payment_amount" | "total_payment"> = {
@@ -466,6 +466,7 @@ export function RegistrationForm() {
 				alert("Παρακαλώ επιλέξτε έτος φοίτησης");
 				throw Error("");
 			}
+			setSpinner(true);
 			const res = await apiHook(API.Registrations.post, { RequestObject: data });
 			if (res.message) {
 				const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
@@ -474,13 +475,12 @@ export function RegistrationForm() {
 			}
 		} catch (err) {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
-			setSpinner(false);
 			setTimeout(() => {
 				form.classList.add("animate-shake");
 				setTimeout(() => {
 					form.classList.remove("animate-shake");
 				}, 500);
-			}, 500);
+			}, 50);
 		} finally {
 			setSpinner(false);
 		}
@@ -663,7 +663,7 @@ export function RegistrationForm() {
 		}
 	}
 
-	.animate-shake button {
+	.animate-shake > button {
 		animation: ShakeAnimation 0.6s ease-in-out;
 	}
 `}

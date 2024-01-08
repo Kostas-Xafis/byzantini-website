@@ -48,7 +48,6 @@ type DateInputProps = {
 
 export default function DateInput(props: DateInputProps) {
 	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
-	console.log(props);
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
