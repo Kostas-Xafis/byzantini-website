@@ -1,4 +1,4 @@
-import { Show, type Accessor, type JSX, createMemo, createSignal, createEffect } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, type Accessor, type JSX } from "solid-js";
 import type { Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
@@ -52,7 +52,7 @@ export function TableControl(props: Props) {
 					<i
 						style={{ "backface-visibility": "hidden" }}
 						class={
-							"text-lg max-sm:text-base will-change-transform transition-transform duration-300 group-hover/ctrlBtn:scale-[1.096] origin-center " +
+							"text-lg max-sm:text-base will-change-transform transition-transform duration-150 ease-[cubic-bezier(0,.85,.43,.64)] group-hover/ctrlBtn:scale-[1.096] origin-center " +
 							(action().icon || ActionIcon.ADD)
 						}></i>
 				</button>

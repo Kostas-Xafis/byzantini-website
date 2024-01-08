@@ -1,7 +1,7 @@
 /// <reference path="../.astro/types.d.ts" />
 /// <reference types="astro/client" />
 
-type R2Bucket = import('@cloudflare/workers-types').R2Bucket;
+type R2Bucket = import('@cloudflare/workers-types/experimental').R2Bucket;
 type ENV = {
 	S3_BUCKET: R2Bucket;
 };
@@ -9,12 +9,7 @@ type Runtime = import('@astrojs/cloudflare').AdvancedRuntime<ENV>;
 
 
 declare namespace App {
-	interface Locals extends Runtime {
-		user: {
-			name: string;
-			surname: string;
-		};
-	}
+	interface Locals extends Runtime { }
 }
 
 

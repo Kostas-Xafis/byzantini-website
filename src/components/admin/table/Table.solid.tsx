@@ -69,7 +69,7 @@ export default function Table(props: Props) {
 	);
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
-	const readRowData = createMemo(() => {
+	const readRowData = () => {
 		const [direction, col_ind] = sorted();
 		if (direction === SortDirection.NONE || col_ind < 0) {
 			return data();
@@ -95,11 +95,17 @@ export default function Table(props: Props) {
 			});
 		}
 		return rows;
-	});
+	};
 	const readPageData = createMemo(() => {
 		const data = readRowData();
 		if (!pagination) return data;
 		const { page, size } = pagination();
+		if (data.length < page * size) {
+			//This happens during a user search
+			const newPage = Math.floor(data.length / size);
+			setPagination && setPagination((prev) => ({ ...prev, page: newPage }));
+			return data.slice(0, size);
+		}
 		let res = data.slice(
 			page * size,
 			mappedValue((page + 1) * size, 0, data.length, 0, data.length)
@@ -110,7 +116,6 @@ export default function Table(props: Props) {
 	});
 
 	const { columnWidths, columns } = computeColumns(columnNames, !!props.hasSelectBox);
-
 	const onClickRow = (e: MouseEvent) => {
 		const row = getParent(e.target as HTMLElement, ".row");
 		if (!row) return;
@@ -136,9 +141,13 @@ export default function Table(props: Props) {
 
 	const onClickPagination = (e: MouseEvent) => {
 		const btn = getParent(e.target as HTMLElement, "button");
-		if (!btn || btn.dataset.active === "false") return;
+		if (!btn || btn.dataset.active === "false") {
+			return;
+		}
 		const pageTurn = Number(btn.dataset["pageturn"]);
-		if (pageTurn === 0) return;
+		if (pageTurn === 0) {
+			return;
+		}
 		setPagination &&
 			setPagination((prev) => {
 				const page = prev.page + pageTurn;

@@ -94,18 +94,26 @@ export const sleep = (ms: number): Promise<void> =>
 export function removeAccents(str: string): string {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
-
-export function mappedValue(value: number, min = 0, max = 1, outMin = 0, outMax = 1): number {
-	if (min === max) return outMin;
+/**
+ * This function maps a value with from [valMin, valMax] to [outMin, outMax]
+ */
+export function mappedValue(value: number, valMin = 0, valMax = 1, outMin = 0, outMax = 1): number {
+	if (valMin === valMax) return outMin;
 	if (outMin === outMax) return outMin;
-	if (value >= max) return outMax;
-	if (value <= min) return outMin;
-	let range = max - min;
+	if (value >= valMax) return outMax;
+	if (value <= valMin) return outMin;
+	let range = valMax - valMin;
 	let outRange = outMax - outMin;
 
-	value = value > max ? max : value < min ? min : value;
-	let normalized = (value - min) / range;
-
+	// Apply a floor and ceiling to the value
+	if (value > valMax) {
+		value = valMax;
+	} else if (value < valMin) {
+		value = valMin;
+	}
+	// First normalization in respect to the input range
+	let normalized = (value - valMin) / range;
+	// Second normalization in respect to the output range
 	return normalized * outRange + outMin;
 };
 

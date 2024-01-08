@@ -722,10 +722,11 @@ export default function RegistrationsTable() {
 				let rows = [...document.querySelectorAll<HTMLElement>(".row[data-id]")];
 				let resultArray = [];
 				for (let i = 0; i < rows.length; i++) {
-					const row = rows[i];
-					const id = Number(row.dataset.id);
+					const id = Number(rows[i].dataset.id);
 					let reg = registrations.find((r) => r.id === id);
-					if (reg) resultArray.push({ row, registration: reg });
+					if (reg) {
+						resultArray.push({ row: rows[i], registration: reg });
+					}
 				}
 				for (let i = 0; i < resultArray.length; i++) {
 					const { row, registration } = resultArray[i];

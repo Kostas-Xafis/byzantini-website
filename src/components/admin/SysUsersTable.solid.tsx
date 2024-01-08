@@ -2,13 +2,13 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
+import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { SysUsers as FullSysUser } from "../../../types/entities";
 import Spinner from "../other/Spinner.solid";
 import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
-import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "sysusers";
 
@@ -68,7 +68,7 @@ export default function SysUsersTable() {
 			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
 			headerText: !link
 				? "Δημιουργία link εγγραφής"
-				: "Link εγγραφής:\n https://musicschool-metamorfosi.gr/admin/signup/" + link,
+				: `Link εγγραφής:\n ${window.location.origin}/admin/signup/${link}`,
 			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_USER,
 		};
@@ -86,6 +86,7 @@ export default function SysUsersTable() {
 		const selectedSysUsers = selectedItems.map(
 			(i) => sysusers.find((p) => p.id === i) as SysUsers
 		);
+
 		if (
 			!selectedSysUsers.find(
 				(s) =>
