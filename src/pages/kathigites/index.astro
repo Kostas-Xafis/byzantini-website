@@ -262,7 +262,7 @@ const cvSrc = "kathigites/cv/";
 		}, {
 			threshold: [0.001]
 		});
-		teacherImages.forEach(obsv.observe);
+		teacherImages.forEach((img) => obsv.observe(img));
 
 		// Load all images after 2 seconds of network inactivity
 		// and remove the observers
