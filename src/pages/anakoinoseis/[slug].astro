@@ -32,15 +32,17 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			{announcement.title}
 		</h1>
 		<div class="imgLoader group/img max-sm:px-4">
-			<div class="hidden group-[:is(.loading)]/img:block w-[780px] h-[320px] overflow-hidden">
+			<div
+				class="hidden group-[:is(.loading)]/img:block w-[780px] h-[640px] max-sm:max-h-[420px] overflow-hidden">
 				<Spinner />
 			</div>
 			<div class="group-[:is(.loaded)]/img:block max-w-[780px]">
 				<img
+					fetchpriority="high"
 					data-src={imgSrc + announcement.images[0]}
 					src={imgSrc + announcement.images[0]}
 					alt={announcement?.title as string}
-					width=""
+					height="640"
 					class="w-full max-w-[780px] object-cover max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px] shadow-md shadow-slate-600"
 				/>
 			</div>
@@ -59,10 +61,11 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 							</div>
 							<button
 								type="button"
-								class="hidden group-[:is(.loaded)]/img:block max-w-[460px] max-sm:max-w-[350px] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 cursor-pointer overflow-hidden">
+								class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden">
 								<img
 									data-src={imgThumbSrc + image}
 									alt={announcement?.title as string}
+									width="400px"
 									class="w-[400px] object-cover h-full"
 								/>
 							</button>
@@ -291,7 +294,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				] as HTMLImageElement[];
 				imgs.forEach((img, i) => {
 					img.addEventListener("click", (e) => {
-						window.location.href = img.src.replace("thumb_", "");
+						window.open(img.src.replace("thumb_", ""), "_blank");
 					});
 				});
 			});

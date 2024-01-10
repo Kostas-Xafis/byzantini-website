@@ -1,5 +1,6 @@
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
+import { asyncQueue } from "../utils.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes } from "./announcements.client";
 
@@ -92,6 +93,7 @@ serverRoutes.imageUpload.func = async (ctx, slug) => {
 		return "Image uploaded successfully";
 	});
 };
+
 serverRoutes.imagesDelete.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		const { announcement_id } = slug;
@@ -99,14 +101,14 @@ serverRoutes.imagesDelete.func = async (ctx, slug) => {
 		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND priority IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
 		if (!images || !images.length) throw Error("images not found");
 		await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND priority IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
-		const promisesArr = [];
+		const deletionJobs = [];
 		for (const { name } of images) {
-			promisesArr.push(
-				Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
-				Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
+			deletionJobs.push(
+				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
+				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
 			);
 		}
-		await Promise.all(promisesArr);
+		await asyncQueue(deletionJobs, 10);
 		return "Images deleted successfully";
 	});
 };

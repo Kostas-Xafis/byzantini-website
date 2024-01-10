@@ -1,6 +1,7 @@
 import type { Locations } from "../../types/entities";
 import { Bucket } from "../bucket";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { asyncQueue } from "../utils.client";
+import { execTryCatch, executeQuery, generateLink, MIMETypeMap, questionMarks } from "../utils.server";
 import { LocationsRoutes } from "./locations.client";
 
 
@@ -51,7 +52,7 @@ serverRoutes.update.func = async ctx => {
 	});
 };
 
-const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
+const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 serverRoutes.fileUpload.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		const { id } = slug;
@@ -93,6 +94,26 @@ serverRoutes.delete.func = async ctx => {
 		}
 		await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(body)})`, body);
 		return "Locations deleted successfully";
+	});
+};
+
+serverRoutes.moveFiles.func = async ctx => {
+	return await execTryCatch(async () => {
+		const locations = await executeQuery<Locations>("SELECT * FROM locations");
+		await asyncQueue(locations.map(location => {
+			const l = location; // Typescript is stupid
+			return async () => {
+				if (!l.image) return;
+
+				const fileType = l.image.split(".").at(-1);
+				if (!fileType) return;
+
+				await Bucket.move(ctx, l.image, bucketPrefix + l.name + "." + fileType);
+				// Update the database
+				await executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [location.name + "." + fileType, location.id]);
+			};
+		}), 4);
+		return "Files moved successfully";
 	});
 };
 

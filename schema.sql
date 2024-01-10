@@ -44,7 +44,7 @@ CREATE TABLE `total_school_payoffs` (
 
 CREATE TABLE `locations` (
     `id` int NOT NULL AUTO_INCREMENT,
-    `name` varchar(80) NOT NULL,
+    `name` varchar(100) NOT NULL,
     `address` varchar(80) NOT NULL,
     `areacode` int NOT NULL,
     `municipality` varchar(80) NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE `locations` (
     `email` varchar(80),
     `telephones` varchar(80) NOT NULL,
     `priority` int NOT NULL DEFAULT 1,
-    `image` varchar(80),
+    `image` varchar(120),
     `map` varchar(400) NOT NULL,
     `link` varchar(200),
     `youtube` varchar(120),

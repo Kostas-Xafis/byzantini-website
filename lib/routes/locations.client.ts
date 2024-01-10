@@ -62,6 +62,14 @@ const del: EndpointRoute<"/locations", number[]> = {
 	hasUrlParams: false,
 };
 
+// This is a one-time route to move the location images to a specific directory in the bucket
+const moveFiles: EndpointRoute<"/locations/move", null> = {
+	authentication: true,
+	method: "GET",
+	path: "/locations/move",
+	hasUrlParams: false,
+};
+
 export const LocationsRoutes = {
 	get,
 	getById,
@@ -71,4 +79,5 @@ export const LocationsRoutes = {
 	fileUpload,
 	fileDelete,
 	delete: del,
+	moveFiles,
 };

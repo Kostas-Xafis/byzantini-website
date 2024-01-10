@@ -598,7 +598,6 @@ export default function TeachersTable() {
 				picture: FileHandler.getFiles("picture"),
 				cv: FileHandler.getFiles("cv"),
 			};
-			console.log(files);
 			const didUpdateFiles =
 				(files.picture.length && !files.picture[0].isProxy) ||
 				(files.cv.length && !files.cv[0].isProxy);

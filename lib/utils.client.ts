@@ -148,7 +148,7 @@ export async function asyncQueue<T>(
 
 			results.push(await job()); // execute the job
 			jobsCompleted++;
-			verb &&
+			verb && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs) &&
 				console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
 
 			while (queue.length === maxJobs) await sleep(50); // respect the maxJobs limit

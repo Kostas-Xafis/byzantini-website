@@ -14,7 +14,6 @@ export type Connection = {
 	transaction: (func: (tx: Transaction) => any) => Promise<any>;
 };
 
-
 export const CreateDbConnection = async (): Promise<Connection> => {
 	const { DB_PWD, DB_HOST, DB_USERNAME, CONNECTOR, DB_NAME, DB_PORT } = await import.meta.env;
 	try {
@@ -88,7 +87,6 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 			// trust me typescript...
 		}) as unknown as Connection;
 	} catch (error) {
-		console.log(error);
 		throw new Error(error as any);
 	}
 };

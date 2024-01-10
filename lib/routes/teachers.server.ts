@@ -1,6 +1,6 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, imageMIMEType, MIMETypeMap, questionMarks } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -111,15 +111,6 @@ serverRoutes.update.func = async ctx => {
 	});
 };
 
-const imageMIMETypeMap: Record<string, string> = {
-	"jpeg": "image/jpeg",
-	"png": "image/png",
-	"webp": "image/webp",
-	"gif": "image/gif",
-	"jfif": "image/jfif",
-	"jpg:": "image/jpg"
-};
-const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
 serverRoutes.fileUpload.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		const { id } = slug;
@@ -134,7 +125,8 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 
 		if (filetype === "application/pdf") {
 			const link = bucketCVPrefix + filename;
-			if (teacher.cv && filename !== teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv); // Delete the old file if the new one has a different extension
+			// Delete the old file if the new one has a different extension
+			if (teacher.cv && filename !== teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
 
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
@@ -152,9 +144,9 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 };
 
 serverRoutes.fileRename.func = async (ctx, slug) => {
-	return await execTryCatch(async () => {
+	return await execTryCatch(async (T) => {
 		const { id } = slug;
-		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
+		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
 
 		const oldNameCV = (teacher.cv) && teacher.cv.split(".")[0];
@@ -162,14 +154,14 @@ serverRoutes.fileRename.func = async (ctx, slug) => {
 		const newName = teacher.fullname;
 		if (teacher.cv && oldNameCV !== newName) {
 			const newFileName = newName + "." + teacher.cv.split(".").at(-1);
-			await Bucket.rename(ctx, bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName, "application/pdf");
-			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [newFileName, id]);
+			await Bucket.move(ctx, bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName, "application/pdf");
+			await T.executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [newFileName, id]);
 		}
 		if (teacher.picture && oldNameImg !== newName) {
 			const imageFileType = teacher.picture.split(".").at(-1) as string;
 			const newFileName = newName + "." + imageFileType;
-			await Bucket.rename(ctx, bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName, imageMIMETypeMap[imageFileType]);
-			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
+			await Bucket.move(ctx, bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName, MIMETypeMap[imageFileType]);
+			await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
 		}
 		return "Files renamed successfully";
 	});

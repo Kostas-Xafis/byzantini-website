@@ -32,6 +32,26 @@ export const generateLink = (size = 16) => {
 	return link;
 };
 
+export const MIMETypeMap: Record<string, string> = {
+	"jpeg": "image/jpeg",
+	"png": "image/png",
+	"webp": "image/webp",
+	"gif": "image/gif",
+	"jfif": "image/jfif",
+	"jpg:": "image/jpg",
+	"svg": "image/svg+xml",
+	"pdf": "application/pdf",
+	"doc": "application/msword",
+	"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	"xls": "application/vnd.ms-excel",
+	"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	"ppt": "application/vnd.ms-powerpoint",
+	"pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	"txt": "text/plain",
+};
+export const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
+
+
 const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
 	let argStr = JSON.stringify(args);

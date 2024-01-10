@@ -10,6 +10,7 @@ import { ClassTypeServerRoutes } from "./instruments.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
 import { RegistrationsServerRoutes } from "./registrations.server";
 import { AnnouncementsServerRoutes } from "./announcement.server";
+import { ReplicationServerRoutes } from "./replication.server";
 
 import { requestValidation } from "../middleware/requestValidation";
 import type { RemovePartial } from "../../types/helpers";
@@ -29,6 +30,7 @@ const routes = (function () {
 		SysUsersServerRoutes,
 		RegistrationsServerRoutes,
 		AnnouncementsServerRoutes,
+		ReplicationServerRoutes,
 	).flat() as (RemovePartial<AnyEndpoint, "func">)[];
 	allRoutes.forEach(route => {
 		route.middleware = [];
