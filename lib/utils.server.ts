@@ -5,24 +5,6 @@ import { CreateDbConnection, type Transaction } from "./db";
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 
-/**
- *
- * @param arg
- * @returns Return the number of question marks needed for a query
- */
-export const questionMarks = (arg: number | any[] | {}) => {
-	const length = Array.isArray(arg) ? arg.length : typeof arg === "number" ? arg : Object.keys(arg).length;
-	return "?".repeat(length).split("").join(", ");
-};
-export const createSessionId = (size = 32) => {
-	const hexLookup = "0123456789abcdef";
-	let session_id = "";
-	for (let j = 0; j < size; j++) {
-		session_id += hexLookup[Math.floor(Math.random() * 16)];
-	}
-	return { session_id, session_exp_date: Date.now() + 1000 * 60 * 60 * 24 * 7 };
-};
-
 export const generateLink = (size = 16) => {
 	const linkLookup = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	let link = "";
@@ -54,6 +36,14 @@ export const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gi
 
 
 //  ---------------------- DATABASE UTILS ----------------------  \\
+
+/**
+ * @returns Return the number of question marks needed for a query
+ */
+export const questionMarks = (arg: number | any[] | {}) => {
+	const length = Array.isArray(arg) ? arg.length : typeof arg === "number" ? arg : Object.keys(arg).length;
+	return "?".repeat(length).split("").join(", ");
+};
 
 const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");

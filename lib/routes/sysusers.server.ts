@@ -1,7 +1,7 @@
 import { SysUsersRoutes } from "./sysusers.client";
-import { createSessionId, execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
-import { getSessionId } from "./authentication.server";
+import { createSessionId, getSessionId } from "../utils.auth";
 
 
 const serverRoutes = JSON.parse(JSON.stringify(SysUsersRoutes)) as typeof SysUsersRoutes;
@@ -13,7 +13,7 @@ serverRoutes.get.func = async (ctx) => {
 serverRoutes.getById.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
-		const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE id = ? LIMIT 1", id);
+		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE id = ? LIMIT 1", id);
 		if (!user) throw Error("User not found");
 		return user;
 	});
@@ -22,7 +22,7 @@ serverRoutes.getById.func = async (ctx) => {
 serverRoutes.getBySid.func = async (ctx) => {
 	return await execTryCatch(async () => {
 		const session_id = getSessionId(ctx.request) as string;
-		const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
+		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		return user;
 	});
 };
@@ -55,8 +55,8 @@ serverRoutes.registerSysUser.func = async (ctx, slug) => {
 			throw new Error("Invalid Link");
 		}
 
-		// const SECRET = await import.meta.env.DB_PWD;
-		// const body = await ctx.request.json();
+		const SECRET = await import.meta.env.SECRET;
+		const body = await ctx.request.json();
 		// const salt = randomBytes(16).toString("hex");
 		// const hash = scryptSync(body.password + SECRET, salt, 64).toString("hex") + ":" + salt;
 		// body.password = hash;

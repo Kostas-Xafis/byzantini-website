@@ -1,5 +1,5 @@
 import type { AnyEndpoint, AnyObjectSchema, HTTPMethods } from "../../types/routes";
-import { AuthenticationServerRoutes, authentication } from "./authentication.server";
+import { AuthenticationServerRoutes } from "./authentication.server";
 import { BooksServerRoutes } from "./books.server";
 import { PaymentsServerRoutes } from "./payments.server";
 import { PayoffsServerRoutes } from "./payoffs.server";
@@ -14,6 +14,7 @@ import { ReplicationServerRoutes } from "./replication.server";
 
 import { requestValidation } from "../middleware/requestValidation";
 import type { RemovePartial } from "../../types/helpers";
+import { authentication } from "../utils.auth";
 
 const routes = (function () {
 	const allRoutes = (function (...routesArr: any[]) {
@@ -55,14 +56,16 @@ export const matchRoute = (urlSlug: string[], method: HTTPMethods) => {
 	routeLoop: for (const route of routes[method]) {
 		const routePath = route.path.split("/").slice(1) as string[];
 		if (routePath.length !== urlSlug.length) continue;
+
 		for (let i = 0; i < routePath.length; i++) {
 			if (routePath[i] === urlSlug[i]) continue;
-			else if (
+
+			if (
 				routePath[i].startsWith("[") &&
 				((routePath[i].includes("number") && !isNaN(Number(urlSlug[i]))) || routePath[i].includes("string"))
-			)
-				continue;
-			else continue routeLoop;
+			) continue;
+
+			continue routeLoop;
 		}
 		return route;
 	}

@@ -21,7 +21,7 @@ export function convertUrlFromArgs(url: string, args: any): string {
 	return newUrl;
 };
 export function isSafeURLPath(url: string): boolean {
-	return url.match(/^[\p{L}\w\. '$_.+!*()-]+$/gu)?.at(0) === url;
+	return url.match(/^[\p{L}\w '$_.,+!*()-]+$/gu)?.at(0) === url;
 }
 
 // Cookie functions from w3schools

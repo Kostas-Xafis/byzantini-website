@@ -149,7 +149,7 @@ CREATE TABLE `registrations`(
 CREATE TABLE `sys_users` (
     `id` int NOT NULL AUTO_INCREMENT,
     `email` varchar(80) NOT NULL,
-    `password` varchar(80) NOT NULL,
+    `password` varchar(100) NOT NULL,
     `session_id` varchar(40),
     `session_exp_date` bigint,
     `privilege` int NOT NULL DEFAULT 0,
