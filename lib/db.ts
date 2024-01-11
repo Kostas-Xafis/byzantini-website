@@ -22,7 +22,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 			// to allow for quick local development
 
 			// This is the worst, ugliest, most stupid & most shameful line of code I've ever written
-			const mysql = await eval(`import("mysql2/promise")`);
+			const mysql = await eval(`import("mysql2/promise")`) as typeof import("mysql2/promise");
 			const db = await mysql.createConnection({
 				user: DB_USERNAME,
 				database: DB_NAME,
@@ -33,7 +33,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 			});
 			const execute: Exec = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
 				try {
-					const [res] = await db.execute(query, args) as [{ insertId: number; } | T[]];
+					const [res] = await db.execute(query, args) as unknown as [{ insertId: number; } | T[]];
 					let resObj = {} as any;
 					if ("insertId" in res) resObj["insertId"] = "" + res.insertId;
 					else {

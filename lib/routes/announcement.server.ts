@@ -1,8 +1,48 @@
+import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { asyncQueue } from "../utils.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes } from "./announcements.client";
+
+async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announcements) {
+	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
+	if (!sitemap) return;
+
+	let sitemapStr: string = "";
+	if ("byteLength" in sitemap) sitemapStr = new TextDecoder("utf-8").decode(sitemap);
+	else sitemapStr = await sitemap.text();
+
+	const title = announcement.title.replaceAll(/ /g, "-");
+	const lastmod = new Date(announcement.date).toISOString();
+	const url = `<url><loc>https://musicschool-metamorfosi.gr/anakoinoseis/${title}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>`;
+	sitemapStr = sitemapStr.replace("</urlset>", url + "</urlset>");
+
+	const sitemapBuf = new TextEncoder().encode(sitemapStr);
+	await Bucket.put(ctx, sitemapBuf, "sitemap-announcements.xml", "application/xml");
+}
+
+async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
+	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
+	if (!sitemap) return;
+
+	let sitemapStr: string = "";
+	if ("byteLength" in sitemap) sitemapStr = new TextDecoder("utf-8").decode(sitemap);
+	else sitemapStr = await sitemap.text();
+
+
+	// Replace url that contains the announcement title
+	titles.forEach(title => {
+		if (!sitemapStr.includes(title)) return;
+		const regexedTitle = title.replace(/[\/\\^$*+?.()|[\]{}]/g, "\\$&").replaceAll(/ /g, "-");
+		const regex = new RegExp(`<url>(.|\n)*?${regexedTitle}(.|\n)*?<\/url>`, "g");
+		sitemapStr = sitemapStr.replace(regex, "");
+	});
+
+	const sitemapBuf = new TextEncoder().encode(sitemapStr);
+	await Bucket.put(ctx, sitemapBuf, "sitemap-announcements.xml", "application/xml");
+}
+
 
 const bucketPrefix = "anakoinoseis/images/";
 
@@ -49,6 +89,7 @@ serverRoutes.post.func = async ctx => {
 			`INSERT INTO announcements (title, content, date) VALUES (${questionMarks(args)})`,
 			args
 		);
+		await insertAnnouncementToSitemap(ctx, body as Announcements);
 		return { insertId };
 	});
 };
@@ -60,6 +101,8 @@ serverRoutes.update.func = async ctx => {
 		args.push(args.shift());
 
 		await executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ? WHERE id = ?`, args);
+		await removeAnnouncementFromSitemap(ctx, [body.title]);
+		await insertAnnouncementToSitemap(ctx, body as Announcements);
 		return "Announcement updated successfully";
 	});
 };
@@ -77,7 +120,6 @@ const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "im
 serverRoutes.imageUpload.func = async (ctx, slug) => {
 	return await execTryCatch(async () => {
 		let { id, name } = slug;
-		name = decodeURIComponent(name);
 
 		const [announcement] = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ? AND name = ?", [id, name.replace("thumb_", "")]);
 		if (!announcement) throw Error("announcement not found");
@@ -131,6 +173,7 @@ serverRoutes.delete.func = async ctx => {
 				}
 			}
 		}
+		await removeAnnouncementFromSitemap(ctx, announcements.map(({ title }) => title));
 		return "announcement deleted successfully";
 	});
 };

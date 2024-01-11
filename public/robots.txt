@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://musicschool-metamorfosi.gr/sitemap-index.xml
+Sitemap: https://musicschool-metamorfosi.gr/sitemap-announcements.xml

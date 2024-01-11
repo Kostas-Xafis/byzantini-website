@@ -38,7 +38,7 @@ export const MIMETypeMap: Record<string, string> = {
 	"webp": "image/webp",
 	"gif": "image/gif",
 	"jfif": "image/jfif",
-	"jpg:": "image/jpg",
+	"jpg": "image/jpeg",
 	"svg": "image/svg+xml",
 	"pdf": "application/pdf",
 	"doc": "application/msword",
@@ -51,6 +51,9 @@ export const MIMETypeMap: Record<string, string> = {
 };
 export const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 
+
+
+//  ---------------------- DATABASE UTILS ----------------------  \\
 
 const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");

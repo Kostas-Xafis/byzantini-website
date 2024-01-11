@@ -97,24 +97,4 @@ serverRoutes.delete.func = async ctx => {
 	});
 };
 
-serverRoutes.moveFiles.func = async ctx => {
-	return await execTryCatch(async () => {
-		const locations = await executeQuery<Locations>("SELECT * FROM locations");
-		await asyncQueue(locations.map(location => {
-			const l = location; // Typescript is stupid
-			return async () => {
-				if (!l.image) return;
-
-				const fileType = l.image.split(".").at(-1);
-				if (!fileType) return;
-
-				await Bucket.move(ctx, l.image, bucketPrefix + l.name + "." + fileType);
-				// Update the database
-				await executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [location.name + "." + fileType, location.id]);
-			};
-		}), 4);
-		return "Files moved successfully";
-	});
-};
-
 export const LocationsServerRoutes = serverRoutes;

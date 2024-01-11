@@ -20,6 +20,10 @@ export function convertUrlFromArgs(url: string, args: any): string {
 		});
 	return newUrl;
 };
+export function isSafeURLPath(url: string): boolean {
+	return url.match(/^[\p{L}\w\. '$_.+!*()-]+$/gu)?.at(0) === url;
+}
+
 // Cookie functions from w3schools
 export function setCookie(cname: string, cvalue: string | number | boolean = "", exdays = 0, path = "/") {
 	const d = new Date();

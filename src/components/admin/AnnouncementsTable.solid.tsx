@@ -4,7 +4,7 @@ import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { asyncQueue, fileToBlob } from "../../../lib/utils.client";
+import { asyncQueue, fileToBlob, isSafeURLPath } from "../../../lib/utils.client";
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
 import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -77,7 +77,6 @@ const columnNames: ColumnType<AnnouncementTable> = {
 };
 
 function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> {}
-
 async function UploadImages(args: {
 	announcement_id: number;
 	setStore: SetStoreFunction<APIStore>;
@@ -120,7 +119,7 @@ async function UploadImages(args: {
 						return;
 					}
 					const thumbBlob = await fileToBlob(
-						await thumbCreator.createThumbnail(file, name)
+						await thumbCreator.createThumbnail(file, name, i === 0 ? 0.2 : undefined)
 					);
 					if (!thumbBlob) throw new Error("Could not create thumbnail");
 					await apiHook(API.Announcements.imageUpload, {
@@ -178,13 +177,15 @@ export default function AnnouncementsTable() {
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const submit = async function (formData: FormData) {
+			if (!isSafeURLPath(formData.get("title") as string)) {
+				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
+				throw new Error("Invalid title");
+			}
 			const data: Omit<Announcements, "id" | "views"> = {
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
 			};
-			if (data.title.includes("/"))
-				return alert('Ο τίτλος δεν μπορεί να περιέχει τον χαρακτήρα "/"');
 			const res = await apiHook(API.Announcements.post, {
 				RequestObject: data,
 			});
@@ -216,14 +217,17 @@ export default function AnnouncementsTable() {
 		if (!announcements || !images || selectedItems.length !== 1) return modifyModal;
 
 		const submit = async function (formData: FormData) {
+			if (!isSafeURLPath(formData.get("title") as string)) {
+				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
+				throw new Error("Invalid title");
+			}
+
 			const data: Omit<Announcements, "views"> = {
 				id: selectedItems[0],
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
 			};
-			if (data.title.includes("/"))
-				return alert('Ο τίτλος δεν μπορεί να περιέχει τον χαρακτήρα "/"');
 			const res = await apiHook(API.Announcements.update, {
 				RequestObject: data,
 			});

@@ -3,7 +3,9 @@ import { API, useAPI } from "../../../lib/hooks/useAPI.astro";
 import Spinner from "../../components/other/Spinner.astro";
 import Layout from "../../layouts/Layout.astro";
 
-const announcement_title = (Astro.url.pathname.split("/").pop() as string).replace(/-/g, " ");
+let url = Astro.url.pathname;
+url = url.endsWith("/") ? url.slice(0, -1) : url;
+const announcement_title = (url.split("/").pop() as string).replace(/-/g, " ");
 let announcement:
 	| ({ id: number; title: string; date: number; content: string; views: number } & {
 			images: string[];

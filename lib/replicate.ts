@@ -71,7 +71,9 @@ async function productionDatabaseReplication() {
 		// Fail silently
 		executeCommands(connectCommand, closeConnController.signal).catch(error => { });
 
+		//Wait for the connection to be established
 		await sleep(4000);
+
 		// Execute the dump commands
 		await executeCommands(dumpCommands);
 		closeConnController.abort();
