@@ -4,11 +4,11 @@ import { PaymentsRoutes } from "./payments.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(PaymentsRoutes)) as typeof PaymentsRoutes;
 
-serverRoutes.get.func = async _ctx => {
+serverRoutes.get.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"));
 };
 
-serverRoutes.getById.func = async ctx => {
+serverRoutes.getById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
@@ -17,11 +17,11 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-serverRoutes.getTotal.func = async _ctx => {
+serverRoutes.getTotal.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_payments"))[0]);
 };
 
-serverRoutes.post.func = async ctx => {
+serverRoutes.post.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const { book_id, student_name, book_amount } = await ctx.request.json();
 		const book = (await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
@@ -47,7 +47,7 @@ serverRoutes.post.func = async ctx => {
 	});
 };
 
-serverRoutes.updatePayment.func = async ctx => {
+serverRoutes.updatePayment.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const { id, amount } = await ctx.request.json();
 		//check if payment exists
@@ -60,7 +60,7 @@ serverRoutes.updatePayment.func = async ctx => {
 	});
 };
 
-serverRoutes.complete.func = async ctx => {
+serverRoutes.complete.func = async ({ ctx }) => {
 	return await execTryCatch(async (T) => {
 		const ids = await ctx.request.json();
 		//check if payment exists
@@ -72,7 +72,7 @@ serverRoutes.complete.func = async ctx => {
 	});
 };
 
-serverRoutes.delete.func = async ctx => {
+serverRoutes.delete.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const ids = await ctx.request.json();
 

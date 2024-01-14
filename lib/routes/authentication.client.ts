@@ -1,11 +1,12 @@
 import { v_LoginCredentials } from "../../types/entities";
 import type { EndpointRoute, } from "../../types/routes";
 
-const authenticateSession: EndpointRoute<"/auth/session", null, { isValid: boolean; }> = {
+const authenticateSession: EndpointRoute<"/auth/session", any, { isValid: boolean; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/auth/session",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 type UserLoginRes =
@@ -30,6 +31,7 @@ const userLogout: EndpointRoute<"/auth/logout", { sid: string; }, string> = {
 	method: "POST",
 	path: "/auth/logout",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 export const AuthenticationRoutes = {

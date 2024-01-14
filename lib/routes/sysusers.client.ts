@@ -1,11 +1,12 @@
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/sys", null, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
+const get: EndpointRoute<"/sys", any, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
@@ -13,13 +14,15 @@ const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
 	method: "POST",
 	path: "/sys/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const getBySid: EndpointRoute<"/sys/sid", null, SysUsers> = {
+const getBySid: EndpointRoute<"/sys/sid", any, SysUsers> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys/sid",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const del: EndpointRoute<"/sys", number[]> = {
@@ -27,6 +30,7 @@ const del: EndpointRoute<"/sys", number[]> = {
 	method: "DELETE",
 	path: "/sys",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; }> = {
@@ -37,18 +41,20 @@ const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_Log
 	validation: () => v_LoginCredentials,
 };
 
-const createRegisterLink: EndpointRoute<"/sys/register", null, { link: string; }> = {
+const createRegisterLink: EndpointRoute<"/sys/register", any, { link: string; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/register",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", null, { isValid: boolean; }> = {
+const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", any, { isValid: boolean; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/validate/[link:string]",
 	hasUrlParams: true,
+	validation: undefined,
 };
 
 

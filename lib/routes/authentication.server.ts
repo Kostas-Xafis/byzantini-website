@@ -7,7 +7,7 @@ import { authentication, createSessionId, generateShaKey } from "../utils.auth";
 const serverRoutes = JSON.parse(JSON.stringify(AuthenticationRoutes)) as typeof AuthenticationRoutes;
 
 
-serverRoutes.userLogin.func = async (ctx) => {
+serverRoutes.userLogin.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const credentials = await ctx.request.json();
 
@@ -30,7 +30,7 @@ serverRoutes.userLogin.func = async (ctx) => {
 	});
 };
 
-serverRoutes.userLogout.func = async (ctx) => {
+serverRoutes.userLogout.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const { sid } = await ctx.request.json();
 		await executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
@@ -38,7 +38,7 @@ serverRoutes.userLogout.func = async (ctx) => {
 	});
 };
 
-serverRoutes.authenticateSession.func = async (ctx) => {
+serverRoutes.authenticateSession.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const isAuthenticated = await authentication(ctx);
 		return { isValid: isAuthenticated };

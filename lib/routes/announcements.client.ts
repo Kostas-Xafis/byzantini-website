@@ -8,18 +8,20 @@ import {
 import { omit } from "valibot";
 import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
-const get: EndpointRoute<"/announcements", null, Announcements[]> = {
+const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/announcements",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const getSimple: EndpointRoute<"/announcements/no-content", null, Omit<Announcements, "content">[]> = {
+const getSimple: EndpointRoute<"/announcements/no-content", any, Omit<Announcements, "content">[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/announcements/no-content",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const getById: EndpointRoute<"/announcements/id", number[], Announcements> = {
@@ -27,13 +29,15 @@ const getById: EndpointRoute<"/announcements/id", number[], Announcements> = {
 	method: "POST",
 	path: "/announcements/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const getByTitle: EndpointRoute<"/announcements/title/[title:string]", null, Announcements & { images: string[]; }> = {
+const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Announcements & { images: string[]; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/announcements/title/[title:string]",
 	hasUrlParams: true,
+	validation: undefined,
 };
 
 const postReq = omit(v_Announcements, ["id", "views"]);
@@ -59,13 +63,15 @@ const del: EndpointRoute<"/announcements", number[]> = {
 	method: "DELETE",
 	path: "/announcements",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const getImages: EndpointRoute<"/announcements/images", null, AnnouncementImages[]> = {
+const getImages: EndpointRoute<"/announcements/images", any, AnnouncementImages[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/announcements/images",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 // Put image data in database
@@ -87,6 +93,7 @@ const imageUpload: EndpointRoute<"/announcements/images/[id:number]/[name:string
 	method: "POST",
 	path: "/announcements/images/[id:number]/[name:string]",
 	hasUrlParams: true,
+	validation: undefined,
 };
 
 // Delete images from bucket
@@ -95,6 +102,7 @@ const imagesDelete: EndpointRoute<"/announcements/images/[announcement_id:number
 	method: "DELETE",
 	path: "/announcements/images/[announcement_id:number]",
 	hasUrlParams: true,
+	validation: undefined,
 };
 
 export const AnnouncementsRoutes = {

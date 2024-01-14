@@ -5,6 +5,7 @@ const replication: EndpointRoute<"/replication/[service:string]"> = {
 	method: "GET",
 	path: "/replication/[service:string]",
 	hasUrlParams: true,
+	validation: undefined,
 };
 
 export const ReplicationRoutes = {

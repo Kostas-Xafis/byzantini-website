@@ -4,11 +4,11 @@ import { PayoffsRoutes, type PayoffGetResponse } from "./payoffs.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(PayoffsRoutes)) as typeof PayoffsRoutes;
 
-serverRoutes.get.func = async _ctx => {
+serverRoutes.get.func = async ({ ctx: _ctx }) => {
 	return execTryCatch(() => executeQuery<PayoffGetResponse>("SELECT * FROM school_payoffs WHERE amount > 0"));
 };
 
-serverRoutes.getById.func = async ctx => {
+serverRoutes.getById.func = async ({ ctx }) => {
 	return execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const payoff = (await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)})`, ids));
@@ -17,11 +17,11 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-serverRoutes.getTotal.func = async _ctx => {
+serverRoutes.getTotal.func = async ({ ctx: _ctx }) => {
 	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_school_payoffs"))[0]);
 };
 
-serverRoutes.updateAmount.func = async ctx => {
+serverRoutes.updateAmount.func = async ({ ctx }) => {
 	return execTryCatch(async () => {
 		const payoff = await ctx.request.json();
 		if (payoff.amount < 0) throw Error("Amount must be greater than 0");
@@ -36,7 +36,7 @@ serverRoutes.updateAmount.func = async ctx => {
 	});
 };
 
-serverRoutes.complete.func = async ctx => {
+serverRoutes.complete.func = async ({ ctx }) => {
 	return execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const payoffs = await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)}) `, ids);

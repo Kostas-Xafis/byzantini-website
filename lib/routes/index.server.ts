@@ -35,12 +35,12 @@ const routes = (function () {
 	).flat() as (RemovePartial<AnyEndpoint, "func">)[];
 	allRoutes.forEach(route => {
 		route.middleware = [];
-		if (route.authentication) route.middleware?.push(async (ctx) => {
-			let isAuthenticated = await authentication(ctx);
+		if (route.authentication) route.middleware?.push(async (req) => {
+			let isAuthenticated = await authentication(req);
 			if (!isAuthenticated) return new Response("Unauthorized", { status: 401 });
 		});
 		if ("validation" in route && route.validation) {
-			route.middleware?.push(requestValidation(route.validation as (() => AnyObjectSchema)));
+			route.middleware?.push(requestValidation(route.validation));
 		}
 	});
 

@@ -2,11 +2,12 @@ import { omit } from "valibot";
 import { v_Instruments, type Instruments } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/instruments", null, Instruments[]> = {
+const get: EndpointRoute<"/instruments", any, Instruments[]> = {
 	authentication: false,
 	method: "GET",
 	path: "/instruments",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 let postReq = omit(v_Instruments, ["id"]);
@@ -23,6 +24,7 @@ const getById: EndpointRoute<"/instruments/id", number[], Instruments> = {
 	method: "POST",
 	path: "/instruments/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const del: EndpointRoute<"/instruments", number[]> = {
@@ -30,6 +32,7 @@ const del: EndpointRoute<"/instruments", number[]> = {
 	method: "DELETE",
 	path: "/instruments",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 export const InstrumentsRoutes = {

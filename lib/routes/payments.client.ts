@@ -2,11 +2,12 @@ import { omit, pick } from "valibot";
 import { v_Payments, type Payments } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/payments", null, Payments[]> = {
+const get: EndpointRoute<"/payments", any, Payments[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/payments",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const getById: EndpointRoute<"/payments/id", number[], Payments[]> = {
@@ -14,13 +15,15 @@ const getById: EndpointRoute<"/payments/id", number[], Payments[]> = {
 	method: "POST",
 	path: "/payments/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const getTotal: EndpointRoute<"/payments/total", null, { total: number; }> = {
+const getTotal: EndpointRoute<"/payments/total", any, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payments/total",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 let postReq = omit(v_Payments, ["id", "amount", "date"]);
@@ -45,6 +48,7 @@ const complete: EndpointRoute<"/payments/complete", number[]> = {
 	method: "POST",
 	path: "/payments/complete",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const del: EndpointRoute<"/payments", number[]> = {
@@ -52,6 +56,7 @@ const del: EndpointRoute<"/payments", number[]> = {
 	method: "DELETE",
 	path: "/payments",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 export const PaymentsRoutes = {

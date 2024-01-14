@@ -5,11 +5,11 @@ import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(InstrumentsRoutes)) as typeof InstrumentsRoutes; // Copy the routes object to split it into client and server routes
 
-serverRoutes.get.func = async _ctx => {
+serverRoutes.get.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<Instruments>("SELECT * FROM instruments ORDER BY name ASC"));
 };
 
-serverRoutes.getById.func = async ctx => {
+serverRoutes.getById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
 		const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", id);
@@ -18,7 +18,7 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-serverRoutes.post.func = async ctx => {
+serverRoutes.post.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
@@ -27,7 +27,7 @@ serverRoutes.post.func = async ctx => {
 	});
 };
 
-serverRoutes.delete.func = async ctx => {
+serverRoutes.delete.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		await executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);

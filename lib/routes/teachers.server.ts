@@ -1,6 +1,6 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
-import { execTryCatch, executeQuery, imageMIMEType, MIMETypeMap, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, imageMIMEType, questionMarks } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -9,11 +9,11 @@ const bucketCVPrefix = "kathigites/cv/";
 // Include this in all .server.ts files
 let serverRoutes = JSON.parse(JSON.stringify(TeachersRoutes)) as typeof TeachersRoutes; // Copy the routes object to split it into client and server routes
 
-serverRoutes.get.func = async _ctx => {
+serverRoutes.get.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
 };
 
-serverRoutes.getById.func = async ctx => {
+serverRoutes.getById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", ids);
@@ -22,21 +22,21 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-serverRoutes.getByPriorityClasses.func = async (_ctx, slug) => {
+serverRoutes.getByPriorityClasses.func = async ({ ctx: _ctx, slug }) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id]));
 };
 
-serverRoutes.getByFullnames.func = async _ctx => {
+serverRoutes.getByFullnames.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"));
 };
 
 // TeachersClasses endpoints
-serverRoutes.getClasses.func = async _ctx => {
+serverRoutes.getClasses.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
 };
-serverRoutes.getClassesById.func = async ctx => {
+serverRoutes.getClassesById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
 		return await executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", id);
@@ -44,10 +44,10 @@ serverRoutes.getClassesById.func = async ctx => {
 };
 
 // TeachersLocations endpoints
-serverRoutes.getLocations.func = async _ctx => {
+serverRoutes.getLocations.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations"));
 };
-serverRoutes.getLocationsById.func = async ctx => {
+serverRoutes.getLocationsById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
 		return await executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id = ?", id);
@@ -55,17 +55,17 @@ serverRoutes.getLocationsById.func = async ctx => {
 };
 
 // TeachersInstruments endpoints
-serverRoutes.getInstruments.func = async ctx => {
+serverRoutes.getInstruments.func = async ({ ctx }) => {
 	return await execTryCatch(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments"));
 };
-serverRoutes.getInstrumentsById.func = async ctx => {
+serverRoutes.getInstrumentsById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
 		return await executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id = ?", id);
 	});
 };
 
-serverRoutes.post.func = async ctx => {
+serverRoutes.post.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online];
@@ -85,7 +85,7 @@ serverRoutes.post.func = async ctx => {
 	});
 };
 
-serverRoutes.update.func = async ctx => {
+serverRoutes.update.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
@@ -111,7 +111,7 @@ serverRoutes.update.func = async ctx => {
 	});
 };
 
-serverRoutes.fileUpload.func = async (ctx, slug) => {
+serverRoutes.fileUpload.func = async ({ ctx, slug }) => {
 	return await execTryCatch(async () => {
 		const { id } = slug;
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
@@ -143,7 +143,7 @@ serverRoutes.fileUpload.func = async (ctx, slug) => {
 	});
 };
 
-serverRoutes.fileRename.func = async (ctx, slug) => {
+serverRoutes.fileRename.func = async ({ ctx, slug }) => {
 	return await execTryCatch(async (T) => {
 		const { id } = slug;
 		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
@@ -154,20 +154,20 @@ serverRoutes.fileRename.func = async (ctx, slug) => {
 		const newName = teacher.fullname;
 		if (teacher.cv && oldNameCV !== newName) {
 			const newFileName = newName + "." + teacher.cv.split(".").at(-1);
-			await Bucket.move(ctx, bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName, "application/pdf");
+			await Bucket.move(ctx, bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName);
 			await T.executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [newFileName, id]);
 		}
 		if (teacher.picture && oldNameImg !== newName) {
 			const imageFileType = teacher.picture.split(".").at(-1) as string;
 			const newFileName = newName + "." + imageFileType;
-			await Bucket.move(ctx, bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName, MIMETypeMap[imageFileType]);
+			await Bucket.move(ctx, bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName);
 			await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
 		}
 		return "Files renamed successfully";
 	});
 };
 
-serverRoutes.fileDelete.func = async ctx => {
+serverRoutes.fileDelete.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
@@ -185,7 +185,7 @@ serverRoutes.fileDelete.func = async ctx => {
 	});
 };
 
-serverRoutes.delete.func = async ctx => {
+serverRoutes.delete.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const body = await ctx.request.json();
 		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (${questionMarks(body)})`, body);

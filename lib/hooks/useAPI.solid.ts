@@ -23,7 +23,7 @@ export type StoreMutation<T extends APIEndpointNames> = {
 };
 
 export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<T>) => {
-	const Route = APIEndpoints[endpoint];
+	const Route = APIEndpoints[endpoint] as (typeof APIEndpoints)[T];
 	try {
 		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
 		if (req === undefined) {
@@ -36,11 +36,12 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 				parse(Route.validation, req.RequestObject);
 			}
 			const { RequestObject, UrlArgs } = req;
-			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
+			const IsBlob = RequestObject instanceof Blob;
+			const body = (IsBlob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
 			fetcher = fetch(URL + "/api" + convertUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
 				headers: {
-					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"
+					"Content-Type": (IsBlob && RequestObject.type) || "application/json"
 				},
 				body
 			});

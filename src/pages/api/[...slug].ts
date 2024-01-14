@@ -7,7 +7,7 @@ export const prerender = false;
 
 const generateResponse = async (ctx: APIContext, route: RemovePartial<AnyEndpoint, "func">, urlSlug: string[]) => {
 	let { func, path } = route;
-	if (route.hasUrlParams === false) return await func(ctx, {});
+	if (route.hasUrlParams === false) return await func({ ctx, slug: {} });
 	const slugData = {} as any;
 	path.split("/")
 		.slice(1)
@@ -17,7 +17,7 @@ const generateResponse = async (ctx: APIContext, route: RemovePartial<AnyEndpoin
 			if (type === "number") slugData[name] = Number(urlSlug[i]);
 			else slugData[name] = urlSlug[i];
 		});
-	return await func(ctx, slugData);
+	return await func({ ctx, slug: slugData });
 };
 
 const ResponseWrap = async (ctx: APIContext, route: RemovePartial<AnyEndpoint, "func">, urlSlug: string[]) => {

@@ -1,10 +1,10 @@
-import { Show, createEffect, createMemo, createSignal, onMount, untrack } from "solid-js";
+import { Show, createEffect, createMemo, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import { getKeyIndex, mappedValue, removeAccents } from "../../../lib/utils.client";
+import { getKeyIndex, removeAccents } from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
 import { Fill, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";

@@ -2,11 +2,12 @@ import { omit, pick } from "valibot";
 import { v_Books, type Books } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/books", null, Books[]> = {
+const get: EndpointRoute<"/books", any, Books[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/books",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const getById: EndpointRoute<"/books/id", number[], Books> = {
@@ -14,6 +15,7 @@ const getById: EndpointRoute<"/books/id", number[], Books> = {
 	method: "POST",
 	path: "/books/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const postReq = omit(v_Books, ["id"]);
@@ -39,6 +41,7 @@ const del: EndpointRoute<"/books", number[]> = {
 	method: "DELETE",
 	path: "/books",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 export const BooksRoutes = {

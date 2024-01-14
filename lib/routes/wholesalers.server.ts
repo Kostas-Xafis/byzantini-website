@@ -4,11 +4,11 @@ import { WholesalersRoutes } from "./wholesalers.client";
 
 const serverRoutes = JSON.parse(JSON.stringify(WholesalersRoutes)) as typeof WholesalersRoutes;
 
-serverRoutes.get.func = async function (_ctx) {
+serverRoutes.get.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"));
 };
 
-serverRoutes.getById.func = async (ctx) => {
+serverRoutes.getById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const id = await ctx.request.json();
 		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", id);
@@ -17,7 +17,7 @@ serverRoutes.getById.func = async (ctx) => {
 	});
 };
 
-serverRoutes.post.func = async (ctx) => {
+serverRoutes.post.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const args = Object.values(await ctx.request.json());
 		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
@@ -26,7 +26,7 @@ serverRoutes.post.func = async (ctx) => {
 	});
 };
 
-serverRoutes.delete.func = async (ctx) => {
+serverRoutes.delete.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const wholesaler_id = await ctx.request.json();
 		const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;

@@ -2,11 +2,12 @@ import { object, omit, string } from "valibot";
 import { v_Registrations, type Registrations } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/registrations", null, Registrations[]> = {
+const get: EndpointRoute<"/registrations", any, Registrations[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/registrations",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const getById: EndpointRoute<"/registrations/id", number[], Registrations> = {
@@ -14,13 +15,15 @@ const getById: EndpointRoute<"/registrations/id", number[], Registrations> = {
 	method: "POST",
 	path: "/registrations/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
-const getTotal: EndpointRoute<"/registrations/total", null, { total: number; }> = {
+const getTotal: EndpointRoute<"/registrations/total", any, { total: number; }> = {
 	authentication: true,
 	method: "GET",
 	path: "/registrations/total",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const postReq = omit(v_Registrations, [
@@ -51,6 +54,7 @@ const del: EndpointRoute<"/registrations", number[]> = {
 	method: "DELETE",
 	path: "/registrations",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const v_Email = object({ email: string() });

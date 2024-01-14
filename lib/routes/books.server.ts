@@ -5,11 +5,11 @@ import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(BooksRoutes)) as typeof BooksRoutes; // Copy the routes object to split it into client and server routes
 
-serverRoutes.get.func = async _ctx => {
+serverRoutes.get.func = async ({ ctx: _ctx }) => {
 	return await execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
 };
 
-serverRoutes.getById.func = async ctx => {
+serverRoutes.getById.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", ids);
@@ -18,7 +18,7 @@ serverRoutes.getById.func = async ctx => {
 	});
 };
 
-serverRoutes.post.func = async (ctx) => {
+serverRoutes.post.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
@@ -39,7 +39,7 @@ serverRoutes.post.func = async (ctx) => {
 	});
 };
 
-serverRoutes.updateQuantity.func = async (ctx) => {
+serverRoutes.updateQuantity.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const reqBook = await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
@@ -58,7 +58,7 @@ serverRoutes.updateQuantity.func = async (ctx) => {
 	});
 };
 
-serverRoutes.delete.func = async (ctx) => {
+serverRoutes.delete.func = async ({ ctx }) => {
 	return await execTryCatch(async T => {
 		const ids = await ctx.request.json();
 		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids)})`, ids);

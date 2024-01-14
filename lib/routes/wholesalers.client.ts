@@ -2,11 +2,12 @@ import { omit } from "valibot";
 import { v_Wholesalers, type Wholesalers } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/wholesalers", null, Wholesalers[]> = {
+const get: EndpointRoute<"/wholesalers", any, Wholesalers[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/wholesalers",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const getById: EndpointRoute<"/wholesalers/id", number[], Wholesalers> = {
@@ -14,6 +15,7 @@ const getById: EndpointRoute<"/wholesalers/id", number[], Wholesalers> = {
 	method: "POST",
 	path: "/wholesalers/id",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 const postReq = omit(v_Wholesalers, ["id"]);
@@ -29,6 +31,7 @@ const remove: EndpointRoute<"/wholesalers", number[]> = {
 	method: "DELETE",
 	path: "/wholesalers",
 	hasUrlParams: false,
+	validation: undefined,
 };
 
 export const WholesalersRoutes = { get, post, getById, delete: remove };
