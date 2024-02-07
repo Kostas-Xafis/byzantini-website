@@ -3,11 +3,6 @@ export type TooltipProps = {
 	position: "top" | "bottom" | "left" | "right";
 };
 
-/**
- * A tooltip component must be used inside a relative container
- * @param props
- * @returns
- */
 export default function Tooltip(props: TooltipProps) {
 	return props.position === "left" ? (
 		<ul
@@ -16,11 +11,11 @@ export default function Tooltip(props: TooltipProps) {
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}>
 			<li class="justify-self-center">
-				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
+				<i class="fa-solid fa-circle-info text-[2.2vw] text-red-900"></i>
 			</li>
 			{props.message.map((message) => (
 				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
+					<i class="fa-solid fa-circle-chevron-right text-[1.25vw] pr-4 text-red-900 drop-shadow-none"></i>
 					{message}
 				</li>
 			))}
@@ -38,11 +33,11 @@ export default function Tooltip(props: TooltipProps) {
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}>
 			<li class="justify-self-center">
-				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
+				<i class="fa-solid fa-circle-info text-[2.2vw] text-red-900"></i>
 			</li>
 			{props.message.map((message) => (
-				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
+				<li class="text-[1.25vw] drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+					<i class="fa-solid fa-circle-chevron-right text-[1.25vw] pr-4 text-red-900 drop-shadow-none"></i>
 					{message}
 				</li>
 			))}
@@ -84,11 +79,11 @@ export default function Tooltip(props: TooltipProps) {
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}>
 			<li class="justify-self-center" style={{ "grid-column": "1 / 3" }}>
-				<i class="fa-solid fa-circle-info text-4xl text-red-900"></i>
+				<i class="fa-solid fa-circle-info text-[2.2vw] text-red-900"></i>
 			</li>
 			{props.message.map((message) => (
-				<li class="text-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-					<i class="fa-solid fa-circle-chevron-right text-lg pr-4 text-red-900 drop-shadow-none"></i>
+				<li class="text-[1.25vw] drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+					<i class="fa-solid fa-circle-chevron-right text-[1.25vw] pr-4 text-red-900 drop-shadow-none"></i>
 					{message}
 				</li>
 			))}

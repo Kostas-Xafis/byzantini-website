@@ -312,10 +312,10 @@ const searchColumns: SearchColumn[] = [
 
 const columnNames: ColumnType<TeachersTableType> = {
 	id: { type: "number", name: "Id" },
-	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 20 },
+	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 14 },
 	picture: { type: "link", name: "Φωτογραφία" },
 	cv: { type: "link", name: "Βιογραφικό" },
-	email: { type: "string", name: "Email", size: 25 },
+	email: { type: "string", name: "Email", size: 18 },
 	telephone: { type: "string", name: "Τηλέφωνο", size: 15 },
 	linktree: { type: "link", name: "Σύνδεσμος", size: 15 },
 	priority_byz: {

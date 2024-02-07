@@ -140,9 +140,9 @@ const columnNames: ColumnType<LocationsTable> = {
 	address: { type: "string", name: "Διεύθυνση", size: 15 },
 	areacode: { type: "number", name: "Ταχ. Κώδικας" },
 	municipality: { type: "string", name: "Δήμος", size: 12 },
-	priority: { type: "number", name: "Προτεραιότητα" },
+	priority: { type: "number", name: "Προτεραιότητα", size: 12 },
 	manager: { type: "string", name: "Υπεύθυνος", size: 15 },
-	email: { type: "string", name: "Email", size: 25 },
+	email: { type: "string", name: "Email", size: 20 },
 	image: { type: "link", name: "Φωτογραφία", size: 15 },
 	partner: {
 		type: "boolean",

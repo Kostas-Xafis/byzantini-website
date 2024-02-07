@@ -312,6 +312,8 @@ export default function Table(props: Props) {
 	.cell {
 		position: relative;
 		width: 100%;
+		min-width: 0;
+		word-break: break-word;
 		padding-top: 0.5rem/* 8px */;
 		padding-bottom: 0.5rem/* 8px */;
 	}

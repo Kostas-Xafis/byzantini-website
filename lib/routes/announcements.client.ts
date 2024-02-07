@@ -6,7 +6,6 @@ import {
 	type AnnouncementImages,
 } from "../../types/entities";
 import { omit } from "valibot";
-import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
 
 const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	authentication: false,

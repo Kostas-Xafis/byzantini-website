@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
 import type { ObjectSchema, ObjectShape, Output } from "valibot";
-import type { ConcatStrings, IsAny, IsNull, RemovePartial } from "./helpers";
+import type { ConcatStrings, IsAny, RemoveNullishFields, RemovePartial } from "./helpers";
 import type { ExpectedArguments, HasUrlParams } from "./path";
 
 export type HTTPMethods = "GET" | "POST" | "PUT" | "DELETE";
@@ -49,7 +49,7 @@ type DefaultEndpointRoute<Req = AnyObjectSchema> = {
 	hasUrlParams: boolean;
 	func?: (arg: { ctx: Context<any>, slug: any; }) => Promise<DefaultEndpointResponse<any>>;
 	middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
-	validation: IsValibotSchema<Req> extends true ? () => Req : undefined;
+	validation?: IsValibotSchema<Req> extends true ? () => Req : undefined;
 };
 
 // Use for typing routes, accessible in the backend
@@ -77,7 +77,7 @@ export type APIEndpointsBuilder<
 			path: Routes[K]["path"];
 			endpoint: ConcatStrings<Mount, K & string, ".">;
 			validation: Routes[K] extends { validation: () => AnyObjectSchema; } ? AnyObjectSchema : undefined;
-		};
+		}
 	};
 
 // Use for an object of routes, accessible in the frontend
@@ -87,24 +87,23 @@ export type APIBuilder<Mount extends string, Routes extends Record<string, any>>
 	};
 };
 
-type ConvertEmptyObjectArgToUndefined<T> = T extends { [k: string]: never; } ? undefined : T;
+// type ConvertEmptyObjectArgToUndefined<T> = T extends { [k: string]: never; } ? undefined : T;
 
 // Use for typing API Request params in the frontend
 export type APIArguments<Mount extends string, Routes extends Record<string, AnyEndpoint>> =
 	{
-		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]: ConvertEmptyObjectArgToUndefined<(Parameters<
-			RemovePartial<Routes[K], "func">["func"]
-		>[0]["ctx"]["request"] extends { json: () => Promise<infer T>; }
+		[K in keyof Routes as ConcatStrings<Mount, K & string, ".">]: RemoveNullishFields<{
+			RequestObject: Parameters<
+				RemovePartial<Routes[K], "func">["func"]
+			>[0]["ctx"]["request"] extends { json: () => Promise<infer T>; }
 			? IsAny<T> extends false
-			? {
-				RequestObject: T;
-			}
-			: {}
-			: {}) &
-			(Routes[K]["hasUrlParams"] extends true
-				? { UrlArgs: Parameters<RemovePartial<Routes[K], "func">["func"]>[0]["slug"]; }
-				: {})>
+			? T
+			: undefined
+			: undefined;
+			UrlArgs: Routes[K]["hasUrlParams"] extends true ? Parameters<RemovePartial<Routes[K], "func">["func"]>[0]["slug"] : undefined;
+		}>;
 	};
+
 
 
 type ExtractData<T extends DefaultEndpointResponse<{}>> = Extract<T, EndpointResponse<{}>>["res"]["data"];

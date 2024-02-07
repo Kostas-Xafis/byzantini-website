@@ -76,8 +76,26 @@ export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Re
 	};
 export type ObjectValuesToUnion<T extends Record<any, any>> = T[keyof T];
 
+type IsOptional<T, U extends keyof T> = Pick<T, U> extends {
+	[K in U]-?: T[K]
+} ? false : true;
 
-type t1 = ObjectValuesToUnion<{ a: 1, b: 2, c: 3; }>;
+type GetUndefinedFields<T extends Record<string, any>> = keyof T extends `${infer K}`
+	? K extends keyof T
+	? IsOptional<T, K> extends false
+	? IsNull<T[K]> extends true
+	? K
+	: never
+	: never
+	: never
+	: never;
+
+export type RemoveNullishFields<T extends Record<string, any>> =
+	{
+		[K in keyof Omit<T, GetUndefinedFields<T>>]: T[K];
+	} & {};
+
+
 
 type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
 
