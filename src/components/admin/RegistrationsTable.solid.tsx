@@ -755,7 +755,7 @@ export default function RegistrationsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
+		<>
 			<Show
 				when={
 					store[API.Registrations.get] &&
@@ -783,30 +783,29 @@ export default function RegistrationsTable() {
 			{/* Registration specific row styles */}
 			<style>
 				{`
-/* Paid rows */
-.row[data-paid]:nth-of-type(odd)::before {
-	background: linear-gradient(to right, #6FD286, 80px, rgb(243,244,246) 160px);
-}
-.row[data-paid]::before {
-	background: linear-gradient(to right, #6FD286, 80px, white 160px);
-}
-.row[data-paid]:is(.selectedRow){
-	background: linear-gradient(to right, #6FD286, 80px, rgb(254,202,202) 160px);
-}
+				/* Paid rows */
+				.row[data-paid]:nth-of-type(odd)::before {
+					background: linear-gradient(to right, #6FD286, 80px, rgb(243,244,246) 160px);
+				}
+				.row[data-paid]::before {
+					background: linear-gradient(to right, #6FD286, 80px, white 160px);
+				}
+				.row[data-paid]:is(.selectedRow){
+					background: linear-gradient(to right, #6FD286, 80px, rgb(254,202,202) 160px);
+				}
 
-/* Partially-Paid rows */
-.row[data-partially-paid]:nth-of-type(odd)::before {
-	background: linear-gradient(to right, #FDE85A, 80px, rgb(243,244,246) 160px);
-}
-.row[data-partially-paid]::before {
-	background: linear-gradient(to right, #FDE85A, 80px, white 160px);
-}
-.row[data-partially-paid]:is(.selectedRow){
-	background: linear-gradient(to right, #FDE85A, 80px, rgb(254,202,202) 160px);
-}
-
-`}
+				/* Partially-Paid rows */
+				.row[data-partially-paid]:nth-of-type(odd)::before {
+					background: linear-gradient(to right, #FDE85A, 80px, rgb(243,244,246) 160px);
+				}
+				.row[data-partially-paid]::before {
+					background: linear-gradient(to right, #FDE85A, 80px, white 160px);
+				}
+				.row[data-partially-paid]:is(.selectedRow){
+					background: linear-gradient(to right, #FDE85A, 80px, rgb(254,202,202) 160px);
+				}
+				`}
 			</style>
-		</SelectedItemsContext.Provider>
+		</>
 	);
 }

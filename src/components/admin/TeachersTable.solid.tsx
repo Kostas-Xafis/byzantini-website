@@ -32,6 +32,7 @@ import { TableControl, type Action, TableControlsGroup } from "./table/TableCont
 import { FileHandler } from "../../../lib/fileHandling.client";
 
 const PREFIX = "teachers";
+const INSTRUMENTS_PREFIX = "instruments";
 
 type TeachersTableType = Omit<FullTeachers, "instruments"> & {
 	priority_byz: number;
@@ -315,9 +316,9 @@ const columnNames: ColumnType<TeachersTableType> = {
 	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 14 },
 	picture: { type: "link", name: "Φωτογραφία" },
 	cv: { type: "link", name: "Βιογραφικό" },
-	email: { type: "string", name: "Email", size: 18 },
-	telephone: { type: "string", name: "Τηλέφωνο", size: 15 },
-	linktree: { type: "link", name: "Σύνδεσμος", size: 15 },
+	email: { type: "string", name: "Email", size: 15 },
+	telephone: { type: "string", name: "Τηλέφωνο", size: 12 },
+	linktree: { type: "link", name: "Σύνδεσμος", size: 9 },
 	priority_byz: {
 		type: "number",
 		name: "Προτεραιότητα Βυζαντινής",
@@ -731,7 +732,7 @@ export default function TeachersTable() {
 	});
 	const onDeleteInstrument = createMemo((): Action | EmptyAction => {
 		const instruments = store[API.Instruments.get];
-		if (!instruments) return { icon: ActionIcon.DELETE_BOX };
+		if (!instruments) return { type: ActionEnum.DELETE, icon: ActionIcon.DELETE_BOX };
 		const submit = async function (formData: FormData) {
 			const name = formData.get("name") as string;
 			const instrument = instruments.find((i) => i.name === name);
@@ -845,33 +846,31 @@ export default function TeachersTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
-			<Show
-				when={
-					store[API.Teachers.get] &&
-					store[API.Teachers.getClasses] &&
-					store[API.Locations.get] &&
-					store[API.Teachers.getLocations] &&
-					store[API.Instruments.get] &&
-					store[API.Teachers.getInstruments]
-				}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-				<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-					<TableControlsGroup prefix={"instrument"}>
-						<TableControl action={onAddInstrument} prefix={"instrument"} />
-						<TableControl action={onDeleteInstrument} prefix={"instrument"} />
-					</TableControlsGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onDownloadExcel} prefix={PREFIX} />
-					</TableControlsGroup>
-					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
-				</Table>
-			</Show>
-		</SelectedItemsContext.Provider>
+		<Show
+			when={
+				store[API.Teachers.get] &&
+				store[API.Teachers.getClasses] &&
+				store[API.Locations.get] &&
+				store[API.Teachers.getLocations] &&
+				store[API.Instruments.get] &&
+				store[API.Teachers.getInstruments]
+			}
+			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
+				<TableControlsGroup prefix={PREFIX}>
+					<TableControl action={onAdd} prefix={PREFIX} />
+					<TableControl action={onModify} prefix={PREFIX} />
+					<TableControl action={onDelete} prefix={PREFIX} />
+				</TableControlsGroup>
+				<TableControlsGroup prefix={INSTRUMENTS_PREFIX}>
+					<TableControl action={onAddInstrument} prefix={INSTRUMENTS_PREFIX} />
+					<TableControl action={onDeleteInstrument} prefix={INSTRUMENTS_PREFIX} />
+				</TableControlsGroup>
+				<TableControlsGroup prefix={PREFIX}>
+					<TableControl action={onDownloadExcel} prefix={PREFIX} />
+				</TableControlsGroup>
+				<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
+			</Table>
+		</Show>
 	);
 }

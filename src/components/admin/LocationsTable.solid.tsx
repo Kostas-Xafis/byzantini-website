@@ -300,18 +300,14 @@ export default function LocationsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
-			<Show
-				when={store[API.Locations.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-				</Table>
-			</Show>
-		</SelectedItemsContext.Provider>
+		<Show when={store[API.Locations.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
+				<TableControlsGroup prefix={PREFIX}>
+					<TableControl action={onAdd} prefix={PREFIX} />
+					<TableControl action={onModify} prefix={PREFIX} />
+					<TableControl action={onDelete} prefix={PREFIX} />
+				</TableControlsGroup>
+			</Table>
+		</Show>
 	);
 }

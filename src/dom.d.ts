@@ -1,4 +1,5 @@
 import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid.ts";
+import type { Alert } from "./components/admin/Alert.solid.tsx";
 
 declare global {
 	// interface Document { //adds definition to Document, but you can do the same with HTMLElement
@@ -18,6 +19,7 @@ declare global {
 		FormCleanup: CustomEvent<{ prefix: string; }>;
 		FormMount: CustomEvent<{ prefix: string; }>;
 		ModalClose: CustomEvent<{ prefix: string; }>;
+		push_alert: CustomEvent<Alert>;
 	}
 }
 

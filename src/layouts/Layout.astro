@@ -151,6 +151,19 @@ const logoUrl = new URL(Astro.request.url).origin + (imageUrl || "/logo.png");
 					transform: translateX(0px);
 				}
 			}
+			@keyframes fadeInRight {
+				0% {
+					opacity: 0.0001;
+					transform: translateX(2rem);
+				}
+				80% {
+					opacity: 1;
+				}
+				100% {
+					opacity: 1;
+					transform: translateX(0px);
+				}
+			}
 		</style>
 		<style is:inline>
 			.spinner {

@@ -27,6 +27,7 @@ export class SelectedRows {
 	private selectedItems: number[];
 	private setSelectedItems: SetStoreFunction<number[]>;
 	private static eventListeners: Map<string, (e: CustomEvent<TypeEffect>) => void> = new Map();
+	private static selectedItems: number[] = [];
 
 	constructor() {
 		let [si, ssi] = createStore<number[]>([]);
@@ -46,6 +47,7 @@ export class SelectedRows {
 		};
 		document.addEventListener("ModifySelections", eventHandler);
 		SelectedRows.eventListeners.set(window.location.pathname, eventHandler);
+		SelectedRows.selectedItems = this.selectedItems;
 
 		return [
 			this.selectedItems,
@@ -80,6 +82,11 @@ export class SelectedRows {
 			default:
 				break;
 		}
+		SelectedRows.selectedItems = this.selectedItems;
+	}
+
+	static getSelectedItems() {
+		return SelectedRows.selectedItems;
 	}
 }
 

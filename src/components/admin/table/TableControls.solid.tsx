@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, createSignal, type Accessor, type JSX } from "solid-js";
+import { Show, createEffect, type Accessor, type JSX } from "solid-js";
 import type { Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";

@@ -1,3 +1,12 @@
+export function randomHex(size = 16) {
+	const hexLookup = "0123456789abcdef";
+	let hex = "";
+	for (let j = 0; j < size; j++) {
+		hex += hexLookup[Math.floor(Math.random() * 16)];
+	}
+	return hex;
+};
+
 export function isDevFromURL(url: URL | string, localProd = true): boolean {
 	if (typeof url === "string") url = new URL(url);
 	// Only wrangler dev use cf plugins like buckets
@@ -282,3 +291,21 @@ export const teacherTitleByGender = (title: 0 | 1 | 2, gender: "M" | "F") => {
 };
 
 export const imageMIMETypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
+
+
+export class BatchedExecution<T> {
+	#items: T[] = [];
+	constructor(private timeout = 1000, private updateHandler = new UpdateHandler(timeout)) { }
+	add(item: T) {
+		this.#items.push(item);
+		this.updateHandler.reset();
+	}
+	execute(func: (items: T[]) => void) {
+		this.updateHandler.setFunction(() => {
+			const temp = this.#items.slice();
+			func(temp);
+			this.#items = this.#items.slice(temp.length);
+		});
+		this.updateHandler.timeout().catch((e) => { });
+	}
+}

@@ -240,19 +240,17 @@ export default function PaymentsTable() {
 	});
 
 	return (
-		<SelectedItemsContext.Provider value={[selectedItems, setSelectedItems]}>
-			<Show
-				when={store[API.Books.get] && store[API.Payments.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-				<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-						<TableControl action={onComplete} prefix={PREFIX} />
-					</TableControlsGroup>
-				</Table>
-			</Show>
-		</SelectedItemsContext.Provider>
+		<Show
+			when={store[API.Books.get] && store[API.Payments.get]}
+			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
+				<TableControlsGroup prefix={PREFIX}>
+					<TableControl action={onAdd} prefix={PREFIX} />
+					<TableControl action={onModify} prefix={PREFIX} />
+					<TableControl action={onDelete} prefix={PREFIX} />
+					<TableControl action={onComplete} prefix={PREFIX} />
+				</TableControlsGroup>
+			</Table>
+		</Show>
 	);
 }

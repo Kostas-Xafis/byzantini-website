@@ -1,9 +1,9 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
-import AdminPage from "../../components/admin/AdminPage.solid.tsx";
+import AdminRouter from "../../components/admin/AdminRouter.solid.tsx";
 export const prerender = false;
 ---
 
 <AdminLayout title="Διαχείρηση">
-	<AdminPage client:only="solid-js" />
+	<AdminRouter client:only="solid-js" />
 </AdminLayout>

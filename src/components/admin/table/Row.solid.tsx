@@ -1,6 +1,10 @@
 import { type Setter, For } from "solid-js";
 import { SortDirection } from "./Table.solid";
-import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
+import {
+	SelectedRows,
+	TypeEffectEnum,
+	selectedRowsEvent,
+} from "../../../../lib/hooks/useSelectedRows.solid";
 import { getParent } from "../../../../lib/utils.client";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean";
@@ -141,11 +145,21 @@ export default function Row(props: Props) {
 				{hasSelectBox && (
 					<div
 						class={
-							"group/checkbox relative w-full items-center" +
+							"group/checkbox relative items-center justify-items-center" +
 							(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
 						}>
-						<i class="selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden"></i>
-						<i class="selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden"></i>
+						<button>
+							<i
+								class={
+									"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" +
+									(header ? " text-2xl" : "")
+								}></i>
+							<i
+								class={
+									"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" +
+									(header ? " text-2xl" : "")
+								}></i>
+						</button>
 					</div>
 				)}
 				<For each={data}>

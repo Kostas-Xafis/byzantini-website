@@ -4,7 +4,7 @@ import type { SysUsers } from "../types/entities";
 import { createHash } from "node:crypto";
 
 export async function generateShaKey(key: string, salt?: string) {
-	salt = salt || generateSalt();
+	salt = salt || randomHex();
 	const hmac = createHash("sha256");
 	hmac.update(key + (await import.meta.env.SECRET));
 	hmac.update(salt);
@@ -45,12 +45,12 @@ class AuthCache {
 const small_cache = new AuthCache();
 
 const hexLookup = "0123456789abcdef";
-export const generateSalt = (size = 16) => {
-	let salt = "";
+export function randomHex(size = 16) {
+	let hex = "";
 	for (let j = 0; j < size; j++) {
-		salt += hexLookup[Math.floor(Math.random() * 16)];
+		hex += hexLookup[Math.floor(Math.random() * 16)];
 	}
-	return salt;
+	return hex;
 };
 
 export const createSessionId = (size = 32) => {

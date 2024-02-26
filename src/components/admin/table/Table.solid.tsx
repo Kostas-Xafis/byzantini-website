@@ -45,14 +45,14 @@ const computeColumns = (
 	columnNames: Record<string, { type: CellValue; name: string; size?: number }>,
 	hasSelectBox: boolean
 ) => {
-	let columnWidths = "grid-template-columns: " + (hasSelectBox ? "2ch " : "");
+	let columnWidths = "grid-template-columns: " + (hasSelectBox ? "5ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
 		let len = (size || name.length) + 1;
 		columnWidths += ` ${len + 2}ch`;
 		return name;
 	});
 	columnWidths += ";";
-	if (hasSelectBox) columnWidths += "padding-left: 1.5rem;";
+	// if (hasSelectBox) columnWidths += "padding-left: 1.5rem;";
 	return { columnWidths, columns };
 };
 
@@ -120,7 +120,6 @@ export default function Table(props: Props) {
 		const row = getParent(e.target as HTMLElement, ".row");
 		if (!row) return;
 
-		// const removedAllAction = false;
 		if (row.classList.contains("header")) {
 			// If user actually clicked on the main checkbox
 			let mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
@@ -261,7 +260,7 @@ export default function Table(props: Props) {
 	}
 	@media (max-height: 859px) {
 		#tableContainer {
-			max-height: calc(var(--paginate) * 80vh + (1 - var(--paginate)) * 88.5vh);
+			max-height: calc(var(--paginate) * 82vh + (1 - var(--paginate)) * 88.5vh);
 		}
 	}
 	.row {
@@ -272,7 +271,6 @@ export default function Table(props: Props) {
 		justify-content: space-between;
 		place-items: center;
 		height: min-content;
-		padding-left: 1.5rem/* 24px */;
    		padding-right: 1.5rem/* 24px */;
 		column-gap: 0.5rem/* 8px */;
 		font-size: 1.125rem/* 18px */;
@@ -321,8 +319,7 @@ export default function Table(props: Props) {
 		position: absolute;
 		top: 50%;
 		left: 0;
-		width: 16px;
-		transform: translateY(-50%);
+		transform: translate(-50%, -50%);
 		color: rgb(55 65 81);
 	}
 	@keyframes ShakeAnimation {
