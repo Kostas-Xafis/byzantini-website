@@ -23,5 +23,6 @@ export const enum ActionIcon {
 }
 
 export type EmptyAction = {
+	type: ActionEnum;
 	icon: ActionIcon;
 };

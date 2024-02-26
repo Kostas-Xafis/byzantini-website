@@ -63,7 +63,7 @@ export class SelectedRows {
 		const type = effect.type;
 		switch (type) {
 			case TypeEffectEnum.ADD:
-				this.setSelectedItems([...this.selectedItems, effect.id]);
+				this.setSelectedItems([...new Set([...this.selectedItems, effect.id])]);
 				break;
 			case TypeEffectEnum.ADD_MANY:
 				this.setSelectedItems([...new Set([...this.selectedItems, ...effect.ids])]);

@@ -8,7 +8,7 @@ import type { Action } from "./TableControls.solid";
 
 type Props = {
 	prefix: string;
-	action: Action;
+	actionStore: { action: Action };
 };
 
 const [globalLoading, setGlobalLoading] = createStore<Record<string, boolean>>({});
@@ -45,7 +45,7 @@ export const useModalLoading = (prefix?: string) => {
 };
 
 const submitWrapper = (
-	onSubmit: Props["action"]["onSubmit"],
+	onSubmit: (formData: FormData) => Promise<void>,
 	{
 		setModalLoading,
 		setModalOpen,
@@ -74,18 +74,18 @@ const submitWrapper = (
 };
 
 export default function Modal(props: Props) {
-	const { prefix, action } = props;
-	const MODAL_PREFIX = prefix + action.type;
+	const { prefix, actionStore } = props;
+	const MODAL_PREFIX = prefix + actionStore.action.type;
 	const [openState, setOpenState] = useModalOpen(MODAL_PREFIX);
 	const [loadingState, setLoadingState] = useModalLoading(MODAL_PREFIX);
 
 	const onFormSubmit = async (event: Event) => {
-		if (!action.onSubmit) return;
+		if (!actionStore.action.onSubmit) return;
 		event.preventDefault();
 		event.stopPropagation();
 		const form = document.querySelector<HTMLFormElement>(`form[data-prefix=${MODAL_PREFIX}]`);
 		if (!form) return;
-		await submitWrapper(action.onSubmit, {
+		await submitWrapper(actionStore.action.onSubmit, {
 			setModalLoading: (set: boolean) => {
 				setLoadingState(MODAL_PREFIX, set);
 			},
@@ -108,11 +108,16 @@ export default function Modal(props: Props) {
 				(!globalOpen[MODAL_PREFIX] ? " hidden" : "")
 			}>
 			<div class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-white place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center">
-				<p class="text-4xl p-2 w-full text-center max-sm:text-3xl">{action.headerText}</p>
+				<p class="text-4xl p-2 w-full text-center max-sm:text-3xl">
+					{actionStore.action.headerText}
+				</p>
 				<form
 					data-prefix={MODAL_PREFIX}
 					class="peer/form group/form grid grid-cols-3 auto-rows-max gap-10 py-4 overflow-y-auto max-sm:grid-cols-1">
-					<For each={Object.values(action.inputs).filter((input) => !!input.name)}>
+					<For
+						each={Object.values(actionStore.action.inputs).filter(
+							(input) => !!input.name
+						)}>
 						{(input) => (
 							<Input {...(input as InputProps)} prefix={MODAL_PREFIX}></Input>
 						)}
@@ -126,7 +131,7 @@ export default function Modal(props: Props) {
 						}
 						type="submit"
 						onclick={onFormSubmit}>
-						{action.submitText}
+						{actionStore.action.submitText}
 					</button>
 				</Show>
 				<CloseButton

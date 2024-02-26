@@ -20,7 +20,7 @@ import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 
-import { toggleCheckboxes } from "./table/Row.solid";
+import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
 
@@ -420,8 +420,11 @@ export default function RegistrationsTable() {
 
 		let bulk = selectedItems.length > 1;
 
+		console.log("bulk:", bulk);
+
 		const submit = !bulk
 			? async function () {
+					console.log("calling onDownloadPDF not bulk");
 					const student = registrations.find(
 						(r) => r.id === selectedItems[0]
 					) as Registrations;
@@ -440,6 +443,7 @@ export default function RegistrationsTable() {
 					} catch (error) {}
 			  }
 			: async function () {
+					console.log("calling onDownloadPDF bulk");
 					const items = selectedItems.map((id) => {
 						const student = registrations.find((r) => r.id === id) as Registrations;
 						const teacher = teachers.find(
@@ -742,6 +746,9 @@ export default function RegistrationsTable() {
 					) {
 						row.setAttribute("data-partially-paid", "");
 					}
+				}
+				for (let i = 0; i < selectedItems.length; i++) {
+					toggleCheckbox(selectedItems[i], true);
 				}
 			});
 		});
