@@ -86,7 +86,7 @@ const columnNames: ColumnType<PaymentsTable> = {
 };
 
 export default function PaymentsTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 

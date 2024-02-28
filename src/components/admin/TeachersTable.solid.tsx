@@ -341,7 +341,7 @@ const columnNames: ColumnType<TeachersTableType> = {
 };
 
 export default function TeachersTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>(
 		{}
 	);

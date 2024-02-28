@@ -28,7 +28,7 @@ const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
 };
 
 export default function SysUsersTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setSysUserHydrate = useHydrateById({

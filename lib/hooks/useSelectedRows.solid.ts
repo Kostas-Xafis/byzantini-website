@@ -49,16 +49,7 @@ export class SelectedRows {
 		SelectedRows.eventListeners.set(window.location.pathname, eventHandler);
 		SelectedRows.selectedItems = this.selectedItems;
 
-		return [
-			this.selectedItems,
-			{
-				add: (id: number) => this.mutateItems({ type: TypeEffectEnum.ADD, id }),
-				addMany: (ids: number[]) => this.mutateItems({ type: TypeEffectEnum.ADD_MANY, ids }),
-				remove: (id: number) => this.mutateItems({ type: TypeEffectEnum.REMOVE, id }),
-				removeMany: (ids: number[]) => this.mutateItems({ type: TypeEffectEnum.REMOVE_MANY, ids }),
-				removeAll: () => this.mutateItems({ type: TypeEffectEnum.REMOVE_ALL }),
-			},
-		] as const;
+		return this.selectedItems;
 	}
 
 	mutateItems(effect: TypeEffect) {

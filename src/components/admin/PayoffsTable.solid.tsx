@@ -51,7 +51,7 @@ const payoffsToTable = (payoffs: Payoffs[], wholesalers: Wholesalers[]): SchoolP
 };
 
 export default function PayoffsTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setPayoffHydrate = useHydrateById({

@@ -131,7 +131,10 @@ async function UploadImages(args: {
 				}
 			};
 		});
-	await asyncQueue(photos, 4, true);
+	await asyncQueue(photos, {
+		maxJobs: 4,
+		verbose: true,
+	});
 
 	if (!images) return;
 	const deletedFiles = FileHandler.getDeletedFiles(imagesPrefix);
@@ -150,7 +153,7 @@ async function UploadImages(args: {
 }
 
 export default function AnnouncementsTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setAnnouncementHydrate = useHydrateById({

@@ -126,7 +126,7 @@ export class PDF {
 		a.click();
 	}
 
-	public static async downloadBulk(arr: PDF[]): Promise<void> {
+	public static async downloadBulk(arr: PDF[], progressCallback?: (prog: number) => any): Promise<void> {
 		let serverTimeout = false;
 		let requestArr = arr.map((pdf) => async () => {
 			let res;
@@ -155,7 +155,7 @@ export class PDF {
 			}
 		});
 		let t = Date.now();
-		let queueResult = await asyncQueue(requestArr, 6, true);
+		let queueResult = await asyncQueue(requestArr, { maxJobs: 6, verbose: true, progressCallback });
 		console.log("Queue took", Date.now() - t);
 
 		let z = zip as typeof zip;

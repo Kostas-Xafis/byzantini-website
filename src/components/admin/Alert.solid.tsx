@@ -1,91 +1,151 @@
-import { onCleanup, createSignal } from "solid-js";
-import { createStore } from "solid-js/store";
-import { BatchedExecution, randomHex, sleep } from "../../../lib/utils.client";
+import { onCleanup, createSignal, batch } from "solid-js";
+import { ExecutionQueue, randomHex } from "../../../lib/utils.client";
 
 export type Alert = {
+	id: string;
 	message: string;
 	type: "error" | "success" | "warning" | "info";
+	status: "push" | "remove" | "update";
+	expires?: number;
 };
 
-type UniqueAlert = Alert & { id: string };
+export function createAlert(type: Alert["type"], ...message: (Record<any, any> | string)[]): Alert {
+	let msg = "";
+	message.forEach((m) => {
+		if (typeof m === "object") {
+			msg += JSON.stringify(m);
+		} else {
+			msg += m;
+		}
+	});
+	return {
+		type,
+		message: msg,
+		id: randomHex(5),
+		status: "push",
+	};
+}
+
+export function pushAlert(alert: Alert) {
+	window.dispatchEvent(new CustomEvent("push_alert", { detail: alert }));
+	return alert;
+}
+
+export function updateAlert(alert: Alert) {
+	window.dispatchEvent(new CustomEvent("update_alert", { detail: alert }));
+}
 
 export default function AlertStack() {
-	const batchedAlertRemove = new BatchedExecution<UniqueAlert>(500);
-	const batchedAlertAdd = new BatchedExecution<UniqueAlert>(500);
-	const [alerts, setAlerts] = createStore<UniqueAlert[]>([]);
-	// If the array operation is not push, we dont want to animate the last element
-	const [arrayOperation, setArrayOperation] = createSignal<"push" | "remove" | "">("", {
+	const [alerts, setAlerts] = createSignal<Alert[]>([], { equals: false });
+	const [arrayOperation, setArrayOperation] = createSignal<Alert["status"]>("push", {
 		equals: false,
 	});
-
-	// Add a live update for functionality later!!! probably with a window event listener
-
-	batchedAlertRemove.execute((alerts) => {
-		alerts.forEach((alert) => {
-			const alertEl = document.querySelector(
-				`[data-alert-id="${alert.id}"]`
-			) as HTMLElement | null;
-			if (!alertEl) return;
-			alertEl.classList.remove("fadeInRightAnim", "slideInBottomAnim");
-			void alertEl.offsetWidth;
-			alertEl.classList.add("fadeOutLeftAnim");
-		});
-		setTimeout(() => {
-			setAlerts((prevAlerts) => {
-				return prevAlerts.filter(
-					(pAlert) => alerts.findIndex((alert) => pAlert.id === alert.id) === -1
-				);
-			});
-			setArrayOperation("remove");
-		}, 500);
-	});
-	batchedAlertAdd.execute(async (new_alerts) => {
-		for (let alert of new_alerts) {
-			setAlerts([...alerts, alert]);
-			await sleep(100);
+	const executionQueue = new ExecutionQueue<Alert>(600, async (alert) => {
+		if (alert.status !== "update" && executionQueue.getInterval() === 10) {
+			executionQueue.setInterval(600);
 		}
-		for (let alert of new_alerts) {
-			if (alert.type === "info" || alert.type === "success") {
-				setTimeout(() => removeAlert(alert), 3000 + 1000 * alerts.length);
+		switch (alert.status) {
+			case "push":
+				batch(() => {
+					alert.expires = Date.now() + 3000;
+					setAlerts((prevAlerts) => [...prevAlerts, alert]);
+					setArrayOperation("push");
+				});
+				break;
+			case "remove":
+				const alertEl = document.querySelector(
+					`[data-alert-id="${alert.id}"]`
+				) as HTMLElement | null;
+				if (!alertEl) return;
+				alertEl.classList.remove("fadeInRightAnim", "slideInBottomAnim", "duration-50");
+				void alertEl.offsetWidth;
+				alertEl.classList.add("fadeOutLeftAnim");
+				setTimeout(() => {
+					batch(() => {
+						setAlerts((prevAlerts) => {
+							return prevAlerts.filter((pAlert) => pAlert.id !== alert.id);
+						});
+						setArrayOperation("remove");
+					});
+				}, 500);
+				break;
+			case "update":
+				const alertIdx = alerts().findIndex((a) => a.id === alert.id);
+				if (alertIdx === -1) return;
+				batch(() => {
+					setAlerts((prevAlerts) => {
+						prevAlerts[alertIdx].message = alert.message;
+						prevAlerts[alertIdx].status = "update";
+						if (alert.type === "info" || alert.type === "success") {
+							prevAlerts[alertIdx].expires = Date.now() + 3000;
+						}
+						return prevAlerts;
+					});
+					setArrayOperation("update");
+				});
+				executionQueue.setInterval(10); // Instant update
+				break;
+			default:
+				break;
+		}
+	});
+	const handlePushAlert = (e: CustomEvent<Alert>) => {
+		executionQueue.push(e.detail);
+	};
+
+	const handleRemoveAlert = (alert: Alert) => {
+		alert.status = "remove";
+		executionQueue.push(alert);
+	};
+	const handleUpdateAlert = (e: CustomEvent<Alert>) => {
+		e.detail.status = "update";
+		executionQueue.push(e.detail);
+	};
+
+	window.addEventListener("push_alert", handlePushAlert);
+	window.addEventListener("update_alert", handleUpdateAlert);
+	const removeAlertsIntervalId = setInterval(() => {
+		const d = Date.now();
+		alerts().forEach((alert) => {
+			if (
+				alert.status !== "remove" &&
+				(alert.type === "info" || alert.type === "success") &&
+				alert.expires &&
+				alert.expires < d
+			) {
+				handleRemoveAlert(alert);
 			}
-		}
-		setArrayOperation("push");
-	});
-
-	const handleAlert = (e: CustomEvent<Alert>) => {
-		batchedAlertAdd.add({ ...e.detail, id: randomHex(5) } as UniqueAlert);
-	};
-
-	const removeAlert = (alert: UniqueAlert) => {
-		batchedAlertRemove.add(alert);
-	};
-
-	window.addEventListener("push_alert", handleAlert);
+		});
+	}, 500);
 	onCleanup(() => {
-		window.removeEventListener("push_alert", handleAlert);
+		window.removeEventListener("push_alert", handlePushAlert);
+		window.removeEventListener("update_alert", handleUpdateAlert);
+		clearInterval(removeAlertsIntervalId);
 	});
 
 	return (
 		<div class="fixed bottom-8 right-8 flex flex-col gap-y-2 z-[9999] transition-[height]">
-			{alerts.map((alert, idx) => {
+			{alerts().map((alert, idx) => {
 				return (
 					<div
 						class={
-							"flex flex-row gap-x-2 justify-between items-center shadow-md shadow-gray-400 px-3 py-2 rounded-md text-white" +
+							"flex flex-row gap-x-2 justify-between items-center shadow-md shadow-gray-400 px-3 py-2 rounded-md text-white break-words" +
 							(alert.type === "error" ? " bg-red-900" : "") +
 							(alert.type === "warning" ? " bg-[#df8920]" : "") +
 							(alert.type === "success" ? " bg-[#0da51f]" : "") +
 							(alert.type === "info" ? " bg-[#0661e0]" : "") +
 							((arrayOperation() === "push" &&
-								(idx === alerts.length - 1
+								(idx === alerts().length - 1
 									? " fadeInRightAnim"
 									: " slideInBottomAnim duration-50")) ||
 								"")
 						}
 						data-alert-id={alert.id}>
-						<p class="text-lg max-w-[25ch] min-w-0 text-white">{alert.message}</p>
+						<p class="text-lg max-w-[35ch] min-w-0 text-white">{alert.message}</p>
 						{alert.type === "error" || alert.type === "warning" ? (
-							<button class="bg-slate-500 p-2" onClick={() => removeAlert(alert)}>
+							<button
+								class="bg-slate-500 p-2"
+								onClick={() => handleRemoveAlert(alert)}>
 								Dismiss
 							</button>
 						) : null}

@@ -20,6 +20,7 @@ declare global {
 		FormMount: CustomEvent<{ prefix: string; }>;
 		ModalClose: CustomEvent<{ prefix: string; }>;
 		push_alert: CustomEvent<Alert>;
+		update_alert: CustomEvent<Alert>;
 	}
 }
 

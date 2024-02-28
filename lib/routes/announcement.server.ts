@@ -150,7 +150,9 @@ serverRoutes.imagesDelete.func = async ({ ctx, slug }) => {
 				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
 			);
 		}
-		await asyncQueue(deletionJobs, 10);
+		await asyncQueue(deletionJobs, {
+			maxJobs: 10,
+		});
 		return "Images deleted successfully";
 	});
 };

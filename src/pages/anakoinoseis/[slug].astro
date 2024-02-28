@@ -166,7 +166,9 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					await sleep(20);
 				}
 			});
-			await asyncQueue(jobs, 5);
+			await asyncQueue(jobs, {
+				maxJobs: 5,
+			});
 			imgContainers.forEach((imgContainer, i) => {
 				if (i === 0) return;
 				imgContainer.addEventListener("click", () => {

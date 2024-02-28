@@ -152,7 +152,7 @@ const columnNames: ColumnType<LocationsTable> = {
 };
 
 export default function LocationsTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setLocationHydrate = useHydrateById({

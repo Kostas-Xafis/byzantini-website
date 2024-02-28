@@ -36,8 +36,7 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 		}
 		const response = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.res.type === "error") {
-			console.error(response.res.error);
-			throw new Error(JSON.stringify(response.res.error));
+			throw new Error(response.res.error);
 		} else if (response.res.type === "message") {
 			return { message: response.res.message };
 		} else {
@@ -45,6 +44,6 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 		}
 	} catch (err) {
 		console.error(err);
-		throw new Error(JSON.stringify(err as {}));
+		throw err;
 	}
 };

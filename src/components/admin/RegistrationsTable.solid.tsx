@@ -21,6 +21,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTy
 import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
 
 import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
+import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 
 const PREFIX = "registrations";
 
@@ -235,7 +236,7 @@ const searchColumns: SearchColumn[] = [
 ];
 
 export default function RegistrationsTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
@@ -366,6 +367,7 @@ export default function RegistrationsTable() {
 				action: ActionEnum.MODIFY,
 				ids: [data.id],
 			});
+			pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
 		};
 		const filledInputs = Fill(
 			RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>,
@@ -398,6 +400,11 @@ export default function RegistrationsTable() {
 			});
 			if (!res.data && !res.message) return;
 			setRegistrationHydrate({ action: ActionEnum.DELETE, ids: data });
+			data.forEach((id) => {
+				const reg = registrations.find((r) => r.id === id);
+				let fullname = reg?.last_name + " " + reg?.first_name;
+				pushAlert(createAlert("success", `Επιτυχής διαγραφή εγγραφής: ${fullname}`));
+			});
 		};
 		return {
 			inputs: {},
@@ -420,8 +427,6 @@ export default function RegistrationsTable() {
 
 		let bulk = selectedItems.length > 1;
 
-		console.log("bulk:", bulk);
-
 		const submit = !bulk
 			? async function () {
 					console.log("calling onDownloadPDF not bulk");
@@ -440,7 +445,10 @@ export default function RegistrationsTable() {
 						pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
 						await pdf.fillTemplate();
 						await pdf.download();
-					} catch (error) {}
+						pushAlert(createAlert("success", "Επιτυχής λήψη PDF"));
+					} catch (error: any) {
+						pushAlert(createAlert("error", "Σφάλμα κατά την λήψη του PDF: ", error));
+					}
 			  }
 			: async function () {
 					console.log("calling onDownloadPDF bulk");
@@ -468,8 +476,16 @@ export default function RegistrationsTable() {
 							);
 							pdfArr.push(pdf);
 						}
-						await PDF.downloadBulk(pdfArr);
-					} catch (error) {}
+						const alert = pushAlert(
+							createAlert("success", "Λήψη των PDF: 0 από " + pdfArr.length)
+						);
+						await PDF.downloadBulk(pdfArr, (pg) => {
+							alert.message = "Λήψη των PDF: " + pg + " από " + pdfArr.length;
+							updateAlert(alert);
+						});
+					} catch (error: any) {
+						pushAlert(createAlert("error", "Σφάλμα κατά την λήψη των PDF: ", error));
+					}
 			  };
 		return {
 			inputs: {},

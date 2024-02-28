@@ -11,6 +11,7 @@ import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 
 const PREFIX = "books";
 
@@ -94,7 +95,7 @@ const columnNames: ColumnType<BooksTable> = {
 };
 
 export default function BooksTable() {
-	const [selectedItems, setSelectedItems] = new SelectedRows().useSelectedRows();
+	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setBookHydrate = useHydrateById({
@@ -159,6 +160,7 @@ export default function BooksTable() {
 				action: ActionEnum.ADD,
 				ids: [res.data.insertId],
 			});
+			pushAlert(createAlert("success", "Επιτυχής προσθήκη βιβλίου: " + (data.title || "")));
 		};
 		return {
 			inputs: Omit(BooksInputs(wholesalers), "id"),
@@ -187,6 +189,7 @@ export default function BooksTable() {
 			});
 			if (!res.data && !res.message) return;
 			setBookHydrate({ action: ActionEnum.MODIFY, ids: [book.id] });
+			pushAlert(createAlert("success", "Επιτυχής ενημέρωση βιβλίου: " + (book.title || "")));
 		};
 		return {
 			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
@@ -215,6 +218,10 @@ export default function BooksTable() {
 				action: ActionEnum.DELETE,
 				ids: selectedItems.slice(),
 			});
+			data.forEach((id) => {
+				let name = books.find((b) => b.id === id)?.title;
+				pushAlert(createAlert("success", "Επιτυχής διαγραφή βιβλίου: " + (name || "")));
+			});
 		};
 		return {
 			inputs: {},
@@ -238,6 +245,9 @@ export default function BooksTable() {
 				action: ActionEnum.ADD,
 				ids: [res.data.insertId],
 			});
+			pushAlert(
+				createAlert("success", "Επιτυχής προσθήκη χονδρέμπορου: " + (data.name || ""))
+			);
 		};
 		return {
 			inputs: {
@@ -267,6 +277,8 @@ export default function BooksTable() {
 				action: ActionEnum.DELETE,
 				ids: data,
 			});
+			let name = wholesalers.find((w) => w.id === data[0])?.name;
+			pushAlert(createAlert("success", "Επιτυχής διαγραφή χονδρέμπορου: " + (name || "")));
 		};
 		return {
 			inputs: {

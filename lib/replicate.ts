@@ -10,7 +10,9 @@ async function productionBucketReplication() {
 
 	await asyncQueue(devBucketList.map((file) => {
 		return () => Bucket.deleteDev(file);
-	}), 10);
+	}), {
+		maxJobs: 10,
+	});
 	console.log("Dev bucket wiped");
 
 	const prodBucketList = await Bucket.listDev("byzantini-bucket");
@@ -26,7 +28,10 @@ async function productionBucketReplication() {
 			await Bucket.putDev(file, fileName, MIMETypeMap[fileType] || "application/octet-stream");
 			totalReplicatedFiles++;
 		};
-	}), 10, true);
+	}), {
+		maxJobs: 10,
+		verbose: true
+	});
 
 	if (totalReplicatedFiles !== prodBucketList.length) console.warn("Prod bucket replicated to dev bucket unsuccessfully");
 	else console.log("Prod bucket replicated to dev bucket successfully");
@@ -77,7 +82,6 @@ async function productionDatabaseReplication() {
 		// Execute the dump commands
 		await executeCommands(dumpCommands);
 		closeConnController.abort();
-
 	}
 	try {
 		await connectAndDumpSnapshot();

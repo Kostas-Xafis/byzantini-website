@@ -137,9 +137,13 @@ export function getKeyIndex<T extends {}>(key: keyof T, obj: T) {
 
 export async function asyncQueue<T>(
 	jobs: (() => Promise<T>)[],
-	maxJobs = 1,
-	verb = false
+	args: {
+		maxJobs?: number,
+		verbose?: boolean,
+		progressCallback?: (prog: number) => any;
+	}
 ): Promise<T[]> {
+	let { maxJobs = 1, verbose = false, progressCallback = null } = args;
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
 	let queue: any[];
@@ -161,8 +165,11 @@ export async function asyncQueue<T>(
 
 			results.push(await job()); // execute the job
 			jobsCompleted++;
-			verb && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs) &&
+
+			// Logging progress
+			verbose && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs) &&
 				console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
+			progressCallback && progressCallback(jobsCompleted);
 
 			while (queue.length === maxJobs) await sleep(50); // respect the maxJobs limit
 			if (jobsCompleted !== totalJobs && jobs.length !== 0) {
@@ -306,6 +313,37 @@ export class BatchedExecution<T> {
 			func(temp);
 			this.#items = this.#items.slice(temp.length);
 		});
-		this.updateHandler.timeout().catch((e) => { });
+		this.updateHandler.timeout(this.timeout).catch((e) => { });
+	}
+}
+
+export class ExecutionQueue<T> {
+	#queue: T[] = [];
+	#isExecuting = false;
+	constructor(private interval = 1000, private func: (item: T) => (Promise<void> | void) = () => { }) { }
+	push(item: T) {
+		this.#queue.push(JSON.parse(JSON.stringify(item)));
+		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
+	}
+	async execute() {
+		this.#isExecuting = true;
+		while (this.#queue.length) {
+			const item = this.#queue.shift() as T;
+			if (this.func.constructor.name === "AsyncFunction") {
+				await this.func(item);
+			} else {
+				this.func(item);
+			}
+			await sleep(this.interval);
+		}
+		this.#isExecuting = false;
+	}
+
+	setInterval(interval: number) {
+		this.interval = interval;
+	}
+
+	getInterval() {
+		return this.interval;
 	}
 }

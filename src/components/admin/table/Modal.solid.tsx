@@ -5,6 +5,7 @@ import { CloseButton } from "./CloseButton.solid";
 import Spinner from "../../other/Spinner.solid";
 import { createStore } from "solid-js/store";
 import type { Action } from "./TableControls.solid";
+import { createAlert, pushAlert } from "../Alert.solid";
 
 type Props = {
 	prefix: string;
@@ -60,8 +61,8 @@ const submitWrapper = (
 			await onSubmit(new FormData(form));
 			setModalLoading(false);
 			setModalOpen(false);
-		} catch (error) {
-			console.error(error);
+		} catch (error: any) {
+			pushAlert(createAlert("error", "Error: ", error.message));
 			const form = document.querySelector(
 				".modal:is(:not(.hidden)) > div > form"
 			) as HTMLFormElement;
