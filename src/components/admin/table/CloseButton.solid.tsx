@@ -8,12 +8,11 @@ export function CloseButton(props: Props) {
 		<button
 			type="button"
 			class={
-				"grid place-items-center aspect-square rounded-xl hover:bg-gray-300 closeBtn " +
+				"flex items-center aspect-square rounded-xl hover:bg-gray-300 closeBtn " +
 				(props.classes || "")
 			}
-			onclick={props.onClick}
-		>
-			<i class="fa-solid fa-xmark"></i>
+			onclick={props.onClick}>
+			<i class="w-full fa-solid fa-xmark"></i>
 		</button>
 	);
 }

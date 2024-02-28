@@ -6,6 +6,7 @@ import Spinner from "../../other/Spinner.solid";
 import { createAlert, pushAlert } from "../Alert.solid";
 import { CloseButton } from "./CloseButton.solid";
 import type { Action } from "./TableControls.solid";
+import { isGeneratorFunction } from "../../../../lib/utils.client";
 
 type Props = {
 	prefix: string;
@@ -46,7 +47,7 @@ export const useModalLoading = (prefix?: string) => {
 };
 
 const submitWrapper = (
-	onSubmit: (formData: FormData) => Promise<void>,
+	onSubmit: ((formData: FormData) => Promise<void>) | AsyncGenerator<undefined, void, unknown>,
 	{
 		setModalLoading,
 		setModalOpen,
@@ -57,8 +58,14 @@ const submitWrapper = (
 ) => {
 	return async function (form: HTMLFormElement, e: Event) {
 		try {
-			setModalLoading(true);
-			await onSubmit(new FormData(form));
+			if ("next" in onSubmit) {
+				const res = await onSubmit.next();
+				if (!res.done) return;
+				setModalLoading(true);
+			} else {
+				setModalLoading(true);
+				await onSubmit(new FormData(form));
+			}
 			setModalLoading(false);
 			setModalOpen(false);
 		} catch (error: any) {
@@ -80,20 +87,29 @@ export default function Modal(props: Props) {
 	const [openState, setOpenState] = useModalOpen(MODAL_PREFIX);
 	const [loadingState, setLoadingState] = useModalLoading(MODAL_PREFIX);
 
+	let genFunc: AsyncGenerator<undefined, void, unknown> | null = null;
 	const onFormSubmit = async (event: Event) => {
-		if (!actionStore.action.onSubmit) return;
 		event.preventDefault();
 		event.stopPropagation();
 		const form = document.querySelector<HTMLFormElement>(`form[data-prefix=${MODAL_PREFIX}]`);
 		if (!form) return;
-		await submitWrapper(actionStore.action.onSubmit, {
-			setModalLoading: (set: boolean) => {
-				setLoadingState(MODAL_PREFIX, set);
-			},
-			setModalOpen: (set: boolean) => {
-				setOpenState(MODAL_PREFIX, set);
-			},
-		})(form, event);
+
+		const { onSubmit } = actionStore.action;
+		if (isGeneratorFunction(onSubmit) && !genFunc) {
+			genFunc = onSubmit(new FormData(form)) as AsyncGenerator<undefined, void, unknown>;
+		}
+		await submitWrapper(
+			// @ts-ignore this gets to messy
+			genFunc !== null ? genFunc : onSubmit,
+			{
+				setModalLoading: (set: boolean) => {
+					setLoadingState(MODAL_PREFIX, set);
+				},
+				setModalOpen: (set: boolean) => {
+					setOpenState(MODAL_PREFIX, set);
+				},
+			}
+		)(form, event);
 	};
 
 	const onClose = () => {

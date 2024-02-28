@@ -190,7 +190,7 @@ export default function Row(props: Props) {
 								onClick={onClickSort}>
 								{header ? (
 									<>
-										<span class="group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">
+										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">
 											{item}
 										</span>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>

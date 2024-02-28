@@ -90,10 +90,12 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 				<div class="flex flex-row flex-wrap gap-4 p-4 self-start">
 					<For each={fileList()}>
 						{(fname, index) => (
-							<div class="flex flex-row items-center h-min px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
+							<div
+								style={{ "word-break": "break-all" }}
+								class="flex flex-row items-center h-min w-[25ch] px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
 								<CloseButton
 									onClick={() => onFileRemove(index())}
-									classes="text-lg w-[1.4rem] h-[1.4rem] hover:bg-white"></CloseButton>
+									classes="text-lg hover:text-red-800 hover:bg-transparent"></CloseButton>
 								<p>{fname}</p>
 							</div>
 						)}

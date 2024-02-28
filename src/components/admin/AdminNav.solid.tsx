@@ -28,7 +28,8 @@ export default function AdminNav(props: RouterProps) {
 		<>
 			<nav
 				class={
-					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex flex-col max-sm:overflow-visible z-50 max-sm:sticky max-sm:top-0"
+					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex flex-col max-sm:overflow-visible z-50 max-sm:sticky max-sm:top-0" +
+					" max-sm:flex-row max-sm:p-1"
 				}>
 				<div class="relative grid place-items-center gap-x-4 font-anaktoria">
 					<a
@@ -63,13 +64,14 @@ export default function AdminNav(props: RouterProps) {
 				<div
 					id="burgerNav"
 					class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
-					<p class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]">
+					<p class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_-_7px)]">
+						{/* 7px = 1/2 of 14px = 0.875rem */}
 						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
 						<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
 							{currentPage()}
 						</span>
 					</p>
-					<div class="hidden absolute top-[2.25rem] h-max flex-col w-full z-[5000]">
+					<div class="hidden fixed top-[3.5rem] left-0 right-0 h-max flex-col w-full z-[5000]">
 						{links.map((link) => (
 							<A
 								class="relative grid py-4 bg-red-900 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"

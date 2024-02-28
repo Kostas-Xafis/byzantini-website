@@ -56,23 +56,26 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			<div
 				class="flex flex-row flex-wrap w-full mt-4 gap-y-6 loading items-center justify-evenly self-center">
 				{
-					announcement.images.map((image, i) => (
-						<div class="imgLoader group/img" data-imgIndex={i}>
-							<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px] ">
-								<Spinner />
+					announcement.images.map((image, i) => {
+						if (i === 0) return null;
+						return (
+							<div class="imgLoader group/img" data-imgIndex={i - 1}>
+								<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px] ">
+									<Spinner />
+								</div>
+								<button
+									type="button"
+									class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden">
+									<img
+										data-src={imgThumbSrc + image}
+										alt={announcement?.title as string}
+										width="400px"
+										class="w-[400px] object-cover h-full"
+									/>
+								</button>
 							</div>
-							<button
-								type="button"
-								class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden">
-								<img
-									data-src={imgThumbSrc + image}
-									alt={announcement?.title as string}
-									width="400px"
-									class="w-[400px] object-cover h-full"
-								/>
-							</button>
-						</div>
-					))
+						);
+					})
 				}
 			</div>
 		</div>
@@ -104,7 +107,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 							id="mainCarouselImg"
 							alt={announcement.title}
 							class="object-cover h-[clamp(0px,100vh,calc(95dvh_-_79px))] hover:shadow-lg !shadow-red-950"
-							src={imgSrc + announcement.images.at(0)}
+							src={imgSrc + announcement.images.at(1)}
 						/>
 					</div>
 				</div>
@@ -116,7 +119,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					{
 						// Have at least up to 5 preview thumbnails in the carousel
 						announcement.images
-							.slice(0, 5)
+							.slice(1, 6)
 							.map((image, i) => (
 								<img
 									class="w-[60px] aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
@@ -187,7 +190,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				).map((img) =>
 					(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
 				) as string[];
-
+				console.log(imgSrcArr);
 				const announcementId = (
 					document.querySelector("section[data-announcement-id]") as HTMLElement
 				).dataset.announcementId as string;

@@ -347,3 +347,17 @@ export class ExecutionQueue<T> {
 		return this.interval;
 	}
 }
+
+export const GeneratorFunction = async function* (args: any) {
+	yield undefined;
+}.constructor;
+
+export const Function = function () { }.constructor;
+
+export function isGeneratorFunction(func: any): func is GeneratorFunction {
+	return func.constructor === GeneratorFunction;
+}
+
+export function isFunction(func: any): func is Function {
+	return func.constructor === Function;
+}

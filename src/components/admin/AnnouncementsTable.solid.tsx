@@ -19,7 +19,7 @@ const PREFIX = "announcements";
 type AnnouncementTable = Omit<Announcements, "content"> & { link: string };
 
 const AnnouncementsInputs = (): Omit<
-	Record<keyof Announcements | "images", InputProps>,
+	Record<keyof Announcements | "images" | "mainImage", InputProps>,
 	"views"
 > => {
 	return {
@@ -47,6 +47,13 @@ const AnnouncementsInputs = (): Omit<
 			label: "Περιεχόμενο",
 			iconClasses: "fa-solid fa-paragraph",
 		},
+		mainImage: {
+			type: "file",
+			name: "mainImage",
+			label: "Κεντρική Φωτογραφία",
+			iconClasses: "fa-solid fa-image",
+			fileExtension: "image/*",
+		},
 		images: {
 			type: "multifile",
 			name: "photos",
@@ -70,7 +77,7 @@ const announcementsToTable = (announcements: Announcements[]): AnnouncementTable
 
 const columnNames: ColumnType<AnnouncementTable> = {
 	id: { type: "number", name: "Id" },
-	title: { type: "string", name: "Τίτλος", size: 16 },
+	title: { type: "string", name: "Τίτλος", size: 24 },
 	date: { type: "date", name: "Ημερομηνία", size: 12 },
 	link: { type: "link", name: "Σελίδα" },
 	views: { type: "number", name: "Προβολές" },
@@ -82,13 +89,15 @@ async function UploadImages(args: {
 	setStore: SetStoreFunction<APIStore>;
 	imagesPrefix: string;
 	images?: AnnouncementImages[]; // Include images only when modifying
+	is_main?: boolean;
 }) {
-	const { announcement_id, imagesPrefix, images } = args;
+	const { announcement_id, imagesPrefix, images, is_main = false } = args;
 	const apiHook = useAPI(args.setStore);
 	await ThumbnailGenerator.loadCompressor();
 
 	const kb40 = 1024 * 40;
 	const thumbCreator = new ThumbnailGenerator();
+
 	const photos = FileHandler.getFiles(imagesPrefix)
 		.filter((f) => !f.isProxy)
 		.map(({ name, file }, i) => {
@@ -99,9 +108,10 @@ async function UploadImages(args: {
 				try {
 					await apiHook(API.Announcements.postImage, {
 						RequestObject: {
+							id: is_main ? 0 : i + 1,
 							announcement_id,
 							name,
-							priority: i + 1,
+							is_main,
 						},
 					});
 					await apiHook(API.Announcements.imageUpload, {
@@ -150,7 +160,7 @@ async function UploadImages(args: {
 
 	let ids = images
 		.filter((img) => img.announcement_id === announcement_id)
-		?.map((img) => (deletedFiles.find((f) => f.name === img.name) ? img.priority : undefined))
+		?.map((img) => (deletedFiles.find((f) => f.name === img.name) ? 1 : undefined))
 		.filter((id) => id !== undefined) as number[];
 	if (ids.length === 0) return;
 
@@ -200,6 +210,14 @@ export default function AnnouncementsTable() {
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
+
+			await UploadImages({
+				announcement_id: id,
+				setStore,
+				imagesPrefix: PREFIX + ActionEnum.ADD + "mainImage",
+				is_main: true,
+			});
+
 			await UploadImages({
 				announcement_id: id,
 				setStore,
@@ -242,6 +260,14 @@ export default function AnnouncementsTable() {
 				RequestObject: data,
 			});
 			if (!res.message) return;
+
+			await UploadImages({
+				announcement_id: data.id,
+				setStore,
+				imagesPrefix: PREFIX + ActionEnum.ADD + "mainImage",
+				is_main: true,
+			});
+
 			await UploadImages({
 				announcement_id: data.id,
 				setStore,
@@ -259,7 +285,10 @@ export default function AnnouncementsTable() {
 		>;
 		// @ts-ignore
 		delete copyAnc.views;
-		copyAnc.images = images.filter((i) => i.announcement_id === copyAnc.id).map((i) => i.name);
+		copyAnc.mainImage = images.find((i) => i.is_main)?.name;
+		copyAnc.images = images
+			.filter((i) => i.announcement_id === copyAnc.id && !i.is_main)
+			.map((i) => i.name);
 		return {
 			inputs: Fill(AnnouncementsInputs(), copyAnc),
 			onSubmit: submit,

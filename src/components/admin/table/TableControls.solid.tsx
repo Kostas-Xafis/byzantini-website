@@ -6,7 +6,9 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
 
 export type Action = {
 	inputs: Record<string, InputProps>;
-	onSubmit: (formData: FormData) => Promise<void>;
+	onSubmit:
+		| ((formData: FormData) => Promise<void>)
+		| ((formData: FormData) => AsyncGenerator<undefined, void, unknown>);
 	submitText: string;
 	headerText: string;
 	icon: ActionIcon;

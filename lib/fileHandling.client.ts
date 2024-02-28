@@ -155,7 +155,7 @@ export class FileHandler {
 		if (FileHandler.AllFiles[prefix] == null) return [];
 		return FileHandler.AllFiles[prefix].getInitialFiles();
 	}
-	static createFileProxy(name?: string, { isProxy = true, file = null }: { isProxy?: boolean, file?: File | null; } = {}) {
+	static createFileProxy(name?: string, { isProxy = true, file = null }: { isProxy?: boolean, file?: File | null; } = {}): FileProxy {
 		if (typeof name !== "string") throw Error("Name not provided");
 		if (isProxy)
 			return { isProxy, name, file: null, markForDeletion: false };

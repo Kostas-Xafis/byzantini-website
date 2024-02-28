@@ -1,17 +1,17 @@
 import {
-	object,
-	number,
-	integer,
-	minValue,
-	string,
-	minLength,
-	optional,
-	email,
-	omit,
-	literal,
-	union,
-	nullable,
 	boolean,
+	email,
+	integer,
+	literal,
+	minLength,
+	minValue,
+	nullable,
+	number,
+	object,
+	omit,
+	optional,
+	string,
+	union,
 } from "valibot";
 
 export const v_Books = object({
@@ -304,12 +304,14 @@ export interface Announcements {
 
 //! Later on rename the priority column to id
 export const v_AnnouncementImages = object({
+	id: number([integer(), minValue(0)]),
 	announcement_id: number([integer(), minValue(0)]),
 	name: string(),
-	priority: number([integer(), minValue(1)]),
+	is_main: boolean()
 });
 export interface AnnouncementImages {
+	id: number;
 	announcement_id: number;
 	name: string;
-	priority: number;
+	is_main: boolean;
 };

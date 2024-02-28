@@ -17,7 +17,7 @@ export default function FileInput(props: FileInputProps) {
 	const [filename, setFilename] = createSignal<string>((value as string) || "", {
 		equals: false,
 	});
-	const fileHandler = new FileHandler(name, {
+	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: true,
 		file: value ? FileHandler.createFileProxy(value as string) : undefined,
 	});

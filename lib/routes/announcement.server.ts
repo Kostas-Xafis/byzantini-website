@@ -111,7 +111,7 @@ serverRoutes.postImage.func = async ({ ctx }) => {
 	return await execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
-		const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, priority) VALUES (${questionMarks(args)})`, args);
+		const { insertId } = await executeQuery(`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (${questionMarks(args)})`, args);
 		return { insertId };
 	});
 };
@@ -140,9 +140,9 @@ serverRoutes.imagesDelete.func = async ({ ctx, slug }) => {
 	return await execTryCatch(async () => {
 		const { announcement_id } = slug;
 		const ids = await ctx.request.json();
-		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND priority IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
+		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
 		if (!images || !images.length) throw Error("images not found");
-		await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND priority IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
+		await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
 		const deletionJobs = [];
 		for (const { name } of images) {
 			deletionJobs.push(
