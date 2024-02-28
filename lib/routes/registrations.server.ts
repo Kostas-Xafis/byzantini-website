@@ -1,6 +1,6 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
+import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
-import { execTryCatch, executeQuery, questionMarks, generateLink } from "../utils.server";
 
 // Include this in all .server.ts files
 const serverRoutes = JSON.parse(JSON.stringify(RegistrationsRoutes)) as typeof RegistrationsRoutes; // Copy the routes object to split it into client and server routes

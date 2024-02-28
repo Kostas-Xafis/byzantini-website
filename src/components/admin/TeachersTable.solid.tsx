@@ -1,5 +1,6 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
+import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
@@ -23,13 +24,12 @@ import {
 	type Props as InputProps,
 } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
 import { toggleCheckboxes } from "./table/Row.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "teachers";
 const INSTRUMENTS_PREFIX = "instruments";
@@ -516,6 +516,7 @@ export default function TeachersTable() {
 			if (blobs.cv) await fileUpload(blobs.cv, id);
 
 			setTeacherHydrate({ action: ActionEnum.ADD, ids: [id] });
+			pushAlert(createAlert("success", "Επιτυχής εισαγωγή καθηγητή"));
 		};
 		return {
 			inputs: Omit(TeachersInputs(class_types, locations, instruments), "id"),
@@ -627,6 +628,7 @@ export default function TeachersTable() {
 				action: ActionEnum.MODIFY,
 				ids: [teacher.id],
 			});
+			pushAlert(createAlert("success", "Επιτυχής ενημέρωση καθηγητή"));
 		};
 		const simpleTeacher = JSON.parse(JSON.stringify(teacher)) as Partial<FullTeachers>;
 		delete simpleTeacher.picture;
@@ -665,6 +667,11 @@ export default function TeachersTable() {
 			const res = await apiHook(API.Teachers.delete, { RequestObject: ids });
 			if (!res.data && !res.message) return;
 			setTeacherHydrate({ action: ActionEnum.DELETE, ids: ids });
+			if (ids.length === 1) {
+				pushAlert(createAlert("success", "Επιτυχής διαγραφή καθηγητή"));
+				return;
+			}
+			pushAlert(createAlert("success", `Επιτυχής διαγραφή ${ids.length} καθηγητών`));
 		};
 		return {
 			inputs: {},
@@ -694,6 +701,7 @@ export default function TeachersTable() {
 				action: ActionEnum.ADD,
 				ids: [res.data.insertId],
 			});
+			pushAlert(createAlert("success", "Επιτυχής εισαγωγή οργάνου"));
 		};
 		return {
 			inputs: {
@@ -744,6 +752,7 @@ export default function TeachersTable() {
 				action: ActionEnum.DELETE,
 				ids: [instrument.id],
 			});
+			pushAlert(createAlert("success", "Επιτυχής διαγραφή οργάνου"));
 		};
 		return {
 			inputs: {
@@ -835,6 +844,7 @@ export default function TeachersTable() {
 			);
 			xlsx.utils.book_append_sheet(wb, wsStudentsBook, "Καθηγητές");
 			xlsx.writeFile(wb, "Καθηγητές.xlsx");
+			pushAlert(createAlert("success", "Επιτυχής λήψη αρχείου excel"));
 		};
 		return {
 			inputs: {},

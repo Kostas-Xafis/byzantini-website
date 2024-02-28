@@ -1,4 +1,4 @@
-import { onCleanup, createSignal, batch } from "solid-js";
+import { batch, createSignal, onCleanup } from "solid-js";
 import { ExecutionQueue, randomHex } from "../../../lib/utils.client";
 
 export type Alert = {
@@ -9,7 +9,10 @@ export type Alert = {
 	expires?: number;
 };
 
-export function createAlert(type: Alert["type"], ...message: (Record<any, any> | string)[]): Alert {
+export function createAlert(
+	type: Alert["type"],
+	...message: (Record<any, any> | string | number)[]
+): Alert {
 	let msg = "";
 	message.forEach((m) => {
 		if (typeof m === "object") {
@@ -47,7 +50,7 @@ export default function AlertStack() {
 		switch (alert.status) {
 			case "push":
 				batch(() => {
-					alert.expires = Date.now() + 3000;
+					alert.expires = Date.now() + 5000;
 					setAlerts((prevAlerts) => [...prevAlerts, alert]);
 					setArrayOperation("push");
 				});

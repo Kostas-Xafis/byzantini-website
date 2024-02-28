@@ -7,7 +7,7 @@ import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
@@ -127,6 +127,7 @@ export default function PaymentsTable() {
 				action: ActionEnum.ADD,
 				ids: [res.data.id],
 			});
+			pushAlert(createAlert("success", "Η αγορά προστέθηκε επιτυχώς!"));
 		};
 		return {
 			inputs: Pick(PaymentsInputs(books), "book_id", "student_name", "book_amount", "date"),
@@ -165,6 +166,7 @@ export default function PaymentsTable() {
 				action: ActionEnum.MODIFY,
 				ids: [payment.id],
 			});
+			pushAlert(createAlert("success", "Η αγορά ενημερώθηκε επιτυχώς!"));
 		};
 		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
@@ -198,6 +200,7 @@ export default function PaymentsTable() {
 				action: ActionEnum.CHECK,
 				ids: selectedItems.slice(),
 			});
+			pushAlert(createAlert("success", "Οι πληρωμές ολοκληρώθηκαν επιτυχώς!"));
 		};
 		return {
 			inputs: {},
@@ -229,6 +232,7 @@ export default function PaymentsTable() {
 				action: ActionEnum.DELETE,
 				ids: selectedItems.slice(),
 			});
+			pushAlert(createAlert("success", "Οι πληρωμές διαγράφηκαν επιτυχώς!"));
 		};
 		return {
 			inputs: {},

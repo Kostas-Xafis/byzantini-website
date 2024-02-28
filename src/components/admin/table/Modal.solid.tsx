@@ -1,11 +1,11 @@
-import { createSignal, For, Show, batch, createEffect, untrack } from "solid-js";
+import { For, Show, batch, createEffect, createSignal, untrack } from "solid-js";
+import { createStore } from "solid-js/store";
 import type { Props as InputProps } from "../../input/Input.solid";
 import Input from "../../input/Input.solid";
-import { CloseButton } from "./CloseButton.solid";
 import Spinner from "../../other/Spinner.solid";
-import { createStore } from "solid-js/store";
-import type { Action } from "./TableControls.solid";
 import { createAlert, pushAlert } from "../Alert.solid";
+import { CloseButton } from "./CloseButton.solid";
+import type { Action } from "./TableControls.solid";
 
 type Props = {
 	prefix: string;

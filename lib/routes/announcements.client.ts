@@ -1,11 +1,11 @@
-import type { EndpointRoute, APIArguments, APIResponse } from "../../types/routes";
-import {
-	v_Announcements,
-	type Announcements,
-	v_AnnouncementImages,
-	type AnnouncementImages,
-} from "../../types/entities";
 import { omit } from "valibot";
+import {
+	v_AnnouncementImages,
+	v_Announcements,
+	type AnnouncementImages,
+	type Announcements,
+} from "../../types/entities";
+import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	authentication: false,

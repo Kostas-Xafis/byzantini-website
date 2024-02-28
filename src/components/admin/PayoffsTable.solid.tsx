@@ -7,10 +7,10 @@ import type { Payoffs, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "payoffs";
 
@@ -104,8 +104,10 @@ export default function PayoffsTable() {
 				action: ActionEnum.MODIFY,
 				ids: [payoff.id],
 			});
+			pushAlert(createAlert("success", "Η οφειλή ενημερώθηκε επιτυχώς!"));
 		};
 		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
+
 		return {
 			inputs: Pick(filledInputs, "amount"),
 			onSubmit: submit,
@@ -116,8 +118,8 @@ export default function PayoffsTable() {
 	});
 	const onDelete = createMemo((): Action | EmptyAction => {
 		const deleteModal = {
-			type: ActionEnum.DELETE,
-			icon: ActionIcon.DELETE,
+			type: ActionEnum.CHECK,
+			icon: ActionIcon.CHECK,
 		};
 		const payoffs = store[API.Payoffs.get];
 		if (!payoffs || selectedItems.length < 1) {
@@ -130,9 +132,14 @@ export default function PayoffsTable() {
 			});
 			if (!res.data && !res.message) return;
 			setPayoffHydrate({
-				action: ActionEnum.DELETE,
+				action: ActionEnum.CHECK,
 				ids: selectedItems.slice(),
 			});
+			if (selectedItems.length === 1) {
+				pushAlert(createAlert("success", "Η οφειλή ολοκληρώθηκε επιτυχώς!"));
+				return;
+			}
+			pushAlert(createAlert("success", "Οι οφειλές ολοκληρώθηκαν επιτυχώς!"));
 		};
 		return {
 			inputs: {},

@@ -1,8 +1,8 @@
-import { API, type APIStore, useHydrate, useAPI } from "../../../lib/hooks/useAPI.solid";
-import Table, { type ColumnType } from "./table/Table.solid";
-import { createMemo, Show } from "solid-js";
+import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
+import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import Spinner from "../other/Spinner.solid";
+import Table, { type ColumnType } from "./table/Table.solid";
 
 type TotalsTable = {
 	total_payments: number;

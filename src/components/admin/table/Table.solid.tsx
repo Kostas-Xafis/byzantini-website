@@ -1,8 +1,8 @@
-import Row, { toggleCheckboxes, type CellValue, toggleCheckbox } from "./Row.solid";
-import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
-import { getParent, mappedValue } from "../../../../lib/utils.client";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
+import { getParent, mappedValue } from "../../../../lib/utils.client";
+import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>; // The column names and types
 	data: Accessor<any[]>; // The data to be displayed

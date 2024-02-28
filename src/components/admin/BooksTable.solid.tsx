@@ -7,11 +7,10 @@ import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Omit, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
-import { createAlert, pushAlert } from "./Alert.solid";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 const PREFIX = "books";
 

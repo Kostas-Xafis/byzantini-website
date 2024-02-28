@@ -8,8 +8,8 @@ import { asyncQueue, fileToBlob, isSafeURLPath } from "../../../lib/utils.client
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
 import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
+import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
@@ -131,10 +131,18 @@ async function UploadImages(args: {
 				}
 			};
 		});
-	await asyncQueue(photos, {
-		maxJobs: 4,
-		verbose: true,
-	});
+	if (photos.length !== 0) {
+		const photosLength = photos.length;
+		const alert = pushAlert(createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength));
+		await asyncQueue(photos, {
+			maxJobs: 4,
+			verbose: true,
+			progressCallback: (i) => {
+				alert.message = `Ανέβασμα φωτογραφιών: ${i} / ${photosLength}`;
+				updateAlert(alert);
+			},
+		});
+	}
 
 	if (!images) return;
 	const deletedFiles = FileHandler.getDeletedFiles(imagesPrefix);
@@ -158,14 +166,12 @@ export default function AnnouncementsTable() {
 	const apiHook = useAPI(setStore);
 	const setAnnouncementHydrate = useHydrateById({
 		setStore,
+		// TODO: Need to update the images when updating the announcement
 		mutations: [
 			{
 				srcEndpoint: API.Announcements.getById,
 				destEndpoint: API.Announcements.get,
 			},
-			// {
-			// 	srcEndpoint: API.Announcements.get
-			// }
 		],
 	});
 	useHydrate(() => {
@@ -200,6 +206,7 @@ export default function AnnouncementsTable() {
 				imagesPrefix: PREFIX + ActionEnum.ADD + "photos",
 			});
 			setAnnouncementHydrate({ action: ActionEnum.ADD, ids: [id] });
+			pushAlert(createAlert("success", "Η ανακοίνωση προστέθηκε επιτυχώς"));
 		};
 		return {
 			inputs: Omit(AnnouncementsInputs(), "id"),
@@ -238,11 +245,12 @@ export default function AnnouncementsTable() {
 			await UploadImages({
 				announcement_id: data.id,
 				setStore,
-				imagesPrefix: PREFIX + modifyModal.type + "photos",
+				imagesPrefix: PREFIX + ActionEnum.MODIFY + "photos",
 				images,
 			});
 
 			setAnnouncementHydrate({ action: ActionEnum.MODIFY, ids: [data.id] });
+			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};
 		const anc = announcements.find((a) => a.id === selectedItems[0]);
 		const copyAnc = JSON.parse(JSON.stringify(anc)) as Record<
@@ -267,19 +275,24 @@ export default function AnnouncementsTable() {
 		};
 		const announcements = store[API.Announcements.get];
 		if (!announcements || selectedItems.length < 1) return deleteModal;
+		const data = selectedItems.slice();
 		const submit = async function () {
-			const data = selectedItems.slice();
 			const res = await apiHook(API.Announcements.delete, {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
 			setAnnouncementHydrate({ action: ActionEnum.DELETE, ids: data });
+			if (data.length === 1) {
+				pushAlert(createAlert("success", "Η ανακοίνωση διαγράφηκε επιτυχώς"));
+				return;
+			}
+			pushAlert(createAlert("success", `Διαγραφθηκαν επιτυχώς ${data.length} ανακοινώσεις`));
 		};
 		return {
 			inputs: {},
 			onSubmit: submit,
 			submitText: "Διαγραφή",
-			headerText: "Διαγραφή Ανακοίνωσης",
+			headerText: data.length === 1 ? "Διαγραφή Ανακοίνωσης" : "Διαγραφή Ανακοινώσεων",
 			...deleteModal,
 		};
 	});

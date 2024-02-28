@@ -1,6 +1,6 @@
 import { batch, createSignal, For } from "solid-js";
-import { UpdateHandler } from "../../../lib/utils.client";
 import type { SetStoreFunction } from "solid-js/store";
+import { UpdateHandler } from "../../../lib/utils.client";
 import type { CellValue } from "./table/Row.solid";
 
 export const enum Compare {

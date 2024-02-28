@@ -8,7 +8,7 @@ import { fileToBlob } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
 import { Fill, Omit, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
@@ -204,6 +204,7 @@ export default function LocationsTable() {
 				});
 			}
 			setLocationHydrate({ action: ActionEnum.ADD, ids: [id] });
+			pushAlert(createAlert("success", `Το παράρτημα ${data.name} προστέθηκε επιτυχώς!`));
 		};
 		return {
 			inputs: Omit(LocationsInputs(), "id"),
@@ -266,6 +267,7 @@ export default function LocationsTable() {
 				action: ActionEnum.MODIFY,
 				ids: [location.id],
 			});
+			pushAlert(createAlert("success", `Το παράρτημα ${data.name} ενημερώθηκε επιτυχώς!`));
 		};
 		return {
 			inputs: Omit(Fill(LocationsInputs(location), location), "id"),
@@ -289,6 +291,13 @@ export default function LocationsTable() {
 			});
 			if (!res.data && !res.message) return;
 			setLocationHydrate({ action: ActionEnum.DELETE, ids: data });
+			if (data.length === 1) {
+				pushAlert(createAlert("success", `Το παράρτημα διαγράφηκε επιτυχώς!`));
+			} else {
+				pushAlert(
+					createAlert("success", `Διαγράφηκαν επιτυχώς ${data.length} παραρτήματα!`)
+				);
+			}
 		};
 		return {
 			inputs: {},

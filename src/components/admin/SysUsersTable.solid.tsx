@@ -5,7 +5,7 @@ import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { SysUsers as FullSysUser } from "../../../types/entities";
 import Spinner from "../other/Spinner.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
@@ -61,6 +61,7 @@ export default function SysUsersTable() {
 		const submit = async function () {
 			if (link) return;
 			await apiHook(API.SysUsers.createRegisterLink);
+			pushAlert(createAlert("success", "Ο σύνδεσμος δημιουργήθηκε επιτυχώς!"));
 		};
 		return {
 			inputs: {},
@@ -103,6 +104,11 @@ export default function SysUsersTable() {
 			});
 			if (!res.data && !res.message) return;
 			setSysUserHydrate({ action: ActionEnum.DELETE, ids });
+			if (ids.length === 1) {
+				pushAlert(createAlert("success", "Ο χρήστης διαγράφηκε επιτυχώς!"));
+			} else {
+				pushAlert(createAlert("success", "Οι χρήστες διαγράφηκαν επιτυχώς!"));
+			}
 		};
 		return {
 			inputs: {},

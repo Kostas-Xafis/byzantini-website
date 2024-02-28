@@ -15,13 +15,12 @@ import {
 	type SearchColumn,
 	type SearchSetter,
 } from "./SearchTable.solid";
-import { SelectedItemsContext } from "./table/SelectedRowContext.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, type Action, TableControlsGroup } from "./table/TableControls.solid";
+import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
-import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
+import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
 
@@ -709,6 +708,7 @@ export default function RegistrationsTable() {
 				xlsx.utils.book_append_sheet(wb, ws, teachers[i].fullname);
 			});
 			xlsx.writeFile(wb, "Εγγραφές.xlsx");
+			pushAlert(createAlert("success", "Επιτυχής λήψη Excel"));
 		};
 		return {
 			inputs: {},
