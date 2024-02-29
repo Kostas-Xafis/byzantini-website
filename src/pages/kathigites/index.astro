@@ -61,22 +61,25 @@ const cvSrc = "kathigites/cv/";
 
 <Layout title="Καθηγητές">
 	<div id="teachersPage" class="group/type byz w-full grid grid-cols-[max-content_1fr] font-didact max-sm:grid-cols-[100%] max-sm:grid-rows-[max-content_1fr]">
-		<div id="btsContainer" class="w-max h-full grid grid-rows-[repeat(3,max-content)] border-r-2 max-sm:border-none border-red-900 max-sm:w-full max-sm:grid-rows-1 max-sm:grid-cols-[repeat(3,_1fr)]">
-			{
-				music.map(([str, type], ind) => (
-					<div id={type} data-show={ind === 0} data-type={type} class={
-						"group/btn relative cursor-pointer w-full h-max py-[1vw] max-sm:pt-2 place-self-center red-300 grid grid-cols-[1fr_max-content] max-sm:grid-cols-[100%] max-sm:justify-items-center"
-						+ " transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"}>
-						<button
-							class="p-[0.8vw] text-[1.5vw] max-sm:text-base max-3xs:text-sm max-sm:w-[13ch] first-of-type:max-sm:w-[12ch] z-10 group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
-							data-type={type}
-						>
-							{str}
-						</button>
-						<i class="mt-[0.4vw] pr-2 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center z-10 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] max-sm:hidden"></i>
-					</div>
-				))
-			}
+		<div id="btsContainer" class="relative w-max h-full border-r-2 max-sm:border-none border-red-900 max-sm:w-full">
+			{/* sticky with top being the height of the navbar */}
+			<div id="stickyContainer" class="sticky top-[4.2vw] grid grid-rows-[repeat(3,max-content)] max-sm:grid-rows-1 max-sm:grid-cols-[repeat(3,_1fr)]">
+				{
+					music.map(([str, type], ind) => (
+						<div id={type} data-show={ind === 0} data-type={type} class={
+							"group/btn relative cursor-pointer w-full h-max py-[1vw] max-sm:pt-2 place-self-center red-300 grid grid-cols-[1fr_max-content] max-sm:grid-cols-[100%] max-sm:justify-items-center"
+							+ " transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"}>
+							<button
+								class="p-[0.8vw] text-[1.5vw] max-sm:text-base max-3xs:text-sm max-sm:w-[13ch] first-of-type:max-sm:w-[12ch] z-10 group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+								data-type={type}
+							>
+								{str}
+							</button>
+							<i class="mt-[0.4vw] pr-2 fa-solid fa-chevron-right font-bold text-xl text-red-50 place-self-center z-10 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] max-sm:hidden"></i>
+						</div>
+					))
+				}
+			</div>
 		</div>
 		<div id="teachersContainer" class="max-w-full h-min flex flex-wrap gap-x-[1.25%] p-[2vw] px-4 pr-0 gap-y-8 max-sm:px-2 max-sm:pt-6 max-sm:pb-12 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
 			<h1 class="group-[:is(:not(.byz))]/type:hidden text-[3vw] max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Βυζαντινής Μουσικής</h1>
