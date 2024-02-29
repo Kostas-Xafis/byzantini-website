@@ -93,17 +93,21 @@ const cvSrc = "kathigites/cv/";
 						t_instruments?.sort();
 						if (teacher.online) t_locations?.push("Διαδικτυακά Μαθήματα");
 						return (
-						<div class={"group/parent-card hidden show rounded-2xl @7xl:rounded-2xl @4xl:rounded-lg max-sm:rounded-md shadow-md shadow-gray-500 border-solid border-2 max-sm:border border-red-900"
+						<div class={"group/card sm:w-[48.5%] max-sm:w-full hidden show rounded-2xl @7xl:rounded-2xl @4xl:rounded-lg max-sm:rounded-md shadow-md shadow-gray-500 border-solid border-2 max-sm:border border-red-900"
 								+ (type === MusicType.Byzantine ? " group-[:is(.byz)]/type:block" : "")
 								+ (type === MusicType.Traditional ? " group-[:is(.par)]/type:block" : "")
 								+ (type === MusicType.European ? " group-[:is(.eur)]/type:block" : "")}>
-							<div class="group/card w-[48.5%] flex max-sm:min-w-full group-odd/parent-card:flex-row-reverse group-odd/parent-card:justify-between max-sm:justify-items-center">
+							<div class="flex sm:h-full max-sm:min-w-full group-odd/card:flex-row-reverse group-odd/card:justify-between max-sm:justify-items-center">
 								{teacher.picture ? (
-									<img data-url={imgSrc + teacher.picture} width={240} alt={"Φωτογραφία Καθηγητή " + teacher.fullname} class="w-[clamp(0px,100%,240px)] max-sm:aspect-[6_/_9]  max-sm:w-[clamp(150px,25vw,250px)] object-cover max-sm:group-even/card:rounded-l-[4px] group-even/card:rounded-l-[13px] max-sm:group-odd/card:rounded-r-[4px] group-odd/card:rounded-r-[13px]" />
+									<img data-url={imgSrc + teacher.picture} width={240} alt={"Φωτογραφία Καθηγητή " + teacher.fullname}
+									class={"w-[clamp(0px,100%,240px)] max-sm:aspect-[6_/_9] max-sm:w-[clamp(150px,25vw,250px)] object-cover" +
+									" max-sm:group-even/card:rounded-tl-[6px] max-sm:group-odd/card:rounded-tr-[6px] max-sm:shadow-md max-sm:shadow-gray-400" +
+									(((t_instruments && t_instruments.length > 0) || teacher.cv || teacher.linktree) ? " max-sm:group-even/card:rounded-br-[8px] max-sm:group-odd/card:rounded-bl-[8px]" : "") +
+									" sm:group-even/card:rounded-l-[13px] sm:group-odd/card:rounded-r-[13px]"}/>
 								) : (
-									<div class="group-odd/parent-card:w-[clamp(0px,100%,240px)]"/>
+									<div class="group-odd/card:w-[clamp(0px,100%,240px)]"/>
 								)}
-								<div class="flex flex-col gap-y-[0.5vw] p-[0.8vw] max-sm:gap-y-2 max-sm:w-full max-sm:py-3 max-sm:pb-1 max-sm:pl-3 min-w-0  justify-around">
+								<div class="flex flex-col gap-y-[0.5vw] p-[0.8vw] max-sm:gap-y-2 max-sm:w-full max-sm:py-3 max-sm:pb-1 max-sm:pl-3 min-w-0 max-sm:justify-around">
 									<p class="text-[2vw] max-sm:max-w-[25ch] max-sm:text-lg max-2xs:text-base underline underline-offset-4 decoration-1 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] min-w-0 [word-break:break-word]">{teacher.fullname}</p>
 									<p class="text-[1.25vw] max-w-[35ch] max-sm:max-w-[30ch] max-[300px]:max-w-[25ch] max-sm:text-sm max-2xs:text-xs rounded-lg max-sm:rounded-md bg-red-900 text-white p-[0.4vw] max-sm:p-2 max-sm:mr-2 min-w-0 [word-break:break-word]">{t_locations.map((str, i) => {
 											const dot = i === t_locations.length - 1 ? "" : "&";
@@ -122,8 +126,8 @@ const cvSrc = "kathigites/cv/";
 											}
 									})}</span></p>
 									{t_instruments && t_instruments.length > 0 ? (
-										<p class="text-[1.25vw] max-sm:hidden max-sm:text-sm max-2xs:text-xs max-w-[35ch] flex flex-row flex-wrap max-sm:gap-y-1 gap-y-2 max-sm:max-w-[55ch] min-w-0 [word-break:break-word]">
-											<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2 max-sm:pr-1 ">Διδάσκει:</span>
+										<p class="text-[1.25vw] max-sm:hidden max-w-[35ch] flex flex-row flex-wrap gap-y-2 min-w-0 [word-break:break-word]">
+											<span class="underline decoration-1 decoration-slate-800 underline-offset-[3px] pr-2">Διδάσκει:</span>
 											{t_instruments.map((instr, i) => {
 												const dot = i === t_instruments.length - 1 ? "" : "•";
 												return (
@@ -134,15 +138,15 @@ const cvSrc = "kathigites/cv/";
 									) : (
 										<></>
 									)}
-									<div class="flex flex-row flex-wrap max-sm:hidden sm:gap-2 max-sm:gap-y-2">
+									<div class="flex flex-row flex-wrap max-sm:hidden gap-2">
 										{teacher.cv ?
-											<a target="_blank" href={cvSrc + teacher.cv} class="w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25vw] max-sm:text-sm max-2xs:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6vw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
-												<i class="fa-solid fa-file-lines pr-2 max-sm:text-2xs max-sm:pr-1"></i> Βιογραφικό
+											<a target="_blank" href={cvSrc + teacher.cv} class="w-max rounded-lg text-[1.25vw] border-red-900 border-solid border-2 p-[0.6vw] transition-colors hover:bg-red-900 hover:text-white">
+												<i class="fa-solid fa-file-lines pr-2"></i> Βιογραφικό
 											</a>
 											: <></>}
 										{teacher.linktree ?
-											<a target="_blank" href={teacher.linktree} class="w-max max-sm:text-2xs max-sm:leading-2xs rounded-lg max-sm:rounded-md text-[1.25vw] max-sm:text-sm max-2xs:text-xs border-red-900 border-solid border-2 max-sm:border p-[0.6vw] max-sm:p-1 max-sm:px-2 transition-colors hover:bg-red-900 hover:text-white">
-												<i class={"pr-2 max-sm:text-2xs max-sm:pr-1"
+											<a target="_blank" href={teacher.linktree} class="w-max rounded-lg text-[1.25vw] border-red-900 border-solid border-2 p-[0.6vw] transition-colors hover:bg-red-900 hover:text-white">
+												<i class={"pr-2"
 												+ (teacher.linktree.includes("youtube") ? " fa-brands fa-youtube" : " fa-solid fa-link") }></i> {teacher.linktree.includes("youtube") ? "YouTube" : "Πολυμέσα"}
 											</a>
 											: <></>}
