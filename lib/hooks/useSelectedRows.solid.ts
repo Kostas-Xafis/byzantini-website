@@ -38,14 +38,14 @@ export class SelectedRows {
 	useSelectedRows() {
 		if (SelectedRows.eventListeners.size) {
 			SelectedRows.eventListeners.forEach((handler, path) => {
-				document.removeEventListener("ModifySelections", handler);
+				document.removeEventListener("modify_selections", handler);
 				SelectedRows.eventListeners.delete(path);
 			});
 		}
 		const eventHandler = (e: CustomEvent<TypeEffect>) => {
 			this.mutateItems(e.detail);
 		};
-		document.addEventListener("ModifySelections", eventHandler);
+		document.addEventListener("modify_selections", eventHandler);
 		SelectedRows.eventListeners.set(window.location.pathname, eventHandler);
 		SelectedRows.selectedItems = this.selectedItems;
 
@@ -84,7 +84,7 @@ export class SelectedRows {
 export function selectedRowsEvent<T extends TypeEffect>(detail: T) {
 	// 🤯🤯🤯 Solid-js is actually insane: UI bugfix due to state change after toggleCheckboxes was being called
 	// It also makes more sense, as I wouldn't want any state recalcuations to happen after a event dispatch
-	const event = new CustomEvent("ModifySelections", { detail, cancelable: true, composed: true });
+	const event = new CustomEvent("modify_selections", { detail, cancelable: true, composed: true });
 	untrack(() => {
 		document.dispatchEvent(event);
 	});

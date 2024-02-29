@@ -176,7 +176,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				if (i === 0) return;
 				imgContainer.addEventListener("click", () => {
 					document.dispatchEvent(
-						new CustomEvent("openCarousel", {
+						new CustomEvent("open_carousel", {
 							detail: { index: Number(imgContainer.dataset.imgindex as string) },
 						}),
 					);
@@ -270,12 +270,12 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					"#imageCarouselContainer",
 				) as HTMLElement;
 
-				document.addEventListener("openCarousel", (e) => {
+				document.addEventListener("open_carousel", (e) => {
 					carouselGoto(Number(e.detail.index || 0));
 					carousel.dataset.index = currIndex.toString();
 					carouselContainer.classList.remove("hidden");
 				});
-				document.addEventListener("closeCarousel", () => {
+				document.addEventListener("close_carousel", () => {
 					carouselContainer.classList.add("hidden");
 				});
 				document.addEventListener("keydown", (e) => {
@@ -291,7 +291,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 		!!window.matchMedia("(min-width: 640px)").matches &&
 			onElementMount("#carouselClose", (el) => {
 				el.addEventListener("click", () => {
-					document.dispatchEvent(new CustomEvent("closeCarousel"));
+					document.dispatchEvent(new CustomEvent("close_carousel"));
 				});
 			});
 		window.matchMedia("(max-width: 640px)").matches &&

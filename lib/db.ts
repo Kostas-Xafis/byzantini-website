@@ -75,16 +75,12 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 				return fetch(url, init);
 			},
 			cast(field, value) {
+				console.log({ field, value });
 				if (field.type === 'INT64' || field.type === 'UINT64') {
 					return Number(value);
 				}
-				// if it's a boolean
-				// if (field.type === 'INT8' && field.columnLength === 1) {
-				// 	return value === 1
-				// }
 				return cast(field, value);
 			},
-			// trust me typescript...
 		}) as unknown as Connection;
 	} catch (error) {
 		throw new Error(error as any);

@@ -115,7 +115,9 @@ export default function Modal(props: Props) {
 	const onClose = () => {
 		setLoadingState(MODAL_PREFIX, false);
 		setOpenState(MODAL_PREFIX, false);
-		document.dispatchEvent(new CustomEvent("ModalClose", { detail: { prefix: MODAL_PREFIX } }));
+		document.dispatchEvent(
+			new CustomEvent("modal_close", { detail: { prefix: MODAL_PREFIX } })
+		);
 	};
 
 	return (

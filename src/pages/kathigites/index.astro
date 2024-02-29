@@ -63,7 +63,7 @@ const cvSrc = "kathigites/cv/";
 	<div id="teachersPage" class="group/type byz w-full grid grid-cols-[max-content_1fr] font-didact max-sm:grid-cols-[100%] max-sm:grid-rows-[max-content_1fr]">
 		<div id="btsContainer" class="relative w-max h-full border-r-2 max-sm:border-none border-red-900 max-sm:w-full">
 			{/* sticky with top being the height of the navbar */}
-			<div id="stickyContainer" class="sticky top-[4.2vw] grid grid-rows-[repeat(3,max-content)] max-sm:grid-rows-1 max-sm:grid-cols-[repeat(3,_1fr)]">
+			<div id="stickyContainer" class="sticky top-[4.1vw] grid grid-rows-[repeat(3,max-content)] max-sm:grid-rows-1 max-sm:grid-cols-[repeat(3,_1fr)]">
 				{
 					music.map(([str, type], ind) => (
 						<div id={type} data-show={ind === 0} data-type={type} class={
@@ -81,10 +81,10 @@ const cvSrc = "kathigites/cv/";
 				}
 			</div>
 		</div>
-		<div id="teachersContainer" class="max-w-full h-min flex flex-wrap gap-x-[1.25%] p-[2vw] px-4 pr-0 gap-y-8 max-sm:px-2 max-sm:pt-6 max-sm:pb-12 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
-			<h1 class="group-[:is(:not(.byz))]/type:hidden text-[3vw] max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Βυζαντινής Μουσικής</h1>
-			<h1 class="group-[:is(:not(.par))]/type:hidden text-[3vw] max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Παραδοσιακής Μουσικής</h1>
-			<h1 class="group-[:is(:not(.eur))]/type:hidden text-[3vw] max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Ευρωπαϊκής Μουσικής</h1>
+		<div id="teachersContainer" class="justify-evenly max-w-full h-min flex flex-wrap gap-x-[1.25%] p-[2vw] px-4 pr-0 gap-y-8 max-sm:px-2 max-sm:pt-6 max-sm:pb-12 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
+			<h1 class="group-[:is(:not(.byz))]/type:hidden text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Βυζαντινής Μουσικής</h1>
+			<h1 class="group-[:is(:not(.par))]/type:hidden text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Παραδοσιακής Μουσικής</h1>
+			<h1 class="group-[:is(:not(.eur))]/type:hidden text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 w-full flex-grow pb-[1.5vw] text-center drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">Καθηγητές Ευρωπαϊκής Μουσικής</h1>
 			{
 				teachers.map(([teachersByType, type]) => {
 					return teachersByType.map(teacher => {
@@ -96,7 +96,7 @@ const cvSrc = "kathigites/cv/";
 						t_instruments?.sort();
 						if (teacher.online) t_locations?.push("Διαδικτυακά Μαθήματα");
 						return (
-						<div class={"group/card sm:w-[48.5%] max-sm:w-full hidden show rounded-2xl @7xl:rounded-2xl @4xl:rounded-lg max-sm:rounded-md shadow-md shadow-gray-500 border-solid border-2 max-sm:border border-red-900"
+						<div class={"group/card sm:w-[48.5%] sm:max-w-[750px] max-sm:w-full hidden show rounded-2xl @7xl:rounded-2xl @4xl:rounded-lg max-sm:rounded-md shadow-md shadow-gray-500 border-solid border-2 max-sm:border border-red-900"
 								+ (type === MusicType.Byzantine ? " group-[:is(.byz)]/type:block" : "")
 								+ (type === MusicType.Traditional ? " group-[:is(.par)]/type:block" : "")
 								+ (type === MusicType.European ? " group-[:is(.eur)]/type:block" : "")}>
@@ -209,7 +209,7 @@ const cvSrc = "kathigites/cv/";
 			opacity: 0.0001;
 			animation: fadeIn 0.6s ease-in-out forwards;
 		}
-		#btsContainer > div:hover i {
+		#btsContainer [data-type]:hover i {
 			animation: fadeInLeft 0.3s ease-in-out forwards;
 		}
 	</style>

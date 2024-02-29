@@ -38,6 +38,7 @@ async function productionBucketReplication() {
 }
 
 
+// You'll need to authenticate with `pscale auth login` before running this function
 async function productionDatabaseReplication() {
 	const exec = (await eval(`import('child_process')`)).exec as typeof import("child_process").exec;
 	async function connectAndDumpSnapshot() {

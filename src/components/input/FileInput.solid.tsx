@@ -47,7 +47,7 @@ export default function FileInput(props: FileInputProps) {
 		setFilename("");
 	};
 
-	document.addEventListener("ModalClose", (e) => {
+	document.addEventListener("modal_close", (e) => {
 		const modalPrefix = e.detail.prefix;
 		if (modalPrefix !== prefix) return;
 		if (prefix.includes("ADD")) {
