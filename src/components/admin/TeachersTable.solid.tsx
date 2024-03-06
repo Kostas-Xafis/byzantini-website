@@ -5,7 +5,12 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { loadXLSX } from "../../../lib/pdf.client";
-import { fileToBlob, removeAccents, teacherTitleByGender } from "../../../lib/utils.client";
+import {
+	deepCopy,
+	fileToBlob,
+	removeAccents,
+	teacherTitleByGender,
+} from "../../../lib/utils.client";
 import type {
 	ClassType,
 	Teachers as FullTeachers,
@@ -527,6 +532,7 @@ export default function TeachersTable() {
 		};
 	});
 	const onModify = createMemo((): Action | EmptyAction => {
+		console.log(FileHandler.getAllFiles());
 		const modifyModal = {
 			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
@@ -630,7 +636,7 @@ export default function TeachersTable() {
 			});
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση καθηγητή"));
 		};
-		const simpleTeacher = JSON.parse(JSON.stringify(teacher)) as Partial<FullTeachers>;
+		const simpleTeacher = deepCopy(teacher) as Partial<FullTeachers>;
 		delete simpleTeacher.picture;
 		delete simpleTeacher.cv;
 		return {

@@ -1,7 +1,7 @@
 import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
-import { asyncQueue } from "../utils.client";
+import { asyncQueue, deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes } from "./announcements.client";
 
@@ -46,23 +46,22 @@ async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) 
 
 const bucketPrefix = "anakoinoseis/images/";
 
-// Include this in all .server.ts files
-let serverRoutes = JSON.parse(JSON.stringify(AnnouncementsRoutes)) as typeof AnnouncementsRoutes; // Copy the routes object to split it into client and server routes
+let serverRoutes = deepCopy(AnnouncementsRoutes); // Copy the routes object to split it into client and server routes
 
-serverRoutes.get.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"));
+serverRoutes.get.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"));
 };
 
-serverRoutes.getImages.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"));
+serverRoutes.getImages.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"));
 };
 
-serverRoutes.getSimple.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<Omit<Announcements, "content">>("SELECT id, title, date, views FROM announcements"));
+serverRoutes.getSimple.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<Omit<Announcements, "content">>("SELECT id, title, date, views FROM announcements"));
 };
 
-serverRoutes.getById.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getById.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", ids);
 		if (!announcement) throw Error("announcement not found");
@@ -70,8 +69,8 @@ serverRoutes.getById.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.getByTitle.func = async ({ ctx: _ctx, slug }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
+	return execTryCatch(async () => {
 		const { title } = slug;
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
 		const imageNames = await executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
@@ -81,8 +80,8 @@ serverRoutes.getByTitle.func = async ({ ctx: _ctx, slug }) => {
 	});
 };
 
-serverRoutes.post.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.post.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body) as any[];
 		const { insertId } = await executeQuery(
@@ -94,8 +93,8 @@ serverRoutes.post.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.update.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.update.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		let args = Object.values(body) as any[];
 		args.push(args.shift());
@@ -107,8 +106,8 @@ serverRoutes.update.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.postImage.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.postImage.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		const { insertId } = await executeQuery(`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (${questionMarks(args)})`, args);
@@ -117,8 +116,8 @@ serverRoutes.postImage.func = async ({ ctx }) => {
 };
 
 const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
-serverRoutes.imageUpload.func = async ({ ctx, slug }) => {
-	return await execTryCatch(async () => {
+serverRoutes.imageUpload.func = ({ ctx, slug }) => {
+	return execTryCatch(async () => {
 		let { id, name } = slug;
 
 		const [announcement] = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ? AND name = ?", [id, name.replace("thumb_", "")]);
@@ -136,8 +135,8 @@ serverRoutes.imageUpload.func = async ({ ctx, slug }) => {
 	});
 };
 
-serverRoutes.imagesDelete.func = async ({ ctx, slug }) => {
-	return await execTryCatch(async () => {
+serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
+	return execTryCatch(async () => {
 		const { announcement_id } = slug;
 		const ids = await ctx.request.json();
 		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
@@ -157,8 +156,8 @@ serverRoutes.imagesDelete.func = async ({ ctx, slug }) => {
 	});
 };
 
-serverRoutes.delete.func = async ({ ctx }) => {
-	return await execTryCatch(async T => {
+serverRoutes.delete.func = ({ ctx }) => {
+	return execTryCatch(async T => {
 		const ids = await ctx.request.json();
 		const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!announcements || !announcements.length) throw Error("announcements not found");

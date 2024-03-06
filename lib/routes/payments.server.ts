@@ -1,15 +1,16 @@
 import type { Books, Payments } from "../../types/entities";
+import { deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { PaymentsRoutes } from "./payments.client";
 
-const serverRoutes = JSON.parse(JSON.stringify(PaymentsRoutes)) as typeof PaymentsRoutes;
+const serverRoutes = deepCopy(PaymentsRoutes);
 
-serverRoutes.get.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"));
+serverRoutes.get.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"));
 };
 
-serverRoutes.getById.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getById.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!payments) throw Error("Payment not found");
@@ -17,18 +18,20 @@ serverRoutes.getById.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.getTotal.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_payments"))[0]);
+serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
+	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_payments"))[0]);
 };
 
-serverRoutes.post.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.post.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const { book_id, student_name, book_amount } = await ctx.request.json();
 		const book = (await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
+
 		if (!book) throw Error("Book not found");
 		if (book.quantity - book.sold <= 0) throw Error("Book is out of stock");
 		if (book_amount > book.quantity - book.sold) throw Error("Not enough books in stock");
 		if (book_amount <= 0) throw Error("Invalid book amount");
+
 		const [result1, result2] = await Promise.allSettled([
 			executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
 				book_id,
@@ -47,8 +50,8 @@ serverRoutes.post.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.updatePayment.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.updatePayment.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const { id, amount } = await ctx.request.json();
 		//check if payment exists
 		const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
@@ -60,8 +63,8 @@ serverRoutes.updatePayment.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.complete.func = async ({ ctx }) => {
-	return await execTryCatch(async (T) => {
+serverRoutes.complete.func = ({ ctx }) => {
+	return execTryCatch(async (T) => {
 		const ids = await ctx.request.json();
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
@@ -72,8 +75,8 @@ serverRoutes.complete.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.delete.func = async ({ ctx }) => {
-	return await execTryCatch(async T => {
+serverRoutes.delete.func = ({ ctx }) => {
+	return execTryCatch(async T => {
 		const ids = await ctx.request.json();
 
 		//check if payment exists

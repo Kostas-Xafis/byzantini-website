@@ -1,14 +1,14 @@
-import { AuthenticationRoutes } from "./authentication.client";
-import { execTryCatch } from "../utils.server";
 import type { SysUsers } from "../../types/entities";
-import { executeQuery } from "../utils.server";
 import { authentication, createSessionId, generateShaKey } from "../utils.auth";
+import { deepCopy } from "../utils.client";
+import { execTryCatch, executeQuery } from "../utils.server";
+import { AuthenticationRoutes } from "./authentication.client";
 
-const serverRoutes = JSON.parse(JSON.stringify(AuthenticationRoutes)) as typeof AuthenticationRoutes;
+const serverRoutes = deepCopy(AuthenticationRoutes);
 
 
-serverRoutes.userLogin.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.userLogin.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const credentials = await ctx.request.json();
 
 		const [sysUser] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]);
@@ -30,16 +30,16 @@ serverRoutes.userLogin.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.userLogout.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.userLogout.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const { sid } = await ctx.request.json();
 		await executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
 		return "Logged out";
 	});
 };
 
-serverRoutes.authenticateSession.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.authenticateSession.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const isAuthenticated = await authentication(ctx);
 		return { isValid: isAuthenticated };
 	});

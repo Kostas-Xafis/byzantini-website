@@ -1,12 +1,13 @@
 import { productionReplication } from "../replicate";
+import { deepCopy } from "../utils.client";
 import { execTryCatch } from "../utils.server";
 import { ReplicationRoutes } from "./replication.client";
 
-const serverRoutes = JSON.parse(JSON.stringify(ReplicationRoutes)) as typeof ReplicationRoutes; // Copy the routes object to split it into client and server routes
+const serverRoutes = deepCopy(ReplicationRoutes); // Copy the routes object to split it into client and server routes
 
 
-serverRoutes.replication.func = async ({ ctx, slug }) => {
-	return await execTryCatch(async () => {
+serverRoutes.replication.func = ({ ctx, slug }) => {
+	return execTryCatch(async () => {
 		if (ctx.url.hostname !== "localhost") throw Error("This route is only available in development mode");
 		// Even if the a malicious user manages to send a request to this route,
 		// it wont do anything because it doesn't have access to dev env variables

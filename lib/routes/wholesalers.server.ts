@@ -1,15 +1,16 @@
 import type { Books, Payments, Wholesalers } from "../../types/entities";
+import { deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
 import { WholesalersRoutes } from "./wholesalers.client";
 
-const serverRoutes = JSON.parse(JSON.stringify(WholesalersRoutes)) as typeof WholesalersRoutes;
+const serverRoutes = deepCopy(WholesalersRoutes);
 
-serverRoutes.get.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"));
+serverRoutes.get.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"));
 };
 
-serverRoutes.getById.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getById.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const id = await ctx.request.json();
 		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", id);
 		if (!wholesaler) throw Error("Wholesaler not found");
@@ -17,8 +18,8 @@ serverRoutes.getById.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.post.func = async ({ ctx }) => {
-	return await execTryCatch(async T => {
+serverRoutes.post.func = ({ ctx }) => {
+	return execTryCatch(async T => {
 		const args = Object.values(await ctx.request.json());
 		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
 		await T.executeQuery("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
@@ -26,8 +27,8 @@ serverRoutes.post.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.delete.func = async ({ ctx }) => {
-	return await execTryCatch(async T => {
+serverRoutes.delete.func = ({ ctx }) => {
+	return execTryCatch(async T => {
 		const wholesaler_id = await ctx.request.json();
 		const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;
 		if (!wholesaler) throw Error("Wholesaler not found");

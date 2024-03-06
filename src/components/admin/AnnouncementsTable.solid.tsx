@@ -4,7 +4,7 @@ import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { asyncQueue, fileToBlob, isSafeURLPath } from "../../../lib/utils.client";
+import { asyncQueue, deepCopy, fileToBlob, isSafeURLPath } from "../../../lib/utils.client";
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
 import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -66,7 +66,7 @@ const AnnouncementsInputs = (): Omit<
 
 const announcementsToTable = (announcements: Announcements[]): AnnouncementTable[] => {
 	return announcements.map((a) => {
-		let announcement = JSON.parse(JSON.stringify(a)) as Partial<Announcements>;
+		let announcement = deepCopy(a) as Partial<Announcements>;
 		delete announcement.content;
 		const columns = Object.values(announcement);
 		columns.push(a.views);
@@ -176,7 +176,6 @@ export default function AnnouncementsTable() {
 	const apiHook = useAPI(setStore);
 	const setAnnouncementHydrate = useHydrateById({
 		setStore,
-		// TODO: Need to update the images when updating the announcement
 		mutations: [
 			{
 				srcEndpoint: API.Announcements.getById,
@@ -279,7 +278,7 @@ export default function AnnouncementsTable() {
 			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};
 		const anc = announcements.find((a) => a.id === selectedItems[0]);
-		const copyAnc = JSON.parse(JSON.stringify(anc)) as Record<
+		const copyAnc = deepCopy(anc) as unknown as Record<
 			keyof ReturnType<typeof AnnouncementsInputs>,
 			any
 		>;

@@ -162,5 +162,8 @@ export class FileHandler {
 		if (file == null || !("name" in file)) throw Error("File is null");
 		return { isProxy, name, file };
 	}
+	static getAllFiles() {
+		return FileHandler.AllFiles;
+	}
 }
 

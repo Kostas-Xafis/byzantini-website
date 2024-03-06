@@ -1,16 +1,17 @@
 import type { Books, Payments } from "../../types/entities";
-import { BooksRoutes } from "./books.client";
+import { deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { BooksRoutes } from "./books.client";
 
 // Include this in all .server.ts files
-const serverRoutes = JSON.parse(JSON.stringify(BooksRoutes)) as typeof BooksRoutes; // Copy the routes object to split it into client and server routes
+const serverRoutes = deepCopy(BooksRoutes);
 
-serverRoutes.get.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
+serverRoutes.get.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
 };
 
-serverRoutes.getById.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getById.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", ids);
 		if (!book) throw Error("Book not found");
@@ -18,8 +19,8 @@ serverRoutes.getById.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.post.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.post.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		const res = await executeQuery(
@@ -39,8 +40,8 @@ serverRoutes.post.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.updateQuantity.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.updateQuantity.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const reqBook = await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
 		if (book.quantity > reqBook.quantity) throw Error("Cannot reduce quantity");
@@ -58,8 +59,8 @@ serverRoutes.updateQuantity.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.delete.func = async ({ ctx }) => {
-	return await execTryCatch(async T => {
+serverRoutes.delete.func = ({ ctx }) => {
+	return execTryCatch(async T => {
 		const ids = await ctx.request.json();
 		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids)})`, ids);
 		if (books.length === 0) throw Error("Book not found");

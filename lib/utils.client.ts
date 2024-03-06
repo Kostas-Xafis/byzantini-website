@@ -322,7 +322,7 @@ export class ExecutionQueue<T> {
 	#isExecuting = false;
 	constructor(private interval = 1000, private func: (item: T) => (Promise<void> | void) = () => { }) { }
 	push(item: T) {
-		this.#queue.push(JSON.parse(JSON.stringify(item)));
+		this.#queue.push(deepCopy(item));
 		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
 	}
 	async execute() {
@@ -361,3 +361,11 @@ export function isGeneratorFunction(func: any): func is GeneratorFunction {
 export function isFunction(func: any): func is Function {
 	return func.constructor === Function;
 }
+
+// Recursive object copy
+export const deepCopy = <T>(obj: T): T => {
+	if (typeof obj !== "object" || obj === null) return obj;
+	if (Array.isArray(obj)) return obj.map(deepCopy) as any;
+	return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, deepCopy(v)])) as any;
+};
+

@@ -1,16 +1,20 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
+import { deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
-// Include this in all .server.ts files
-const serverRoutes = JSON.parse(JSON.stringify(RegistrationsRoutes)) as typeof RegistrationsRoutes; // Copy the routes object to split it into client and server routes
+console.log("RegistrationsRoutes: ", RegistrationsRoutes);
 
-serverRoutes.get.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
+// Include this in all .server.ts files
+const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
+
+console.log("serverRoutes: ", serverRoutes);
+serverRoutes.get.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
 };
 
-serverRoutes.getById.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getById.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const ids = await ctx.request.json();
 		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", ids);
 		if (!registration) throw Error("Registration not found");
@@ -18,12 +22,12 @@ serverRoutes.getById.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.getTotal.func = async ({ ctx: _ctx }) => {
-	return await execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
+serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
+	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
 };
 
-serverRoutes.post.func = async ({ ctx }) => {
-	return await execTryCatch(async T => {
+serverRoutes.post.func = ({ ctx }) => {
+	return execTryCatch(async T => {
 		const body = await ctx.request.json();
 		const args = Object.values(body);
 		await T.executeQuery(
@@ -38,9 +42,11 @@ serverRoutes.post.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.update.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.update.func = ({ ctx }) => {
+	return execTryCatch(async () => {
+		console.log("ctx.request.bodyUsed: ", ctx.request.bodyUsed);
 		const body = await ctx.request.json();
+		console.log("ctx.request.bodyUsed: ", ctx.request.bodyUsed);
 		const args = Object.values(body);
 		args.push(args.shift() as any); // Remove the id from the arguments and push it at the end
 		await executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=? WHERE id=?`, args);
@@ -48,8 +54,8 @@ serverRoutes.update.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.delete.func = async ({ ctx }) => {
-	return await execTryCatch(async (T) => {
+serverRoutes.delete.func = ({ ctx }) => {
+	return execTryCatch(async (T) => {
 		const body = await ctx.request.json();
 		if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id=?`, body);
 		else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body)})`, body);
@@ -58,16 +64,16 @@ serverRoutes.delete.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.emailSubscribe.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.emailSubscribe.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		await executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
 		return "Email subscribed successfully";
 	});
 };
 
-serverRoutes.emailUnsubscribe.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.emailUnsubscribe.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const isSubscribed = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
 		if (isSubscribed.length === 0) return { isValid: false };
@@ -76,8 +82,8 @@ serverRoutes.emailUnsubscribe.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.getSubscriptionToken.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getSubscriptionToken.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const body = await ctx.request.json();
 		const [isSubscribed] = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
 		if (!isSubscribed) return { token: null };

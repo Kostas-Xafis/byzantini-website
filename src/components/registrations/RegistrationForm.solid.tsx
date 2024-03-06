@@ -10,6 +10,7 @@ import type {
 import { CloseButton } from "../admin/table/CloseButton.solid";
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
+import { deepCopy } from "../../../lib/utils.client";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -365,7 +366,7 @@ export function RegistrationForm() {
 
 	const TeachersByType = createMemo(() => {
 		let teacher_store = store[API.Teachers.get]?.slice();
-		const teachers = teacher_store && (JSON.parse(JSON.stringify(teacher_store)) as Teachers[]);
+		const teachers = teacher_store && deepCopy(teacher_store);
 		const teacher_classes = store[API.Teachers.getClasses];
 		if (!teachers || !teacher_classes) return [];
 		const id = btns.findIndex((btn) => btn[1] === formSelected());

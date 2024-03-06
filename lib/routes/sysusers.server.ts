@@ -1,17 +1,18 @@
-import { SysUsersRoutes } from "./sysusers.client";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
 import { createSessionId, generateShaKey, getSessionId } from "../utils.auth";
+import { deepCopy } from "../utils.client";
+import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { SysUsersRoutes } from "./sysusers.client";
 
 
-const serverRoutes = JSON.parse(JSON.stringify(SysUsersRoutes)) as typeof SysUsersRoutes;
+const serverRoutes = deepCopy(SysUsersRoutes);
 
-serverRoutes.get.func = async ({ ctx }) => {
-	return await execTryCatch(() => executeQuery<Pick<SysUsers, "id" | "email" | "privilege">>("SELECT id, email, privilege FROM sys_users"));
+serverRoutes.get.func = ({ ctx }) => {
+	return execTryCatch(() => executeQuery<Pick<SysUsers, "id" | "email" | "privilege">>("SELECT id, email, privilege FROM sys_users"));
 };
 
-serverRoutes.getById.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getById.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const id = await ctx.request.json();
 		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE id = ? LIMIT 1", id);
 		if (!user) throw Error("User not found");
@@ -19,16 +20,16 @@ serverRoutes.getById.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.getBySid.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.getBySid.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const session_id = getSessionId(ctx.request) as string;
 		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		return user;
 	});
 };
 
-serverRoutes.delete.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.delete.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		let body = await ctx.request.json();
 		const session_id = getSessionId(ctx.request) as string;
 		const [{ id, privilege }] = await executeQuery<Pick<SysUsers, "id" | "privilege">>("SELECT id, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
@@ -44,9 +45,9 @@ serverRoutes.delete.func = async ({ ctx }) => {
 };
 
 
-serverRoutes.registerSysUser.func = async ({ ctx, slug }) => {
+serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 	const { link } = slug;
-	return await execTryCatch(async T => {
+	return execTryCatch(async T => {
 		const linkCheck = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ?", [link]);
 		if (linkCheck.length === 0) {
 			throw new Error("Invalid Link");
@@ -66,8 +67,8 @@ serverRoutes.registerSysUser.func = async ({ ctx, slug }) => {
 	});
 };
 
-serverRoutes.createRegisterLink.func = async ({ ctx }) => {
-	return await execTryCatch(async () => {
+serverRoutes.createRegisterLink.func = ({ ctx }) => {
+	return execTryCatch(async () => {
 		const link = generateLink();
 		const exp_date = Date.now() + 1000 * 60 * 60 * 24;
 		const session_id = getSessionId(ctx.request);
@@ -77,8 +78,8 @@ serverRoutes.createRegisterLink.func = async ({ ctx }) => {
 	});
 };
 
-serverRoutes.validateRegisterLink.func = async ({ ctx, slug }) => {
-	return await execTryCatch(async () => {
+serverRoutes.validateRegisterLink.func = ({ ctx: _ctx, slug }) => {
+	return execTryCatch(async () => {
 		const { link } = slug;
 		const [{ exp_date }] = await executeQuery<Pick<SysUserRegisterLink, "exp_date">>("SELECT exp_date FROM sys_user_register_links WHERE link = ? LIMIT 1", [
 			link

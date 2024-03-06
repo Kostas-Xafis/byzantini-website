@@ -157,30 +157,3 @@ export const TeachersRoutes = {
 	fileDelete,
 	delete: del
 };
-
-
-//* I / O Read time: 0.21s
-//* Parse time: 1.39s
-//* ResolveModule time: 0.50s
-//* ResolveTypeReference time: 0.02s
-//* ResolveLibrary time: 0.03s
-//* Program time: 2.35s
-//* Bind time: 0.68s
-//* Check time: 3.34s
-//* printTime time: 0.00s
-//* Emit time: 0.00s
-//* Total time: 6.38s;
-
-
-
-//* I / O Read time: 0.22s
-//* Parse time: 1.40s
-//* ResolveModule time: 0.50s
-//* ResolveTypeReference time: 0.02s
-//* ResolveLibrary time: 0.03s
-//* Program time: 2.38s
-//* Bind time: 0.71s
-//* Check time: 3.76s
-//* printTime time: 0.00s
-//* Emit time: 0.00s
-//* Total time: 6.85s;
