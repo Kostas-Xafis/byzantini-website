@@ -1,7 +1,7 @@
 import type { SysUsers } from "../../types/entities";
 import { authentication, createSessionId, generateShaKey } from "../utils.auth";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody } from "../utils.server";
 import { AuthenticationRoutes } from "./authentication.client";
 
 const serverRoutes = deepCopy(AuthenticationRoutes);
@@ -9,7 +9,7 @@ const serverRoutes = deepCopy(AuthenticationRoutes);
 
 serverRoutes.userLogin.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const credentials = await ctx.request.json();
+		const credentials = getUsedBody(ctx) || await ctx.request.json();
 
 		const [sysUser] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]);
 		if (!sysUser) return { isValid: false };
@@ -32,7 +32,7 @@ serverRoutes.userLogin.func = ({ ctx }) => {
 
 serverRoutes.userLogout.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const { sid } = await ctx.request.json();
+		const { sid } = getUsedBody(ctx) || await ctx.request.json();
 		await executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
 		return "Logged out";
 	});

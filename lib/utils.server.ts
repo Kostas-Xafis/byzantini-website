@@ -1,6 +1,6 @@
-import type { EndpointResponse, EndpointResponseError } from "../types/routes";
+import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { CreateDbConnection, type Transaction } from "./db";
-
+import type { Output } from "valibot";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
@@ -33,7 +33,11 @@ export const MIMETypeMap: Record<string, string> = {
 };
 export const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 
-
+export const getUsedBody = <T>(ctx: Context<T>): (T extends AnyObjectSchema ? Output<T> : T) | undefined => {
+	if (!ctx.request.bodyUsed) return undefined;
+	// @ts-ignore
+	return ctx.request.json();
+};
 
 //  ---------------------- DATABASE UTILS ----------------------  \\
 

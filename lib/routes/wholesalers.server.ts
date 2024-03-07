@@ -1,6 +1,6 @@
 import type { Books, Payments, Wholesalers } from "../../types/entities";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { WholesalersRoutes } from "./wholesalers.client";
 
 const serverRoutes = deepCopy(WholesalersRoutes);
@@ -11,7 +11,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
+		const id = getUsedBody(ctx) || await ctx.request.json();
 		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", id);
 		if (!wholesaler) throw Error("Wholesaler not found");
 		return wholesaler;
@@ -29,7 +29,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const wholesaler_id = await ctx.request.json();
+		const wholesaler_id = getUsedBody(ctx) || await ctx.request.json();
 		const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;
 		if (!wholesaler) throw Error("Wholesaler not found");
 		await T.executeQuery(`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`, wholesaler_id);

@@ -1,7 +1,7 @@
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
 import { createSessionId, generateShaKey, getSessionId } from "../utils.auth";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
 import { SysUsersRoutes } from "./sysusers.client";
 
 
@@ -13,7 +13,7 @@ serverRoutes.get.func = ({ ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
+		const id = getUsedBody(ctx) || await ctx.request.json();
 		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE id = ? LIMIT 1", id);
 		if (!user) throw Error("User not found");
 		return user;
@@ -30,7 +30,7 @@ serverRoutes.getBySid.func = ({ ctx }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		let body = await ctx.request.json();
+		let body = getUsedBody(ctx) || await ctx.request.json();
 		const session_id = getSessionId(ctx.request) as string;
 		const [{ id, privilege }] = await executeQuery<Pick<SysUsers, "id" | "privilege">>("SELECT id, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		if (body.includes(id)) {
@@ -56,7 +56,7 @@ serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 			throw new Error("Invalid Link");
 		}
 
-		const { email, password } = await ctx.request.json();
+		const { email, password } = getUsedBody(ctx) || await ctx.request.json();
 		const key = await generateShaKey(password);
 
 		const args = [email, key] as (string | number)[];

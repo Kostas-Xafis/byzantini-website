@@ -1,6 +1,6 @@
 import type { Books, Payments } from "../../types/entities";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { PaymentsRoutes } from "./payments.client";
 
 const serverRoutes = deepCopy(PaymentsRoutes);
@@ -11,7 +11,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!payments) throw Error("Payment not found");
 		return payments;
@@ -24,7 +24,7 @@ serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const { book_id, student_name, book_amount } = await ctx.request.json();
+		const { book_id, student_name, book_amount } = getUsedBody(ctx) || await ctx.request.json();
 		const book = (await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
 		if (!book) throw Error("Book not found");
@@ -52,7 +52,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.updatePayment.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const { id, amount } = await ctx.request.json();
+		const { id, amount } = getUsedBody(ctx) || await ctx.request.json();
 		//check if payment exists
 		const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
 		if (payment.length === 0) {
@@ -65,7 +65,7 @@ serverRoutes.updatePayment.func = ({ ctx }) => {
 
 serverRoutes.complete.func = ({ ctx }) => {
 	return execTryCatch(async (T) => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
 		if (payments.length === 0) throw Error("Payment not found");
@@ -77,7 +77,7 @@ serverRoutes.complete.func = ({ ctx }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);

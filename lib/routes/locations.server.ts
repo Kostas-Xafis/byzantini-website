@@ -1,7 +1,7 @@
 import type { Locations } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, generateLink, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
 import { LocationsRoutes } from "./locations.client";
 
 
@@ -16,7 +16,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", ids);
 		if (!location) throw Error("Location not found");
 		return location;
@@ -30,7 +30,7 @@ serverRoutes.getByPriority.func = ({ ctx: _ctx }) => {
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		const { insertId } = await executeQuery(
 			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube, partner) VALUES (${questionMarks(args)})`,
@@ -42,7 +42,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		await executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`, [
 			...args.slice(1),
@@ -84,7 +84,7 @@ serverRoutes.fileDelete.func = ({ ctx, slug }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const files = await T.executeQuery<Pick<Locations, "image">>(
 			`SELECT image FROM locations WHERE id IN (${questionMarks(body)})`,
 			body

@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { asyncQueue, deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes } from "./announcements.client";
 
 async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announcements) {
@@ -62,7 +62,7 @@ serverRoutes.getSimple.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", ids);
 		if (!announcement) throw Error("announcement not found");
 		return announcement;
@@ -82,7 +82,7 @@ serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body) as any[];
 		const { insertId } = await executeQuery(
 			`INSERT INTO announcements (title, content, date) VALUES (${questionMarks(args)})`,
@@ -95,7 +95,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		let args = Object.values(body) as any[];
 		args.push(args.shift());
 
@@ -108,7 +108,7 @@ serverRoutes.update.func = ({ ctx }) => {
 
 serverRoutes.postImage.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		const { insertId } = await executeQuery(`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (${questionMarks(args)})`, args);
 		return { insertId };
@@ -138,7 +138,7 @@ serverRoutes.imageUpload.func = ({ ctx, slug }) => {
 serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { announcement_id } = slug;
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
 		if (!images || !images.length) throw Error("images not found");
 		await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
@@ -158,7 +158,7 @@ serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!announcements || !announcements.length) throw Error("announcements not found");
 		await T.executeQuery(`DELETE FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);

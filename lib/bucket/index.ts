@@ -98,22 +98,22 @@ export class Bucket {
 		return list.objects.map(({ key }) => key);
 	}
 
-	static async get(context: APIContext, filename: string) {
-		if (Bucket.isDev(context)) return await Bucket.getDev(filename);
+	static get(context: APIContext, filename: string) {
+		if (Bucket.isDev(context)) return Bucket.getDev(filename);
 		const S3 = Bucket.getS3Bucket(context);
-		return await S3.get(filename);
+		return S3.get(filename);
 	};
 
-	static async put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
-		if (Bucket.isDev(context)) return await Bucket.putDev(file, filename, filetype);
+	static put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
+		if (Bucket.isDev(context)) return Bucket.putDev(file, filename, filetype);
 		const S3 = Bucket.getS3Bucket(context);
-		await S3.put(filename, file, { httpMetadata: { "contentType": filetype } });
+		return S3.put(filename, file, { httpMetadata: { "contentType": filetype } });
 	};
 
-	static async delete(context: APIContext, filename: string) {
-		if (Bucket.isDev(context)) return await Bucket.deleteDev(filename);
+	static delete(context: APIContext, filename: string) {
+		if (Bucket.isDev(context)) return Bucket.deleteDev(filename);
 		const S3 = Bucket.getS3Bucket(context);
-		await S3.delete(filename);
+		return S3.delete(filename);
 	};
 
 	static async move(context: APIContext, srcFile: string, destFile: string) {
@@ -121,7 +121,7 @@ export class Bucket {
 		if (!fileType) throw Error("Invalid filetype");
 		const MIMEType = MIMETypeMap[fileType] || "application/octet-stream";
 
-		if (Bucket.isDev(context)) return await Bucket.moveDev(srcFile, destFile, MIMEType);
+		if (Bucket.isDev(context)) return Bucket.moveDev(srcFile, destFile, MIMEType);
 
 		const S3 = Bucket.getS3Bucket(context);
 		const file = await S3.get(srcFile);

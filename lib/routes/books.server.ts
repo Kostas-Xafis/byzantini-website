@@ -1,6 +1,6 @@
 import type { Books, Payments } from "../../types/entities";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { BooksRoutes } from "./books.client";
 
 // Include this in all .server.ts files
@@ -12,7 +12,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", ids);
 		if (!book) throw Error("Book not found");
 		return book;
@@ -21,7 +21,7 @@ serverRoutes.getById.func = ({ ctx }) => {
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		const res = await executeQuery(
 			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args)})`,
@@ -42,7 +42,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.updateQuantity.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const reqBook = await ctx.request.json();
+		const reqBook = getUsedBody(ctx) || await ctx.request.json();
 		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
 		if (book.quantity > reqBook.quantity) throw Error("Cannot reduce quantity");
 		const newAddedAmount = book.wholesale_price * (reqBook.quantity - book.quantity);
@@ -61,7 +61,7 @@ serverRoutes.updateQuantity.func = ({ ctx }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids)})`, ids);
 		if (books.length === 0) throw Error("Book not found");
 

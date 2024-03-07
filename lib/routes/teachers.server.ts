@@ -1,7 +1,7 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, imageMIMEType, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, imageMIMEType, questionMarks } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -16,7 +16,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", ids);
 		if (!teacher) throw Error("Teacher not found");
 		return teacher;
@@ -39,7 +39,7 @@ serverRoutes.getClasses.func = ({ ctx: _ctx }) => {
 };
 serverRoutes.getClassesById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
+		const id = getUsedBody(ctx) || await ctx.request.json();
 		return await executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", id);
 	});
 };
@@ -50,7 +50,7 @@ serverRoutes.getLocations.func = ({ ctx: _ctx }) => {
 };
 serverRoutes.getLocationsById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
+		const id = getUsedBody(ctx) || await ctx.request.json();
 		return await executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id = ?", id);
 	});
 };
@@ -61,14 +61,14 @@ serverRoutes.getInstruments.func = ({ ctx: _ctx }) => {
 };
 serverRoutes.getInstrumentsById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
+		const id = getUsedBody(ctx) || await ctx.request.json();
 		return await executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id = ?", id);
 	});
 };
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online];
 		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, gender, title, visible, online) VALUES (${questionMarks(args)})`, args);
 		for (const class_id of body.teacherClasses) {
@@ -88,7 +88,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
 		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, args);
 
@@ -170,7 +170,7 @@ serverRoutes.fileRename.func = ({ ctx, slug }) => {
 
 serverRoutes.fileDelete.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
 		if (!teacher) throw Error("Teacher not found");
 		if (body.type === "cv") {
@@ -188,7 +188,7 @@ serverRoutes.fileDelete.func = ({ ctx }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (${questionMarks(body)})`, body);
 		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (${questionMarks(body)})`, body);
 		await T.executeQuery(`DELETE FROM teacher_instruments WHERE teacher_id IN (${questionMarks(body)})`, body);

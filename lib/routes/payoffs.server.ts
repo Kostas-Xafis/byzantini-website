@@ -1,6 +1,6 @@
 import type { Payoffs } from "../../types/entities";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { PayoffsRoutes, type PayoffGetResponse } from "./payoffs.client";
 
 const serverRoutes = deepCopy(PayoffsRoutes);
@@ -11,7 +11,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const payoff = (await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)})`, ids));
 		if (!payoff) throw Error("Payoff not found");
 		return payoff;
@@ -24,7 +24,7 @@ serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 
 serverRoutes.updateAmount.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const payoff = await ctx.request.json();
+		const payoff = getUsedBody(ctx) || await ctx.request.json();
 		if (payoff.amount < 0) throw Error("Amount must be greater than 0");
 		const args = Object.values(payoff);
 		const previousAmount = (await executeQuery<{ amount: number; }>("SELECT amount FROM school_payoffs WHERE id = ?", [args[0]]))[0].amount;
@@ -39,7 +39,7 @@ serverRoutes.updateAmount.func = ({ ctx }) => {
 
 serverRoutes.complete.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = await ctx.request.json();
+		const ids = getUsedBody(ctx) || await ctx.request.json();
 		const payoffs = await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)}) `, ids);
 		if (payoffs.length === 0) throw Error("Payoff not found");
 		let sum = 0;

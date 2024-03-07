@@ -1,6 +1,6 @@
 import type { Instruments } from "../../types/entities";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { InstrumentsRoutes } from "./instruments.client";
 
 // Include this in all .server.ts files
@@ -12,7 +12,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = await ctx.request.json();
+		const id = getUsedBody(ctx) || await ctx.request.json();
 		const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", id);
 		if (!instrument) throw Error("Instrument not found");
 		return instrument;
@@ -21,7 +21,7 @@ serverRoutes.getById.func = ({ ctx }) => {
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		const id = await executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
 		return id;
@@ -30,7 +30,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = await ctx.request.json();
+		const body = getUsedBody(ctx) || await ctx.request.json();
 		await executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
 	});
