@@ -57,14 +57,16 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { id } = slug;
 		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
-		if (!location) throw Error("Teacher not found");
+		if (!location) throw Error("Location not found");
+
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
-		const body = await blob.arrayBuffer();
-		const link = generateLink(12) + "." + filetype.split("/")[1];
 		if (imageMIMEType.includes(filetype)) {
+			const body = await blob.arrayBuffer();
+			const filename = location.name + "." + filetype.split("/")[1];
+			const link = bucketPrefix + filename;
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [link, id]);
+			await executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [filename, id]);
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
@@ -75,8 +77,9 @@ serverRoutes.fileDelete.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { id } = slug;
 		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
-		if (!location) throw Error("Teacher not found");
-		if (location.image) await Bucket.delete(ctx, location.image);
+		if (!location) throw Error("Location not found");
+
+		if (location.image) await Bucket.delete(ctx, bucketPrefix + location.image);
 		await executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [id]);
 		return "Image deleted successfully";
 	});

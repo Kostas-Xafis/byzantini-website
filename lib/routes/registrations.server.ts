@@ -3,12 +3,10 @@ import { deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
-console.log("RegistrationsRoutes: ", RegistrationsRoutes);
 
 // Include this in all .server.ts files
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
 
-console.log("serverRoutes: ", serverRoutes);
 serverRoutes.get.func = ({ ctx: _ctx }) => {
 	return execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
 };
@@ -44,9 +42,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		console.log("ctx.request.bodyUsed: ", ctx.request.bodyUsed);
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		console.log("ctx.request.bodyUsed: ", ctx.request.bodyUsed);
 		const args = Object.values(body);
 		args.push(args.shift() as any); // Remove the id from the arguments and push it at the end
 		await executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=? WHERE id=?`, args);

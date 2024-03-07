@@ -104,7 +104,10 @@ async function UploadImages(args: {
 			assertNotNull(file);
 			return async function () {
 				let blob = await fileToBlob(file);
-				if (!blob) return console.error("Could not load file:", name);
+				if (!blob)
+					return pushAlert(
+						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας ${name}`)
+					);
 				try {
 					await apiHook(API.Announcements.postImage, {
 						RequestObject: {
@@ -137,7 +140,9 @@ async function UploadImages(args: {
 						UrlArgs: { id: announcement_id, name: "thumb_" + name },
 					});
 				} catch (e) {
-					console.error(e);
+					pushAlert(
+						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας ${name}`)
+					);
 				}
 			};
 		});

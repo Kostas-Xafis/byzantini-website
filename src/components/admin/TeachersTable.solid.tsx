@@ -391,7 +391,7 @@ export default function TeachersTable() {
 			UrlArgs: { id },
 		});
 	};
-	const fileDelete = (id: number, type: "picture" | "cv") => {
+	const fileDelete = (id: number, type: "cv" | "picture") => {
 		return apiHook(API.Teachers.fileDelete, {
 			RequestObject: { id, type },
 		});
@@ -464,6 +464,7 @@ export default function TeachersTable() {
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
 		if (!locations || !locationsList || !instruments) return addModal;
+
 		const submit = async function (formData: FormData) {
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
@@ -503,22 +504,29 @@ export default function TeachersTable() {
 			const res = await apiHook(API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const files = {
-				picture: FileHandler.getFiles("picture"),
-				cv: FileHandler.getFiles("cv"),
+			const fileHandles = {
+				picture: FileHandler.getFiles(PREFIX + addModal.type + "picture"),
+				cv: FileHandler.getFiles(PREFIX + addModal.type + "cv"),
 			};
-			const blobs = {
+			const files = {
 				picture:
-					files.picture.length && !files.picture[0].isProxy
-						? await fileToBlob(files.picture[0].file)
+					fileHandles.picture.length && !fileHandles.picture[0].isProxy
+						? fileHandles.picture[0].file
 						: null,
 				cv:
-					files.cv.length && !files.cv[0].isProxy
-						? await fileToBlob(files.cv[0].file)
+					fileHandles.cv.length && !fileHandles.cv[0].isProxy
+						? fileHandles.cv[0].file
 						: null,
 			};
-			if (blobs.picture) await fileUpload(blobs.picture, id);
-			if (blobs.cv) await fileUpload(blobs.cv, id);
+
+			const blobs = await Promise.all([
+				files.picture && fileToBlob(files.picture),
+				files.cv && fileToBlob(files.cv),
+			]);
+			await Promise.all([
+				blobs[0] && fileUpload(blobs[0], id),
+				blobs[1] && fileUpload(blobs[1], id),
+			]);
 
 			setTeacherHydrate({ action: ActionEnum.ADD, ids: [id] });
 			pushAlert(createAlert("success", "Επιτυχής εισαγωγή καθηγητή"));
@@ -532,13 +540,13 @@ export default function TeachersTable() {
 		};
 	});
 	const onModify = createMemo((): Action | EmptyAction => {
-		console.log(FileHandler.getAllFiles());
 		const modifyModal = {
 			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
 		};
 		const teachers = store[API.Teachers.get];
 		if (!teachers || selectedItems.length !== 1) return modifyModal;
+
 		const teacher = teachers.find((p) => p.id === selectedItems[0]);
 		const classList = store[API.Teachers.getClasses];
 		const locations = store[API.Locations.get];
@@ -602,30 +610,41 @@ export default function TeachersTable() {
 			const res = await apiHook(API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 
+			const pictureHandler = FileHandler.getHandler(PREFIX + modifyModal.type + "picture"),
+				cvHandler = FileHandler.getHandler(PREFIX + modifyModal.type + "cv");
 			const files = {
-				picture: FileHandler.getFiles("picture"),
-				cv: FileHandler.getFiles("cv"),
+				picture:
+					pictureHandler.getFiles().length && !pictureHandler.getFile(0).isProxy
+						? pictureHandler.getFile(0).file
+						: null,
+				cv:
+					cvHandler.getFiles().length && !cvHandler.getFile(0).isProxy
+						? cvHandler.getFile(0).file
+						: null,
 			};
-			const didUpdateFiles =
-				(files.picture.length && !files.picture[0].isProxy) ||
-				(files.cv.length && !files.cv[0].isProxy);
+			const deletedFiles = {
+				picture: pictureHandler.getDeletedFiles(),
+				cv: cvHandler.getDeletedFiles(),
+			};
+
+			const didUpdateFiles = files.picture || files.cv;
+			const didDeleteFiles = deletedFiles.picture.length || deletedFiles.cv.length;
 			if (didUpdateFiles) {
-				const blobs = {
-					picture: await fileToBlob(files.picture.at(0)?.file),
-					cv: await fileToBlob(files.cv.at(0)?.file),
-				};
-				const deletedFiles = {
-					picture: FileHandler.getDeletedFiles("picture"),
-					cv: FileHandler.getDeletedFiles("cv"),
-				};
-
-				// Store the new file atop of the old one if it exists, else delete the old one if it needs to.
-				if (blobs.picture) await fileUpload(blobs.picture, teacher.id);
-				else if (deletedFiles.picture.length) await fileDelete(teacher.id, "picture");
-
-				if (blobs.cv) await fileUpload(blobs.cv, teacher.id);
-				else if (deletedFiles.cv.length) await fileDelete(teacher.id, "cv");
+				const blobs = await Promise.all([
+					files.picture && fileToBlob(files.picture),
+					files.cv && fileToBlob(files.cv),
+				]);
+				await Promise.all([
+					blobs[0] && fileUpload(blobs[0], teacher.id),
+					blobs[1] && fileUpload(blobs[1], teacher.id),
+				]);
+			} else if (didDeleteFiles) {
+				await Promise.all([
+					deletedFiles.picture.length && fileDelete(teacher.id, "picture"),
+					deletedFiles.cv.length && fileDelete(teacher.id, "cv"),
+				]);
 			}
+
 			if (teacher.fullname !== data.fullname) {
 				await apiHook(API.Teachers.fileRename, { UrlArgs: { id: teacher.id } });
 			}

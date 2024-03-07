@@ -428,7 +428,6 @@ export default function RegistrationsTable() {
 
 		const submit = !bulk
 			? async function () {
-					console.log("calling onDownloadPDF not bulk");
 					const student = registrations.find(
 						(r) => r.id === selectedItems[0]
 					) as Registrations;
@@ -450,7 +449,6 @@ export default function RegistrationsTable() {
 					}
 			  }
 			: async function () {
-					console.log("calling onDownloadPDF bulk");
 					const items = selectedItems.map((id) => {
 						const student = registrations.find((r) => r.id === id) as Registrations;
 						const teacher = teachers.find(

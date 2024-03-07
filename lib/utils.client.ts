@@ -250,7 +250,7 @@ export const download = (file: Blob, name: string) => {
 	a.click();
 };
 
-export const fileToBlob = async (file?: File | null): Promise<Blob | null> => {
+export const fileToBlob = (file?: File | null): Promise<Blob | null> => {
 	if (!file || !file.name) return Promise.resolve(null);
 	return new Promise((res) => {
 		const reader = new FileReader();

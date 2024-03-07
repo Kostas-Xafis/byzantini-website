@@ -59,14 +59,11 @@ export default function SysUsersTable() {
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const link = store[API.SysUsers.createRegisterLink]?.link;
 		const submit = async function* () {
-			console.log({ link });
 			if (link) return;
 
 			// Maybe make it a generator function?
 			await apiHook(API.SysUsers.createRegisterLink);
-			console.log("Link created");
 			yield undefined;
-			console.log("Closing modal");
 			pushAlert(createAlert("success", "Ο σύνδεσμος δημιουργήθηκε επιτυχώς!"));
 		};
 		return {

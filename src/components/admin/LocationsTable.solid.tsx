@@ -194,7 +194,7 @@ export default function LocationsTable() {
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const files = FileHandler.getFiles("image");
+			const files = FileHandler.getFiles(PREFIX + ActionEnum.ADD + "image");
 			const imgBlob =
 				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
 			if (imgBlob) {
@@ -246,23 +246,22 @@ export default function LocationsTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			const files = FileHandler.getFiles("image");
+			const imgHandler = FileHandler.getHandler(PREFIX + ActionEnum.MODIFY + "image");
+			const files = imgHandler.getFiles();
 			const imgBlob =
 				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
-			const deletedImage = FileHandler.getDeletedFiles("image");
+			const deletedImg = imgHandler.getDeletedFiles();
 			if (imgBlob) {
 				await apiHook(API.Locations.fileUpload, {
 					RequestObject: imgBlob,
 					UrlArgs: { id: location.id },
 				});
-			}
-			if (deletedImage.length) {
+			} else if (deletedImg.length) {
 				await apiHook(API.Locations.fileDelete, {
-					UrlArgs: {
-						id: location.id,
-					},
+					UrlArgs: { id: location.id },
 				});
 			}
+
 			setLocationHydrate({
 				action: ActionEnum.MODIFY,
 				ids: [location.id],

@@ -190,7 +190,6 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				).map((img) =>
 					(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
 				) as string[];
-				console.log(imgSrcArr);
 				const announcementId = (
 					document.querySelector("section[data-announcement-id]") as HTMLElement
 				).dataset.announcementId as string;

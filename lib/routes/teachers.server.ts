@@ -126,15 +126,12 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 
 		if (filetype === "application/pdf") {
 			const link = bucketCVPrefix + filename;
-			// Delete the old file if the new one has a different extension
-			if (teacher.cv && filename !== teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
 
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
 		} else if (imageMIMEType.includes(filetype)) {
 			const link = bucketPicturePrefix + filename;
-			if (teacher.picture && filename !== teacher.picture) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
 
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
