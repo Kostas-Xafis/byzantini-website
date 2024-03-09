@@ -364,7 +364,8 @@ export default function RegistrationsTable() {
 			});
 			setRegistrationHydrate({
 				action: ActionEnum.MODIFY,
-				ids: [data.id],
+				id: data.id,
+				isMultiple: false,
 			});
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
 		};

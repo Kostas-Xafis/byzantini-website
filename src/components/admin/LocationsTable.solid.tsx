@@ -203,7 +203,7 @@ export default function LocationsTable() {
 					UrlArgs: { id },
 				});
 			}
-			setLocationHydrate({ action: ActionEnum.ADD, ids: [id] });
+			setLocationHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", `Το παράρτημα ${data.name} προστέθηκε επιτυχώς!`));
 		};
 		return {
@@ -264,7 +264,8 @@ export default function LocationsTable() {
 
 			setLocationHydrate({
 				action: ActionEnum.MODIFY,
-				ids: [location.id],
+				id: location.id,
+				isMultiple: false,
 			});
 			pushAlert(createAlert("success", `Το παράρτημα ${data.name} ενημερώθηκε επιτυχώς!`));
 		};

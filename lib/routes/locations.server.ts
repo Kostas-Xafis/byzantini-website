@@ -16,8 +16,8 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", ids);
+		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
 		if (!location) throw Error("Location not found");
 		return location;
 	});

@@ -102,7 +102,8 @@ export default function PayoffsTable() {
 			if (!res.data && !res.message) return;
 			setPayoffHydrate({
 				action: ActionEnum.MODIFY,
-				ids: [payoff.id],
+				id: payoff.id,
+				isMultiple: false,
 			});
 			pushAlert(createAlert("success", "Η οφειλή ενημερώθηκε επιτυχώς!"));
 		};
@@ -133,6 +134,7 @@ export default function PayoffsTable() {
 			if (!res.data && !res.message) return;
 			setPayoffHydrate({
 				action: ActionEnum.CHECK,
+				isMultiple: true,
 				ids: selectedItems.slice(),
 			});
 			if (selectedItems.length === 1) {

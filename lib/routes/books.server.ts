@@ -10,10 +10,12 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 	return execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
 };
 
+// The getById function should only accept multiple
+// ids per select only if there is a need for it in the frontend
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", ids);
+		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", [id]);
 		if (!book) throw Error("Book not found");
 		return book;
 	});

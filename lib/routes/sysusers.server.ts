@@ -13,8 +13,8 @@ serverRoutes.get.func = ({ ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = getUsedBody(ctx) || await ctx.request.json();
-		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE id = ? LIMIT 1", id);
+		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE id = ? LIMIT 1", [id]);
 		if (!user) throw Error("User not found");
 		return user;
 	});

@@ -11,8 +11,8 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = getUsedBody(ctx) || await ctx.request.json();
-		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", id);
+		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", [id]);
 		if (!wholesaler) throw Error("Wholesaler not found");
 		return wholesaler;
 	});
@@ -20,7 +20,7 @@ serverRoutes.getById.func = ({ ctx }) => {
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const args = Object.values(await ctx.request.json());
+		const args = Object.values(getUsedBody(ctx) || await ctx.request.json());
 		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
 		await T.executeQuery("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
 		return result;

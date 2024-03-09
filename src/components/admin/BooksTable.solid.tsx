@@ -157,7 +157,7 @@ export default function BooksTable() {
 			if (!res.data) return;
 			setBookHydrate({
 				action: ActionEnum.ADD,
-				ids: [res.data.insertId],
+				id: res.data.insertId,
 			});
 			pushAlert(createAlert("success", "Επιτυχής προσθήκη βιβλίου: " + (data.title || "")));
 		};
@@ -187,7 +187,7 @@ export default function BooksTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			setBookHydrate({ action: ActionEnum.MODIFY, ids: [book.id] });
+			setBookHydrate({ action: ActionEnum.MODIFY, id: book.id, isMultiple: false });
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση βιβλίου: " + (book.title || "")));
 		};
 		return {
@@ -242,7 +242,7 @@ export default function BooksTable() {
 			if (!res.data) return;
 			setWholesalerHydrate({
 				action: ActionEnum.ADD,
-				ids: [res.data.insertId],
+				id: res.data.insertId,
 			});
 			pushAlert(
 				createAlert("success", "Επιτυχής προσθήκη χονδρέμπορου: " + (data.name || ""))

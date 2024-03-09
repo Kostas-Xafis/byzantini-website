@@ -76,6 +76,7 @@ export type APIEndpointsBuilder<
 			method: Routes[K]["method"];
 			path: Routes[K]["path"];
 			endpoint: ConcatStrings<Mount, K & string, ".">;
+			hasUrlParams: Routes[K]["hasUrlParams"];
 			validation: Routes[K] extends { validation: () => AnyObjectSchema; } ? AnyObjectSchema : undefined;
 		}
 	};

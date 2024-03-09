@@ -125,7 +125,7 @@ export default function PaymentsTable() {
 			if (!res.data) return;
 			setPaymentHydrate({
 				action: ActionEnum.ADD,
-				ids: [res.data.id],
+				id: res.data.id,
 			});
 			pushAlert(createAlert("success", "Η αγορά προστέθηκε επιτυχώς!"));
 		};
@@ -164,7 +164,8 @@ export default function PaymentsTable() {
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({
 				action: ActionEnum.MODIFY,
-				ids: [payment.id],
+				id: payment.id,
+				isMultiple: false,
 			});
 			pushAlert(createAlert("success", "Η αγορά ενημερώθηκε επιτυχώς!"));
 		};
@@ -198,6 +199,7 @@ export default function PaymentsTable() {
 			if (!res.data && !res.message) return;
 			setPaymentHydrate({
 				action: ActionEnum.CHECK,
+				isMultiple: true,
 				ids: selectedItems.slice(),
 			});
 			pushAlert(createAlert("success", "Οι πληρωμές ολοκληρώθηκαν επιτυχώς!"));

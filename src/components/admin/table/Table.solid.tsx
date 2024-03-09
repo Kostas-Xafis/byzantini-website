@@ -117,6 +117,7 @@ export default function Table(props: Props) {
 
 	const { columnWidths, columns } = computeColumns(columnNames, !!props.hasSelectBox);
 	const onClickRow = (e: MouseEvent) => {
+		if (isDown) return;
 		const row = getParent(e.target as HTMLElement, ".row");
 		if (!row) return;
 

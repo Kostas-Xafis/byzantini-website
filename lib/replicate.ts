@@ -43,8 +43,8 @@ async function productionDatabaseReplication() {
 	const exec = (await eval(`import('child_process')`)).exec as typeof import("child_process").exec;
 	async function connectAndDumpSnapshot() {
 		const PORT = 4300;
-		const { PROD_DB_USERNAME, PROD_DB_PWD, REPLICA_DB_USERNAME, REPLICA_DB_PWD }: Record<string, string> = await import.meta.env;
-		if (!PROD_DB_USERNAME || !PROD_DB_PWD || !REPLICA_DB_USERNAME || !REPLICA_DB_PWD) throw Error("Missing environment variables");
+		const { PSCALE_DB_USERNAME, PSCALE_DB_PWD, REPLICA_DB_PWD }: Record<string, string> = await import.meta.env;
+		if (!PSCALE_DB_USERNAME || !PSCALE_DB_PWD || !REPLICA_DB_PWD) throw Error("Missing environment variables");
 		// Command to connect to the database
 		const connectCommand = [`pscale connect byzmusic-db main --port ${PORT}`];
 
@@ -55,8 +55,8 @@ async function productionDatabaseReplication() {
 		const dumpCommands = [
 			`cd C:/Users/poupa/Projects/Javascript/astro/byzantini-website/dbSnapshots`,
 			`$OutputEncoding = [Console]::OutputEncoding = [Text.Encoding]::UTF8`,
-			`mysqldump --default-character-set=utf8mb4 -h 127.0.0.1 -P ${PORT} -u ${PROD_DB_USERNAME}  -p${PROD_DB_PWD} byzmusic-db --skip-extended-insert --complete-insert --set-gtid-purged=OFF | Out-File -Encoding "UTF8" snapshot-${SNAPSHOT_DATE}.sql`,
-			`mysql --defaults-file='C:\\ProgramData\\MySQL\\MySQL Server 8.0\\my.ini' byzproductionreplica  -u ${REPLICA_DB_USERNAME}  -p${REPLICA_DB_PWD} -e 'SOURCE C:/Users/poupa/Projects/Javascript/astro/byzantini-website/dbSnapshots/snapshot-${SNAPSHOT_DATE}.sql ;'`,
+			`mysqldump --default-character-set=utf8mb4 -h 127.0.0.1 -P ${PORT} -u ${PSCALE_DB_USERNAME}  -p${PSCALE_DB_PWD} byzmusic-db --skip-extended-insert --complete-insert --set-gtid-purged=OFF | Out-File -Encoding "UTF8" snapshot-${SNAPSHOT_DATE}.sql`,
+			`mysql --defaults-file='C:\\ProgramData\\MySQL\\MySQL Server 8.0\\my.ini' byzproductionreplica  -u root  -p${REPLICA_DB_PWD} -e 'SOURCE C:/Users/poupa/Projects/Javascript/astro/byzantini-website/dbSnapshots/snapshot-${SNAPSHOT_DATE}.sql ;'`,
 		];
 
 		// Function to execute shell commands

@@ -48,8 +48,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 		}
 		const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.type === "error") {
-			console.error(response.error);
-			throw new Error(JSON.stringify(response.error));
+			throw Error(response.error);
 		} else if (response.type === "message") {
 			setStore && setStore(response.message as any);
 			return { message: response.message };

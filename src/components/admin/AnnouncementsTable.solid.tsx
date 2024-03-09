@@ -227,7 +227,7 @@ export default function AnnouncementsTable() {
 				setStore,
 				imagesPrefix: PREFIX + ActionEnum.ADD + "photos",
 			});
-			setAnnouncementHydrate({ action: ActionEnum.ADD, ids: [id] });
+			setAnnouncementHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", "Η ανακοίνωση προστέθηκε επιτυχώς"));
 		};
 		return {
@@ -279,7 +279,7 @@ export default function AnnouncementsTable() {
 				images,
 			});
 
-			setAnnouncementHydrate({ action: ActionEnum.MODIFY, ids: [data.id] });
+			setAnnouncementHydrate({ action: ActionEnum.MODIFY, id: data.id, isMultiple: false });
 			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};
 		const anc = announcements.find((a) => a.id === selectedItems[0]);

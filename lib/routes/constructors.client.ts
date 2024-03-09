@@ -7,6 +7,7 @@ export const EndpointsConstructor = <K extends string, T extends Record<string, 
 			method: route.method,
 			path: route.path,
 			endpoint: baseRoute + "." + key,
+			hasUrlParams: route.hasUrlParams,
 			validation: ("validation" in route && route.validation && route.validation()) || undefined
 		};
 	});

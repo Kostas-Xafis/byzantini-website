@@ -243,7 +243,6 @@ export class UpdateHandler {
 		this.abort();
 		func && (this.#func = func);
 		this.#backoff *= this.#backoffFactor;
-		console.log("Backoff:", this.#backoff);
 		if (catchAbort) return this.trigger(ms || this.#timer).catch(() => { });
 		return this.trigger(ms || this.#timer);
 	}
@@ -461,7 +460,6 @@ export class ExecutionQueue<T> {
 	push(item: T) {
 		this.#queue.push(deepCopy(item));
 		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
-		console.log("Queue length:", this.#queue.length);
 	}
 	async execute() {
 		this.#isExecuting = true;

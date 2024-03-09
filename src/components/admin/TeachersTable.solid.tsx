@@ -528,7 +528,7 @@ export default function TeachersTable() {
 				blobs[1] && fileUpload(blobs[1], id),
 			]);
 
-			setTeacherHydrate({ action: ActionEnum.ADD, ids: [id] });
+			setTeacherHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", "Επιτυχής εισαγωγή καθηγητή"));
 		};
 		return {
@@ -651,7 +651,8 @@ export default function TeachersTable() {
 
 			setTeacherHydrate({
 				action: ActionEnum.MODIFY,
-				ids: [teacher.id],
+				id: teacher.id,
+				isMultiple: false,
 			});
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση καθηγητή"));
 		};
@@ -724,7 +725,7 @@ export default function TeachersTable() {
 			if (!res.data) return;
 			setActionPressedInstruments({
 				action: ActionEnum.ADD,
-				ids: [res.data.insertId],
+				id: res.data.insertId,
 			});
 			pushAlert(createAlert("success", "Επιτυχής εισαγωγή οργάνου"));
 		};

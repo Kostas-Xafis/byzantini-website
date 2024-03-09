@@ -62,8 +62,8 @@ serverRoutes.getSimple.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", ids);
+		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", [id]);
 		if (!announcement) throw Error("announcement not found");
 		return announcement;
 	});

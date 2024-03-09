@@ -149,7 +149,7 @@ export default function AlertStack() {
 						<p class="text-lg max-w-[35ch] min-w-0 text-white">{alert.message}</p>
 						{alert.type === "error" || alert.type === "warning" ? (
 							<button
-								class="bg-slate-500 p-2"
+								class="p-2 bg-transparent shadow-sm shadow-gray-300 rounded-lg hover:bg-gray-300 transition-all hover:shadow-none duration-200 ease-in-out text-white hover:text-gray-900"
 								onClick={() => handleRemoveAlert(alert)}>
 								Dismiss
 							</button>
