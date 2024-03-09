@@ -1,5 +1,5 @@
+import { createClient } from "@libsql/client";
 import { cast, connect } from "@planetscale/database";
-
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
 
@@ -15,7 +15,15 @@ export type Connection = {
 };
 
 export const CreateDbConnection = async (): Promise<Connection> => {
-	const { DB_PWD, DB_HOST, DB_USERNAME, CONNECTOR, DB_NAME, DB_PORT } = await import.meta.env;
+	const {
+		// Mysql env variables for local development
+		MYSQL_DB_PWD, MYSQL_DB_HOST, MYSQL_DB_USERNAME, MYSQL_DB_NAME, MYSQL_DB_PORT,
+		// Planetscale env variables for production
+		PSCALE_DB_HOST, PSCALE_DB_PWD, PSCALE_DB_USERNAME,
+		// Turso env variables for production
+		TURSO_DB_URL, TURSO_DB_TOKEN,
+		// Connector type
+		CONNECTOR } = await import.meta.env;
 	try {
 		if (CONNECTOR === "mysql") {
 			// Exposing mysql2/promise package in dev as an api, wrapped with the functions of @planetscale/database
@@ -24,11 +32,11 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 			// This is the worst, ugliest, most stupid & most shameful line of code I've ever written
 			const mysql = await eval(`import("mysql2/promise")`) as typeof import("mysql2/promise");
 			const db = await mysql.createConnection({
-				user: DB_USERNAME,
-				database: DB_NAME,
-				password: DB_PWD,
-				host: DB_HOST,
-				port: DB_PORT,
+				user: MYSQL_DB_USERNAME,
+				database: MYSQL_DB_NAME,
+				password: MYSQL_DB_PWD,
+				host: MYSQL_DB_HOST,
+				port: MYSQL_DB_PORT,
 				multipleStatements: false
 			});
 			const execute: Exec = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
@@ -66,22 +74,60 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 				}
 			};
 		}
-		return connect({
-			host: DB_HOST,
-			password: DB_PWD,
-			username: DB_USERNAME,
-			fetch: (url, init) => {
-				delete (init as any)["cache"]; // Remove cache header
-				return fetch(url, init);
-			},
-			cast(field, value) {
-				console.log({ field, value });
-				if (field.type === 'INT64' || field.type === 'UINT64') {
-					return Number(value);
+		if (CONNECTOR === "sqlite") {
+			const client = createClient({
+				url: TURSO_DB_URL,
+				authToken: TURSO_DB_TOKEN,
+				intMode: "number",
+			});
+			const execute = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
+				let res = await client.execute({ sql: query, args });
+				let resObj = {} as any;
+				if (res.lastInsertRowid && !Number.isNaN(res.lastInsertRowid)) resObj.insertId = "" + res.lastInsertRowid;
+				else {
+					resObj.insertId = "0";
+					resObj.rows = res.rows;
 				}
-				return cast(field, value);
-			},
-		}) as unknown as Connection;
+				return resObj as T extends undefined ? { insertId: string; } : ExecReturn<T>;
+			};
+			return {
+				execute: async <T>(query: string, args: any[] = [], _?: any) => {
+					let res = await execute<T>(query, args);
+					client.close();
+					return res;
+				},
+				transaction: async (func) => {
+					const t = await client.transaction("write");
+					let res;
+					try {
+						res = await func({ execute } as Transaction);
+						await t.commit();
+					} catch (error) {
+						await t.rollback();
+					}
+					client.close();
+					return res;
+				}
+			};
+		}
+		if (CONNECTOR === "planetscale") {
+			connect({
+				host: PSCALE_DB_HOST,
+				password: PSCALE_DB_PWD,
+				username: PSCALE_DB_USERNAME,
+				fetch: (url, init) => {
+					delete (init as any)["cache"]; // Remove cache header
+					return fetch(url, init);
+				},
+				cast(field, value) {
+					if (field.type === 'INT64' || field.type === 'UINT64') {
+						return Number(value);
+					}
+					return cast(field, value);
+				},
+			}) as unknown as Connection;
+		}
+		throw new Error("Database connector is not specified.");
 	} catch (error) {
 		throw new Error(error as any);
 	}

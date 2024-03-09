@@ -31,7 +31,7 @@ export const MIMETypeMap: Record<string, string> = {
 	"pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 	"txt": "text/plain",
 };
-export const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
+export const ImageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 
 export const getUsedBody = <T>(ctx: Context<T>): (T extends AnyObjectSchema ? Output<T> : T) | undefined => {
 	if (!ctx.request.bodyUsed) return undefined;
@@ -54,7 +54,7 @@ const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	let argStr = JSON.stringify(args);
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
-		await (await CreateDbConnection()).execute("INSERT INTO query_logs (id, query, args, date) VALUES (?, ?, ?, ?)", [queryId, query, argStr, Date.now()]);
+		(await CreateDbConnection()).execute("INSERT INTO query_logs (id, query, args, date) VALUES (?, ?, ?, ?)", [queryId, query, argStr, Date.now()]);
 	} catch (error) {
 		console.log(error);
 	}
@@ -68,17 +68,19 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 		if (!query.startsWith("SELECT") || log) {
 			queryId = generateLink(20);
 			tx && tx.queryHistory.push(queryId);
-			await queryLogger(queryId, query, args);
+			queryLogger(queryId, query, args);
 		}
 		res = await conn.execute<T>(query, args, { as: "object" });
 	} catch (error) {
 		console.log(error);
 		if (queryId) {
-			const errConn = await CreateDbConnection();
-			if (tx)
-				await errConn.execute(`UPDATE query_logs SET error = ? WHERE id IN (${questionMarks(tx.queryHistory.length)})`, [true, ...tx.queryHistory]);
-			else
-				await errConn.execute("UPDATE query_logs SET error = ? WHERE id=?", [true, queryId]);
+			(async function () {
+				const errConn = await CreateDbConnection();
+				if (tx)
+					await errConn.execute(`UPDATE query_logs SET error = ? WHERE id IN (${questionMarks(tx.queryHistory.length)})`, [true, ...tx.queryHistory]);
+				else
+					await errConn.execute("UPDATE query_logs SET error = ? WHERE id=?", [true, queryId]);
+			})();
 		}
 		throw new Error(error as any);
 	}

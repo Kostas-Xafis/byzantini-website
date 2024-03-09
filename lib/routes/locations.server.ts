@@ -1,7 +1,7 @@
 import type { Locations } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
+import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { LocationsRoutes } from "./locations.client";
 
 
@@ -52,7 +52,6 @@ serverRoutes.update.func = ({ ctx }) => {
 	});
 };
 
-const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { id } = slug;
@@ -61,7 +60,7 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
-		if (imageMIMEType.includes(filetype)) {
+		if (ImageMIMEType.includes(filetype)) {
 			const body = await blob.arrayBuffer();
 			const filename = location.name + "." + filetype.split("/")[1];
 			const link = bucketPrefix + filename;

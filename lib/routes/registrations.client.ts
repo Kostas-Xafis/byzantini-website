@@ -10,11 +10,11 @@ const get: EndpointRoute<"/registrations", any, Registrations[]> = {
 	validation: undefined,
 };
 
-const getById: EndpointRoute<"/registrations/id", number[], Registrations> = {
+const getById: EndpointRoute<"/registrations/[id:number]", null, Registrations> = {
 	authentication: true,
 	method: "POST",
-	path: "/registrations/id",
-	hasUrlParams: false,
+	path: "/registrations/[id:number]",
+	hasUrlParams: true,
 	validation: undefined,
 };
 

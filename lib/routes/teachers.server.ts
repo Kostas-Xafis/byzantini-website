@@ -1,7 +1,7 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, getUsedBody, imageMIMEType, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, ImageMIMEType, questionMarks } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -26,7 +26,9 @@ serverRoutes.getById.func = ({ ctx }) => {
 serverRoutes.getByPriorityClasses.func = ({ ctx: _ctx, slug }) => {
 	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
 	if (class_id === -1) throw Error("Invalid class type");
-	return execTryCatch(() => executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id]));
+	return execTryCatch(() =>
+		executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id])
+	);
 };
 
 serverRoutes.getByFullnames.func = ({ ctx: _ctx }) => {
@@ -130,7 +132,7 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 			await Bucket.put(ctx, body, link, filetype);
 			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
-		} else if (imageMIMEType.includes(filetype)) {
+		} else if (ImageMIMEType.includes(filetype)) {
 			const link = bucketPicturePrefix + filename;
 
 			await Bucket.put(ctx, body, link, filetype);

@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { asyncQueue, deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
+import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes } from "./announcements.client";
 
 async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announcements) {
@@ -115,7 +115,6 @@ serverRoutes.postImage.func = ({ ctx }) => {
 	});
 };
 
-const imageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
 serverRoutes.imageUpload.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		let { id, name } = slug;
@@ -125,7 +124,7 @@ serverRoutes.imageUpload.func = ({ ctx, slug }) => {
 
 		const blob = await ctx.request.blob();
 		const filetype = blob.type;
-		if (!imageMIMEType.includes(filetype)) throw Error("Invalid filetype");
+		if (!ImageMIMEType.includes(filetype)) throw Error("Invalid filetype");
 
 		const imageBuf = await blob.arrayBuffer();
 		const bucketFileName = bucketPrefix + `${id}/` + name;

@@ -11,10 +11,10 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 	return execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
 };
 
-serverRoutes.getById.func = ({ ctx }) => {
+serverRoutes.getById.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", ids);
+		const id = slug.id;
+		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", [id]);
 		if (!registration) throw Error("Registration not found");
 		return registration;
 	});
