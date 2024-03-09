@@ -147,6 +147,9 @@ export async function asyncQueue<T>(
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
 	let queue: any[];
+	let results: T[] = [];
+
+	// If the number of jobs is less than the maxJobs, then we can just execute them all at once
 	if (maxJobs < jobs.length) {
 		queue = Array.from(jobs.splice(0, maxJobs - 1));
 	} else {
@@ -154,74 +157,219 @@ export async function asyncQueue<T>(
 		maxJobs = jobs.length;
 		jobs = []; // empty the jobs array
 	}
-	let results: T[] = [];
-	console.log(`Starting ${totalJobs} jobs with ${maxJobs} max jobs`);
+
+	if (verbose) {
+		console.log(`Starting ${totalJobs} jobs with ${maxJobs} max jobs`);
+	}
+
 	while (true) {
 		if (jobsCompleted === totalJobs) break;
 		while (queue.length === 0 && jobsCompleted !== totalJobs) await sleep(25); // wait for a job to be added to the queue if any are left
-		(jobsCompleted < totalJobs) && (async () => {
-			let job = queue.shift() as () => Promise<T>; // dequeue the job
-			if (!job) return;
+		if (jobsCompleted < totalJobs) {
+			(async () => {
+				let job = queue.shift() as () => Promise<T>; // dequeue the job
+				if (!job) return;
 
-			results.push(await job()); // execute the job
-			jobsCompleted++;
+				// Execute the job and store the result
+				results.push(await job());
+				jobsCompleted++;
 
-			// Logging progress
-			verbose && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs) &&
-				console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
-			progressCallback && progressCallback(jobsCompleted);
+				// Logging progress
+				if (progressCallback) {
+					if (progressCallback.constructor.name === "AsyncFunction") {
+						await progressCallback(jobsCompleted);
+					} else {
+						progressCallback(jobsCompleted);
+					}
+				}
+				if (verbose && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs)) {
+					console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
+				}
 
-			while (queue.length === maxJobs) await sleep(50); // respect the maxJobs limit
-			if (jobsCompleted !== totalJobs && jobs.length !== 0) {
-				let newJob = jobs.shift() as () => Promise<T>;
-				queue.push(newJob);
-			}
-		})();
+				while (queue.length === maxJobs) await sleep(25); // respect the maxJobs limit
+				if (jobsCompleted !== totalJobs && jobs.length !== 0) {
+					let newJob = jobs.shift() as () => Promise<T>;
+					queue.push(newJob);
+				}
+			})();
+		}
 	}
 	while (jobsCompleted < totalJobs) await sleep(100);
 	return results;
 };
 
 export class UpdateHandler {
-	abortController = new AbortController();
-	timeoutFired = false;
-	func: Function;
-	setFunction(func: Function) {
-		this.func = func;
-	}
-	timer: number;
-	timeout(ms = 0): Promise<void> {
-		this.timeoutFired = true;
+	#abortController = new AbortController();
+	#initialBackoff = 0;
+	#backoff = 0;
+	#backoffFactor = 1.5;
+	#func: Function | null = null;
+	#isTriggered = false;
+	#timer: number;
+
+	trigger(ms = 0): Promise<void> {
+		this.#isTriggered = true;
 		return new Promise((res, rej) => {
 			let tId = setTimeout(() => {
-				this.timeoutFired = false;
-				this.func.call(null);
+				this.#isTriggered = false;
+				this.#func?.call(null);
+				this.#backoff = this.#initialBackoff;
 				res();
-			}, ms || this.timer);
-			this.abortController.signal.onabort = () => {
+			}, (ms || this.#timer) + this.#backoff);
+			this.#abortController.signal.onabort = () => {
 				clearTimeout(tId);
-				this.abortController = new AbortController();
+				this.#abortController = new AbortController();
 				rej(0);
 			};
 		});
 	};
+
+	/**
+	 * Aborts the timeout if it is not already fired
+	 */
 	abort() {
-		if (this.timeoutFired) this.abortController.abort();
-		this.timeoutFired = false;
+		if (this.#isTriggered) this.#abortController.abort();
+		this.#isTriggered = false;
 	};
-	reset(ms = 0, func?: Function, catchAbort = false): Promise<void> {
+
+	/**
+	 * Refires the timeout with the same function and timer or with the new ones
+	 * @param ms milliseconds for the new timer
+	 * @param func the new function to be called
+	 * @param catchAbort if true the promise will resolve even if the timeout is aborted
+	 * @returns
+	 */
+	reset({ ms = 0, func, catchAbort = false }: { ms?: number, func?: Function, catchAbort?: boolean; }): Promise<void> {
 		this.abort();
-		func && (this.func = func);
-		if (catchAbort) return this.timeout(ms || this.timer).catch(() => { });
-		return this.timeout(ms || this.timer);
-	}
-	constructor(timer = 0, func = () => { }) {
-		this.timer = timer || 1000;
-		this.func = func;
+		func && (this.#func = func);
+		this.#backoff *= this.#backoffFactor;
+		console.log("Backoff:", this.#backoff);
+		if (catchAbort) return this.trigger(ms || this.#timer).catch(() => { });
+		return this.trigger(ms || this.#timer);
 	}
 
-	static createInstance(timer = 0, func = () => { }): UpdateHandler {
-		return new UpdateHandler(timer, func);
+	constructor({ timer = 0, func = () => { }, backoff = 0 }) {
+		this.#timer = timer || 1000;
+		this.#func = func;
+		this.#initialBackoff = backoff;
+		this.#backoff = backoff;
+	}
+
+	setFunction(func: Function) {
+		this.#func = func;
+	}
+
+	getTimer() {
+		return this.#timer;
+	}
+	setTimer(timer: number) {
+		this.#timer = timer;
+	}
+
+	isTriggered() {
+		return this.#isTriggered;
+	}
+	setTriggered(fired: boolean) {
+		this.#isTriggered = fired;
+	}
+
+	setBackoff(backoff: number, factor = 1.5) {
+		this.#initialBackoff = backoff;
+		this.#backoff = backoff;
+		this.#backoffFactor = factor;
+	}
+
+	static createInstance(timer = 0, func = () => { }, backoff = 0): UpdateHandler {
+		return new UpdateHandler({ timer, func, backoff });
+	}
+}
+
+export class UpdateHandler2 {
+	// Private fields
+	#abortController = new AbortController();
+	#initialBackoff = 0;
+	#backoff = 0;
+	#backoffFactor = 1.5;
+	#func: Function | null = null;
+	#isTriggered = false;
+	#timer: number;
+
+	constructor({ timer = 1000, func = () => { }, backoff = 0 }) {
+		this.#timer = timer;
+		this.#func = func;
+		this.#initialBackoff = backoff;
+		this.#backoff = backoff;
+	}
+
+	// Triggers the function after a delay
+	trigger(ms = 0): Promise<void> {
+		this.#isTriggered = true;
+		const delay = ms || this.#timer;
+
+		return new Promise((resolve, reject) => {
+			const timeoutId = setTimeout(() => {
+				this.#isTriggered = false;
+				this.#func?.call(null);
+				this.#backoff = this.#initialBackoff;
+				resolve();
+			}, delay + this.#backoff);
+
+			this.#abortController.signal.onabort = () => {
+				clearTimeout(timeoutId);
+				this.#abortController = new AbortController();
+				reject(0);
+			};
+		});
+	}
+
+	// Aborts the timeout if it is not already fired
+	abort() {
+		if (this.#isTriggered) {
+			this.#abortController.abort();
+			this.#isTriggered = false;
+		}
+	}
+
+	// Resets the timeout and optionally changes the function and timer
+	reset({ ms = 0, func, catchAbort = false }: { ms?: number, func?: Function, catchAbort?: boolean; }): Promise<void> {
+		this.abort();
+		if (func) this.#func = func;
+		this.#backoff *= this.#backoffFactor;
+
+		const triggerPromise = this.trigger(ms || this.#timer);
+		return catchAbort ? triggerPromise.catch(() => { }) : triggerPromise;
+	}
+
+	// Setters and getters
+	setFunction(func: Function) {
+		this.#func = func;
+	}
+
+	getTimer() {
+		return this.#timer;
+	}
+
+	setTimer(timer: number) {
+		this.#timer = timer;
+	}
+
+	isTriggered() {
+		return this.#isTriggered;
+	}
+
+	setTriggered(fired: boolean) {
+		this.#isTriggered = fired;
+	}
+
+	setBackoff(backoff: number, factor = 1.5) {
+		this.#initialBackoff = backoff;
+		this.#backoff = backoff;
+		this.#backoffFactor = factor;
+	}
+
+	// Factory method
+	static createInstance(timer = 0, func = () => { }, backoff = 0): UpdateHandler {
+		return new UpdateHandler({ timer, func, backoff });
 	}
 }
 
@@ -281,12 +429,21 @@ export function loadScript(src: string, res?: () => boolean): Promise<void> {
 
 	});
 };
-export const loadImage = (src: string): Promise<void> => {
+
+
+const imageCache = new Map<string, HTMLImageElement>();
+export const loadImage = (src: string, keep?: boolean): Promise<void> => {
+	if (keep && imageCache.has(src)) {
+		return new Promise((resolve) => {
+			imageCache.get(src)!.onload = () => resolve();
+		});
+	}
 	return new Promise((resolve, reject) => {
 		let img = new Image();
 		img.onload = () => resolve();
 		img.onerror = () => reject();
 		img.src = src;
+		keep && imageCache.set(src, img);
 	});
 };
 
@@ -297,26 +454,6 @@ export const teacherTitleByGender = (title: 0 | 1 | 2, gender: "M" | "F") => {
 		return title === 0 ? "Καθηγήτρια" : title === 1 ? "Δασκάλα" : "Επιμελήτρια";
 };
 
-export const imageMIMETypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg"];
-
-
-export class BatchedExecution<T> {
-	#items: T[] = [];
-	constructor(private timeout = 1000, private updateHandler = new UpdateHandler(timeout)) { }
-	add(item: T) {
-		this.#items.push(item);
-		this.updateHandler.reset();
-	}
-	execute(func: (items: T[]) => void) {
-		this.updateHandler.setFunction(() => {
-			const temp = this.#items.slice();
-			func(temp);
-			this.#items = this.#items.slice(temp.length);
-		});
-		this.updateHandler.timeout(this.timeout).catch((e) => { });
-	}
-}
-
 export class ExecutionQueue<T> {
 	#queue: T[] = [];
 	#isExecuting = false;
@@ -324,6 +461,7 @@ export class ExecutionQueue<T> {
 	push(item: T) {
 		this.#queue.push(deepCopy(item));
 		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
+		console.log("Queue length:", this.#queue.length);
 	}
 	async execute() {
 		this.#isExecuting = true;
@@ -369,3 +507,6 @@ export const deepCopy = <T>(obj: T): T => {
 	return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, deepCopy(v)])) as any;
 };
 
+export class ExponentialTimeout {
+
+}

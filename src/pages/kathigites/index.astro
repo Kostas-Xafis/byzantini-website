@@ -307,18 +307,18 @@ const cvSrc = "kathigites/cv/";
 		// Load all images after 2 seconds of network inactivity
 		// and remove the observers
 		let pobsv: PerformanceObserver;
-		const networkCheckHandler = new UpdateHandler(2000, () => {
+		const networkCheckHandler = new UpdateHandler({timer:2000, func:() => {
 			teacherImages.forEach((img) => {
 				ImageLoad(img);
 			});
 			obsv.disconnect();
 			pobsv.disconnect();
-		});
+		}});
 		pobsv = new PerformanceObserver((list) => {
 			const entries = list.getEntries();
-			if(entries.length) networkCheckHandler.reset();
+			if(entries.length) networkCheckHandler.reset({});
 		});
 		pobsv.observe({entryTypes: ["resource"]});
-		networkCheckHandler.timeout().catch((e) => {});
+		networkCheckHandler.trigger().catch((e) => {});
 	});
 </script>

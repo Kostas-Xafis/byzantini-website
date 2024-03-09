@@ -479,6 +479,9 @@ export default function RegistrationsTable() {
 						await PDF.downloadBulk(pdfArr, (pg) => {
 							alert.message = "Λήψη των PDF: " + pg + " από " + pdfArr.length;
 							updateAlert(alert);
+							return new Promise((res, rej) => {
+								alert.onDidUpdate = res;
+							});
 						});
 					} catch (error: any) {
 						pushAlert(createAlert("error", "Σφάλμα κατά την λήψη των PDF: ", error));

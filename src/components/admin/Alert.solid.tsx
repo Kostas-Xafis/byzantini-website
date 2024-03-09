@@ -6,6 +6,7 @@ export type Alert = {
 	message: string;
 	type: "error" | "success" | "warning" | "info";
 	status: "push" | "remove" | "update";
+	onDidUpdate?: Function;
 	expires?: number;
 };
 
@@ -43,7 +44,7 @@ export default function AlertStack() {
 	const [arrayOperation, setArrayOperation] = createSignal<Alert["status"]>("push", {
 		equals: false,
 	});
-	const executionQueue = new ExecutionQueue<Alert>(600, async (alert) => {
+	const executionQueue = new ExecutionQueue<Alert>(600, (alert) => {
 		if (alert.status !== "update" && executionQueue.getInterval() === 10) {
 			executionQueue.setInterval(600);
 		}
@@ -80,12 +81,13 @@ export default function AlertStack() {
 						prevAlerts[alertIdx].message = alert.message;
 						prevAlerts[alertIdx].status = "update";
 						if (alert.type === "info" || alert.type === "success") {
-							prevAlerts[alertIdx].expires = Date.now() + 3000;
+							prevAlerts[alertIdx].expires = Date.now() + 10000;
 						}
 						return prevAlerts;
 					});
 					setArrayOperation("update");
 				});
+				alert.onDidUpdate?.();
 				executionQueue.setInterval(10); // Instant update
 				break;
 			default:

@@ -80,7 +80,7 @@ const booksToTable = (books: Books[], wholesalers: Wholesalers[]): BooksTable[] 
 };
 
 const columnNames: ColumnType<BooksTable> = {
-	id: { type: "number", name: "Id" },
+	id: { type: "number", name: "Id", size: 4 },
 	title: { type: "string", name: "Τίτλος", size: 15 },
 	wholesaler: { type: "string", name: "Χονδρέμπορος", size: 15 },
 	wholesale_price: {

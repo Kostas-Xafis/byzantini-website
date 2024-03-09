@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { Index, Show } from "solid-js";
 import type { PartialBy } from "../../../types/helpers";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
@@ -209,27 +209,27 @@ export default function Input(props: InputProps) {
 					}
 					disabled={disabled || false}>
 					<option value="undefined"></option>
-					<For each={selectList}>
+					<Index each={selectList}>
 						{(selectItem, index) => (
 							<option
 								selected={
 									valueLiteral
-										? selectItem === value
+										? selectItem() === value
 										: valueList
-										? valueList[index()] === value
-										: index() === value
+										? valueList[index] === value
+										: index === value
 								}
 								value={
 									valueLiteral
-										? selectItem
+										? selectItem()
 										: valueList
-										? valueList[index()]
-										: index()
+										? valueList[index]
+										: index
 								}>
-								{selectItem}
+								{selectItem()}
 							</option>
 						)}
-					</For>
+					</Index>
 				</select>
 			</Show>
 			{/*-------------------------------MULTISELECT INPUT------------------------------------ */}
@@ -240,13 +240,13 @@ export default function Input(props: InputProps) {
 						(iconClasses || "")
 					}></i>
 				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-x-hidden z-10">
-					<For each={multiselectList}>
-						{(selectItem, index) =>
-							selectItem.value !== null || selectItem.value !== undefined ? (
+					<Index each={multiselectList}>
+						{(selectItem) =>
+							selectItem().value !== null || selectItem().value !== undefined ? (
 								<button
 									data-specifier={name}
-									data-selected={selectItem.selected}
-									data-value={selectItem.value}
+									data-selected={selectItem().selected}
+									data-value={selectItem().value}
 									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 									onClick={(e: MouseEvent) => {
 										if (multiselectOnce) {
@@ -271,14 +271,14 @@ export default function Input(props: InputProps) {
 									<p
 										class="p-2 font-didact text-start"
 										style={{ "grid-column": "2 / 3" }}>
-										{selectItem.label}
+										{selectItem().label}
 									</p>
 								</button>
 							) : (
 								<></>
 							)
 						}
-					</For>
+					</Index>
 				</div>
 			</Show>
 			{/*----------------------------------FILE INPUT---------------------------------------- */}

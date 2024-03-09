@@ -113,7 +113,7 @@
 		);
 		obsv.observe(choir);
 
-		const carouselUpdate = new UpdateHandler(5000);
+		const carouselUpdate = new UpdateHandler({ timer: 5000 });
 		const carousel = document.querySelector("#choirCarousel") as HTMLDivElement;
 		const choirText = document.querySelector("#choirText") as HTMLDivElement;
 		let isCarouselVisible = false;
@@ -151,9 +151,9 @@
 					choirText.classList.add("remove");
 				}
 				isCarouselVisible = intersectionRatio > 0.4;
-				if (isCarouselVisible && !carouselUpdate.timeoutFired) {
-					carouselUpdate.timeout().catch((e) => {});
-				} else if (!isCarouselVisible && carouselUpdate.timeoutFired) {
+				if (isCarouselVisible && !carouselUpdate.isTriggered()) {
+					carouselUpdate.trigger().catch((e) => {});
+				} else if (!isCarouselVisible && carouselUpdate.isTriggered()) {
 					carouselUpdate.abort();
 				}
 			},
@@ -164,33 +164,34 @@
 			},
 		);
 		obsv2.observe(choir);
+		let index = 0;
+		let loadedImgs = 1; // 1 image is already loaded
 		const carouselImgs = [
+			"/choir/choir_1.jpg",
 			"/choir/choir_2.jpg",
 			"/choir/choir_3.jpg",
 			"/choir/choir_4.jpg",
 			"/choir/choir_5.jpg",
-			"/choir/choir_1.jpg",
 		];
-		const loadedImgs = new Set<string>(["choir_1.jpg"]);
-		carouselUpdate.setFunction(async () => {
-			const img = carousel.querySelector("img") as HTMLImageElement;
-			let imgSrc = carouselImgs.shift() as string;
-			carouselImgs.push(imgSrc);
-			if (!loadedImgs.has(imgSrc)) {
-				loadedImgs.add(imgSrc);
-				await loadImage(imgSrc);
+		const img = carousel.querySelector("img") as HTMLImageElement;
+		carouselUpdate.setFunction(() => {
+			let imgSrc = carouselImgs[++index % 5];
+			if (loadedImgs < 5) {
+				loadedImgs++;
+				loadImage(imgSrc, true);
 			}
 			carousel.classList.remove("open");
+			void carousel.clientWidth;
 			carousel.classList.add("remove");
 			setTimeout(() => {
 				img.src = imgSrc;
-				void carousel.clientWidth;
 				carousel.classList.remove("remove");
+				void carousel.clientWidth;
 				carousel.classList.add("open");
 				if (!isCarouselVisible) carouselUpdate.abort();
-				else carouselUpdate.reset();
-			}, 300);
+				else carouselUpdate.reset({ catchAbort : true});
+			}, 600);
 		});
-		carouselUpdate.timeout().catch((e) => {});
+		carouselUpdate.trigger().catch((e) => {});
 	});
 </script>

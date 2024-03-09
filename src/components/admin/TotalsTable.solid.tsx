@@ -22,17 +22,17 @@ export default function TotalsTable() {
 		total_payments: {
 			type: "number",
 			name: "Συνολικές Οφειλές Μαθητών",
-			size: 20,
+			size: 24,
 		},
 		total_school_payoffs: {
 			type: "number",
 			name: "Συνολικές Οφειλές Σχολής",
-			size: 20,
+			size: 24,
 		},
 		total_registrations: {
 			type: "number",
 			name: "Συνολικές Εγγραφές",
-			size: 18,
+			size: 20,
 		},
 	};
 

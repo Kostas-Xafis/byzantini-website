@@ -76,7 +76,7 @@ const paymentsToTable = (payments: Payments[], books: Books[]): PaymentsTable[] 
 };
 
 const columnNames: ColumnType<PaymentsTable> = {
-	id: { type: "number", name: "Id" },
+	id: { type: "number", name: "Id", size: 4 },
 	student_name: { type: "string", name: "Μαθητής", size: 15 },
 	title: { type: "string", name: "Βιβλίο", size: 25 },
 	amount: { type: "number", name: "Οφειλή" },

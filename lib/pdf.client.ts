@@ -1,7 +1,7 @@
 import type { Registrations } from "../types/entities";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
-import { asyncQueue, loadScript, sleep } from "./utils.client";
+import { UpdateHandler, asyncQueue, loadScript, sleep } from "./utils.client";
 
 
 const DidactGothicFontBufffer = await (await fetch("/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
@@ -128,9 +128,15 @@ export class PDF {
 
 	public static async downloadBulk(arr: PDF[], progressCallback?: (prog: number) => any): Promise<void> {
 		let serverTimeout = false;
+		const updateHandler = UpdateHandler.createInstance(5000);
+		updateHandler.setBackoff(5000, 2);
+		updateHandler.setFunction(() => {
+			serverTimeout = false;
+		});
+
 		let requestArr = arr.map((pdf) => async () => {
 			let res;
-			if (!serverTimeout && Math.random() > 0.7) {
+			if (!serverTimeout && Math.random() > 0.725) {
 				try {
 					let resp = await fetch("https://pdf-create.koxafis.workers.dev/" + pdf.student.class_id, {
 						method: "POST",
@@ -140,10 +146,15 @@ export class PDF {
 							instrument: pdf.instrument,
 						})
 					});
+					if (resp.status >= 400) throw new Error("Server error");
 					res = await resp.blob();
 				} catch (e) {
 					serverTimeout = true;
-					setTimeout(() => serverTimeout = false, 1000 * 20);
+					if (!updateHandler.isTriggered()) {
+						updateHandler.trigger().catch(console.error);
+					} else {
+						updateHandler.reset({});
+					}
 				}
 			}
 			if (!res) {

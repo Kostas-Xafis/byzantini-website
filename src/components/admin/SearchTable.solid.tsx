@@ -1,4 +1,4 @@
-import { batch, createSignal, For } from "solid-js";
+import { batch, createSignal, Index } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { UpdateHandler } from "../../../lib/utils.client";
 import type { CellValue } from "./table/Row.solid";
@@ -70,16 +70,20 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 		setColumn({ columnName, name, type });
 	};
 
-	let debounce = new UpdateHandler();
+	let debounce = new UpdateHandler({
+		timer: 250,
+	});
 	const searchHandler = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		debounce.reset(250, () => {
-			const c = column();
-			batch(() => {
-				props.setSearchQuery("columnName", c.columnName);
-				props.setSearchQuery("value", target.value);
-				props.setSearchQuery("type", c.type);
-			});
+		debounce.reset({
+			func: () => {
+				const c = column();
+				batch(() => {
+					props.setSearchQuery("columnName", c.columnName);
+					props.setSearchQuery("value", target.value);
+					props.setSearchQuery("type", c.type);
+				});
+			},
 		});
 	};
 
@@ -101,17 +105,17 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 					{column().name} :
 				</p>
 				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 rounded-md overflow-hidden ">
-					<For each={props.columns}>
+					<Index each={props.columns}>
 						{(c) => (
 							<p
 								class="py-1 px-3 bg-red-50 hover:bg-red-200 text-red-900 cursor-pointer"
-								data-colname={c.columnName}
-								data-name={c.name}
-								data-type={c.type}>
-								{c.name}
+								data-colname={c().columnName}
+								data-name={c().name}
+								data-type={c().type}>
+								{c().name}
 							</p>
 						)}
-					</For>
+					</Index>
 				</div>
 			</div>
 			<input

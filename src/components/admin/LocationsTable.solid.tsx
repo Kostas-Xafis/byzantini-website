@@ -135,7 +135,7 @@ const locationsToTable = (locations: Locations[]): LocationsTable[] => {
 };
 
 const columnNames: ColumnType<LocationsTable> = {
-	id: { type: "number", name: "Id" },
+	id: { type: "number", name: "Id", size: 4 },
 	name: { type: "string", name: "Τοποθεσία", size: 15 },
 	address: { type: "string", name: "Διεύθυνση", size: 15 },
 	areacode: { type: "number", name: "Ταχ. Κώδικας" },
