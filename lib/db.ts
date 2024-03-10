@@ -1,5 +1,4 @@
 import { createClient } from "@libsql/client";
-import { cast, connect } from "@planetscale/database";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
 
@@ -18,8 +17,6 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 	const {
 		// Mysql env variables for local development
 		MYSQL_DB_PWD, MYSQL_DB_HOST, MYSQL_DB_USERNAME, MYSQL_DB_NAME, MYSQL_DB_PORT,
-		// Planetscale env variables for production
-		PSCALE_DB_HOST, PSCALE_DB_PWD, PSCALE_DB_USERNAME,
 		// Turso env variables for production
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
@@ -109,23 +106,6 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 					return res;
 				}
 			};
-		}
-		if (CONNECTOR === "planetscale") {
-			connect({
-				host: PSCALE_DB_HOST,
-				password: PSCALE_DB_PWD,
-				username: PSCALE_DB_USERNAME,
-				fetch: (url, init) => {
-					delete (init as any)["cache"]; // Remove cache header
-					return fetch(url, init);
-				},
-				cast(field, value) {
-					if (field.type === 'INT64' || field.type === 'UINT64') {
-						return Number(value);
-					}
-					return cast(field, value);
-				},
-			}) as unknown as Connection;
 		}
 		throw new Error("Database connector is not specified.");
 	} catch (error) {

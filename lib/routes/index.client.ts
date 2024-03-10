@@ -11,6 +11,7 @@ import { RegistrationsRoutes } from "./registrations.client";
 import { AnnouncementsRoutes } from "./announcements.client";
 import { EndpointsConstructor, APIBuilderConstructor } from "./constructors.client";
 import { type APIArguments, type APIResponse as APIRes } from "../../types/routes";
+import { SchemaRoutes } from "./schema.client";
 
 export const enum BaseRoutes {
 	Books = "Books",
@@ -24,6 +25,7 @@ export const enum BaseRoutes {
 	SysUsers = "SysUsers",
 	Registrations = "Registrations",
 	Announcements = "Announcements",
+	Schema = "Schema",
 }
 
 export const API = {
@@ -38,6 +40,7 @@ export const API = {
 	...APIBuilderConstructor(BaseRoutes.SysUsers, SysUsersRoutes),
 	...APIBuilderConstructor(BaseRoutes.Registrations, RegistrationsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Announcements, AnnouncementsRoutes),
+	...APIBuilderConstructor(BaseRoutes.Schema, SchemaRoutes),
 };
 
 export const APIEndpoints = {
@@ -52,6 +55,7 @@ export const APIEndpoints = {
 	...EndpointsConstructor(BaseRoutes.SysUsers, SysUsersRoutes),
 	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsRoutes),
 	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsRoutes),
+	...EndpointsConstructor(BaseRoutes.Schema, SchemaRoutes),
 };
 
 export type APIEndpointNames = keyof (typeof APIEndpoints); // Union of all the keys in APIEndpoints
@@ -67,7 +71,8 @@ export interface APIArgs extends
 	APIArguments<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
 	APIArguments<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
 	APIArguments<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
-	APIArguments<BaseRoutes.Announcements, typeof AnnouncementsRoutes> { }
+	APIArguments<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
+	APIArguments<BaseRoutes.Schema, typeof SchemaRoutes> { }
 
 export interface APIResponse extends
 	APIRes<BaseRoutes.Books, typeof BooksRoutes>,
@@ -80,4 +85,5 @@ export interface APIResponse extends
 	APIRes<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
 	APIRes<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
 	APIRes<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
-	APIRes<BaseRoutes.Announcements, typeof AnnouncementsRoutes> { }
+	APIRes<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
+	APIRes<BaseRoutes.Schema, typeof SchemaRoutes> { }

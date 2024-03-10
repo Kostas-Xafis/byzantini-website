@@ -15,6 +15,7 @@ import { WholesalersServerRoutes } from "./wholesalers.server";
 import type { RemovePartial } from "../../types/helpers";
 import { requestValidation } from "../middleware/requestValidation";
 import { authentication } from "../utils.auth";
+import { SchemaServerRoutes } from "./schema.server";
 
 function getAllRoutes() {
 	const allRoutes =
@@ -29,7 +30,8 @@ function getAllRoutes() {
 			SysUsersServerRoutes,
 			RegistrationsServerRoutes,
 			AnnouncementsServerRoutes,
-			ReplicationServerRoutes]
+			ReplicationServerRoutes,
+			SchemaServerRoutes]
 			.map(routes => Object.values(routes)).flat() as (RemovePartial<AnyEndpoint, "func">)[];
 
 	allRoutes.forEach(route => {
