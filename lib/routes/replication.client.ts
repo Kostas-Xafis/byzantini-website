@@ -1,9 +1,9 @@
 import type { EndpointRoute } from "../../types/routes";
 
-const replication: EndpointRoute<"/replication/[service:string]"> = {
+const replication: EndpointRoute<'/replication/[service:"bucket" | "database" | "both"]', null, string> = {
 	authentication: true,
 	method: "GET",
-	path: "/replication/[service:string]",
+	path: '/replication/[service:"bucket" | "database" | "both"]',
 	hasUrlParams: true,
 	validation: undefined,
 };
