@@ -8,12 +8,19 @@ export type Transaction = {
 	queryHistory: string[];
 };
 
-export type Connection = {
+export type DBConnection = {
 	execute: Exec,
 	transaction: (func: (tx: Transaction) => any) => Promise<any>;
 };
 
-export const CreateDbConnection = async (): Promise<Connection> => {
+type DBTypes = "mysql" | "sqlite" | undefined;
+
+type PromiseReturn<DBType extends DBTypes = undefined> =
+	DBType extends "mysql" ? import("mysql2/promise").Connection :
+	DBType extends "sqlite" ? ReturnType<typeof createClient> :
+	DBConnection;
+
+export async function createDbConnection<T extends DBTypes = undefined>(type?: T): Promise<PromiseReturn<T>> {
 	const {
 		// Mysql env variables for local development
 		MYSQL_DB_PWD, MYSQL_DB_HOST, MYSQL_DB_USERNAME, MYSQL_DB_NAME, MYSQL_DB_PORT,
@@ -22,7 +29,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 		// Connector type
 		CONNECTOR } = await import.meta.env;
 	try {
-		if (CONNECTOR === "mysql") {
+		if (type === "mysql" || CONNECTOR === "mysql") {
 			// Exposing mysql2/promise package in dev as an api, wrapped with the functions of @planetscale/database
 			// to allow for quick local development
 
@@ -36,6 +43,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 				port: MYSQL_DB_PORT,
 				multipleStatements: false
 			});
+			if (type === "mysql") return db as any;
 			const execute: Exec = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
 				try {
 					const [res] = await db.execute(query, args) as unknown as [{ insertId: number; } | T[]];
@@ -57,7 +65,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 					db.end();
 					return res;
 				},
-				transaction: async (func) => {
+				transaction: async (func: any) => {
 					await db.beginTransaction();
 					let res;
 					try {
@@ -69,14 +77,15 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 					db.end();
 					return res;
 				}
-			};
+			} as DBConnection as any;
 		}
-		if (CONNECTOR === "sqlite") {
+		if (type === "sqlite" || CONNECTOR === "sqlite") {
 			const client = createClient({
 				url: TURSO_DB_URL,
 				authToken: TURSO_DB_TOKEN,
 				intMode: "number",
 			});
+			if (type === "sqlite") return client as any;
 			const execute = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
 				let res = await client.execute({ sql: query, args });
 				let resObj = {} as any;
@@ -105,7 +114,7 @@ export const CreateDbConnection = async (): Promise<Connection> => {
 					client.close();
 					return res;
 				}
-			};
+			} as DBConnection as any;
 		}
 		throw new Error("Database connector is not specified.");
 	} catch (error) {

@@ -1,5 +1,5 @@
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
-import { CreateDbConnection, type Transaction } from "./db";
+import { createDbConnection, type Transaction } from "./db";
 import type { Output } from "valibot";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
@@ -33,11 +33,23 @@ export const MIMETypeMap: Record<string, string> = {
 };
 export const ImageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 
-export const getUsedBody = <T>(ctx: Context<T>): (T extends AnyObjectSchema ? Output<T> : T) | undefined => {
+export function getUsedBody<T>(ctx: Context<T>): (T extends AnyObjectSchema ? Output<T> : T) | undefined {
 	if (!ctx.request.bodyUsed) return undefined;
 	// @ts-ignore
 	return ctx.request.json();
 };
+
+export function unionStringToSet(str: string): Set<string | number> {
+	return new Set(str.split("|").map((s) => {
+		const num = Number(s);
+		return isNaN(num) ? s.replaceAll(/[ \"]/g, "") : num;
+	}));
+}
+
+export function unionHas(set: Set<any>, value: any): boolean {
+	if (Number(value) && !isNaN(Number(value))) return set.has(Number(value));
+	return set.has(value);
+}
 
 //  ---------------------- DATABASE UTILS ----------------------  \\
 
@@ -54,7 +66,7 @@ const queryLogger = async (queryId: string, query: string, args: any[]) => {
 	let argStr = JSON.stringify(args);
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
-		(await CreateDbConnection()).execute("INSERT INTO query_logs (id, query, args, date) VALUES (?, ?, ?, ?)", [queryId, query, argStr, Date.now()]);
+		(await createDbConnection()).execute("INSERT INTO query_logs (id, query, args, date) VALUES (?, ?, ?, ?)", [queryId, query, argStr, Date.now()]);
 	} catch (error) {
 		console.log(error);
 	}
@@ -62,7 +74,7 @@ const queryLogger = async (queryId: string, query: string, args: any[]) => {
 
 
 export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
-	const conn = tx ?? await CreateDbConnection();
+	const conn = tx ?? await createDbConnection();
 	let queryId, res;
 	try {
 		if (!query.startsWith("SELECT") || log) {
@@ -75,7 +87,7 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 		console.log(error);
 		if (queryId) {
 			(async function () {
-				const errConn = await CreateDbConnection();
+				const errConn = await createDbConnection();
 				if (tx)
 					await errConn.execute(`UPDATE query_logs SET error = ? WHERE id IN (${questionMarks(tx.queryHistory.length)})`, [true, ...tx.queryHistory]);
 				else
@@ -96,7 +108,7 @@ export const execTryCatch = async <T>(
 	try {
 		let response;
 		if (hasTransaction) {
-			let conn = await CreateDbConnection();
+			let conn = await createDbConnection();
 			response = await conn.transaction((tx) => {
 				tx.queryHistory = [];
 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
@@ -114,6 +126,7 @@ export const execTryCatch = async <T>(
 		} else {
 			res = ErrorWrapper(error);
 		}
+		console.error(error);
 	}
 	return res;
 };

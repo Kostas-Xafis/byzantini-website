@@ -498,13 +498,13 @@ export function isFunction(func: any): func is Function {
 	return func.constructor === Function;
 }
 
+export function isNumber(n: any): n is number {
+	return typeof n === "number" && !isNaN(n) && isFinite(n);
+}
+
 // Recursive object copy
 export const deepCopy = <T>(obj: T): T => {
 	if (typeof obj !== "object" || obj === null) return obj;
 	if (Array.isArray(obj)) return obj.map(deepCopy) as any;
 	return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, deepCopy(v)])) as any;
 };
-
-export class ExponentialTimeout {
-
-}

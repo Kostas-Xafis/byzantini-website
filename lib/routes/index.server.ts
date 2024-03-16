@@ -16,6 +16,7 @@ import type { RemovePartial } from "../../types/helpers";
 import { requestValidation } from "../middleware/requestValidation";
 import { authentication } from "../utils.auth";
 import { SchemaServerRoutes } from "./schema.server";
+import { unionHas, unionStringToSet } from "../utils.server";
 
 function getAllRoutes() {
 	const allRoutes =
@@ -63,16 +64,22 @@ export const matchRoute = (urlSlug: string[], method: HTTPMethods) => {
 		// If the route and url slug have different lengths, they can't match
 		if (routePath.length !== urlSlug.length) continue;
 
+		routeCheckLoop:
 		for (let i = 0; i < routePath.length; i++) {
-			if (routePath[i] === urlSlug[i]) continue;
+			const routePart = routePath[i];
+			if (routePart === urlSlug[i]) continue;
 
-			if (
-				routePath[i].startsWith("[") &&
-				((routePath[i].includes("number") && !isNaN(Number(urlSlug[i]))) || routePath[i].includes("string"))
-			) {
-				continue;
+			if (routePart.startsWith("[")) {
+				if ((routePart.includes("number") && !isNaN(Number(urlSlug[i]))) || routePart.includes("string")) {
+					console.log("It's a number or string");
+					continue;
+				}
+				if (routePart.includes("|")) {
+					const value = urlSlug[i];
+					const unionArr = unionStringToSet(routePart.slice(1, -1).split(":")[1]);
+					if (unionHas(unionArr, value)) continue;
+				}
 			}
-
 			continue routeLoop;
 		}
 		return route;

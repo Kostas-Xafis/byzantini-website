@@ -14,8 +14,12 @@ const generateResponse = (ctx: APIContext, route: RemovePartial<AnyEndpoint, "fu
 		.forEach((part, i) => {
 			if (!part.startsWith("[")) return;
 			const [name, type] = part.slice(1, -1).split(":");
-			if (type === "number") slugData[name] = Number(urlSlug[i]);
-			else slugData[name] = urlSlug[i];
+			if (type === "number") {
+				slugData[name] = Number(urlSlug[i]);
+			} else {
+				const num = Number(urlSlug[i]);
+				slugData[name] = isNaN(num) ? urlSlug[i] : num;
+			}
 		});
 	return func({ ctx, slug: slugData });
 };

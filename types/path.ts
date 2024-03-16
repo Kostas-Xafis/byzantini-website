@@ -6,8 +6,23 @@ type StringToType = {
 	false: false;
 };
 
+type InferToNum<T extends number> = T;
+type ToDigit<T extends number | string> = T extends number ? T : T extends `${InferToNum<infer N>}` ? N : never;
+
 type ExtractName<Param> = Param extends `[${infer ArgName}:${infer _}]` ? ArgName : never;
 type ExtractType<Param> = Param extends `[${infer _}:${infer ArgType}]` ? ArgType : never;
+
+type GetLiteral<Literal> = Literal extends `"${infer Str}"`
+	? Str
+	: Literal extends `${infer Num}`
+	? ToDigit<Num>
+	: never;
+
+type ExtractLiteral<Param> =
+	Param extends `${infer Literal} | ${infer Next}`
+	? GetLiteral<Literal> | ExtractLiteral<Next>
+	: Param extends `${infer Literal}`
+	? GetLiteral<Literal> : never;
 
 //Splits URL to a union of parts
 // export type Parts<URL> = URL extends `${infer HTTPMethod}:/${infer Path}`
@@ -31,13 +46,8 @@ type ExtractArgumentParts<Path extends string> =
 	Path extends `${infer _}[${infer Name}:${infer Type}]${infer nextPath}` ? `[${Name}:${Type}]` | ExtractArgumentParts<nextPath> : never;
 ;
 export type ExpectedArguments<URL extends string> = {
-	[K in ExtractArgumentParts<URL> as ExtractName<K>]: ExtractType<K> extends keyof StringToType ? StringToType[ExtractType<K>] : never;
+	[K in ExtractArgumentParts<URL> as ExtractName<K>]:
+	ExtractType<K> extends keyof StringToType
+	? StringToType[ExtractType<K>]
+	: ExtractLiteral<ExtractType<K>>;
 };
-
-// type BOB = ExpectedArguments<ArgumentParts<Parts<"/teachers/file/[id:number]/[name:string]">>>;
-// type BOB2 = ExpectedArguments2<"/teachers/file/[id:number]/[name:string]">;
-
-
-// type BOB = Parts<"/teachers/file/[id:number]">;
-
-// type kyle = Parts2<"/teachers/file/[id:number]">;
