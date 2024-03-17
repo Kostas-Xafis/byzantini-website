@@ -456,7 +456,7 @@ export const teacherTitleByGender = (title: 0 | 1 | 2, gender: "M" | "F") => {
 export class ExecutionQueue<T> {
 	#queue: T[] = [];
 	#isExecuting = false;
-	constructor(private interval = 1000, private func: (item: T) => (Promise<void> | void) = () => { }) { }
+	constructor(private interval = 1000, private func: (item: T) => (Promise<any> | any) = () => { }, private isAsync = false) { }
 	push(item: T) {
 		this.#queue.push(deepCopy(item));
 		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
@@ -465,7 +465,10 @@ export class ExecutionQueue<T> {
 		this.#isExecuting = true;
 		while (this.#queue.length) {
 			const item = this.#queue.shift() as T;
-			if (this.func.constructor.name === "AsyncFunction") {
+
+			if (this.isAsync) {
+				await this.func(item);
+			} else if (this.func.constructor.name === "AsyncFunction") {
 				await this.func(item);
 			} else {
 				this.func(item);

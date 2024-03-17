@@ -107,10 +107,19 @@ serverRoutes.update.func = ({ ctx }) => {
 };
 
 serverRoutes.postImage.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async (T) => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
-		const { insertId } = await executeQuery(`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (${questionMarks(args)})`, args);
+		let insertId;
+		if (body.is_main) {
+			insertId = 0;
+			await T.executeQuery(`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (${questionMarks(args.length + 1)})`, [0, ...args]);
+		} else {
+			insertId = (await T.executeQuery(
+				`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (
+(SELECT image_counter FROM announcements WHERE id = ?), ${questionMarks(args.length)})`, [body.announcement_id, ...args])).insertId;
+			await T.executeQuery(`UPDATE announcements SET image_counter = image_counter + 1 WHERE id = ?`, [body.announcement_id]);
+		}
 		return { insertId };
 	});
 };

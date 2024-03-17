@@ -71,7 +71,6 @@ export const matchRoute = (urlSlug: string[], method: HTTPMethods) => {
 
 			if (routePart.startsWith("[")) {
 				if ((routePart.includes("number") && !isNaN(Number(urlSlug[i]))) || routePart.includes("string")) {
-					console.log("It's a number or string");
 					continue;
 				}
 				if (routePart.includes("|")) {

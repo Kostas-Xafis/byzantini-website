@@ -2,6 +2,7 @@ import {
 	boolean,
 	email,
 	integer,
+	length,
 	literal,
 	minLength,
 	minValue,
@@ -293,6 +294,7 @@ export const v_Announcements = object({
 	content: string(),
 	date: number([integer()]),
 	views: number([integer(), minValue(0)]),
+	image_counter: number([integer(), minValue(0)])
 });
 export interface Announcements {
 	id: number;
@@ -300,6 +302,7 @@ export interface Announcements {
 	content: string;
 	date: number;
 	views: number;
+	image_counter: number;
 };
 
 //! Later on rename the priority column to id

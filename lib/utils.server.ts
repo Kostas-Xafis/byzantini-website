@@ -1,6 +1,7 @@
+import type { Output } from "valibot";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { createDbConnection, type Transaction } from "./db";
-import type { Output } from "valibot";
+import { ExecutionQueue } from "./utils.client";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
@@ -75,6 +76,7 @@ const queryLogger = async (queryId: string, query: string, args: any[]) => {
 
 export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? await createDbConnection();
+	query = query.trim().replaceAll("\n", "");
 	let queryId, res;
 	try {
 		if (!query.startsWith("SELECT") || log) {
@@ -99,6 +101,10 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? { insertId: number; } : T[];
 };
 
+const TxQueue = new ExecutionQueue<() => Promise<any>>(0, (item) => {
+	return item();
+}, true);
+
 export const execTryCatch = async <T>(
 	func: (t: Transaction) => Promise<T>
 ): Promise<EndpointResponse<T> | EndpointResponseError> => {
@@ -108,11 +114,20 @@ export const execTryCatch = async <T>(
 	try {
 		let response;
 		if (hasTransaction) {
-			let conn = await createDbConnection();
-			response = await conn.transaction((tx) => {
-				tx.queryHistory = [];
-				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
-				return func(tx as Transaction) as Promise<T>;
+			response = await new Promise((resolve, reject) => {
+				TxQueue.push(async () => {
+					try {
+						const conn = await createDbConnection();
+						const tres = await conn.transaction((tx) => {
+							tx.queryHistory = [];
+							tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
+							return func(tx as Transaction) as Promise<T>;
+						}) as T;
+						resolve(tres);
+					} catch (error) {
+						reject(error);
+					}
+				});
 			}) as T;
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;

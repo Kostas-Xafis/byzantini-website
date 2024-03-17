@@ -16,11 +16,13 @@ import { TableControl, TableControlsGroup, type Action } from "./table/TableCont
 
 const PREFIX = "announcements";
 
-type AnnouncementTable = Omit<Announcements, "content"> & { link: string };
+type SimpleAnnouncements = Omit<Announcements, "image_counter">;
+
+type AnnouncementTable = Omit<Announcements, "content" | "image_counter"> & { link: string };
 
 const AnnouncementsInputs = (): Omit<
 	Record<keyof Announcements | "images" | "mainImage", InputProps>,
-	"views"
+	"views" | "image_counter"
 > => {
 	return {
 		id: {
@@ -68,6 +70,7 @@ const announcementsToTable = (announcements: Announcements[]): AnnouncementTable
 	return announcements.map((a) => {
 		let announcement = deepCopy(a) as Partial<Announcements>;
 		delete announcement.content;
+		delete announcement.image_counter;
 		const columns = Object.values(announcement);
 		columns.push(a.views);
 		columns[3] = `/anakoinoseis/${a.title.replace(/ /g, "-")}`;
@@ -87,18 +90,19 @@ function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> 
 async function UploadImages(args: {
 	announcement_id: number;
 	setStore: SetStoreFunction<APIStore>;
-	imagesPrefix: string;
+	fileHandler: FileHandler;
 	images?: AnnouncementImages[]; // Include images only when modifying
 	is_main?: boolean;
 }) {
-	const { announcement_id, imagesPrefix, images, is_main = false } = args;
+	const { announcement_id, fileHandler, images, is_main = false } = args;
 	const apiHook = useAPI(args.setStore);
 	await ThumbnailGenerator.loadCompressor();
 
 	const kb40 = 1024 * 40;
 	const thumbCreator = new ThumbnailGenerator();
 
-	const photos = FileHandler.getFiles(imagesPrefix)
+	const photos = fileHandler
+		.getFiles()
 		.filter((f) => !f.isProxy)
 		.map(({ name, file }, i) => {
 			assertNotNull(file);
@@ -111,7 +115,6 @@ async function UploadImages(args: {
 				try {
 					await apiHook(API.Announcements.postImage, {
 						RequestObject: {
-							id: is_main ? 0 : i + 1,
 							announcement_id,
 							name,
 							is_main,
@@ -160,12 +163,12 @@ async function UploadImages(args: {
 	}
 
 	if (!images) return;
-	const deletedFiles = FileHandler.getDeletedFiles(imagesPrefix);
+	const deletedFiles = fileHandler.getDeletedFiles();
 	if (deletedFiles.length === 0) return;
 
 	let ids = images
 		.filter((img) => img.announcement_id === announcement_id)
-		?.map((img) => (deletedFiles.find((f) => f.name === img.name) ? 1 : undefined))
+		?.map((img) => (deletedFiles.find((f) => f.name === img.name) ? img.id : undefined))
 		.filter((id) => id !== undefined) as number[];
 	if (ids.length === 0) return;
 
@@ -204,7 +207,7 @@ export default function AnnouncementsTable() {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
-			const data: Omit<Announcements, "id" | "views"> = {
+			const data: Omit<SimpleAnnouncements, "id" | "views"> = {
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
@@ -218,14 +221,14 @@ export default function AnnouncementsTable() {
 			await UploadImages({
 				announcement_id: id,
 				setStore,
-				imagesPrefix: PREFIX + ActionEnum.ADD + "mainImage",
+				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.ADD + "mainImage"),
 				is_main: true,
 			});
 
 			await UploadImages({
 				announcement_id: id,
 				setStore,
-				imagesPrefix: PREFIX + ActionEnum.ADD + "photos",
+				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.ADD + "photos"),
 			});
 			setAnnouncementHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", "Η ανακοίνωση προστέθηκε επιτυχώς"));
@@ -254,7 +257,7 @@ export default function AnnouncementsTable() {
 				throw new Error("Invalid title");
 			}
 
-			const data: Omit<Announcements, "views"> = {
+			const data: Omit<SimpleAnnouncements, "views"> = {
 				id: selectedItems[0],
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
@@ -268,14 +271,14 @@ export default function AnnouncementsTable() {
 			await UploadImages({
 				announcement_id: data.id,
 				setStore,
-				imagesPrefix: PREFIX + ActionEnum.ADD + "mainImage",
+				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.MODIFY + "mainImage"),
 				is_main: true,
 			});
 
 			await UploadImages({
 				announcement_id: data.id,
 				setStore,
-				imagesPrefix: PREFIX + ActionEnum.MODIFY + "photos",
+				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.MODIFY + "photos"),
 				images,
 			});
 

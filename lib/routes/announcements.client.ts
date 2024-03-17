@@ -39,7 +39,7 @@ const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Anno
 	validation: undefined,
 };
 
-const postReq = omit(v_Announcements, ["id", "views"]);
+const postReq = omit(v_Announcements, ["id", "views", "image_counter"]);
 const post: EndpointRoute<"/announcements", typeof postReq, { insertId: number; }> = {
 	authentication: true,
 	method: "POST",
@@ -48,7 +48,7 @@ const post: EndpointRoute<"/announcements", typeof postReq, { insertId: number; 
 	validation: () => postReq,
 };
 
-const updateReq = omit(v_Announcements, ["views"]);
+const updateReq = omit(v_Announcements, ["views", "image_counter"]);
 const update: EndpointRoute<"/announcements", typeof updateReq> = {
 	authentication: true,
 	method: "PUT",
@@ -73,17 +73,18 @@ const getImages: EndpointRoute<"/announcements/images", any, AnnouncementImages[
 	validation: undefined,
 };
 
+const postImageReq = omit(v_AnnouncementImages, ["id"]);
 // Put image data in database
 const postImage: EndpointRoute<
 	"/announcements/images",
-	typeof v_AnnouncementImages,
+	typeof postImageReq,
 	{ insertId: number; }
 > = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements/images",
 	hasUrlParams: false,
-	validation: () => v_AnnouncementImages,
+	validation: () => postImageReq,
 };
 
 // Store image in bucket

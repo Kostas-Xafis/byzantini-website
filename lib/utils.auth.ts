@@ -2,6 +2,7 @@ import type { APIContext } from "astro";
 import { executeQuery } from "./utils.server";
 import type { SysUsers } from "../types/entities";
 import { createHash } from "node:crypto";
+import { randomHex } from "./utils.client";
 
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || randomHex();
@@ -44,21 +45,10 @@ class AuthCache {
 
 const small_cache = new AuthCache();
 
-const hexLookup = "0123456789abcdef";
-export function randomHex(size = 16) {
-	let hex = "";
-	for (let j = 0; j < size; j++) {
-		hex += hexLookup[Math.floor(Math.random() * 16)];
-	}
-	return hex;
-};
+
 
 export const createSessionId = (size = 32) => {
-	let session_id = "";
-	for (let j = 0; j < size; j++) {
-		session_id += hexLookup[Math.floor(Math.random() * 16)];
-	}
-	return { session_id, session_exp_date: Date.now() + 1000 * 60 * 60 * 24 * 7 };
+	return { session_id: randomHex(size), session_exp_date: Date.now() + 1000 * 60 * 60 * 24 * 7 };
 };
 
 export const getSessionId = (req: Request) => {

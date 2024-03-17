@@ -275,7 +275,6 @@ export default function Table(props: Props) {
    		padding-right: 1.5rem/* 24px */;
 		column-gap: 0.5rem/* 8px */;
 		font-size: 1.125rem/* 18px */;
-   		line-height: 1.75rem/* 28px */;
 		text-align: center;
 		background-color: transparent;
 		transition: box-shadow 0.2s cubic-bezier(0,.8,.43,.64);
@@ -313,8 +312,8 @@ export default function Table(props: Props) {
 		width: 100%;
 		min-width: 0;
 		word-break: break-word;
-		padding-top: 0.5rem/* 8px */;
-		padding-bottom: 0.5rem/* 8px */;
+		padding-top: 0.25rem/* 4px */;
+		padding-bottom: 0.25rem/* 4px */;
 	}
 	.selectBox {
 		position: absolute;
