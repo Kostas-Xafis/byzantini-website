@@ -31,6 +31,14 @@ const getById: EndpointRoute<"/announcements/id", number[], Announcements> = {
 	validation: undefined,
 };
 
+const getImagesById: EndpointRoute<"/announcements/images/[id:number]", any, AnnouncementImages[]> = {
+	authentication: true,
+	method: "GET",
+	path: "/announcements/images/[id:number]",
+	hasUrlParams: true,
+	validation: undefined,
+};
+
 const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Announcements & { images: string[]; }> = {
 	authentication: false,
 	method: "POST",
@@ -110,6 +118,7 @@ export const AnnouncementsRoutes = {
 	getImages,
 	getSimple,
 	getById,
+	getImagesById,
 	getByTitle,
 	post,
 	update,

@@ -69,6 +69,15 @@ serverRoutes.getById.func = ({ ctx }) => {
 	});
 };
 
+serverRoutes.getImagesById.func = ({ ctx, slug }) => {
+	return execTryCatch(async () => {
+		const { id } = slug;
+		const images = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
+		if (!images || !images.length) throw Error("images not found");
+		return images;
+	});
+};
+
 serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { title } = slug;

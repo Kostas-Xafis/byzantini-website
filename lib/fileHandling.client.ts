@@ -72,13 +72,14 @@ export class FileHandler {
 		}
 		this.files = this.files.concat(newFiles);
 	}
-	removeFile(index?: number) {
+	removeFile(index?: number, force?: boolean) {
 		if (index == undefined) throw Error("Index not provided");
 		if (index < 0 || index >= this.files.length) throw Error("Index out of bounds");
 
 		const file = this.files[index];
 		if (file.isProxy) {
-			this.markAsDeleteFileProxy(file);
+			if (force) this.initialFileProxies = this.initialFileProxies.filter(f => f.name != file.name);
+			else this.markAsDeleteFileProxy(file);
 		}
 		if (this.isSingleFile) this.files = [];
 		else this.files.splice(index, 1);
@@ -94,7 +95,7 @@ export class FileHandler {
 		return this.initialFileProxies.filter((f: FileProxy) => f.isProxy && f.markForDeletion);
 	}
 	getInitialFiles() {
-		return this.initialFileProxies;
+		return this.initialFileProxies.filter((f: FileProxy) => f.isProxy && !f.markForDeletion);
 	}
 
 	mountDragAndDrop(element: HTMLElement, events: DragEvents) {

@@ -172,6 +172,11 @@ async function UploadImages(args: {
 		.filter((id) => id !== undefined) as number[];
 	if (ids.length === 0) return;
 
+	// Remove the marked files from the handler
+	ids.forEach((id) => {
+		fileHandler.removeFile(id, true);
+	});
+
 	await apiHook(API.Announcements.imagesDelete, {
 		RequestObject: ids,
 		UrlArgs: { announcement_id },
@@ -188,6 +193,11 @@ export default function AnnouncementsTable() {
 			{
 				srcEndpoint: API.Announcements.getById,
 				destEndpoint: API.Announcements.get,
+			},
+			{
+				srcEndpoint: API.Announcements.getImagesById,
+				destEndpoint: API.Announcements.getImages,
+				foreignKey: "announcement_id",
 			},
 		],
 	});
