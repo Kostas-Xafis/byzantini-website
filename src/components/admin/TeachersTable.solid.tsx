@@ -34,7 +34,12 @@ import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable
 import { toggleCheckboxes } from "./table/Row.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	TableControlsGroup,
+	TopTableGroup,
+	type Action,
+} from "./table/TableControls.solid";
 
 const PREFIX = "teachers";
 const INSTRUMENTS_PREFIX = "instruments";
@@ -892,20 +897,27 @@ export default function TeachersTable() {
 				store[API.Teachers.getInstruments]
 			}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
-				<TableControlsGroup prefix={PREFIX}>
-					<TableControl action={onAdd} prefix={PREFIX} />
-					<TableControl action={onModify} prefix={PREFIX} />
-					<TableControl action={onDelete} prefix={PREFIX} />
-				</TableControlsGroup>
-				<TableControlsGroup prefix={INSTRUMENTS_PREFIX}>
-					<TableControl action={onAddInstrument} prefix={INSTRUMENTS_PREFIX} />
-					<TableControl action={onDeleteInstrument} prefix={INSTRUMENTS_PREFIX} />
-				</TableControlsGroup>
-				<TableControlsGroup prefix={PREFIX}>
-					<TableControl action={onDownloadExcel} prefix={PREFIX} />
-				</TableControlsGroup>
-				<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				hasSelectBox
+				tools={{ left: false, top: true }}>
+				<TopTableGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+					<TableControlsGroup prefix={INSTRUMENTS_PREFIX}>
+						<TableControl action={onAddInstrument} prefix={INSTRUMENTS_PREFIX} />
+						<TableControl action={onDeleteInstrument} prefix={INSTRUMENTS_PREFIX} />
+					</TableControlsGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onDownloadExcel} prefix={PREFIX} />
+					</TableControlsGroup>
+					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
+				</TopTableGroup>
 			</Table>
 		</Show>
 	);

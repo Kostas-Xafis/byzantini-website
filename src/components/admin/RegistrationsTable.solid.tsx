@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, onMount, untrack } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
@@ -17,7 +17,13 @@ import {
 } from "./SearchTable.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import {
+	LeftTableGroup,
+	TableControl,
+	TableControlsGroup,
+	TopTableGroup,
+	type Action,
+} from "./table/TableControls.solid";
 
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
@@ -237,6 +243,7 @@ const searchColumns: SearchColumn[] = [
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
+
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setRegistrationHydrate = useHydrateById({
@@ -253,6 +260,8 @@ export default function RegistrationsTable() {
 		apiHook(API.Teachers.getByFullnames);
 		apiHook(API.Instruments.get);
 	});
+
+	const [year, setYear] = createSignal(new Date().getFullYear());
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
@@ -785,17 +794,37 @@ export default function RegistrationsTable() {
 					prefix={PREFIX}
 					data={shapedData}
 					columns={columns}
-					paginate={50}
-					hasSelectBox>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onDownloadPDf} prefix={PREFIX} />
-						<TableControl action={onDownloadExcel} prefix={PREFIX} />
-					</TableControlsGroup>
-					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
+					paginate={100}
+					hasSelectBox
+					tools={{
+						left: true,
+						top: true,
+					}}>
+					<TopTableGroup>
+						<TableControlsGroup prefix={PREFIX}>
+							<TableControl action={onModify} prefix={PREFIX} />
+							<TableControl action={onDelete} prefix={PREFIX} />
+						</TableControlsGroup>
+						<TableControlsGroup prefix={PREFIX}>
+							<TableControl action={onDownloadPDf} prefix={PREFIX} />
+							<TableControl action={onDownloadExcel} prefix={PREFIX} />
+						</TableControlsGroup>
+						<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
+					</TopTableGroup>
+					<LeftTableGroup>
+						{/* <div class="flex flex-col gap-y-4 items-center"> */}
+						<button
+							class="px-2 py-1 border border-red-900 text-lg rounded-md"
+							onClick={() => setYear(year() + 1)}>
+							{year() + "-" + (year() + 1 + "").slice(3)}
+						</button>
+						<button
+							class="px-2 py-1 border border-red-900 text-lg rounded-md"
+							onClick={() => setYear(year() - 1)}>
+							{year() - 1 + "-" + (year() + "").slice(3)}
+						</button>
+						{/* </div> */}
+					</LeftTableGroup>
 				</Table>
 			</Show>
 			{/* Registration specific row styles */}

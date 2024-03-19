@@ -12,7 +12,12 @@ import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	TableControlsGroup,
+	type Action,
+	TopTableGroup,
+} from "./table/TableControls.solid";
 
 const PREFIX = "announcements";
 
@@ -347,12 +352,18 @@ export default function AnnouncementsTable() {
 		<Show
 			when={store[API.Announcements.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TableControlsGroup prefix={PREFIX}>
-					<TableControl action={onAdd} prefix={PREFIX} />
-					<TableControl action={onModify} prefix={PREFIX} />
-					<TableControl action={onDelete} prefix={PREFIX} />
-				</TableControlsGroup>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				tools={{ left: false, top: true }}>
+				<TopTableGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+				</TopTableGroup>
 			</Table>
 		</Show>
 	);

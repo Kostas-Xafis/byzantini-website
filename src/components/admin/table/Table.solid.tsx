@@ -10,6 +10,10 @@ export type Props = {
 	children?: JSX.Element | JSX.Element[];
 	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
 	paginate?: number; // Number of items per page
+	tools?: {
+		top: boolean;
+		left: boolean;
+	};
 };
 
 export const enum SortDirection {
@@ -60,7 +64,13 @@ export default function Table(props: Props) {
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], {
 		equals: false,
 	});
-	const { columns: columnNames, prefix = "", data, paginate } = props;
+	const {
+		columns: columnNames,
+		prefix = "",
+		data,
+		paginate,
+		tools = { top: true, left: false },
+	} = props;
 	const [pagination, setPagination] =
 		(paginate && createSignal({ page: 0, size: paginate }, { equals: false })) || [];
 	//@ts-ignore
@@ -158,20 +168,25 @@ export default function Table(props: Props) {
 
 	return (
 		<div
+			id="table"
 			class={
-				"h-[100dvh] pt-[1.5vh] grid grid-cols-[100%] justify-center content-start items-start gap-y-3 z-[1]" +
-				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4" +
+				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-dark" +
 				((paginate && " grid-rows-[max-content,1fr,max-content]") ||
-					" grid-rows-[max-content,1fr]")
+					" grid-rows-[max-content,1fr]") +
+				(tools.left ? " pr-8" : "")
 			}
 			data-prefix={prefix}>
-			<div class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
-				{props.children}
-			</div>
+			{props.children}
 			<div
 				id="tableContainer"
-				style={{ "--paginate": paginate ? "1" : "0" }}
-				class="relative z-[1000] min-w-[40%] max-w-[90%] max-sm:max-w-[92.5%] overflow-x-auto justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900"
+				style={{ "--paginate": paginate ? "1" : "0", "grid-area": "table" }}
+				class={
+					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
+					(tools.left
+						? " max-w-[100%] max-sm:max-w-[97.5%]"
+						: " max-w-[90%] max-sm:max-w-[92.5%]")
+				}
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
@@ -200,6 +215,7 @@ export default function Table(props: Props) {
 			</div>
 			<Show when={paginate && paginate < props.data().length}>
 				<div
+					style={{ "grid-area": "pagination" }}
 					class="w-full pb-4 flex flex-row justify-center gap-x-2 font-didact text-2xl text-red-950"
 					onClick={onClickPagination}>
 					<button
@@ -264,6 +280,17 @@ export default function Table(props: Props) {
 			max-height: calc(var(--paginate) * 82vh + (1 - var(--paginate)) * 88.5vh);
 		}
 	}
+
+	#table {
+		display:grid;
+		grid-template-columns: ${tools.left ? "minmax(min-content, calc(4rem + 7ch)) auto" : "100%"};
+		grid-template-rows: auto auto;
+		grid-template-areas:
+			"top_tools top_tools"
+			${tools.left ? '"left_tools table"' : '"table table"'}
+			${paginate && tools.left ? '"left_tools pagination"' : paginate ? '"pagination pagination"' : ""};
+	}
+
 	.row {
 		${columnWidths}
 		position: relative;
@@ -298,6 +325,9 @@ export default function Table(props: Props) {
 	}
 	.row:nth-child(odd)::before {
 		background-color: rgb(243,244,246);
+	}
+	.row:nth-child(even)::before {
+		background-color: white;
 	}
 
 	.row:is(.selectedRow):nth-child(odd)::before,

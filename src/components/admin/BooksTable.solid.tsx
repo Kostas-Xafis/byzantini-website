@@ -10,7 +10,12 @@ import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	TableControlsGroup,
+	TopTableGroup,
+	type Action,
+} from "./table/TableControls.solid";
 
 const PREFIX = "books";
 
@@ -302,16 +307,22 @@ export default function BooksTable() {
 		<Show
 			when={store[API.Books.get] && store[API.Wholesalers.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TableControlsGroup prefix={PREFIX}>
-					<TableControl action={onAdd} prefix={PREFIX} />
-					<TableControl action={onModify} prefix={PREFIX} />
-					<TableControl action={onDelete} prefix={PREFIX} />
-				</TableControlsGroup>
-				<TableControlsGroup prefix={PREFIX}>
-					<TableControl action={onAddWholesaler} prefix={"wholesalers"} />
-					<TableControl action={onDeleteWholesaler} prefix={"wholesalers"} />
-				</TableControlsGroup>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				tools={{ left: false, top: true }}>
+				<TopTableGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAdd} prefix={PREFIX} />
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onAddWholesaler} prefix={"wholesalers"} />
+						<TableControl action={onDeleteWholesaler} prefix={"wholesalers"} />
+					</TableControlsGroup>
+				</TopTableGroup>
 			</Table>
 		</Show>
 	);

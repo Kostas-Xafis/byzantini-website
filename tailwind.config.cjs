@@ -23,7 +23,11 @@ module.exports = {
 				"3xs": "320px",
 				"3xl": "1680px",
 			},
+			backgroundColor: {
+				dark: "#1a1a1a",
+			},
 		},
 	},
+	darkMode: "class",
 	plugins: [require("@tailwindcss/container-queries")],
 };

@@ -10,7 +10,12 @@ import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import {
+	TableControl,
+	TableControlsGroup,
+	TopTableGroup,
+	type Action,
+} from "./table/TableControls.solid";
 
 const PREFIX = "payoffs";
 
@@ -156,11 +161,17 @@ export default function PayoffsTable() {
 		<Show
 			when={store[API.Wholesalers.get] && store[API.Payoffs.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TableControlsGroup prefix={PREFIX}>
-					<TableControl action={onModify} prefix={PREFIX} />
-					<TableControl action={onDelete} prefix={PREFIX} />
-				</TableControlsGroup>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				tools={{ left: false, top: true }}>
+				<TopTableGroup>
+					<TableControlsGroup prefix={PREFIX}>
+						<TableControl action={onModify} prefix={PREFIX} />
+						<TableControl action={onDelete} prefix={PREFIX} />
+					</TableControlsGroup>
+				</TopTableGroup>
 			</Table>
 		</Show>
 	);

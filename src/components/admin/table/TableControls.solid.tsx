@@ -77,3 +77,23 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 		</div>
 	);
 }
+
+export function TopTableGroup(props: { children?: Element | JSX.Element }) {
+	return (
+		<div
+			style={{ "grid-area": "top_tools" }}
+			class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
+			{props.children}
+		</div>
+	);
+}
+
+export function LeftTableGroup(props: { children?: Element | JSX.Element }) {
+	return (
+		<div
+			style={{ "grid-area": "left_tools" }}
+			class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-[1001]">
+			{props.children}
+		</div>
+	);
+}
