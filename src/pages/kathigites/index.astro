@@ -14,13 +14,13 @@ const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_r
 	useAPI(API.Instruments.get),
 ]);
 
-let byz_teachers = "data" in byz_teachers_res && byz_teachers_res.data || [],
-	par_teachers = "data" in par_teachers_res && par_teachers_res.data || [],
-	eur_teachers = "data" in eur_teachers_res && eur_teachers_res.data || [],
-	teacher_locations = "data" in teacher_locations_res && teacher_locations_res.data || [],
-	locations = "data" in locations_res && locations_res.data || [],
-	teacher_instruments = "data" in teacher_instruments_res && teacher_instruments_res.data || [],
-	instruments = "data" in instruments_res && instruments_res.data || [];
+let byz_teachers = byz_teachers_res.data || [],
+	par_teachers = par_teachers_res.data || [],
+	eur_teachers = eur_teachers_res.data || [],
+	teacher_locations = teacher_locations_res.data || [],
+	locations = locations_res.data || [],
+	teacher_instruments = teacher_instruments_res.data || [],
+	instruments = instruments_res.data || [];
 
 const enum MusicType {
 	Byzantine = "byz",

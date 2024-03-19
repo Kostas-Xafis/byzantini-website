@@ -3,7 +3,7 @@ import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { asyncQueue, deepCopy } from "../utils.client";
 import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
-import { AnnouncementsRoutes } from "./announcements.client";
+import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 
 async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announcements) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
@@ -56,8 +56,14 @@ serverRoutes.getImages.func = ({ ctx: _ctx }) => {
 	return execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"));
 };
 
-serverRoutes.getSimple.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Omit<Announcements, "content">>("SELECT id, title, date, views FROM announcements"));
+serverRoutes.getForPage.func = ({ ctx: _ctx }) => {
+	return execTryCatch(() => executeQuery<PageAnnouncement>(
+		`SELECT a.id, a.title, a.date, a.content, a.views,
+			(SELECT ai.name FROM announcement_images as ai WHERE ai.announcement_id = a.id AND ai.is_main) as main_image,
+			COUNT(i.name) as total_images
+		FROM announcements as a LEFT JOIN announcement_images as i ON a.id = i.announcement_id
+		GROUP BY a.id ORDER BY a.date DESC`
+	));
 };
 
 serverRoutes.getById.func = ({ ctx }) => {

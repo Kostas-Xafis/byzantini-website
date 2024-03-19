@@ -15,10 +15,12 @@ const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	validation: undefined,
 };
 
-const getSimple: EndpointRoute<"/announcements/no-content", any, Omit<Announcements, "content">[]> = {
+// I will need to paginate it. That will come later though.
+export type PageAnnouncement = Omit<Announcements, "image_counter"> & { main_image: string, total_images: number; };
+const getForPage: EndpointRoute<"/announcements/page", any, PageAnnouncement[]> = {
 	authentication: false,
 	method: "GET",
-	path: "/announcements/no-content",
+	path: "/announcements/page",
 	hasUrlParams: false,
 	validation: undefined,
 };
@@ -116,7 +118,7 @@ const imagesDelete: EndpointRoute<"/announcements/images/[announcement_id:number
 export const AnnouncementsRoutes = {
 	get,
 	getImages,
-	getSimple,
+	getForPage,
 	getById,
 	getImagesById,
 	getByTitle,
