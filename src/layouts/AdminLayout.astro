@@ -22,7 +22,7 @@ const { title } = Astro.props;
 				font-family: system-ui, sans-serif;
 				background-color: #f6f6f6;
 			}
-			body {
+			#AdminPage {
 				grid-template-columns: 180px 1fr;
 				grid-template-rows: 100%;
 				height: 100dvh;
@@ -148,7 +148,7 @@ const { title } = Astro.props;
 			}
 		</style>
 	</head>
-	<body class="box-border p-0 grid max-sm:flex flex-col max-sm:h-max">
+	<body class="box-border p-0">
 		<script>
 			import { onElementMount } from "../../lib/utils.client";
 			import { API, useAPI } from "../../lib/hooks/useAPI.astro";

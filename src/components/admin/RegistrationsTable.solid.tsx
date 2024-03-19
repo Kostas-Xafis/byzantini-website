@@ -797,7 +797,7 @@ export default function RegistrationsTable() {
 					paginate={100}
 					hasSelectBox
 					tools={{
-						left: true,
+						left: false,
 						top: true,
 					}}>
 					<TopTableGroup>
@@ -811,8 +811,7 @@ export default function RegistrationsTable() {
 						</TableControlsGroup>
 						<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 					</TopTableGroup>
-					<LeftTableGroup>
-						{/* <div class="flex flex-col gap-y-4 items-center"> */}
+					{/* <LeftTableGroup>
 						<button
 							class="px-2 py-1 border border-red-900 text-lg rounded-md"
 							onClick={() => setYear(year() + 1)}>
@@ -823,8 +822,7 @@ export default function RegistrationsTable() {
 							onClick={() => setYear(year() - 1)}>
 							{year() - 1 + "-" + (year() + "").slice(3)}
 						</button>
-						{/* </div> */}
-					</LeftTableGroup>
+					</LeftTableGroup> */}
 				</Table>
 			</Show>
 			{/* Registration specific row styles */}
