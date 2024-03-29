@@ -2,6 +2,7 @@ import type { Output } from "valibot";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { createDbConnection, type Transaction } from "./db";
 import { ExecutionQueue } from "./utils.client";
+import type { Insert } from "../types/entities";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
@@ -98,7 +99,7 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 		}
 		throw new Error(error as any);
 	}
-	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? { insertId: number; } : T[];
+	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 };
 
 const TxQueue = new ExecutionQueue<() => Promise<any>>(0, (item) => {

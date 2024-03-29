@@ -1,5 +1,5 @@
 import { omit } from "valibot";
-import { v_Instruments, type Instruments } from "../../types/entities";
+import { v_Instruments, type Instruments, type Insert } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/instruments", any, Instruments[]> = {
@@ -11,7 +11,7 @@ const get: EndpointRoute<"/instruments", any, Instruments[]> = {
 };
 
 let postReq = omit(v_Instruments, ["id"]);
-const post: EndpointRoute<"/instruments", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/instruments", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/instruments",

@@ -1,4 +1,4 @@
-import { v_Payments, type Payments } from "../../types/entities";
+import { v_Payments, type Payments, type Insert } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 import { omit, pick } from "valibot";
 
@@ -27,7 +27,7 @@ const getTotal: EndpointRoute<"/payments/total", any, { total: number; }> = {
 };
 
 let postReq = omit(v_Payments, ["id", "amount", "date"]);
-const post: EndpointRoute<"/payments", typeof postReq, Payments> = {
+const post: EndpointRoute<"/payments", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/payments",

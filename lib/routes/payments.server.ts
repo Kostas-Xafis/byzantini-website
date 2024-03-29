@@ -12,6 +12,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const ids = getUsedBody(ctx) || await ctx.request.json();
+		console.log(ids);
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!payments) throw Error("Payment not found");
 		return payments;
@@ -23,30 +24,27 @@ serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async (T) => {
 		const { book_id, student_name, book_amount } = getUsedBody(ctx) || await ctx.request.json();
-		const book = (await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
+		const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
 		if (!book) throw Error("Book not found");
 		if (book.quantity - book.sold <= 0) throw Error("Book is out of stock");
 		if (book_amount > book.quantity - book.sold) throw Error("Not enough books in stock");
 		if (book_amount <= 0) throw Error("Invalid book amount");
 
-		const [result1, result2] = await Promise.allSettled([
-			executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
-				book_id,
-				student_name,
-				book.price * book_amount,
-				book_amount,
-				Date.now()
-			]),
-			executeQuery("UPDATE books SET sold = sold + ? WHERE id = ? LIMIT 1", [book_amount, book_id]),
-			executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]),
+		const res = await T.executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
+			book_id,
+			student_name,
+			book.price * book_amount,
+			book_amount,
+			Date.now()
 		]);
-		if (result1.status === "rejected" || result2.status === "rejected") throw Error("Failed database insertion and/or update");
-		// get inserted payment from database
-		const [payment] = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [result1.value.insertId]);
-		return payment;
+
+		await T.executeQuery("UPDATE books SET sold = sold + ? WHERE id = ? LIMIT 1", [book_amount, book_id]);
+		await T.executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]);
+
+		return res;
 	});
 };
 

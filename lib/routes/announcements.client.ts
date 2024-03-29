@@ -4,6 +4,7 @@ import {
 	v_Announcements,
 	type AnnouncementImages,
 	type Announcements,
+	type Insert,
 } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
@@ -50,7 +51,7 @@ const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Anno
 };
 
 const postReq = omit(v_Announcements, ["id", "views", "image_counter"]);
-const post: EndpointRoute<"/announcements", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/announcements", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements",
@@ -88,7 +89,7 @@ const postImageReq = omit(v_AnnouncementImages, ["id"]);
 const postImage: EndpointRoute<
 	"/announcements/images",
 	typeof postImageReq,
-	{ insertId: number; }
+	Insert
 > = {
 	authentication: true,
 	method: "POST",

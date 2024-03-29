@@ -1,5 +1,5 @@
 import { array, integer, merge, number, object, omit, string } from "valibot";
-import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
+import type { Insert, TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { v_SimpleTeacher } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
@@ -89,7 +89,7 @@ const teacherJoins = object({
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);
 let postReq = omit(JoinedTeacher, ["id"]);
-const post: EndpointRoute<"/teachers", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/teachers", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/teachers",

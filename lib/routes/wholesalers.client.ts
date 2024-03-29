@@ -1,5 +1,5 @@
 import { omit } from "valibot";
-import { v_Wholesalers, type Wholesalers } from "../../types/entities";
+import { v_Wholesalers, type Insert, type Wholesalers } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/wholesalers", any, Wholesalers[]> = {
@@ -19,7 +19,7 @@ const getById: EndpointRoute<"/wholesalers/id", number[], Wholesalers> = {
 };
 
 const postReq = omit(v_Wholesalers, ["id"]);
-const post: EndpointRoute<"/wholesalers", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/wholesalers", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/wholesalers",

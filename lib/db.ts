@@ -1,10 +1,11 @@
 import { createClient } from "@libsql/client";
+import type { Insert } from "../types/entities";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
 
 export type Transaction = {
 	execute: Exec,
-	executeQuery: <T = undefined>(query: string, args?: any[], log?: boolean) => Promise<T extends undefined ? { insertId: number; } : T[]>,
+	executeQuery: <T = undefined>(query: string, args?: any[], log?: boolean) => Promise<T extends undefined ? Insert : T[]>,
 	queryHistory: string[];
 };
 
@@ -46,7 +47,7 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 			if (type === "mysql") return db as any;
 			const execute: Exec = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
 				try {
-					const [res] = await db.execute(query, args) as unknown as [{ insertId: number; } | T[]];
+					const [res] = await db.execute(query, args) as unknown as [Insert | T[]];
 					let resObj = {} as any;
 					if ("insertId" in res) resObj["insertId"] = "" + res.insertId;
 					else {

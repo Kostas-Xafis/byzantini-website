@@ -15,6 +15,8 @@ import {
 	union,
 } from "valibot";
 
+export type Insert = { insertId: number; };
+
 export const v_Books = object({
 	id: number([integer(), minValue(0)]),
 	title: string([minLength(1)]),

@@ -56,7 +56,7 @@ export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>, mut
 			if ((hydrate.action === ActionEnum.MODIFY || hydrate.action === ActionEnum.CHECK) && hydrate.isMultiple) {
 				const ids = hydrate.ids;
 				mutations.forEach((mut) => {
-					apiHook(mut.srcEndpoint, { RequestObject: [ids] }, { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
+					apiHook(mut.srcEndpoint, { RequestObject: ids }, { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
 				});
 			} else if ((("isMultiple" in hydrate) && !hydrate.isMultiple) || hydrate.action === ActionEnum.ADD) {
 				const id = hydrate.id;

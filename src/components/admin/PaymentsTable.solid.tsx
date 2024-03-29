@@ -130,7 +130,7 @@ export default function PaymentsTable() {
 			if (!res.data) return;
 			setPaymentHydrate({
 				action: ActionEnum.ADD,
-				id: res.data.id,
+				id: res.data.insertId,
 			});
 			pushAlert(createAlert("success", "Η αγορά προστέθηκε επιτυχώς!"));
 		};

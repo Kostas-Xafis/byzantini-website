@@ -1,5 +1,5 @@
 import { omit } from "valibot";
-import { v_Locations, type Locations } from "../../types/entities";
+import { v_Locations, type Locations, type Insert } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/locations", any, Locations[]> = {
@@ -27,7 +27,7 @@ const getById: EndpointRoute<"/locations/id", number[], Locations> = {
 };
 
 const postReq = omit(v_Locations, ["id", "image"]);
-const post: EndpointRoute<"/locations", typeof postReq, { insertId: number; }> = {
+const post: EndpointRoute<"/locations", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/locations",
