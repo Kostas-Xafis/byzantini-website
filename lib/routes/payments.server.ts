@@ -76,15 +76,15 @@ serverRoutes.complete.func = ({ ctx }) => {
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const ids = getUsedBody(ctx) || await ctx.request.json();
+		console.log({ ids });
 
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);
 		if (payments.length === 0) throw Error("Payments not found");
-		let updateBooks = payments.map(payment => T.executeQuery("UPDATE books SET sold = sold - ? WHERE id = ?", [payment.book_amount, payment.book_id]));
-		await Promise.all([
-			T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids),
-			...updateBooks
-		]);
+		for (let payment of payments) {
+			await T.executeQuery("UPDATE total_payments SET amount = amount - ? WHERE id = ?", [payment.amount, payment.id]);
+		}
+		await T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		return "Deleted payment successfully";
 	});
 };
