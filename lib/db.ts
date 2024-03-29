@@ -81,6 +81,7 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 			} as DBConnection as any;
 		}
 		if (type === "sqlite" || CONNECTOR === "sqlite") {
+			// ! SQLITE does not support LIMIT in UPDATE queries
 			const client = createClient({
 				url: TURSO_DB_URL,
 				authToken: TURSO_DB_TOKEN,

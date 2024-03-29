@@ -41,7 +41,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			Date.now()
 		]);
 
-		await T.executeQuery("UPDATE books SET sold = sold + ? WHERE id = ? LIMIT 1", [book_amount, book_id]);
+		await T.executeQuery("UPDATE books SET sold = sold + ? WHERE id = ?", [book_amount, book_id]);
 		await T.executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]);
 
 		return res;
@@ -56,7 +56,7 @@ serverRoutes.updatePayment.func = ({ ctx }) => {
 		if (payment.length === 0) {
 			throw Error("Payment not found");
 		}
-		await executeQuery("UPDATE payments SET amount = ? WHERE id = ? LIMIT 1", [amount, id]);
+		await executeQuery("UPDATE payments SET amount = ? WHERE id = ?", [amount, id]);
 		return "Updated payment successfully";
 	});
 };
@@ -80,7 +80,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);
 		if (payments.length === 0) throw Error("Payments not found");
-		let updateBooks = payments.map(payment => T.executeQuery("UPDATE books SET sold = sold - ? WHERE id=? LIMIT 1", [payment.book_amount, payment.book_id]));
+		let updateBooks = payments.map(payment => T.executeQuery("UPDATE books SET sold = sold - ? WHERE id = ?", [payment.book_amount, payment.book_id]));
 		await Promise.all([
 			T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids),
 			...updateBooks
