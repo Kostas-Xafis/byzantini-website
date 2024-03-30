@@ -480,8 +480,6 @@ export class ExecutionQueue<T> {
 			}
 			if (this.#executionNotify[executionId]) {
 				this.#executionNotify[executionId]();
-			} else {
-				console.log("Execution notify not found: ", executionId);
 			}
 			await sleep(this.interval);
 		}
@@ -501,11 +499,9 @@ export class ExecutionQueue<T> {
 		this.#executionNotify[id] = () => {
 			end = true;
 		};
-		console.log("Waiting for execution to end: ", id);
 		while (!end) await sleep(25);
 		delete this.#executionNotify[id];
 
-		console.log("Execution ended: ", id);
 		return true;
 	}
 

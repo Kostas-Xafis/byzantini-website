@@ -12,7 +12,6 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const ids = getUsedBody(ctx) || await ctx.request.json();
-		console.log(ids);
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!payments) throw Error("Payment not found");
 		return payments;
@@ -29,10 +28,10 @@ serverRoutes.post.func = ({ ctx }) => {
 
 		const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
-		if (!book) throw new Error("Book not found");
-		if (book.quantity - book.sold <= 0) throw new Error("Book is out of stock");
-		if (book_amount > book.quantity - book.sold) throw new Error("Not enough books in stock");
-		if (book_amount <= 0) throw new Error("Invalid book amount");
+		if (!book) throw new Error("Το βιβλίο δεν βρέθηκε");
+		if (book.quantity - book.sold <= 0) throw new Error("Το βιβλίο δεν είναι διαθέσιμο");
+		if (book_amount > book.quantity - book.sold) throw new Error("Δεν υπάρχουν αρκετά βιβλία");
+		if (book_amount <= 0) throw new Error("Χρειάζεται τουλάχιστον 1 βιβλίο για να πραγματοποιηθεί η αγορά");
 
 		const res = await T.executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
 			book_id,
@@ -77,7 +76,6 @@ serverRoutes.complete.func = ({ ctx }) => {
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const ids = getUsedBody(ctx) || await ctx.request.json();
-		console.log({ ids });
 
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);

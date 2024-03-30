@@ -74,6 +74,7 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 						await db.commit();
 					} catch (error) {
 						await db.rollback();
+						throw error;
 					} finally {
 						db.end();
 					}
@@ -115,7 +116,6 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 						await t.commit();
 					} catch (error) {
 						await t.rollback();
-						console.log({ error });
 						throw error;
 					} finally {
 						t.close();
