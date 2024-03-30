@@ -115,6 +115,7 @@ export const execTryCatch = async <T>(
 	try {
 		let response;
 		if (hasTransaction) {
+			let resId = "";
 			response = await new Promise(async (resolve, reject) => {
 				const id = TxQueue.push(async () => {
 					try {
@@ -124,13 +125,17 @@ export const execTryCatch = async <T>(
 							tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
 							return func(tx as Transaction) as Promise<T>;
 						}) as T;
+						console.log({ resId, tres });
 						resolve(tres);
 					} catch (error) {
+						console.log({ resId, error });
 						reject(error);
 					}
 				});
+				resId = id;
 				await TxQueue.executionEnd(id);
 			}) as T;
+			console.log({ resId, response });
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;
 		}
