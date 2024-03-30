@@ -74,8 +74,9 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 						await db.commit();
 					} catch (error) {
 						await db.rollback();
+					} finally {
+						db.end();
 					}
-					db.end();
 					return res;
 				}
 			} as DBConnection as any;
@@ -88,6 +89,7 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 				intMode: "number",
 			});
 			if (type === "sqlite") return client as any;
+
 			const execute = async function <T = undefined>(query: string, args: any[] = [], _?: any) {
 				let res = await client.execute({ sql: query, args });
 				let resObj = {} as any;
@@ -98,6 +100,7 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 				}
 				return resObj as T extends undefined ? { insertId: string; } : ExecReturn<T>;
 			};
+
 			return {
 				execute: async <T>(query: string, args: any[] = [], _?: any) => {
 					let res = await execute<T>(query, args);
@@ -112,8 +115,12 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 						await t.commit();
 					} catch (error) {
 						await t.rollback();
+						console.log({ error });
+						throw error;
+					} finally {
+						t.close();
+						client.close();
 					}
-					client.close();
 					return res;
 				}
 			} as DBConnection as any;

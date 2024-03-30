@@ -114,6 +114,7 @@ export const execTryCatch = async <T>(
 	const hasTransaction: boolean = func.length === 1;
 	try {
 		let response;
+		// ! Transactions refuse Cloudflare production
 		if (hasTransaction) {
 			let resId = "";
 			// ! This code refuses to work in Cloudflare production
@@ -134,16 +135,21 @@ export const execTryCatch = async <T>(
 			// 	});
 			// }) as T;
 			const conn = await createDbConnection();
-			response = await conn.transaction((tx) => {
+			response = await conn.transaction(async (tx) => {
 				tx.queryHistory = [];
-				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
-				return func(tx as Transaction) as Promise<T>;
+				tx.executeQuery = <T>(query: string, args?: any[], log = false) => {
+					console.log({ resId, query, args });
+					return executeQuery<T>(query, args, tx, log);
+				};
+				return await func(tx as Transaction) as Promise<T>;
 			}) as T;
 
 			console.log({ resId, response });
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;
+
 		}
+
 		// @ts-ignore
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);

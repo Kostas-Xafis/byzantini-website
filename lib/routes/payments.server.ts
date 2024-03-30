@@ -26,12 +26,13 @@ serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async (T) => {
 		const { book_id, student_name, book_amount } = getUsedBody(ctx) || await ctx.request.json();
+
 		const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
-		if (!book) throw Error("Book not found");
-		if (book.quantity - book.sold <= 0) throw Error("Book is out of stock");
-		if (book_amount > book.quantity - book.sold) throw Error("Not enough books in stock");
-		if (book_amount <= 0) throw Error("Invalid book amount");
+		if (!book) throw new Error("Book not found");
+		if (book.quantity - book.sold <= 0) throw new Error("Book is out of stock");
+		if (book_amount > book.quantity - book.sold) throw new Error("Not enough books in stock");
+		if (book_amount <= 0) throw new Error("Invalid book amount");
 
 		const res = await T.executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
 			book_id,
