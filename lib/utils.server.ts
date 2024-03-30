@@ -102,9 +102,9 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 };
 
-const TxQueue = new ExecutionQueue<() => Promise<any>>(0, (item) => {
-	return item();
-}, true);
+// const TxQueue = new ExecutionQueue<() => Promise<any>>(0, (item) => {
+// 	return item();
+// }, true);
 
 export const execTryCatch = async <T>(
 	func: (t: Transaction) => Promise<T>
@@ -116,26 +116,30 @@ export const execTryCatch = async <T>(
 		let response;
 		if (hasTransaction) {
 			let resId = "";
-			response = await new Promise(async (resolve, reject) => {
-				let result;
-				const id = TxQueue.push(async () => {
-					try {
-						const conn = await createDbConnection();
-						const tres = await conn.transaction((tx) => {
-							tx.queryHistory = [];
-							tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
-							return func(tx as Transaction) as Promise<T>;
-						}) as T;
-						result = tres;
-						console.log({ resId, tres });
-					} catch (error) {
-						console.log({ resId, error });
-						reject(error);
-					}
-				});
-				while (!result) await sleep(25);
-				resolve(result);
+			// ! This code refuses to work in Cloudflare production
+			// response = await new Promise(async (resolve, reject) => {
+			// 	TxQueue.push(async () => {
+			// 		try {
+			// 			const conn = await createDbConnection();
+			// 			const tres = await conn.transaction((tx) => {
+			// 				tx.queryHistory = [];
+			// 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
+			// 				return func(tx as Transaction) as Promise<T>;
+			// 			}) as T;
+			// 			resolve(tres);
+			// 		} catch (error) {
+			// 			console.log({ resId, error });
+			// 			reject(error);
+			// 		}
+			// 	});
+			// }) as T;
+			const conn = await createDbConnection();
+			response = await conn.transaction((tx) => {
+				tx.queryHistory = [];
+				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
+				return func(tx as Transaction) as Promise<T>;
 			}) as T;
+
 			console.log({ resId, response });
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;
