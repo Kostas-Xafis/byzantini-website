@@ -115,8 +115,8 @@ export const execTryCatch = async <T>(
 	try {
 		let response;
 		if (hasTransaction) {
-			response = await new Promise((resolve, reject) => {
-				TxQueue.push(async () => {
+			response = await new Promise(async (resolve, reject) => {
+				const id = TxQueue.push(async () => {
 					try {
 						const conn = await createDbConnection();
 						const tres = await conn.transaction((tx) => {
@@ -129,6 +129,7 @@ export const execTryCatch = async <T>(
 						reject(error);
 					}
 				});
+				await TxQueue.executionEnd(id);
 			}) as T;
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;

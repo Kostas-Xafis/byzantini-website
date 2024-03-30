@@ -454,24 +454,29 @@ export const teacherTitleByGender = (title: 0 | 1 | 2, gender: "M" | "F") => {
 };
 
 export class ExecutionQueue<T> {
-	#queue: T[] = [];
+	#queue: { executionId: string, task: T; }[] = [];
+	#executionNotify: Record<string, () => void> = {};
 	#isExecuting = false;
 	constructor(private interval = 1000, private func: (item: T) => (Promise<any> | any) = () => { }, private isAsync = false) { }
-	push(item: T) {
-		this.#queue.push(deepCopy(item));
+	push(item: T): string {
+		const executionId = randomHex(4);
+		this.#queue.push({ executionId, task: deepCopy(item) });
 		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
+		return executionId;
 	}
 	async execute() {
 		this.#isExecuting = true;
 		while (this.#queue.length) {
-			const item = this.#queue.shift() as T;
+			let item = this.#queue.shift();
+			if (!item) break;
+			const { executionId, task } = item;
 
 			if (this.isAsync) {
-				await this.func(item);
+				await this.func(task);
 			} else if (this.func.constructor.name === "AsyncFunction") {
-				await this.func(item);
+				await this.func(task);
 			} else {
-				this.func(item);
+				this.func(task);
 			}
 			await sleep(this.interval);
 		}
@@ -484,6 +489,19 @@ export class ExecutionQueue<T> {
 
 	getInterval() {
 		return this.interval;
+	}
+
+	async executionEnd(id: string) {
+		let end = false;
+		this.#executionNotify[id] = () => {
+			end = true;
+		};
+		while (!end) await sleep(25);
+		return true;
+	}
+
+	getSize() {
+		return this.#queue.length;
 	}
 }
 

@@ -67,7 +67,7 @@ serverRoutes.complete.func = ({ ctx }) => {
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
 		if (payments.length === 0) throw Error("Payment not found");
-		await T.executeQuery(`UPDATE payments SET payment_date = ?, amount=(SELECT price FROM books WHERE books.id=payments.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`, [Date.now(), ...ids]);
+		await T.executeQuery(`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`, [Date.now(), ...ids]);
 		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids)}))`, [...ids]);
 		return "Completed payment successfully";
 	});
