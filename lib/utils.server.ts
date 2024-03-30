@@ -1,7 +1,7 @@
 import type { Output } from "valibot";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { createDbConnection, type Transaction } from "./db";
-import { ExecutionQueue } from "./utils.client";
+import { ExecutionQueue, sleep } from "./utils.client";
 import type { Insert } from "../types/entities";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
@@ -117,6 +117,7 @@ export const execTryCatch = async <T>(
 		if (hasTransaction) {
 			let resId = "";
 			response = await new Promise(async (resolve, reject) => {
+				let result;
 				const id = TxQueue.push(async () => {
 					try {
 						const conn = await createDbConnection();
@@ -125,15 +126,15 @@ export const execTryCatch = async <T>(
 							tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
 							return func(tx as Transaction) as Promise<T>;
 						}) as T;
+						result = tres;
 						console.log({ resId, tres });
-						resolve(tres);
 					} catch (error) {
 						console.log({ resId, error });
 						reject(error);
 					}
 				});
-				resId = id;
-				await TxQueue.executionEnd(id);
+				while (!result) await sleep(25);
+				resolve(result);
 			}) as T;
 			console.log({ resId, response });
 		} else {
