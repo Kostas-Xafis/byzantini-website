@@ -1,4 +1,4 @@
-compatibility-date=2024-03-09
+compatibility-date = "2024-03-09"
 account_id = '6b75328f1167f45e0a0028b85aaa4191'
 workers_dev = false
 compatibility_flags = [ "nodejs_compat" ]

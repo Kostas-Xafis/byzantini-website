@@ -4,7 +4,7 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import { getKeyIndex, removeAccents } from "../../../lib/utils.client";
+import { getKeyIndex, onElementMount, removeAccents } from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
 import { Fill, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -779,6 +779,14 @@ export default function RegistrationsTable() {
 				}
 			});
 		});
+		onElementMount("#tableContainer", (el) => {
+			el.style.setProperty("--gradient-left-offset", "0px");
+			let prevOffset = 0;
+			el.addEventListener("scroll", (e) => {
+				if (el.scrollLeft === prevOffset) return;
+				el.style.setProperty("--gradient-left-offset", el.scrollLeft + "px");
+			});
+		});
 	});
 
 	return (
@@ -828,26 +836,40 @@ export default function RegistrationsTable() {
 			{/* Registration specific row styles */}
 			<style>
 				{`
+				#tableContainer {
+					--gradient-left-offset: 0px;
+				}
 				/* Paid rows */
 				.row[data-paid]:nth-of-type(odd)::before {
-					background: linear-gradient(to right, #6FD286, 80px, rgb(243,244,246) 160px);
+					background: linear-gradient(to right, #6FD286, calc(var(--gradient-left-offset) + 80px), rgb(243,244,246) calc(var(--gradient-left-offset) + 160px));
 				}
 				.row[data-paid]::before {
-					background: linear-gradient(to right, #6FD286, 80px, white 160px);
+					background: linear-gradient(to right, #6FD286, calc(var(--gradient-left-offset) + 80px), white calc(var(--gradient-left-offset) + 160px));
 				}
 				.row[data-paid]:is(.selectedRow){
-					background: linear-gradient(to right, #6FD286, 80px, rgb(254,202,202) 160px);
+					background: linear-gradient(to right, #6FD286, calc(var(--gradient-left-offset) + 80px), rgb(254,202,202) calc(var(--gradient-left-offset) + 160px));
 				}
 
 				/* Partially-Paid rows */
 				.row[data-partially-paid]:nth-of-type(odd)::before {
-					background: linear-gradient(to right, #FDE85A, 80px, rgb(243,244,246) 160px);
+					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(243,244,246) calc(var(--gradient-left-offset) + 160px));
 				}
 				.row[data-partially-paid]::before {
-					background: linear-gradient(to right, #FDE85A, 80px, white 160px);
+					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), white calc(var(--gradient-left-offset) + 160px));
 				}
 				.row[data-partially-paid]:is(.selectedRow){
-					background: linear-gradient(to right, #FDE85A, 80px, rgb(254,202,202) 160px);
+					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(254,202,202) calc(var(--gradient-left-offset) + 160px));
+				}
+
+				/* Partially-Paid rows */
+				.row[data-partially-paid]:nth-of-type(odd)::before {
+					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(243,244,246) calc(var(--gradient-left-offset) + 160px));
+				}
+				.row[data-partially-paid]::before {
+					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), white calc(var(--gradient-left-offset) + 160px));
+				}
+				.row[data-partially-paid]:is(.selectedRow){
+					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(254,202,202) calc(var(--gradient-left-offset) + 160px));
 				}
 				`}
 			</style>

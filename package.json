@@ -36,7 +36,7 @@
 		"client-zip": "^2.4.4",
 		"mysql2": "^3.6.1",
 		"pdf-lib": "^1.17.1",
-		"typescript": "^5.3.3",
+		"typescript": "5.3.3",
 		"xlsx": "^0.18.5"
 	}
 }

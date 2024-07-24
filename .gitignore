@@ -21,23 +21,19 @@ pnpm-debug.log*
 
 tsconfig.tsbuildinfo
 
+package-lock.json
 .vscode
 test.exe
 *.txt
+.wrangler
+.mf
 
 /getData
 
-package-lock.json
 
 /public/images
 /public/fek-*.pdf
 /notAssets
-
 /pdfWorker
-
-.wrangler
-.mf
-
 /dbSnapshots
-/functions
-/trace
+/bucket

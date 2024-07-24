@@ -2,13 +2,13 @@ type CLI_Profile = "pwsh" | "bash";
 
 export const createCLI = async () => {
 	const exec = (await eval(`import('child_process')`)).exec as typeof import("child_process").exec;
-	let profile: CLI_Profile = "pwsh";
+	let profile: CLI_Profile = "bash";
 	let command = "";
 	return {
 		exec: <T>(options: { signal?: AbortSignal; } = {}): Promise<T> => {
 			const initialCommand = profile === "pwsh" ?
 				`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "${command}"`
-				: "bash";
+				: `bash -c "${command}"`;
 			return new Promise((resolve, reject) => {
 				exec(initialCommand, options, (error, stdout, stderr) => {
 					if (error) {
@@ -30,7 +30,7 @@ export const createCLI = async () => {
 	};
 };
 
-export const executeCommands = async <T>(commands: string | string[], signal?: AbortSignal, profile: CLI_Profile = "pwsh") => {
+export const executeCommands = async <T>(commands: string | string[], signal?: AbortSignal, profile: CLI_Profile = "bash") => {
 	const cli = await createCLI();
 	cli.setProfile(profile);
 	cli.setCommand(commands);

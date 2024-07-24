@@ -5,7 +5,7 @@ import { isDevFromURL } from "../utils.client";
 import { MIMETypeMap } from "../utils.server";
 
 
-// Although eval is not needed here, as it build fine without it, it is needed because it adds an
+// Although eval is not needed here, as it builds fine without it, it is needed because it adds an
 // additional 500kb of unused code to the production build size
 const createS3Client = async () => {
 	const s3Client = (await eval('import("@aws-sdk/client-s3")')).S3Client as typeof S3Client;
@@ -34,13 +34,16 @@ export class Bucket {
 		return isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env);
 	}
 
-	// Development functions
+	static async getDevFilename(filename: string) {
+		return `${await import.meta.env.S3_DEV_BUCKET_NAME}/latest/${filename}`;
+	}
 
+	// Development functions
 	static async listDev(bucketName?: string) {
 		const listObjectsCommand = (await eval('import("@aws-sdk/client-s3")')).ListObjectsCommand as typeof ListObjectsCommand;
 		const client = await createS3Client();
 		const cmdResult = await client.send(new listObjectsCommand({
-			Bucket: bucketName || (await import.meta.env.S3_BUCKET_NAME),
+			Bucket: bucketName || (await import.meta.env.S3_DEV_BUCKET_NAME),
 		}));
 
 		const { Contents } = cmdResult;
@@ -53,7 +56,7 @@ export class Bucket {
 		const getObjectCommand = (await eval('import("@aws-sdk/client-s3")')).GetObjectCommand as typeof GetObjectCommand;
 		let client = await createS3Client();
 		let cmdResult = await client.send(new getObjectCommand({
-			Bucket: bucketName || (await import.meta.env.S3_BUCKET_NAME),
+			Bucket: bucketName || (await import.meta.env.S3_DEV_BUCKET_NAME),
 			Key: filename,
 		}));
 		const { Body } = cmdResult;
@@ -65,7 +68,7 @@ export class Bucket {
 		const putObjectCommand = (await eval('import("@aws-sdk/client-s3")')).PutObjectCommand as typeof PutObjectCommand;
 		let client = await createS3Client();
 		await client.send(new putObjectCommand({
-			Bucket: bucketName || (await import.meta.env.S3_BUCKET_NAME),
+			Bucket: bucketName || (await import.meta.env.S3_DEV_BUCKET_NAME),
 			Key: filename,
 			Body: new Uint8Array(file),
 			ContentType: filetype,
@@ -76,7 +79,7 @@ export class Bucket {
 		const deleteObjectCommand = (await eval('import("@aws-sdk/client-s3")')).DeleteObjectCommand as typeof DeleteObjectCommand;
 		let client = await createS3Client();
 		await client.send(new deleteObjectCommand({
-			Bucket: bucketName || (await import.meta.env.S3_BUCKET_NAME),
+			Bucket: bucketName || (await import.meta.env.S3_DEV_BUCKET_NAME),
 			Key: filename,
 		}));
 	}

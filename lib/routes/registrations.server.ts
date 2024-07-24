@@ -1,5 +1,5 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
-import { deepCopy } from "../utils.client";
+import { deepCopy, sleep } from "../utils.client";
 import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
@@ -51,12 +51,13 @@ serverRoutes.update.func = ({ ctx }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async (T) => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id=?`, body);
 		else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body)})`, body);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount - ?", [body.length]);
-		return "Registration completed successfully";
+
+		return "Registration deleted successfully";
 	});
 };
 

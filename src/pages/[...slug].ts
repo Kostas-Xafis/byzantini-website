@@ -9,7 +9,7 @@ export async function GET(context: APIContext) {
 
 		if ("byteLength" in file) return new Response(file, { status: 200 });
 		else return new Response(await file.arrayBuffer(), { status: 200 });
-	} catch (error: Error | any) {
+	} catch (error: any) {
 		return context.redirect("/404");
 	}
 }

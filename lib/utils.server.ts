@@ -1,7 +1,7 @@
 import type { Output } from "valibot";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { createDbConnection, type Transaction } from "./db";
-import { ExecutionQueue, sleep } from "./utils.client";
+// import { ExecutionQueue, sleep } from "./utils.client";
 import type { Insert } from "../types/entities";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
@@ -63,43 +63,40 @@ export const questionMarks = (arg: number | any[] | {}) => {
 	return "?".repeat(length).split("").join(", ");
 };
 
-const queryLogger = async (queryId: string, query: string, args: any[]) => {
-	query.length > 400 && (query = query.slice(0, 397) + "...");
-	let argStr = JSON.stringify(args);
-	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
-	try {
-		(await createDbConnection()).execute("INSERT INTO query_logs (id, query, args, date) VALUES (?, ?, ?, ?)", [queryId, query, argStr, Date.now()]);
-	} catch (error) {
-		console.log(error);
-	}
-};
-
 
 export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? await createDbConnection();
 	query = query.trim().replaceAll("\n", "");
-	let queryId, res;
+	let queryId, res, hasError;
 	try {
+		res = await conn.execute<T>(query, args, { as: "object" });
 		if (!query.startsWith("SELECT") || log) {
 			queryId = generateLink(20);
-			tx && tx.queryHistory.push(queryId);
-			queryLogger(queryId, query, args);
+			tx && tx.queryHistory.push({
+				id: queryId,
+				query,
+				args,
+			});
 		}
-		res = await conn.execute<T>(query, args, { as: "object" });
+		return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 	} catch (error) {
-		console.log(error);
-		if (queryId) {
-			(async function () {
+		console.log("ExecuteQuery error:" + { error });
+		hasError = true;
+		throw error;
+	} finally {
+		if ("isClosed" in conn) {
+			conn.close();
+			if (hasError) {
 				const errConn = await createDbConnection();
-				if (tx)
-					await errConn.execute(`UPDATE query_logs SET error = ? WHERE id IN (${questionMarks(tx.queryHistory.length)})`, [true, ...tx.queryHistory]);
-				else
-					await errConn.execute("UPDATE query_logs SET error = ? WHERE id=?", [true, queryId]);
-			})();
+				await errConn.execute("UPDATE query_logs SET error = ? WHERE id=?", [true, queryId]);
+			}
+		} else {
+			if (hasError) {
+				const errConn = await createDbConnection();
+				await errConn.execute("UPDATE query_logs SET error = ? WHERE id=?", [true, queryId]);
+			}
 		}
-		throw new Error(error as any);
 	}
-	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 };
 
 // const TxQueue = new ExecutionQueue<() => Promise<any>>(0, (item) => {
@@ -136,15 +133,13 @@ export const execTryCatch = async <T>(
 			// }) as T;
 			const conn = await createDbConnection();
 			response = await conn.transaction(async (tx) => {
-				tx.queryHistory = [];
 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => {
-					console.log({ resId, query, args });
+					// console.log({ resId, query, args });
 					return executeQuery<T>(query, args, tx, log);
 				};
-				return await func(tx as Transaction) as Promise<T>;
+				return await func(tx) as Promise<T>;
 			}) as T;
 
-			console.log({ resId, response });
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;
 
