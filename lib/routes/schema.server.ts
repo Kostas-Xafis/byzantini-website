@@ -1,6 +1,4 @@
-import { readFile } from "node:fs/promises";
 import { createDbConnection } from "../db";
-import { executeCommands } from "../utils.cli";
 import { deepCopy } from "../utils.client";
 import { execTryCatch } from "../utils.server";
 import { SchemaRoutes } from "./schema.client";
@@ -44,10 +42,11 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 		if (!SAFE_BACKUP_SNAPSHOT) {
 			throw Error("No safe schema found");
 		}
+		const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 
 		if (type === "sqlite") {
 			const sqliteConn = await createDbConnection("sqlite-dev");
-			await sqliteConn.execute(await readFile(SAFE_BACKUP_SNAPSHOT, "utf-8"));
+			await sqliteConn.execute(await fs.readFile(SAFE_BACKUP_SNAPSHOT, "utf-8"));
 			return "Reverted to previous schema";
 		}
 		throw Error(`The ${type} connector not supported anymore`);
@@ -63,7 +62,8 @@ serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 		if (!SAFE_BACKUP_SNAPSHOT) {
 			throw Error("No safe schema found. Please create a safe schema before migrating");
 		}
-		const migrationFile = await readFile(LATEST_MIGRATION_FILE, "utf-8");
+		const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
+		const migrationFile = await fs.readFile(LATEST_MIGRATION_FILE, "utf-8");
 
 		const sqliteConn = await createDbConnection("sqlite-dev");
 		await sqliteConn.execute(migrationFile);
