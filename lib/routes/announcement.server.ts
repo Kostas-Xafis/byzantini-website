@@ -85,21 +85,21 @@ serverRoutes.getImagesById.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const { title } = slug;
-		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
-		const imageNames = await executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
+		const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
+		const imageNames = await T.executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
 		if (!announcement) throw Error("announcement not found");
-		await executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
+		await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 		return { ...announcement, images: imageNames.map(({ name }) => name) };
 	});
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body) as any[];
-		const { insertId } = await executeQuery(
+		const { insertId } = await T.executeQuery(
 			`INSERT INTO announcements (title, content, date) VALUES (${questionMarks(args)})`,
 			args
 		);
@@ -109,12 +109,12 @@ serverRoutes.post.func = ({ ctx }) => {
 };
 
 serverRoutes.update.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		let args = Object.values(body) as any[];
 		args.push(args.shift());
 
-		await executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ? WHERE id = ?`, args);
+		await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ? WHERE id = ?`, args);
 		await removeAnnouncementFromSitemap(ctx, [body.title]);
 		await insertAnnouncementToSitemap(ctx, body as Announcements);
 		return "Announcement updated successfully";

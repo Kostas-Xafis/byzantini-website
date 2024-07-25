@@ -7,7 +7,7 @@ const serverRoutes = deepCopy(SchemaRoutes);
 
 export const sqliteGenerateBackup = async () => {
 	const new_schema = [];
-	const conn = await createDbConnection("sqlite-prod", false);
+	const conn = await createDbConnection("sqlite-prod");
 	const { rows: tables } = await conn.execute("SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'");
 	for (const table of tables) {
 		const tableName = table[2];

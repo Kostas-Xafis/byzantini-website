@@ -456,24 +456,22 @@ export const teacherTitleByGender = (title: 0 | 1 | 2, gender: "M" | "F") => {
 export class ExecutionQueue<T> {
 	#queue: { executionId: string, task: T; }[] = [];
 	#executionNotify: Record<string, () => void> = {};
-	#isExecuting = false;
+	isExecuting = false;
 	constructor(private interval = 1000, private func: (item: T) => (Promise<any> | any) = () => { }, private isAsync = false) { }
 	push(item: T): string {
 		const executionId = randomHex(4);
 		this.#queue.push({ executionId, task: deepCopy(item) });
-		if (this.#queue.length === 1 && !this.#isExecuting) this.execute();
+		if (this.#queue.length === 1 && !this.isExecuting) this.execute();
 		return executionId;
 	}
 	async execute() {
-		this.#isExecuting = true;
+		this.isExecuting = true;
 		while (this.#queue.length) {
 			let item = this.#queue.shift();
 			if (!item) break;
 			const { executionId, task } = item;
 
-			if (this.isAsync) {
-				await this.func(task);
-			} else if (this.func.constructor.name === "AsyncFunction") {
+			if (this.isAsync || this.func.constructor.name === "AsyncFunction") {
 				await this.func(task);
 			} else {
 				this.func(task);
@@ -481,9 +479,11 @@ export class ExecutionQueue<T> {
 			if (this.#executionNotify[executionId]) {
 				this.#executionNotify[executionId]();
 			}
-			await sleep(this.interval);
+			if (this.interval > 0) {
+				await sleep(this.interval);
+			}
 		}
-		this.#isExecuting = false;
+		this.isExecuting = false;
 	}
 
 	setInterval(interval: number) {

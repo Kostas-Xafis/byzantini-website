@@ -1,5 +1,5 @@
 import type { Books, Payments } from "../../types/entities";
-import { deepCopy } from "../utils.client";
+import { deepCopy, sleep } from "../utils.client";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { BooksRoutes } from "./books.client";
 
@@ -22,40 +22,39 @@ serverRoutes.getById.func = ({ ctx }) => {
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
-		const res = await executeQuery(
+		const res = await T.executeQuery(
 			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args)})`,
 			args
 		);
-
 		// Update school_payoffs table amount
 		await Promise.all([
-			executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
+			T.executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
 				body.wholesale_price * body.quantity,
 				body.wholesaler_id
 			]),
-			executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [body.wholesale_price * body.quantity])
+			T.executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [body.wholesale_price * body.quantity])
 		]);
 		return res;
 	});
 };
 
 serverRoutes.updateQuantity.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const reqBook = getUsedBody(ctx) || await ctx.request.json();
-		const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
+		const [book] = await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
 		if (book.quantity > reqBook.quantity) throw Error("Cannot reduce quantity");
 		const newAddedAmount = book.wholesale_price * (reqBook.quantity - book.quantity);
 		await Promise.all([
-			executeQuery(`UPDATE books SET quantity = ? WHERE id = ?`, [reqBook.quantity, reqBook.id]),
+			T.executeQuery(`UPDATE books SET quantity = ? WHERE id = ?`, [reqBook.quantity, reqBook.id]),
 			// Update school_payoffs table amount
-			executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
+			T.executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
 				newAddedAmount,
 				book.wholesaler_id
 			]),
-			executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [newAddedAmount])
+			T.executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [newAddedAmount])
 		]);
 		return "Quantity updated successfully";
 	});

@@ -8,10 +8,10 @@ const serverRoutes = deepCopy(AuthenticationRoutes);
 
 
 serverRoutes.userLogin.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const credentials = getUsedBody(ctx) || await ctx.request.json();
 
-		const [sysUser] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]);
+		const [sysUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]);
 		if (!sysUser) return { isValid: false };
 
 		const [hash, salt] = sysUser.password.split(":");
@@ -21,7 +21,7 @@ serverRoutes.userLogin.func = ({ ctx }) => {
 		if (!isValid) return { isValid };
 
 		const { session_exp_date, session_id } = createSessionId();
-		await executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
+		await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
 			session_id,
 			session_exp_date,
 			credentials.email
@@ -31,9 +31,9 @@ serverRoutes.userLogin.func = ({ ctx }) => {
 };
 
 serverRoutes.userLogout.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const { sid } = getUsedBody(ctx) || await ctx.request.json();
-		await executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
+		await T.executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
 		return "Logged out";
 	});
 };

@@ -41,11 +41,12 @@ serverRoutes.post.func = ({ ctx }) => {
 };
 
 serverRoutes.update.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
+		await sleep(5000);
 		const args = Object.values(body);
 		args.push(args.shift() as any); // Remove the id from the arguments and push it at the end
-		await executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=? WHERE id=?`, args);
+		await T.executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=? WHERE id=?`, args);
 		return "Registration updated successfully";
 	});
 };
@@ -62,19 +63,19 @@ serverRoutes.delete.func = ({ ctx }) => {
 };
 
 serverRoutes.emailSubscribe.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		await executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
+		await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
 		return "Email subscribed successfully";
 	});
 };
 
 serverRoutes.emailUnsubscribe.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const isSubscribed = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
+		const isSubscribed = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
 		if (isSubscribed.length === 0) return { isValid: false };
-		await executeQuery("DELETE FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
+		await T.executeQuery("DELETE FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
 		return { isValid: true };
 	});
 };

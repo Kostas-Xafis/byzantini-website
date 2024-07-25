@@ -20,18 +20,18 @@ serverRoutes.getById.func = ({ ctx }) => {
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
-		const id = await executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
+		const id = await T.executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
 		return id;
 	});
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		await executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);
+		await T.executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
 	});
 };

@@ -1,6 +1,7 @@
 import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction, LibsqlError } from "@libsql/client";
 import type { Insert } from "../types/entities";
 import { sleep } from "./utils.client";
+import { generateLink } from "./utils.server";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
 
@@ -19,22 +20,19 @@ type TxConn = {
 	conn: libsqlTransaction;
 };
 
-export type DBConnection = {
+export type WrappedConnection = {
 	execute: Exec,
 	transaction: (func: (tx: Transaction) => any) => Promise<any>;
 	close: () => void;
 	isClosed: () => boolean;
 };
 
-type DBTypes = "mysql" | "sqlite-dev" | "sqlite-prod" | undefined;
+type DBType = "sqlite-prod" | "sqlite-dev" | null;
+type SimpleConnection = ReturnType<typeof createClient>;
+type PromiseReturn<IsWrapped extends boolean> =
+	IsWrapped extends true ? WrappedConnection : SimpleConnection;
 
-type PromiseReturn<DBType extends DBTypes = undefined> =
-	DBType extends "mysql" ? import("mysql2/promise").Connection :
-	DBType extends "sqlite-prod" ? ReturnType<typeof createClient> :
-	DBType extends "sqlite-dev" ? ReturnType<typeof createClient> :
-	DBConnection;
-
-export async function createDbConnection<T extends DBTypes = undefined>(type?: T, wrapper = true): Promise<PromiseReturn<T>> {
+export async function createDbConnection<T extends boolean = false>(type?: DBType, wrapper?: T): Promise<PromiseReturn<T>> {
 	const {
 		// Local snaphot env variables for development
 		DEV_DB_ABSOLUTE_LOCATION,
@@ -42,11 +40,8 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
 		CONNECTOR } = await import.meta.env;
-	if (type === "mysql" || CONNECTOR === "mysql") {
-		throw new Error("MySQL is not supported anymore");
-	}
 	// ! SQLITE does not support LIMIT in UPDATE queries
-	let client: PromiseReturn<"sqlite-prod"> = null as any;
+	let client: SimpleConnection = null as any;
 	if (type === "sqlite-prod" || CONNECTOR === "sqlite-prod") {
 		client = createClient({
 			url: TURSO_DB_URL,
@@ -81,24 +76,16 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 		};
 
 		let txconn: TxConn = {} as any;
-		// let retries = 5;
-		// let expBackoff = 500;
 		return {
 			execute: async <T>(query: string, args: any[] = [], _?: any) => {
-				// try {
-				let res = await execute(client)<T>(query, args);
-				return res;
-				// } catch (err) {
-				// console.log({ err });
-				// if (err instanceof LibsqlError && err.code === "SQLITE_BUSY") {
-				// 	retries--;
-				// 	if (retries === 0) throw err;
-				// 	expBackoff = expBackoff * 2;
-				// 	await sleep(expBackoff);
-				// 	console.log("Retrying query", query, args);
-				// 	return await execute(client)<T>(query, args);
-				// }
-				// }
+				try {
+					let res = await execute(client)<T>(query, args);
+					return res;
+				} catch (err) {
+					console.log({ err });
+					queryLogger({ id: generateLink(20), query, args }, true);
+					throw err;
+				}
 			},
 			transaction: async (func) => {
 				txconn.conn = await client.transaction("write");
@@ -107,17 +94,22 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 					queryHistory: [] as any,
 					executeQuery: null as any
 				};
-				let res;
+				let res, hasError = false;
 				try {
 					res = await func(txconn.tx);
 					await txconn.conn.commit();
 				} catch (error) {
 					await txconn.conn.rollback();
+					hasError = true;
 					throw error;
 				} finally {
 					client.close();
+					txconn.tx.queryHistory.forEach(async (q) => {
+						console.log({ q });
+						if (q.query.startsWith("SELECT")) return;
+						await queryLogger(q, hasError);
+					});
 				}
-				txconn.tx.queryHistory.forEach(queryLogger);
 				txconn = {} as any;
 				return res;
 			},
@@ -127,19 +119,22 @@ export async function createDbConnection<T extends DBTypes = undefined>(type?: T
 			isClosed(): boolean {
 				return client.closed;
 			}
-		} as DBConnection as any;
+		} as WrappedConnection as any;
 	}
 	return client as any;
 };
 
 
 
-const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][0]) => {
+const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][0], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
 	let argStr = JSON.stringify(args);
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
-		(await createDbConnection()).execute("INSERT INTO query_logs (id, query, args, date) VALUES (?, ?, ?, ?)", [id, query, argStr, Date.now()]);
+		(await createDbConnection()).execute({
+			sql: "INSERT INTO query_logs (id, query, args, error, date) VALUES (?, ?, ?, ?, ?)",
+			args: [id, query, argStr, err ? 1 : 0, Date.now()]
+		});
 	} catch (error) {
 		console.log("Query logger error:" + error);
 	}
