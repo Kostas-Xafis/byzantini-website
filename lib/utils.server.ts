@@ -1,7 +1,6 @@
 import type { Output } from "valibot";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { createDbConnection, type Transaction } from "./db";
-import { ExecutionQueue, sleep } from "./utils.client";
 import type { Insert } from "../types/entities";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
@@ -80,10 +79,6 @@ export const executeQuery = async <T = undefined>(query: string, args: any[] = [
 	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 };
 
-const TxQueue = new ExecutionQueue<() => Promise<any>>(0, async (item) => {
-	return await item();
-}, true);
-
 export const execTryCatch = async <T>(
 	func: (t: Transaction) => Promise<T>
 ): Promise<EndpointResponse<T> | EndpointResponseError> => {
@@ -94,30 +89,13 @@ export const execTryCatch = async <T>(
 		let response;
 		// ! Transactions refuse Cloudflare production
 		if (hasTransaction) {
-			let resId = "";
-			// ! This code refuses to work in Cloudflare production
-			// response = await new Promise(async (resolve, reject) => {
-			// 	TxQueue.push(async () => {
-			// 		try {
-			// 			const conn = await createDbConnection(null, true);
-			// 			const tres = await conn.transaction((tx) => {
-			// 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => executeQuery<T>(query, args, tx, log);
-			// 				return func(tx as Transaction) as Promise<T>;
-			// 			}) as T;
-			// 			resolve(tres);
-			// 		} catch (error) {
-			// 			console.log({ resId, error });
-			// 			reject(error);
-			// 		}
-			// 	});
-			// }) as T;
 			const conn = await createDbConnection(null, true);
-			response = await conn.transaction(async (tx) => {
+			response = await conn.transaction((tx) => {
 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => {
 					// console.log({ resId, query, args });
 					return executeQuery<T>(query, args, tx, log);
 				};
-				return await func(tx) as Promise<T>;
+				return func(tx) as Promise<T>;
 			}) as T;
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;

@@ -6,7 +6,7 @@ import { SchemaRoutes } from "./schema.client";
 const serverRoutes = deepCopy(SchemaRoutes);
 
 export const sqliteGenerateBackup = async () => {
-	const new_schema = [];
+	const new_schema = ["PRAGMA journal_mode=WAL;"];
 	const conn = await createDbConnection("sqlite-prod");
 	const { rows: tables } = await conn.execute("SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'");
 	for (const table of tables) {

@@ -115,9 +115,9 @@ serverRoutes.update.func = ({ ctx }) => {
 };
 
 serverRoutes.fileUpload.func = ({ ctx, slug }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const { id } = slug;
-		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
+		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
 
 		const blob = await ctx.request.blob();
@@ -130,13 +130,13 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 			const link = bucketCVPrefix + filename;
 
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
+			await T.executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
 		} else if (ImageMIMEType.includes(filetype)) {
 			const link = bucketPicturePrefix + filename;
 
 			await Bucket.put(ctx, body, link, filetype);
-			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
+			await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
@@ -144,7 +144,7 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.fileRename.func = ({ ctx, slug }) => {
-	return execTryCatch(async (T) => {
+	return execTryCatch(async T => {
 		const { id } = slug;
 		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
@@ -168,17 +168,17 @@ serverRoutes.fileRename.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.fileDelete.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
+		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
 		if (!teacher) throw Error("Teacher not found");
 		if (body.type === "cv") {
 			if (teacher.cv) await Bucket.delete(ctx, bucketCVPrefix + teacher.cv);
-			await executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
+			await T.executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
 			return "Pdf deleted successfully" as string;
 		} else if (body.type === "picture") {
 			if (teacher.picture) await Bucket.delete(ctx, bucketPicturePrefix + teacher.picture);
-			await executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
+			await T.executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
 			return "Image deleted successfully";
 		}
 		throw Error("Invalid filetype");

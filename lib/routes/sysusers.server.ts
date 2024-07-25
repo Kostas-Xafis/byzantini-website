@@ -29,17 +29,17 @@ serverRoutes.getBySid.func = ({ ctx }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		let body = getUsedBody(ctx) || await ctx.request.json();
 		const session_id = getSessionId(ctx.request) as string;
-		const [{ id, privilege }] = await executeQuery<Pick<SysUsers, "id" | "privilege">>("SELECT id, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
+		const [{ id, privilege }] = await T.executeQuery<Pick<SysUsers, "id" | "privilege">>("SELECT id, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		if (body.includes(id)) {
 			body = body.filter(id => id !== id);
-			await executeQuery(`DELETE FROM sys_users WHERE id = ?`, [id]);
+			await T.executeQuery(`DELETE FROM sys_users WHERE id = ?`, [id]);
 			if (body.length === 0) return "Deleted self successfully";
 		}
-		if (body.length === 1) await executeQuery(`DELETE FROM sys_users WHERE id = ? AND privilege < ?`, [body[0], privilege]);
-		else await executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(body)}) AND privelege < ?`, [...body, privilege]);
+		if (body.length === 1) await T.executeQuery(`DELETE FROM sys_users WHERE id = ? AND privilege < ?`, [body[0], privilege]);
+		else await T.executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(body)}) AND privelege < ?`, [...body, privilege]);
 		return "User/s deleted successfully";
 	});
 };
@@ -68,25 +68,25 @@ serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.createRegisterLink.func = ({ ctx }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const link = generateLink();
 		const exp_date = Date.now() + 1000 * 60 * 60 * 24;
 		const session_id = getSessionId(ctx.request);
-		const [{ privilege }] = await executeQuery<Pick<SysUsers, "privilege">>("SELECT privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
-		await executeQuery("INSERT INTO sys_user_register_links (link, exp_date, privilege) VALUES (?, ?, ?)", [link, exp_date, privilege - 1]);
+		const [{ privilege }] = await T.executeQuery<Pick<SysUsers, "privilege">>("SELECT privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
+		await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date, privilege) VALUES (?, ?, ?)", [link, exp_date, privilege - 1]);
 		return { link };
 	});
 };
 
 serverRoutes.validateRegisterLink.func = ({ ctx: _ctx, slug }) => {
-	return execTryCatch(async () => {
+	return execTryCatch(async T => {
 		const { link } = slug;
-		const [{ exp_date }] = await executeQuery<Pick<SysUserRegisterLink, "exp_date">>("SELECT exp_date FROM sys_user_register_links WHERE link = ? LIMIT 1", [
+		const [{ exp_date }] = await T.executeQuery<Pick<SysUserRegisterLink, "exp_date">>("SELECT exp_date FROM sys_user_register_links WHERE link = ? LIMIT 1", [
 			link
 		]);
 		if (!exp_date) throw new Error("Invalid Link");
 		if (exp_date < Date.now()) {
-			await executeQuery("DELETE FROM sys_user_register_links WHERE link = ?", [link]);
+			await T.executeQuery("DELETE FROM sys_user_register_links WHERE link = ?", [link]);
 			throw new Error("Invalid Link");
 		}
 		return { isValid: true };

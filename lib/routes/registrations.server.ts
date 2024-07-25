@@ -1,5 +1,5 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
-import { deepCopy, sleep } from "../utils.client";
+import { deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
@@ -43,7 +43,6 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		await sleep(5000);
 		const args = Object.values(body);
 		args.push(args.shift() as any); // Remove the id from the arguments and push it at the end
 		await T.executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=? WHERE id=?`, args);
