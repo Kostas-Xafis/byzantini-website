@@ -27,12 +27,17 @@ const posterSrc = "/";
 					Για τις Ανακοινώσεις και το φωτογραφικό υλικό επισκεφτείτε τη παλαιά <a
 						class="text-blue-500 underline decoration-blue-500"
 						target="_blank"
-						href="https://inmm.gr/index.php/pnevmatiko-kentro/vyzantini-mousiki/ekdiloseis"
+						href="https://inmm.gr/index.php/vyzantini-mousiki/ekdiloseis"
 						>σελίδα της Σχολής μας</a
 					>
 				</p>
 			</div>
 			<img
+				src={posterSrc + "Σεμινάριο-Αύγουστος-2024.jpg"}
+				width="900px"
+				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
+			/>
+			<!-- <img
 				src={posterSrc + "Εκδήλωση-Χριστουγέννων-9-12-23.jpg"}
 				width="900px"
 				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
@@ -46,7 +51,7 @@ const posterSrc = "/";
 				src={posterSrc + "poster.jpg"}
 				width="900px"
 				class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] shadow-xl max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800"
-			/>
+			/> -->
 		</section>
 		<Announcements />
 		<Choir />
@@ -57,7 +62,7 @@ const posterSrc = "/";
 
 	onElementMount("#anakoinosi-2023-24", () => {
 		const obsv = new IntersectionObserver(
-			(entries) => {
+			entries => {
 				const entry = entries[0];
 				const head = document.querySelector("#announcementHead") as HTMLElement;
 				if (!head) return;
@@ -72,8 +77,8 @@ const posterSrc = "/";
 			{
 				root: null,
 				rootMargin: "0px",
-				threshold: [0.2, 0.3, 0.4, 0.5],
-			},
+				threshold: [0.2, 0.3, 0.4, 0.5]
+			}
 		);
 		obsv.observe(document.querySelector("#announcementHead") as HTMLElement);
 	});
@@ -82,7 +87,7 @@ const posterSrc = "/";
 		onElementMount("#sxoli", () => {
 			setTimeout(() => {
 				const announcement = document.querySelector(
-					"#anakoinosi-2023-24 > h1",
+					"#anakoinosi-2023-24 > h1"
 				) as HTMLDivElement;
 				announcement.scrollIntoView({ behavior: "smooth", block: "center" });
 			}, 200);

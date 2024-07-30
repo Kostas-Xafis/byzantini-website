@@ -28,12 +28,13 @@ test.exe
 .wrangler
 .mf
 
+
+
+/bucket
+/dbSnapshots
+/email
 /getData
-
-
-/public/images
-/public/fek-*.pdf
 /notAssets
 /pdfWorker
-/dbSnapshots
-/bucket
+/public/images
+/public/fek-*.pdf

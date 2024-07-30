@@ -34,7 +34,7 @@ const {
 	disabled,
 	iconClasses,
 	selectList,
-	minmax,
+	minmax
 } = Astro.props;
 ---
 
@@ -46,12 +46,12 @@ const {
 			<>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " +
+						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}
 				/>
 				<input
-					class="formInputs max-sm:w-[calc(27.5ch_-_1rem)] peer m-2 px-12 py-3 text-xl font-didact shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -113,12 +113,12 @@ const {
 </label>
 
 <script>
-	document.querySelectorAll(".formInputs").forEach((inp) => {
+	document.querySelectorAll(".formInputs").forEach(inp => {
 		(inp as HTMLElement).addEventListener("focus", (e: FocusEvent) => {
 			(e.currentTarget as HTMLElement).removeAttribute("required");
 		});
 	});
-	document.querySelectorAll(".formInputs").forEach((inp) => {
+	document.querySelectorAll(".formInputs").forEach(inp => {
 		(inp as HTMLElement).addEventListener("blur", (e: FocusEvent) => {
 			(e.currentTarget as HTMLElement).setAttribute("required", "");
 		});
@@ -126,5 +126,5 @@ const {
 
 	document
 		.querySelectorAll<HTMLInputElement>("input[type='date']")
-		.forEach((d) => (d.valueAsDate = new Date()));
+		.forEach(d => (d.valueAsDate = new Date()));
 </script>
