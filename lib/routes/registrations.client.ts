@@ -58,7 +58,7 @@ const del: EndpointRoute<"/registrations", number[]> = {
 };
 
 const v_Email = object({ email: string() });
-const emailSubscribe: EndpointRoute<"/registrations/email-subscribe", typeof v_Email> = {
+const emailSubscribe: EndpointRoute<"/registrations/email-subscribe", typeof v_Email, { subscribed: boolean; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe",

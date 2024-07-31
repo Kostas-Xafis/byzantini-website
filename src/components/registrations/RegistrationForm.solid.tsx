@@ -7,10 +7,10 @@ import type {
 	TeacherInstruments,
 	Teachers,
 } from "../../../types/entities";
-import { CloseButton } from "../admin/table/CloseButton.solid";
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { deepCopy } from "../../../lib/utils.client";
+import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
+import Popup from "../other/Popup.solid";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -401,25 +401,32 @@ export function RegistrationForm() {
 
 	const onSelectClick = (type: MusicType) => {
 		const curType = formSelected();
+		const atl = new AnimTimeline();
 		if (curType === type) return;
 		if (curType === MusicType.None) {
 			const regContainer = document.querySelector("#registrationContainer") as HTMLElement;
-			regContainer.classList.add("remove");
-			void regContainer.offsetWidth;
-			setTimeout(() => {
-				regContainer.classList.remove("remove");
-				void regContainer.offsetWidth;
-				setFormSelected(type);
-			}, 500);
+			atl.step(() => regContainer.classList.add("remove"))
+				.step({
+					time: 500,
+					anim: () => {
+						regContainer.classList.remove("remove");
+						void regContainer.offsetWidth;
+						setFormSelected(type);
+					},
+				})
+				.start();
 		} else {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
-			form.classList.add("remove");
-			void form.offsetWidth;
-			setTimeout(() => {
-				form.classList.remove("remove");
-				void form.offsetWidth;
-				setFormSelected(type);
-			}, 500);
+			atl.step(() => form.classList.add("remove"))
+				.step({
+					time: 500,
+					anim: () => {
+						form.classList.remove("remove");
+						void form.offsetWidth;
+						setFormSelected(type);
+					},
+				})
+				.start();
 		}
 	};
 
@@ -470,18 +477,20 @@ export function RegistrationForm() {
 			setSpinner(true);
 			const res = await apiHook(API.Registrations.post, { RequestObject: data });
 			if (res.message) {
-				const messageDialog = document.querySelector("#submitMessage") as HTMLElement;
-				messageDialog.classList.remove("hidden");
-				messageDialog.classList.add("flex");
+				document.querySelector("#popup")?.dispatchEvent(new CustomEvent("show"));
 			}
 		} catch (err) {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
-			setTimeout(() => {
-				form.classList.add("animate-shake");
-				setTimeout(() => {
-					form.classList.remove("animate-shake");
-				}, 500);
-			}, 50);
+			const atl = new AnimTimeline();
+			atl.step({
+				time: 50,
+				anim: () => form.classList.add("animate-shake"),
+			})
+				.step({
+					time: 500,
+					anim: () => form.classList.remove("animate-shake"),
+				})
+				.start();
 		} finally {
 			setSpinner(false);
 		}
@@ -592,32 +601,12 @@ export function RegistrationForm() {
 							</Show>
 						</form>
 					</div>
-					<div
-						id="submitMessage"
-						class="hidden fixed inset-0 w-[100dvw] h-[100dvh] items-center justify-center bg-gray-500 bg-opacity-40 backdrop-blur-[2px] z-[100]">
-						<div
-							id="messageBox"
-							class="relative p-12 max-sm:p-6 w-[500px] max-sm:w-[450px] max-[420px]:320px max-2xs:280px h-max rounded-xl flex flex-col justify-center gap-y-4 shadow-lg drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] shadow-gray-700 bg-red-100">
-							<p class="text-3xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								Επιτυχής Εγγραφή
-							</p>
-							<p class="text-xl text-center drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-								Η εγγραφή ολοκληρώθηκε επιτυχώς! Επικοινωνήστε με τη Γραμματεία της
-								Σχολής για περαιτέρω πληροφορίες
-							</p>
-							<CloseButton
-								classes="absolute top-4 right-4 w-10 h-10 text-xl"
-								onClick={() => {
-									const messageDialog = document.querySelector(
-										"#submitMessage"
-									) as HTMLElement;
-									messageDialog.classList.add("hidden");
-									messageDialog.classList.remove("flex");
-								}}></CloseButton>
-						</div>
-					</div>
 				</div>
 			</Show>
+			<Popup
+				title="Επιτυχής Εγγραφή"
+				content="Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."
+			/>
 			<style>
 				{`
 	#registrationSelect,

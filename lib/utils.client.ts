@@ -534,3 +534,48 @@ export const deepCopy = <T>(obj: T): T => {
 	if (Array.isArray(obj)) return obj.map(deepCopy) as any;
 	return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, deepCopy(v)])) as any;
 };
+
+
+type AnimTimelineStep = { time?: number, anim: () => void; } | (() => void);
+export class AnimTimeline {
+	steps: AnimTimelineStep[] = [];
+	startTime = 0;
+	running = false;
+	abortController = new AbortController();
+
+	constructor() { }
+
+	step(s: AnimTimelineStep) {
+		if (typeof s === "function") {
+			this.steps.push(s);
+		} else {
+			this.steps.push({ time: s.time || 0, anim: s.anim });
+		}
+		return this;
+	}
+
+	async start() {
+		if (this.startTime != 0) await sleep(this.startTime);
+
+		this.running = true;
+		this.startTime = performance.now();
+		for (let i = 0; i < this.steps.length; i++) {
+			if (this.abortController.signal.aborted) break;
+
+			const s = this.steps[i];
+			console.log(s);
+			if (typeof s === "function") {
+				s();
+			} else if (s.time && s.time != 0) {
+				await sleep(s.time);
+				s.anim();
+			}
+			void document.body.offsetHeight;
+		}
+		this.running = false;
+	}
+
+	abort() {
+		this.abortController.abort();
+	}
+}

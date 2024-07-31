@@ -215,7 +215,7 @@ const cvSrc = "kathigites/cv/";
 	</style>
 </Layout>
 <script>
-	import { onElementMount, UpdateHandler } from "../../../lib/utils.client";
+	import { AnimTimeline, onElementMount, UpdateHandler } from "../../../lib/utils.client";
 
 	document.querySelectorAll("div > button[data-type]").forEach(btnChild => {
 		const btn = btnChild.parentElement as HTMLElement;
@@ -224,21 +224,25 @@ const cvSrc = "kathigites/cv/";
 		btn.addEventListener("click", () => {
 			const shown = document.querySelector("[data-show]") as HTMLElement;
 			if (shown === btn) return;
+			const atl = new AnimTimeline();
 			const container = document.querySelector("#teachersContainer") as HTMLElement;
 
-			container.classList.add("remove");
-			void container.offsetWidth;
-			setTimeout(() => {
-				shown.removeAttribute("data-show");
-				container.classList.remove("remove");
-				btn.setAttribute("data-show", "");
-				teachersPage.classList.remove("byz", "par", "eur");
-				teachersPage.classList.add(type);
-				document.querySelector("#teachersContainer")?.scrollTo({
-					top: 0,
-					behavior: "smooth"
-				})
-			}, 300);
+			atl.step(() => {
+				container.classList.add("remove");
+			}).step({
+				time: 300,
+				anim: () => {
+					shown.removeAttribute("data-show");
+					container.classList.remove("remove");
+					btn.setAttribute("data-show", "");
+					teachersPage.classList.remove("byz", "par", "eur");
+					teachersPage.classList.add(type);
+					document.querySelector("#teachersContainer")?.scrollTo({
+						top: 0,
+						behavior: "smooth"
+					})
+				}
+			}).start();
 		})
 	});
 	if(window.location.hash) {
@@ -261,7 +265,6 @@ const cvSrc = "kathigites/cv/";
 		const obsv = new IntersectionObserver((entries) => {
 			entries.forEach(entry => {
 				const parentEl = entry.target as HTMLElement;
-				//@ts-ignore
 				const isVisible = parentEl.classList.contains("show");
 				if (entry.intersectionRatio <= 0.05 && isVisible) {
 					parentEl.classList.remove("show");

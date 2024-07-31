@@ -1,121 +1,124 @@
 <div id="contacts" class="hidden fixed bottom-0 right-[0px] w-max translate-y-full">
-    <div
-        class="relative px-[1.5vw] py-[1.5vh] pb-1 flex flex-col glass gap-y-[0.75vh] rounded-t-lg font-didact !bg-opacity-80">
-        <p class="text-[1.5vw] text-red-50">
-            <i class="text-[1.25vw] pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
-                class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
-                href="tel:6983380631">6983380631</a
-            >
-            <i
-                class="copy text-[1.25vw] ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
-            ></i>
-        </p>
-        <p class="text-[1.5vw] text-red-50">
-            <i class="text-[1.25vw] pr-3 fa-solid fa-envelope"></i>Email: <a
-                target="_blank"
-                class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
-                href="mailto:byzscholemousikhs@gmail.com">byzscholemousikhs@gmail.com</a
-            >
-            <i
-                class="copy text-[1.25vw] ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
-            ></i>
-        </p>
-        <p class="text-[1.5vw] text-red-50">
-            <i class="text-[1.25vw] pr-1 fa-solid fa-map-location-dot"></i>
-             Χάρτης:
-            <a
-                class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
-                target="_blank"
-                href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8">Έδρα Μεταμόρφωσης</a
-            >
-        </p>
-        <div class="rounded-md bg-red-950 flex flex-col">
-            <p class="text-[1.5vw] text-red-50 underline underline-offset-2 self-center">
-                Ωράριο επικοινωνίας
-            </p>
-            <p class="text-[1.5vw] text-red-50 self-center">Καθημερινά 9πμ - 2μμ & 4:30μμ - 9μμ</p>
-        </div>
-        <a
-            class="text-red-50 self-center"
-            target="_blank"
-            href="https://www.facebook.com/profile.php?id=100032307446762">
-            <i class="fa-brands fa-facebook text-[1.75vw]"></i>
-        </a>
-        <button
-            id="showContacts"
-            class="group/btn tracking-wider px-[0.75vw] rounded-t-lg border-b-0 absolute top-0 left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] !bg-opacity-100">
-            <i
-                class="text-red-50 h-0 pb-[1vw] fa-solid fa-chevron-up font-bold text-[1vw] leading-[1.5vw] place-self-center"
-            ></i>
-            <p class="text-[1.5vw] text-red-50 font-anaktoria">Επικοινωνία</p>
-        </button>
-    </div>
-    <style is:inline>
-        #contacts {
-            transition: transform 0.2s ease-in-out;
-        }
-        #contacts i,
-        #contacts p {
-            text-shadow: -1px 1px 2px rgb(24, 24, 24, 0.75);
-        }
-        #contacts:is(.clickedContacts) {
-            transform: translateY(0%);
-        }
-        #showContacts i {
-            transition: transform 0.2s ease-in-out;
-        }
-        #contacts:is(.clickedContacts) #showContacts i {
-            transform: rotateZ(180deg) translateY(calc(-1rem * 0.75));
-        }
-        .copy:is(.clicked) {
-            background-color: rgb(22, 163, 74);
-        }
-    </style>
-    <script is:inline>
-        let onElementMount = async (target, callback) => {
-            let count = 0;
-            while (!document.querySelector(target) && count++ < 50) {
-                await new Promise((resolve) => setTimeout(resolve, 50));
-            }
-            if (count >= 10) return;
-            callback();
-        };
-        onElementMount("#contacts", () => {
-            // delete the contacts element if the use is on his phone
-            const contacts = document.querySelector("#contacts");
-            if (window.matchMedia("(max-width: 640px)").matches) contacts.remove();
-            else contacts.classList.replace("hidden", "grid");
-        }).then(() => {
-            if (!window.matchMedia("(max-width: 640px)").matches) {
-                onElementMount("#showContacts", () => {
-                    const btn = document.querySelector("#showContacts");
-                    const contacts = document.querySelector("#contacts");
-                    btn.addEventListener("click", () => {
-                        contacts.classList.toggle("clickedContacts");
-                    });
-                });
-                onElementMount("#contacts", () => {
-                    const btn = [...document.querySelectorAll("#contacts .copy")];
-                    btn.forEach((btn) => {
-                        btn.addEventListener("click", () => {
-                            const text = btn.parentElement?.querySelector("a")?.innerText;
-                            if (text) {
-                                navigator.clipboard.writeText(text);
-                                btn.classList.add("clicked");
-                                btn.classList.remove("fa-regular");
-                                btn.classList.add("fa-solid");
-                                btn.classList.add("fa-clipboard-check");
-                                setTimeout(() => {
-                                    btn.classList.remove("clicked");
-                                    btn.classList.add("fa-regular");
-                                    btn.classList.remove("fa-solid");
-                                    btn.classList.remove("fa-clipboard-check");
-                                }, 1000);
-                            }
-                        });
-                    });
-                });
-            }
-        });
-    </script>
+	<div
+		class="relative px-[1.5vw] py-[1.5vh] pb-1 flex flex-col glass gap-y-[0.75vh] rounded-t-lg font-didact !bg-opacity-80">
+		<p class="text-[1.5vw] text-red-50">
+			<i class="text-[1.25vw] pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="tel:6983380631">6983380631</a
+			>
+			<i
+				class="copy text-[1.25vw] ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
+			></i>
+		</p>
+		<p class="text-[1.5vw] text-red-50">
+			<i class="text-[1.25vw] pr-3 fa-solid fa-envelope"></i>Email: <a
+				target="_blank"
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="mailto:byzscholemousikhs@gmail.com">byzscholemousikhs@gmail.com</a
+			>
+			<i
+				class="copy text-[1.25vw] ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
+			></i>
+		</p>
+		<p class="text-[1.5vw] text-red-50">
+			<i class="text-[1.25vw] pr-1 fa-solid fa-map-location-dot"></i>
+			Χάρτης:
+			<a
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				target="_blank"
+				href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8">Έδρα Μεταμόρφωσης</a
+			>
+		</p>
+		<div class="rounded-md bg-red-950 flex flex-col">
+			<p class="text-[1.5vw] text-red-50 underline underline-offset-2 self-center">
+				Ωράριο επικοινωνίας
+			</p>
+			<p class="text-[1.5vw] text-red-50 self-center">Καθημερινά 9πμ - 2μμ & 4:30μμ - 9μμ</p>
+		</div>
+		<a
+			class="text-red-50 self-center"
+			target="_blank"
+			href="https://www.facebook.com/profile.php?id=100032307446762">
+			<i class="fa-brands fa-facebook text-[1.75vw]"></i>
+		</a>
+		<button
+			id="showContacts"
+			class="group/btn tracking-wider px-[0.75vw] rounded-t-lg border-b-0 absolute top-0 left-[50%] glass -translate-x-[50%] -translate-y-[100%] grid grid-rows-[min-content_min-content] !bg-opacity-100">
+			<i
+				class="text-red-50 h-0 pb-[1vw] fa-solid fa-chevron-up font-bold text-[1vw] leading-[1.5vw] place-self-center"
+			></i>
+			<p class="text-[1.5vw] text-red-50 font-anaktoria">Επικοινωνία</p>
+		</button>
+	</div>
+	<style is:inline>
+		#contacts {
+			transition: transform 0.2s ease-in-out;
+		}
+		#contacts i,
+		#contacts p {
+			text-shadow: -1px 1px 2px rgb(24, 24, 24, 0.75);
+		}
+		#contacts:is(.clickedContacts) {
+			transform: translateY(0%);
+		}
+		#showContacts i {
+			transition: transform 0.2s ease-in-out;
+		}
+		#contacts:is(.clickedContacts) #showContacts i {
+			transform: rotateZ(180deg) translateY(calc(-1rem * 0.75));
+		}
+		.copy {
+			transition: background-color 0.3s ease-in-out;
+		}
+
+		.copy:is(.clicked) {
+			background-color: rgb(22, 163, 74);
+		}
+	</style>
 </div>
+<script>
+	import { AnimTimeline, onElementMount } from "../../../lib/utils.client";
+
+	onElementMount("#contacts", () => {
+		// delete the contacts element if the use is on his phone
+		const contacts = document.querySelector("#contacts") as HTMLElement;
+		if (window.matchMedia("(max-width: 640px)").matches) contacts.remove();
+		else contacts.classList.replace("hidden", "grid");
+	}).then(() => {
+		if (!window.matchMedia("(max-width: 640px)").matches) {
+			onElementMount("#showContacts", () => {
+				const btn = document.querySelector("#showContacts") as HTMLElement;
+				const contacts = document.querySelector("#contacts") as HTMLElement;
+				btn.addEventListener("click", () => {
+					contacts.classList.toggle("clickedContacts");
+				});
+			});
+			const btn = [...document.querySelectorAll("#contacts .copy")];
+			btn.forEach(btn => {
+				btn.addEventListener("click", () => {
+					const text = btn.parentElement?.querySelector("a")?.innerText;
+					if (text) {
+						const atl = new AnimTimeline();
+						atl.step(() => {
+							navigator.clipboard.writeText(text);
+							btn.classList.add("clicked");
+							btn.classList.remove("fa-regular");
+							btn.classList.add("fa-solid");
+							btn.classList.add("fa-clipboard-check");
+						})
+							.step({
+								time: 1000,
+								anim: () => {
+									btn.classList.remove("clicked");
+									btn.classList.add("fa-regular");
+									btn.classList.remove("fa-solid");
+									btn.classList.remove("fa-clipboard-check");
+								}
+							})
+							.start();
+					}
+				});
+			});
+		}
+	});
+</script>

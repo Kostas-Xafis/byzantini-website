@@ -65,7 +65,7 @@ serverRoutes.emailSubscribe.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
-		return "Email subscribed successfully";
+		return { subscribed: true };
 	});
 };
 

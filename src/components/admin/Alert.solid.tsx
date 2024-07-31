@@ -1,5 +1,5 @@
 import { batch, createSignal, onCleanup } from "solid-js";
-import { ExecutionQueue, randomHex } from "../../../lib/utils.client";
+import { AnimTimeline, ExecutionQueue, randomHex } from "../../../lib/utils.client";
 
 export type Alert = {
 	id: string;
@@ -61,17 +61,25 @@ export default function AlertStack() {
 					`[data-alert-id="${alert.id}"]`
 				) as HTMLElement | null;
 				if (!alertEl) return;
-				alertEl.classList.remove("fadeInRightAnim", "slideInBottomAnim", "duration-50");
-				void alertEl.offsetWidth;
-				alertEl.classList.add("fadeOutLeftAnim");
-				setTimeout(() => {
-					batch(() => {
-						setAlerts((prevAlerts) => {
-							return prevAlerts.filter((pAlert) => pAlert.id !== alert.id);
-						});
-						setArrayOperation("remove");
-					});
-				}, 500);
+				const atl = new AnimTimeline();
+				atl.step(() => {
+					alertEl.classList.remove("fadeInRightAnim", "slideInBottomAnim", "duration-50");
+				})
+					.step(() => {
+						alertEl.classList.add("fadeOutLeftAnim");
+					})
+					.step({
+						time: 500,
+						anim: () => {
+							batch(() => {
+								setAlerts((prevAlerts) => {
+									return prevAlerts.filter((pAlert) => pAlert.id !== alert.id);
+								});
+								setArrayOperation("remove");
+							});
+						},
+					})
+					.start();
 				break;
 			case "update":
 				const alertIdx = alerts().findIndex((a) => a.id === alert.id);
