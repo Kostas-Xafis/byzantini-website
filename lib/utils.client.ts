@@ -563,7 +563,6 @@ export class AnimTimeline {
 			if (this.abortController.signal.aborted) break;
 
 			const s = this.steps[i];
-			console.log(s);
 			if (typeof s === "function") {
 				s();
 			} else if (s.time && s.time != 0) {

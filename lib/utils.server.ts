@@ -7,10 +7,11 @@ import type { Insert } from "../types/entities";
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 
 export const generateLink = (size = 16) => {
+	const lluSize = 62;
 	const linkLookup = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	let link = "";
 	for (let j = 0; j < size; j++) {
-		link += linkLookup[Math.floor(Math.random() * 62)];
+		link += linkLookup[Math.floor(Math.random() * lluSize)];
 	}
 	return link;
 };

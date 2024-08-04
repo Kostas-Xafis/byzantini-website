@@ -18,21 +18,26 @@ const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR");
 			announcements.map(a => {
 				return (
 					<div class="flex flex-row gap-x-4 h-[400px]">
-						<div class="max-w-[400px] min-w-[200px] rounded-sm overflow-hidden">
+						<div class="max-w-[400px] min-w-[200px] rounded-sm max-h-[300px] overflow-hidden">
 							<img
-								src={imgSrc(a)}
+								src={imgThumbSrc(a)}
 								alt={a.title}
 								width="400"
 								height="500"
-								class="min-w-[200px] object-cover"
+								class="min-w-[200px] object-cover shadow-lg shadow-slate-500"
 							/>
 						</div>
-						<div class="flex flex-col mb-4 w-[calc(100vw_-_500px)] min-w-[200px]">
-							<h2 class="text-2xl font-bold">{a.title}</h2>
-							<p class="text-gray-500">{formatDate(a.date)}</p>
+						<div class="flex flex-col mb-4 w-[calc(100vw_-_500px)] min-w-[200px] gap-y-4">
+							<h2 class="text-3xl font-anaktoria font-bold text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.2)]">
+								{a.title}
+							</h2>
+							<p class="text-gray-100 bg-red-900 w-min px-2 py-1 rounded-md shadow-md shadow-slate-300">
+								{formatDate(a.date)}
+							</p>
 
-							<!--// prettierignore -->
-							<p class="max-h-[60%] overflow-hidden whitespace-break-spaces">{a.content}</p>
+							<p class="max-h-[60%] overflow-hidden whitespace-break-spaces">
+								{a.content}
+							</p>
 							<p>
 								{a.views} {a.views > 1 ? "Προβολές" : "Προβολή"}
 							</p>

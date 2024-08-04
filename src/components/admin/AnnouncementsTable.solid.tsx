@@ -140,7 +140,7 @@ async function UploadImages(args: {
 						return;
 					}
 					const thumbBlob = await fileToBlob(
-						await thumbCreator.createThumbnail(file, name, i === 0 ? 0.2 : undefined)
+						await thumbCreator.createThumbnail(file, name, i === 0 ? 0.5 : undefined)
 					);
 					if (!thumbBlob) throw new Error("Could not create thumbnail");
 					await apiHook(API.Announcements.imageUpload, {
