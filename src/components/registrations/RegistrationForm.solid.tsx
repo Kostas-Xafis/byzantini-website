@@ -11,6 +11,7 @@ import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.
 import Spinner from "../other/Spinner.solid";
 import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
 import Popup from "../other/Popup.solid";
+import { customEvent, type CustomEvents } from "../../../types/custom-events";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -26,6 +27,7 @@ const genericInputs: Record<
 		| "payment_date"
 		| "payment_amount"
 		| "total_payment"
+		| "pass"
 	>,
 	InputProps
 > = {
@@ -138,7 +140,7 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-calendar-days",
 		disabled: true,
 		blurDisabled: false,
-		value: "2023-2024",
+		value: "2024-2025",
 	},
 };
 
@@ -153,6 +155,7 @@ const byzantineInputs = (
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
 			selectList: [
+				"Υπό Κατάταξη",
 				"Α' Ετος",
 				"Β' Ετος",
 				"Γ' Ετος",
@@ -168,6 +171,16 @@ const byzantineInputs = (
 				],
 				position: isPhone ? "top" : "right",
 			},
+			onchange: (e) => {
+				const select = e.target as HTMLSelectElement;
+				const teacherSelect = document.querySelector("[name='teacher_id']");
+				if (!teacherSelect) return;
+				if (select.value === "Υπό Κατάταξη") {
+					teacherSelect.dispatchEvent(customEvent("enable_input", false));
+				} else {
+					teacherSelect.dispatchEvent(customEvent("enable_input", true));
+				}
+			},
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -177,6 +190,8 @@ const byzantineInputs = (
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map((t) => t.fullname),
 			valueList: teachers.map((t) => t.id),
+			listeners: true,
+			blurDisabled: false,
 		},
 	};
 };
@@ -192,6 +207,7 @@ const traditionalInputs = (
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
 			selectList: [
+				"Υπό Κατάταξη",
 				"Α' Προκαταρκτική",
 				"Α' Κατωτέρα",
 				"Β' Κατωτέρα",
@@ -208,6 +224,16 @@ const traditionalInputs = (
 				],
 				position: isPhone ? "top" : "right",
 			},
+			onchange: (e) => {
+				const select = e.target as HTMLSelectElement;
+				const teacherSelect = document.querySelector("[name='teacher_id']");
+				if (!teacherSelect) return;
+				if (select.value === "Υπό Κατάταξη" || select.value === "Α' Προκαταρκτική") {
+					teacherSelect.dispatchEvent(customEvent("enable_input", false));
+				} else {
+					teacherSelect.dispatchEvent(customEvent("enable_input", true));
+				}
+			},
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -217,6 +243,7 @@ const traditionalInputs = (
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map((t) => t.fullname),
 			valueList: teachers.map((t) => t.id),
+			listeners: true,
 		},
 	};
 };
@@ -232,6 +259,7 @@ const europeanInputs = (
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
 			selectList: [
+				"Υπό Κατάταξη",
 				"Α' Προκαταρκτική",
 				"Α' Κατωτέρα",
 				"Β' Κατωτέρα",
@@ -248,6 +276,16 @@ const europeanInputs = (
 				],
 				position: isPhone ? "top" : "right",
 			},
+			onchange: (e) => {
+				const select = e.target as HTMLSelectElement;
+				const teacherSelect = document.querySelector("[name='teacher_id']");
+				if (!teacherSelect) return;
+				if (select.value === "Υπό Κατάταξη" || select.value === "Α' Προκαταρκτική") {
+					teacherSelect.dispatchEvent(customEvent("enable_input", false));
+				} else {
+					teacherSelect.dispatchEvent(customEvent("enable_input", true));
+				}
+			},
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -257,6 +295,7 @@ const europeanInputs = (
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map((t) => t.fullname),
 			valueList: teachers.map((t) => t.id),
+			listeners: true,
 		},
 	};
 };
@@ -326,9 +365,7 @@ export function RegistrationForm() {
 	});
 	createEffect(
 		on(formSelected, (type) => {
-			const select = document.querySelector(
-				"select[name='teacher_id']"
-			) as unknown as HTMLSelectElement;
+			const select = document.querySelector<HTMLSelectElement>("select[name='teacher_id']");
 			const teachers = store[API.Teachers.get];
 			if (!select || !teachers) return;
 			select.addEventListener("change", (e: Event) => {
@@ -460,9 +497,14 @@ export function RegistrationForm() {
 					return id;
 				})[0] || 0,
 			date: Date.now(),
+			pass: false,
 		};
 		try {
-			if (data.teacher_id === -1) {
+			if (
+				data.teacher_id === -1 &&
+				data.class_year !== "Υπό Κατάταξη" &&
+				data.class_year !== "Α' Προκαταρκτική"
+			) {
 				alert("Παρακαλώ επιλέξτε καθηγητή");
 				throw Error("");
 			}
@@ -651,10 +693,6 @@ export function RegistrationForm() {
 			transform: translateX(0px);
 			filter: blur(0px);
 		}
-	}
-
-	.animate-shake > button {
-		animation: ShakeAnimation 0.6s ease-in-out;
 	}
 `}
 			</style>

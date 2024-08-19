@@ -1,6 +1,5 @@
-import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction, LibsqlError } from "@libsql/client";
+import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction } from "@libsql/client";
 import type { Insert } from "../types/entities";
-import { sleep } from "./utils.client";
 import { generateLink } from "./utils.server";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
@@ -40,6 +39,7 @@ export async function createDbConnection<T extends boolean = false>(type?: DBTyp
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
 		CONNECTOR } = await import.meta.env;
+
 	// ! SQLITE does not support LIMIT in UPDATE queries
 	let client: SimpleConnection = null as any;
 	if (type === "sqlite-prod" || CONNECTOR === "sqlite-prod") {

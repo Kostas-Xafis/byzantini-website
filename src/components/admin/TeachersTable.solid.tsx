@@ -483,22 +483,18 @@ export default function TeachersTable() {
 					| 0
 					| 1
 					| 2,
-				visible: getMultiSelect("visible").map(
-					(btn) => !!Number(btn.dataset.value)
-				)[0] as boolean,
-				online: getMultiSelect("online").map(
-					(btn) => !!Number(btn.dataset.value)
-				)[0] as boolean,
+				visible: getMultiSelect("visible").map((btn) => !!Number(btn.dataset.value))[0],
+				online: getMultiSelect("online").map((btn) => !!Number(btn.dataset.value))[0],
 				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
 					Number(btn.dataset.value)
-				) as number[],
+				),
 				teacherInstruments: [
 					...getMultiSelect("teacherInstrumentsTraditional"),
 					...getMultiSelect("teacherInstrumentsEuropean"),
-				].map((btn) => Number(btn.dataset.value)) as number[],
+				].map((btn) => Number(btn.dataset.value)),
 				teacherLocations: getMultiSelect("teacherLocations").map((btn) =>
 					Number(btn.dataset.value)
-				) as number[],
+				),
 				priorities: getByName("priority", "startsWith")
 					.map((i) => Number(i.value))
 					.filter(Boolean),

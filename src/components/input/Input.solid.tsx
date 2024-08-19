@@ -1,9 +1,12 @@
-import { Index, Show } from "solid-js";
+import { Index, Show, onMount } from "solid-js";
+import type { CustomEvents } from "../../../types/custom-events";
 import type { PartialBy } from "../../../types/helpers";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput from "./FileInput.solid";
 import MultiFileInput from "./MultiFileInput.solid";
+import { createSignal } from "solid-js";
+import { AnimTimeline } from "../../../lib/utils.client";
 
 function disable(input: Props) {
 	input.disabled = true;
@@ -103,7 +106,9 @@ type InputProps = {
 	multiselectOnce?: boolean;
 	fileExtension?: string;
 	minmax?: [number, number];
+	onchange?: (e: Event) => void;
 	tooltip?: TooltipProps;
+	listeners?: boolean;
 };
 
 export type Props = PartialBy<InputProps, "prefix">;
@@ -125,20 +130,55 @@ export default function Input(props: InputProps) {
 		multiselectList,
 		multiselectOnce,
 		minmax,
+		onchange,
 		tooltip,
+		listeners = false,
 	} = props;
 	if (type === null) return <></>;
 
+	let [isShown, setIsShown] = createSignal(true);
+
 	document.querySelectorAll(".formInputs").forEach((inp) => {
-		(inp as HTMLElement).addEventListener("focus", (e: FocusEvent) => {
+		inp.addEventListener("focus", (e: FocusEvent) => {
 			(e.currentTarget as HTMLElement).removeAttribute("required");
 		});
 	});
 	document.querySelectorAll(".formInputs").forEach((inp) => {
-		(inp as HTMLElement).addEventListener("blur", (e: FocusEvent) => {
+		inp.addEventListener("blur", (e: FocusEvent) => {
 			(e.currentTarget as HTMLElement).setAttribute("required", "");
 		});
 	});
+
+	if (listeners) {
+		onMount(() => {
+			const selector = document.querySelector(`[name='${name}']`);
+			if (!selector) return;
+			selector.addEventListener("enable_input", ((e: CustomEvents["enable_input"]) => {
+				if (isShown() === e.detail) return;
+				const sParent = selector.parentElement as HTMLElement;
+				const action = e.detail ? "fadeIn" : "fadeOut";
+				const atl = new AnimTimeline();
+				atl.step(() => {
+					if (action === "fadeIn") {
+						setIsShown(e.detail);
+					}
+					sParent.style.setProperty("--fade-duration", "500ms");
+					void sParent.offsetWidth;
+					sParent.classList.add(action);
+				})
+					.step({
+						time: 500,
+						anim: () => {
+							if (action === "fadeOut") {
+								setIsShown(e.detail);
+							}
+							sParent.classList.remove(action);
+						},
+					})
+					.start();
+			}) as any);
+		});
+	}
 
 	const isExtended = type === "textarea" || type === "multifile";
 	return (
@@ -146,7 +186,9 @@ export default function Input(props: InputProps) {
 			for={name}
 			class={
 				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
-				(isExtended ? " col-span-full max-w-full !h-[300px] max-h-[300px]" : "")
+				(isExtended ? " col-span-full max-w-full !h-[300px] max-h-[300px]" : "") +
+				(disabled && blurDisabled ? " blur-[1px]" : "") +
+				(isShown() ? "" : " hidden")
 			}>
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show
@@ -164,10 +206,7 @@ export default function Input(props: InputProps) {
 						(iconClasses || "")
 					}></i>
 				<input
-					class={
-						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10" +
-						(disabled && blurDisabled ? " blur-[1px]" : "")
-					}
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -183,6 +222,7 @@ export default function Input(props: InputProps) {
 						(e.currentTarget as HTMLInputElement).value === "" &&
 						(e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
+					onchange={onchange}
 				/>
 			</Show>
 			<Show when={type === "date"}>
@@ -196,10 +236,7 @@ export default function Input(props: InputProps) {
 						(iconClasses || "")
 					}></i>
 				<select
-					class={
-						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
-						(disabled && blurDisabled ? " blur-[1px]" : "")
-					}
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
 					onblur={(e: FocusEvent) =>
 						required && (e.currentTarget as HTMLElement).removeAttribute("required")
@@ -207,6 +244,7 @@ export default function Input(props: InputProps) {
 					onfocus={(e: FocusEvent) =>
 						required && (e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
+					onchange={onchange}
 					disabled={disabled || false}>
 					<option value="undefined"></option>
 					<Index each={selectList}>
@@ -297,10 +335,7 @@ export default function Input(props: InputProps) {
 						(iconClasses || "")
 					}></i>
 				<textarea
-					class={
-						"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10" +
-						(disabled && blurDisabled ? " blur-[1px]" : "")
-					}
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
 					placeholder={placeholder || ""}
 					value={value === 0 ? "0" : value || ""}

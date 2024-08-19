@@ -6,6 +6,11 @@ import type { Insert } from "../types/entities";
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 
+/**
+ *
+ * @param size The size of the link to generate
+ * @returns A random string to be used in a url link
+ */
 export const generateLink = (size = 16) => {
 	const lluSize = 62;
 	const linkLookup = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -35,6 +40,14 @@ export const MIMETypeMap: Record<string, string> = {
 };
 export const ImageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 
+
+/**
+ * This function serves as a small optimization and should be called first to get the body of the request
+ * to avoid unnecessary use of promises. Otherwise, if it returns undefined, use `await ctx.request.json()`.
+ * @param ctx The context object from the route
+ * @returns The body of the request if it has been used, otherwise undefined
+ * @example const body = getUsedBody(ctx) || await ctx.request.json();
+ */
 export function getUsedBody<T>(ctx: Context<T>): (T extends AnyObjectSchema ? Output<T> : T) | undefined {
 	if (!ctx.request.bodyUsed) return undefined;
 	// @ts-ignore

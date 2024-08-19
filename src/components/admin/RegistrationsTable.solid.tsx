@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, createSignal, onMount, untrack } from "solid-js";
+import { Show, createEffect, createMemo, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
@@ -6,7 +6,7 @@ import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
 import { getKeyIndex, onElementMount, removeAccents } from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
-import { Fill, type Props as InputProps } from "../input/Input.solid";
+import { Fill, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
 	CompareList,
@@ -33,6 +33,7 @@ const PREFIX = "registrations";
 type RegistrationsTable = Registrations;
 
 const RegistrationsInputs = (
+	student: Registrations,
 	teachers: Teachers[],
 	instruments: Instruments[]
 ): Record<keyof Registrations, InputProps> => {
@@ -182,6 +183,17 @@ const RegistrationsInputs = (
 			type: "date",
 			iconClasses: "fa-regular fa-calendar-days",
 		},
+		pass: {
+			label: "Προάχθει",
+			name: "pass",
+			type: "multiselect",
+			iconClasses: "fa-solid fa-check",
+			multiselectOnce: true,
+			multiselectList: [
+				{ value: 1, label: "Ναί", selected: !!student?.pass },
+				{ value: 0, label: "Όχι", selected: !student?.pass },
+			],
+		},
 	};
 };
 
@@ -226,6 +238,7 @@ const columns: ColumnType<RegistrationsTable> = {
 	payment_amount: { type: "number", name: "Ποσό Πληρωμής", size: 8 },
 	total_payment: { type: "number", name: "Σύνολο Πληρωμής", size: 8 },
 	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής", size: 12 },
+	pass: { type: "boolean", name: "Προάχθει", size: 8 },
 };
 
 const searchColumns: SearchColumn[] = [
@@ -261,7 +274,7 @@ export default function RegistrationsTable() {
 		apiHook(API.Instruments.get);
 	});
 
-	const [year, setYear] = createSignal(new Date().getFullYear());
+	// const [year, setYear] = createSignal(new Date().getFullYear());
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
@@ -292,6 +305,10 @@ export default function RegistrationsTable() {
 			searchRows = searchRows.filter((r) => {
 				//@ts-ignore
 				const col = r[columnIndex] as string;
+				if (!col) {
+					// In case where there is not a value for the column
+					return false;
+				}
 				const nsCol = removeAccents(col).toLowerCase();
 				const nsVal = removeAccents(value as string).toLowerCase();
 				return nsCol.includes(nsVal);
@@ -367,7 +384,10 @@ export default function RegistrationsTable() {
 				payment_date: formData.get("payment_date")
 					? new Date(formData.get("payment_date") as string).getTime()
 					: null,
+				pass: getMultiSelect("pass").map((btn) => !!Number(btn.dataset.value))[0],
 			};
+			console.log("Passed :" + data.pass);
+			console.log(formData.get("pass"));
 			await apiHook(API.Registrations.update, {
 				RequestObject: data,
 			});
@@ -379,7 +399,10 @@ export default function RegistrationsTable() {
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
 		};
 		const filledInputs = Fill(
-			RegistrationsInputs(teachers, instruments) as Record<keyof Registrations, InputProps>,
+			RegistrationsInputs(registration, teachers, instruments) as Record<
+				keyof Registrations,
+				InputProps
+			>,
 			registration
 		);
 		filledInputs.class_id.value = registration.class_id;

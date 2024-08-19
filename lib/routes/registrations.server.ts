@@ -27,9 +27,10 @@ serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
+		console.log({ body });
 		const args = Object.values(body);
 		await T.executeQuery(
-			`INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date) VALUES (${questionMarks(args)})`,
+			`INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(args)})`,
 			args
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
@@ -45,7 +46,7 @@ serverRoutes.update.func = ({ ctx }) => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		args.push(args.shift() as any); // Remove the id from the arguments and push it at the end
-		await T.executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=? WHERE id=?`, args);
+		await T.executeQuery(`UPDATE registrations SET am=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=?, pass=? WHERE id=?`, args);
 		return "Registration updated successfully";
 	});
 };

@@ -114,6 +114,23 @@ const logoUrl = new URL(Astro.request.url).origin + (imageUrl || "/logo.png");
 				backdrop-filter: blur(4px);
 				border: 1px solid rgb(153 27 27 / 0.3);
 			}
+
+			.fadeIn {
+				animation: fadeIn var(--fade-duration) ease-in-out;
+			}
+			.fadeOut {
+				animation: fadeOut var(--fade-duration) ease-in-out;
+			}
+			.fadeInParent {
+				animation: fadeInParent var(--fade-duration) ease-in-out;
+			}
+			.fadeInLeft {
+				animation: fadeInLeft var(--fade-duration) ease-in-out;
+			}
+			.fadeInRight {
+				animation: fadeInRight var(--fade-duration) ease-in-out;
+			}
+
 			@keyframes fadeIn {
 				0% {
 					opacity: 0.0001;

@@ -247,12 +247,13 @@ export const v_Registrations = object({
 	registration_year: string(),
 	class_year: string(),
 	class_id: number([integer(), minValue(0)]),
-	teacher_id: number([integer(), minValue(0)]),
+	teacher_id: number([integer(), minValue(-1)]),
 	instrument_id: number([integer(), minValue(0)]),
 	date: number([integer(), minValue(0)]),
 	payment_amount: number([integer(), minValue(0)]),
 	total_payment: number([integer(), minValue(0)]),
-	payment_date: optional(nullable(number([integer(), minValue(0)])))
+	payment_date: optional(nullable(number([integer(), minValue(0)]))),
+	pass: boolean()
 });
 export interface Registrations {
 	id: number;
@@ -277,6 +278,7 @@ export interface Registrations {
 	payment_amount: number;
 	total_payment: number;
 	payment_date?: number | null;
+	pass: boolean;
 };
 
 export const v_EmailSubscriptions = object({
