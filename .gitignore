@@ -5,7 +5,7 @@ dist/
 .astro/
 
 # dependencies
-node_modules/
+**/node_modules/
 
 # logs
 npm-debug.log*
@@ -14,26 +14,20 @@ yarn-error.log*
 pnpm-debug.log*
 
 # environment variables
-.env*
+**/.env*
 
-# macOS-specific files
-.DS_Store
 
-tsconfig.tsbuildinfo
-
-package-lock.json
+**/package-lock.json
 .vscode
-test.exe
 *.txt
 .wrangler
 .mf
-
+**/bun.lockb
 
 
 /bucket
 /dbSnapshots
 /email
-/getData
 /notAssets
 /pdfWorker
 /public/images
