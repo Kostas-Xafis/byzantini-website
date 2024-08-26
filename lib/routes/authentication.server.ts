@@ -1,7 +1,7 @@
 import type { SysUsers } from "../../types/entities";
 import { authentication, createSessionId, generateShaKey } from "../utils.auth";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, getUsedBody } from "../utils.server";
+import { execTryCatch, getUsedBody } from "../utils.server";
 import { AuthenticationRoutes } from "./authentication.client";
 
 const serverRoutes = deepCopy(AuthenticationRoutes);

@@ -338,6 +338,8 @@ const instrumentsInput = ({
 	};
 };
 
+const DiplomaClasses = ["Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος", "Α' Ανωτέρα", "Β' Ανωτέρα"];
+
 const enum MusicType {
 	Byzantine = "byz",
 	Traditional = "par",
@@ -353,6 +355,7 @@ const heading = {
 
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
+	const [registrationData, setRegistrationData] = createStore<Registrations>({} as any);
 	const apiHook = useAPI(setStore);
 	const [formSelected, setFormSelected] = createSignal<MusicType>(MusicType.None);
 	const [selectedTeacher, setSelectedTeacher] = createSignal<Teachers>();
@@ -375,22 +378,30 @@ export function RegistrationForm() {
 		})
 	);
 
-	onMount(() => {
+	onMount(async () => {
+		const music = ["byz", "par", "eur"];
 		if (window.location.hash) {
 			const hash = window.location.hash.replace("#", "");
 			const type = decodeURI(hash);
-			const music = {
-				"Βυζαντινή Μουσική": "byz",
-				"Παραδοσιακή Μουσική": "par",
-				"Ευρωπαϊκή Μουσική": "eur",
-			} as Record<string, string>;
-			if (type in music) {
-				const btn = document.querySelector(
-					`#firstSelect #${music[type]} button`
-				) as HTMLElement;
-				btn.parentElement?.parentElement?.focus();
-				void btn.offsetWidth;
-				setTimeout(() => btn.click(), 3000);
+			window.location.hash = "";
+			if (music.includes(type)) {
+				setTimeout(() => {
+					onSelectClick(type as MusicType);
+				}, 1250);
+			}
+		}
+		let urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.has("regid")) {
+			const regid = urlParams.get("regid") as string;
+			try {
+				const res = await apiHook(API.Registrations.getByReregistrationId, {
+					UrlArgs: { id: regid },
+				});
+				if (!res.data) return;
+				setRegistrationData(res.data);
+				setFormSelected(music[res.data.class_id] as MusicType);
+			} catch (err) {
+				console.error(err);
 			}
 		}
 	});
@@ -499,6 +510,7 @@ export function RegistrationForm() {
 			date: Date.now(),
 			pass: false,
 		};
+		setRegistrationData(data);
 		try {
 			if (
 				data.teacher_id === -1 &&
@@ -519,7 +531,7 @@ export function RegistrationForm() {
 			setSpinner(true);
 			const res = await apiHook(API.Registrations.post, { RequestObject: data });
 			if (res.message) {
-				document.querySelector("#popup")?.dispatchEvent(new CustomEvent("show"));
+				document.querySelector("#popup")?.dispatchEvent(customEvent("show"));
 			}
 		} catch (err) {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
@@ -608,9 +620,19 @@ export function RegistrationForm() {
 							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
 							</h1>
-							{Object.values(genericInputs).map((input) => (
-								<Input {...input} prefix={PREFIX} />
-							))}
+							{Object.values(genericInputs).map((input) => {
+								return (
+									<Input
+										{...input}
+										prefix={PREFIX}
+										value={
+											registrationData[
+												input.name as keyof Registrations
+											] as any
+										}
+									/>
+								);
+							})}
 							{formSelected() === MusicType.Byzantine
 								? Object.values(byzantineInputs(TeachersByType())).map((input) => (
 										<Input {...input} prefix={PREFIX} />
@@ -647,7 +669,22 @@ export function RegistrationForm() {
 			</Show>
 			<Popup
 				title="Επιτυχής Εγγραφή"
-				content="Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."
+				content={
+					!DiplomaClasses.includes(registrationData["class_year"])
+						? "Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."
+						: ["Α' Ανωτέρα", "Β' Ανωτέρα"].includes(registrationData["class_year"])
+						? [
+								"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας.",
+								" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
+						  ]
+						: [
+								"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας και το Πτυχίο σας.",
+								" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
+						  ]
+				}
+				onClose={() => {
+					setFormSelected(MusicType.None);
+				}}
 			/>
 			<style>
 				{`

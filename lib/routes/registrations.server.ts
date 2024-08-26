@@ -20,6 +20,15 @@ serverRoutes.getById.func = ({ ctx, slug }) => {
 	});
 };
 
+serverRoutes.getByReregistrationId.func = ({ ctx, slug }) => {
+	return execTryCatch(async () => {
+		const id = slug.id;
+		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_url = ?", [id]);
+		if (!registration) throw Error("Registration not found");
+		return registration;
+	});
+};
+
 serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
 };

@@ -10,8 +10,9 @@ export type CustomEvents = {
 	push_alert: CustomEvent<Alert>;
 	update_alert: CustomEvent<Alert>;
 	enable_input: CustomEvent<boolean>;
+	show: CustomEvent<void>;
 };
 
-export function customEvent<K extends keyof CustomEvents>(name: K, detail: CustomEvents[K]["detail"]) {
+export function customEvent<K extends keyof CustomEvents>(name: K, detail?: CustomEvents[K]["detail"]) {
 	return new CustomEvent(name, { detail });
 }
