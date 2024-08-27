@@ -120,11 +120,11 @@ export class PDF {
 			if (body.student.class_id === 1) p.drawText(body?.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
 			else if (body.student.class_id === 2) p.drawText(body?.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
 		}
-		if (body.instrument) {
-			p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
-		} else {
-			p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
-		}
+		// if (body.instrument) {
+		// 	p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
+		// } else {
+		// 	p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
+		// }
 	}
 
 	public getBlob(): Promise<Uint8Array> {
