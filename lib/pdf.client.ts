@@ -74,8 +74,8 @@ export class PDF {
 		p.drawText(month, { x: c.dateMM.x, y: c.dateMM.y, size: fontSize, font });
 		p.drawText(year, { x: c.dateYYYY.x, y: c.dateYYYY.y, size: fontSize, font });
 
-		p.drawText("23", { x: c.year1.x, y: c.year1.y, size: fontSize, font });
-		p.drawText("24", { x: c.year2.x, y: c.year2.y, size: fontSize, font });
+		p.drawText("24", { x: c.year1.x, y: c.year1.y, size: fontSize, font });
+		p.drawText("25", { x: c.year2.x, y: c.year2.y, size: fontSize, font });
 
 		if (this.instrument.length > 15) {
 			p.drawText(this.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
@@ -83,11 +83,11 @@ export class PDF {
 			if (this.student.class_id === 1) p.drawText(this.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
 			else if (this.student.class_id === 2) p.drawText(this.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
 		}
-		if (this.instrument) {
-			p.drawText(this.student.first_name + " " + this.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
-		} else {
-			p.drawText(this.student.first_name + " " + this.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
-		}
+		// if (this.instrument) {
+		// 	p.drawText(this.student.first_name + " " + this.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
+		// } else {
+		// 	p.drawText(this.student.first_name + " " + this.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
+		// }
 	}
 
 	private static loadingScript = -1; // -1: not loading, 0: loading, 1: loaded
