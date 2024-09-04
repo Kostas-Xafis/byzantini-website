@@ -24,11 +24,11 @@ pnpm-debug.log*
 .mf
 **/bun.lockb
 
+*credentials.*
+
 
 /bucket
 /dbSnapshots
-/email
 /notAssets
-/pdfWorker
 /public/images
 /public/fek-*.pdf

@@ -2,7 +2,7 @@
 import { Registrations } from "../../types/entities";
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import type { R2Bucket } from "@cloudflare/workers-types";
+import type { R2Bucket, R2ObjectBody } from "@cloudflare/workers-types";
 export interface Env {
 	BUCKET: R2Bucket;
 }

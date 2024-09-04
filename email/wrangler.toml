@@ -1,0 +1,8 @@
+name = "automated-mail"
+main = "mailersend.ts"
+compatibility-date = "2024-03-09"
+compatibility_flags = [ "nodejs_compat" ]
+
+[[r2_buckets]]
+binding = 'BUCKET' # <~ valid JavaScript variable name
+bucket_name = 'byzantini-bucket'
