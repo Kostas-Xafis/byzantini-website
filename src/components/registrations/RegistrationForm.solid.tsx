@@ -1,4 +1,13 @@
-import { For, Show, createEffect, createMemo, createSignal, on, onMount } from "solid-js";
+import {
+	For,
+	Show,
+	createEffect,
+	createMemo,
+	createSignal,
+	on,
+	onMount,
+	type Setter,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import type {
@@ -11,7 +20,7 @@ import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.
 import Spinner from "../other/Spinner.solid";
 import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
 import Popup from "../other/Popup.solid";
-import { customEvent, type CustomEvents } from "../../../types/custom-events";
+import { customEvent } from "../../../types/custom-events";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -197,7 +206,8 @@ const byzantineInputs = (
 };
 
 const traditionalInputs = (
-	teachers: Teachers[]
+	teachers: Teachers[],
+	resetTeacher: Setter<Teachers | undefined>
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -227,11 +237,15 @@ const traditionalInputs = (
 			onchange: (e) => {
 				const select = e.target as HTMLSelectElement;
 				const teacherSelect = document.querySelector("[name='teacher_id']");
-				if (!teacherSelect) return;
+				const allInstrumentsSelect = document.querySelector("[name='instruments-all']");
+				if (!teacherSelect || !allInstrumentsSelect) return;
 				if (select.value === "Υπό Κατάταξη" || select.value === "Α' Προκαταρκτική") {
 					teacherSelect.dispatchEvent(customEvent("enable_input", false));
+					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", true));
+					resetTeacher();
 				} else {
 					teacherSelect.dispatchEvent(customEvent("enable_input", true));
+					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", false));
 				}
 			},
 		},
@@ -249,7 +263,8 @@ const traditionalInputs = (
 };
 
 const europeanInputs = (
-	teachers: Teachers[]
+	teachers: Teachers[],
+	resetTeacher: Setter<Teachers | undefined>
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -279,11 +294,15 @@ const europeanInputs = (
 			onchange: (e) => {
 				const select = e.target as HTMLSelectElement;
 				const teacherSelect = document.querySelector("[name='teacher_id']");
-				if (!teacherSelect) return;
+				const allInstrumentsSelect = document.querySelector("[name='instruments-all']");
+				if (!teacherSelect || !allInstrumentsSelect) return;
 				if (select.value === "Υπό Κατάταξη" || select.value === "Α' Προκαταρκτική") {
 					teacherSelect.dispatchEvent(customEvent("enable_input", false));
+					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", true));
+					resetTeacher();
 				} else {
 					teacherSelect.dispatchEvent(customEvent("enable_input", true));
+					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", false));
 				}
 			},
 		},
@@ -300,7 +319,33 @@ const europeanInputs = (
 	};
 };
 
-const instrumentsInput = ({
+const allInstrumentsInput = ({
+	type,
+	instruments,
+}: {
+	type?: MusicType;
+	instruments?: Instruments[];
+}): { instruments: InputProps } => {
+	console.log({ type });
+	if (type !== MusicType.Traditional && type !== MusicType.European)
+		return { instruments: { type: null, label: "", name: "" } };
+	const instrumentsByType = instruments?.filter((i) => i.type === type);
+	return {
+		instruments: {
+			label: "Όργανα-Μαθήματα",
+			name: "instruments-all",
+			iconClasses: "fa-solid fa-guitar",
+			type: "select",
+			required: true,
+			selectList: instrumentsByType?.map((i) => i.name),
+			valueList: instrumentsByType?.map((i) => i.id),
+			listeners: true,
+			show: false,
+		},
+	};
+};
+
+const instrumentsByTeacherInput = ({
 	type,
 	teacher,
 	instruments,
@@ -338,7 +383,7 @@ const instrumentsInput = ({
 	};
 };
 
-const DiplomaClasses = ["Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος", "Α' Ανωτέρα", "Β' Ανωτέρα"];
+const DiplomaClasses = ["Β' Ετος Διπλώματος", "Β' Ανωτέρα"];
 
 const enum MusicType {
 	Byzantine = "byz",
@@ -368,6 +413,7 @@ export function RegistrationForm() {
 	});
 	createEffect(
 		on(formSelected, (type) => {
+			if (type === MusicType.None || type === MusicType.Byzantine) return;
 			const select = document.querySelector<HTMLSelectElement>("select[name='teacher_id']");
 			const teachers = store[API.Teachers.get];
 			if (!select || !teachers) return;
@@ -506,7 +552,9 @@ export function RegistrationForm() {
 				getMultiSelect("instruments").map((btn) => {
 					const id = Number(btn.dataset.value) || null;
 					return id;
-				})[0] || 0,
+				})[0] ||
+				Number(formData.get("instruments-all")) ||
+				0,
 			date: Date.now(),
 			pass: false,
 		};
@@ -638,18 +686,37 @@ export function RegistrationForm() {
 										<Input {...input} prefix={PREFIX} />
 								  ))
 								: formSelected() === MusicType.Traditional
-								? Object.values(traditionalInputs(TeachersByType())).map(
-										(input) => <Input {...input} prefix={PREFIX} />
-								  )
-								: Object.values(europeanInputs(TeachersByType())).map((input) => (
-										<Input {...input} prefix={PREFIX} />
-								  ))}
+								? Object.values(
+										traditionalInputs(TeachersByType(), setSelectedTeacher)
+								  ).map((input) => <Input {...input} prefix={PREFIX} />)
+								: Object.values(
+										europeanInputs(TeachersByType(), setSelectedTeacher)
+								  ).map((input) => <Input {...input} prefix={PREFIX} />)}
 							{formSelected() === MusicType.Traditional ||
 							formSelected() === MusicType.European
-								? Object.values(instrumentsInput(InstrumentsByTeacher())).map(
-										(input) => <Input {...input} prefix={PREFIX} />
-								  )
+								? Object.values(
+										instrumentsByTeacherInput(InstrumentsByTeacher())
+								  ).map((input) => <Input {...input} prefix={PREFIX} />)
 								: ""}
+							{formSelected() === MusicType.Traditional ? (
+								<Input
+									{...allInstrumentsInput({
+										type: MusicType.Traditional,
+										instruments: store[API.Instruments.get],
+									}).instruments}
+									prefix={PREFIX}
+								/>
+							) : formSelected() === MusicType.European ? (
+								<Input
+									{...allInstrumentsInput({
+										type: MusicType.European,
+										instruments: store[API.Instruments.get],
+									}).instruments}
+									prefix={PREFIX}
+								/>
+							) : (
+								""
+							)}
 							<Show
 								when={!spinner()}
 								fallback={
@@ -672,7 +739,7 @@ export function RegistrationForm() {
 				content={
 					!DiplomaClasses.includes(registrationData["class_year"])
 						? "Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."
-						: ["Α' Ανωτέρα", "Β' Ανωτέρα"].includes(registrationData["class_year"])
+						: registrationData["class_year"] === "Β' Ανωτέρα"
 						? [
 								"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας.",
 								" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",

@@ -47,23 +47,14 @@ export function getMultiSelect(prefix: string, isSelected = true) {
 }
 
 export function getByName(name: string, strCmp?: "startsWith" | "endsWith" | "includes") {
-	if (!strCmp) {
-		return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
-	} else {
-		switch (strCmp) {
-			case "startsWith":
-				return [
-					...document.querySelectorAll(`input[name^='${name}']`),
-				] as HTMLInputElement[];
-			case "endsWith":
-				return [
-					...document.querySelectorAll(`input[name$='${name}']`),
-				] as HTMLInputElement[];
-			case "includes":
-				return [
-					...document.querySelectorAll(`input[name*='${name}']`),
-				] as HTMLInputElement[];
-		}
+	switch (strCmp) {
+		case "endsWith":
+			return [...document.querySelectorAll(`input[name$='${name}']`)] as HTMLInputElement[];
+		case "includes":
+			return [...document.querySelectorAll(`input[name*='${name}']`)] as HTMLInputElement[];
+		case "startsWith":
+		default:
+			return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
 	}
 }
 
@@ -109,6 +100,7 @@ type InputProps = {
 	onchange?: (e: Event) => void;
 	tooltip?: TooltipProps;
 	listeners?: boolean;
+	show?: boolean;
 };
 
 export type Props = PartialBy<InputProps, "prefix">;
@@ -133,10 +125,11 @@ export default function Input(props: InputProps) {
 		onchange,
 		tooltip,
 		listeners = false,
+		show = true,
 	} = props;
 	if (type === null) return <></>;
 
-	let [isShown, setIsShown] = createSignal(true);
+	let [isShown, setIsShown] = createSignal(show);
 
 	document.querySelectorAll(".formInputs").forEach((inp) => {
 		inp.addEventListener("focus", (e: FocusEvent) => {

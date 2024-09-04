@@ -1,5 +1,8 @@
 <div id="phoneContact" class="w-[100dvw] h-max fixed bottom-0 translate-y-[100%] z-[1000]">
 	<div class="relative h-max px-4 py-1 flex flex-col gap-y-1 font-didact bg-red-900">
+		<p class="p-1 text-xl text-red-50 bg-red-950 rounded-md text-center">
+			Στοιχεία Βυζαντινής Μουσικής
+		</p>
 		<p class="text-lg text-red-50">
 			<i class="text-base pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
 				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
@@ -15,13 +18,46 @@
 		</p>
 		<p class="text-lg text-red-50">
 			<i class="text-base pr-1 fa-solid fa-map-location-dot"></i>
-			 Χάρτης:
+			Χάρτης:
 			<a
 				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
 				target="_blank"
 				href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8">Έδρα Μεταμόρφωσης</a
 			>
 		</p>
+		<p
+			class="p-1 text-xl text-red-50 bg-red-950 rounded-md text-center max-w-[30ch] self-center">
+			Στοιχεία Παραδοσιακής & Ευρωπαϊκής Μουσικής
+		</p>
+		<p class="text-lg text-red-50">
+			<i class="text-base pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="tel:6975848638">6975848638</a
+			>
+			<i
+				class="copy text-base ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
+			></i>
+		</p>
+		<p class="text-lg text-red-50">
+			<i class="text-base pr-3 fa-solid fa-phone"></i>Τηλέφωνο: <a
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="tel:6948751656">6948751656</a
+			>
+			<i
+				class="copy text-base ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
+			></i>
+		</p>
+		<p class="text-lg text-red-50">
+			<i class="text-base pr-3 fa-solid fa-envelope"></i>Email: <a
+				target="_blank"
+				class="text-red-50 underline decoration-1 underline-offset-2 pl-2"
+				href="mailto:parschole@gmail.com">parschole@gmail.com</a
+			>
+			<i
+				class="copy text-base ml-2 px-2 py-1 fa-regular fa-clipboard rounded-full cursor-pointer bg-opacity-40 hover:bg-gray-600"
+			></i>
+		</p>
+
 		<div class="rounded-md bg-red-950 flex flex-col">
 			<p class="text-lg text-red-50 underline underline-offset-2 self-center">
 				Ωράριο επικοινωνίας
@@ -38,7 +74,7 @@
 			id="showPhoneContacts"
 			class="group/btn absolute inset-x-[-1px] top-0 h-[44px] -translate-y-[42px] flex flex-col tracking-wider bg-red-900">
 			<i
-				class="text-red-50 h-0 my-1 pt-1 fa-solid fa-chevron-up font-bold text-sm leading-[1.5vw] self-center"
+				class="text-red-50 h-0 my-1 fa-solid fa-chevron-up font-bold text-sm leading-lg self-center"
 			></i>
 			<p class="text-2xl text-red-50 font-anaktoria self-center">Επικοινωνία</p>
 		</button>
@@ -58,19 +94,18 @@
 			transition: transform 0.2s ease-in-out;
 		}
 		#phoneContact:is(.clickedContacts) #showPhoneContacts i {
-			transform: rotateZ(180deg) translateY(calc(-1rem * 0.5));
+			transform: rotateZ(180deg) translateY(-0.75rem);
 		}
 		.copy:is(.clicked) {
 			background-color: rgb(22, 163, 74);
 		}
 	</style>
 	<script is:inline>
-
 		(function () {
 			let onElementMount = async (target, callback) => {
 				let count = 0;
 				while (!document.querySelector(target) && count++ < 50) {
-					await new Promise((resolve) => setTimeout(resolve, 50));
+					await new Promise(resolve => setTimeout(resolve, 50));
 				}
 				if (count >= 10) return;
 				callback();
