@@ -560,6 +560,16 @@ export function RegistrationForm() {
 		setRegistrationData(data);
 		try {
 			if (
+				data.am.startsWith("0") &&
+				data.class_year !== "Υπό Κατάταξη" &&
+				data.class_year !== "Α' Προκαταρκτική"
+			) {
+				alert(
+					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζεται το ΑΜ, θα το βρείτε σε προσωπικό μαιλ, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής."
+				);
+				throw Error("");
+			}
+			if (
 				data.teacher_id === -1 &&
 				data.class_year !== "Υπό Κατάταξη" &&
 				data.class_year !== "Α' Προκαταρκτική"
@@ -579,6 +589,13 @@ export function RegistrationForm() {
 			const res = await apiHook(API.Registrations.post, { RequestObject: data });
 			if (res.message) {
 				document.querySelector("#popup")?.dispatchEvent(customEvent("show"));
+				setRegistrationData((prevReg) => {
+					return {
+						...prevReg,
+						teacher_id: 0,
+						instrument_id: 0,
+					};
+				});
 			}
 		} catch (err) {
 			const form = document.querySelector("#registrationForm") as HTMLElement;
