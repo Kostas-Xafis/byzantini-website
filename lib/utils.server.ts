@@ -106,7 +106,6 @@ export const execTryCatch = async <T>(
 			const conn = await createDbConnection(null, true);
 			response = await conn.transaction((tx) => {
 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => {
-					// console.log({ resId, query, args });
 					return executeQuery<T>(query, args, tx, log);
 				};
 				return func(tx) as Promise<T>;

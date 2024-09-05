@@ -326,7 +326,6 @@ const allInstrumentsInput = ({
 	type?: MusicType;
 	instruments?: Instruments[];
 }): { instruments: InputProps } => {
-	console.log({ type });
 	if (type !== MusicType.Traditional && type !== MusicType.European)
 		return { instruments: { type: null, label: "", name: "" } };
 	const instrumentsByType = instruments?.filter((i) => i.type === type);

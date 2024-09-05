@@ -82,7 +82,7 @@ export async function createDbConnection<T extends boolean = false>(type?: DBTyp
 					let res = await execute(client)<T>(query, args);
 					return res;
 				} catch (err) {
-					console.log({ err });
+					// console.log({ err });
 					queryLogger({ id: generateLink(20), query, args }, true);
 					throw err;
 				}
@@ -105,7 +105,7 @@ export async function createDbConnection<T extends boolean = false>(type?: DBTyp
 				} finally {
 					client.close();
 					txconn.tx.queryHistory.forEach(async (q) => {
-						console.log({ q });
+						// console.log({ q });
 						if (q.query.startsWith("SELECT")) return;
 						await queryLogger(q, hasError);
 					});

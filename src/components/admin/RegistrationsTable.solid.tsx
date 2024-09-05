@@ -387,8 +387,6 @@ export default function RegistrationsTable() {
 					: null,
 				pass: getMultiSelect("pass").map((btn) => !!Number(btn.dataset.value))[0],
 			};
-			console.log("Passed :" + data.pass);
-			console.log(formData.get("pass"));
 			await apiHook(API.Registrations.update, {
 				RequestObject: data,
 			});

@@ -8,7 +8,7 @@ import { RegistrationsRoutes } from "./registrations.client";
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations"));
+	return execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'"));
 };
 
 serverRoutes.getById.func = ({ ctx, slug }) => {
@@ -36,15 +36,33 @@ serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		console.log({ body });
 		const args = Object.values(body);
 		await T.executeQuery(
 			`INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(args)})`,
 			args
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
-		const isSubscribed = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
-		if (isSubscribed.length === 0) await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
+		let mail_subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
+		if (mail_subscription.length === 0) {
+			let insert = await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
+			mail_subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE id=?", [insert.insertId]);
+		}
+
+		// Send automated email to the student for the successful registration
+		const AESU = await import.meta.env.AUTOMATED_EMAILS_SERVICE_URL;
+		if (!AESU) throw Error("Cannot send automated email. AUTOMATED_EMAILS_SERVICE_URL is not defined.");
+		fetch(AESU, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				to: mail_subscription[0].email,
+				subject: "Επιτυχής εγγραφή",
+				htmlTemplateName: "epitixis_eggrafi.html",
+				templateData: { token: "abc" }
+			})
+		});
 
 		return "Registrated successfully";
 	});
