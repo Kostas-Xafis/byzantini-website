@@ -49,18 +49,22 @@ serverRoutes.post.func = ({ ctx }) => {
 		}
 
 		// Send automated email to the student for the successful registration
-		const AESU = await import.meta.env.AUTOMATED_EMAILS_SERVICE_URL;
-		if (!AESU) throw Error("Cannot send automated email. AUTOMATED_EMAILS_SERVICE_URL is not defined.");
-		fetch(AESU, {
+		const {
+			AUTOMATED_EMAILS_SERVICE_URL: service_url,
+			AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken
+		} = await import.meta.env;
+		if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
+		fetch(service_url, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({
+				authToken,
 				to: mail_subscription[0].email,
 				subject: "Επιτυχής εγγραφή",
 				htmlTemplateName: "epitixis_eggrafi.html",
-				templateData: { token: "abc" }
+				templateData: { token: mail_subscription[0].unsubscribe_token }
 			})
 		});
 
