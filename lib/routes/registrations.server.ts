@@ -44,8 +44,8 @@ serverRoutes.post.func = ({ ctx }) => {
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
 		let mail_subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
 		if (mail_subscription.length === 0) {
-			let insert = await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
-			mail_subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE id=?", [insert.insertId]);
+			mail_subscription = [{ email: body.email, unsubscribe_token: generateLink(16), unrelated: false }];
+			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
 		}
 
 		// Send automated email to the student for the successful registration
@@ -54,7 +54,15 @@ serverRoutes.post.func = ({ ctx }) => {
 			AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken
 		} = await import.meta.env;
 		if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
-		fetch(service_url, {
+		console.log({
+			service_url,
+			authToken,
+			to: mail_subscription[0].email,
+			subject: "Επιτυχής εγγραφή",
+			htmlTemplateName: "epitixis_eggrafi.html",
+			templateData: { token: mail_subscription[0].unsubscribe_token }
+		});
+		await fetch(service_url, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
