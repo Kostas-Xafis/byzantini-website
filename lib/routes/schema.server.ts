@@ -38,7 +38,7 @@ serverRoutes.get.func = ({ slug }) => {
 serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 	return execTryCatch(async () => {
 		const { type } = slug;
-		const { SAFE_BACKUP_SNAPSHOT } = await import.meta.env;
+		const { SAFE_BACKUP_SNAPSHOT } = import.meta.env;
 		if (!SAFE_BACKUP_SNAPSHOT) {
 			throw Error("No safe schema found");
 		}
@@ -55,7 +55,7 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 
 serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
-		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, LATEST_MIGRATION_FILE } = await import.meta.env;
+		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, LATEST_MIGRATION_FILE } = import.meta.env;
 		if (CONNECTOR !== "mysql") {
 			throw Error(`Cannot revert schema for '${CONNECTOR}' connector`);
 		}

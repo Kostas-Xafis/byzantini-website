@@ -7,7 +7,7 @@ import { randomHex } from "./utils.client";
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || randomHex();
 	const hmac = createHash("sha256");
-	hmac.update(key + (await import.meta.env.SECRET));
+	hmac.update(key + (import.meta.env.SECRET));
 	hmac.update(salt);
 	return hmac.digest("hex").toString() + ":" + salt;
 }

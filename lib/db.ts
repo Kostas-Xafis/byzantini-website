@@ -38,7 +38,7 @@ export async function createDbConnection<T extends boolean = false>(type?: DBTyp
 		// Turso env variables for production
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
-		CONNECTOR } = await import.meta.env;
+		CONNECTOR } = import.meta.env;
 
 	// ! SQLITE does not support LIMIT in UPDATE queries
 	let client: SimpleConnection = null as any;

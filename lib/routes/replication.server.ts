@@ -13,7 +13,7 @@ const getCurrentFormattedDate = () => {
 };
 
 async function productionBucketReplication() {
-	const { DEV_BUCKET_LOCATION, S3_BUCKET_NAME } = await import.meta.env;
+	const { DEV_BUCKET_LOCATION, S3_BUCKET_NAME } = import.meta.env;
 	if (!DEV_BUCKET_LOCATION) throw Error("Missing environment variables");
 	const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 	// This is a dev only function to replicate the dev bucket from the prod bucket
@@ -57,7 +57,7 @@ async function productionBucketReplication() {
 
 
 async function productionDatabaseReplication(force = false) {
-	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = await import.meta.env;
+	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = import.meta.env;
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH) throw Error("Missing environment variables");
 	const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 	const SNAPSHOT_DATE = getCurrentFormattedDate();
@@ -95,6 +95,7 @@ async function productionDatabaseReplication(force = false) {
 
 serverRoutes.replication.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
+		if (import.meta.env.ENV !== "DEV") throw Error("This route is only available in development mode");
 		if (ctx.url.hostname !== "localhost") throw Error("This route is only available in development mode");
 		// Even if the a malicious user manages to send a request to this route,
 		// it wont do anything because it doesn't have access to dev env variables
