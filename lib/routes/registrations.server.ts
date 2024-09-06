@@ -8,7 +8,12 @@ import { RegistrationsRoutes } from "./registrations.client";
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'"));
+	return execTryCatch(async () => {
+		if (await import.meta.env.ENV === "PROD") {
+			return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'");
+		}
+		return executeQuery<Registrations>("SELECT * FROM registrations");
+	});
 };
 
 serverRoutes.getById.func = ({ ctx, slug }) => {
@@ -48,33 +53,27 @@ serverRoutes.post.func = ({ ctx }) => {
 			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
 		}
 
-		// Send automated email to the student for the successful registration
-		const {
-			AUTOMATED_EMAILS_SERVICE_URL: service_url,
-			AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken
-		} = await import.meta.env;
-		if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
-		console.log({
-			service_url,
-			authToken,
-			to: mail_subscription[0].email,
-			subject: "Επιτυχής εγγραφή",
-			htmlTemplateName: "epitixis_eggrafi.html",
-			templateData: { token: mail_subscription[0].unsubscribe_token }
-		});
-		await fetch(service_url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({
-				authToken,
-				to: mail_subscription[0].email,
-				subject: "Επιτυχής εγγραφή",
-				htmlTemplateName: "epitixis_eggrafi.html",
-				templateData: { token: mail_subscription[0].unsubscribe_token }
-			})
-		});
+		if (await import.meta.env.ENV === "PROD") {
+			// Send automated email to the student for the successful registration
+			const {
+				AUTOMATED_EMAILS_SERVICE_URL: service_url,
+				AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken
+			} = await import.meta.env;
+			if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
+			await fetch(service_url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({
+					authToken,
+					to: mail_subscription[0].email,
+					subject: "Επιτυχής εγγραφή",
+					htmlTemplateName: "epitixis_eggrafi.html",
+					templateData: { token: mail_subscription[0].unsubscribe_token }
+				})
+			});
+		}
 
 		return "Registrated successfully";
 	});
