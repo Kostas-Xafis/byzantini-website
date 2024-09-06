@@ -11,15 +11,8 @@ const { PROD } = import.meta.env;
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
-		const {
-			// Local snaphot env variables for development
-			DEV_DB_ABSOLUTE_LOCATION,
-			// Turso env variables for production
-			TURSO_DB_URL, TURSO_DB_TOKEN,
-			// Connector type
-			CONNECTOR } = import.meta.env;
-		console.log({ DEV_DB_ABSOLUTE_LOCATION, TURSO_DB_URL, TURSO_DB_TOKEN, CONNECTOR });
-		console.log({ env: import.meta.env });
+		const { ENV } = import.meta.env;
+		console.log({ ENV, env: import.meta.env });
 		if (PROD) {
 			return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'");
 		}
