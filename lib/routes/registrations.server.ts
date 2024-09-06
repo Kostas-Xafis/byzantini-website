@@ -7,12 +7,20 @@ import { RegistrationsRoutes } from "./registrations.client";
 // Include this in all .server.ts files
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
 
-const { ENV } = import.meta.env;
+const { PROD } = import.meta.env;
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
-		console.log({ env: await import.meta.env });
-		if (ENV === "PROD") {
+		const {
+			// Local snaphot env variables for development
+			DEV_DB_ABSOLUTE_LOCATION,
+			// Turso env variables for production
+			TURSO_DB_URL, TURSO_DB_TOKEN,
+			// Connector type
+			CONNECTOR } = import.meta.env;
+		console.log({ DEV_DB_ABSOLUTE_LOCATION, TURSO_DB_URL, TURSO_DB_TOKEN, CONNECTOR });
+		console.log({ env: import.meta.env });
+		if (PROD) {
 			return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'");
 		}
 		return executeQuery<Registrations>("SELECT * FROM registrations");
@@ -56,7 +64,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
 		}
 
-		if (ENV === "PROD") {
+		if (PROD) {
 			// Send automated email to the student for the successful registration
 			const {
 				AUTOMATED_EMAILS_SERVICE_URL: service_url,
