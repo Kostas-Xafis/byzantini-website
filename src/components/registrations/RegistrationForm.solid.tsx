@@ -443,6 +443,7 @@ export function RegistrationForm() {
 					UrlArgs: { id: regid },
 				});
 				if (!res.data) return;
+				res.data.registration_year = "2024-2025";
 				setRegistrationData(res.data);
 				setFormSelected(music[res.data.class_id] as MusicType);
 			} catch (err) {
