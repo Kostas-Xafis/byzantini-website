@@ -419,7 +419,6 @@ export function RegistrationForm() {
 			select.addEventListener("change", (e: Event) => {
 				setSelectedTeacher(TeachersByType().find((t) => t.id === Number(select.value)));
 			});
-			setSelectedTeacher();
 		})
 	);
 
@@ -444,6 +443,8 @@ export function RegistrationForm() {
 				});
 				if (!res.data) return;
 				res.data.registration_year = "2024-2025";
+				res.data.class_year = "";
+				res.data.teacher_id = 0;
 				setRegistrationData(res.data);
 				setFormSelected(music[res.data.class_id] as MusicType);
 			} catch (err) {
