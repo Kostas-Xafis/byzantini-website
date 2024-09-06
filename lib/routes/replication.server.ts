@@ -103,7 +103,7 @@ serverRoutes.replication.func = ({ ctx, slug }) => {
 		// so it would throw an error regardless
 		const { service } = slug;
 		if (service === "database" || service === "database-force") {
-			await productionDatabaseReplication();
+			await productionDatabaseReplication(service === "database-force");
 			return "Database replicated";
 		}
 		else if (service === "bucket") {

@@ -19,7 +19,7 @@ const getById: EndpointRoute<"/registrations/[id:number]", null, Registrations> 
 };
 
 const getByReregistrationId: EndpointRoute<"/registrations/reregistration/[id:string]", null, Registrations> = {
-	authentication: true,
+	authentication: false,
 	method: "GET",
 	path: "/registrations/reregistration/[id:string]",
 	hasUrlParams: true,
