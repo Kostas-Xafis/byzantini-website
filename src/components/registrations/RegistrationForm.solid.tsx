@@ -242,7 +242,7 @@ const traditionalInputs = (
 				if (select.value === "Υπό Κατάταξη" || select.value === "Α' Προκαταρκτική") {
 					teacherSelect.dispatchEvent(customEvent("enable_input", false));
 					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", true));
-					resetTeacher();
+					resetTeacher(undefined);
 				} else {
 					teacherSelect.dispatchEvent(customEvent("enable_input", true));
 					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", false));
@@ -299,7 +299,7 @@ const europeanInputs = (
 				if (select.value === "Υπό Κατάταξη" || select.value === "Α' Προκαταρκτική") {
 					teacherSelect.dispatchEvent(customEvent("enable_input", false));
 					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", true));
-					resetTeacher();
+					resetTeacher(undefined);
 				} else {
 					teacherSelect.dispatchEvent(customEvent("enable_input", true));
 					allInstrumentsSelect.dispatchEvent(customEvent("enable_input", false));
@@ -355,6 +355,12 @@ const instrumentsByTeacherInput = ({
 	instruments?: Instruments[];
 	instrumentsList?: TeacherInstruments[];
 }): { instruments: InputProps } => {
+	console.log("Checking instrumentsByTeacherInput for teacher: ", {
+		type,
+		teacher,
+		instruments,
+		instrumentsList,
+	});
 	if (!type || !teacher || !instruments || !instrumentsList || instruments.length === 0)
 		return { instruments: { type: null, label: "", name: "" } };
 	const teacherInstruments = instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
@@ -485,7 +491,13 @@ export function RegistrationForm() {
 		const instruments = store[API.Instruments.get];
 		const teacher_instruments = store[API.Teachers.getInstruments];
 		const teacher = selectedTeacher();
+		console.log("Checking InstrumentsByTeacher for teacher: ", {
+			instruments,
+			teacher_instruments,
+			teacher,
+		});
 		if (!instruments || !teacher_instruments || !teacher) return {};
+		console.log("Loading InstrumentsByTeacher for teacher: ", teacher);
 		return {
 			type: formSelected(),
 			teacher,
