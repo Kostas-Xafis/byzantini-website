@@ -422,8 +422,6 @@ export function RegistrationForm() {
 
 			if (type === MusicType.None || type === MusicType.Byzantine) return;
 			await onElementMount<HTMLSelectElement>("select[name='teacher_id']", (select) => {
-				const teachers = store[API.Teachers.get];
-				if (!select || !teachers) return;
 				select.addEventListener("change", (e: Event) => {
 					setSelectedTeacher(TeachersByType().find((t) => t.id === Number(select.value)));
 				});
