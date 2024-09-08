@@ -412,6 +412,8 @@ export function RegistrationForm() {
 	});
 	createEffect(
 		on(formSelected, async (type) => {
+			setSelectedTeacher(undefined);
+
 			if (type === MusicType.None || type === MusicType.Byzantine) return;
 			await onElementMount<HTMLSelectElement>("select[name='teacher_id']", (select) => {
 				const teachers = store[API.Teachers.get];
