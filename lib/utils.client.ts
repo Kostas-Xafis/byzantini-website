@@ -58,14 +58,14 @@ export function getCookie(cname: string): string {
 	return "";
 }
 
-export async function onElementMount(target: string, callback: (el: HTMLElement) => any) {
+export async function onElementMount<T = HTMLElement>(target: string, callback: (el: T) => any) {
 	let counter = 0;
 	let el;
 	while (!(el = document.querySelector(target)) && counter++ < 40) {
 		await new Promise((resolve) => setTimeout(resolve, 25));
 	}
 	if (counter >= 40) return;
-	callback(el as HTMLElement);
+	callback(el as T);
 };
 
 export function getParent(el: HTMLElement | null, selector: string, maxHeight = 10): HTMLElement | null {

@@ -18,7 +18,7 @@ import type {
 } from "../../../types/entities";
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
+import { AnimTimeline, deepCopy, onElementMount } from "../../../lib/utils.client";
 import Popup from "../other/Popup.solid";
 import { customEvent } from "../../../types/custom-events";
 
@@ -411,13 +411,14 @@ export function RegistrationForm() {
 		apiHook(API.Instruments.get);
 	});
 	createEffect(
-		on(formSelected, (type) => {
+		on(formSelected, async (type) => {
 			if (type === MusicType.None || type === MusicType.Byzantine) return;
-			const select = document.querySelector<HTMLSelectElement>("select[name='teacher_id']");
-			const teachers = store[API.Teachers.get];
-			if (!select || !teachers) return;
-			select.addEventListener("change", (e: Event) => {
-				setSelectedTeacher(TeachersByType().find((t) => t.id === Number(select.value)));
+			await onElementMount<HTMLSelectElement>("select[name='teacher_id']", (select) => {
+				const teachers = store[API.Teachers.get];
+				if (!select || !teachers) return;
+				select.addEventListener("change", (e: Event) => {
+					setSelectedTeacher(TeachersByType().find((t) => t.id === Number(select.value)));
+				});
 			});
 		})
 	);
@@ -445,6 +446,7 @@ export function RegistrationForm() {
 				res.data.registration_year = "2024-2025";
 				res.data.class_year = "";
 				res.data.teacher_id = 0;
+				console.log(res.data);
 				setRegistrationData(res.data);
 				setFormSelected(music[res.data.class_id] as MusicType);
 			} catch (err) {
