@@ -32,3 +32,4 @@ pnpm-debug.log*
 /notAssets
 /public/images
 /public/fek-*.pdf
+/email
