@@ -1,12 +1,12 @@
 import {
 	For,
 	Show,
-	createEffect,
 	createMemo,
 	createSignal,
-	on,
 	onMount,
 	type Setter,
+	createEffect,
+	on,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
@@ -18,7 +18,7 @@ import type {
 } from "../../../types/entities";
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { AnimTimeline, deepCopy, onElementMount } from "../../../lib/utils.client";
+import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
 import Popup, { PopupShow } from "../other/Popup.solid";
 import { customEvent } from "../../../types/custom-events";
 
@@ -359,12 +359,6 @@ const instrumentsByTeacherInput = ({
 	instruments?: Instruments[];
 	instrumentsList?: TeacherInstruments[];
 }): { instruments: InputProps } => {
-	console.log("Checking instrumentsByTeacherInput for teacher: ", {
-		type,
-		teacher,
-		instruments,
-		instrumentsList,
-	});
 	if (!type || !teacher || !instruments || !instrumentsList || instruments.length === 0)
 		return { instruments: { type: null, label: "", name: "" } };
 	const teacherInstruments = instrumentsList?.filter((i) => i.teacher_id === teacher?.id) || [];
@@ -427,6 +421,12 @@ export function RegistrationForm() {
 		);
 	};
 
+	createEffect(
+		on(formSelected, (type) => {
+			setSelectedTeacher(undefined);
+		})
+	);
+
 	onMount(async () => {
 		const music = ["byz", "par", "eur"];
 		if (window.location.hash) {
@@ -450,7 +450,6 @@ export function RegistrationForm() {
 				res.data.registration_year = "2024-2025";
 				res.data.class_year = "";
 				res.data.teacher_id = 0;
-				console.log(res.data);
 				setRegistrationData(res.data);
 				setFormSelected(music[res.data.class_id] as MusicType);
 			} catch (err) {
@@ -487,13 +486,7 @@ export function RegistrationForm() {
 		const instruments = store[API.Instruments.get];
 		const teacher_instruments = store[API.Teachers.getInstruments];
 		const teacher = selectedTeacher();
-		console.log("Checking InstrumentsByTeacher for teacher: ", {
-			instruments,
-			teacher_instruments,
-			teacher,
-		});
 		if (!instruments || !teacher_instruments || !teacher) return {};
-		console.log("Loading InstrumentsByTeacher for teacher: ", teacher);
 		return {
 			type: formSelected(),
 			teacher,
