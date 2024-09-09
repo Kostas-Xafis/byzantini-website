@@ -7,7 +7,7 @@ const serverRoutes = deepCopy(SchemaRoutes);
 
 export const sqliteGenerateBackup = async () => {
 	const new_schema = ["PRAGMA journal_mode=WAL;"];
-	const conn = await createDbConnection("sqlite-prod");
+	const conn = createDbConnection("sqlite-prod");
 	const { rows: tables } = await conn.execute("SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'");
 	for (const table of tables) {
 		const tableName = table[2];
@@ -45,7 +45,7 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 		const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 
 		if (type === "sqlite") {
-			const sqliteConn = await createDbConnection("sqlite-dev");
+			const sqliteConn = createDbConnection("sqlite-dev");
 			await sqliteConn.execute(await fs.readFile(SAFE_BACKUP_SNAPSHOT, "utf-8"));
 			return "Reverted to previous schema";
 		}
@@ -65,7 +65,7 @@ serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 		const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 		const migrationFile = await fs.readFile(LATEST_MIGRATION_FILE, "utf-8");
 
-		const sqliteConn = await createDbConnection("sqlite-dev");
+		const sqliteConn = createDbConnection("sqlite-dev");
 		await sqliteConn.execute(migrationFile);
 		return "Migrated to latest schema";
 	});

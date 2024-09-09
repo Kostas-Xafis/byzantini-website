@@ -207,7 +207,8 @@ const byzantineInputs = (
 
 const traditionalInputs = (
 	teachers: Teachers[],
-	resetTeacher: Setter<Teachers | undefined>
+	resetTeacher: Setter<Teachers | undefined>,
+	onTeacherChange?: (e: Event) => void
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -257,6 +258,7 @@ const traditionalInputs = (
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map((t) => t.fullname),
 			valueList: teachers.map((t) => t.id),
+			onchange: onTeacherChange,
 			listeners: true,
 		},
 	};
@@ -264,7 +266,8 @@ const traditionalInputs = (
 
 const europeanInputs = (
 	teachers: Teachers[],
-	resetTeacher: Setter<Teachers | undefined>
+	resetTeacher: Setter<Teachers | undefined>,
+	onTeacherChange?: (e: Event) => void
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -314,6 +317,7 @@ const europeanInputs = (
 			iconClasses: "fa-solid fa-user",
 			selectList: teachers.map((t) => t.fullname),
 			valueList: teachers.map((t) => t.id),
+			onchange: onTeacherChange,
 			listeners: true,
 		},
 	};
@@ -417,19 +421,11 @@ export function RegistrationForm() {
 		apiHook(API.Instruments.get);
 	});
 
-	createEffect(
-		on(formSelected, async (type) => {
-			console.log("Form selected: ", type);
-			setSelectedTeacher(undefined);
-
-			if (type === MusicType.None || type === MusicType.Byzantine) return;
-			await onElementMount<HTMLSelectElement>("select[name='teacher_id']", (select) => {
-				select.addEventListener("change", (e: Event) => {
-					setSelectedTeacher(TeachersByType().find((t) => t.id === Number(select.value)));
-				});
-			});
-		})
-	);
+	const onTeacherChange = (e: Event) => {
+		setSelectedTeacher(
+			TeachersByType().find((t) => t.id === Number((e.target as HTMLSelectElement).value))
+		);
+	};
 
 	onMount(async () => {
 		const music = ["byz", "par", "eur"];
@@ -722,10 +718,18 @@ export function RegistrationForm() {
 								  ))
 								: formSelected() === MusicType.Traditional
 								? Object.values(
-										traditionalInputs(TeachersByType(), setSelectedTeacher)
+										traditionalInputs(
+											TeachersByType(),
+											setSelectedTeacher,
+											onTeacherChange
+										)
 								  ).map((input) => <Input {...input} prefix={PREFIX} />)
 								: Object.values(
-										europeanInputs(TeachersByType(), setSelectedTeacher)
+										europeanInputs(
+											TeachersByType(),
+											setSelectedTeacher,
+											onTeacherChange
+										)
 								  ).map((input) => <Input {...input} prefix={PREFIX} />)}
 							{formSelected() === MusicType.Traditional ||
 							formSelected() === MusicType.European

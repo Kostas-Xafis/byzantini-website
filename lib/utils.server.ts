@@ -78,7 +78,7 @@ export const questionMarks = (arg: number | any[] | {}) => {
 
 
 export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
-	const conn = tx ?? await createDbConnection(null, true);
+	const conn = tx ?? createDbConnection(null, true);
 	query = query.trim().replaceAll("\n", "");
 	let queryId;
 	const res = await conn.execute<T>(query, args, { as: "object" });
@@ -103,7 +103,7 @@ export const execTryCatch = async <T>(
 		let response;
 		// ! Transactions refuse Cloudflare production
 		if (hasTransaction) {
-			const conn = await createDbConnection(null, true);
+			const conn = createDbConnection(null, true);
 			response = await conn.transaction((tx) => {
 				tx.executeQuery = <T>(query: string, args?: any[], log = false) => {
 					return executeQuery<T>(query, args, tx, log);

@@ -28,10 +28,10 @@ export type WrappedConnection = {
 
 type DBType = "sqlite-prod" | "sqlite-dev" | null;
 type SimpleConnection = ReturnType<typeof createClient>;
-type PromiseReturn<IsWrapped extends boolean> =
+type ConnectionType<IsWrapped extends boolean> =
 	IsWrapped extends true ? WrappedConnection : SimpleConnection;
 
-export async function createDbConnection<T extends boolean = false>(type?: DBType, wrapper?: T): Promise<PromiseReturn<T>> {
+export function createDbConnection<T extends boolean = false>(type?: DBType, wrapper?: T): ConnectionType<T> {
 	const {
 		// Local snaphot env variables for development
 		DEV_DB_ABSOLUTE_LOCATION,
@@ -131,7 +131,7 @@ const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][0], 
 	let argStr = JSON.stringify(args);
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
-		(await createDbConnection()).execute({
+		createDbConnection().execute({
 			sql: "INSERT INTO query_logs (id, query, args, error, date) VALUES (?, ?, ?, ?, ?)",
 			args: [id, query, argStr, err ? 1 : 0, Date.now()]
 		});

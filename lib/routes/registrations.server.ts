@@ -12,7 +12,6 @@ const { PROD } = import.meta.env;
 serverRoutes.get.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
 		const { ENV } = import.meta.env;
-		console.log({ ENV, env: import.meta.env });
 		if (PROD) {
 			return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'");
 		}
