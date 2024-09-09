@@ -3,6 +3,12 @@ import { AnimTimeline } from "../../../lib/utils.client.ts";
 
 type StringOrElement = string | JSX.Element;
 
+export const PopupShow = () =>
+	document.getElementById("popup")?.dispatchEvent(new CustomEvent("show"));
+
+export const PopupHide = () =>
+	document.getElementById("popup")?.dispatchEvent(new CustomEvent("hide"));
+
 export interface Props {
 	title: StringOrElement;
 	content: string[] | StringOrElement;

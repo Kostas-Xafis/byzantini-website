@@ -19,7 +19,7 @@ import type {
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { AnimTimeline, deepCopy, onElementMount } from "../../../lib/utils.client";
-import Popup from "../other/Popup.solid";
+import Popup, { PopupShow } from "../other/Popup.solid";
 import { customEvent } from "../../../types/custom-events";
 
 const PREFIX = "RegForm";
@@ -416,8 +416,10 @@ export function RegistrationForm() {
 		apiHook(API.Teachers.getInstruments);
 		apiHook(API.Instruments.get);
 	});
+
 	createEffect(
 		on(formSelected, async (type) => {
+			console.log("Form selected: ", type);
 			setSelectedTeacher(undefined);
 
 			if (type === MusicType.None || type === MusicType.Byzantine) return;
@@ -605,7 +607,7 @@ export function RegistrationForm() {
 			setSpinner(true);
 			const res = await apiHook(API.Registrations.post, { RequestObject: data });
 			if (res.message) {
-				document.querySelector("#popup")?.dispatchEvent(customEvent("show"));
+				PopupShow();
 				setRegistrationData((prevReg) => {
 					return {
 						...prevReg,
