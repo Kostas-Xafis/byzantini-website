@@ -1,7 +1,7 @@
 <>
 	<section
 		id="choir"
-		class="w-full flex flex-col font-didact items-center justify-center mt-8 py-8 max-sm:py-4 max-sm:px-2 gap-y-20 overflow-visible max-sm:gap-y-10">
+		class="w-full flex flex-col font-didact items-center justify-center py-10 max-sm:py-4 max-sm:px-2 gap-y-20 overflow-visible max-sm:gap-y-10">
 		<h1
 			id="choirHead"
 			class="heading relative p-2 text-center flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px]">
@@ -20,7 +20,7 @@
 						Παραδοσιακής Μουσικής
 					</h2>
 				</div>
-				<p class="text-xl max-sm:text-lg w-[50ch] max-sm:w-full tracking-wide">
+				<p class="text-2xl max-sm:text-lg w-[45ch] max-sm:w-full tracking-wide">
 					Η αγάπη για την βυζαντινή μουσική και η ανάγκη να παραμείνει ζωντανή η
 					ελληνορθόδοξη παράδοσή μας αποτέλεσαν το κίνητρο ίδρυσης της χορωδίας «Άδοντες
 					και Ψάλλοντες» από μια ομάδα νέων συναδέλφων ιεροψαλτών και μαθητών. Αποτελεί
@@ -34,7 +34,7 @@
 				id="choirCarousel"
 				class="max-w-[850px] max-h-[425px] max-sm:max-h-[225px] flex overflow-hidden shadow-lg max-sm:shadow-md shadow-slate-800 max-sm:shadow-slate-800">
 				<img
-					src={"/choir/choir_1.jpg"}
+					src="/choir/choir_1.jpg"
 					width="900px"
 					alt="Φωτογραφία Χορωδίας"
 					class="w-[900px] max-sm:w-[clamp(240px,100%,360px)] h-[425px] max-sm:h-[225px] object-cover"
@@ -113,7 +113,7 @@
 		);
 		obsv.observe(choir);
 
-		const carouselUpdate = new UpdateHandler({ timer: 5000 });
+		const carouselUpdate = new UpdateHandler({ timer: 7500 });
 		const carousel = document.querySelector("#choirCarousel") as HTMLDivElement;
 		const choirText = document.querySelector("#choirText") as HTMLDivElement;
 		let isCarouselVisible = false;

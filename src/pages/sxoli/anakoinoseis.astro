@@ -6,42 +6,53 @@ export const prerender = false;
 
 const announcements = (await useAPI(API.Announcements.getForPage)).data || [];
 
-const imgSrc = (a: PageAnnouncement) => "/anakoinoseis/images/" + a.id + "/" + a.main_image;
 const imgThumbSrc = (a: PageAnnouncement) =>
 	"/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;
 const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR");
 ---
 
 <Layout title="Ανακοινώσεις">
-	<div class="p-6 mb-6 flex flex-col gap-y-10 h-full">
+	<div class="p-10 max-sm:px-4 flex flex-col gap-y-10 h-full overflow-y-auto">
+		<h1
+			id="announcementHead"
+			class="heading relative p-2 text-center w-[11ch] place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full after:left-[calc(100%_+_2.15ch)] after:w-[11ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px] tracking-wide">
+			Ανακοινώσεις
+		</h1>
 		{
 			announcements.map(a => {
 				return (
-					<div class="flex flex-row gap-x-4 h-[400px]">
-						<div class="max-w-[400px] min-w-[200px] rounded-sm max-h-[300px] overflow-hidden">
+					<div class="flex flex-row gap-x-4 gap-y-4 h-[400px] max-sm:flex-col max-sm:h-auto">
+						<h2 class="hidden max-sm:block text-2xl text-center font-anaktoria font-bold text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.2)]">
+							{a.title}
+						</h2>
+						<div class="max-w-[400px] min-w-[200px] max-sm:w-full max-sm:max-h-[300px] rounded-[3px] max-h-[450px] overflow-hidden shadow-md shadow-gray-600 border-2 border-red-900">
 							<img
 								src={imgThumbSrc(a)}
 								alt={a.title}
 								width="400"
 								height="500"
-								class="min-w-[200px] object-cover shadow-lg shadow-slate-500"
+								class="object-cover h-full"
 							/>
 						</div>
-						<div class="flex flex-col mb-4 w-[calc(100vw_-_500px)] min-w-[200px] gap-y-4">
-							<h2 class="text-3xl font-anaktoria font-bold text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.2)]">
+						<div class="flex flex-col mb-4 w-[calc(100vw_-_500px)] max-sm:w-full min-w-[200px] gap-y-4">
+							<h2 class="max-sm:hidden text-3xl font-anaktoria font-bold text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.2)]">
 								{a.title}
 							</h2>
-							<p class="text-gray-100 bg-red-900 w-min px-2 py-1 rounded-md shadow-md shadow-slate-300">
-								{formatDate(a.date)}
+							<p class="text-lg max-sm:text-base text-gray-100 bg-red-900 w-fit px-2 py-1 rounded-md shadow-md shadow-slate-300 tracking-wider">
+								{formatDate(a.date) + " • "} {a.views}{" "}
+								{a.views > 1 ? "Προβολές" : "Προβολή"}
 							</p>
 
-							<p class="max-h-[60%] overflow-hidden whitespace-break-spaces">
-								{a.content}
+							<p class="text-lg max-sm:text-base pl-1 max-h-[60%] max-sm:max-h-max overflow-hidden whitespace-break-spaces">
+								{a.content
+									? a.content.slice(0, a.content.indexOf(" ", 200)) + "..."
+									: ""}
 							</p>
-							<p>
-								{a.views} {a.views > 1 ? "Προβολές" : "Προβολή"}
-							</p>
-							<a href={`/anakoinoseis/${a.title}`}>Περισσότερα</a>
+							<a
+								href={`/sxoli/anakoinoseis/${a.title}`}
+								class="text-lg max-sm:text-base  text-gray-100 bg-red-900 w-fit px-2 py-1 rounded-md shadow-md shadow-slate-300">
+								Περισσότερα <i class="fa-solid fa-arrow-right" />
+							</a>
 						</div>
 					</div>
 				);

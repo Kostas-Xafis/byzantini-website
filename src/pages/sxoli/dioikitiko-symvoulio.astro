@@ -1,0 +1,13 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Administration from "../../components/sxoli/Administration.astro";
+export const prerender = true;
+---
+
+<Layout title="Η Σχολή μας">
+	<main
+		id="sxoli"
+		class="w-full h-max flex flex-col font-didact overflow-hidden px-12 py-6 max-sm:px-4">
+		<Administration />
+	</main>
+</Layout>
