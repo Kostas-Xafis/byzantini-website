@@ -27,9 +27,9 @@ export type WrappedConnection = {
 };
 
 type DBType = "sqlite-prod" | "sqlite-dev" | null;
-type SimpleConnection = ReturnType<typeof createClient>;
-type ConnectionType<IsWrapped extends boolean> =
-	IsWrapped extends true ? WrappedConnection : SimpleConnection;
+type SimpleConnection = Client;
+type ConnectionType<ShouldWrap extends boolean> =
+	ShouldWrap extends true ? WrappedConnection : SimpleConnection;
 
 export function createDbConnection<T extends boolean = false>(type?: DBType, wrapper?: T): ConnectionType<T> {
 	const {
@@ -126,7 +126,7 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 
 
 
-const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][0], err = false) => {
+const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][number], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
 	let argStr = JSON.stringify(args);
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
