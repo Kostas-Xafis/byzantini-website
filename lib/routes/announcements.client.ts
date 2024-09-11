@@ -42,7 +42,7 @@ const getImagesById: EndpointRoute<"/announcements/images/[id:number]", any, Ann
 	validation: undefined,
 };
 
-const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Announcements & { images: string[]; }> = {
+const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Announcements & { images: AnnouncementImages[]; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/announcements/title/[title:string]",

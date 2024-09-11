@@ -78,7 +78,7 @@ const announcementsToTable = (announcements: Announcements[]): AnnouncementTable
 		delete announcement.image_counter;
 		const columns = Object.values(announcement);
 		columns.push(a.views);
-		columns[3] = `/anakoinoseis/${a.title.replace(/ /g, "-")}`;
+		columns[3] = `/sxoli/anakoinoseis/${a.title.replaceAll(" ", "%20")}`;
 		return columns as unknown as AnnouncementTable;
 	});
 };

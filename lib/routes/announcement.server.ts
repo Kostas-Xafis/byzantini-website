@@ -15,13 +15,14 @@ async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announ
 
 	const title = announcement.title.replaceAll(/ /g, "-");
 	const lastmod = new Date(announcement.date).toISOString();
-	const url = `<url><loc>https://musicschool-metamorfosi.gr/anakoinoseis/${title}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>`;
+	const url = `<url><loc>https://musicschool-metamorfosi.gr/sxoli/anakoinoseis/${title}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>`;
 	sitemapStr = sitemapStr.replace("</urlset>", url + "</urlset>");
 
 	const sitemapBuf = new TextEncoder().encode(sitemapStr);
 	await Bucket.put(ctx, sitemapBuf, "sitemap-announcements.xml", "application/xml");
 }
 
+// Doesn't work as expected
 async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
 	if (!sitemap) return;
@@ -34,7 +35,7 @@ async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) 
 	// Replace url that contains the announcement title
 	titles.forEach(title => {
 		if (!sitemapStr.includes(title)) return;
-		const regexedTitle = title.replace(/[\/\\^$*+?.()|[\]{}]/g, "\\$&").replaceAll(/ /g, "-");
+		const regexedTitle = title.replace(/[\/\\^$*+?.()|[\]{}]/g, "\\$&").replaceAll(" ", "%20");
 		const regex = new RegExp(`<url>(.|\n)*?${regexedTitle}(.|\n)*?<\/url>`, "g");
 		sitemapStr = sitemapStr.replace(regex, "");
 	});
@@ -84,14 +85,16 @@ serverRoutes.getImagesById.func = ({ ctx, slug }) => {
 	});
 };
 
+
+
 serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
 	return execTryCatch(async T => {
 		const { title } = slug;
 		const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
-		const imageNames = await T.executeQuery<Pick<AnnouncementImages, "name">>("SELECT name FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
+		const images = await T.executeQuery<AnnouncementImages>("SELECT name, is_main FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
 		if (!announcement) throw Error("announcement not found");
 		await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
-		return { ...announcement, images: imageNames.map(({ name }) => name) };
+		return { ...announcement, images };
 	});
 };
 

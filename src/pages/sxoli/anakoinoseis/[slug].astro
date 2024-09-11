@@ -1,16 +1,13 @@
 ---
 import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
+import type { AnnouncementImages, Announcements } from "../../../../types/entities";
 import Spinner from "../../../components/other/Spinner.astro";
 import Layout from "../../../layouts/Layout.astro";
 
 let url = Astro.url.pathname;
 url = url.endsWith("/") ? url.slice(0, -1) : url;
 const announcement_title = (url.split("/").pop() as string).replaceAll("%20", " ");
-let announcement:
-	| ({ id: number; title: string; date: number; content: string; views: number } & {
-			images: string[];
-	  })
-	| undefined;
+let announcement: (Announcements & { images: AnnouncementImages[] }) | undefined;
 try {
 	const res_announcement = await useAPI(API.Announcements.getByTitle, {
 		UrlArgs: { title: announcement_title }
@@ -22,9 +19,13 @@ try {
 }
 const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
+
+const mainImg = announcement.images.find(img => img.is_main) as AnnouncementImages;
+announcement.images = announcement.images.filter(img => !img.is_main);
+console.log(announcement);
 ---
 
-<Layout title={announcement.title} imageUrl={imgThumbSrc + announcement.images[0]}>
+<Layout title={announcement.title} imageUrl={imgThumbSrc + mainImg.name}>
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}
@@ -41,8 +42,8 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 			<div class="group-[:is(.loaded)]/img:block max-w-[780px] border-2 border-red-900">
 				<img
 					fetchpriority="high"
-					data-src={imgSrc + announcement.images[0]}
-					src={imgSrc + announcement.images[0]}
+					data-src={imgSrc + mainImg.name}
+					src={imgSrc + mainImg.name}
 					alt={announcement?.title as string}
 					height="640"
 					class="w-full max-w-[780px] object-cover max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px] shadow-md shadow-slate-600"
@@ -57,7 +58,6 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				class="flex flex-row flex-wrap w-full mt-4 gap-y-6 loading items-center justify-evenly self-center">
 				{
 					announcement.images.map((image, i) => {
-						if (i === 0) return null;
 						return (
 							<div class="imgLoader group/img" data-imgIndex={i - 1}>
 								<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px]">
@@ -67,7 +67,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 									type="button"
 									class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden border-2 border-red-900">
 									<img
-										data-src={imgThumbSrc + image}
+										data-src={imgThumbSrc + image.name}
 										alt={announcement?.title as string}
 										width="400px"
 										class="w-[400px] object-cover h-full"
@@ -119,12 +119,12 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					{
 						// Have at least up to 5 preview thumbnails in the carousel
 						announcement.images
-							.slice(1, 6)
+							.slice(0, 5)
 							.map((image, i) => (
 								<img
 									class="w-[60px] aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
 									alt={announcement?.title}
-									src={imgThumbSrc + image}
+									src={imgThumbSrc + image.name}
 								/>
 							))
 					}
@@ -177,7 +177,7 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 				imgContainer.addEventListener("click", () => {
 					document.dispatchEvent(
 						new CustomEvent("open_carousel", {
-							detail: { index: Number(imgContainer.dataset.imgindex as string) }
+							detail: { index: Number(imgContainer.dataset.imgindex as string) + 1 }
 						})
 					);
 				});
