@@ -6,13 +6,11 @@
 		"deploy": "wrangler deploy",
 		"start": "wrangler dev"
 	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20230904.0",
-		"typescript": "^5.0.4",
-		"wrangler": "^3.0.0"
-	},
 	"dependencies": {
 		"@pdf-lib/fontkit": "^1.1.1",
 		"pdf-lib": "^1.17.1"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.1.9"
 	}
 }

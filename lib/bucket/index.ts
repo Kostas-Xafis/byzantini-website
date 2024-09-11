@@ -36,10 +36,6 @@ export class Bucket {
 		return isDevFromURL(context.url) || !((context.locals as any)?.runtime?.env);
 	}
 
-	static async getDevFilename(filename: string) {
-		return `${S3_DEV_BUCKET_NAME}/latest/${filename}`;
-	}
-
 	// Development functions
 	static async listDev(bucketName?: string) {
 		const listObjectsCommand = (await eval('import("@aws-sdk/client-s3")')).ListObjectsCommand as typeof ListObjectsCommand;

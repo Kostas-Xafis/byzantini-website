@@ -1,17 +1,14 @@
 //@ts-ignore
-import { Registrations } from "../../types/entities";
+import { Registrations, Coords, TemplateCoords } from "./types";
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import type { R2Bucket, R2ObjectBody } from "@cloudflare/workers-types";
-export interface Env {
-	BUCKET: R2Bucket;
-}
 
-export default {
-	async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+Bun.serve({
+	port: 3000,
+	async fetch(req: Request): Promise<Response> {
 		const corsHeaders = {
 			"Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Methods": "GET, OPTIONS",
+			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 			"Access-Control-Allow-Headers": "*",
 		};
 
@@ -34,37 +31,41 @@ export default {
 				}
 			}
 			return handleOptions(req);
-		}
+		} else if (req.method === "POST") {
+			let slug_id = Number(new URL(req.url).pathname.split("/")[1] || "-1");
+			if (isNaN(slug_id)) slug_id = -1;
+			if (slug_id < 0 || slug_id > 2) return new Response("Invalid slug_id", { status: 400 });
 
-		let slug_id = Number(new URL(req.url).pathname.split("/")[1] || "-1");
-		if (isNaN(slug_id)) slug_id = -1;
-		if (slug_id < 0 || slug_id > 2) return new Response("Invalid slug_id", { status: 400 });
-
-		const pdf = new PDF(env);
-		await pdf.fillTemplate(req, slug_id);
-
-		return new Response(await pdf.getBlob(), {
-			headers: {
-				...corsHeaders,
-				"Content-Type": "application/pdf",
-				"Access-Control-Allow-Origin": "*",
+			try {
+				const pdf = new PDF();
+				await pdf.fillTemplate(req, slug_id);
+				return new Response(await pdf.getBlob(), {
+					headers: {
+						...corsHeaders,
+						"Content-Type": "application/pdf",
+						"Access-Control-Allow-Origin": "*",
+					}
+				});
+			} catch (e) {
+				return new Response("Malformed request, please check the request body.", { status: 400 });
 			}
-		});
+		} else {
+			return new Response("Invalid request. This service accepts only POST requests", { status: 400 });
+		}
 	},
-};
+});
+
 
 export class PDF {
-	private static TemplateFileName = ["byz_template.pdf", "par_template.pdf", "eur_template.pdf"];
+	private static siteURL = "https://musicschool-metamorfosi.gr";
+	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
 	private doc = {} as typeof PDFDocument.prototype;
-	private env = {} as Env;
-	constructor(env: Env) {
-		this.env = env;
-	};
+	constructor() { };
 
 	public async fillTemplate(req: Request, class_id: number): Promise<void> {
 		const [templateBuffer, fontBuffer, body] = await Promise.all([
 			(async () =>
-				(await this.env.BUCKET.get(this.getTemplateURL(class_id)) as R2ObjectBody).arrayBuffer()
+				(await fetch(PDF.siteURL + this.getTemplateURL(class_id))).arrayBuffer()
 			)(),
 			DidactGothicFontBuff(),
 			req.json() as Promise<{ student: Registrations; teachersName: string; instrument?: string; }>
@@ -95,7 +96,11 @@ export class PDF {
 		p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font });
 		p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font });
 		p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font });
-		p.drawText("" + body.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: body.teachersName.length <= 24 ? fontSize : (body.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
+		if (body?.teachersName) {
+			p.drawText("" + body.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: body.teachersName.length <= 24 ? fontSize : (body.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
+		} else {
+			p.drawText("-", { x: c.teachersName.x, y: c.teachersName.y, size: fontSize, font });
+		}
 
 		const date = new Date(s.date);
 		let month = (date.getMonth() + 1) + "";
@@ -120,11 +125,6 @@ export class PDF {
 			if (body.student.class_id === 1) p.drawText(body?.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
 			else if (body.student.class_id === 2) p.drawText(body?.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
 		}
-		// if (body.instrument) {
-		// 	p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureEur.x, y: c.signatureEur.y, size: fontSize, font });
-		// } else {
-		// 	p.drawText(body.student.first_name + " " + body.student.last_name, { x: c.signatureByz.x, y: c.signatureByz.y, size: fontSize, font });
-		// }
 	}
 
 	public getBlob(): Promise<Uint8Array> {
@@ -135,36 +135,6 @@ export class PDF {
 		return PDF.TemplateFileName[id];
 	}
 }
-
-type Coords = { x: number, y: number; };
-
-type TemplateCoords = {
-	am: Coords,
-	lastName: Coords,
-	firstName: Coords,
-	fathersName: Coords,
-	road: Coords,
-	number: Coords,
-	tk: Coords,
-	region: Coords,
-	birthDate: Coords,
-	telephone: Coords,
-	cellphone: Coords,
-	email: Coords,
-	registrationYear: Coords,
-	classYear: Coords,
-	teachersName: Coords,
-	dateDD: Coords,
-	dateMM: Coords,
-	dateYYYY: Coords,
-	year1: Coords,
-	year2: Coords,
-	instrumentPar: Coords,
-	instrumentEur: Coords,
-	instrumentLarge: Coords,
-	signatureByz: Coords,
-	signatureEur: Coords,
-};
 
 const pdfHeight = 841.89;
 const H = (y: number) => pdfHeight - y;
@@ -200,3 +170,4 @@ Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
 const DidactGothicFontBuff = async () => {
 	return await (await fetch("https://musicschool-metamorfosi.gr/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
 };
+

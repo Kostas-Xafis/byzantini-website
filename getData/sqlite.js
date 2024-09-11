@@ -12,6 +12,7 @@ module.exports = getDatabase = function (isProduction) {
 
 		let client = null;
 		if (isProduction) {
+			console.log(`Connected to production sqlite database`);
 			client = createClient({
 				url: TURSO_DB_URL,
 				authToken: TURSO_DB_TOKEN,
@@ -25,7 +26,6 @@ module.exports = getDatabase = function (isProduction) {
 			});
 		}
 
-		console.log(`Connected to local sqlite database`);
 		return client;
 	} catch (err) {
 		console.error("Could not establish connection with the database");

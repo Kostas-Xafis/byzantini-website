@@ -58,8 +58,11 @@ export class PDF {
 		p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font });
 		p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font });
 		p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font });
-		p.drawText("" + this.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: this.teachersName.length <= 24 ? fontSize : (this.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
-
+		if (this?.teachersName) {
+			p.drawText("" + this.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: this.teachersName.length <= 24 ? fontSize : (this.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
+		} else {
+			p.drawText("-", { x: c.teachersName.x, y: c.teachersName.y, size: fontSize, font });
+		}
 		const date = new Date(s.date);
 		let month = (date.getMonth() + 1) + "";
 		month = month.length === 1 ? "0" + month : month;
@@ -136,9 +139,9 @@ export class PDF {
 
 		let requestArr = arr.map((pdf) => async () => {
 			let res;
-			if (!serverTimeout && Math.random() > 0.725) {
+			if (!serverTimeout && Math.random() > 0) {
 				try {
-					let resp = await fetch("https://pdf-create.koxafis.workers.dev/" + pdf.student.class_id, {
+					let resp = await fetch("https://byz-pdfworker-1063742578003.europe-west1.run.app/" + pdf.student.class_id, {
 						method: "POST",
 						body: JSON.stringify({
 							student: pdf.student,

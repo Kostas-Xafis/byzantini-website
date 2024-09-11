@@ -5,7 +5,7 @@ import Layout from "../../../layouts/Layout.astro";
 
 let url = Astro.url.pathname;
 url = url.endsWith("/") ? url.slice(0, -1) : url;
-const announcement_title = (url.split("/").pop() as string).replace(/-/g, " ");
+const announcement_title = (url.split("/").pop() as string).replaceAll("%20", " ");
 let announcement:
 	| ({ id: number; title: string; date: number; content: string; views: number } & {
 			images: string[];
@@ -59,15 +59,13 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 					announcement.images.map((image, i) => {
 						if (i === 0) return null;
 						return (
-							<div
-								class="imgLoader group/img border-2 border-red-900"
-								data-imgIndex={i - 1}>
+							<div class="imgLoader group/img" data-imgIndex={i - 1}>
 								<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px]">
 									<Spinner />
 								</div>
 								<button
 									type="button"
-									class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden">
+									class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden border-2 border-red-900">
 									<img
 										data-src={imgThumbSrc + image}
 										alt={announcement?.title as string}

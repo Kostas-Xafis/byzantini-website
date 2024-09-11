@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, onMount, untrack } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
@@ -254,10 +254,17 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "class_year", name: "Έτος Φοίτησης", type: "string" },
 ];
 
+const getRegistrationsYear = () => {
+	const year = new Date().getFullYear();
+	const nextYear = year + 1;
+	return `${year}-${nextYear}`;
+};
+
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 
+	const [year, setYear] = createSignal(new Date().getFullYear());
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setRegistrationHydrate = useHydrateById({
@@ -270,12 +277,17 @@ export default function RegistrationsTable() {
 		],
 	});
 	useHydrate(() => {
+		// apiHook(API.Registrations.get, { UrlArgs: { year: year() } });
 		apiHook(API.Registrations.get);
 		apiHook(API.Teachers.getByFullnames);
 		apiHook(API.Instruments.get);
 	});
 
-	// const [year, setYear] = createSignal(new Date().getFullYear());
+	// createEffect(
+	// 	on(year, (y) => {
+	// 		apiHook(API.Registrations.get, { UrlArgs: { year: y } });
+	// 	})
+	// );
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
@@ -472,7 +484,11 @@ export default function RegistrationsTable() {
 						null;
 					try {
 						const pdf = await PDF.createInstance();
-						pdf.setTemplateData(student, teacher.fullname, instrument?.name || "");
+						pdf.setTemplateData(
+							student,
+							teacher?.fullname || "",
+							instrument?.name || ""
+						);
 						await pdf.fillTemplate();
 						await pdf.download();
 						pushAlert(createAlert("success", "Επιτυχής λήψη PDF"));
@@ -500,7 +516,7 @@ export default function RegistrationsTable() {
 							const pdf = await PDF.createInstance();
 							pdf.setTemplateData(
 								item.student,
-								item.teacher.fullname,
+								item.teacher?.fullname || "",
 								item.instrument?.name || ""
 							);
 							pdfArr.push(pdf);
@@ -844,13 +860,13 @@ export default function RegistrationsTable() {
 					{/* <LeftTableGroup>
 						<button
 							class="px-2 py-1 border border-red-900 text-lg rounded-md"
-							onClick={() => setYear(year() + 1)}>
-							{year() + "-" + (year() + 1 + "").slice(3)}
+							onClick={() => setYear(Math.min(year() + 1, 2024))}>
+							{year() + "-" + (year() + 1 + "").slice(2)}
 						</button>
 						<button
 							class="px-2 py-1 border border-red-900 text-lg rounded-md"
-							onClick={() => setYear(year() - 1)}>
-							{year() - 1 + "-" + (year() + "").slice(3)}
+							onClick={() => setYear(Math.max(year() - 1, 2023))}>
+							{year() - 1 + "-" + (year() + "").slice(2)}
 						</button>
 					</LeftTableGroup> */}
 				</Table>
