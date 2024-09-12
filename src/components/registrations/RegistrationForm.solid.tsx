@@ -592,6 +592,10 @@ export function RegistrationForm() {
 				);
 				throw Error("");
 			}
+			if (data.amka.length !== 11) {
+				alert("Ο ΑΜΚΑ αποτελείται μόνο από 11 ψηφία.");
+				throw Error("");
+			}
 			if (
 				data.teacher_id === -1 &&
 				data.class_year !== "Υπό Κατάταξη" &&
