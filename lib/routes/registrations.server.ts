@@ -9,13 +9,16 @@ const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to
 
 const { PROD } = import.meta.env;
 
-serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(async () => {
-		const { ENV } = import.meta.env;
+serverRoutes.get.func = ({ ctx: _ctx, slug }) => {
+	return execTryCatch(() => {
 		if (PROD) {
 			return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'");
 		}
 		return executeQuery<Registrations>("SELECT * FROM registrations");
+
+		// const { year } = slug;
+		// return executeQuery<Registrations>("SELECT * FROM registrations");
+		// return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [`${year}-${year + 1}`]);
 	});
 };
 
@@ -46,7 +49,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = Object.values(body);
 		await T.executeQuery(
-			`INSERT INTO registrations (last_name, first_name, am, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(args)})`,
+			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(args)})`,
 			args
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");

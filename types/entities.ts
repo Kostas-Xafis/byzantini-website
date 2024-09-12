@@ -233,6 +233,7 @@ export interface TeacherInstruments {
 export const v_Registrations = object({
 	id: number([integer(), minValue(0)]),
 	am: string(),
+	amka: string([length(11)]),
 	first_name: string(),
 	last_name: string(),
 	fathers_name: string(),
@@ -258,6 +259,7 @@ export const v_Registrations = object({
 export interface Registrations {
 	id: number;
 	am: string;
+	amka: string;
 	first_name: string;
 	last_name: string;
 	fathers_name: string;

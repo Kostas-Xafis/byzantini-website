@@ -57,6 +57,12 @@ const RegistrationsInputs = (
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
 		},
+		amka: {
+			label: "ΑΜΚΑ",
+			name: "amka",
+			type: "text",
+			iconClasses: "fa-solid fa-id-card",
+		},
 		last_name: {
 			label: "Επώνυμο",
 			name: "last_name",
@@ -204,6 +210,7 @@ const registrationsToTable = (
 ) => {
 	return registrations.map((reg) => {
 		const columns = Object.values(reg) as any[];
+		console.log(Object.entries(reg));
 		columns[15] = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"][
 			columns[15] as number
 		];
@@ -211,7 +218,9 @@ const registrationsToTable = (
 		columns[17] = instruments.find((i) => i.id === columns[17])?.name;
 		if (columns[19] === 0 || !columns[19]) columns[19] = null;
 		if (columns[20] === 0 || !columns[20]) columns[20] = null;
+		columns[22] = reg.amka;
 		columns[23] = null;
+		columns[24] = reg.pass;
 		return columns as unknown as RegistrationsTable;
 	});
 };
@@ -239,6 +248,7 @@ const columns: ColumnType<RegistrationsTable> = {
 	payment_amount: { type: "number", name: "Ποσό Πληρωμής", size: 8 },
 	total_payment: { type: "number", name: "Σύνολο Πληρωμής", size: 8 },
 	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής", size: 12 },
+	amka: { type: "string", name: "ΑΜΚΑ", size: 15 },
 	pass: { type: "boolean", name: "Προάχθει", size: 8 },
 };
 
@@ -246,6 +256,7 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "last_name", name: "Επώνυμο", type: "string" },
 	{ columnName: "first_name", name: "Όνομα", type: "string" },
 	{ columnName: "am", name: "ΑΜ", type: "number" },
+	{ columnName: "amka", name: "ΑΜΚΑ", type: "string" },
 	{ columnName: "teacher_id", name: "Καθηγητής", type: "string" },
 	{ columnName: "telephone", name: "Τηλέφωνο", type: "string" },
 	{ columnName: "cellphone", name: "Κινητό", type: "string" },
@@ -375,6 +386,7 @@ export default function RegistrationsTable() {
 			const data: Registrations = {
 				id: registration.id,
 				am: formData.get("am") as string,
+				amka: formData.get("amka") as string,
 				last_name: formData.get("last_name") as string,
 				first_name: formData.get("first_name") as string,
 				fathers_name: formData.get("fathers_name") as string,

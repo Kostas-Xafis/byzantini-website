@@ -55,6 +55,20 @@ const genericInputs: Record<
 			position: isPhone ? "top" : "left",
 		},
 	},
+	amka: {
+		label: "ΑΜΚΑ",
+		name: "amka",
+		type: "text",
+		required: true,
+		iconClasses: "fa-solid fa-id-card",
+		tooltip: {
+			message: [
+				"Συμπληρώνετε τον Αριθμό Μητρώου Κοινωνικής Ασφάλισης (ΑΜΚΑ) σας.",
+				"Ο ΑΜΚΑ αποτελείται από 11 ψηφία.",
+			],
+			position: isPhone ? "top" : "right",
+		},
+	},
 	last_name: {
 		label: "Επώνυμο",
 		name: "last_name",
@@ -65,7 +79,7 @@ const genericInputs: Record<
 			message: [
 				"Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης).",
 			],
-			position: isPhone ? "top" : "right",
+			position: isPhone ? "top" : "left",
 		},
 	},
 	first_name: {
@@ -76,7 +90,7 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
 			message: ["Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας."],
-			position: isPhone ? "top" : "left",
+			position: isPhone ? "top" : "right",
 		},
 	},
 	fathers_name: {
@@ -178,7 +192,7 @@ const byzantineInputs = (
 				message: [
 					"Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής",
 				],
-				position: isPhone ? "top" : "right",
+				position: isPhone ? "top" : "left",
 			},
 			onchange: (e) => {
 				const select = e.target as HTMLSelectElement;
@@ -233,7 +247,7 @@ const traditionalInputs = (
 				message: [
 					"Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής",
 				],
-				position: isPhone ? "top" : "right",
+				position: isPhone ? "top" : "left",
 			},
 			onchange: (e) => {
 				const select = e.target as HTMLSelectElement;
@@ -292,7 +306,7 @@ const europeanInputs = (
 				message: [
 					"Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής",
 				],
-				position: isPhone ? "top" : "right",
+				position: isPhone ? "top" : "left",
 			},
 			onchange: (e) => {
 				const select = e.target as HTMLSelectElement;
@@ -541,6 +555,7 @@ export function RegistrationForm() {
 			last_name: formData.get("last_name") as string,
 			first_name: formData.get("first_name") as string,
 			am: formData.get("am") as string,
+			amka: formData.get("amka") as string,
 			fathers_name: formData.get("fathers_name") as string,
 			telephone: (formData.get("telephone") as string) || "-",
 			cellphone: formData.get("cellphone") as string,
