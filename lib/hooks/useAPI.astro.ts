@@ -1,6 +1,6 @@
 import { parse } from "valibot";
 import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIResponse } from "../routes/index.client";
-import { convertUrlFromArgs } from "../utils.client";
+import { convertToUrlFromArgs } from "../utils.client";
 import type { DefaultEndpointResponse } from "../../types/routes";
 import { assertOwnProp } from "../utils.server";
 export { API };
@@ -26,7 +26,7 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 			}
 			const { RequestObject } = req;
 			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(URL + "/api" + convertUrlFromArgs(Route.path, req.UrlArgs), {
+			fetcher = fetch(URL + "/api" + convertToUrlFromArgs(Route.path, req.UrlArgs), {
 				method: Route.method,
 				headers: {
 					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"

@@ -7,19 +7,7 @@ export function randomHex(size = 16) {
 	return hex;
 };
 
-export function isDevFromURL(url: URL | string, localProd = true): boolean {
-	if (typeof url === "string") url = new URL(url);
-	// Only wrangler dev use cf plugins like buckets
-	if (!localProd) return url.hostname === "127.0.0.1" || url.hostname.includes("192.168.2.");
-	else return url.hostname === "localhost";
-};
-
-export function isOnlineDev(url: URL | string): boolean {
-	if (typeof url === "string") url = new URL(url);
-	return url.hostname === 'byzantini-website.pages.dev';
-};
-
-export function convertUrlFromArgs(url: string, args: any): string {
+export function convertToUrlFromArgs(url: string, args: any): string {
 	let newUrl = url.slice();
 	url.split("/")
 		.filter(part => part.startsWith("["))
@@ -107,6 +95,10 @@ export const sleep = (ms: number): Promise<void> =>
 export function removeAccents(str: string): string {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
+export function trimWhitespace(str: string): string {
+	return str.replace(/(^\s+|\s+)$/g, "");
+}
+
 /**
  * This function maps a value with from [valMin, valMax] to [outMin, outMax]
  */
@@ -425,10 +417,8 @@ export function loadScript(src: string, res?: () => boolean): Promise<void> {
 			resolve();
 		};
 		document.head.appendChild(script);
-
 	});
 };
-
 
 const imageCache = new Map<string, HTMLImageElement>();
 export const loadImage = (src: string, keep?: boolean): Promise<void> => {

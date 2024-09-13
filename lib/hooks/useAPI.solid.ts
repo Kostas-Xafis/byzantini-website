@@ -3,7 +3,7 @@ import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIResponse } from "../routes/index.client";
-import { convertUrlFromArgs } from "../utils.client";
+import { convertToUrlFromArgs } from "../utils.client";
 import { assertOwnProp } from "../utils.server";
 import type { DefaultEndpointResponse } from "../../types/routes";
 
@@ -38,7 +38,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
 			const body = (IsBlob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(URL + "/api" + convertUrlFromArgs(Route.path, UrlArgs), {
+			fetcher = fetch(URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
 				headers: {
 					"Content-Type": (IsBlob && RequestObject.type) || "application/json"
