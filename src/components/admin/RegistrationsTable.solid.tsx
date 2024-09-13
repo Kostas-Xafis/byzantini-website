@@ -275,7 +275,7 @@ export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 
-	const [year, setYear] = createSignal(new Date().getFullYear());
+	// const [year, setYear] = createSignal(new Date().getFullYear());
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setRegistrationHydrate = useHydrateById({
@@ -287,6 +287,7 @@ export default function RegistrationsTable() {
 			},
 		],
 	});
+
 	useHydrate(() => {
 		// apiHook(API.Registrations.get, { UrlArgs: { year: year() } });
 		apiHook(API.Registrations.get);
@@ -386,7 +387,7 @@ export default function RegistrationsTable() {
 			const data: Registrations = {
 				id: registration.id,
 				am: formData.get("am") as string,
-				amka: formData.get("amka") as string,
+				amka: (formData.get("amka") as string) || "",
 				last_name: formData.get("last_name") as string,
 				first_name: formData.get("first_name") as string,
 				fathers_name: formData.get("fathers_name") as string,

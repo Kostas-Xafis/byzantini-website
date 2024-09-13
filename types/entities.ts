@@ -233,7 +233,7 @@ export interface TeacherInstruments {
 export const v_Registrations = object({
 	id: number([integer(), minValue(0)]),
 	am: string(),
-	amka: string([length(11)]),
+	amka: union([string([length(11)]), literal("")]),
 	first_name: string(),
 	last_name: string(),
 	fathers_name: string(),
