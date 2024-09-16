@@ -139,17 +139,24 @@ async function UploadImages(args: {
 						});
 						return;
 					}
-					const thumbBlob = await fileToBlob(
-						await thumbCreator.createThumbnail(file, name, i === 0 ? 0.5 : undefined)
-					);
+					const thumbBlob = await (
+						await fetch(
+							"https://byz-imagecompression-1063742578003.europe-west1.run.app",
+							{
+								method: "POST",
+								body: await file.arrayBuffer(),
+							}
+						)
+					).blob();
 					if (!thumbBlob) throw new Error("Could not create thumbnail");
 					await apiHook(API.Announcements.imageUpload, {
 						RequestObject: thumbBlob,
 						UrlArgs: { id: announcement_id, name: "thumb_" + name },
 					});
 				} catch (e) {
+					console.error(e);
 					pushAlert(
-						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας ${name}`)
+						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`)
 					);
 				}
 			};

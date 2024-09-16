@@ -4,7 +4,12 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import { getKeyIndex, onElementMount, removeAccents } from "../../../lib/utils.client";
+import {
+	getKeyIndex,
+	looseStringIncludes,
+	onElementMount,
+	removeAccents,
+} from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
 import { Fill, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -210,7 +215,6 @@ const registrationsToTable = (
 ) => {
 	return registrations.map((reg) => {
 		const columns = Object.values(reg) as any[];
-		console.log(Object.entries(reg));
 		columns[15] = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"][
 			columns[15] as number
 		];
@@ -334,9 +338,7 @@ export default function RegistrationsTable() {
 					// In case where there is not a value for the column
 					return false;
 				}
-				const nsCol = removeAccents(col).toLowerCase();
-				const nsVal = removeAccents(value as string).toLowerCase();
-				return nsCol.includes(nsVal);
+				return looseStringIncludes(col, value as string);
 			});
 		} else if (type === "date") {
 			// @ts-ignore

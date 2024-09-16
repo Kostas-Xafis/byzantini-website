@@ -92,6 +92,17 @@ export function setFocusFixed(e: HTMLElement) {
 export const sleep = (ms: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
+
+//  String utility functions
+export function stringEquals(str1: string, str2: string, caseSensitive = false): boolean {
+	return caseSensitive ? str1 === str2 : str1.toLowerCase() === str2.toLowerCase();
+}
+export function looseStringEquals(str1: string, str2: string): boolean {
+	return stringEquals(removeAccents(str1), removeAccents(str2), true);
+}
+export function looseStringIncludes(str1: string, str2: string): boolean {
+	return removeAccents(str1).toLowerCase().includes(removeAccents(str2).toLowerCase());
+}
 export function removeAccents(str: string): string {
 	return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };

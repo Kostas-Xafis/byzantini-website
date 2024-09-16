@@ -8,6 +8,7 @@ import { loadXLSX } from "../../../lib/pdf.client";
 import {
 	deepCopy,
 	fileToBlob,
+	looseStringIncludes,
 	removeAccents,
 	teacherTitleByGender,
 } from "../../../lib/utils.client";
@@ -450,9 +451,7 @@ export default function TeachersTable() {
 				.filter((r) => {
 					const col = r[columnName as keyof Teachers];
 					if (typeof col === "string") {
-						let nCol = removeAccents(col).toLowerCase();
-						let nVal = removeAccents(value as string).toLowerCase();
-						return nCol.includes(nVal);
+						return looseStringIncludes(col, value as string);
 					}
 					return false;
 				});

@@ -1,7 +1,7 @@
 import type { Registrations } from "../types/entities";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
-import { UpdateHandler, asyncQueue, loadScript, sleep } from "./utils.client";
+import { UpdateHandler, asyncQueue, loadScript, looseStringEquals, sleep } from "./utils.client";
 
 
 const DidactGothicFontBufffer = await (await fetch("/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
@@ -9,7 +9,7 @@ const DidactGothicFontBufffer = await (await fetch("/fonts/DidactGothic-Regular.
 const TemplateCache = new Map<string, ArrayBuffer>();
 
 export class PDF {
-	private static TemplateURL = ["/byz_template.pdf", "/par_template.pdf", "/eur_template.pdf"];
+	private static TemplateURL = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
 	private student: Registrations = {} as Registrations;
 	private teachersName: string = "";
 	private instrument: string = "";
@@ -119,6 +119,9 @@ export class PDF {
 	}
 
 	public getFileName(): string {
+		if (looseStringEquals(this.student.class_year, "Υπό Κατάταξη")) {
+			return `Υπό κατάταξη/${this.student.first_name}_${this.student.last_name}.pdf`;
+		}
 		return `${this.teachersName}/${this.student.first_name}_${this.student.last_name}.pdf`;
 	}
 
@@ -130,16 +133,9 @@ export class PDF {
 	}
 
 	public static async downloadBulk(arr: PDF[], progressCallback?: (prog: number) => any): Promise<void> {
-		let serverTimeout = false;
-		const updateHandler = UpdateHandler.createInstance(5000);
-		updateHandler.setBackoff(5000, 2);
-		updateHandler.setFunction(() => {
-			serverTimeout = false;
-		});
-
 		let requestArr = arr.map((pdf) => async () => {
-			let res;
-			if (!serverTimeout && Math.random() > 0) {
+			let res = null;
+			if (Math.random() > 0.1) {
 				try {
 					let resp = await fetch("https://byz-pdfworker-1063742578003.europe-west1.run.app/" + pdf.student.class_id, {
 						method: "POST",
@@ -152,15 +148,10 @@ export class PDF {
 					if (resp.status >= 400) throw new Error("Server error");
 					res = await resp.blob();
 				} catch (e) {
-					serverTimeout = true;
-					if (!updateHandler.isTriggered()) {
-						updateHandler.trigger().catch(console.error);
-					} else {
-						updateHandler.reset({});
-					}
+					console.error(e);
 				}
 			}
-			if (!res) {
+			if (res === null) {
 				await pdf.fillTemplate();
 				let file = await pdf.toFile();
 				return { input: file, name: pdf.getFileName(), size: file.size };
