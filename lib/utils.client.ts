@@ -89,9 +89,9 @@ export function setFocusFixed(e: HTMLElement) {
 	e.setAttribute('tabindex', "");
 }
 
-export const sleep = (ms: number): Promise<void> =>
-	new Promise((resolve) => setTimeout(resolve, ms));
-
+export const sleep = (ms: number): Promise<void> => {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
 //  String utility functions
 export function stringEquals(str1: string, str2: string, caseSensitive = false): boolean {
@@ -144,9 +144,10 @@ export async function asyncQueue<T>(
 		maxJobs?: number,
 		verbose?: boolean,
 		progressCallback?: (prog: number) => any;
+		progressOnThrow?: boolean;
 	}
 ): Promise<T[]> {
-	let { maxJobs = 1, verbose = false, progressCallback = null } = args;
+	let { maxJobs = 1, verbose = false, progressCallback = null, progressOnThrow = false } = args;
 	let totalJobs = jobs.length;
 	let jobsCompleted = 0;
 	let queue: any[];
@@ -174,8 +175,16 @@ export async function asyncQueue<T>(
 				if (!job) return;
 
 				// Execute the job and store the result
-				results.push(await job());
-				jobsCompleted++;
+				if (progressOnThrow) {
+					try {
+						results.push(await job());
+					} catch (e) {
+						jobsCompleted++;
+					}
+				} else {
+					results.push(await job());
+					jobsCompleted++;
+				}
 
 				// Logging progress
 				if (progressCallback) {

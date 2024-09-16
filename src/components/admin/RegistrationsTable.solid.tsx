@@ -4,12 +4,7 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import {
-	getKeyIndex,
-	looseStringIncludes,
-	onElementMount,
-	removeAccents,
-} from "../../../lib/utils.client";
+import { getKeyIndex, looseStringIncludes, onElementMount } from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
 import { Fill, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -223,9 +218,9 @@ const registrationsToTable = (
 		if (columns[19] === 0 || !columns[19]) columns[19] = null;
 		if (columns[20] === 0 || !columns[20]) columns[20] = null;
 		columns[22] = reg.amka;
-		columns[23] = null;
-		columns[24] = reg.pass;
-		return columns as unknown as RegistrationsTable;
+		columns[23] = reg.pass;
+		// Removing the subscription_url column
+		return columns.slice(0, 24) as unknown as RegistrationsTable;
 	});
 };
 
@@ -498,13 +493,12 @@ export default function RegistrationsTable() {
 							) as Instruments)) ||
 						null;
 					try {
-						const pdf = await PDF.createInstance();
+						const pdf = new PDF();
 						pdf.setTemplateData(
 							student,
 							teacher?.fullname || "",
 							instrument?.name || ""
 						);
-						await pdf.fillTemplate();
 						await pdf.download();
 						pushAlert(createAlert("success", "Επιτυχής λήψη PDF"));
 					} catch (error: any) {
@@ -528,7 +522,7 @@ export default function RegistrationsTable() {
 					let pdfArr: PDF[] = [];
 					try {
 						for (const item of items) {
-							const pdf = await PDF.createInstance();
+							const pdf = new PDF();
 							pdf.setTemplateData(
 								item.student,
 								item.teacher?.fullname || "",

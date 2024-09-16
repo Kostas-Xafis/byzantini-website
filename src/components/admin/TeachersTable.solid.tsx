@@ -9,7 +9,6 @@ import {
 	deepCopy,
 	fileToBlob,
 	looseStringIncludes,
-	removeAccents,
 	teacherTitleByGender,
 } from "../../../lib/utils.client";
 import type {
@@ -430,11 +429,7 @@ export default function TeachersTable() {
 			if (!teachersInstruments || !instruments) return teachersToTable(teachers, classList);
 			const searchedInstruments = instruments
 				.map((x) => x)
-				?.filter((i) =>
-					removeAccents(i.name)
-						.toLowerCase()
-						.includes(removeAccents(value as string).toLowerCase())
-				)
+				?.filter((i) => looseStringIncludes(i.name, value as string))
 				.map((i) => i.id);
 			// inside a set because there might be multiple instruments per teacher and we don't want duplicates
 			searchRows = [

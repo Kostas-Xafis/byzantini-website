@@ -30,6 +30,11 @@ export function createAlert(
 	};
 }
 
+/**
+ * Pushes an alert to the alert stack
+ * @example pushAlert(createAlert("success", "This is a success message"));
+ * pushAlert(createAlert("error", "This is an error message"));
+ */
 export function pushAlert(alert: Alert) {
 	window.dispatchEvent(new CustomEvent("push_alert", { detail: alert }));
 	return alert;

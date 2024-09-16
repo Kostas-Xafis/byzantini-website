@@ -9,7 +9,6 @@ import type { AnnouncementImages, Announcements } from "../../../types/entities"
 import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
-import { ThumbnailGenerator } from "./ThumbnailGenerator";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import {
@@ -101,10 +100,8 @@ async function UploadImages(args: {
 }) {
 	const { announcement_id, fileHandler, images, is_main = false } = args;
 	const apiHook = useAPI(args.setStore);
-	await ThumbnailGenerator.loadCompressor();
 
 	const kb40 = 1024 * 40;
-	const thumbCreator = new ThumbnailGenerator();
 
 	const photos = fileHandler
 		.getFiles()
@@ -123,11 +120,8 @@ async function UploadImages(args: {
 							announcement_id,
 							name,
 							is_main,
+							image: blob,
 						},
-					});
-					await apiHook(API.Announcements.imageUpload, {
-						RequestObject: blob,
-						UrlArgs: { id: announcement_id, name },
 					});
 					if (file.size <= kb40) {
 						await apiHook(API.Announcements.imageUpload, {
