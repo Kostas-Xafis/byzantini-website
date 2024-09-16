@@ -179,6 +179,7 @@ export async function asyncQueue<T>(
 					try {
 						results.push(await job());
 					} catch (e) {
+					} finally {
 						jobsCompleted++;
 					}
 				} else {

@@ -59,6 +59,7 @@ export class PDF {
 					}
 					const imgBlob = await resp.blob();
 					let fileName = pdf.getFileName();
+					console.log({ input: imgBlob, name: fileName, size: imgBlob.size });
 					if (!namesArr.includes(fileName)) {
 						namesArr.push(fileName);
 					} else {
