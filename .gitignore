@@ -33,3 +33,5 @@ pnpm-debug.log*
 /public/images
 /public/fek-*.pdf
 /email
+./pdfWorker/.git
+/imageCompression

@@ -125,6 +125,12 @@ const TeachersInputs = (
 			type: "text",
 			iconClasses: "fa-solid fa-user",
 		},
+		amka: {
+			name: "amka",
+			label: "ΑΜΚΑ",
+			type: "text",
+			iconClasses: "fa-solid fa-id-card",
+		},
 		email: {
 			name: "email",
 			label: "Email",
@@ -294,17 +300,18 @@ const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]) 
 		columns[3] = (t.cv && "/kathigites/cv/" + t.cv) || undefined;
 		columns[4] = t?.email;
 		columns[5] = t?.telephone;
-		columns[6] = t?.linktree;
+		columns[6] = t?.amka || "-";
+		columns[7] = t?.linktree;
 
-		columns[7] = classes.find((c) => c.class_id === 0)?.priority;
-		columns[8] = classes.find((c) => c.class_id === 1)?.priority;
-		columns[9] = classes.find((c) => c.class_id === 2)?.priority;
+		columns[8] = classes.find((c) => c.class_id === 0)?.priority;
+		columns[9] = classes.find((c) => c.class_id === 1)?.priority;
+		columns[10] = classes.find((c) => c.class_id === 2)?.priority;
 
-		columns[10] = t.gender === "M" ? "Άρρεν" : "Θήλυ";
-		columns[11] = teacherTitleByGender(t.title, t.gender);
+		columns[11] = t.gender === "M" ? "Άρρεν" : "Θήλυ";
+		columns[12] = teacherTitleByGender(t.title, t.gender);
 
-		columns[12] = t.visible;
-		columns[13] = t.online;
+		columns[13] = t.visible;
+		columns[14] = t.online;
 		return columns as unknown as TeachersTableType;
 	});
 };
@@ -328,6 +335,7 @@ const columnNames: ColumnType<TeachersTableType> = {
 	cv: { type: "link", name: "Βιογραφικό" },
 	email: { type: "string", name: "Email", size: 15 },
 	telephone: { type: "string", name: "Τηλέφωνο", size: 12 },
+	amka: { type: "string", name: "ΑΜΚΑ", size: 13 },
 	linktree: { type: "link", name: "Σύνδεσμος", size: 9 },
 	priority_byz: {
 		type: "number",
@@ -467,6 +475,7 @@ export default function TeachersTable() {
 		const submit = async function (formData: FormData) {
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: formData.get("fullname") as string,
+				amka: (formData.get("amka") as string) || "",
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
@@ -565,6 +574,7 @@ export default function TeachersTable() {
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
 				fullname: formData.get("fullname") as string,
+				amka: (formData.get("amka") as string) || "",
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,

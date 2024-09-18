@@ -72,7 +72,7 @@ serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online];
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, email, telephone, linktree, gender, title, visible, online) VALUES (${questionMarks(args)})`, args);
+		const id = await T.executeQuery(`INSERT INTO teachers (fullname, amka, email, telephone, linktree, gender, title, visible, online) VALUES (${questionMarks(args)})`, args);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			const registration_number = body.registrations_number.shift() || null;
@@ -91,8 +91,8 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
-		await T.executeQuery(`UPDATE teachers SET fullname=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, args);
+		const args = [body.fullname, body.amka, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
+		await T.executeQuery(`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, args);
 
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {

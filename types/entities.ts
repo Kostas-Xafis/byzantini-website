@@ -124,7 +124,8 @@ export const v_Teachers = object({
 	gender: union([literal("M"), literal("F")]),
 	title: union([literal(0), literal(1), literal(2)]), // 0: Καθηγητής, 1: Δάσκαλος, 2: Επιμελητής
 	visible: boolean(),
-	online: boolean()
+	online: boolean(),
+	amka: union([string([length(11)]), literal("")]),
 });
 export interface Teachers {
 	id: number;
@@ -138,6 +139,7 @@ export interface Teachers {
 	title: 0 | 1 | 2;
 	visible: boolean;
 	online: boolean;
+	amka: string;
 };
 
 export const v_SimpleTeacher = omit(v_Teachers, ["picture", "cv"]);
