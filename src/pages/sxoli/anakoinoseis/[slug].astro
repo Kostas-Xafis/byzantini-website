@@ -22,7 +22,6 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
 const mainImg = announcement.images.find(img => img.is_main) as AnnouncementImages;
 announcement.images = announcement.images.filter(img => !img.is_main);
-console.log(announcement);
 ---
 
 <Layout title={announcement.title} imageUrl={imgThumbSrc + mainImg.name}>

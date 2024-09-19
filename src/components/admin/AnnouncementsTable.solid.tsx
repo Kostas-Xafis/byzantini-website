@@ -120,8 +120,11 @@ async function UploadImages(args: {
 							announcement_id,
 							name,
 							is_main,
-							image: blob,
 						},
+					});
+					await apiHook(API.Announcements.imageUpload, {
+						RequestObject: blob,
+						UrlArgs: { id: announcement_id, name },
 					});
 					if (file.size <= kb40) {
 						await apiHook(API.Announcements.imageUpload, {
