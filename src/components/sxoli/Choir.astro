@@ -152,7 +152,7 @@
 				}
 				isCarouselVisible = intersectionRatio > 0.4;
 				if (isCarouselVisible && !carouselUpdate.isTriggered()) {
-					carouselUpdate.trigger().catch((e) => {});
+					carouselUpdate.trigger().catch(() => {});
 				} else if (!isCarouselVisible && carouselUpdate.isTriggered()) {
 					carouselUpdate.abort();
 				}
@@ -192,6 +192,6 @@
 				else carouselUpdate.reset({ catchAbort : true});
 			}, 600);
 		});
-		carouselUpdate.trigger().catch((e) => {});
+		carouselUpdate.trigger().catch(() => {});
 	});
 </script>

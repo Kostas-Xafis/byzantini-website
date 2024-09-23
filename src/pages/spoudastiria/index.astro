@@ -272,7 +272,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 			const select = document.querySelector(
 				"#btsMobileContainer select"
 			) as unknown as HTMLSelectElement;
-			select.addEventListener("change", e => {
+			select.addEventListener("change", () => {
 				const atl = new AnimTimeline();
 				const locationName = select?.value as string;
 				const container = document.querySelector("#locationsContainer") as HTMLElement;

@@ -436,7 +436,7 @@ export function RegistrationForm() {
 	};
 
 	createEffect(
-		on(formSelected, (type) => {
+		on(formSelected, () => {
 			setSelectedTeacher(undefined);
 		})
 	);
@@ -653,14 +653,14 @@ export function RegistrationForm() {
 							id="firstSelect"
 							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
 							<For each={btns}>
-								{([str, type], index) => (
+								{([str, type]) => (
 									<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
 										<div
 											id={type}
 											class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md">
 											<button
 												class="p-6 text-5xl max-sm:text-3xl max-3xs:text-2xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
-												onClick={(e) => onSelectClick(type)}>
+												onClick={() => onSelectClick(type)}>
 												{str}
 											</button>
 										</div>
@@ -690,7 +690,7 @@ export function RegistrationForm() {
 											? "bg-red-900"
 											: "hover:bg-red-900")
 									}
-									onClick={(e) => onSelectClick(type)}>
+									onClick={() => onSelectClick(type)}>
 									<button
 										class={
 											"p-6 max-sm:p-2 text-2xl font-didact font-medium bg-transparent group-hover:text-white transition-colors ease-in-out max-sm:text-base" +

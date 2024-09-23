@@ -322,6 +322,6 @@ const cvSrc = "kathigites/cv/";
 			if(entries.length) networkCheckHandler.reset({});
 		});
 		pobsv.observe({entryTypes: ["resource"]});
-		networkCheckHandler.trigger().catch((e) => {});
+		networkCheckHandler.trigger().catch(() => {});
 	});
 </script>

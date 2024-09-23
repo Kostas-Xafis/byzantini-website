@@ -297,7 +297,7 @@ if (!mainImg) return Astro.redirect("/404");
 				const imgs = [
 					...document.querySelectorAll("#imgContainer img")
 				] as HTMLImageElement[];
-				imgs.forEach((img, i) => {
+				imgs.forEach(img => {
 					img.addEventListener("click", e => {
 						window.open(img.src.replace("thumb_", ""), "_blank");
 					});

@@ -33,7 +33,7 @@ export default function Popup(props: Props) {
 				.start();
 		});
 
-		popup?.addEventListener("hide", async (e) => {
+		popup?.addEventListener("hide", async () => {
 			// if (e instanceof CustomEvent && e.detail && e.detail.id !== props.id) return;
 			const atl = new AnimTimeline();
 			await atl
