@@ -22,7 +22,7 @@
 		"@tailwindcss/container-queries": "^0.1.1",
 		"air-datepicker": "^3.4.0",
 		"astro": "^4.4.15",
-		"astro-seo": "^0.7.5",
+		"astro-seo": "^0.7.6",
 		"browser-image-compression": "^2.0.2",
 		"schema-dts": "^1.1.2",
 		"solid-js": "^1.7.8",

@@ -1,8 +1,7 @@
-import { Show, createEffect, createMemo, onCleanup, onMount, type Accessor } from "solid-js";
+import { Show, createEffect, createMemo, on, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 import { getParent } from "../../../../lib/utils.client";
 import { customEvent } from "../../../../types/custom-events";
-import { on } from "solid-js";
 
 export type Page = {
 	page: number;
