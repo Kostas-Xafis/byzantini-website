@@ -1,22 +1,24 @@
 import type { Accessor, JSX } from "solid-js";
 import { For, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
+import { createStore, unwrap } from "solid-js/store";
 import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
 import { getParent, mappedValue } from "../../../../lib/utils.client";
-import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
-import { customEvent } from "../../../../types/custom-events";
 import type { Page } from "./Pagination.solid";
-import { createStore, unwrap } from "solid-js/store";
+import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
+
+type DOMElement = Element | JSX.Element;
+
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>; // The column names and types
 	data: Accessor<any[]>; // The data to be displayed
 	prefix?: string; // Prefix for the data- attribute on the table
-	children?: JSX.Element[];
+	children?: DOMElement | DOMElement[];
 	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
-	paginate?: boolean; // If the table should be paginated
 	pageSize?: number; // Number of items per page
 	tools?: {
 		top: boolean;
 		left: boolean;
+		bottom: boolean;
 	};
 };
 
@@ -72,9 +74,8 @@ export default function Table(props: Props) {
 		columns: columnNames,
 		prefix = "",
 		data,
-		paginate,
 		pageSize = 100,
-		tools = { top: true, left: false },
+		tools = { top: true, left: false, bottom: false },
 	} = props;
 	const [tablePagination, setTablePagination] = createStore<Page>({
 		page: 0,
@@ -138,7 +139,7 @@ export default function Table(props: Props) {
 			let mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
 			if (!mainCheckbox) return;
 			toggleCheckboxes();
-			if (paginate) {
+			if (tools.bottom) {
 				let tableHasSelected = document.querySelector(".selectedRow") !== null;
 				if (tableHasSelected) {
 					const ids = data().map((row) => row[0]) as number[];
@@ -170,7 +171,7 @@ export default function Table(props: Props) {
 			class={
 				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
 				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-dark" +
-				((paginate && " grid-rows-[max-content,1fr,max-content]") ||
+				((tools.bottom && " grid-rows-[max-content,1fr,max-content]") ||
 					" grid-rows-[max-content,1fr]") +
 				(tools.left ? " pr-8" : "")
 			}
@@ -178,7 +179,7 @@ export default function Table(props: Props) {
 			{props.children}
 			<div
 				id="tableContainer"
-				style={{ "--paginate": paginate ? "1" : "0", "grid-area": "table" }}
+				style={{ "--tools_bottom": tools.bottom ? "1" : "0", "grid-area": "table" }}
 				class={
 					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
 					(tools.left
@@ -215,12 +216,12 @@ export default function Table(props: Props) {
 				{`
 	@media (min-height: 860px) {
 		#tableContainer {
-			max-height: calc(var(--paginate) * 85vh + (1 - var(--paginate)) * 88.5vh);
+			max-height: calc(var(--tools_bottom) * 85vh + (1 - var(--tools_bottom)) * 88.5vh);
 		}
 	}
 	@media (max-height: 859px) {
 		#tableContainer {
-			max-height: calc(var(--paginate) * 82vh + (1 - var(--paginate)) * 88.5vh);
+			max-height: calc(var(--tools_bottom) * 82vh + (1 - var(--tools_bottom)) * 88.5vh);
 		}
 	}
 
@@ -231,9 +232,9 @@ export default function Table(props: Props) {
 			"top_tools top_tools"
 			${tools.left ? '"left_tools table"' : '"table table"'}
 			${
-				paginate && tools.left
+				tools.left && tools.bottom
 					? '"left_tools bottom_tools"'
-					: paginate
+					: tools.bottom
 					? '"bottom_tools bottom_tools"'
 					: ""
 			};

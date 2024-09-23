@@ -161,11 +161,7 @@ export default function PayoffsTable() {
 		<Show
 			when={store[API.Wholesalers.get] && store[API.Payoffs.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table
-				prefix={PREFIX}
-				data={shapedData}
-				columns={columnNames}
-				tools={{ left: false, top: true }}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 				<TopTableGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onModify} prefix={PREFIX} />

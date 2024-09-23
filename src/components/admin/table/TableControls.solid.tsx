@@ -7,8 +7,11 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
 export type Action = {
 	inputs: Record<string, InputProps>;
 	onSubmit:
-		| ((formData: FormData) => Promise<void>)
-		| ((formData: FormData) => AsyncGenerator<undefined, void, unknown>);
+		| ((formData: FormData, form?: HTMLFormElement) => Promise<void>)
+		| ((
+				formData: FormData,
+				form?: HTMLFormElement
+		  ) => AsyncGenerator<undefined, void, unknown>);
 	submitText: string;
 	headerText: string;
 	icon: ActionIcon;
@@ -78,7 +81,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	);
 }
 
-export function TopTableGroup(props: { children?: Element | JSX.Element }) {
+export function TopTableGroup(props: { children: Element | JSX.Element }) {
 	return (
 		<div
 			style={{ "grid-area": "top_tools" }}
@@ -88,7 +91,7 @@ export function TopTableGroup(props: { children?: Element | JSX.Element }) {
 	);
 }
 
-export function BottomTableGroup(props: { children?: Element | JSX.Element }) {
+export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 	return (
 		<div
 			style={{ "grid-area": "bottom_tools" }}

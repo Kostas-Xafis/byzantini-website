@@ -131,11 +131,7 @@ export default function SysUsersTable() {
 		<Show
 			when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table
-				prefix={PREFIX}
-				data={shapedData}
-				columns={columnNames}
-				tools={{ left: false, top: true }}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 				<TopTableGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

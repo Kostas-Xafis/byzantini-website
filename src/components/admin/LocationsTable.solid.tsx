@@ -231,7 +231,8 @@ export default function LocationsTable() {
 		const location = locations.find((p) => p.id === selectedItems[0]);
 		if (!location) return modifyModal;
 
-		const submit = async function (formData: FormData) {
+		const submit = async function (formData: FormData, form?: HTMLFormElement) {
+			if (!form) return;
 			const data: Omit<Locations, "image"> = {
 				id: location.id,
 				name: formData.get("name") as string,
@@ -245,7 +246,9 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner").map((i) => Number(i.dataset.value) as 0 | 1)[0],
+				partner: getMultiSelect("partner", form).map(
+					(i) => Number(i.dataset.value) as 0 | 1
+				)[0],
 			};
 			const res = await apiHook(API.Locations.update, {
 				RequestObject: data,
@@ -315,11 +318,7 @@ export default function LocationsTable() {
 
 	return (
 		<Show when={store[API.Locations.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table
-				prefix={PREFIX}
-				data={shapedData}
-				columns={columnNames}
-				tools={{ left: false, top: true }}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 				<TopTableGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

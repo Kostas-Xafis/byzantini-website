@@ -47,7 +47,9 @@ export const useModalLoading = (prefix?: string) => {
 };
 
 const submitWrapper = (
-	onSubmit: ((formData: FormData) => Promise<void>) | AsyncGenerator<undefined, void, unknown>,
+	onSubmit:
+		| ((formData: FormData, form?: HTMLFormElement) => Promise<void>)
+		| AsyncGenerator<undefined, void, unknown>,
 	{
 		setModalLoading,
 		setModalOpen,
@@ -64,7 +66,7 @@ const submitWrapper = (
 				setModalLoading(true);
 			} else {
 				setModalLoading(true);
-				await onSubmit(new FormData(form));
+				await onSubmit(new FormData(form), form);
 			}
 			setModalLoading(false);
 			setModalOpen(false);
@@ -96,7 +98,11 @@ export default function Modal(props: Props) {
 
 		const { onSubmit } = actionStore.action;
 		if (isGeneratorFunction(onSubmit) && !genFunc) {
-			genFunc = onSubmit(new FormData(form)) as AsyncGenerator<undefined, void, unknown>;
+			genFunc = onSubmit(new FormData(form), form) as AsyncGenerator<
+				undefined,
+				void,
+				unknown
+			>;
 		}
 		await submitWrapper(
 			// @ts-ignore this gets to messy

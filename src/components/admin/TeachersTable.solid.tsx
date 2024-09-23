@@ -170,21 +170,21 @@ const TeachersInputs = (
 		},
 		ae_byz: {
 			name: "ae-byz",
-			label: "Α.Έκγρισης Βυζαντινής",
+			label: "Αρ.Έγκρισης Βυζαντινής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
 			value: teacherRegNumber.find((p) => p.class_id === 0)?.registration_number || "",
 		},
 		ae_par: {
 			name: "ae-par",
-			label: "Α.Έκγρισης Παραδοσιακής",
+			label: "Αρ.Έγκρισης Παραδοσιακής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
 			value: teacherRegNumber.find((p) => p.class_id === 1)?.registration_number || "",
 		},
 		ae_eur: {
 			name: "ae-eur",
-			label: "Α.Έκγρισης Ευρωπαϊκής",
+			label: "Αρ.Έγκρισης Ευρωπαϊκής",
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
 			value: teacherRegNumber.find((p) => p.class_id === 2)?.registration_number || "",
@@ -567,8 +567,9 @@ export default function TeachersTable() {
 		)
 			return modifyModal;
 
-		const submit = async function (formData: FormData) {
-			const classes = getMultiSelect("teacherClasses").map((btn) =>
+		const submit = async function (formData: FormData, form?: HTMLFormElement) {
+			if (!form) return;
+			const classes = getMultiSelect("teacherClasses", form).map((btn) =>
 				Number(btn.dataset.value)
 			) as number[];
 			const data: Teachers & TeacherJoins = {
@@ -578,31 +579,37 @@ export default function TeachersTable() {
 				email: formData.get("email") as string,
 				telephone: formData.get("telephone") as string,
 				linktree: formData.get("linktree") as string,
-				gender: getMultiSelect("gender").map((btn) =>
+				gender: getMultiSelect("gender", form).map((btn) =>
 					Number(btn.dataset.value) ? "F" : "M"
 				)[0],
-				title: getMultiSelect("title").map((btn) => Number(btn.dataset.value))[0] as
+				title: getMultiSelect("title", form).map((btn) => Number(btn.dataset.value))[0] as
 					| 0
 					| 1
 					| 2,
-				visible: getMultiSelect("visible").map(
-					(btn) => !!Number(btn.dataset.value)
-				)[0] as boolean,
-				online: getMultiSelect("online").map(
+				visible: getMultiSelect("visible", form).map((btn) => {
+					console.log(
+						btn,
+						btn.dataset.value,
+						Number(btn.dataset.value),
+						!!Number(btn.dataset.value)
+					);
+					return !!Number(btn.dataset.value);
+				})[0] as boolean,
+				online: getMultiSelect("online", form).map(
 					(btn) => !!Number(btn.dataset.value)
 				)[0] as boolean,
 				teacherClasses: classes,
 				teacherInstruments: (
 					[
 						classes.find((c) => c === 1) &&
-							getMultiSelect("teacherInstrumentsTraditional"),
+							getMultiSelect("teacherInstrumentsTraditional", form),
 						classes.find((c) => c === 2) &&
-							getMultiSelect("teacherInstrumentsEuropean"),
+							getMultiSelect("teacherInstrumentsEuropean", form),
 					].flat() as (HTMLInputElement | undefined)[]
 				)
 					.map((btn) => btn && Number(btn.dataset.value))
 					.filter((btn) => !!btn) as number[],
-				teacherLocations: getMultiSelect("teacherLocations").map((btn) =>
+				teacherLocations: getMultiSelect("teacherLocations", form).map((btn) =>
 					Number(btn.dataset.value)
 				) as number[],
 				priorities: getByName("priority", "startsWith")
@@ -897,12 +904,7 @@ export default function TeachersTable() {
 				store[API.Teachers.getInstruments]
 			}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table
-				prefix={PREFIX}
-				data={shapedData}
-				columns={columnNames}
-				hasSelectBox
-				tools={{ left: false, top: true }}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
 				<TopTableGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

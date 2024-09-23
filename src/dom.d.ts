@@ -16,7 +16,7 @@ declare global {
 		push_alert: CustomEvent<Alert>;
 		update_alert: CustomEvent<Alert>;
 		enable_input: CustomEvent<boolean>;
-		setTablePagination: CustomEvent<Page>;
+		onTablePageChange: CustomEvent<Page>;
 	}
 	interface Document {
 		querySelector<K extends HTMLElementTags = HTMLElement>(selectors: string): K | null;

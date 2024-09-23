@@ -96,11 +96,11 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 	};
 
 	return (
-		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2  border-[2px] border-red-900 px-4 py-2 gap-x-3 items-center rounded-[4px] ">
-			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md"></i>
+		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2 max-sm:px-8 max-sm:justify-center max-sm:w-min border-[2px] border-red-900 px-4 py-2 gap-x-3 items-center rounded-[4px]">
 			<div
-				class="group relative w-max flex flex-row !font-didact"
+				class="group relative w-max flex flex-row gap-x-2 !font-didact"
 				onClick={(e) => columnSelect(e)}>
+				<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md self-center"></i>
 				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-sm cursor-pointer rounded-md shadow-md">
 					{column().name} :
 				</p>
@@ -128,7 +128,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 				onChange={(e) => searchHandler(e)}
 			/>
 			<i
-				class="absolute fa-solid fa-xmark text-red-900 drop-shadow-md right-4 translate-x-[-25%] hover:bg-red-200 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
+				class="absolute fa-solid fa-xmark text-red-900 drop-shadow-md right-4 max-sm:right-2 max-sm:top-2 sm:translate-x-[-25%] hover:bg-red-200 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
 				onClick={(e) => clearSearch()}></i>
 		</div>
 	);

@@ -254,11 +254,7 @@ export default function PaymentsTable() {
 		<Show
 			when={store[API.Books.get] && store[API.Payments.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table
-				prefix={PREFIX}
-				data={shapedData}
-				columns={columnNames}
-				tools={{ left: false, top: true }}>
+			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
 				<TopTableGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

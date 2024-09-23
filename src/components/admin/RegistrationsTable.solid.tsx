@@ -546,7 +546,7 @@ export default function RegistrationsTable() {
 			inputs: {},
 			onSubmit: submit,
 			submitText: "Λήψη",
-			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγράφης σε PDF",
+			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγραφής σε PDF",
 			type: ActionEnum.DOWNLOAD_PDF,
 			icon: selectedItems.length > 1 ? ActionIcon.DOWNLOAD_ZIP : ActionIcon.DOWNLOAD_SINGLE,
 		};
@@ -847,11 +847,11 @@ export default function RegistrationsTable() {
 					prefix={PREFIX}
 					data={shapedData}
 					columns={columns}
-					paginate
 					hasSelectBox
 					tools={{
 						left: false,
 						top: true,
+						bottom: true,
 					}}>
 					<TopTableGroup>
 						<TableControlsGroup prefix={PREFIX}>

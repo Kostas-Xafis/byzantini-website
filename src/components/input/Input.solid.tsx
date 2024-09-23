@@ -38,9 +38,9 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 	return inputs;
 }
 
-export function getMultiSelect(prefix: string, isSelected = true) {
+export function getMultiSelect(prefix: string, form?: HTMLFormElement, isSelected = true) {
 	return [
-		...document.querySelectorAll<HTMLInputElement>(
+		...(form || document.body).querySelectorAll<HTMLInputElement>(
 			`button[data-specifier='${prefix}'][data-selected='${isSelected ? "true" : "false"}']`
 		),
 	];

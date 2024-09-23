@@ -12,7 +12,7 @@ export type CustomEvents = {
 	update_alert: CustomEvent<Alert>;
 	enable_input: CustomEvent<boolean>;
 	show: CustomEvent<void>;
-	setTablePagination: CustomEvent<Page>;
+	onTablePageChange: CustomEvent<Page>;
 };
 
 export function customEvent<K extends keyof CustomEvents>(name: K, detail?: CustomEvents[K]["detail"]) {
