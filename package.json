@@ -5,7 +5,6 @@
 	"scripts": {
 		"dev": "astro dev",
 		"start": "astro dev",
-		"check": "astro check",
 		"build": "astro build",
 		"preview": "astro build && wrangler pages dev ./dist",
 		"astro": "astro"
