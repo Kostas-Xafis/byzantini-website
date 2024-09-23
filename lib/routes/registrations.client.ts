@@ -2,11 +2,11 @@ import { object, omit, string } from "valibot";
 import { v_Registrations, type Registrations } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/registrations", any, Registrations[]> = {
+const get: EndpointRoute<"/registrations/[year:number]", any, Registrations[]> = {
 	authentication: true,
 	method: "GET",
-	path: "/registrations",
-	hasUrlParams: false,
+	path: "/registrations/[year:number]",
+	hasUrlParams: true,
 	validation: undefined,
 };
 

@@ -1,15 +1,19 @@
 import type { Accessor, JSX } from "solid-js";
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
 import { getParent, mappedValue } from "../../../../lib/utils.client";
 import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
+import { customEvent } from "../../../../types/custom-events";
+import type { Page } from "./Pagination.solid";
+import { createStore, unwrap } from "solid-js/store";
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>; // The column names and types
 	data: Accessor<any[]>; // The data to be displayed
 	prefix?: string; // Prefix for the data- attribute on the table
-	children?: JSX.Element | JSX.Element[];
+	children?: JSX.Element[];
 	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
-	paginate?: number; // Number of items per page
+	paginate?: boolean; // If the table should be paginated
+	pageSize?: number; // Number of items per page
 	tools?: {
 		top: boolean;
 		left: boolean;
@@ -69,15 +73,14 @@ export default function Table(props: Props) {
 		prefix = "",
 		data,
 		paginate,
+		pageSize = 100,
 		tools = { top: true, left: false },
 	} = props;
-	const [pagination, setPagination] =
-		(paginate && createSignal({ page: 0, size: paginate }, { equals: false })) || [];
-	//@ts-ignore
-	const maxPage = createMemo(() =>
-		Math.ceil(data().length / ((pagination && pagination().size) || data().length))
-	);
-
+	const [tablePagination, setTablePagination] = createStore<Page>({
+		page: 0,
+		pageSize,
+		dataSize: data().length,
+	});
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = () => {
 		const [direction, col_ind] = sorted();
@@ -108,17 +111,16 @@ export default function Table(props: Props) {
 	};
 	const readPageData = createMemo(() => {
 		const data = readRowData();
-		if (!pagination) return data;
-		const { page, size } = pagination();
-		if (data.length < page * size) {
-			//This happens during a user search
-			const newPage = Math.floor(data.length / size);
-			setPagination && setPagination((prev) => ({ ...prev, page: newPage }));
-			return data.slice(0, size);
+		const dataLength = data.length;
+		const { pageSize, dataSize } = unwrap(tablePagination);
+		const page = tablePagination.page;
+		if (dataLength !== dataSize) {
+			untrack(() => setTablePagination((prev) => ({ ...prev, dataSize: dataLength })));
+			return data.slice(0, pageSize);
 		}
 		let res = data.slice(
-			page * size,
-			mappedValue((page + 1) * size, 0, data.length, 0, data.length)
+			page * pageSize,
+			mappedValue((page + 1) * pageSize, 0, dataLength, 0, dataLength)
 		);
 		// In case of table sorting with pagination, the payment status of each row must be updated
 		setTimeout(() => document.dispatchEvent(new CustomEvent("hydrate")), 0);
@@ -149,22 +151,18 @@ export default function Table(props: Props) {
 		}
 	};
 
-	const onClickPagination = (e: MouseEvent) => {
-		const btn = getParent(e.target as HTMLElement, "button");
-		if (!btn || btn.dataset.active === "false") {
-			return;
-		}
-		const pageTurn = Number(btn.dataset["pageturn"]);
-		if (pageTurn === 0) {
-			return;
-		}
-		setPagination &&
-			setPagination((prev) => {
-				const page = prev.page + pageTurn;
-				return { ...prev, page };
-			});
-		document.dispatchEvent(new CustomEvent("hydrate"));
-	};
+	function tablePaginationListener(e: CustomEvent<Page>) {
+		const { page, pageSize, dataSize } = e.detail;
+		setTablePagination((prev) => ({ page, pageSize, dataSize }));
+	}
+
+	onMount(() => {
+		document.addEventListener("onTablePageChange", tablePaginationListener);
+	});
+
+	onCleanup(() => {
+		document.removeEventListener("onTablePageChange", tablePaginationListener);
+	});
 
 	return (
 		<div
@@ -213,61 +211,6 @@ export default function Table(props: Props) {
 					</For>
 				</div>
 			</div>
-			<Show when={paginate && paginate < props.data().length}>
-				<div
-					style={{ "grid-area": "pagination" }}
-					class="w-full pb-4 flex flex-row justify-center gap-x-2 font-didact text-2xl text-red-950"
-					onClick={onClickPagination}>
-					<button
-						// @ts-ignore
-						data-active={pagination().page - 1 >= 0}
-						class="group/pgBtn transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
-						data-pageTurn="-1"
-						type="button">
-						<i class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-gray-300"></i>
-					</button>
-					{/* @ts-ignore */}
-					{maxPage() > 1 && pagination().page - 1 >= 0 && (
-						<button
-							class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white"
-							data-pageTurn="-1"
-							type="button">
-							{/* @ts-ignore */}
-							{pagination().page}
-						</button>
-					)}
-					<button
-						class="relative transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-red-950 before:z-[10]"
-						data-pageTurn="0"
-						type="button">
-						{/* @ts-ignore */}
-						{pagination().page + 1}
-					</button>
-					{
-						//@ts-ignore
-						maxPage() > 2 && pagination().page + 1 < maxPage() && (
-							<button
-								class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 hover:bg-red-950 hover:text-white"
-								data-pageTurn="1"
-								type="button">
-								{/* @ts-ignore */}
-								{pagination().page + 2}
-							</button>
-						)
-					}
-					{/* @ts-ignore */}
-					{pagination().page !== maxPage() && (
-						<button
-							// @ts-ignore
-							data-active={pagination().page + 1 < maxPage()}
-							class="group/pgBtn transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
-							data-pageTurn="1"
-							type="button">
-							<i class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-gray-300"></i>
-						</button>
-					)}
-				</div>
-			</Show>
 			<style>
 				{`
 	@media (min-height: 860px) {
@@ -284,11 +227,17 @@ export default function Table(props: Props) {
 	#table {
 		display:grid;
 		grid-template-columns: ${tools.left ? "minmax(min-content, calc(4rem + 7ch)) auto" : "100%"};
-		grid-template-rows: auto auto;
 		grid-template-areas:
 			"top_tools top_tools"
 			${tools.left ? '"left_tools table"' : '"table table"'}
-			${paginate && tools.left ? '"left_tools pagination"' : paginate ? '"pagination pagination"' : ""};
+			${
+				paginate && tools.left
+					? '"left_tools bottom_tools"'
+					: paginate
+					? '"bottom_tools bottom_tools"'
+					: ""
+			};
+
 	}
 
 	.row {

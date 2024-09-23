@@ -1,6 +1,7 @@
 import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid.ts";
 import type { ObjectValuesToUnion } from "../types/helpers.ts";
 import type { Alert } from "./components/admin/Alert.solid.tsx";
+import type { Page } from "./components/admin/table/Pagination.solid.tsx";
 
 type HTMLElementTags = ObjectValuesToUnion<HTMLElementTagNameMap>;
 
@@ -15,6 +16,7 @@ declare global {
 		push_alert: CustomEvent<Alert>;
 		update_alert: CustomEvent<Alert>;
 		enable_input: CustomEvent<boolean>;
+		setTablePagination: CustomEvent<Page>;
 	}
 	interface Document {
 		querySelector<K extends HTMLElementTags = HTMLElement>(selectors: string): K | null;

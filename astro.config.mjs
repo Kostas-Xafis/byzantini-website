@@ -42,6 +42,7 @@ export default defineConfig({
 					"**/wrangler.toml",
 					"**/dbSnapshots/**",
 					"**/pdfWorker/**",
+					"**/bucket/**",
 				],
 			},
 		},

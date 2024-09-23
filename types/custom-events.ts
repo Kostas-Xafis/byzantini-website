@@ -1,5 +1,6 @@
 import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid";
 import type { Alert } from "../src/components/admin/Alert.solid";
+import type { Page } from "../src/components/admin/table/Pagination.solid";
 
 export type CustomEvents = {
 	hydrate: CustomEvent<undefined>;
@@ -11,6 +12,7 @@ export type CustomEvents = {
 	update_alert: CustomEvent<Alert>;
 	enable_input: CustomEvent<boolean>;
 	show: CustomEvent<void>;
+	setTablePagination: CustomEvent<Page>;
 };
 
 export function customEvent<K extends keyof CustomEvents>(name: K, detail?: CustomEvents[K]["detail"]) {

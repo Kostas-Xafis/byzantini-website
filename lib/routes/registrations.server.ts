@@ -11,14 +11,8 @@ const { PROD } = import.meta.env;
 
 serverRoutes.get.func = ({ ctx: _ctx, slug }) => {
 	return execTryCatch(() => {
-		if (PROD) {
-			return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE '2024-2025'");
-		}
-		return executeQuery<Registrations>("SELECT * FROM registrations");
-
-		// const { year } = slug;
-		// return executeQuery<Registrations>("SELECT * FROM registrations");
-		// return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [`${year}-${year + 1}`]);
+		const { year } = slug;
+		return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [`${year}-${year + 1}`]);
 	});
 };
 

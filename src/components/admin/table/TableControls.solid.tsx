@@ -88,6 +88,16 @@ export function TopTableGroup(props: { children?: Element | JSX.Element }) {
 	);
 }
 
+export function BottomTableGroup(props: { children?: Element | JSX.Element }) {
+	return (
+		<div
+			style={{ "grid-area": "bottom_tools" }}
+			class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
+			{props.children}
+		</div>
+	);
+}
+
 export function LeftTableGroup(props: { children?: Element | JSX.Element }) {
 	return (
 		<div

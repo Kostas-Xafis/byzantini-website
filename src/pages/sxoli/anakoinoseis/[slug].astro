@@ -22,8 +22,8 @@ const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
 const mainImg = announcement.images.find(img => img.is_main) as AnnouncementImages;
 announcement.images = announcement.images.filter(img => !img.is_main);
+if (!mainImg) return Astro.redirect("/404");
 ---
-
 <Layout title={announcement.title} imageUrl={imgThumbSrc + mainImg.name}>
 	<section
 		id="announcementSection"
@@ -106,7 +106,7 @@ announcement.images = announcement.images.filter(img => !img.is_main);
 							id="mainCarouselImg"
 							alt={announcement.title}
 							class="object-cover h-[clamp(0px,100vh,calc(95dvh_-_79px))] hover:shadow-lg !shadow-red-950"
-							src={imgSrc + announcement.images.at(1)}
+							src={imgSrc + announcement.images.at(1)?.name}
 						/>
 					</div>
 				</div>

@@ -18,7 +18,7 @@ import {
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import {
-	LeftTableGroup,
+	BottomTableGroup,
 	TableControl,
 	TableControlsGroup,
 	TopTableGroup,
@@ -26,6 +26,7 @@ import {
 } from "./table/TableControls.solid";
 
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
+import Pagination from "./table/Pagination.solid";
 import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
@@ -264,17 +265,11 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "class_year", name: "Έτος Φοίτησης", type: "string" },
 ];
 
-const getRegistrationsYear = () => {
-	const year = new Date().getFullYear();
-	const nextYear = year + 1;
-	return `${year}-${nextYear}`;
-};
-
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 
-	// const [year, setYear] = createSignal(new Date().getFullYear());
+	const [year, setYear] = createSignal(new Date().getFullYear());
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setRegistrationHydrate = useHydrateById({
@@ -286,19 +281,20 @@ export default function RegistrationsTable() {
 			},
 		],
 	});
+	const [dataLength, setDataLength] = createSignal(0);
 
 	useHydrate(() => {
-		// apiHook(API.Registrations.get, { UrlArgs: { year: year() } });
+		apiHook(API.Registrations.get, { UrlArgs: { year: year() } });
 		apiHook(API.Registrations.get);
 		apiHook(API.Teachers.getByFullnames);
 		apiHook(API.Instruments.get);
 	});
 
-	// createEffect(
-	// 	on(year, (y) => {
-	// 		apiHook(API.Registrations.get, { UrlArgs: { year: y } });
-	// 	})
-	// );
+	createEffect(
+		on(year, (y) => {
+			apiHook(API.Registrations.get, { UrlArgs: { year: y } });
+		})
+	);
 
 	const shapedData = createMemo(() => {
 		const registrations = store[API.Registrations.get];
@@ -308,6 +304,7 @@ export default function RegistrationsTable() {
 		let { columnName, value, type } = searchQuery;
 		if (!columnName || !value || !type) {
 			toggleCheckboxes(false);
+			setDataLength(registrations.length);
 			return registrationsToTable(registrations, teachers, instruments);
 		}
 		let searchRows = registrationsToTable(registrations, teachers, instruments);
@@ -362,6 +359,7 @@ export default function RegistrationsTable() {
 			});
 		}
 		toggleCheckboxes(false);
+		setDataLength(searchRows.length);
 		return searchRows;
 	});
 
@@ -468,7 +466,7 @@ export default function RegistrationsTable() {
 		};
 	});
 
-	const onDownloadPDf = createMemo(() => {
+	const onDownloadPDF = createMemo(() => {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
@@ -849,7 +847,7 @@ export default function RegistrationsTable() {
 					prefix={PREFIX}
 					data={shapedData}
 					columns={columns}
-					paginate={100}
+					paginate
 					hasSelectBox
 					tools={{
 						left: false,
@@ -861,23 +859,28 @@ export default function RegistrationsTable() {
 							<TableControl action={onDelete} prefix={PREFIX} />
 						</TableControlsGroup>
 						<TableControlsGroup prefix={PREFIX}>
-							<TableControl action={onDownloadPDf} prefix={PREFIX} />
+							<TableControl action={onDownloadPDF} prefix={PREFIX} />
 							<TableControl action={onDownloadExcel} prefix={PREFIX} />
 						</TableControlsGroup>
 						<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
 					</TopTableGroup>
-					{/* <LeftTableGroup>
-						<button
-							class="px-2 py-1 border border-red-900 text-lg rounded-md"
-							onClick={() => setYear(Math.min(year() + 1, 2024))}>
-							{year() + "-" + (year() + 1 + "").slice(2)}
-						</button>
-						<button
-							class="px-2 py-1 border border-red-900 text-lg rounded-md"
-							onClick={() => setYear(Math.max(year() - 1, 2023))}>
-							{year() - 1 + "-" + (year() + "").slice(2)}
-						</button>
-					</LeftTableGroup> */}
+					<BottomTableGroup>
+						<Pagination pageSize={100} dataSize={dataLength} />
+						<div class="pb-2 flex items-center gap-x-4">
+							<button
+								data-active={year() === 2023}
+								class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
+								onClick={() => setYear(2023)}>
+								2023-24
+							</button>
+							<button
+								data-active={year() === 2024}
+								class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
+								onClick={() => setYear(2024)}>
+								2024-25
+							</button>
+						</div>
+					</BottomTableGroup>
 				</Table>
 			</Show>
 			{/* Registration specific row styles */}
