@@ -846,7 +846,9 @@ export default function TeachersTable() {
 			const xlsx = await loadXLSX();
 			const wb = xlsx.utils.book_new();
 			const wsStudentsBook = xlsx.utils.aoa_to_sheet(
-				[["Ονοματεπώνυμο", "Ιδιότητα", "Αριθμός Έγκρισης", "Υπογραφή"]].concat(
+				[
+					["Ονοματεπώνυμο", "Ιδιότητα", "Email", "Τηλέφωνο", "ΑΜΚΑ", "Αριθμός Έγκρισης"],
+				].concat(
 					byzTeachers.map((t) => {
 						const ao = classes.find(
 							(c) => c.teacher_id === t.id && c.class_id === 0
@@ -856,8 +858,10 @@ export default function TeachersTable() {
 								? t.fullname.replace("π. ", "").split(" ").reverse().join(" π. ")
 								: t.fullname.split(" ").reverse().join(" "),
 							teacherTitleByGender(t.title, t.gender),
+							t.email ?? "",
+							t.telephone ?? "",
+							t.amka ?? "",
 							ao ?? "",
-							"",
 						];
 					}),
 					[""],
@@ -871,11 +875,13 @@ export default function TeachersTable() {
 							.join(", ");
 						return [
 							t.fullname.includes("π.")
-								? t.fullname.replace("π. ", "").split(" ").reverse().join("π.")
+								? t.fullname.replace("π. ", "").split(" ").reverse().join(" π.")
 								: t.fullname.split(" ").reverse().join(" "),
 							teacherInstruments,
+							t.email ?? "",
+							t.telephone ?? "",
+							t.amka ?? "",
 							ao ?? "",
-							"",
 						];
 					})
 				)
