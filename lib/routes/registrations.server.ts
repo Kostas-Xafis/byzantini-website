@@ -9,14 +9,14 @@ const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to
 
 const { PROD } = import.meta.env;
 
-serverRoutes.get.func = ({ ctx: _ctx, slug }) => {
+serverRoutes.get.func = ({ slug }) => {
 	return execTryCatch(() => {
 		const { year } = slug;
 		return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [`${year}-${year + 1}`]);
 	});
 };
 
-serverRoutes.getById.func = ({ ctx, slug }) => {
+serverRoutes.getById.func = ({ slug }) => {
 	return execTryCatch(async () => {
 		const id = slug.id;
 		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", [id]);
@@ -25,16 +25,16 @@ serverRoutes.getById.func = ({ ctx, slug }) => {
 	});
 };
 
-serverRoutes.getByReregistrationId.func = ({ ctx, slug }) => {
+serverRoutes.getByReregistrationUrl.func = ({ slug }) => {
 	return execTryCatch(async () => {
-		const id = slug.id;
-		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_url = ?", [id]);
+		const { url } = slug;
+		const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_url = ?", [url]);
 		if (!registration) throw Error("Registration not found");
 		return registration;
 	});
 };
 
-serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
+serverRoutes.getTotal.func = () => {
 	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
 };
 

@@ -97,7 +97,7 @@ export type RemoveNullishFields<T extends Record<string, any>> =
 
 
 
-type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
+export type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
 
 // let t1: TypeGuard<any> = true;
 // let t2: TypeGuard<string> = true;

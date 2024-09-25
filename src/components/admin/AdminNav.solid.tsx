@@ -10,7 +10,6 @@ const links = [
 	{ name: "Καθηγητές", url: "/admin/teachers", force: false },
 	{ name: "Παραρτήματα", url: "/admin/locations", force: false },
 	{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false },
-	// While the sysusers page is not ready, it will be not be shown in the dashboard
 	{ name: "Διαχειριστές", url: "/admin/sysusers", force: false },
 	{ name: "Έξοδος", url: "/admin/logout", force: true },
 ];

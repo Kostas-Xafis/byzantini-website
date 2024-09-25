@@ -455,10 +455,10 @@ export function RegistrationForm() {
 		}
 		let urlParams = new URLSearchParams(window.location.search);
 		if (urlParams.has("regid")) {
-			const regid = urlParams.get("regid") as string;
+			const reg_url = urlParams.get("regid") as string;
 			try {
-				const res = await apiHook(API.Registrations.getByReregistrationId, {
-					UrlArgs: { id: regid },
+				const res = await apiHook(API.Registrations.getByReregistrationUrl, {
+					UrlArgs: { url: reg_url },
 				});
 				if (!res.data) return;
 				res.data.registration_year = "2024-2025";

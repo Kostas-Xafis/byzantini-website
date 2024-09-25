@@ -18,10 +18,10 @@ const getById: EndpointRoute<"/registrations/[id:number]", null, Registrations> 
 	validation: undefined,
 };
 
-const getByReregistrationId: EndpointRoute<"/registrations/reregistration/[id:string]", null, Registrations> = {
+const getByReregistrationUrl: EndpointRoute<"/registrations/reregistration/[url:string]", null, Registrations> = {
 	authentication: false,
 	method: "GET",
-	path: "/registrations/reregistration/[id:string]",
+	path: "/registrations/reregistration/[url:string]",
 	hasUrlParams: true,
 	validation: undefined,
 };
@@ -102,7 +102,7 @@ const getSubscriptionToken: EndpointRoute<
 export const RegistrationsRoutes = {
 	get,
 	getById,
-	getByReregistrationId,
+	getByReregistrationUrl,
 	getTotal,
 	post,
 	update,

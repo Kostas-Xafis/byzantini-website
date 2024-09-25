@@ -23,6 +23,6 @@
 		"noEmit": true,
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
-		"types": ["@types/node", "@cloudflare/workers-types"]
+		"types": ["@types/bun", "@cloudflare/workers-types"]
 	}
 }
