@@ -587,12 +587,6 @@ export default function TeachersTable() {
 					| 1
 					| 2,
 				visible: getMultiSelect("visible", form).map((btn) => {
-					console.log(
-						btn,
-						btn.dataset.value,
-						Number(btn.dataset.value),
-						!!Number(btn.dataset.value)
-					);
 					return !!Number(btn.dataset.value);
 				})[0] as boolean,
 				online: getMultiSelect("online", form).map(

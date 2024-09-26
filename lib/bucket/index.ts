@@ -56,7 +56,7 @@ export class Bucket {
 		}));
 		const { Body } = cmdResult;
 		if (!Body) return null;
-		return (await Body.transformToByteArray()).buffer;
+		return (await Body.transformToByteArray()).buffer as ArrayBuffer;
 	}
 
 	static async putDev(file: ArrayBuffer, filename: string, filetype: string, bucketName?: string) {

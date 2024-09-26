@@ -569,7 +569,6 @@ export default function RegistrationsTable() {
 						const student = registrations.find((r) => r.id === id);
 						if (!student) return;
 						const teacher = teachers.find((t) => t.id === student.teacher_id);
-						if (!teacher) return;
 						const instrument =
 							(student.class_id &&
 								(instruments.find(
@@ -580,7 +579,7 @@ export default function RegistrationsTable() {
 					})
 					.filter((x) => !!x) as {
 					student: Registrations;
-					teacher: Teachers;
+					teacher?: Teachers;
 					instrument: Instruments | null;
 				}[]
 			).sort((a, b) => (Number(a?.student.am) < Number(b?.student.am) ? -1 : 1));
@@ -593,6 +592,7 @@ export default function RegistrationsTable() {
 						"Επώνυμο",
 						"Όνομα",
 						"Όνομα Πατρός",
+						"ΑΜΚΑ",
 						"Έτος Γέννησης",
 						"Διεύθυνση",
 						"Ημερομηνία Εγγραφής",
@@ -607,10 +607,11 @@ export default function RegistrationsTable() {
 							s.student.last_name,
 							s.student.first_name,
 							s.student.fathers_name,
+							s.student.amka,
 							"" + new Date(s.student.birth_date).getFullYear(),
 							`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
 							new Date(s.student.date).toLocaleDateString("el-GR"),
-							s.teacher.fullname,
+							s.teacher?.fullname || "-",
 							s.student.email,
 							s.student.telephone + "-" + s.student.cellphone,
 						];
@@ -624,6 +625,7 @@ export default function RegistrationsTable() {
 						"Επώνυμο",
 						"Όνομα",
 						"Όνομα Πατρός",
+						"ΑΜΚΑ",
 						"Έτος Γέννησης",
 						"Διεύθυνση",
 						"Έτος Φόιτησης",
@@ -637,16 +639,19 @@ export default function RegistrationsTable() {
 							item.student.last_name,
 							item.student.first_name,
 							item.student.fathers_name,
+							item.student.amka,
 							"" + new Date(item.student.birth_date).getFullYear(),
 							`${item.student.road} ${item.student.number}, ${item.student.region}, ${item.student.tk}`,
 							item.student.class_year,
-							item.teacher.fullname,
+							item.teacher?.fullname || "-",
 							item.instrument?.name || "",
 						];
 					})
 				)
 			);
-			items = items.sort((a, b) => (a?.teacher.fullname < b?.teacher.fullname ? -1 : 1));
+			items = items.sort((a, b) =>
+				(a?.teacher?.fullname || "") < (b?.teacher?.fullname || "") ? -1 : 1
+			);
 
 			const byzStudents = items.filter((i) => i.student.class_id === 0);
 			const parStudents = items.filter((i) => i.student.class_id === 1);
@@ -656,6 +661,7 @@ export default function RegistrationsTable() {
 					"Επώνυμο",
 					"Όνομα",
 					"Όνομα Πατρός",
+					"ΑΜΚΑ",
 					"Έτος Γέννησης",
 					"Διεύθυνση",
 					"Έτος Φόιτησης",
@@ -668,10 +674,11 @@ export default function RegistrationsTable() {
 						s.student.last_name,
 						s.student.first_name,
 						s.student.fathers_name,
+						s.student.amka,
 						"" + new Date(s.student.birth_date).getFullYear(),
 						`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
 						s.student.class_year,
-						s.teacher.fullname,
+						s.teacher?.fullname || "-",
 						"",
 					];
 				}),
@@ -682,10 +689,11 @@ export default function RegistrationsTable() {
 						s.student.last_name,
 						s.student.first_name,
 						s.student.fathers_name,
+						s.student.amka,
 						"" + new Date(s.student.birth_date).getFullYear(),
 						`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
 						s.student.class_year,
-						s.teacher.fullname,
+						s.teacher?.fullname || "-",
 						s.instrument?.name || "",
 					];
 				}),
@@ -697,6 +705,7 @@ export default function RegistrationsTable() {
 					"Επώνυμο",
 					"Όνομα",
 					"Όνομα Πατρός",
+					"ΑΜΚΑ",
 					"Διδάσκων Καθηγητής",
 					"Email",
 					"Τηλέφωνα",
@@ -710,7 +719,8 @@ export default function RegistrationsTable() {
 						s.student.last_name,
 						s.student.first_name,
 						s.student.fathers_name,
-						s.teacher.fullname,
+						s.student.amka,
+						s.teacher?.fullname || "-",
 						s.student.email,
 						s.student.telephone + "-" + s.student.cellphone,
 						s.student.payment_amount,
@@ -719,7 +729,7 @@ export default function RegistrationsTable() {
 				}),
 			]);
 			const wsBookByTeacher = teachers.map((teacher) => {
-				const students = items.filter((item) => item.teacher.id === teacher.id);
+				const students = items.filter((item) => item.teacher?.id === teacher.id);
 				if (!students.length) return;
 				return xlsx.utils.aoa_to_sheet(
 					[
@@ -728,6 +738,7 @@ export default function RegistrationsTable() {
 							"Επώνυμο",
 							"Όνομα",
 							"Όνομα Πατρός",
+							"ΑΜΚΑ",
 							"Έτος Γέννησης",
 							"Διεύθυνση",
 							"Ημερομηνία Εγγραφής",
@@ -743,11 +754,12 @@ export default function RegistrationsTable() {
 								item.student.last_name,
 								item.student.first_name,
 								item.student.fathers_name,
+								item.student.amka,
 								"" + new Date(item.student.birth_date).getFullYear(),
 								`${item.student.road} ${item.student.number}, ${item.student.region}, ${item.student.tk}`,
 								new Date(item.student.date).toLocaleDateString("el-GR"),
 								item.student.class_year,
-								item.teacher.fullname,
+								item.teacher?.fullname || "-",
 								item.student.email,
 								item.student.telephone + "-" + item.student.cellphone,
 							];
