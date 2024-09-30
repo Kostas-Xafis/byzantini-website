@@ -16,12 +16,8 @@ declare namespace App {
 // 💖💖💖💖 All the types without the MBytes of added js to the bundle!!!!!
 declare global {
 	interface Window {
-		fontkit: typeof import("@pdf-lib/fontkit");
-		PDFLib: typeof import("pdf-lib");
 		XLSX: typeof import("xlsx");
 	}
 }
-
-export { default as imageCompression } from "browser-image-compression";
 export { default as zip } from "client-zip";
 export { };

@@ -75,7 +75,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="controlsContainer w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent">
+			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent">
 			{props.children}
 		</div>
 	);
@@ -95,7 +95,7 @@ export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 	return (
 		<div
 			style={{ "grid-area": "bottom_tools" }}
-			class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
+			class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1000]">
 			{props.children}
 		</div>
 	);
@@ -105,7 +105,7 @@ export function LeftTableGroup(props: { children?: Element | JSX.Element }) {
 	return (
 		<div
 			style={{ "grid-area": "left_tools" }}
-			class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-[1001]">
+			class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-[1000]">
 			{props.children}
 		</div>
 	);

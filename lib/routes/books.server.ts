@@ -24,10 +24,9 @@ serverRoutes.getById.func = ({ ctx }) => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body);
 		const res = await T.executeQuery(
-			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(args)})`,
-			args
+			`INSERT INTO books (title, wholesaler_id, wholesale_price, price, quantity, sold) VALUES (${questionMarks(body)})`,
+			body
 		);
 		// Update school_payoffs table amount
 		await Promise.all([
@@ -48,7 +47,7 @@ serverRoutes.updateQuantity.func = ({ ctx }) => {
 		if (book.quantity > reqBook.quantity) throw Error("Cannot reduce quantity");
 		const newAddedAmount = book.wholesale_price * (reqBook.quantity - book.quantity);
 		await Promise.all([
-			T.executeQuery(`UPDATE books SET quantity = ? WHERE id = ?`, [reqBook.quantity, reqBook.id]),
+			T.executeQuery(`UPDATE books SET quantity = ? WHERE id = ?`, reqBook),
 			// Update school_payoffs table amount
 			T.executeQuery("UPDATE school_payoffs SET amount = amount + ? WHERE wholesaler_id = ?", [
 				newAddedAmount,

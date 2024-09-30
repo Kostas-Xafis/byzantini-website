@@ -19,7 +19,7 @@ async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announ
 	sitemapStr = sitemapStr.replace("</urlset>", url + "</urlset>");
 
 	const sitemapBuf = new TextEncoder().encode(sitemapStr);
-	await Bucket.put(ctx, sitemapBuf, "sitemap-announcements.xml", "application/xml");
+	await Bucket.put(ctx, sitemapBuf.buffer as ArrayBuffer, "sitemap-announcements.xml", "application/xml");
 }
 
 // Doesn't work as expected
@@ -41,7 +41,7 @@ async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) 
 	});
 
 	const sitemapBuf = new TextEncoder().encode(sitemapStr);
-	await Bucket.put(ctx, sitemapBuf, "sitemap-announcements.xml", "application/xml");
+	await Bucket.put(ctx, sitemapBuf.buffer as ArrayBuffer, "sitemap-announcements.xml", "application/xml");
 }
 
 

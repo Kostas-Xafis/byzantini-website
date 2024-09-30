@@ -44,7 +44,6 @@ async function productionBucketReplication() {
 			await fs.mkdir(`${DEV_BUCKET_LOCATION}/${BUCKET_DATE}/${fileName.split("/").slice(0, -1).join("/")}`, { recursive: true });
 			await fs.writeFile(`${DEV_BUCKET_LOCATION}/${BUCKET_DATE}/${fileName}`, Buffer.from(file), { encoding: "utf-8" });
 			totalReplicatedFiles++;
-
 		};
 	}), {
 		maxJobs: 10,

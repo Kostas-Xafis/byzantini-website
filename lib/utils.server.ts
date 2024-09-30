@@ -1,6 +1,6 @@
 import type { Output } from "valibot";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
-import { createDbConnection, type Transaction } from "./db";
+import { createDbConnection, type QueryArguments, type Transaction } from "./db";
 import type { Insert } from "../types/entities";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
@@ -71,13 +71,13 @@ export function unionHas(set: Set<any>, value: any): boolean {
 /**
  * @returns Return the number of question marks needed for a query
  */
-export const questionMarks = (arg: number | any[] | {}) => {
+export const questionMarks = (arg: number | QueryArguments) => {
 	const length = Array.isArray(arg) ? arg.length : typeof arg === "number" ? arg : Object.keys(arg).length;
 	return "?".repeat(length).split("").join(", ");
 };
 
 
-export const executeQuery = async <T = undefined>(query: string, args: any[] = [], tx?: Transaction, log = false) => {
+export const executeQuery = async <T = undefined>(query: string, args: QueryArguments = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? createDbConnection(null, true);
 	query = query.trim().replaceAll("\n", "");
 	let queryId;
@@ -101,11 +101,11 @@ export const execTryCatch = async <T>(
 	const hasTransaction: boolean = func.length === 1;
 	try {
 		let response;
-		// ! Transactions refuse Cloudflare production
+
 		if (hasTransaction) {
 			const conn = createDbConnection(null, true);
 			response = await conn.transaction((tx) => {
-				tx.executeQuery = <T>(query: string, args?: any[], log = false) => {
+				tx.executeQuery = <T>(query: string, args?: QueryArguments, log = false) => {
 					return executeQuery<T>(query, args, tx, log);
 				};
 				return func(tx) as Promise<T>;

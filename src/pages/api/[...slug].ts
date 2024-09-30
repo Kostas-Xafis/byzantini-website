@@ -5,7 +5,9 @@ import type { AnyEndpoint, HTTPMethods } from "../../../types/routes";
 
 export const prerender = false;
 
-const generateResponse = (ctx: APIContext, route: RemovePartial<AnyEndpoint, "func">, urlSlug: string[]) => {
+type Route = RemovePartial<AnyEndpoint, "func">;
+
+const generateResponse = (ctx: APIContext, route: Route, urlSlug: string[]) => {
 	let { func, path } = route;
 	if (route.hasUrlParams === false) return func({ ctx, slug: {} });
 	const slugData = {} as any;
@@ -24,7 +26,7 @@ const generateResponse = (ctx: APIContext, route: RemovePartial<AnyEndpoint, "fu
 	return func({ ctx, slug: slugData });
 };
 
-const ResponseWrap = async (ctx: APIContext, route: RemovePartial<AnyEndpoint, "func">, urlSlug: string[]) => {
+const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) => {
 	for (const middleware of (route.middleware ?? [])) {
 		const response = await middleware(ctx);
 		if (response) return response;

@@ -2,15 +2,17 @@ import { createClient, type Client, type ResultSet, type Transaction as libsqlTr
 import type { Insert } from "../types/entities";
 import { generateLink } from "./utils.server";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
-export type Exec = <T = undefined>(query: string, args?: any[], _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
+export type Exec = <T = undefined>(query: string, args?: QueryArguments, _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
+
+export type QueryArguments = Record<string, any> | any[];
 
 export type Transaction = {
 	execute: Exec,
-	executeQuery: <T = undefined>(query: string, args?: any[], log?: boolean) => Promise<T extends undefined ? Insert : T[]>,
+	executeQuery: <T = undefined>(query: string, args?: QueryArguments, log?: boolean) => Promise<T extends undefined ? Insert : T[]>,
 	queryHistory: [{
 		id: string;
 		query: string;
-		args: any[];
+		args: QueryArguments;
 	}];
 };
 
@@ -48,7 +50,6 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 			authToken: TURSO_DB_TOKEN,
 			intMode: "number",
 		});
-
 	} else if (type === "sqlite-dev" || CONNECTOR === "sqlite-dev") {
 		client = createClient({
 			url: `file://${DEV_DB_ABSOLUTE_LOCATION}`,
@@ -63,8 +64,9 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 			/**
 			 * @throws {LibsqlError}
 			 */
-			return async function <T = undefined>(query: string, args: any[] = [], _?: any) {
-				let res = await clientHandler.execute({ sql: query, args }) as ResultSet;
+			return async function <T = undefined>(query: string, args: QueryArguments = [], _?: any) {
+				const argsArr = Array.isArray(args) ? args : objectToArrayFromQuery(args, query);
+				let res = await clientHandler.execute({ sql: query, args: argsArr }) as ResultSet;
 				let resObj = {} as any;
 				if (res.lastInsertRowid && !Number.isNaN(res.lastInsertRowid)) resObj.insertId = "" + res.lastInsertRowid;
 				else {
@@ -77,7 +79,7 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 
 		let txconn: TxConn = {} as any;
 		return {
-			execute: async <T>(query: string, args: any[] = [], _?: any) => {
+			execute: async <T>(query: string, args: QueryArguments = [], _?: any) => {
 				try {
 					let res = await execute(client)<T>(query, args);
 					return res;
@@ -128,7 +130,7 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 
 const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][number], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
-	let argStr = JSON.stringify(args);
+	let argStr = JSON.stringify(Array.isArray(args) ? args : objectToArrayFromQuery(args, query));
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
 		createDbConnection().execute({
@@ -138,4 +140,29 @@ const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][numb
 	} catch (error) {
 		console.log("Query logger error:" + error);
 	}
+};
+
+
+const objectToArrayFromQuery = (obj: Record<string, any>, query: string) => {
+	let argsArr = [] as any[];
+	if (query.includes("VALUES")) {
+		const fields = query.match(/\([_\-a-zA-Z ,]+\)/g);
+		if (fields) {
+			fields.forEach((field) => {
+				const keys = field.slice(1, field.length - 1).split(", ");
+				keys.forEach((key) => {
+					argsArr.push(obj[key]);
+				});
+			});
+		}
+	} else {
+		const fields = query.match(/([_\-a-zA-Z]+(<|>|!)?( )?(LIKE|=)( )?\?)/g);
+		if (fields) {
+			fields.forEach((field) => {
+				const key = field.split("=")[0].trim();
+				argsArr.push(obj[key]);
+			});
+		}
+	}
+	return argsArr;
 };

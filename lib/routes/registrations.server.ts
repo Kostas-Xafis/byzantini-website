@@ -41,16 +41,16 @@ serverRoutes.getTotal.func = () => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body);
 		await T.executeQuery(
-			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(args)})`,
-			args
+			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(body)})`,
+			body
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
 		let mail_subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
 		if (mail_subscription.length === 0) {
-			mail_subscription = [{ email: body.email, unsubscribe_token: generateLink(16), unrelated: false }];
-			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
+			const unsubscribe_token = generateLink(16);
+			mail_subscription = [{ email: body.email, unsubscribe_token, unrelated: false }];
+			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", mail_subscription[0]);
 		}
 
 		if (PROD) {
@@ -82,9 +82,7 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body);
-		args.push(args.shift() as any); // Remove the id from the arguments and push it at the end
-		await T.executeQuery(`UPDATE registrations SET am=?, amka=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=?, pass=? WHERE id=?`, args);
+		await T.executeQuery(`UPDATE registrations SET am=?, amka=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=?, pass=? WHERE id=?`, body);
 		return "Registration updated successfully";
 	});
 };
@@ -102,7 +100,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 
 serverRoutes.emailSubscribe.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+		const body = (getUsedBody(ctx) || await ctx.request.json());
 		await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
 		return { subscribed: true };
 	});
