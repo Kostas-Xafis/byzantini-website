@@ -3,9 +3,12 @@
 	"type": "module",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "astro dev",
+		"dev": "bunx --bun astro dev",
+		"test": "bun test --env-file='./tests/.env.test'",
+		"testf": "bun test --env-file='./tests/.env.testforce'",
 		"start": "astro dev",
 		"build": "astro build",
+		"bun-build": "bunx --bun astro build",
 		"preview": "astro build && wrangler pages dev ./dist",
 		"astro": "astro"
 	},

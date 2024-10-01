@@ -41,8 +41,8 @@ serverRoutes.getTotal.func = () => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		await T.executeQuery(
-			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass) VALUES (${questionMarks(body)})`,
+		const { insertId } = await T.executeQuery(
+			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass, registration_url) VALUES (${questionMarks(body)})`,
 			body
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
@@ -75,7 +75,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			});
 		}
 
-		return "Registrated successfully";
+		return { id: insertId };
 	});
 };
 

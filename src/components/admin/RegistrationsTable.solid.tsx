@@ -31,13 +31,13 @@ import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
 
-type RegistrationsTable = Registrations;
+type RegistrationsTable = Omit<Registrations, "registration_url">;
 
 const RegistrationsInputs = (
 	student: Registrations,
 	teachers: Teachers[],
 	instruments: Instruments[]
-): Record<keyof Registrations, InputProps> => {
+): Record<keyof RegistrationsTable, InputProps> => {
 	let sortTeachers = teachers
 		.map((t) => t)
 		.sort((a, b) => {
@@ -821,7 +821,7 @@ export default function RegistrationsTable() {
 					const payment_status = registration.total_payment - registration.payment_amount;
 					if (registration.payment_amount === 0 && registration.total_payment === 0)
 						continue;
-					if (payment_status === 0) {
+					if (payment_status <= 0) {
 						row.setAttribute("data-paid", "");
 					} else if (
 						payment_status > 0 ||

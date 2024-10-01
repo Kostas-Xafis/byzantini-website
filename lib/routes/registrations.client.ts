@@ -41,7 +41,7 @@ const postReq = omit(v_Registrations, [
 	"payment_amount",
 	"total_payment",
 ]);
-const post: EndpointRoute<"/registrations", typeof postReq> = {
+const post: EndpointRoute<"/registrations", typeof postReq, { id: number; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations",

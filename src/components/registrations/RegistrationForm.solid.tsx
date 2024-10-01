@@ -1,15 +1,17 @@
 import {
 	For,
 	Show,
+	createEffect,
 	createMemo,
 	createSignal,
+	on,
 	onMount,
 	type Setter,
-	createEffect,
-	on,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
+import { AnimTimeline, deepCopy, randomString } from "../../../lib/utils.client";
+import { customEvent } from "../../../types/custom-events";
 import type {
 	Instruments,
 	Registrations,
@@ -17,10 +19,8 @@ import type {
 	Teachers,
 } from "../../../types/entities";
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
-import Spinner from "../other/Spinner.solid";
-import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
 import Popup, { PopupShow } from "../other/Popup.solid";
-import { customEvent } from "../../../types/custom-events";
+import Spinner from "../other/Spinner.solid";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -36,6 +36,7 @@ const genericInputs: Record<
 		| "payment_date"
 		| "payment_amount"
 		| "total_payment"
+		| "registration_url"
 		| "pass"
 	>,
 	InputProps
@@ -577,6 +578,7 @@ export function RegistrationForm() {
 				Number(formData.get("instruments-all")) ||
 				0,
 			date: Date.now(),
+			registration_url: randomString(32),
 			pass: false,
 		};
 		setRegistrationData(data);
@@ -614,7 +616,7 @@ export function RegistrationForm() {
 			}
 			setSpinner(true);
 			const res = await apiHook(API.Registrations.post, { RequestObject: data });
-			if (res.message) {
+			if (res.data) {
 				PopupShow();
 				setRegistrationData((prevReg) => {
 					return {

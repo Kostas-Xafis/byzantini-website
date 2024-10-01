@@ -167,7 +167,6 @@ export interface TeacherClasses {
 	registration_number?: string | undefined;
 };
 
-
 export const v_ClassType = object({
 	id: number([integer(), minValue(0)]),
 	name: string([minLength(1)])
@@ -256,7 +255,8 @@ export const v_Registrations = object({
 	payment_amount: number([integer(), minValue(0)]),
 	total_payment: number([integer(), minValue(0)]),
 	payment_date: optional(nullable(number([integer(), minValue(0)]))),
-	pass: boolean()
+	registration_url: optional(string()),
+	pass: union([boolean(), literal(1), literal(0)])
 });
 export interface Registrations {
 	id: number;
@@ -282,6 +282,7 @@ export interface Registrations {
 	payment_amount: number;
 	total_payment: number;
 	payment_date?: number | null;
+	registration_url?: string | undefined;
 	pass: boolean;
 };
 
@@ -325,4 +326,22 @@ export interface AnnouncementImages {
 	announcement_id: number;
 	name: string;
 	is_main: boolean;
+};
+
+
+// Dev mode only
+export const v_QueryLogs = object({
+	id: string(),
+	query: string(),
+	args: string(),
+	date: number([integer(), minValue(0)]),
+	error: union([boolean(), literal(1), literal(0)])
+});
+
+export interface QueryLogs {
+	id: string;
+	query: string;
+	args: string;
+	date: number;
+	error: boolean;
 };

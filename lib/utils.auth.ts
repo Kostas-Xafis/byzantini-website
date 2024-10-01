@@ -1,8 +1,8 @@
 import type { APIContext } from "astro";
-import { executeQuery } from "./utils.server";
-import type { SysUsers } from "../types/entities";
 import { createHash } from "node:crypto";
+import type { SysUsers } from "../types/entities";
 import { randomHex } from "./utils.client";
+import { executeQuery } from "./utils.server";
 
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || randomHex();
