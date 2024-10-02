@@ -43,6 +43,7 @@ export default defineConfig({
 					"**/dbSnapshots/**",
 					"**/pdfWorker/**",
 					"**/bucket/**",
+					"**/tests/**",
 				],
 			},
 		},

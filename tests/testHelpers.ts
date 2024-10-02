@@ -1,12 +1,11 @@
-import { expect, test as bun_test, afterAll } from "bun:test";
-import { parse, BaseSchema } from "valibot";
-import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
-import { TypeGuard } from "../types/helpers";
-import { APIEndpoints, type APIEndpointNames, type APIArgs, APIResponse } from "../lib/routes/index.client";
+import { file, hash, write } from "bun";
+import { afterAll, test as bun_test, expect } from "bun:test";
+import { BaseSchema, parse } from "valibot";
+import { APIEndpoints, APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
 import { convertToUrlFromArgs } from "../lib/utils.client";
 import { assertOwnProp } from "../lib/utils.server";
-import { file, hash, sleep, write } from "bun";
-import { randomString } from "../lib/utils.client";
+import { TypeGuard } from "../types/helpers";
+import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
 
 const { URL, FORCE_TEST } = import.meta.env as { URL: string, FORCE_TEST: string; };
 let session_id = "";
@@ -98,33 +97,6 @@ export async function getJson<T>(res: Response): Promise<TypeGuard<T> extends fa
 	return json.res;
 }
 
-
-export function randomNumber(min: number, max: number) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-export { randomString } from "../lib/utils.client";
-
-export function randomMail() {
-	return `${randomString(10)}@${randomString(5)}.com`;
-}
-
-export function randomDate(start: Date, end: Date) {
-	return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
-
-export function standardRandomDate() {
-	return randomDate(new Date(0), new Date());
-}
-
-export function randomBoolean() {
-	return Math.random() < 0.5;
-}
-
-export function randomItem<T>(arr: T[]) {
-	return arr[Math.floor(Math.random() * arr.length)];
-}
-
 class Signal {
 	#res: (value: boolean) => void;
 	#rej: (err: unknown) => void;
@@ -144,11 +116,21 @@ class Signal {
 	abort(err: unknown) {
 		this.#rej(err);
 	}
+
 }
 
 type Function = () => (Promise<unknown> | void);
 type TestFunc = [string, Function];
+// TODO: If a chain link is updated, the whole chain needs to be re-run
 export async function chain(...tests: TestFunc[]) {
+	let forceTests = false;
+	for (let i = 0; i < tests.length; i++) {
+		const [testLabel, testFunc] = tests[i];
+		if (checkCache(testLabel, functionHash(testFunc))) {
+			forceTests = true;
+			break;
+		}
+	}
 	let sigTests = tests.map((test) => [...test, new Signal()]) as [string, Function, Signal][];
 	for (let i = 0; i < sigTests.length; i++) {
 		const [testLabel, testFunc, signal] = sigTests[i];
@@ -160,7 +142,7 @@ export async function chain(...tests: TestFunc[]) {
 			} catch (error) {
 				sigTests.forEach(([, , s], j) => {
 					if (j > i) {
-						s.abort("Aborted");
+						s.abort(error);
 					}
 				});
 				throw error;
@@ -169,7 +151,7 @@ export async function chain(...tests: TestFunc[]) {
 		};
 
 		// Initialize the tests in the chain
-		cached_test(testLabel, testFunc, wrapper);
+		cached_test(testLabel, testFunc, { wrapper, force: forceTests });
 	}
 	// Start the chain
 	sigTests[0][2].signal();
@@ -178,9 +160,15 @@ export async function chain(...tests: TestFunc[]) {
 let cached_test_file = file("./.cache/tests.json");
 const cached_tests = (await cached_test_file.exists() && FORCE_TEST !== "true" ? await cached_test_file.json() : {}) as { [key: string]: string; };
 
-const cached_test = (label: string, func: Function, wrapper?: () => Promise<void>) => {
-	const testHash = hash(func.toString()).toString(16);
-	if (FORCE_TEST === "true" || !cached_tests[label] || cached_tests[label] !== testHash) {
+const functionHash = (func: Function) => hash(func.toString()).toString(16);
+
+const checkCache = (label: string, hash: string) => {
+	return !cached_tests[label] || cached_tests[label] !== hash;
+};
+
+const cached_test = (label: string, func: Function, { wrapper, force = false }: { wrapper?: () => Promise<void>; force?: boolean; } = {}) => {
+	const testHash = functionHash(func);
+	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
 		bun_test(label, async () => {
 			if (wrapper) {
 				await wrapper();
@@ -192,7 +180,7 @@ const cached_test = (label: string, func: Function, wrapper?: () => Promise<void
 			cached_tests[label] = testHash;
 		});
 	} else {
-		bun_test.skip(label, func);
+		bun_test.skip(label, wrapper || func);
 	}
 };
 

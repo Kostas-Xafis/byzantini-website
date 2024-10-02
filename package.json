@@ -4,8 +4,8 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "bunx --bun astro dev",
-		"test": "bun test --env-file='./tests/.env.test'",
-		"testf": "bun test --env-file='./tests/.env.testforce'",
+		"test": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
+		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"start": "astro dev",
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",

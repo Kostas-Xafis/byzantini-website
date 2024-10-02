@@ -1,6 +1,7 @@
 import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction } from "@libsql/client";
 import type { Insert } from "../types/entities";
-import { generateLink } from "./utils.server";
+import { Random as R } from "./random";
+import { questionMarks } from "./utils.server";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: QueryArguments, _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
 
@@ -66,7 +67,8 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 			 */
 			return async function <T = undefined>(query: string, args: QueryArguments = [], _?: any) {
 				const argsArr = Array.isArray(args) ? args : objectToArrayFromQuery(args, query);
-				let res = await clientHandler.execute({ sql: query, args: argsArr }) as ResultSet;
+				const sql = query.replace("???", questionMarks(argsArr.length));
+				let res = await clientHandler.execute({ sql, args: argsArr }) as ResultSet;
 				let resObj = {} as any;
 				if (res.lastInsertRowid && !Number.isNaN(res.lastInsertRowid)) resObj.insertId = "" + res.lastInsertRowid;
 				else {
@@ -85,7 +87,7 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 					return res;
 				} catch (err) {
 					// console.log({ err });
-					queryLogger({ id: generateLink(20), query, args }, true);
+					queryLogger({ id: R.link(20), query, args }, true);
 					throw err;
 				}
 			},

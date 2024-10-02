@@ -1,7 +1,8 @@
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
+import { Random as R } from "../random";
 import { createSessionId, generateShaKey, getSessionId } from "../utils.auth";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { SysUsersRoutes } from "./sysusers.client";
 
 
@@ -69,7 +70,7 @@ serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 
 serverRoutes.createRegisterLink.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const link = generateLink();
+		const link = R.link();
 		const exp_date = Date.now() + 1000 * 60 * 60 * 24;
 		const session_id = getSessionId(ctx.request);
 		const [{ privilege }] = await T.executeQuery<Pick<SysUsers, "privilege">>("SELECT privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);

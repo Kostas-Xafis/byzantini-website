@@ -1,2 +1,3 @@
 [test]
-env-file = ".env.development"
+env-file = "./tests/.env.test"
+root = "./tests"

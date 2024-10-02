@@ -1,25 +1,11 @@
 import type { Output } from "valibot";
+import type { Insert } from "../types/entities";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
 import { createDbConnection, type QueryArguments, type Transaction } from "./db";
-import type { Insert } from "../types/entities";
+import { Random as R } from "./random";
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
-
-/**
- *
- * @param size The size of the link to generate
- * @returns A random string to be used in a url link
- */
-export const generateLink = (size = 16) => {
-	const lluSize = 62;
-	const linkLookup = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	let link = "";
-	for (let j = 0; j < size; j++) {
-		link += linkLookup[Math.floor(Math.random() * lluSize)];
-	}
-	return link;
-};
 
 export const MIMETypeMap: Record<string, string> = {
 	"jpeg": "image/jpeg",
@@ -83,7 +69,7 @@ export const executeQuery = async <T = undefined>(query: string, args: QueryArgu
 	let queryId;
 	const res = await conn.execute<T>(query, args, { as: "object" });
 	if (tx && !query.startsWith("SELECT") || log) {
-		queryId = generateLink(20);
+		queryId = R.link(20);
 		tx && tx.queryHistory.push({
 			id: queryId,
 			query,

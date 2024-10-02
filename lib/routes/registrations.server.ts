@@ -1,6 +1,7 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
+import { Random as R } from "../random";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, generateLink, getUsedBody, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
 
@@ -42,13 +43,13 @@ serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const { insertId } = await T.executeQuery(
-			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass, registration_url) VALUES (${questionMarks(body)})`,
+			`INSERT INTO registrations (last_name, first_name, am, amka, fathers_name, telephone, cellphone, email, birth_date, road, number, tk, region, registration_year, class_year, class_id, teacher_id, instrument_id, date, pass, registration_url) VALUES (???)`,
 			body
 		);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount + 1");
 		let mail_subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
 		if (mail_subscription.length === 0) {
-			const unsubscribe_token = generateLink(16);
+			const unsubscribe_token = R.link(16);
 			mail_subscription = [{ email: body.email, unsubscribe_token, unrelated: false }];
 			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", mail_subscription[0]);
 		}
@@ -75,7 +76,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			});
 		}
 
-		return { id: insertId };
+		return { insertId };
 	});
 };
 
@@ -90,8 +91,8 @@ serverRoutes.update.func = ({ ctx }) => {
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id=?`, body);
-		else await T.executeQuery(`DELETE FROM registrations WHERE id IN (${questionMarks(body)})`, body);
+		if (body.length === 1) await T.executeQuery(`DELETE FROM registrations WHERE id = ?`, body);
+		else await T.executeQuery(`DELETE FROM registrations WHERE id IN (???)`, body);
 		await T.executeQuery("UPDATE total_registrations SET amount = amount - ?", [body.length]);
 
 		return "Registration deleted successfully";
@@ -101,7 +102,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 serverRoutes.emailSubscribe.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = (getUsedBody(ctx) || await ctx.request.json());
-		await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, generateLink(16)]);
+		await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, R.link(16)]);
 		return { subscribed: true };
 	});
 };
@@ -109,9 +110,9 @@ serverRoutes.emailSubscribe.func = ({ ctx }) => {
 serverRoutes.emailUnsubscribe.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const isSubscribed = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
+		const isSubscribed = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token = ?", [body.token]);
 		if (isSubscribed.length === 0) return { isValid: false };
-		await T.executeQuery("DELETE FROM email_subscriptions WHERE unsubscribe_token=?", [body.token]);
+		await T.executeQuery("DELETE FROM email_subscriptions WHERE unsubscribe_token = ?", [body.token]);
 		return { isValid: true };
 	});
 };
@@ -119,7 +120,7 @@ serverRoutes.emailUnsubscribe.func = ({ ctx }) => {
 serverRoutes.getSubscriptionToken.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const [isSubscribed] = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
+		const [isSubscribed] = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email = ?", [body.email]);
 		if (!isSubscribed) return { token: null };
 		return { token: isSubscribed.unsubscribe_token };
 	});

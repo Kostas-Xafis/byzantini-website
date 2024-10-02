@@ -1,7 +1,8 @@
 import { array, boolean, number, object, string } from "valibot";
 import { APIResponse } from "../../lib/routes/index.client.ts";
 import { v_Registrations, type Registrations } from "../../types/entities";
-import { getJson, randomBoolean, randomItem, randomNumber, expectBody, standardRandomDate, useTestAPI, chain, test, randomMail, randomString } from "../testHelpers.ts";
+import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers.ts";
+import { Random as R } from "../../lib/random.ts";
 
 const label = (str: string) => {
 	return "--registrations-- " + str;
@@ -26,7 +27,7 @@ const classes = [
 	"Β' Ανωτέρα",
 ];
 
-async function registrationsTest() {
+function registrationsTest() {
 	const registration = {
 		last_name: "last_name",
 		first_name: "first_name",
@@ -36,23 +37,23 @@ async function registrationsTest() {
 		telephone: "telephone",
 		cellphone: "cellphone",
 		email: "koxafis@gmail.com",
-		birth_date: randomNumber(1000000000, 9999999999),
+		birth_date: R.int(1000000000, 9999999999),
 		road: "road",
-		number: randomNumber(0, 100),
-		tk: randomNumber(10000, 99999),
+		number: R.int(0, 100),
+		tk: R.int(10000, 99999),
 		region: "region",
 		registration_year: "2024-2025",
-		class_year: randomItem(classes),
-		class_id: randomNumber(0, 2),
-		teacher_id: randomNumber(0, 50),
+		class_year: R.item(classes),
+		class_id: R.int(0, 2),
+		teacher_id: R.int(0, 50),
 		instrument_id: 1,
-		date: standardRandomDate().getTime(),
-		registration_url: randomString(32),
-		pass: randomBoolean(),
+		date: R.standardRandomDate().getTime(),
+		registration_url: R.string(32),
+		pass: R.boolean(),
 	} as Registrations;
 	let newRegId: number | null;
 	let newRegUrl: string | null;
-	await chain([
+	chain([
 		label("POST /registrations"), async () => {
 
 			let res = await useTestAPI("Registrations.post", {
@@ -60,9 +61,9 @@ async function registrationsTest() {
 			});
 
 			let json = await getJson<APIResponse["Registrations.post"]>(res);
-			expectBody(json, object({ id: number() }));
+			expectBody(json, object({ insertId: number() }));
 
-			newRegId = json.data.id;
+			newRegId = json.data.insertId;
 		}],
 		[
 			label("GET /registrations/:id"), async () => {
@@ -95,21 +96,21 @@ async function registrationsTest() {
 					telephone: "telephone",
 					cellphone: "cellphone",
 					email: "mail@mail.com",
-					birth_date: randomNumber(1000000000, 9999999999),
+					birth_date: R.int(1000000000, 9999999999),
 					road: "road",
-					number: randomNumber(0, 100),
-					tk: randomNumber(10000, 99999),
+					number: R.int(0, 100),
+					tk: R.int(10000, 99999),
 					region: "region",
 					registration_year: "2024-2025",
-					class_year: randomItem(classes),
-					class_id: randomNumber(0, 2),
-					teacher_id: randomNumber(0, 50),
+					class_year: R.item(classes),
+					class_id: R.int(0, 2),
+					teacher_id: R.int(0, 50),
 					instrument_id: 1,
-					date: standardRandomDate().getTime(),
+					date: R.standardRandomDate().getTime(),
 					payment_amount: 0,
 					total_payment: 0,
 					payment_date: null,
-					pass: randomBoolean(),
+					pass: R.boolean(),
 				};
 				const res = await useTestAPI("Registrations.update", {
 					RequestObject: registration
@@ -131,10 +132,10 @@ async function registrationsTest() {
 }
 
 
-async function emailRegistrationsTest() {
-	let email = randomMail();
+function emailRegistrationsTest() {
+	let email = R.mail();
 	let token;
-	await chain([
+	chain([
 		label("POST /registrations/email-subscribe"), async () => {
 			const res = await useTestAPI("Registrations.emailSubscribe", {
 				RequestObject: { email }

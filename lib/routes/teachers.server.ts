@@ -16,8 +16,8 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const [id] = getUsedBody(ctx) || await ctx.request.json();
-		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
+		const body = getUsedBody(ctx) || await ctx.request.json();
+		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", body);
 		if (!teacher) throw Error("Teacher not found");
 		return teacher;
 	});
@@ -71,20 +71,19 @@ serverRoutes.getInstrumentsById.func = ({ ctx }) => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = [body.fullname, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online];
-		const id = await T.executeQuery(`INSERT INTO teachers (fullname, amka, email, telephone, linktree, gender, title, visible, online) VALUES (${questionMarks(args)})`, args);
+		const { insertId } = await T.executeQuery(`INSERT INTO teachers (fullname, amka, email, telephone, linktree, gender, title, visible, online) VALUES (???)`, body);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			const registration_number = body.registrations_number.shift() || null;
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (${questionMarks(4)})`, [id.insertId, class_id, priority, registration_number]);
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (???)`, [insertId, class_id, priority, registration_number]);
 		}
 		for (const location_id of body.teacherLocations) {
-			await T.executeQuery(`INSERT INTO teacher_locations (teacher_id, location_id) VALUES (?, ?)`, [id.insertId, location_id]);
+			await T.executeQuery(`INSERT INTO teacher_locations (teacher_id, location_id) VALUES (?, ?)`, [insertId, location_id]);
 		}
 		for (const instrument_id of body.teacherInstruments) {
-			await T.executeQuery(`INSERT INTO teacher_instruments (teacher_id, instrument_id) VALUES (?, ?)`, [id.insertId, instrument_id]);
+			await T.executeQuery(`INSERT INTO teacher_instruments (teacher_id, instrument_id) VALUES (?, ?)`, [insertId, instrument_id]);
 		}
-		return { insertId: id.insertId };
+		return { insertId };
 	});
 };
 
@@ -98,7 +97,7 @@ serverRoutes.update.func = ({ ctx }) => {
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			const registration_number = body.registrations_number.shift() || null;
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (${questionMarks(4)})`, [body.id, class_id, priority, registration_number]);
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (???)`, [body.id, class_id, priority, registration_number]);
 		}
 
 		await T.executeQuery("DELETE FROM teacher_locations WHERE teacher_id=?", [body.id]);
