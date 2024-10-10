@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { AnimTimeline, deepCopy, randomString } from "../../../lib/utils.client";
+import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
 import { customEvent } from "../../../types/custom-events";
 import type {
 	Instruments,
@@ -21,6 +21,7 @@ import type {
 import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
 import Spinner from "../other/Spinner.solid";
+import { Random as R } from "../../../lib/random";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -467,9 +468,7 @@ export function RegistrationForm() {
 				res.data.teacher_id = 0;
 				setRegistrationData(res.data);
 				setFormSelected(music[res.data.class_id] as MusicType);
-			} catch (err) {
-				console.error(err);
-			}
+			} catch (err) {}
 		}
 	});
 
@@ -578,7 +577,7 @@ export function RegistrationForm() {
 				Number(formData.get("instruments-all")) ||
 				0,
 			date: Date.now(),
-			registration_url: randomString(32),
+			registration_url: R.string(32),
 			pass: false,
 		};
 		setRegistrationData(data);

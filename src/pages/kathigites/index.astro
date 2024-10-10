@@ -319,7 +319,7 @@ const cvSrc = "kathigites/cv/";
 		}});
 		pobsv = new PerformanceObserver((list) => {
 			const entries = list.getEntries();
-			if(entries.length) networkCheckHandler.reset({});
+			if(entries.length) networkCheckHandler.reset();
 		});
 		pobsv.observe({entryTypes: ["resource"]});
 		networkCheckHandler.trigger().catch(() => {});

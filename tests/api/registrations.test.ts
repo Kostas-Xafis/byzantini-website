@@ -133,7 +133,7 @@ function registrationsTest() {
 
 
 function emailRegistrationsTest() {
-	let email = R.mail();
+	let email = R.email();
 	let token;
 	chain([
 		label("POST /registrations/email-subscribe"), async () => {

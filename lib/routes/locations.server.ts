@@ -27,14 +27,12 @@ serverRoutes.getByPriority.func = ({ ctx: _ctx }) => {
 	return execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations ORDER BY priority ASC"));
 };
 
-
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body);
 		const { insertId } = await T.executeQuery(
-			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube, partner) VALUES (${questionMarks(args)})`,
-			args
+			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube, partner) VALUES (???)`,
+			body
 		);
 		return { insertId };
 	});
@@ -43,19 +41,16 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body);
-		await T.executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`, [
-			...args.slice(1),
-			body.id
-		]);
-		return "Location added successfully";
+		await T.executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`,
+			body
+		);
+		return "Location updated successfully";
 	});
 };
 
 serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 	return execTryCatch(async T => {
-		const { id } = slug;
-		const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
+		const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", slug);
 		if (!location) throw Error("Location not found");
 
 		const blob = await ctx.request.blob();
@@ -65,7 +60,7 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 			const filename = location.name + "." + filetype.split("/")[1];
 			const link = bucketPrefix + filename;
 			await Bucket.put(ctx, body, link, filetype);
-			await T.executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [filename, id]);
+			await T.executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [filename, slug.id]);
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
@@ -74,12 +69,11 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 
 serverRoutes.fileDelete.func = ({ ctx, slug }) => {
 	return execTryCatch(async T => {
-		const { id } = slug;
-		const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
+		const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", slug);
 		if (!location) throw Error("Location not found");
 
 		if (location.image) await Bucket.delete(ctx, bucketPrefix + location.image);
-		await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [id]);
+		await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, slug);
 		return "Image deleted successfully";
 	});
 };
@@ -88,13 +82,13 @@ serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const files = await T.executeQuery<Pick<Locations, "image">>(
-			`SELECT image FROM locations WHERE id IN (${questionMarks(body)})`,
+			`SELECT image FROM locations WHERE id IN (???)`,
 			body
 		);
 		for (const file of files) {
 			if (file.image) await Bucket.delete(ctx, file.image);
 		}
-		await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(body)})`, body);
+		await T.executeQuery(`DELETE FROM locations WHERE id IN (???)`, body);
 		return "Locations deleted successfully";
 	});
 };

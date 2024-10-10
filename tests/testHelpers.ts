@@ -2,7 +2,7 @@ import { file, hash, write } from "bun";
 import { afterAll, test as bun_test, expect } from "bun:test";
 import { BaseSchema, parse } from "valibot";
 import { APIEndpoints, APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
-import { convertToUrlFromArgs } from "../lib/utils.client";
+import { UpdateHandler, convertToUrlFromArgs } from "../lib/utils.client";
 import { assertOwnProp } from "../lib/utils.server";
 import { TypeGuard } from "../types/helpers";
 import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
@@ -142,7 +142,7 @@ export async function chain(...tests: TestFunc[]) {
 			} catch (error) {
 				sigTests.forEach(([, , s], j) => {
 					if (j > i) {
-						s.abort(error);
+						s.abort("Test chain aborted");
 					}
 				});
 				throw error;
@@ -159,6 +159,14 @@ export async function chain(...tests: TestFunc[]) {
 
 let cached_test_file = file("./.cache/tests.json");
 const cached_tests = (await cached_test_file.exists() && FORCE_TEST !== "true" ? await cached_test_file.json() : {}) as { [key: string]: string; };
+const cacheUpdateHandler = new UpdateHandler({
+	func: () => {
+		console.log("Updating cache");
+		write("./.cache/tests.json", JSON.stringify(cached_tests, null, 2));
+	},
+	timer: 2000
+});
+
 
 const functionHash = (func: Function) => hash(func.toString()).toString(16);
 
@@ -167,9 +175,12 @@ const checkCache = (label: string, hash: string) => {
 };
 
 const cached_test = (label: string, func: Function, { wrapper, force = false }: { wrapper?: () => Promise<void>; force?: boolean; } = {}) => {
+	cacheUpdateHandler.isTriggered() && cacheUpdateHandler.trigger();
 	const testHash = functionHash(func);
+	console.log("Checking cache", label, testHash, cached_tests[label]);
 	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
 		bun_test(label, async () => {
+			console.log("Running test", label);
 			if (wrapper) {
 				await wrapper();
 			} else if (func.constructor.name === "AsyncFunction") {
@@ -177,15 +188,12 @@ const cached_test = (label: string, func: Function, { wrapper, force = false }: 
 			} else {
 				func();
 			}
+			cacheUpdateHandler.reset({ catchAbort: true });
 			cached_tests[label] = testHash;
 		});
 	} else {
 		bun_test.skip(label, wrapper || func);
 	}
 };
-
-afterAll(() => {
-	write("./.cache/tests.json", JSON.stringify(cached_tests, null, 2));
-});
 
 export { cached_test as test };

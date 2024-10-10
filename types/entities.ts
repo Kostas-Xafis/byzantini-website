@@ -193,7 +193,7 @@ export const v_Locations = object({
 	map: string(),
 	link: optional(string()),
 	youtube: optional(string()),
-	partner: union([literal(1), literal(0)]),
+	partner: looseBoolean(),
 });
 export interface Locations {
 	id: number;
@@ -209,7 +209,7 @@ export interface Locations {
 	map: string;
 	link?: string | undefined;
 	youtube?: string | undefined;
-	partner: 0 | 1;
+	partner: boolean;
 };
 
 export const v_Instruments = object({
@@ -255,8 +255,8 @@ export const v_Registrations = object({
 	teacher_id: number([integer(), minValue(-1)]),
 	instrument_id: positiveInt(),
 	date: positiveInt(),
-	payment_amount: positiveInt(),
-	total_payment: positiveInt(),
+	payment_amount: optional(positiveInt()),
+	total_payment: optional(positiveInt()),
 	payment_date: optional(nullable(positiveInt())),
 	registration_url: optional(string()),
 	pass: looseBoolean()
@@ -282,8 +282,8 @@ export interface Registrations {
 	teacher_id: number;
 	instrument_id: number;
 	date: number;
-	payment_amount: number;
-	total_payment: number;
+	payment_amount: number | null;
+	total_payment: number | null;
 	payment_date?: number | null;
 	registration_url?: string | undefined;
 	pass: boolean;

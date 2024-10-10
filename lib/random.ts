@@ -1,7 +1,9 @@
-import { assertOwnProp } from "./utils.server";
-
-type Charset = "a-z" | "A-Z" | "0-9" | "a-Z" | "a-9" | "A-9" | "a-Z-9" | "hex" | "HEX" | "oct" | "decimal" | "binary" | "base64";
-const functions = ["string", "hex", "link", "mail", "date", "standardRandomDate", "boolean", "item", "number", "int", "array", "uniqueArray"];
+type Charset = "a-z" | "A-Z" | "0-9" | "a-Z" | "a-9" | "A-9" | "a-Z-9" | "ascii" | "hex" | "HEX" | "oct" | "decimal" | "binary" | "base64";
+type RandomType = typeof Random;
+type RandomArrayType = {
+	[key in keyof Omit<RandomType, "array" | "prototype">]: RandomType[key] extends (...args: infer A) => infer R ? (...args: A) => R[] : never;
+};
+const arrFunctions = ["string", "hex", "link", "mail", "date", "standardRandomDate", "boolean", "item", "number", "int", "uniqueArray"];
 export class Random {
 
 	static string(size = 16, set: Charset = "a-Z-9") {
@@ -13,6 +15,7 @@ export class Random {
 			"a-9": "abcdefghijklmnopqrstuvwxyz0123456789",
 			"A-9": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
 			"a-Z-9": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+			"ascii": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
 			"hex": "0123456789abcdef",
 			"HEX": "0123456789ABCDEF",
 			"oct": "01234567",
@@ -37,8 +40,8 @@ export class Random {
 		return Random.string(size, "a-Z-9");
 	}
 
-	static mail() {
-		return `${Random.string(10)}@${Random.string(5)}.com`;
+	static email() {
+		return `${Random.string(10)}@${Random.string(5, "a-Z")}.com`;
 	}
 
 	static date(start: Date, end: Date) {
@@ -57,48 +60,41 @@ export class Random {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
 
-	static number(min: number, max: number) {
-		return Math.random() * (max - min + 1) + min;
+	static number(min: number, max: number, precision?: number) {
+		let num = Math.random() * (max - min) + min;
+		return precision ? Number(num.toFixed(precision)) : num;
 	}
 
 	static int(min: number, max: number) {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
 
-	static array<T>(size: number): typeof Random {
-		const arr: T[] = Array.from({ length: size });
-
-		// TODO: Refactor to use loop & make the nested "array" function work
-		return functions.reduce((prev, f) => {
-			assertOwnProp(prev, "arr");
-			return {
-				...prev,
-				get [f]() {
-					return (...args: any[]) => {
-						if (f === "array") {
-							// console.log(prev.arr);
-							// // @ts-ignore
-							// return arr.map(() => (Random[f]).apply(null, args));
-						} else {
-							// @ts-ignore
-							return arr.map(() => (Random[f]).apply(null, args));
-						}
-					};
-				}
-			};
-		}, { arr } as Random) as typeof Random;
+	private static multiDimArray<T>(dimensionsSize: number[], cb: () => T): any {
+		if (dimensionsSize.length === 1) {
+			return new Array(dimensionsSize[0]).fill(null).map(cb);
+		} else {
+			return new Array(dimensionsSize[0]).fill(null).map(() => Random.multiDimArray(dimensionsSize.slice(1), cb));
+		}
 	}
 
-	static uniqueArray<T>(size: number, cb: () => T, isRandomSize = false) {
+	static array<T>(dimensionsSize: number | number[]): RandomArrayType {
+		dimensionsSize = Array.isArray(dimensionsSize) ? dimensionsSize : [dimensionsSize];
+		let objRef = {} as any;
+		for (let f of arrFunctions) {
+			objRef[f] = (...args: any[]) => {
+				// @ts-ignore --- ts is too dumb
+				return Random.multiDimArray(dimensionsSize, () => (Random[f]).apply(null, args)) as T[];
+			};
+		}
+		return objRef;
+	}
+
+	static uniqueArray<T>(size: number, cb: () => T) {
 		const arr: T[] = [];
-		size = isRandomSize ? Random.int(1, size) : size;
 		for (let i = 0; i < size; i++) {
 			const item = cb();
-			if (!arr.includes(item)) {
-				arr.push(item);
-			}
+			(!arr.includes(item)) && arr.push(item);
 		}
 		return arr;
 	}
-
 }

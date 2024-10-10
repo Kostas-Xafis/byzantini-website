@@ -1,5 +1,6 @@
 import { batch, createSignal, onCleanup } from "solid-js";
-import { AnimTimeline, ExecutionQueue, randomHex } from "../../../lib/utils.client";
+import { AnimTimeline, ExecutionQueue } from "../../../lib/utils.client";
+import { Random as R } from "../../../lib/random";
 
 export type Alert = {
 	id: string;
@@ -25,7 +26,7 @@ export function createAlert(
 	return {
 		type,
 		message: msg,
-		id: randomHex(5),
+		id: R.hex(5),
 		status: "push",
 	};
 }

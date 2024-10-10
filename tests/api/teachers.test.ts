@@ -19,10 +19,10 @@ function teachersTest() {
 		title: R.int(0, 2) as 0 | 1 | 2,
 		visible: R.boolean(),
 		online: R.boolean(),
-		teacherClasses: R.uniqueArray(2, () => R.int(0, 2), true),
+		teacherClasses: R.uniqueArray(R.int(1, 2), () => R.int(0, 2)),
 		priorities: [1, 2],
 		registrations_number: ["10", "20"],
-		teacherLocations: R.uniqueArray(2, () => R.int(3, 15), true),
+		teacherLocations: R.uniqueArray(R.int(1, 5), () => R.int(3, 15)),
 		teacherInstruments: [1, 2]
 	};
 	let newTeacherId: number | null;
@@ -82,7 +82,7 @@ function teachersTest() {
 				const updatedTeacher = {
 					...teacher,
 					id: newTeacherId as number,
-					email: R.mail(),
+					email: R.email(),
 					telephone: R.string(10, "0-9"),
 					visible: R.boolean(),
 				};

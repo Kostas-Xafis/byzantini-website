@@ -1,11 +1,11 @@
 import type { APIContext } from "astro";
 import { createHash } from "node:crypto";
 import type { SysUsers } from "../types/entities";
-import { randomHex } from "./utils.client";
 import { executeQuery } from "./utils.server";
+import { Random as R } from "./random";
 
 export async function generateShaKey(key: string, salt?: string) {
-	salt = salt || randomHex();
+	salt = salt || R.hex();
 	const hmac = createHash("sha256");
 	hmac.update(key + (import.meta.env.SECRET));
 	hmac.update(salt);
@@ -45,10 +45,8 @@ class AuthCache {
 
 const small_cache = new AuthCache();
 
-
-
 export const createSessionId = (size = 32) => {
-	return { session_id: randomHex(size), session_exp_date: Date.now() + 1000 * 60 * 60 * 24 * 7 };
+	return { session_id: R.hex(size), session_exp_date: Date.now() + 1000 * 60 * 60 * 24 * 7 };
 };
 
 export const getSessionId = (req: Request) => {

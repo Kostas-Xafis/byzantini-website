@@ -1,32 +1,4 @@
-type Charset = "a-z" | "A-Z" | "0-9" | "a-Z" | "a-9" | "A-9" | "a-Z-9" | "hex" | "HEX" | "oct" | "decimal" | "binary" | "base64";
-export const randomString = (size = 16, set: Charset = "a-Z-9") => {
-	const strLookup = {
-		"a-z": "abcdefghijklmnopqrstuvwxyz",
-		"A-Z": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		"0-9": "0123456789",
-		"a-Z": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		"a-9": "abcdefghijklmnopqrstuvwxyz0123456789",
-		"A-9": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-		"a-Z-9": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-		"hex": "0123456789abcdef",
-		"HEX": "0123456789ABCDEF",
-		"oct": "01234567",
-		"decimal": "0123456789",
-		"binary": "01",
-		"base64": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
-	}[set];
-	const luSize = strLookup.length; // lookup string size
-
-	let str = "";
-	for (let j = 0; j < size; j++) {
-		str += strLookup[Math.floor(Math.random() * luSize)];
-	}
-	return str;
-};
-
-export function randomHex(size = 16) {
-	return randomString(size, "hex");
-};
+import { Random as R } from "./random";
 
 export function convertToUrlFromArgs(url: string, args: any): string {
 	let newUrl = url.slice();
@@ -273,7 +245,7 @@ export class UpdateHandler {
 	 * @param catchAbort if true the promise will resolve even if the timeout is aborted
 	 * @returns
 	 */
-	reset({ ms = 0, func, catchAbort = false }: { ms?: number, func?: Function, catchAbort?: boolean; }): Promise<void> {
+	reset({ ms = 0, func, catchAbort = false }: { ms?: number, func?: Function, catchAbort?: boolean; } = {}): Promise<void> {
 		this.abort();
 		func && (this.#func = func);
 		this.#backoff *= this.#backoffFactor;
@@ -491,7 +463,7 @@ export class ExecutionQueue<T> {
 	isExecuting = false;
 	constructor(private interval = 1000, private func: (item: T) => (Promise<any> | any) = () => { }, private isAsync = false) { }
 	push(item: T): string {
-		const executionId = randomHex(4);
+		const executionId = R.hex(4);
 		this.#queue.push({ executionId, task: deepCopy(item) });
 		if (this.#queue.length === 1 && !this.isExecuting) this.execute();
 		return executionId;

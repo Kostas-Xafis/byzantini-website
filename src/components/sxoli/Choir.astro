@@ -189,7 +189,7 @@
 				void carousel.clientWidth;
 				carousel.classList.add("open");
 				if (!isCarouselVisible) carouselUpdate.abort();
-				else carouselUpdate.reset({ catchAbort : true});
+				else carouselUpdate.reset({ catchAbort : true });
 			}, 600);
 		});
 		carouselUpdate.trigger().catch(() => {});
