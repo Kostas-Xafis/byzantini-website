@@ -245,11 +245,18 @@ export class UpdateHandler {
 	 * @param catchAbort if true the promise will resolve even if the timeout is aborted
 	 * @returns
 	 */
-	reset({ ms = 0, func, catchAbort = false }: { ms?: number, func?: Function, catchAbort?: boolean; } = {}): Promise<void> {
+	async reset({ ms = 0, func, catchAbort = false }: { ms?: number, func?: Function, catchAbort?: boolean; } = {}): Promise<void> {
 		this.abort();
 		func && (this.#func = func);
 		this.#backoff *= this.#backoffFactor;
-		if (catchAbort) return this.trigger(ms || this.#timer).catch(() => { });
+		if (catchAbort) {
+			try {
+				await this.trigger(ms || this.#timer);
+			} catch (e) {
+				console.log("Aborted");
+				return;
+			}
+		};
 		return this.trigger(ms || this.#timer);
 	}
 

@@ -30,7 +30,7 @@ export type WrappedConnection = {
 };
 
 type DBType = "sqlite-prod" | "sqlite-dev" | null;
-type SimpleConnection = Client;
+export type SimpleConnection = Client;
 type ConnectionType<ShouldWrap extends boolean> =
 	ShouldWrap extends true ? WrappedConnection : SimpleConnection;
 

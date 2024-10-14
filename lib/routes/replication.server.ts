@@ -1,6 +1,6 @@
 import { Bucket } from "../bucket";
 import { sqliteGenerateBackup } from "../routes/schema.server";
-import { executeCommands } from "../utils.cli";
+import { CLI } from "../utils.cli";
 import { asyncQueue, deepCopy } from "../utils.client";
 import { MIMETypeMap, execTryCatch } from "../utils.server";
 import { ReplicationRoutes } from "./replication.client";
@@ -82,7 +82,7 @@ async function productionDatabaseReplication(force = false) {
 		encoding: "utf-8"
 	});
 
-	await executeCommands([
+	await CLI.executeCommands([
 		`cd ${PROJECT_ABSOLUTE_PATH}/dbSnapshots`,
 		"rm -f latest.db",
 		"sqlite3 latest.db < dev-snapshot.sql",

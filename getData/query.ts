@@ -1,12 +1,22 @@
-const { argv } = require("process");
-const dotenv = require("dotenv");
-const db = require("./sqlite");
-const { readFile, writeFile } = require("fs/promises");
-const XLSX = require("xlsx");
-/**
- * @param {string} str
- */
-const getQueries = (str) => {
+import { argv } from "process";
+import dotenv from "dotenv";
+import { readFile, writeFile } from "fs/promises";
+import XLSX from "xlsx";
+import { SimpleConnection, createDbConnection } from "../lib/db";
+
+type ArgsType = {
+	"--dev"?: boolean;
+	"--prod"?: boolean;
+	"--q"?: string;
+	"--f"?: string;
+	"--out"?: string;
+	"--excel"?: string;
+	"--t"?: string;
+	"--h"?: string;
+	"--help"?: string;
+};
+
+const getQueries = (str: string) => {
 	const formatQuery = (query) => {
 		query = query.replace(/\r\n/g, "");
 		query = query.replace(/\n/g, "");
@@ -29,8 +39,8 @@ const getQueries = (str) => {
  * @param {*} db
  * @returns {Promise<Object<string, string | number>[]>}
  */
-const executeQueries = async (queries, db) => {
-	let resArr = [];
+const executeQueries = async (queries: string[], db: SimpleConnection) => {
+	let resArr: any[] = [];
 	if (args["--skip"]) {
 		for (let i = 0; i < queries.length; i++) {
 			const query = queries[i];
@@ -72,15 +82,10 @@ const outputToExcel = (data) => {
 	const ws = XLSX.utils.aoa_to_sheet([headers].concat(data.map((row) => Object.values(row))));
 
 	XLSX.utils.book_append_sheet(wb, ws, "Σελίδα 1");
-	XLSX.writeFile(wb, args["--out"]);
+	XLSX.writeFile(wb, args["--out"] || "output.xlsx");
 };
 
-/**
- *
- * @param {string[]} args
- * @returns {Object<string, string | boolean>}
- */
-const argReader = (args) => {
+const argReader = (args: string[]): ArgsType => {
 	let argObj = {};
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
@@ -93,13 +98,10 @@ const argReader = (args) => {
 	}
 	return argObj;
 };
-const args = argReader(argv);
+const args: ArgsType = argReader(argv);
 
-/**
- * @param {Object<string, string | boolean>} args
- */
-const dbProcess = async function (args) {
-	const conn = db(isProduction);
+const dbProcess = async function (args: ArgsType) {
+	const conn = createDbConnection(isProduction ? "sqlite-prod" : "sqlite-dev");
 	let data;
 	try {
 		if (args["--f"]) {
@@ -167,7 +169,7 @@ async function main() {
 			await writeFile(args["--out"], strData, { encoding: "utf8", flag: "w+" });
 		} else {
 			console.log(strData);
-			if (data.rows) {
+			if (data?.rows) {
 				console.log("Returned rows: ", data.rows.length);
 			}
 		}

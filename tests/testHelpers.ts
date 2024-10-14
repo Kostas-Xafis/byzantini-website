@@ -188,8 +188,8 @@ const cached_test = (label: string, func: Function, { wrapper, force = false }: 
 			} else {
 				func();
 			}
-			cacheUpdateHandler.reset({ catchAbort: true });
 			cached_tests[label] = testHash;
+			cacheUpdateHandler.reset({ catchAbort: true });
 		});
 	} else {
 		bun_test.skip(label, wrapper || func);
