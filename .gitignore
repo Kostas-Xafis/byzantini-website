@@ -38,3 +38,4 @@ pnpm-debug.log*
 /email
 ./pdfWorker/.git
 /imageCompression
+/test.ts

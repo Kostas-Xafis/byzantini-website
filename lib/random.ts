@@ -5,24 +5,25 @@ type RandomArrayType = {
 };
 const arrFunctions = ["string", "hex", "link", "mail", "date", "standardRandomDate", "boolean", "item", "number", "int", "uniqueArray"];
 export class Random {
+	private static charsets: Record<Charset, string> = {
+		"a-z": "abcdefghijklmnopqrstuvwxyz",
+		"A-Z": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		"0-9": "0123456789",
+		"a-Z": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		"a-9": "abcdefghijklmnopqrstuvwxyz0123456789",
+		"A-9": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+		"a-Z-9": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+		"ascii": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+		"hex": "0123456789abcdef",
+		"HEX": "0123456789ABCDEF",
+		"oct": "01234567",
+		"decimal": "0123456789",
+		"binary": "01",
+		"base64": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+	};
 
 	static string(size = 16, set: Charset = "a-Z-9") {
-		const strLookup = {
-			"a-z": "abcdefghijklmnopqrstuvwxyz",
-			"A-Z": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-			"0-9": "0123456789",
-			"a-Z": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-			"a-9": "abcdefghijklmnopqrstuvwxyz0123456789",
-			"A-9": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-			"a-Z-9": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-			"ascii": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
-			"hex": "0123456789abcdef",
-			"HEX": "0123456789ABCDEF",
-			"oct": "01234567",
-			"decimal": "0123456789",
-			"binary": "01",
-			"base64": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
-		}[set];
+		const strLookup = this.charsets[set];
 		const luSize = strLookup.length; // lookup string size
 
 		let str = "";
@@ -60,7 +61,7 @@ export class Random {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
 
-	static number(min: number, max: number, precision?: number) {
+	static float(min: number, max: number, precision?: number) {
 		let num = Math.random() * (max - min) + min;
 		return precision ? Number(num.toFixed(precision)) : num;
 	}

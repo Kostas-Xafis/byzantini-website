@@ -95,6 +95,9 @@ export type RemoveNullishFields<T extends Record<string, any>> =
 		[K in keyof Omit<T, GetUndefinedFields<T>>]: T[K];
 	} & {};
 
+export type RemoveFlag<T extends Record<string, any>, Flag extends string> = {
+	[K in keyof T as K extends `${Flag}${infer Key}` ? Key : K]: T[K];
+};
 
 
 export type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;

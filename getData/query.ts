@@ -1,9 +1,8 @@
-import { argv } from "process";
-import dotenv from "dotenv";
 import { readFile, writeFile } from "fs/promises";
+import { argv } from "bun";
 import XLSX from "xlsx";
 import { SimpleConnection, createDbConnection } from "../lib/db";
-
+import { argReader } from "../lib/utils.cli";
 type ArgsType = {
 	"--dev"?: boolean;
 	"--prod"?: boolean;
@@ -11,10 +10,12 @@ type ArgsType = {
 	"--f"?: string;
 	"--out"?: string;
 	"--excel"?: string;
+	"--skip"?: boolean;
 	"--t"?: string;
 	"--h"?: string;
 	"--help"?: string;
 };
+const args = argReader<ArgsType>(argv, "--");
 
 const getQueries = (str: string) => {
 	const formatQuery = (query) => {
@@ -41,7 +42,7 @@ const getQueries = (str: string) => {
  */
 const executeQueries = async (queries: string[], db: SimpleConnection) => {
 	let resArr: any[] = [];
-	if (args["--skip"]) {
+	if (args.skip) {
 		for (let i = 0; i < queries.length; i++) {
 			const query = queries[i];
 			if (query === "") break;
@@ -82,36 +83,22 @@ const outputToExcel = (data) => {
 	const ws = XLSX.utils.aoa_to_sheet([headers].concat(data.map((row) => Object.values(row))));
 
 	XLSX.utils.book_append_sheet(wb, ws, "Σελίδα 1");
-	XLSX.writeFile(wb, args["--out"] || "output.xlsx");
+	XLSX.writeFile(wb, args.out || "output.xlsx");
 };
 
-const argReader = (args: string[]): ArgsType => {
-	let argObj = {};
-	for (let i = 0; i < args.length; i++) {
-		const arg = args[i];
-		// if Flag or KV pair
-		if (arg.startsWith("--") && (args[i + 1]?.startsWith("--") || args[i + 1] === undefined)) {
-			argObj[arg] = true;
-		} else if (arg.startsWith("--")) {
-			argObj[arg] = args[i + 1];
-		}
-	}
-	return argObj;
-};
-const args: ArgsType = argReader(argv);
 
-const dbProcess = async function (args: ArgsType) {
+const dbProcess = async function () {
 	const conn = createDbConnection(isProduction ? "sqlite-prod" : "sqlite-dev");
 	let data;
 	try {
-		if (args["--f"]) {
-			const file = args["--f"];
+		if (args.f) {
+			const file = args.f;
 			if (typeof file !== "string" || file === "") asyncEscape("No file specified");
 
 			const queries = getQueries(await readFile(file, { encoding: "utf8" }));
 			data = await executeQueries(queries, conn);
-		} else if (args["--q"]) {
-			const query = args["--q"];
+		} else if (args.q) {
+			const query = args.q;
 			if (typeof query !== "string" || query === "") asyncEscape("No query specified");
 
 			data = await conn.execute(query);
@@ -137,7 +124,7 @@ const printUsage = () => {
 	console.log("  --t:\t\tPrint execution time");
 };
 
-const isProduction = args["--dev"] ? false : args["--prod"] || null;
+const isProduction = args.dev ? false : args.prod || null;
 /**
  * Program use case examples:
  * Query database: node query.js --dev|--prod --q "SELECT * FROM users"
@@ -145,33 +132,27 @@ const isProduction = args["--dev"] ? false : args["--prod"] || null;
  * Query from file and output to file: node query.js --prod --f queries.sql --out output.json
  */
 async function main() {
-	if (args["--h"] || args["--help"] || Object.keys(args).length === 0) {
+	if (args.h || args.help || Object.keys(args).length === 0) {
 		printUsage();
 		return;
 	}
-	dotenv.config({
-		path: "../.env.development",
-	});
 
-	let isProduction = args["--dev"] ? false : args["--prod"] || null;
+	let isProduction = args.dev ? false : args.prod || null;
 	if (isProduction === null) asyncEscape("No environment specified");
 
-	args["--t"] && console.time("Execution Time");
-	let data = await dbProcess(args);
+	args.t && console.time("Execution Time");
+	let data = await dbProcess();
+	args.t && console.timeEnd("Execution Time");
 
-	args["--t"] && console.timeEnd("Execution Time");
-
-	if (args["--out"] && args["--excel"]) {
+	if (args.excel) {
 		outputToExcel(data);
 	} else {
 		const strData = JSON.stringify(data, null, 4);
-		if (args["--out"]) {
-			await writeFile(args["--out"], strData, { encoding: "utf8", flag: "w+" });
+		if (args.out) {
+			await writeFile(args.out, strData, { encoding: "utf8", flag: "w+" });
 		} else {
 			console.log(strData);
-			if (data?.rows) {
-				console.log("Returned rows: ", data.rows.length);
-			}
+			data?.rows && console.log("Returned rows: ", data.rows.length);
 		}
 	}
 }

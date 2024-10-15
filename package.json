@@ -7,6 +7,7 @@
 		"test": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
+		"db-replicate": "bun --env-file='.env.development' ./getData/db-replicate.ts",
 		"start": "astro dev",
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",
@@ -33,7 +34,6 @@
 		"@cloudflare/workers-types": "^4.20231121.0",
 		"@types/bun": "^1.1.10",
 		"client-zip": "^2.4.4",
-		"dotenv": "^16.4.5",
 		"typescript": "5.3.3",
 		"xlsx": "^0.18.5"
 	}
