@@ -4,7 +4,8 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "bunx --bun astro dev",
-		"test": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
+		"test": "bun test --env-file='./tests/.env.test'",
+		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
 		"db-replicate": "bun --env-file='.env.development' ./getData/db-replicate.ts",

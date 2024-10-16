@@ -12,7 +12,7 @@ function teachersTest() {
 	const teacher = {
 		fullname: "John Doe",
 		amka: R.string(11, "0-9"),
-		email: "johndoe@gmail.com",
+		email: R.email(),
 		telephone: R.string(10, "0-9"),
 		linktree: "http://linktree.com/johndoe",
 		gender: R.item(["M", "F"]) as "M" | "F",

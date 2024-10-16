@@ -33,7 +33,7 @@ serverRoutes.updateAmount.func = ({ ctx }) => {
 			T.executeQuery("UPDATE school_payoffs SET amount = ? WHERE id = ?", [args[1], args[0]]),
 			T.executeQuery("UPDATE total_school_payoffs SET amount = amount - ?", [previousAmount - args[1]])
 		]);
-		return "Updated payoff amount";
+		return "Updated payoff amount successfully";
 	});
 };
 
