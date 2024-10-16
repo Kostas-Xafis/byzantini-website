@@ -23,7 +23,7 @@ export class Random {
 	};
 
 	static string(size = 16, set: Charset = "a-Z-9") {
-		const strLookup = this.charsets[set];
+		const strLookup = Random.charsets[set];
 		const luSize = strLookup.length; // lookup string size
 
 		let str = "";

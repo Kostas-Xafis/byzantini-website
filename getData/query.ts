@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "fs/promises";
-import { argv } from "bun";
+import { argv } from "process";
 import XLSX from "xlsx";
 import { SimpleConnection, createDbConnection } from "../lib/db";
 import { argReader } from "../lib/utils.cli";
@@ -16,6 +16,7 @@ type ArgsType = {
 	"--help"?: string;
 };
 const args = argReader<ArgsType>(argv, "--");
+const isProduction = args.dev ? false : args.prod || null;
 
 const getQueries = (str: string) => {
 	const formatQuery = (query) => {
@@ -124,7 +125,6 @@ const printUsage = () => {
 	console.log("  --t:\t\tPrint execution time");
 };
 
-const isProduction = args.dev ? false : args.prod || null;
 /**
  * Program use case examples:
  * Query database: node query.js --dev|--prod --q "SELECT * FROM users"

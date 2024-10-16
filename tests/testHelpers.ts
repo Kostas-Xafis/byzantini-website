@@ -1,8 +1,8 @@
 import { file, hash, write } from "bun";
-import { afterAll, test as bun_test, expect } from "bun:test";
+import { test as bun_test, expect } from "bun:test";
 import { BaseSchema, parse } from "valibot";
 import { APIEndpoints, APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
-import { UpdateHandler, convertToUrlFromArgs } from "../lib/utils.client";
+import { convertToUrlFromArgs } from "../lib/utils.client";
 import { assertOwnProp } from "../lib/utils.server";
 import { TypeGuard } from "../types/helpers";
 import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
@@ -119,8 +119,12 @@ class Signal {
 
 }
 
+const skip = (label: string, func: Function) => bun_test.skip(label, func);
+const test = (label: string, func: Function) => bun_test(label, func);
+
 type Function = () => (Promise<unknown> | void);
 type TestFunc = [string, Function];
+type TestChainFunc = [Function, Function];
 // TODO: If a chain link is updated, the whole chain needs to be re-run
 export async function chain(...tests: TestFunc[]) {
 	let forceTests = false;
@@ -138,7 +142,10 @@ export async function chain(...tests: TestFunc[]) {
 		const wrapper = async () => {
 			try {
 				await signal.wait();
+				// console.log("Running test", testLabel);
 				testFunc.constructor.name === "AsyncFunction" ? await testFunc() : testFunc();
+				cached_tests[testLabel] = functionHash(testFunc);
+				nextSignal && nextSignal.signal();
 			} catch (error) {
 				sigTests.forEach(([, , s], j) => {
 					if (j > i) {
@@ -146,53 +153,51 @@ export async function chain(...tests: TestFunc[]) {
 					}
 				});
 				throw error;
+			} finally {
+				if (i === sigTests.length - 1) {
+					write("./.cache/tests.json", JSON.stringify(cached_tests, null, 2));
+				}
 			}
-			nextSignal && nextSignal.signal();
 		};
 
 		// Initialize the tests in the chain
-		cached_test(testLabel, testFunc, { wrapper, force: forceTests });
+		chain_cached_test(testLabel, [wrapper, testFunc], { force: forceTests });
 	}
 	// Start the chain
 	sigTests[0][2].signal();
 }
 
-let cached_test_file = file("./.cache/tests.json");
+const cached_test_file = file("./.cache/tests.json");
 const cached_tests = (await cached_test_file.exists() && FORCE_TEST !== "true" ? await cached_test_file.json() : {}) as { [key: string]: string; };
-const cacheUpdateHandler = new UpdateHandler({
-	func: () => {
-		console.log("Updating cache");
-		write("./.cache/tests.json", JSON.stringify(cached_tests, null, 2));
-	},
-	timer: 2000
-});
-
 
 const functionHash = (func: Function) => hash(func.toString()).toString(16);
-
 const checkCache = (label: string, hash: string) => {
 	return !cached_tests[label] || cached_tests[label] !== hash;
 };
 
-const cached_test = (label: string, func: Function, { wrapper, force = false }: { wrapper?: () => Promise<void>; force?: boolean; } = {}) => {
-	cacheUpdateHandler.isTriggered() && cacheUpdateHandler.trigger();
+const cached_test = (label: string, func: Function, { force = false }: { force?: boolean; } = {}) => {
 	const testHash = functionHash(func);
-	console.log("Checking cache", label, testHash, cached_tests[label]);
+	// console.log("Checking cache", label, testHash, cached_tests[label]);
 	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
-		bun_test(label, async () => {
-			console.log("Running test", label);
-			if (wrapper) {
-				await wrapper();
-			} else if (func.constructor.name === "AsyncFunction") {
-				await func();
-			} else {
-				func();
-			}
+		test(label, async () => {
+			// console.log("Running test", label);
+			func.constructor.name === "AsyncFunction" ? await func() : func();
 			cached_tests[label] = testHash;
-			cacheUpdateHandler.reset({ catchAbort: true });
+			write("./.cache/tests.json", JSON.stringify(cached_tests, null, 2));
 		});
 	} else {
-		bun_test.skip(label, wrapper || func);
+		skip(label, func);
+	}
+};
+
+const chain_cached_test = (label: string, func: TestChainFunc, { force = false }: { force?: boolean; } = {}) => {
+	const [wrapper, testFunc] = func;
+	const testHash = functionHash(testFunc);
+	// console.log("Checking cache", label, testHash, cached_tests[label]);
+	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
+		test(label, wrapper);
+	} else {
+		skip(label, testFunc);
 	}
 };
 

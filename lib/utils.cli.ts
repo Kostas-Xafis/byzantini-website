@@ -53,4 +53,5 @@ export const argReader = <T extends Record<string, any>>(args: string[], flagRul
 			argObj[arg.slice(2)] = args[i + 1] === undefined || args[i + 1]?.startsWith("--") ? true : args[i + 1];
 		}
 	}
+	return argObj as RemoveFlag<T, "--">;
 };

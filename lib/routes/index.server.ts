@@ -18,22 +18,23 @@ import { authentication } from "../utils.auth";
 import { SchemaServerRoutes } from "./schema.server";
 import { unionHas, unionStringToSet } from "../utils.server";
 
+const raw_routes =
+	[BooksServerRoutes,
+		PaymentsServerRoutes,
+		PayoffsServerRoutes,
+		WholesalersServerRoutes,
+		AuthenticationServerRoutes,
+		TeachersServerRoutes,
+		LocationsServerRoutes,
+		ClassTypeServerRoutes,
+		SysUsersServerRoutes,
+		RegistrationsServerRoutes,
+		AnnouncementsServerRoutes,
+		ReplicationServerRoutes,
+		SchemaServerRoutes];
+
 function getAllRoutes() {
-	const allRoutes =
-		[BooksServerRoutes,
-			PaymentsServerRoutes,
-			PayoffsServerRoutes,
-			WholesalersServerRoutes,
-			AuthenticationServerRoutes,
-			TeachersServerRoutes,
-			LocationsServerRoutes,
-			ClassTypeServerRoutes,
-			SysUsersServerRoutes,
-			RegistrationsServerRoutes,
-			AnnouncementsServerRoutes,
-			ReplicationServerRoutes,
-			SchemaServerRoutes]
-			.map(routes => Object.values(routes)).flat() as (RemovePartial<AnyEndpoint, "func">)[];
+	const allRoutes = raw_routes.map(routes => Object.values(routes)).flat() as (RemovePartial<AnyEndpoint, "func">)[];
 
 	allRoutes.forEach(route => {
 		route.middleware = [];

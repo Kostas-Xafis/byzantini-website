@@ -84,7 +84,7 @@ export const v_SysUsers = object({
 	password: string([minLength(1)]),
 	session_id: string([minLength(1)]),
 	session_exp_date: positiveInt(),
-	privilege: positiveInt(),
+	privilege: number(),
 	last_reg_check_id: positiveInt()
 });
 export interface SysUsers {

@@ -1,7 +1,8 @@
 import { v_LoginCredentials, type SysUsers } from "../../types/entities";
 import type { EndpointRoute } from "../../types/routes";
 
-const get: EndpointRoute<"/sys", any, Pick<SysUsers, "id" | "email" | "privilege">[]> = {
+type SysUsersGetById = Pick<SysUsers, "id" | "email" | "privilege">;
+const get: EndpointRoute<"/sys", any, SysUsersGetById[]> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys",
@@ -9,7 +10,7 @@ const get: EndpointRoute<"/sys", any, Pick<SysUsers, "id" | "email" | "privilege
 	validation: undefined,
 };
 
-const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
+const getById: EndpointRoute<"/sys/id", number[], SysUsersGetById> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/id",
@@ -17,7 +18,7 @@ const getById: EndpointRoute<"/sys/id", number[], SysUsers> = {
 	validation: undefined,
 };
 
-const getBySid: EndpointRoute<"/sys/sid", any, SysUsers> = {
+const getBySid: EndpointRoute<"/sys/sid", any, SysUsersGetById> = {
 	authentication: true,
 	method: "GET",
 	path: "/sys/sid",
@@ -33,7 +34,7 @@ const del: EndpointRoute<"/sys", number[]> = {
 	validation: undefined,
 };
 
-const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; }> = {
+const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; id: number; }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/[link:string]",
