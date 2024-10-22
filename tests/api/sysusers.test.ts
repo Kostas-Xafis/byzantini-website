@@ -1,8 +1,8 @@
-import { array, number, object, string, literal, pick } from "valibot";
+import { array, literal, number, object, pick, string } from "valibot";
+import { Random as R } from "../../lib/random";
 import { APIResponse } from "../../lib/routes/index.client";
 import { SysUsers, v_SysUsers } from "../../types/entities";
-import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers";
-import { Random as R } from "../../lib/random";
+import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers";
 
 const label = (str: string) => {
 	return "--sysusers-- " + str;

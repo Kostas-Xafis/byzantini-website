@@ -1,8 +1,8 @@
 import { array, number, object } from "valibot";
+import { Random as R } from "../../lib/random";
 import { APIResponse } from "../../lib/routes/index.client";
 import { v_Books } from "../../types/entities";
-import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers";
-import { Random as R } from "../../lib/random";
+import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers";
 
 const label = (str: string) => {
 	return "--books-- " + str;

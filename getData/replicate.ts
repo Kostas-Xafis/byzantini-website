@@ -42,7 +42,7 @@ async function productionDatabaseReplication(force = false) {
 	let fileBackup: string | undefined;
 	if (!force) {
 		try {
-			let file = Bun.file(`../${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`);
+			let file = Bun.file(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`);
 			fileBackup = await file.text();
 		} catch (error) {
 			console.log("No backup found for today, generating a new one");
@@ -51,7 +51,7 @@ async function productionDatabaseReplication(force = false) {
 	const sqliteBackup = fileBackup || (await sqliteGenerateBackup());
 
 	// Store sqlite file locally
-	await Bun.write(`../${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
+	await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
 		createPath: true,
 	});
 

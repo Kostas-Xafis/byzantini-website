@@ -1,8 +1,10 @@
 import { type RemoveFlag } from "../types/helpers";
+import { silentImport } from "./utils.server";
 type CLI_Profile = "pwsh" | "bash";
 
+const baseProfile = await silentImport<typeof import('os')>('os').then(os => os.platform() === 'win32' ? 'pwsh' : 'bash');
 export class CLI {
-	private profile: CLI_Profile = eval(`import('os').then(os => os.platform() === 'win32' ? 'pwsh' : 'bash')`);
+	private profile: CLI_Profile = baseProfile;
 	private command = "";
 	constructor(profile?: CLI_Profile, command?: string | string[]) {
 		profile && this.setProfile(profile);
@@ -10,7 +12,8 @@ export class CLI {
 	}
 	async exec<T>(options: { signal?: AbortSignal; } = {}): Promise<T> {
 		// Powershell is no longer supported
-		const safe_exec = (await eval(`import('child_process')`)).exec as typeof import("child_process").exec;
+		const { exec: safe_exec } = (await silentImport<typeof import("child_process")>("child_process"));
+
 		const initialCommand = this.profile === "pwsh" ?
 			`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "${this.command}"`
 			: `bash -c "${this.command}"`;

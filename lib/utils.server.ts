@@ -40,6 +40,22 @@ export function getUsedBody<T>(ctx: Context<T>): (T extends AnyObjectSchema ? Ou
 	return ctx.request.json();
 };
 
+export function formDataToObject(formData: FormData): Record<string, any> {
+	const obj: Record<string, File | string | string[]> = {};
+	formData.forEach((value, key) => {
+		let val: any;
+		console.log({ key, value, curValue: obj[key] });
+		if (obj[key] === undefined) val = value;
+		else if (obj[key] === "number") val = Number(value);
+		else if (obj[key] === "boolean") val = value === "true";
+		else if (obj[key] === "null") val = null;
+		else if (obj[key] === "undefined") val = undefined;
+		else if (obj[key] === "object") val = JSON.parse(value as any);
+		obj[key] = val;
+	});
+	return obj;
+}
+
 export function unionStringToSet(str: string): Set<string | number> {
 	return new Set(str.split("|").map((s) => {
 		const num = Number(s);
@@ -125,4 +141,15 @@ export const MessageWrapper = (msg: string): EndpointResponse<string> => {
 
 export const DataWrapper = <T>(data: T) => {
 	return { res: { type: "data", data } } as EndpointResponse<T>;
+};
+
+// Use case: import a module for use only in development.
+// Any other use case will 99% probably crash the build process.
+// Cursed function
+export const silentImport = async <T>(importStr: string) => {
+	try {
+		return await eval(`import("${importStr}")`) as Promise<T>;
+	} catch (err) {
+		return Promise.resolve({}) as Promise<T>;
+	}
 };

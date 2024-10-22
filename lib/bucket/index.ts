@@ -1,17 +1,15 @@
-import type { DeleteObjectCommand, GetObjectCommand, ListObjectsCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import type { DeleteObjectCommand, GetObjectCommand, ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { APIContext } from "astro";
-import { MIMETypeMap } from "../utils.server";
+import { MIMETypeMap, silentImport } from "../utils.server";
 
-
+const awsSdk = await silentImport<typeof import("@aws-sdk/client-s3")>("@aws-sdk/client-s3");
 const { S3_DEV_BUCKET_NAME } = import.meta.env;
 
-// Although eval is not needed here, as it builds fine without it, it is needed because it adds an
-// additional 500kb of unused code to the production build size
 const createS3Client = async () => {
-	const s3Client = (await eval('import("@aws-sdk/client-s3")')).S3Client as typeof S3Client;
+	const { S3Client } = awsSdk;
 
-	return new s3Client({
+	return new S3Client({
 		region: "auto",
 		endpoint: import.meta.env.S3_ENDPOINT,
 		credentials: {
@@ -35,7 +33,7 @@ export class Bucket {
 
 	// Development functions
 	static async listDev(bucketName?: string) {
-		const listObjectsCommand = (await eval('import("@aws-sdk/client-s3")')).ListObjectsCommand as typeof ListObjectsCommand;
+		const listObjectsCommand = awsSdk.ListObjectsCommand as typeof ListObjectsCommand;
 		const client = await createS3Client();
 		const cmdResult = await client.send(new listObjectsCommand({
 			Bucket: bucketName || S3_DEV_BUCKET_NAME,
@@ -48,7 +46,7 @@ export class Bucket {
 	}
 
 	static async getDev(filename: string, bucketName?: string) {
-		const getObjectCommand = (await eval('import("@aws-sdk/client-s3")')).GetObjectCommand as typeof GetObjectCommand;
+		const getObjectCommand = awsSdk.GetObjectCommand as typeof GetObjectCommand;
 		let client = await createS3Client();
 		let cmdResult = await client.send(new getObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
@@ -60,7 +58,7 @@ export class Bucket {
 	}
 
 	static async putDev(file: ArrayBuffer, filename: string, filetype: string, bucketName?: string) {
-		const putObjectCommand = (await eval('import("@aws-sdk/client-s3")')).PutObjectCommand as typeof PutObjectCommand;
+		const putObjectCommand = awsSdk.PutObjectCommand as typeof PutObjectCommand;
 		let client = await createS3Client();
 		await client.send(new putObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
@@ -71,7 +69,7 @@ export class Bucket {
 	}
 
 	static async deleteDev(filename: string, bucketName?: string) {
-		const deleteObjectCommand = (await eval('import("@aws-sdk/client-s3")')).DeleteObjectCommand as typeof DeleteObjectCommand;
+		const deleteObjectCommand = awsSdk.DeleteObjectCommand as typeof DeleteObjectCommand;
 		let client = await createS3Client();
 		await client.send(new deleteObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),

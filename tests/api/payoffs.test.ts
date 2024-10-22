@@ -1,8 +1,8 @@
 import { array, length, number, object, pick } from "valibot";
+import { Random as R } from "../../lib/random";
 import { APIResponse } from "../../lib/routes/index.client";
 import { Payoffs, v_Payoffs } from "../../types/entities";
-import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers";
-import { Random as R } from "../../lib/random";
+import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers";
 
 const label = (str: string) => {
 	return "--payoffs-- " + str;
@@ -41,7 +41,6 @@ function payoffsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newWholesalerId = json.data.insertId;
-			console.log({ newWholesalerId });
 		}],
 		[label("POST /books"), async () => {
 			if (!newWholesalerId) {
@@ -59,7 +58,6 @@ function payoffsTest() {
 				const res = await useTestAPI("Payoffs.get");
 				const json = await getJson<APIResponse["Payoffs.get"]>(res);
 				expectBody(json, array(SimplePayoff));
-				console.log(json.data);
 				newPayoff = json.data.find(p => p.wholesaler_id === newWholesalerId) as Payoffs;
 			}
 		],

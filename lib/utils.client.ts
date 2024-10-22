@@ -253,7 +253,6 @@ export class UpdateHandler {
 			try {
 				await this.trigger(ms || this.#timer);
 			} catch (e) {
-				console.log("Aborted");
 				return;
 			}
 		};
@@ -422,6 +421,34 @@ export const fileToBlob = (file?: File | null): Promise<Blob | null> => {
 		reader.readAsArrayBuffer(file);
 	});
 };
+
+export const fileToUint8 = async (file?: File | null): Promise<Uint8Array | null> => {
+	if (!file || !file.name) return Promise.resolve(null);
+	return new Uint8Array(await file.arrayBuffer());
+};
+
+export const objToFormData = (obj: Record<string, any>): FormData => {
+	let fd = new FormData();
+	Object.entries(obj).forEach(([key, value]) => {
+		if (value instanceof Object && !(value instanceof Blob)) {
+			fd.append(key, "object");
+			fd.append(key, JSON.stringify(value));
+			return;
+		}
+		if (typeof value === "number") {
+			fd.append(key, "number");
+		} else if (typeof value === "boolean") {
+			fd.append(key, "boolean");
+		} else if (value === null) {
+			fd.append(key, "null");
+		} else if (value === undefined) {
+			fd.append(key, "undefined");
+		}
+		fd.append(key, value);
+	});
+	return fd;
+};
+
 export function loadScript(src: string, res?: () => boolean): Promise<void> {
 	return new Promise(async (resolve, reject) => {
 		let script = document.createElement("script");

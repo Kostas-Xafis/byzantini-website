@@ -17,8 +17,8 @@ import {
 
 export type Insert = { insertId: number; };
 
-const looseBoolean = () => union([boolean(), literal(0), literal(1)]);
-const positiveInt = () => number([integer(), minValue(0)]);
+const looseBoolean = () => union([boolean(), literal(0), literal(1)], "Invalid loose boolean");
+const positiveInt = () => number("Invalid positive integer", [integer(), minValue(0)]);
 
 export const v_Books = object({
 	id: positiveInt(),
@@ -282,8 +282,8 @@ export interface Registrations {
 	teacher_id: number;
 	instrument_id: number;
 	date: number;
-	payment_amount: number | null;
-	total_payment: number | null;
+	payment_amount: number;
+	total_payment: number;
 	payment_date?: number | null;
 	registration_url?: string | undefined;
 	pass: boolean;
@@ -306,7 +306,6 @@ export const v_Announcements = object({
 	content: string(),
 	date: number([integer()]),
 	views: positiveInt(),
-	image_counter: positiveInt()
 });
 export interface Announcements {
 	id: number;
@@ -314,14 +313,13 @@ export interface Announcements {
 	content: string;
 	date: number;
 	views: number;
-	image_counter: number;
 };
 
 //! Later on rename the priority column to id
 export const v_AnnouncementImages = object({
 	id: positiveInt(),
 	announcement_id: positiveInt(),
-	name: string(),
+	name: string("Invalid string type"),
 	is_main: looseBoolean()
 });
 export interface AnnouncementImages {

@@ -45,6 +45,10 @@ export class Random {
 		return `${Random.string(10)}@${Random.string(5, "a-Z")}.com`;
 	}
 
+	// static paragraph(size = 5) {
+	// 	return Random.array(size).string(, "ascii");
+	// }
+
 	static date(start: Date, end: Date) {
 		return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 	}
@@ -59,6 +63,10 @@ export class Random {
 
 	static item<T>(arr: T[]) {
 		return arr[Math.floor(Math.random() * arr.length)];
+	}
+
+	static items<T>(arr: T[], size: number = Random.int(1, arr.length)) {
+		return Random.array(size).item(arr);
 	}
 
 	static float(min: number, max: number, precision?: number) {

@@ -1,8 +1,8 @@
 import { array, number, object } from "valibot";
+import { Random as R } from "../../lib/random.ts";
 import { APIResponse } from "../../lib/routes/index.client.ts";
 import { v_Books, v_Payments } from "../../types/entities";
-import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers.ts";
-import { Random as R } from "../../lib/random.ts";
+import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers.ts";
 
 const label = (str: string) => {
 	return "--payments-- " + str;

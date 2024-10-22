@@ -8,7 +8,7 @@
 		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
-		"db-replicate": "bun --env-file='.env.development' ./getData/db-replicate.ts",
+		"db-replicate": "bun --env-file='.env.development' ./getData/replicate.ts",
 		"start": "astro dev",
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",
