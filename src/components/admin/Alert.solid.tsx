@@ -2,6 +2,8 @@ import { batch, createSignal, onCleanup } from "solid-js";
 import { AnimTimeline, ExecutionQueue } from "../../../lib/utils.client";
 import { Random as R } from "../../../lib/random";
 
+//TODO: Refactor all this code to be included in a single class
+
 export type Alert = {
 	id: string;
 	message: string;

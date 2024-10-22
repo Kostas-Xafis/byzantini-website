@@ -1,10 +1,10 @@
 import { createDbConnection } from "../db";
 import { deepCopy } from "../utils.client";
-import { execTryCatch } from "../utils.server";
+import { execTryCatch, silentImport } from "../utils.server";
 import { SchemaRoutes } from "./schema.client";
 
 const serverRoutes = deepCopy(SchemaRoutes);
-
+const fs = await silentImport<typeof import("fs/promises")>("fs/promises");
 export const sqliteGenerateBackup = async () => {
 	const new_schema = ["PRAGMA journal_mode=WAL;"];
 	const conn = createDbConnection("sqlite-prod");
@@ -42,7 +42,6 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 		if (!SAFE_BACKUP_SNAPSHOT) {
 			throw Error("No safe schema found");
 		}
-		const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 
 		if (type === "sqlite") {
 			const sqliteConn = createDbConnection("sqlite-dev");
@@ -56,17 +55,23 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
 		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, LATEST_MIGRATION_FILE } = import.meta.env;
-		if (CONNECTOR !== "mysql") {
+		if (CONNECTOR === "mysql") {
 			throw Error(`Cannot revert schema for '${CONNECTOR}' connector`);
 		}
-		if (!SAFE_BACKUP_SNAPSHOT) {
+		if (!SAFE_BACKUP_SNAPSHOT && !(await fs.exists(SAFE_BACKUP_SNAPSHOT))) {
 			throw Error("No safe schema found. Please create a safe schema before migrating");
 		}
-		const fs = (await eval('import("fs/promises")')) as typeof import("fs/promises");
 		const migrationFile = await fs.readFile(LATEST_MIGRATION_FILE, "utf-8");
-
 		const sqliteConn = createDbConnection("sqlite-dev");
-		await sqliteConn.execute(migrationFile);
+		for (const query of migrationFile.split("\n")) {
+			try {
+				if (query.trim() === "") continue;
+				await sqliteConn.execute(query);
+			} catch (error) {
+				console.error(error);
+				throw Error("Migration failed");
+			}
+		}
 		return "Migrated to latest schema";
 	});
 };

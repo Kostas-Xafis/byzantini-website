@@ -50,7 +50,6 @@ serverRoutes.delete.func = ({ ctx }) => {
 serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 	return execTryCatch(async T => {
 		const linkCheck = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ?", slug);
-		console.log({ linkCheck });
 		if (linkCheck.length === 0) {
 			throw new Error("Invalid Link");
 		} else if (linkCheck[0].exp_date < Date.now()) {
@@ -69,7 +68,7 @@ serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 
 serverRoutes.createRegisterLink.func = ({ ctx }) => {
 	return execTryCatch(async T => {
-		const link = R.link();
+		const link = R.link(64);
 		// 24 hours expiration
 		const exp_date = Date.now() + 1000 * 60 * 60 * 24;
 		const session_id = getSessionId(ctx.request);

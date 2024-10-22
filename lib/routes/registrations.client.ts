@@ -36,7 +36,6 @@ const getTotal: EndpointRoute<"/registrations/total", any, { total: number; }> =
 
 const postReq = omit(v_Registrations, [
 	"id",
-	"payment_amount",
 	"payment_date",
 	"payment_amount",
 	"total_payment",
