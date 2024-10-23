@@ -5,6 +5,7 @@ import { createDbConnection, type QueryArguments, type Transaction } from "./db"
 import { Random as R } from "./random";
 
 export function isProduction() {
+	console.log({ env: import.meta.env });
 	return import.meta.env.ENV === "PROD";
 }
 
