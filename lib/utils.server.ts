@@ -4,29 +4,9 @@ import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError 
 import { createDbConnection, type QueryArguments, type Transaction } from "./db";
 import { Random as R } from "./random";
 
+const { MODE, PROD } = import.meta.env;
 export function isProduction() {
-	const { AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN,
-		AUTOMATED_EMAILS_SERVICE_URL,
-		CONNECTOR,
-		ENV,
-		GOOGLE_MAPS_KEY,
-		SECRET,
-		TURSO_DB_TOKEN,
-		TURSO_DB_URL,
-		URL
-	} = import.meta.env;
-	console.log({
-		AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN,
-		AUTOMATED_EMAILS_SERVICE_URL,
-		CONNECTOR,
-		ENV,
-		GOOGLE_MAPS_KEY,
-		SECRET,
-		TURSO_DB_TOKEN,
-		TURSO_DB_URL,
-		URL
-	});
-	return import.meta.env.ENV === "PROD";
+	return MODE === "production" && PROD === true;
 }
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
