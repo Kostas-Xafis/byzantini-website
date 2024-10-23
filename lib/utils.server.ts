@@ -4,6 +4,10 @@ import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError 
 import { createDbConnection, type QueryArguments, type Transaction } from "./db";
 import { Random as R } from "./random";
 
+export function isProduction() {
+	return import.meta.env.ENV === "PROD";
+}
+
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
 export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
 
@@ -157,7 +161,7 @@ export const DataWrapper = <T>(data: T) => {
  * @returns {Promise<ImportType>} - A promise that resolves to the imported module or an empty object in production or on error.
  */
 export const silentImport = async <ImportType>(importStr: string) => {
-	if (import.meta.env.ENV === "PROD") {
+	if (isProduction()) {
 		return Promise.resolve({}) as Promise<ImportType>;
 	}
 	try {

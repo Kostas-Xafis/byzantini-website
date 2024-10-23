@@ -2,7 +2,7 @@ import { Bucket } from "../bucket";
 import { sqliteGenerateBackup } from "../routes/schema.server";
 import { CLI } from "../utils.cli";
 import { asyncQueue, deepCopy } from "../utils.client";
-import { MIMETypeMap, execTryCatch, silentImport } from "../utils.server";
+import { MIMETypeMap, execTryCatch, isProduction, silentImport } from "../utils.server";
 import { ReplicationRoutes } from "./replication.client";
 
 const serverRoutes = deepCopy(ReplicationRoutes); // Copy the routes object to split it into client and server routes
@@ -93,7 +93,7 @@ async function productionDatabaseReplication(force = false) {
 
 serverRoutes.replication.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
-		if (import.meta.env.ENV !== "DEV") throw Error("This route is only available in development mode");
+		if (isProduction()) throw Error("This route is only available in development mode");
 		if (ctx.url.hostname !== "localhost") throw Error("This route is only available in development mode");
 		// Even if the a malicious user manages to send a request to this route,
 		// it wont do anything because it doesn't have access to dev env variables

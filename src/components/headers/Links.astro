@@ -1,5 +1,5 @@
 ---
-const isProduction = import.meta.env.ENV === "PROD";
+import { isProduction } from "../../../lib/utils.server.ts";
 const hasBrandIcons = !Astro.url.pathname.includes("login");
 ---
 
@@ -21,7 +21,7 @@ const hasBrandIcons = !Astro.url.pathname.includes("login");
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic" rel="stylesheet" />
 	{
-		isProduction && (
+		isProduction() && (
 			<script
 				defer
 				src="https://static.cloudflareinsights.com/beacon.min.js"

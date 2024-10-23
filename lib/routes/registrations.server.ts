@@ -1,14 +1,12 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
 import { Random as R } from "../random";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, getUsedBody } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, isProduction } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
 
 // Include this in all .server.ts files
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
-
-const isProduction = import.meta.env.ENV === 'PROD';
 
 serverRoutes.get.func = ({ slug }) => {
 	return execTryCatch(() => {
@@ -53,8 +51,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			mail_subscription = [{ email: body.email, unsubscribe_token, unrelated: false }];
 			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", mail_subscription[0]);
 		}
-		console.log({ isProduction });
-		if (isProduction) {
+		if (isProduction()) {
 			// Send automated email to the student for the successful registration
 			const {
 				AUTOMATED_EMAILS_SERVICE_URL: service_url,

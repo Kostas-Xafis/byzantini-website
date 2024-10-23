@@ -1,7 +1,7 @@
 import type { DeleteObjectCommand, GetObjectCommand, ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { APIContext } from "astro";
-import { MIMETypeMap, silentImport } from "../utils.server";
+import { MIMETypeMap, isProduction, silentImport } from "../utils.server";
 
 const awsSdk = await silentImport<typeof import("@aws-sdk/client-s3")>("@aws-sdk/client-s3");
 const { S3_DEV_BUCKET_NAME } = import.meta.env;
@@ -19,11 +19,9 @@ const createS3Client = async () => {
 	});
 };
 
+
 // Development functions can have access to any bucket by passing the bucket name as an argument
 // But it by default uses the dev bucket
-
-const isProduction = import.meta.env.ENV === "PROD";
-
 export class Bucket {
 
 	static getS3Bucket(context: APIContext) {
@@ -88,26 +86,26 @@ export class Bucket {
 
 	// Production functions
 	static async list(context: APIContext) {
-		if (!isProduction) return await Bucket.listDev();
+		if (!isProduction()) return await Bucket.listDev();
 		const S3 = Bucket.getS3Bucket(context);
 		const list = await S3.list();
 		return list.objects.map(({ key }) => key);
 	}
 
 	static get(context: APIContext, filename: string) {
-		if (!isProduction) return Bucket.getDev(filename);
+		if (!isProduction()) return Bucket.getDev(filename);
 		const S3 = Bucket.getS3Bucket(context);
 		return S3.get(filename);
 	};
 
 	static put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
-		if (!isProduction) return Bucket.putDev(file, filename, filetype);
+		if (!isProduction()) return Bucket.putDev(file, filename, filetype);
 		const S3 = Bucket.getS3Bucket(context);
 		return S3.put(filename, file, { httpMetadata: { "contentType": filetype } });
 	};
 
 	static delete(context: APIContext, filename: string) {
-		if (!isProduction) return Bucket.deleteDev(filename);
+		if (!isProduction()) return Bucket.deleteDev(filename);
 		const S3 = Bucket.getS3Bucket(context);
 		return S3.delete(filename);
 	};
@@ -117,7 +115,7 @@ export class Bucket {
 		if (!fileType) throw Error("Invalid filetype");
 		const MIMEType = MIMETypeMap[fileType] || "application/octet-stream";
 
-		if (!isProduction) return Bucket.moveDev(srcFile, destFile, MIMEType);
+		if (!isProduction()) return Bucket.moveDev(srcFile, destFile, MIMEType);
 
 		const S3 = Bucket.getS3Bucket(context);
 		const file = await S3.get(srcFile);
