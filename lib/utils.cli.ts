@@ -2,19 +2,20 @@ import { type RemoveFlag } from "../types/helpers";
 import { silentImport } from "./utils.server";
 type CLI_Profile = "pwsh" | "bash";
 
-const baseProfile = await silentImport<typeof import('os')>('os').then(os => os.platform() === 'win32' ? 'pwsh' : 'bash');
 export class CLI {
-	private profile: CLI_Profile = baseProfile;
+	private static profile: CLI_Profile;
 	private command = "";
-	constructor(profile?: CLI_Profile, command?: string | string[]) {
-		profile && this.setProfile(profile);
+	constructor(command?: string | string[]) {
+		if (!CLI.profile) {
+			silentImport<typeof import('os')>('os').then(os => CLI.profile = (os.platform() === 'win32' ? 'pwsh' : 'bash'));
+		}
 		command && this.setCommand(command);
 	}
 	async exec<T>(options: { signal?: AbortSignal; } = {}): Promise<T> {
 		// Powershell is no longer supported
 		const { exec: safe_exec } = (await silentImport<typeof import("child_process")>("child_process"));
 
-		const initialCommand = this.profile === "pwsh" ?
+		const initialCommand = CLI.profile === "pwsh" ?
 			`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "${this.command}"`
 			: `bash -c "${this.command}"`;
 		return new Promise((resolve, reject) => {
@@ -29,9 +30,6 @@ export class CLI {
 			});
 		});
 	}
-	setProfile(profile: CLI_Profile) {
-		this.profile = profile;
-	}
 	setCommand(command: string | string[]) {
 		this.command = Array.isArray(command) ? command.join(" ; ") : command;
 		this.command = this.command.replace(/"/g, '\\"');
@@ -39,7 +37,7 @@ export class CLI {
 
 	static async executeCommands<T>(commands: string | string[], signal?: AbortSignal, profile: CLI_Profile = "bash") {
 		const cli = new CLI();
-		cli.setProfile(profile);
+		CLI.profile = profile;
 		cli.setCommand(commands);
 		return cli.exec<T>({ signal });
 	}

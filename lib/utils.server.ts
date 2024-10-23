@@ -146,13 +146,23 @@ export const DataWrapper = <T>(data: T) => {
 // Use case: import a module for use only in development.
 // Any other use case will 99% probably crash the build process.
 // Cursed function
-export const silentImport = async <T>(importStr: string) => {
-	if (import.meta.env.PROD) {
-		return Promise.resolve({}) as Promise<T>;
+
+/**
+ * Asynchronously imports a module only in non-production environments.
+ *
+ * @example ```ts
+ * const os = await silentImport<typeof import('os')>('os');
+ * ```
+ * @param {string} importStr - The string representing the module to import.
+ * @returns {Promise<ImportType>} - A promise that resolves to the imported module or an empty object in production or on error.
+ */
+export const silentImport = async <ImportType>(importStr: string) => {
+	if (import.meta.env.ENV === "PROD") {
+		return Promise.resolve({}) as Promise<ImportType>;
 	}
 	try {
-		return await eval(`import("${importStr}")`) as Promise<T>;
+		return await eval(`import("${importStr}")`) as Promise<ImportType>;
 	} catch (err) {
-		return Promise.resolve({}) as Promise<T>;
+		return Promise.resolve({}) as Promise<ImportType>;
 	}
 };

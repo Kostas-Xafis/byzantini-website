@@ -8,7 +8,7 @@ import { RegistrationsRoutes } from "./registrations.client";
 // Include this in all .server.ts files
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
 
-const { PROD } = import.meta.env;
+const isProduction = import.meta.env.ENV === 'PROD';
 
 serverRoutes.get.func = ({ slug }) => {
 	return execTryCatch(() => {
@@ -54,7 +54,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", mail_subscription[0]);
 		}
 
-		if (PROD) {
+		if (isProduction) {
 			// Send automated email to the student for the successful registration
 			const {
 				AUTOMATED_EMAILS_SERVICE_URL: service_url,
