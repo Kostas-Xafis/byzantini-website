@@ -53,7 +53,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			mail_subscription = [{ email: body.email, unsubscribe_token, unrelated: false }];
 			await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", mail_subscription[0]);
 		}
-
+		console.log({ isProduction });
 		if (isProduction) {
 			// Send automated email to the student for the successful registration
 			const {
