@@ -147,6 +147,9 @@ export const DataWrapper = <T>(data: T) => {
 // Any other use case will 99% probably crash the build process.
 // Cursed function
 export const silentImport = async <T>(importStr: string) => {
+	if (import.meta.env.PROD) {
+		return Promise.resolve({}) as Promise<T>;
+	}
 	try {
 		return await eval(`import("${importStr}")`) as Promise<T>;
 	} catch (err) {
