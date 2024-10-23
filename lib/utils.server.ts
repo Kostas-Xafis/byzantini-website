@@ -5,7 +5,27 @@ import { createDbConnection, type QueryArguments, type Transaction } from "./db"
 import { Random as R } from "./random";
 
 export function isProduction() {
-	console.log({ env: import.meta.env });
+	const { AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN,
+		AUTOMATED_EMAILS_SERVICE_URL,
+		CONNECTOR,
+		ENV,
+		GOOGLE_MAPS_KEY,
+		SECRET,
+		TURSO_DB_TOKEN,
+		TURSO_DB_URL,
+		URL
+	} = import.meta.env;
+	console.log({
+		AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN,
+		AUTOMATED_EMAILS_SERVICE_URL,
+		CONNECTOR,
+		ENV,
+		GOOGLE_MAPS_KEY,
+		SECRET,
+		TURSO_DB_TOKEN,
+		TURSO_DB_URL,
+		URL
+	});
 	return import.meta.env.ENV === "PROD";
 }
 
