@@ -2,14 +2,17 @@ import { For, createSignal, onMount } from "solid-js";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
-type MultiFileInputProps = {
+export type MultiFileInputProps = {
 	name: string;
 	prefix: string;
-	value?: string[];
+	// value: [filename, metadata per file][]
+	value?: [string, Record<string, any>][];
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
 	fileExtension?: string;
+	// Metadata for new files
+	metadata?: Record<string, any>[];
 };
 
 export default function MultiFileInput(props: MultiFileInputProps) {
@@ -21,31 +24,34 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 		iconClasses,
 		disabled,
 		fileExtension,
+		metadata,
 	} = props;
 
-	const [fileList, setFileList] = createSignal<string[]>(initFiles); // Need to be a signal to update the component
+	const [input, setInput] = createSignal<HTMLInputElement>();
+	const [fileList, setFileList] = createSignal<typeof initFiles>(initFiles); // Need to be a signal to update the component
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: false,
-		files: initFiles.map((f) => FileHandler.createFileProxy(f)),
+		files: initFiles.map(([name, metadata]) => FileHandler.createFileProxy(name, { metadata })),
+		metadata: metadata || {},
 	});
+	const setFiles = () => {
+		setFileList(fileHandler.getFiles().map((f) => [f.name, f.metadata]) as typeof initFiles);
+	};
+
 	const onFileClick = (e: MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
-		const input = document.querySelector(
-			`form[data-prefix='${prefix}'] input[name='${name}']`
-		) as HTMLInputElement;
-		input.click();
+		input()?.click();
 	};
 	const onFileChange = async (e: Event) => {
-		const input = e.currentTarget as HTMLInputElement;
-		const files = input?.files;
+		const files = input()?.files;
 		if (!files) return;
 		fileHandler.addFiles(files);
-		setFileList(fileHandler.getFiles().map((f) => f.name));
+		setFiles();
 	};
 	const onFileRemove = (fileId: number = 0) => {
 		fileHandler.removeFile(fileId);
-		setFileList(fileHandler.getFiles().map((f) => f.name));
+		setFiles();
 	};
 	onMount(() => {
 		const fileDiv = document.querySelector("#multifileDropZone") as HTMLElement;
@@ -58,9 +64,18 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 			},
 			dropEvent: (e) => {
 				fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
-				setFileList(fileHandler.getFiles().map((f) => f.name));
+				setFiles();
 			},
 		});
+	});
+
+	document.addEventListener("modal_close", (e) => {
+		const modalPrefix = e.detail.prefix;
+		if (modalPrefix !== prefix) return;
+		if (prefix.includes("ADD")) {
+			fileHandler.removeFile(0);
+			setFileList([]);
+		}
 	});
 
 	return (
@@ -89,20 +104,25 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 				</div>
 				<div class="flex flex-row flex-wrap gap-4 p-4 self-start">
 					<For each={fileList()}>
-						{(fname, index) => (
+						{([fname, _], index) => (
 							<div
 								style={{ "word-break": "break-all" }}
 								class="flex flex-row items-center h-min w-[25ch] px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
 								<CloseButton
 									onClick={() => onFileRemove(index())}
 									classes="text-lg hover:text-red-800 hover:bg-transparent"></CloseButton>
-								<p>{fname}</p>
+								<p>
+									{fname.length > 20
+										? fname.slice(0, 12) + " ... " + fname.slice(-7)
+										: fname}
+								</p>
 							</div>
 						)}
 					</For>
 				</div>
 			</div>
 			<input
+				ref={(el) => setInput(el)}
 				class="hidden"
 				type="file"
 				name={name}

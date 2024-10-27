@@ -31,9 +31,9 @@ export class Bucket {
 
 	// Development functions
 	static async listDev(bucketName?: string) {
-		const listObjectsCommand = awsSdk.ListObjectsCommand as typeof ListObjectsCommand;
+		const { ListObjectsCommand } = awsSdk;
 		const client = await createS3Client();
-		const cmdResult = await client.send(new listObjectsCommand({
+		const cmdResult = await client.send(new ListObjectsCommand({
 			Bucket: bucketName || S3_DEV_BUCKET_NAME,
 		}));
 
@@ -44,9 +44,9 @@ export class Bucket {
 	}
 
 	static async getDev(filename: string, bucketName?: string) {
-		const getObjectCommand = awsSdk.GetObjectCommand as typeof GetObjectCommand;
+		const { GetObjectCommand } = awsSdk;
 		let client = await createS3Client();
-		let cmdResult = await client.send(new getObjectCommand({
+		let cmdResult = await client.send(new GetObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
 			Key: filename,
 		}));
@@ -56,9 +56,9 @@ export class Bucket {
 	}
 
 	static async putDev(file: ArrayBuffer, filename: string, filetype: string, bucketName?: string) {
-		const putObjectCommand = awsSdk.PutObjectCommand as typeof PutObjectCommand;
+		const { PutObjectCommand } = awsSdk;
 		let client = await createS3Client();
-		await client.send(new putObjectCommand({
+		await client.send(new PutObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
 			Key: filename,
 			Body: new Uint8Array(file),
@@ -67,9 +67,9 @@ export class Bucket {
 	}
 
 	static async deleteDev(filename: string, bucketName?: string) {
-		const deleteObjectCommand = awsSdk.DeleteObjectCommand as typeof DeleteObjectCommand;
+		const { DeleteObjectCommand } = awsSdk;
 		let client = await createS3Client();
-		await client.send(new deleteObjectCommand({
+		await client.send(new DeleteObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
 			Key: filename,
 		}));

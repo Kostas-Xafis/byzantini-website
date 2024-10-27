@@ -1,3 +1,4 @@
+import { argv } from "bun";
 import { createDbConnection } from "../lib/db";
 import { CLI } from "../lib/utils.cli";
 
@@ -33,37 +34,36 @@ const getCurrentFormattedDate = () => {
 };
 
 async function productionDatabaseReplication(force = false) {
-	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = import.meta
-		.env;
+	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = import.meta.env;
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH)
 		throw Error("Missing environment variables");
 	const SNAPSHOT_DATE = getCurrentFormattedDate();
 
-	let fileBackup: string | undefined;
+	let sqliteBackup: string;
 	if (!force) {
 		try {
-			let file = Bun.file(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`);
-			fileBackup = await file.text();
+			let file = Bun.file(DEV_SNAPSHOT_LOCATION);
+			sqliteBackup = await file.text();
 		} catch (error) {
 			console.log("No backup found for today, generating a new one");
 		}
+	} else {
+		sqliteBackup = await sqliteGenerateBackup();
+		// Create sqlite backup file locally
+		await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
+			createPath: true,
+		});
+		// Latest backup
+		await Bun.write(DEV_SNAPSHOT_LOCATION, sqliteBackup);
 	}
-	const sqliteBackup = fileBackup || (await sqliteGenerateBackup());
-
-	// Store sqlite file locally
-	await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
-		createPath: true,
-	});
-
-	await Bun.write(DEV_SNAPSHOT_LOCATION, sqliteBackup);
 
 	await CLI.executeCommands([
 		`cd ${PROJECT_ABSOLUTE_PATH}/dbSnapshots`,
-		"rm -f latest.db",
+		"rm -f latest.*",
 		"sqlite3 latest.db < dev-snapshot.sql",
 	]);
 
 	console.log("Database replicated successfully");
 }
 
-productionDatabaseReplication();
+productionDatabaseReplication(argv.includes("--force"));

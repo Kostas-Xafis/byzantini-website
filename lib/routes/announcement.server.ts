@@ -2,10 +2,10 @@ import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { asyncQueue, deepCopy } from "../utils.client";
-import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 
-async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Announcements) {
+async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<Announcements, "id" | "views">) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
 	if (!sitemap) return;
 
@@ -71,7 +71,7 @@ serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const [id] = getUsedBody(ctx) || await ctx.request.json();
 		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", [id]);
-		if (!announcement) throw Error("announcement not found");
+		if (!announcement) throw Error("Announcement not found");
 		return announcement;
 	});
 };
@@ -80,19 +80,17 @@ serverRoutes.getImagesById.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { id } = slug;
 		const images = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
-		if (!images || !images.length) throw Error("images not found");
+		if (!images || !images.length) throw Error("Images not found");
 		return images;
 	});
 };
 
 
-
 serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
 	return execTryCatch(async T => {
-		const { title } = slug;
-		const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", [title]);
+		const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", slug);
 		const images = await T.executeQuery<AnnouncementImages>("SELECT name, is_main FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
-		if (!announcement) throw Error("announcement not found");
+		if (!announcement) throw Error("Announcement not found");
 		await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 		return { ...announcement, images };
 	});
@@ -101,12 +99,10 @@ serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body) as any[];
-		const { insertId } = await T.executeQuery(
-			`INSERT INTO announcements (title, content, date) VALUES (${questionMarks(args)})`,
-			args
-		);
-		await insertAnnouncementToSitemap(ctx, body as Announcements);
+		body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
+		body.links = body.links.replaceAll('youtu.be/', "www.youtube.com/embed/").replaceAll('watch?v=', "embed/");
+		const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
+		// await insertAnnouncementToSitemap(ctx, body);
 		return { insertId };
 	});
 };
@@ -114,60 +110,40 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		let args = Object.values(body) as any[];
-		args.push(args.shift());
-
-		await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ? WHERE id = ?`, args);
-		await removeAnnouncementFromSitemap(ctx, [body.title]);
-		await insertAnnouncementToSitemap(ctx, body as Announcements);
+		body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
+		body.links = body.links.replaceAll('youtu.be/', "www.youtube.com/embed/").replaceAll('watch?v=', "embed/");
+		await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
+		// await removeAnnouncementFromSitemap(ctx, [body.title]);
+		// await insertAnnouncementToSitemap(ctx, body as Announcements);
 		return "Announcement updated successfully";
 	});
 };
 
 serverRoutes.postImage.func = ({ ctx }) => {
-	return execTryCatch(async (T) => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = Object.values(body);
-		let insertId;
-		if (body.is_main) {
-			insertId = 0;
-			await T.executeQuery(`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (${questionMarks(args.length + 1)})`, [0, ...args]);
-		} else {
-			insertId = (await T.executeQuery(
-				`INSERT INTO announcement_images (id, announcement_id, name, is_main) VALUES (
-(SELECT image_counter FROM announcements WHERE id = ?), ${questionMarks(args.length)})`, [body.announcement_id, ...args])).insertId;
-			await T.executeQuery(`UPDATE announcements SET image_counter = image_counter + 1 WHERE id = ?`, [body.announcement_id]);
-		}
-		return { insertId };
-	});
-};
-
-serverRoutes.imageUpload.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
-		let { id, name } = slug;
-
-		const [announcement] = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ? AND name = ?", [id, name.replace("thumb_", "")]);
-		if (!announcement) throw Error("announcement not found");
-
-		const blob = await ctx.request.blob();
-		const filetype = blob.type;
-		if (!ImageMIMEType.includes(filetype)) throw Error("Invalid filetype");
-
-		const imageBuf = await blob.arrayBuffer();
-		const bucketFileName = bucketPrefix + `${id}/` + name;
-		if (announcement.name) await Bucket.delete(ctx, announcement.name);
-		await Bucket.put(ctx, imageBuf, bucketFileName, filetype);
-		return "Image uploaded successfully";
+		const body = getUsedBody(ctx) || await ctx.request.json();
+		const { announcement_id, fileData, thumbData, fileType, name: fileName } = body as (typeof body) & { fileData: File; };
+		if (!fileName.startsWith("thumb_")) {
+			await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
+		};
+		const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;
+		await Bucket.put(ctx, await fileData.arrayBuffer(), bucketFileName, fileType);
+		if (thumbData) {
+			const thumbFileName = bucketPrefix + `${announcement_id}/thumb_` + fileName;
+			await Bucket.put(ctx, await thumbData.arrayBuffer(), thumbFileName, fileType);
+		}
+		return { insertId: 0 };
 	});
 };
 
 serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
-		const { announcement_id } = slug;
 		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
+		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE id IN (???)`, ids);
 		if (!images || !images.length) throw Error("images not found");
-		await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND id IN (${questionMarks(ids)})`, [announcement_id, ...ids]);
+		await executeQuery(`DELETE FROM announcement_images WHERE id IN (???)`, ids);
+
+		const { announcement_id } = slug;
 		const deletionJobs = [];
 		for (const { name } of images) {
 			deletionJobs.push(
@@ -188,18 +164,18 @@ serverRoutes.delete.func = ({ ctx }) => {
 		const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!announcements || !announcements.length) throw Error("announcements not found");
 		await T.executeQuery(`DELETE FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
-		for (const id of ids) {
-			const images = await T.executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
-			if (images.length) {
-				await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ?`, [id]);
-				for (const { name, announcement_id } of images) {
-					await Promise.all([
-						Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
-						Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
-					]);
-				}
-			}
+		const images = await T.executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id IN (???)", ids);
+		await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id IN (???)`, ids);
+
+		const deletionJobs = [];
+		for (const { name, announcement_id } of images) {
+			deletionJobs.push(
+				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
+				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name));
 		}
+		await asyncQueue(deletionJobs, {
+			maxJobs: 10,
+		});
 		await removeAnnouncementFromSitemap(ctx, announcements.map(({ title }) => title));
 		return "announcement deleted successfully";
 	});

@@ -3,7 +3,7 @@ import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIResponse } from "../routes/index.client";
-import { convertToUrlFromArgs } from "../utils.client";
+import { convertToUrlFromArgs, objToFormData } from "../utils.client";
 import { assertOwnProp } from "../utils.server";
 import type { DefaultEndpointResponse } from "../../types/routes";
 
@@ -22,10 +22,10 @@ export type StoreMutation<T extends APIEndpointNames> = {
 	type: ActionEnum;
 };
 
-export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], Mutations?: StoreMutation<T>) => {
+export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], { Mutations }: { toFormData?: boolean, Mutations?: StoreMutation<T>; } = {}) => {
 	const Route = APIEndpoints[endpoint] as (typeof APIEndpoints)[T];
 	try {
-		let fetcher: ReturnType<typeof fetch> | undefined = undefined;
+		let fetcher: ReturnType<typeof fetch>;
 		if (req === undefined) {
 			const url = URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method });
@@ -34,16 +34,19 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			assertOwnProp(req, "UrlArgs");
 			if ("validation" in Route && Route.validation) {
 				parse(Route.validation, req.RequestObject);
+				if (Route.multipart) {
+					req.RequestObject = objToFormData(req.RequestObject as any);
+				}
 			}
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
-			const body = (IsBlob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
+			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
 			fetcher = fetch(URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
-				headers: {
+				headers: Route.multipart ? {} : {
 					"Content-Type": (IsBlob && RequestObject.type) || "application/json"
 				},
-				body
+				body,
 			});
 		}
 		const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;

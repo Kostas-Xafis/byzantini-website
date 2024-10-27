@@ -21,9 +21,12 @@ const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
 const mainImg = announcement.images.find(img => img.is_main) as AnnouncementImages;
-announcement.images = announcement.images.filter(img => !img.is_main);
+announcement.images = announcement.images.filter(
+	img => !img.is_main && !img.name.startsWith("thumb_")
+);
 if (!mainImg) return Astro.redirect("/404");
 ---
+
 <Layout title={announcement.title} imageUrl={imgThumbSrc + mainImg.name}>
 	<section
 		id="announcementSection"
@@ -52,6 +55,32 @@ if (!mainImg) return Astro.redirect("/404");
 		<div class="text-xl mt-4 self-start pl-8 max-sm:px-4 max-sm:text-base">
 			{announcement.content.split("\n").map(p => <p class="pb-2">{p}</p>)}
 		</div>
+		{
+			announcement.links && (
+				<div class="flex w-full items-center">
+					<div class="flex flex-row flex-wrap w-full mt-4 gap-y-6 loading items-center justify-evenly self-center">
+						{announcement.links
+							.split("|")
+							.map(link => (
+								<div class="imgLoader group/img">
+									<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px]">
+										<Spinner />
+									</div>
+									<iframe
+										class="hidden group-[:is(.loaded)]/img:block w-[38.5dvw] max-sm:max-w-[95dvw] h-[calc((9_*_38.5dvw)_/_16)] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden border-2 border-red-900"
+										src={link}
+										title="YouTube video player"
+										frameborder="0"
+										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+										referrerpolicy="strict-origin-when-cross-origin"
+										allowfullscreen
+									/>
+								</div>
+							))}
+					</div>
+				</div>
+			)
+		}
 		<div id="imgContainer" class="flex w-full items-center">
 			<div
 				class="flex flex-row flex-wrap w-full mt-4 gap-y-6 loading items-center justify-evenly self-center">

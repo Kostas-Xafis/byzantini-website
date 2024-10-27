@@ -56,15 +56,15 @@ export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>, mut
 			if ((hydrate.action === ActionEnum.MODIFY || hydrate.action === ActionEnum.CHECK) && hydrate.isMultiple) {
 				const ids = hydrate.ids;
 				mutations.forEach((mut) => {
-					apiHook(mut.srcEndpoint, { RequestObject: ids }, { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids });
+					apiHook(mut.srcEndpoint, { RequestObject: ids }, { Mutations: { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids } });
 				});
 			} else if ((("isMultiple" in hydrate) && !hydrate.isMultiple) || hydrate.action === ActionEnum.ADD) {
 				const id = hydrate.id;
 				mutations.forEach((mut) => {
 					if (APIEndpoints[mut.srcEndpoint].hasUrlParams) {
-						apiHook(mut.srcEndpoint, { UrlArgs: { id: [id] } }, { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids: [id] });
+						apiHook(mut.srcEndpoint, { UrlArgs: { id: [id] } }, { Mutations: { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids: [id] } });
 					} else {
-						apiHook(mut.srcEndpoint, { RequestObject: [id] }, { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids: [id] });
+						apiHook(mut.srcEndpoint, { RequestObject: [id] }, { Mutations: { sort, type: mutationType, endpoint: mut.destEndpoint, foreignKey: mut.foreignKey, ids: [id] } });
 					}
 				});
 			}

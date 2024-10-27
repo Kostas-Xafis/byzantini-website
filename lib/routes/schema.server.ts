@@ -64,11 +64,12 @@ serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 		const migrationFile = await fs.readFile(LATEST_MIGRATION_FILE, "utf-8");
 		const sqliteConn = createDbConnection("sqlite-dev");
 		for (const query of migrationFile.split("\n")) {
+			if (query.startsWith("--")) continue;
 			try {
 				if (query.trim() === "") continue;
 				await sqliteConn.execute(query);
 			} catch (error) {
-				console.error(error);
+				console.error("Schema migration error:", error);
 				throw Error("Migration failed");
 			}
 		}

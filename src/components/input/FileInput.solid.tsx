@@ -5,31 +5,29 @@ import { CloseButton } from "../admin/table/CloseButton.solid";
 export type FileInputProps = {
 	name: string;
 	prefix: string;
-	value?: string | number;
+	value?: [string, Record<string, any>] | [];
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
 	fileExtension?: string;
+	metadata?: Record<string, any>;
 };
 
 export default function FileInput(props: FileInputProps) {
-	const { name, prefix, value, required, iconClasses, disabled, fileExtension } = props;
-	const [filename, setFilename] = createSignal<string>((value as string) || "", {
-		equals: false,
-	});
+	const { name, prefix, value, required, iconClasses, disabled, fileExtension, metadata } = props;
+	const [input, setInput] = createSignal<HTMLInputElement>();
+	const [filename, setFilename] = createSignal<string>((value && value[0]) || "");
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: true,
-		file: value ? FileHandler.createFileProxy(value as string) : undefined,
+		file: value ? FileHandler.createFileProxy(value[0], { metadata: value[1] }) : undefined,
+		metadata: metadata || {},
 	});
 	const onFileClick = (e: MouseEvent) => {
-		const input = document.querySelector<HTMLInputElement>(
-			`form[data-prefix=${prefix}] input[name='${name}']`
-		);
-		if (input) input.click();
+		let inp = input();
+		if (inp) inp.click();
 	};
 	const onFileChange = (e: Event) => {
-		const input = e.currentTarget as HTMLInputElement;
-		const files = input?.files;
+		const files = input()?.files;
 		if (!files) return;
 
 		fileHandler.addFiles([files[0]]);
@@ -37,12 +35,9 @@ export default function FileInput(props: FileInputProps) {
 	};
 
 	const onFileRemove = () => {
-		const input = document.querySelector<HTMLInputElement>(
-			`form[data-prefix=${prefix}] input[name='${name}']`
-		);
-		if (!input) return;
-
-		input.value = "";
+		let inp = input();
+		if (!inp) return;
+		inp.value = "";
 		fileHandler.removeFile(0);
 		setFilename("");
 	};
@@ -67,7 +62,11 @@ export default function FileInput(props: FileInputProps) {
 				<CloseButton
 					onClick={() => onFileRemove()}
 					classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
-				<p>{filename()}</p>
+				<p>
+					{(filename().length > 20
+						? filename().slice(0, 12) + " ... " + filename().slice(-7)
+						: filename()) || ""}
+				</p>
 			</div>
 			<div
 				data-name={name}
@@ -81,6 +80,7 @@ export default function FileInput(props: FileInputProps) {
 				<p class="text-xl text-gray-400  group-hover/file:text-gray-50">Drag&Drop</p>
 			</div>
 			<input
+				ref={setInput}
 				class="hidden"
 				type="file"
 				name={name}

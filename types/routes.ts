@@ -47,6 +47,7 @@ type DefaultEndpointRoute<Req = AnyObjectSchema> = {
 	method: HTTPMethods;
 	path: string;
 	hasUrlParams: boolean;
+	multipart?: boolean;
 	func?: (arg: { ctx: Context<any>, slug: any; }) => Promise<DefaultEndpointResponse<any>>;
 	middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 	validation?: IsValibotSchema<Req> extends true ? () => Req : undefined;
@@ -59,6 +60,7 @@ export type EndpointRoute<URL extends string, Req = any, Res = string> = (IsAny<
 		method: HTTPMethods;
 		path: URL;
 		hasUrlParams: HasUrlParams<URL>;
+		multipart?: boolean;
 		func?: (arg: { ctx: Context<Req>; slug: ExpectedArguments<URL>; }) => Promise<DefaultEndpointResponse<Res>>;
 		middleware?: ((req: APIContext) => Promise<Response | undefined>)[];
 		validation: IsValibotSchema<Req> extends true ? () => Req : undefined;
@@ -77,6 +79,7 @@ export type APIEndpointsBuilder<
 			path: Routes[K]["path"];
 			endpoint: ConcatStrings<Mount, K & string, ".">;
 			hasUrlParams: Routes[K]["hasUrlParams"];
+			multipart: Routes[K]["multipart"];
 			validation: Routes[K] extends { validation: () => AnyObjectSchema; } ? AnyObjectSchema : undefined;
 		}
 	};

@@ -1,4 +1,4 @@
-import { omit } from "valibot";
+import { any, array, blob, merge, number, object, omit, optional, string } from "valibot";
 import {
 	v_AnnouncementImages,
 	v_Announcements,
@@ -17,7 +17,7 @@ const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 };
 
 // I will need to paginate it. That will come later though.
-export type PageAnnouncement = Omit<Announcements, "image_counter"> & { main_image: string, total_images: number; };
+export type PageAnnouncement = Announcements & { main_image: string, total_images: number; };
 const getForPage: EndpointRoute<"/announcements/page", any, PageAnnouncement[]> = {
 	authentication: false,
 	method: "GET",
@@ -50,7 +50,7 @@ const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Anno
 	validation: undefined,
 };
 
-const postReq = omit(v_Announcements, ["id", "views", "image_counter"]);
+const postReq = merge([omit(v_Announcements, ["id", "views"]), object({ links: string() })]);
 const post: EndpointRoute<"/announcements", typeof postReq, Insert> = {
 	authentication: true,
 	method: "POST",
@@ -59,7 +59,7 @@ const post: EndpointRoute<"/announcements", typeof postReq, Insert> = {
 	validation: () => postReq,
 };
 
-const updateReq = omit(v_Announcements, ["views", "image_counter"]);
+const updateReq = omit(v_Announcements, ["views"]);
 const update: EndpointRoute<"/announcements", typeof updateReq> = {
 	authentication: true,
 	method: "PUT",
@@ -84,7 +84,7 @@ const getImages: EndpointRoute<"/announcements/images", any, AnnouncementImages[
 	validation: undefined,
 };
 
-const postImageReq = omit(v_AnnouncementImages, ["id"]);
+const postImageReq = merge([v_AnnouncementImages, object({ id: optional(number("Invalid number type")), fileData: blob(), thumbData: optional(blob()), fileType: string() })]);
 // Put image data in database
 const postImage: EndpointRoute<
 	"/announcements/images",
@@ -95,23 +95,23 @@ const postImage: EndpointRoute<
 	method: "POST",
 	path: "/announcements/images",
 	hasUrlParams: false,
+	multipart: true,
 	validation: () => postImageReq,
 };
 
-// Store image in bucket
-const imageUpload: EndpointRoute<"/announcements/images/[id:number]/[name:string]", Blob> = {
+// Delete images from bucket
+const imagesDelete: EndpointRoute<"/announcements/images/id/[announcement_id:number]", number[]> = {
 	authentication: true,
-	method: "POST",
-	path: "/announcements/images/[id:number]/[name:string]",
+	method: "DELETE",
+	path: "/announcements/images/id/[announcement_id:number]",
 	hasUrlParams: true,
 	validation: undefined,
 };
 
-// Delete images from bucket
-const imagesDelete: EndpointRoute<"/announcements/images/[announcement_id:number]", number[]> = {
+const imagesDeleteByName: EndpointRoute<"/announcements/images/name/[announcement_id:number]", string[]> = {
 	authentication: true,
 	method: "DELETE",
-	path: "/announcements/images/[announcement_id:number]",
+	path: "/announcements/images/name/[announcement_id:number]",
 	hasUrlParams: true,
 	validation: undefined,
 };
@@ -126,7 +126,7 @@ export const AnnouncementsRoutes = {
 	post,
 	update,
 	postImage,
-	imageUpload,
 	delete: del,
 	imagesDelete,
+	imagesDeleteByName
 };

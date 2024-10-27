@@ -49,7 +49,6 @@ export function formDataToObject(formData: FormData): Record<string, any> {
 	const obj: Record<string, File | string | string[]> = {};
 	formData.forEach((value, key) => {
 		let val: any;
-		console.log({ key, value, curValue: obj[key] });
 		if (obj[key] === undefined) val = value;
 		else if (obj[key] === "number") val = Number(value);
 		else if (obj[key] === "boolean") val = value === "true";
@@ -87,12 +86,10 @@ export const questionMarks = (arg: number | QueryArguments) => {
 export const executeQuery = async <T = undefined>(query: string, args: QueryArguments = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? createDbConnection(null, true);
 	query = query.trim().replaceAll("\n", "");
-	let queryId;
 	const res = await conn.execute<T>(query, args, { as: "object" });
 	if (tx && !query.startsWith("SELECT") || log) {
-		queryId = R.link(20);
 		tx && tx.queryHistory.push({
-			id: queryId,
+			id: R.link(20),
 			query,
 			args,
 		});
@@ -101,7 +98,8 @@ export const executeQuery = async <T = undefined>(query: string, args: QueryArgu
 };
 
 export const execTryCatch = async <T>(
-	func: (t: Transaction) => Promise<T>
+	func: (t: Transaction) => Promise<T>,
+	errorMessage?: string
 ): Promise<EndpointResponse<T> | EndpointResponseError> => {
 	// This is a work around because if I return inside the try-catch blocks, the return type is not inferred correctly
 	let res: EndpointResponse<T> | EndpointResponseError;
@@ -126,9 +124,9 @@ export const execTryCatch = async <T>(
 		else res = DataWrapper(response);
 	} catch (error: any) {
 		if (error instanceof Error) {
-			res = ErrorWrapper(error.message);
+			res = ErrorWrapper(errorMessage + " " + error.message);
 		} else {
-			res = ErrorWrapper(error);
+			res = ErrorWrapper(errorMessage);
 		}
 	}
 	return res;

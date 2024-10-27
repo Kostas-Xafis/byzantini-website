@@ -306,6 +306,7 @@ export const v_Announcements = object({
 	content: string(),
 	date: number([integer()]),
 	views: positiveInt(),
+	links: string()
 });
 export interface Announcements {
 	id: number;
@@ -313,6 +314,7 @@ export interface Announcements {
 	content: string;
 	date: number;
 	views: number;
+	links: string;
 };
 
 //! Later on rename the priority column to id
@@ -328,7 +330,6 @@ export interface AnnouncementImages {
 	name: string;
 	is_main: boolean;
 };
-
 
 // Dev mode only
 export const v_QueryLogs = object({

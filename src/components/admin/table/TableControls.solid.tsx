@@ -1,11 +1,11 @@
 import { Show, createEffect, type Accessor, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
-import type { Props as InputProps } from "../../input/Input.solid";
+import type { InputFields, Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
 
 export type Action = {
-	inputs: Record<string, InputProps>;
+	inputs: InputFields<Record<string, InputProps>> | Record<string, InputProps>;
 	onSubmit:
 		| ((formData: FormData, form?: HTMLFormElement) => Promise<void>)
 		| ((

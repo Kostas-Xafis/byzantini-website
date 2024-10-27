@@ -90,8 +90,7 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		const args = [body.fullname, body.amka, body.email, body.telephone, body.linktree, body.gender, body.title, body.visible, body.online, body.id];
-		await T.executeQuery(`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, args);
+		await T.executeQuery(`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, body);
 
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
@@ -110,13 +109,13 @@ serverRoutes.update.func = ({ ctx }) => {
 			await T.executeQuery(`INSERT INTO teacher_instruments (teacher_id, instrument_id) VALUES (?, ?)`, [body.id, instrument_id]);
 		}
 		return "Teacher added successfully";
-	});
+	}, "Σφάλμα κατά την ανανέωση του δασκάλου");
 };
 
 serverRoutes.fileUpload.func = ({ ctx, slug }) => {
-	return execTryCatch(async T => {
+	return execTryCatch(async () => {
 		const { id } = slug;
-		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
+		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", slug);
 		if (!teacher) throw Error("Teacher not found");
 
 		const blob = await ctx.request.blob();
@@ -129,17 +128,17 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 			const link = bucketCVPrefix + filename;
 
 			await Bucket.put(ctx, body, link, filetype);
-			await T.executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
+			await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 			return "Pdf uploaded successfully";
 		} else if (ImageMIMEType.includes(filetype)) {
 			const link = bucketPicturePrefix + filename;
 
 			await Bucket.put(ctx, body, link, filetype);
-			await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
+			await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 			return "Image uploaded successfully";
 		}
-		throw Error("Invalid filetype");
-	});
+		throw Error("Μη υποστηριζόμενος τύπος αρχείου");
+	}, "Σφάλμα κατά την αποθήκευση του αρχείου");
 };
 
 serverRoutes.fileRename.func = ({ ctx, slug }) => {
@@ -163,7 +162,8 @@ serverRoutes.fileRename.func = ({ ctx, slug }) => {
 			await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
 		}
 		return "Files renamed successfully";
-	});
+	},
+		"Σφάλμα κατά την μετονομασία των αρχείων");
 };
 
 serverRoutes.fileDelete.func = ({ ctx }) => {
@@ -180,8 +180,8 @@ serverRoutes.fileDelete.func = ({ ctx }) => {
 			await T.executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
 			return "Image deleted successfully";
 		}
-		throw Error("Invalid filetype");
-	});
+		throw Error("Μη υποστηριζόμενος τύπος αρχείου");
+	}, "Σφάλμα κατά την διαγραφή του αρχείου");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -201,7 +201,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		}
 		await T.executeQuery(`DELETE FROM teachers WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή του δασκάλου/δασκάλων");
 };
 
 export const TeachersServerRoutes = serverRoutes;

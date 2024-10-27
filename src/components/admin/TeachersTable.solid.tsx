@@ -5,12 +5,7 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { loadXLSX } from "../../../lib/pdf.client";
-import {
-	deepCopy,
-	fileToBlob,
-	looseStringIncludes,
-	teacherTitleByGender,
-} from "../../../lib/utils.client";
+import { looseStringIncludes, teacherTitleByGender } from "../../../lib/utils.client";
 import type {
 	ClassType,
 	Teachers as FullTeachers,
@@ -22,8 +17,7 @@ import type {
 	SimpleTeacher as Teachers,
 } from "../../../types/entities";
 import {
-	Fill,
-	Omit,
+	InputFields,
 	getByName,
 	getMultiSelect,
 	type Props as InputProps,
@@ -358,6 +352,7 @@ const columnNames: ColumnType<TeachersTableType> = {
 	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 10 },
 };
 
+type TeachersMetadata = { teacher_id: number; type: "cv" | "picture" };
 export default function TeachersTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>(
@@ -398,15 +393,20 @@ export default function TeachersTable() {
 			},
 		],
 	});
-	const fileUpload = (file: Blob, id: number) => {
+	const fileUpload = async (fileHandler: FileHandler<TeachersMetadata>) => {
+		const newFile = fileHandler.getNewFiles().at(0);
+		if (!newFile) return;
+		const id = newFile.metadata.teacher_id;
 		return apiHook(API.Teachers.fileUpload, {
-			RequestObject: file,
+			RequestObject: await fileHandler.fileToBlob(0),
 			UrlArgs: { id },
 		});
 	};
-	const fileDelete = (id: number, type: "cv" | "picture") => {
+	const fileDelete = (fileHandler: FileHandler<TeachersMetadata>) => {
+		const deletedFile = fileHandler.getDeletedFiles().at(0);
+		if (!deletedFile) return;
 		return apiHook(API.Teachers.fileDelete, {
-			RequestObject: { id, type },
+			RequestObject: { id: deletedFile.metadata.teacher_id, type: deletedFile.metadata.type },
 		});
 	};
 
@@ -504,39 +504,36 @@ export default function TeachersTable() {
 				registrations_number: getByName("ae-", "startsWith")
 					.map((i) => i.value)
 					.filter(Boolean),
+				// picture: FileHandler.getNewFiles(PREFIX + addModal.type + "picture").at(0)?.file,
+				// cv: FileHandler.getNewFiles(PREFIX + addModal.type + "cv").at(0)?.file,
 			};
 			const res = await apiHook(API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const fileHandles = {
-				picture: FileHandler.getFiles(PREFIX + addModal.type + "picture"),
-				cv: FileHandler.getFiles(PREFIX + addModal.type + "cv"),
-			};
-			const files = {
-				picture:
-					fileHandles.picture.length && !fileHandles.picture[0].isProxy
-						? fileHandles.picture[0].file
-						: null,
-				cv:
-					fileHandles.cv.length && !fileHandles.cv[0].isProxy
-						? fileHandles.cv[0].file
-						: null,
-			};
-
-			const blobs = await Promise.all([
-				files.picture && fileToBlob(files.picture),
-				files.cv && fileToBlob(files.cv),
-			]);
-			await Promise.all([
-				blobs[0] && fileUpload(blobs[0], id),
-				blobs[1] && fileUpload(blobs[1], id),
-			]);
+			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(
+				PREFIX + addModal.type + "picture"
+			);
+			const cvHandler = FileHandler.getHandler<TeachersMetadata>(
+				PREFIX + addModal.type + "cv"
+			);
+			pictureHandler.setMetadata({ teacher_id: id, type: "picture" });
+			cvHandler.setMetadata({ teacher_id: id, type: "cv" });
+			await Promise.all([fileUpload(pictureHandler), fileUpload(cvHandler)]);
 
 			setTeacherHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", "Επιτυχής εισαγωγή καθηγητή"));
 		};
 		return {
-			inputs: Omit(TeachersInputs(class_types, locations, instruments), "id"),
+			inputs: new InputFields(TeachersInputs(class_types, locations, instruments))
+				.omit(["id"])
+				.fill((field, key) => {
+					if (key === "picture") {
+						field.metadata = { teacher_id: 0, type: "picture" };
+					} else if (key === "cv") {
+						field.metadata = { teacher_id: 0, type: "cv" };
+					}
+				})
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Καθηγητή",
@@ -616,40 +613,14 @@ export default function TeachersTable() {
 			const res = await apiHook(API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 
-			const pictureHandler = FileHandler.getHandler(PREFIX + modifyModal.type + "picture"),
-				cvHandler = FileHandler.getHandler(PREFIX + modifyModal.type + "cv");
-			const files = {
-				picture:
-					pictureHandler.getFiles().length && !pictureHandler.getFile(0).isProxy
-						? pictureHandler.getFile(0).file
-						: null,
-				cv:
-					cvHandler.getFiles().length && !cvHandler.getFile(0).isProxy
-						? cvHandler.getFile(0).file
-						: null,
-			};
-			const deletedFiles = {
-				picture: pictureHandler.getDeletedFiles(),
-				cv: cvHandler.getDeletedFiles(),
-			};
-
-			const didUpdateFiles = files.picture || files.cv;
-			const didDeleteFiles = deletedFiles.picture.length || deletedFiles.cv.length;
-			if (didUpdateFiles) {
-				const blobs = await Promise.all([
-					files.picture && fileToBlob(files.picture),
-					files.cv && fileToBlob(files.cv),
-				]);
-				await Promise.all([
-					blobs[0] && fileUpload(blobs[0], teacher.id),
-					blobs[1] && fileUpload(blobs[1], teacher.id),
-				]);
-			} else if (didDeleteFiles) {
-				await Promise.all([
-					deletedFiles.picture.length && fileDelete(teacher.id, "picture"),
-					deletedFiles.cv.length && fileDelete(teacher.id, "cv"),
-				]);
-			}
+			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(
+				PREFIX + modifyModal.type + "picture"
+			);
+			const cvHandler = FileHandler.getHandler<TeachersMetadata>(
+				PREFIX + modifyModal.type + "cv"
+			);
+			await Promise.all([fileDelete(pictureHandler), fileDelete(cvHandler)]);
+			await Promise.all([fileUpload(pictureHandler), fileUpload(cvHandler)]);
 
 			if (teacher.fullname !== data.fullname) {
 				await apiHook(API.Teachers.fileRename, { UrlArgs: { id: teacher.id } });
@@ -662,25 +633,32 @@ export default function TeachersTable() {
 			});
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση καθηγητή"));
 		};
-		const simpleTeacher = deepCopy(teacher) as Partial<FullTeachers>;
-		delete simpleTeacher.picture;
-		delete simpleTeacher.cv;
 		return {
-			inputs: Omit(
-				Fill(
-					TeachersInputs(
-						class_types,
-						locations,
-						instruments,
-						teacher,
-						classList,
-						locationsList,
-						teacherInstruments
-					),
-					simpleTeacher
-				),
-				"id"
-			),
+			inputs: new InputFields(
+				TeachersInputs(
+					class_types,
+					locations,
+					instruments,
+					teacher,
+					classList,
+					locationsList,
+					teacherInstruments
+				)
+			)
+				.fill((field, key) => {
+					if (key === "picture" && teacher.picture) {
+						const metadata = { teacher_id: teacher.id, type: "picture" };
+						field.value = [teacher.picture, metadata];
+						field.metadata = metadata;
+					} else if (key === "cv" && teacher.cv) {
+						const metadata = { teacher_id: teacher.id, type: "cv" };
+						field.value = [teacher.cv, metadata];
+						field.metadata = metadata;
+						//@ts-ignore
+					} else if (key in teacher) field.value = teacher[key];
+				})
+				.omit(["id"])
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Καθηγητή",
@@ -719,13 +697,15 @@ export default function TeachersTable() {
 			const data: Omit<Instruments, "id"> = {
 				name: formData.get("name") as string,
 				type: (formData.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur",
-				isInstrument: (Number(
-					[
-						...document.querySelectorAll<HTMLInputElement>(
-							`button[data-specifier='isInstrument']`
-						),
-					].filter((i) => i.dataset.selected === "true")[0].dataset.value as string
-				) - 1) as 0 | 1,
+				isInstrument: !!(
+					Number(
+						[
+							...document.querySelectorAll<HTMLInputElement>(
+								`button[data-specifier='isInstrument']`
+							),
+						].filter((i) => i.dataset.selected === "true")[0].dataset.value as string
+					) - 1
+				),
 			};
 			const res = await apiHook(API.Instruments.post, { RequestObject: data });
 			if (!res.data) return;

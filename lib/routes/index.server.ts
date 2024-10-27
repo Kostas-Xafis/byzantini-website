@@ -43,7 +43,7 @@ function getAllRoutes() {
 			if (!isAuthenticated) return new Response("Unauthorized", { status: 401 });
 		});
 		if (route.validation) {
-			route.middleware.push(requestValidation(route.validation));
+			route.middleware.push(requestValidation(route.validation, route.multipart || false));
 		}
 	});
 

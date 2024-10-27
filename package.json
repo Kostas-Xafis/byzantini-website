@@ -12,7 +12,7 @@
 		"start": "astro dev",
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",
-		"preview": "astro build && wrangler pages dev ./dist",
+		"preview": "bunx --bun --env-file='.env.production' astro build && wrangler pages dev ./dist",
 		"astro": "astro"
 	},
 	"dependencies": {

@@ -1,12 +1,12 @@
 import { Show, createMemo } from "solid-js";
-import { createStore, type SetStoreFunction } from "solid-js/store";
+import { createStore } from "solid-js/store";
 import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { asyncQueue, deepCopy, fileToBlob, isSafeURLPath } from "../../../lib/utils.client";
+import { asyncQueue, deepCopy, isSafeURLPath } from "../../../lib/utils.client";
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
-import { Fill, Omit, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -14,19 +14,17 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTy
 import {
 	TableControl,
 	TableControlsGroup,
-	type Action,
 	TopTableGroup,
+	type Action,
 } from "./table/TableControls.solid";
 
 const PREFIX = "announcements";
 
-type SimpleAnnouncements = Omit<Announcements, "image_counter">;
-
-type AnnouncementTable = Omit<Announcements, "content" | "image_counter"> & { link: string };
+type AnnouncementTable = Omit<Announcements, "content" | "links"> & { link: string };
 
 const AnnouncementsInputs = (): Omit<
-	Record<keyof Announcements | "images" | "mainImage", InputProps>,
-	"views" | "image_counter"
+	Record<keyof Announcements | "images" | "mainImage" | "links", InputProps>,
+	"views"
 > => {
 	return {
 		id: {
@@ -60,6 +58,13 @@ const AnnouncementsInputs = (): Omit<
 			iconClasses: "fa-solid fa-image",
 			fileExtension: "image/*",
 		},
+		links: {
+			type: "textarea",
+			name: "links",
+			label: "Συνδέσμοι Youtube",
+			iconClasses: "fa-brands fa-youtube",
+			placeholder: "https://youtube.com/watch?v=...\nhttps://youtu.be/...\n.\n.\n.",
+		},
 		images: {
 			type: "multifile",
 			name: "photos",
@@ -74,10 +79,11 @@ const announcementsToTable = (announcements: Announcements[]): AnnouncementTable
 	return announcements.map((a) => {
 		let announcement = deepCopy(a) as Partial<Announcements>;
 		delete announcement.content;
-		delete announcement.image_counter;
+		delete announcement.links;
 		const columns = Object.values(announcement);
 		columns.push(a.views);
 		columns[3] = `/sxoli/anakoinoseis/${a.title.replaceAll(" ", "%20")}`;
+
 		return columns as unknown as AnnouncementTable;
 	});
 };
@@ -91,107 +97,8 @@ const columnNames: ColumnType<AnnouncementTable> = {
 };
 
 function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> {}
-async function UploadImages(args: {
-	announcement_id: number;
-	setStore: SetStoreFunction<APIStore>;
-	fileHandler: FileHandler;
-	images?: AnnouncementImages[]; // Include images only when modifying
-	is_main?: boolean;
-}) {
-	const { announcement_id, fileHandler, images, is_main = false } = args;
-	const apiHook = useAPI(args.setStore);
 
-	const kb40 = 1024 * 40;
-
-	const photos = fileHandler
-		.getFiles()
-		.filter((f) => !f.isProxy)
-		.map(({ name, file }, i) => {
-			assertNotNull(file);
-			return async function () {
-				let blob = await fileToBlob(file);
-				if (!blob)
-					return pushAlert(
-						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας ${name}`)
-					);
-				try {
-					await apiHook(API.Announcements.postImage, {
-						RequestObject: {
-							announcement_id,
-							name,
-							is_main,
-						},
-					});
-					await apiHook(API.Announcements.imageUpload, {
-						RequestObject: blob,
-						UrlArgs: { id: announcement_id, name },
-					});
-					if (file.size <= kb40) {
-						await apiHook(API.Announcements.imageUpload, {
-							RequestObject: blob,
-							UrlArgs: {
-								id: announcement_id,
-								name: "thumb_" + name,
-							},
-						});
-						return;
-					}
-					const thumbBlob = await (
-						await fetch(
-							"https://byz-imagecompression-1063742578003.europe-west1.run.app",
-							{
-								method: "POST",
-								body: await file.arrayBuffer(),
-							}
-						)
-					).blob();
-					if (!thumbBlob) throw new Error("Could not create thumbnail");
-					await apiHook(API.Announcements.imageUpload, {
-						RequestObject: thumbBlob,
-						UrlArgs: { id: announcement_id, name: "thumb_" + name },
-					});
-				} catch (e) {
-					console.error(e);
-					pushAlert(
-						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`)
-					);
-				}
-			};
-		});
-	if (photos.length !== 0) {
-		const photosLength = photos.length;
-		const alert = pushAlert(createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength));
-		await asyncQueue(photos, {
-			maxJobs: 4,
-			verbose: true,
-			progressCallback: (i) => {
-				alert.message = `Ανέβασμα φωτογραφιών: ${i} / ${photosLength}`;
-				updateAlert(alert);
-			},
-		});
-	}
-
-	if (!images) return;
-	const deletedFiles = fileHandler.getDeletedFiles();
-	if (deletedFiles.length === 0) return;
-
-	let ids = images
-		.filter((img) => img.announcement_id === announcement_id)
-		?.map((img) => (deletedFiles.find((f) => f.name === img.name) ? img.id : undefined))
-		.filter((id) => id !== undefined) as number[];
-	if (ids.length === 0) return;
-
-	// Remove the marked files from the handler
-	ids.forEach((id) => {
-		fileHandler.removeFile(id, true);
-	});
-
-	await apiHook(API.Announcements.imagesDelete, {
-		RequestObject: ids,
-		UrlArgs: { announcement_id },
-	});
-}
-
+type AnnouncementImageMetadata = { is_main: boolean; announcement_id: number; id: number };
 export default function AnnouncementsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
@@ -215,45 +122,130 @@ export default function AnnouncementsTable() {
 		apiHook(API.Announcements.getImages);
 	});
 
+	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>) {
+		const kb40 = 1024 * 40;
+
+		const photos = fileHandler.getNewFiles();
+		if (photos.length === 0) return;
+		const uploadQueue = photos.map(({ name, file, metadata }) => {
+			assertNotNull(file);
+			return async function () {
+				const { type: fileType } = file;
+				try {
+					let thumbFile: File | Blob = file;
+					if (file.size > kb40) {
+						thumbFile = await (
+							await fetch(
+								"https://byz-imagecompression-1063742578003.europe-west1.run.app",
+								{
+									method: "POST",
+									body: await file.arrayBuffer(),
+								}
+							)
+						).blob();
+					}
+					if (!thumbFile) throw new Error("Could not create thumbnail");
+					await apiHook(API.Announcements.postImage, {
+						RequestObject: {
+							announcement_id: metadata.announcement_id,
+							name,
+							is_main: metadata.is_main,
+							fileType,
+							fileData: file,
+							thumbData: thumbFile,
+						},
+					});
+				} catch (e) {
+					console.error(e);
+					pushAlert(
+						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`)
+					);
+				}
+			};
+		});
+		if (photos.length !== 0) {
+			const photosLength = photos.length;
+			const alert = pushAlert(
+				createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength)
+			);
+			await asyncQueue(uploadQueue, {
+				maxJobs: 4,
+				verbose: true,
+				progressCallback: (i) => {
+					alert.message = `Ανέβασμα φωτογραφιών: ${i} / ${photosLength}`;
+					updateAlert(alert);
+				},
+			});
+		}
+	}
+
+	async function imagesDelete(fileHandler: FileHandler<AnnouncementImageMetadata>) {
+		const deletedFiles = fileHandler.getDeletedFiles();
+
+		if (deletedFiles.length === 0) return;
+
+		const ids = deletedFiles.map((f) => f.metadata.id);
+		fileHandler.removeDeletedFiles();
+
+		// Remove the marked files from the handler
+		await apiHook(API.Announcements.imagesDelete, {
+			RequestObject: ids,
+			UrlArgs: { announcement_id: fileHandler.getMetadata().announcement_id },
+		});
+	}
+
 	let shapedData = createMemo(() => {
 		const announcements = store[API.Announcements.get];
 		if (!announcements) return [];
 		return announcementsToTable(announcements);
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
+		const metadata = { is_main: true };
 		const submit = async function (formData: FormData) {
 			if (!isSafeURLPath(formData.get("title") as string)) {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
-			const data: Omit<SimpleAnnouncements, "id" | "views"> = {
+			const data: Omit<Announcements, "id" | "views"> & { links: string } = {
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
+				links: (formData.get("links") as string)
+					.split("\n")
+					.map((l) => l.trim())
+					.join("|"),
 			};
 			const res = await apiHook(API.Announcements.post, {
 				RequestObject: data,
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
+			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
+				PREFIX + ActionEnum.ADD + "mainImage"
+			);
+			const imagesHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
+				PREFIX + ActionEnum.ADD + "photos"
+			);
 
-			await UploadImages({
-				announcement_id: id,
-				setStore,
-				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.ADD + "mainImage"),
-				is_main: true,
-			});
+			mainImageHandler.setMetadata({ is_main: true, announcement_id: id, id: 0 });
+			imagesHandler.setMetadata({ is_main: false, announcement_id: id, id: 0 });
+			await Promise.all([imagesUpload(mainImageHandler), imagesUpload(imagesHandler)]);
 
-			await UploadImages({
-				announcement_id: id,
-				setStore,
-				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.ADD + "photos"),
-			});
 			setAnnouncementHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", "Η ανακοίνωση προστέθηκε επιτυχώς"));
 		};
 		return {
-			inputs: Omit(AnnouncementsInputs(), "id"),
+			inputs: new InputFields(AnnouncementsInputs())
+				.omit(["id"])
+				.fill((field, key) => {
+					if (key === "mainImage") {
+						field.metadata = metadata;
+					}
+					if (key === "images") {
+						field.metadata = { is_main: false };
+					}
+				})
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Ανακοίνωσης",
@@ -269,54 +261,78 @@ export default function AnnouncementsTable() {
 		const announcements = store[API.Announcements.get];
 		const images = store[API.Announcements.getImages];
 		if (!announcements || !images || selectedItems.length !== 1) return modifyModal;
-
 		const submit = async function (formData: FormData) {
 			if (!isSafeURLPath(formData.get("title") as string)) {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
-
-			const data: Omit<SimpleAnnouncements, "views"> = {
-				id: selectedItems[0],
+			const announcement_id = selectedItems[0];
+			const data: Omit<Announcements, "views"> = {
+				id: announcement_id,
 				title: formData.get("title") as string,
 				content: formData.get("content") as string,
 				date: new Date(formData.get("date") as string).getTime(),
+				links: (formData.get("links") as string)
+					.split("\n")
+					.map((l) => l.trim())
+					.filter((l) => l.length > 0)
+					.join("|"),
 			};
 			const res = await apiHook(API.Announcements.update, {
 				RequestObject: data,
 			});
 			if (!res.message) return;
 
-			await UploadImages({
-				announcement_id: data.id,
-				setStore,
-				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.MODIFY + "mainImage"),
-				is_main: true,
-			});
+			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
+				PREFIX + ActionEnum.MODIFY + "mainImage"
+			);
+			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
+				PREFIX + ActionEnum.MODIFY + "photos"
+			);
 
-			await UploadImages({
-				announcement_id: data.id,
-				setStore,
-				fileHandler: FileHandler.getHandler(PREFIX + ActionEnum.MODIFY + "photos"),
-				images,
-			});
+			await Promise.all([imagesDelete(mainImageHandler), imagesDelete(photosHandler)]);
 
+			await Promise.all([imagesUpload(mainImageHandler), imagesUpload(photosHandler)]);
 			setAnnouncementHydrate({ action: ActionEnum.MODIFY, id: data.id, isMultiple: false });
 			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};
-		const anc = announcements.find((a) => a.id === selectedItems[0]);
-		const copyAnc = deepCopy(anc) as unknown as Record<
-			keyof ReturnType<typeof AnnouncementsInputs>,
-			any
-		>;
-		// @ts-ignore
-		delete copyAnc.views;
-		copyAnc.mainImage = images.find((i) => i.is_main)?.name;
-		copyAnc.images = images
-			.filter((i) => i.announcement_id === copyAnc.id && !i.is_main)
-			.map((i) => i.name);
+		const announcement = announcements.find((a) => a.id === selectedItems[0]) as Announcements;
+		const mainImage = images.find(
+			(i) => i.is_main && i.announcement_id === announcement.id
+		) as AnnouncementImages;
 		return {
-			inputs: Fill(AnnouncementsInputs(), copyAnc),
+			inputs: new InputFields(AnnouncementsInputs())
+				.fill((field, key) => {
+					if (key === "mainImage") {
+						field.value = [
+							mainImage.name,
+							{
+								is_main: true,
+								announcement_id: announcement.id,
+								id: mainImage.id,
+							},
+						];
+						field.metadata = {
+							is_main: true,
+							announcement_id: announcement.id,
+						};
+					} else if (key === "images") {
+						field.value = images
+							.filter((i) => i.announcement_id === announcement.id && !i.is_main)
+							.map(({ name, id, announcement_id }) => [
+								name,
+								{ is_main: false, announcement_id, id },
+							]) as any;
+						field.metadata = {
+							is_main: false,
+							announcement_id: announcement.id,
+							id: 0,
+						};
+					} else if (key === "links") {
+						field.value = announcement.links.replaceAll("|", "\n");
+					} else field.value = announcement[key];
+				})
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ανακοίνωσης",
@@ -360,7 +376,7 @@ export default function AnnouncementsTable() {
 				prefix={PREFIX}
 				data={shapedData}
 				columns={columnNames}
-				tools={{ left: false, top: true }}>
+				tools={{ left: false, top: true, bottom: false }}>
 				<TopTableGroup>
 					<TableControlsGroup prefix={PREFIX}>
 						<TableControl action={onAdd} prefix={PREFIX} />

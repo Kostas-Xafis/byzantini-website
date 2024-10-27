@@ -3,8 +3,8 @@ import type { CustomEvents } from "../../../types/custom-events";
 import type { PartialBy } from "../../../types/helpers";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
-import FileInput from "./FileInput.solid";
-import MultiFileInput from "./MultiFileInput.solid";
+import FileInput, { type FileInputProps } from "./FileInput.solid";
+import MultiFileInput, { type MultiFileInputProps } from "./MultiFileInput.solid";
 import { createSignal } from "solid-js";
 import { AnimTimeline } from "../../../lib/utils.client";
 
@@ -12,6 +12,110 @@ function disable(input: Props) {
 	input.disabled = true;
 }
 
+export class InputFields<T extends Record<string, Partial<Props>>> {
+	#inputs: T = {} as T;
+
+	constructor(input: T) {
+		this.#inputs = input;
+	}
+
+	private static disable(input: Props) {
+		input.disabled = true;
+	}
+
+	omit(keys: (keyof T)[]): this {
+		for (const key of keys) {
+			this.#inputs[key].disabled = true;
+		}
+		return this;
+	}
+
+	pick(...keys: (keyof T)[]) {
+		for (const key in this.#inputs) {
+			if (!keys.includes(key)) InputFields.disable(this.#inputs[key] as Props);
+		}
+		return this;
+	}
+
+	fill(obj: Record<keyof T, InputProps["value"]>): this;
+	fill(obj: (field: T[keyof T], key: keyof T) => void): this;
+	fill(obj: Record<keyof T, InputProps["value"]> | ((field: T[keyof T], key: keyof T) => void)) {
+		if (obj instanceof Function) {
+			for (const key in this.#inputs) obj(this.#inputs[key], key);
+		} else {
+			for (const key in obj) if (key in this.#inputs) this.#inputs[key].value = obj[key];
+		}
+		return this;
+	}
+
+	empty() {
+		for (const key in this.#inputs) this.#inputs[key] = {} as any;
+		return this;
+	}
+
+	getInputs() {
+		return this.#inputs;
+	}
+
+	setInputs(inputs: T) {
+		this.#inputs = inputs;
+		return this;
+	}
+
+	static Pick<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
+		for (const key in inputs) {
+			if (!keys.includes(key)) this.disable(inputs[key]);
+		}
+		return inputs;
+	}
+
+	static Omit<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
+		for (const key of keys) {
+			this.disable(inputs[key]);
+		}
+		return inputs;
+	}
+
+	static Fill<T extends {}>(inputs: { [key in keyof T]: Props }, obj: T) {
+		for (const key in obj) {
+			if (key in inputs) inputs[key].value = obj[key] as string;
+		}
+		return inputs;
+	}
+
+	static Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
+		for (const key in inputs) inputs[key] = {};
+		return inputs;
+	}
+
+	static getMultiSelect(prefix: string, form?: HTMLFormElement, isSelected = true) {
+		return [
+			...(form || document.body).querySelectorAll<HTMLInputElement>(
+				`button[data-specifier='${prefix}'][data-selected='${
+					isSelected ? "true" : "false"
+				}']`
+			),
+		];
+	}
+
+	static getByName(name: string, strCmp?: "startsWith" | "endsWith" | "includes") {
+		switch (strCmp) {
+			case "endsWith":
+				return [
+					...document.querySelectorAll(`input[name$='${name}']`),
+				] as HTMLInputElement[];
+			case "includes":
+				return [
+					...document.querySelectorAll(`input[name*='${name}']`),
+				] as HTMLInputElement[];
+			case "startsWith":
+			default:
+				return [
+					...document.querySelectorAll(`input[name^='${name}']`),
+				] as HTMLInputElement[];
+		}
+	}
+}
 export function Pick<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
 	for (const key in inputs) {
 		if (!keys.includes(key)) disable(inputs[key]);
@@ -81,7 +185,7 @@ type InputProps = {
 	label: string;
 	prefix: string;
 	placeholder?: string;
-	value?: string[] | string | number;
+	value?: string[] | string | number | FileInputProps["value"] | MultiFileInputProps["value"];
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
@@ -96,6 +200,7 @@ type InputProps = {
 	}[];
 	multiselectOnce?: boolean;
 	fileExtension?: string;
+	metadata?: Record<string, any>;
 	minmax?: [number, number];
 	onchange?: (e: Event) => void;
 	tooltip?: TooltipProps;
@@ -203,7 +308,7 @@ export default function Input(props: InputProps) {
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
-					value={value === 0 ? "0" : value || ""}
+					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
@@ -314,11 +419,11 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*----------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
-				<FileInput {...(props as InputProps & { value?: string | number })} />
+				<FileInput {...(props as any)} />
 			</Show>
 			{/*--------------------------------MULTIFILE INPUT---------------------------------------- */}
 			<Show when={type === "multifile"}>
-				<MultiFileInput {...(props as InputProps & { value?: string[] })} />
+				<MultiFileInput {...(props as any)} />
 			</Show>
 			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>
@@ -331,7 +436,7 @@ export default function Input(props: InputProps) {
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
 					placeholder={placeholder || ""}
-					value={value === 0 ? "0" : value || ""}
+					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
 					onfocus={(e: FocusEvent) =>
 						required && (e.currentTarget as HTMLElement).removeAttribute("required")

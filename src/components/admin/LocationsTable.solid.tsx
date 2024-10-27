@@ -4,9 +4,8 @@ import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { fileToBlob } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
-import { Fill, Omit, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -156,6 +155,7 @@ const columnNames: ColumnType<LocationsTable> = {
 	},
 };
 
+type LocationsMetadata = { location_id: number };
 export default function LocationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [store, setStore] = createStore<APIStore>({});
@@ -172,6 +172,23 @@ export default function LocationsTable() {
 	useHydrate(() => {
 		apiHook(API.Locations.get);
 	});
+	const fileUpload = async (fileHandler: FileHandler<LocationsMetadata>) => {
+		const newFile = fileHandler.getNewFiles().at(0);
+		if (!newFile) return;
+		return apiHook(API.Locations.fileUpload, {
+			RequestObject: await fileHandler.fileToBlob(0),
+			UrlArgs: { id: newFile.metadata.location_id },
+		});
+	};
+	const fileDelete = (fileHandler: FileHandler<LocationsMetadata>) => {
+		const deletedFile = fileHandler.getDeletedFiles().at(0);
+		if (!deletedFile) return;
+		return apiHook(API.Locations.fileDelete, {
+			UrlArgs: {
+				id: deletedFile.metadata.location_id,
+			},
+		});
+	};
 
 	let shapedData = createMemo(() => {
 		const locations = store[API.Locations.get];
@@ -192,27 +209,24 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner").map((i) => Number(i.dataset.value) as 0 | 1)[0],
+				partner: getMultiSelect("partner").map((i) => !!Number(i.dataset.value))[0],
 			};
 			const res = await apiHook(API.Locations.post, {
 				RequestObject: data,
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const files = FileHandler.getFiles(PREFIX + ActionEnum.ADD + "image");
-			const imgBlob =
-				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
-			if (imgBlob) {
-				await apiHook(API.Locations.fileUpload, {
-					RequestObject: imgBlob,
-					UrlArgs: { id },
-				});
-			}
+			const imageHandler = FileHandler.getHandler<LocationsMetadata>(
+				PREFIX + ActionEnum.ADD + "image"
+			);
+			imageHandler.setMetadata({ location_id: id });
+			await fileUpload(imageHandler);
+
 			setLocationHydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", `Το παράρτημα ${data.name} προστέθηκε επιτυχώς!`));
 		};
 		return {
-			inputs: Omit(LocationsInputs(), "id"),
+			inputs: new InputFields(LocationsInputs()).omit(["id"]).getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Παραρτήματος",
@@ -246,29 +260,18 @@ export default function LocationsTable() {
 				map: formData.get("map") as string,
 				link: formData.get("link") as string,
 				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner", form).map(
-					(i) => Number(i.dataset.value) as 0 | 1
-				)[0],
+				partner: getMultiSelect("partner", form).map((i) => !!Number(i.dataset.value))[0],
 			};
 			const res = await apiHook(API.Locations.update, {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			const imgHandler = FileHandler.getHandler(PREFIX + ActionEnum.MODIFY + "image");
-			const files = imgHandler.getFiles();
-			const imgBlob =
-				files.length && !files[0].isProxy ? await fileToBlob(files[0].file) : null;
-			const deletedImg = imgHandler.getDeletedFiles();
-			if (imgBlob) {
-				await apiHook(API.Locations.fileUpload, {
-					RequestObject: imgBlob,
-					UrlArgs: { id: location.id },
-				});
-			} else if (deletedImg.length) {
-				await apiHook(API.Locations.fileDelete, {
-					UrlArgs: { id: location.id },
-				});
-			}
+			const imageHandler = FileHandler.getHandler<LocationsMetadata>(
+				PREFIX + ActionEnum.MODIFY + "image"
+			);
+
+			await fileDelete(imageHandler);
+			await fileUpload(imageHandler);
 
 			setLocationHydrate({
 				action: ActionEnum.MODIFY,
@@ -278,7 +281,15 @@ export default function LocationsTable() {
 			pushAlert(createAlert("success", `Το παράρτημα ${data.name} ενημερώθηκε επιτυχώς!`));
 		};
 		return {
-			inputs: Omit(Fill(LocationsInputs(location), location), "id"),
+			inputs: new InputFields(LocationsInputs(location))
+				.omit(["id"])
+				.fill((field, key) => {
+					if (field.name === "image") {
+						field.value = [location.image || "", { location_id: location.id }];
+						field.metadata = { location_id: location.id };
+					} else if (key in location) field.value = location[key] as any;
+				})
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Παραρτήματος",

@@ -8,6 +8,7 @@ export const EndpointsConstructor = <K extends string, T extends Record<string, 
 			path: route.path,
 			endpoint: baseRoute + "." + key,
 			hasUrlParams: route.hasUrlParams,
+			multipart: ("multipart" in route && route.multipart) || false,
 			validation: ("validation" in route && route.validation && route.validation()) || undefined
 		};
 	});

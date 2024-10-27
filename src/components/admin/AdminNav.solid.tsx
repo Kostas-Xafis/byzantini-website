@@ -28,7 +28,7 @@ export default function AdminNav(props: RouterProps) {
 		<>
 			<nav
 				class={
-					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex flex-col max-sm:overflow-visible z-50 max-sm:sticky max-sm:top-0" +
+					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex max-sm:z-50 flex-col max-sm:overflow-visible max-sm:sticky max-sm:top-0" +
 					" max-sm:flex-row max-sm:p-1"
 				}>
 				<div class="relative grid place-items-center gap-x-4 font-anaktoria">
@@ -167,7 +167,7 @@ export default function AdminNav(props: RouterProps) {
 			}`}
 				</style>
 			</nav>
-			{props.children}
+			{props.children as any}
 		</>
 	);
 }
