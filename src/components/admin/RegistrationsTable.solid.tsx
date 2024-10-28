@@ -15,23 +15,15 @@ import { Fill, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
 	CompareList,
-	SearchTable,
 	getCompareFn,
 	type SearchColumn,
 	type SearchSetter,
 } from "./SearchTable.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	BottomTableGroup,
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./table/TableControls.solid";
+import { type Action } from "./table/TableControls.solid";
 
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
-import Pagination from "./table/Pagination.solid";
 import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
@@ -864,40 +856,44 @@ export default function RegistrationsTable() {
 					data={shapedData}
 					columns={columns}
 					hasSelectBox
-					tools={{
-						left: false,
-						top: true,
-						bottom: true,
-					}}>
-					<TopTableGroup>
-						<TableControlsGroup prefix={PREFIX}>
-							<TableControl action={onModify} prefix={PREFIX} />
-							<TableControl action={onDelete} prefix={PREFIX} />
-						</TableControlsGroup>
-						<TableControlsGroup prefix={PREFIX}>
-							<TableControl action={onDownloadPDF} prefix={PREFIX} />
-							<TableControl action={onDownloadExcel} prefix={PREFIX} />
-						</TableControlsGroup>
-						<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
-					</TopTableGroup>
-					<BottomTableGroup>
-						<Pagination pageSize={100} dataSize={dataLength} />
-						<div class="pb-2 flex items-center gap-x-4">
-							<button
-								data-active={year() === 2023}
-								class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
-								onClick={() => setYear(2023)}>
-								2023-24
-							</button>
-							<button
-								data-active={year() === 2024}
-								class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
-								onClick={() => setYear(2024)}>
-								2024-25
-							</button>
-						</div>
-					</BottomTableGroup>
-				</Table>
+					structure={[
+						{
+							groupPosition: "top",
+							prefix: PREFIX,
+							controlGroups: [
+								{ controls: [onModify, onDelete] },
+								{ controls: [onDownloadPDF, onDownloadExcel] },
+								{ controlType: "search", columns: searchColumns, setSearchQuery },
+							],
+						},
+						{
+							groupPosition: "bottom",
+							prefix: PREFIX,
+							controlGroups: [
+								{ controlType: "pagination", pageSize: 100, dataSize: dataLength },
+								{
+									controlType: "custom",
+									children: (
+										<div class="pb-2 flex items-center gap-x-4">
+											<button
+												data-active={year() === 2023}
+												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
+												onClick={() => setYear(2023)}>
+												2023-24
+											</button>
+											<button
+												data-active={year() === 2024}
+												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
+												onClick={() => setYear(2024)}>
+												2024-25
+											</button>
+										</div>
+									),
+								},
+							],
+						},
+					]}
+				/>
 			</Show>
 			{/* Registration specific row styles */}
 			<style>

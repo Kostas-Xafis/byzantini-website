@@ -1,13 +1,25 @@
 import type { Accessor, JSX } from "solid-js";
 import { For, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
-import { createStore, unwrap } from "solid-js/store";
+import { createStore, unwrap, type SetStoreFunction } from "solid-js/store";
 import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
 import { getParent, mappedValue } from "../../../../lib/utils.client";
 import type { Page } from "./Pagination.solid";
 import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
+import {
+	TopTableGroup,
+	type Action,
+	TableControlsGroup,
+	TableControl,
+	BottomTableGroup,
+	LeftTableGroup,
+} from "./TableControls.solid";
+import type { EmptyAction } from "./TableControlTypes";
+import { SearchTable, type SearchColumn } from "../SearchTable.solid";
+import Pagination from "./Pagination.solid";
 
 type DOMElement = Element | JSX.Element;
 
+type GroupPositions = "top" | "left" | "bottom";
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>; // The column names and types
 	data: Accessor<any[]>; // The data to be displayed
@@ -15,11 +27,31 @@ export type Props = {
 	children?: DOMElement | DOMElement[];
 	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
 	pageSize?: number; // Number of items per page
-	tools?: {
-		top: boolean;
-		left: boolean;
-		bottom: boolean;
-	};
+	structure?: Array<{
+		groupPosition: GroupPositions;
+		prefix?: string;
+		controlGroups: Array<
+			| {
+					controls: Accessor<Action | EmptyAction>[];
+					controlType?: "simple";
+					prefix?: string;
+			  }
+			| {
+					controlType: "pagination";
+					pageSize: number;
+					dataSize: Accessor<number>;
+			  }
+			| {
+					controlType: "search";
+					columns: SearchColumn[];
+					setSearchQuery: SetStoreFunction<any>;
+			  }
+			| {
+					controlType: "custom";
+					children: DOMElement | DOMElement[];
+			  }
+		>;
+	}>;
 };
 
 export const enum SortDirection {
@@ -70,18 +102,16 @@ export default function Table(props: Props) {
 	const [sorted, setSorted] = createSignal<[SortDirection, number]>([SortDirection.NONE, -1], {
 		equals: false,
 	});
-	const {
-		columns: columnNames,
-		prefix = "",
-		data,
-		pageSize = 100,
-		tools = { top: true, left: false, bottom: false },
-	} = props;
+	const { columns: columnNames, prefix = "", data, pageSize = 100 } = props;
 	const [tablePagination, setTablePagination] = createStore<Page>({
 		page: 0,
 		pageSize,
 		dataSize: data().length,
 	});
+	const hasControlGroup = (groupPosition: GroupPositions) => {
+		return props?.structure?.some((group) => group.groupPosition === groupPosition);
+	};
+
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
 	const readRowData = () => {
 		const [direction, col_ind] = sorted();
@@ -139,7 +169,7 @@ export default function Table(props: Props) {
 			let mainCheckbox = getParent(e.target as HTMLElement, ".mcb");
 			if (!mainCheckbox) return;
 			toggleCheckboxes();
-			if (tools.bottom) {
+			if (hasControlGroup("bottom")) {
 				let tableHasSelected = document.querySelector(".selectedRow") !== null;
 				if (tableHasSelected) {
 					const ids = data().map((row) => row[0]) as number[];
@@ -171,18 +201,59 @@ export default function Table(props: Props) {
 			class={
 				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
 				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-dark" +
-				((tools.bottom && " grid-rows-[max-content,1fr,max-content]") ||
+				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") ||
 					" grid-rows-[max-content,1fr]") +
-				(tools.left ? " pr-8" : "")
+				(hasControlGroup("left") ? " pr-8" : "")
 			}
 			data-prefix={prefix}>
+			{props.structure?.map(({ groupPosition, controlGroups, prefix: ParentPrefix }) => {
+				const TableControlsGroups = controlGroups.map((group) => {
+					const { controlType } = group;
+					switch (controlType) {
+						case "pagination":
+							return (
+								<Pagination pageSize={group.pageSize} dataSize={group.dataSize} />
+							);
+						case "search":
+							return (
+								<SearchTable
+									columns={group.columns}
+									setSearchQuery={group.setSearchQuery}
+								/>
+							);
+						case "custom":
+							return group.children;
+						case "simple":
+						default:
+							const prefix = group.prefix || ParentPrefix || "";
+							return (
+								<TableControlsGroup prefix={prefix}>
+									{group.controls.map((action) => (
+										<TableControl action={action} prefix={prefix} />
+									))}
+								</TableControlsGroup>
+							);
+					}
+				});
+				switch (groupPosition) {
+					case "top":
+						return <TopTableGroup children={TableControlsGroups} />;
+					case "bottom":
+						return <BottomTableGroup children={TableControlsGroups} />;
+					case "left":
+						return <LeftTableGroup children={TableControlsGroups} />;
+				}
+			})}
 			{props.children}
 			<div
 				id="tableContainer"
-				style={{ "--tools_bottom": tools.bottom ? "1" : "0", "grid-area": "table" }}
+				style={{
+					"--tools_bottom": hasControlGroup("bottom") ? "1" : "0",
+					"grid-area": "table",
+				}}
 				class={
 					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
-					(tools.left
+					(hasControlGroup("left")
 						? " max-w-[100%] max-sm:max-w-[97.5%]"
 						: " max-w-[90%] max-sm:max-w-[92.5%]")
 				}
@@ -227,14 +298,16 @@ export default function Table(props: Props) {
 
 	#table {
 		display:grid;
-		grid-template-columns: ${tools.left ? "minmax(min-content, calc(4rem + 7ch)) auto" : "100%"};
+		grid-template-columns: ${
+			hasControlGroup("left") ? "minmax(min-content, calc(4rem + 7ch)) auto" : "100%"
+		};
 		grid-template-areas:
 			"top_tools top_tools"
-			${tools.left ? '"left_tools table"' : '"table table"'}
+			${hasControlGroup("left") ? '"left_tools table"' : '"table table"'}
 			${
-				tools.left && tools.bottom
+				hasControlGroup("left") && hasControlGroup("bottom")
 					? '"left_tools bottom_tools"'
-					: tools.bottom
+					: hasControlGroup("bottom")
 					? '"bottom_tools bottom_tools"'
 					: ""
 			};

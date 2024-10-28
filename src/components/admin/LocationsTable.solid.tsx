@@ -11,12 +11,7 @@ import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./table/TableControls.solid";
+import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "locations";
 
@@ -333,15 +328,18 @@ export default function LocationsTable() {
 
 	return (
 		<Show when={store[API.Locations.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TopTableGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-				</TopTableGroup>
-			</Table>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				structure={[
+					{
+						groupPosition: "top",
+						prefix: PREFIX,
+						controlGroups: [{ controls: [onAdd, onModify, onDelete] }],
+					},
+				]}
+			/>
 		</Show>
 	);
 }

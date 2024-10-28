@@ -3,6 +3,7 @@ import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import type { ExtendedFormData } from "../../../lib/utils.client";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { Fill, Omit, Pick, type Props as InputProps } from "../input/Input.solid";
@@ -10,13 +11,7 @@ import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./table/TableControls.solid";
-import type { ExtendedFormData } from "../../../lib/utils.client";
+import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "books";
 
@@ -300,19 +295,24 @@ export default function BooksTable() {
 		<Show
 			when={store[API.Books.get] && store[API.Wholesalers.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TopTableGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAddWholesaler} prefix={"wholesalers"} />
-						<TableControl action={onDeleteWholesaler} prefix={"wholesalers"} />
-					</TableControlsGroup>
-				</TopTableGroup>
-			</Table>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				structure={[
+					{
+						groupPosition: "top",
+						prefix: PREFIX,
+						controlGroups: [
+							{ controls: [onAdd, onModify, onDelete] },
+							{
+								controls: [onAddWholesaler, onDeleteWholesaler],
+								prefix: "wholesalers",
+							},
+						],
+					},
+				]}
+			/>
 		</Show>
 	);
 }

@@ -11,12 +11,7 @@ import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./table/TableControls.solid";
+import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "announcements";
 
@@ -376,15 +371,18 @@ export default function AnnouncementsTable() {
 				prefix={PREFIX}
 				data={shapedData}
 				columns={columnNames}
-				tools={{ left: false, top: true, bottom: false }}>
-				<TopTableGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-				</TopTableGroup>
-			</Table>
+				structure={[
+					{
+						groupPosition: "top",
+						prefix: PREFIX,
+						controlGroups: [
+							{
+								controls: [onAdd, onModify, onDelete],
+							},
+						],
+					},
+				]}
+			/>
 		</Show>
 	);
 }

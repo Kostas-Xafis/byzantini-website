@@ -23,16 +23,11 @@ import type {
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
-import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
+import { type SearchColumn, type SearchSetter } from "./SearchTable.solid";
 import { toggleCheckboxes } from "./table/Row.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./table/TableControls.solid";
+import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "teachers";
 const INSTRUMENTS_PREFIX = "instruments";
@@ -772,7 +767,7 @@ export default function TeachersTable() {
 		};
 	});
 
-	const onDownloadExcel = createMemo(() => {
+	const onDownloadExcel = createMemo((): Action | EmptyAction => {
 		const excelModal = {
 			type: ActionEnum.DOWNLOAD_EXCEL,
 			icon: ActionIcon.DOWNLOAD_EXCEL,
@@ -871,23 +866,36 @@ export default function TeachersTable() {
 				store[API.Teachers.getInstruments]
 			}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames} hasSelectBox>
-				<TopTableGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-					<TableControlsGroup prefix={INSTRUMENTS_PREFIX}>
-						<TableControl action={onAddInstrument} prefix={INSTRUMENTS_PREFIX} />
-						<TableControl action={onDeleteInstrument} prefix={INSTRUMENTS_PREFIX} />
-					</TableControlsGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onDownloadExcel} prefix={PREFIX} />
-					</TableControlsGroup>
-					<SearchTable columns={searchColumns} setSearchQuery={setSearchQuery} />
-				</TopTableGroup>
-			</Table>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				hasSelectBox
+				structure={[
+					{
+						groupPosition: "top",
+						controlGroups: [
+							{
+								prefix: PREFIX,
+								controls: [onAdd, onModify, onDelete],
+							},
+							{
+								prefix: INSTRUMENTS_PREFIX,
+								controls: [onAddInstrument, onDeleteInstrument],
+							},
+							{
+								prefix: PREFIX,
+								controls: [onDownloadExcel],
+							},
+							{
+								controlType: "search",
+								columns: searchColumns,
+								setSearchQuery,
+							},
+						],
+					},
+				]}
+			/>
 		</Show>
 	);
 }

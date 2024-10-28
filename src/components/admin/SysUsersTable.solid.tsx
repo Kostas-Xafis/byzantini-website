@@ -8,12 +8,7 @@ import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	type Action,
-	TopTableGroup,
-} from "./table/TableControls.solid";
+import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "sysusers";
 
@@ -128,14 +123,18 @@ export default function SysUsersTable() {
 		<Show
 			when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TopTableGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-					</TableControlsGroup>
-				</TopTableGroup>
-			</Table>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				structure={[
+					{
+						groupPosition: "top",
+						prefix: PREFIX,
+						controlGroups: [{ controls: [onAdd, onDelete] }],
+					},
+				]}
+			/>
 		</Show>
 	);
 }

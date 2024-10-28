@@ -3,20 +3,15 @@ import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import type { ExtendedFormData } from "../../../lib/utils.client";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import { Fill, Pick, type Props as InputProps, InputFields } from "../input/Input.solid";
+import { Fill, InputFields, Pick, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
-import {
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./table/TableControls.solid";
-import type { ExtendedFormData } from "../../../lib/utils.client";
+import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "payments";
 
@@ -257,16 +252,18 @@ export default function PaymentsTable() {
 		<Show
 			when={store[API.Books.get] && store[API.Payments.get]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<Table prefix={PREFIX} data={shapedData} columns={columnNames}>
-				<TopTableGroup>
-					<TableControlsGroup prefix={PREFIX}>
-						<TableControl action={onAdd} prefix={PREFIX} />
-						<TableControl action={onModify} prefix={PREFIX} />
-						<TableControl action={onDelete} prefix={PREFIX} />
-						<TableControl action={onComplete} prefix={PREFIX} />
-					</TableControlsGroup>
-				</TopTableGroup>
-			</Table>
+			<Table
+				prefix={PREFIX}
+				data={shapedData}
+				columns={columnNames}
+				structure={[
+					{
+						groupPosition: "top",
+						prefix: PREFIX,
+						controlGroups: [{ controls: [onAdd, onModify, onDelete, onComplete] }],
+					},
+				]}
+			/>
 		</Show>
 	);
 }

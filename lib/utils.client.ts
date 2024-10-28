@@ -489,17 +489,18 @@ export class ExtendedFormData<T extends Record<string, any>> extends FormData {
 	getByName<K extends MultiSelectType, B extends boolean>(key: string, type: K, { cmp = "startsWith", single = false as any, isButton = false }: { cmp?: AttributeMatchType, single?: B; isButton?: boolean; } = {}): B extends true ? StringTypeToType<K> : StringTypeToType<K>[] {
 		let inputs;
 		if (!this.form || key === "" || !key) return [] as any;
-		const inputType = isButton ? "button" : "input";
+		const equality = cmp === "startsWith" ? "^=" : cmp === "endsWith" ? "$=" : "*=";
+		const query = isButton ? `button[data-specifier${equality}'${key}'][data-selected='true']` : `input[name${equality}'${key}']`;
 		switch (cmp) {
 			case "endsWith":
-				inputs = [...this.form.querySelectorAll(`${inputType}[${isButton ? "data-specifier" : "name"}$='${key}']`)] as HTMLInputElement[];
+				inputs = [...this.form.querySelectorAll(query)] as HTMLInputElement[];
 				break;
 			case "includes":
-				inputs = [...this.form.querySelectorAll(`${inputType}[${isButton ? "data-specifier" : "name"}*='${key}']`)] as HTMLInputElement[];
+				inputs = [...this.form.querySelectorAll(query)] as HTMLInputElement[];
 				break;
 			case "startsWith":
 			default:
-				inputs = [...this.form.querySelectorAll(`${inputType}[${isButton ? "data-specifier" : "name"}^='${key}']`)] as HTMLInputElement[];
+				inputs = [...this.form.querySelectorAll(query)] as HTMLInputElement[];
 		}
 		let list;
 		if (type === "number") list = inputs.map((el) => Number((isButton ? el.dataset.value : el.value)));
