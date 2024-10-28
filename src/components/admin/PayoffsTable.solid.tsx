@@ -16,6 +16,7 @@ import {
 	TopTableGroup,
 	type Action,
 } from "./table/TableControls.solid";
+import type { ExtendedFormData } from "../../../lib/utils.client";
 
 const PREFIX = "payoffs";
 
@@ -95,10 +96,10 @@ export default function PayoffsTable() {
 		const payoffs = store[API.Payoffs.get];
 		if (!payoffs || !wholesalers || selectedItems.length !== 1) return modifyModal;
 		const payoff = payoffs.find((p) => p.id === selectedItems[0]) as Payoffs;
-		const submit = async function (formData: FormData) {
+		const submit = async function (formData: ExtendedFormData<Payoffs>) {
 			const data: Omit<Payoffs, "wholesaler_id"> = {
 				id: payoff.id,
-				amount: Number(formData.get("amount") as string),
+				amount: formData.number("amount"),
 			};
 			if (data.amount > payoff.amount || data.amount === 0) throw Error("Invalid amount");
 			const res = await apiHook(API.Payoffs.updateAmount, {
@@ -133,9 +134,7 @@ export default function PayoffsTable() {
 		}
 		const submit = async function () {
 			const data = selectedItems.map((i) => (payoffs.find((p) => p.id === i) as Payoffs).id);
-			const res = await apiHook(API.Payoffs.complete, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Payoffs.complete, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setPayoffHydrate({
 				action: ActionEnum.CHECK,

@@ -1,7 +1,7 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { deepCopy } from "../utils.client";
-import { execTryCatch, executeQuery, getUsedBody, ImageMIMEType, questionMarks } from "../utils.server";
+import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -11,7 +11,7 @@ const bucketCVPrefix = "kathigites/cv/";
 let serverRoutes = deepCopy(TeachersRoutes);
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"));
+	return execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers"), "Σφάλμα κατά την ανάκτηση των δασκάλων");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -20,30 +20,30 @@ serverRoutes.getById.func = ({ ctx }) => {
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", body);
 		if (!teacher) throw Error("Teacher not found");
 		return teacher;
-	});
+	}, "Δάσκαλος δεν βρέθηκε");
 };
 
 serverRoutes.getByPriorityClasses.func = ({ ctx: _ctx, slug }) => {
-	const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
-	if (class_id === -1) throw Error("Invalid class type");
-	return execTryCatch(() =>
-		executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id])
-	);
+	return execTryCatch(() => {
+		const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
+		if (class_id === -1) throw Error("Invalid class type");
+		return executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id]);
+	}, "Σφάλμα κατά την ανάκτηση των δασκάλων");
 };
 
 serverRoutes.getByFullnames.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"));
+	return execTryCatch(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"), "Σφάλμα κατά την ανάκτηση των δασκάλων");
 };
 
 // TeachersClasses endpoints
 serverRoutes.getClasses.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"));
+	return execTryCatch(() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes"), "Σφάλμα κατά την ανάκτηση των μαθημάτων των δασκάλων");
 };
 serverRoutes.getClassesById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const id = getUsedBody(ctx) || await ctx.request.json();
 		return await executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", id);
-	});
+	}, "Σφάλμα κατά την  ανάκτηση των μαθημάτων του δασκάλου");
 };
 
 // TeachersLocations endpoints
@@ -187,19 +187,17 @@ serverRoutes.fileDelete.func = ({ ctx }) => {
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
-		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (${questionMarks(body)})`, body);
-		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (${questionMarks(body)})`, body);
-		await T.executeQuery(`DELETE FROM teacher_instruments WHERE teacher_id IN (${questionMarks(body)})`, body);
 
-		const files = await T.executeQuery<Pick<Teachers, "cv" | "picture">>(
-			`SELECT cv, picture FROM teachers WHERE id IN (${questionMarks(body)})`,
-			body
-		);
+		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (???)`, body);
+		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (???)`, body);
+		await T.executeQuery(`DELETE FROM teacher_instruments WHERE teacher_id IN (???)`, body);
+
+		const files = await T.executeQuery<Teachers>(`SELECT cv, picture FROM teachers WHERE id IN (???)`, body);
 		for (const file of files) {
 			if (file.cv) await Bucket.delete(ctx, bucketCVPrefix + file.cv);
 			if (file.picture) await Bucket.delete(ctx, bucketPicturePrefix + file.picture);
 		}
-		await T.executeQuery(`DELETE FROM teachers WHERE id IN (${questionMarks(body)})`, body);
+		await T.executeQuery(`DELETE FROM teachers WHERE id IN (???)`, body);
 		return "Teacher/s deleted successfully";
 	}, "Σφάλμα κατά την διαγραφή του δασκάλου/δασκάλων");
 };

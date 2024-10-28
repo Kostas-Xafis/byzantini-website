@@ -3,13 +3,14 @@ import { createStore } from "solid-js/store";
 import type { InputFields, Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
+import type { ExtendedFormData } from "../../../../lib/utils.client";
 
 export type Action = {
 	inputs: InputFields<Record<string, InputProps>> | Record<string, InputProps>;
 	onSubmit:
-		| ((formData: FormData, form?: HTMLFormElement) => Promise<void>)
+		| ((formData: ExtendedFormData<any>, form?: HTMLFormElement) => Promise<void>)
 		| ((
-				formData: FormData,
+				formData: ExtendedFormData<any>,
 				form?: HTMLFormElement
 		  ) => AsyncGenerator<undefined, void, unknown>);
 	submitText: string;

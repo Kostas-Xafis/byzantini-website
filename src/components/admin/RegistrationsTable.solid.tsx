@@ -4,9 +4,14 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { PDF, loadXLSX } from "../../../lib/pdf.client";
-import { getKeyIndex, looseStringIncludes, onElementMount } from "../../../lib/utils.client";
+import {
+	ExtendedFormData,
+	getKeyIndex,
+	looseStringIncludes,
+	onElementMount,
+} from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
-import { Fill, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
+import { Fill, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
 	CompareList,
@@ -377,36 +382,35 @@ export default function RegistrationsTable() {
 		const registration = JSON.parse(
 			JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)
 		) as Registrations;
-		const submit = async function (formData: FormData) {
-			const class_id = Number(formData.get("class_id") as string);
+		const submit = async function (form: ExtendedFormData<Registrations>) {
+			const class_id = form.number("class_id");
 			const data: Registrations = {
 				id: registration.id,
-				am: formData.get("am") as string,
-				amka: (formData.get("amka") as string) || "",
-				last_name: formData.get("last_name") as string,
-				first_name: formData.get("first_name") as string,
-				fathers_name: formData.get("fathers_name") as string,
-				telephone: (formData.get("telephone") as string) || "-",
-				cellphone: formData.get("cellphone") as string,
-				email: formData.get("email") as string,
-				birth_date: new Date(formData.get("birth_date") as string).getTime(),
-				road: formData.get("road") as string,
-				number: Number(formData.get("number") as string),
-				tk: Number(formData.get("tk") as string),
-				region: formData.get("region") as string,
-				registration_year: formData.get("registration_year") as string,
-				class_year: formData.get("class_year") as string,
+				am: form.string("am"),
+				amka: form.string("amka", ""),
+				last_name: form.string("last_name"),
+				first_name: form.string("first_name"),
+				fathers_name: form.string("fathers_name"),
+				telephone: form.string("telephone", "-"),
+				cellphone: form.string("cellphone"),
+				email: form.string("email"),
+				birth_date: form.date("birth_date").getTime(),
+				road: form.string("road"),
+				number: form.number("number"),
+				tk: form.number("tk"),
+				region: form.string("region"),
+				registration_year: form.string("registration_year"),
+				class_year: form.string("class_year"),
 				class_id,
-				teacher_id: Number(formData.get("teacher_id")) || 0,
-				instrument_id: (class_id && Number(formData.get("instrument_id"))) || 0,
-				date: new Date(formData.get("date") as string).getTime(),
-				payment_amount: Number(formData.get("payment_amount") as string) || 0,
-				total_payment: Number(formData.get("total_payment") as string) || 0,
-				payment_date: formData.get("payment_date")
-					? new Date(formData.get("payment_date") as string).getTime()
-					: null,
-				pass: getMultiSelect("pass").map((btn) => !!Number(btn.dataset.value))[0],
+				teacher_id: form.number("teacher_id", 0),
+				instrument_id: (class_id && form.number("instrument_id")) || 0,
+				date: form.date("date").getTime(),
+				payment_amount: form.number("payment_amount", 0),
+				total_payment: form.number("total_payment", 0),
+				payment_date: form.date("payment_date")?.getTime() || null,
+				pass: form.multiSelect("pass", "boolean", { single: true }),
 			};
+			console.log({ data });
 			await apiHook(API.Registrations.update, {
 				RequestObject: data,
 			});

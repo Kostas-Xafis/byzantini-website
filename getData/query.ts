@@ -123,6 +123,8 @@ const printUsage = () => {
 	console.log("  --out:\tOutput file path");
 	console.log("  --excel:\tOutput to excel file");
 	console.log("  --t:\t\tPrint execution time");
+	console.log("  --skip:\tSkip errors");
+	console.log("  --h, --help:\tPrint this message");
 };
 
 /**

@@ -1,6 +1,6 @@
 import { For, Show, batch, createEffect, createSignal, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
-import { isGeneratorFunction } from "../../../../lib/utils.client";
+import { ExtendedFormData, isGeneratorFunction } from "../../../../lib/utils.client";
 import type { Props as InputProps } from "../../input/Input.solid";
 import Input from "../../input/Input.solid";
 import { createAlert, pushAlert } from "../Alert.solid";
@@ -46,7 +46,7 @@ const submitWrapper = (
 				const res = await onSubmit.next();
 				if (!res.done) return;
 			} else {
-				await onSubmit(new FormData(form), form);
+				await onSubmit(new ExtendedFormData(form), form);
 			}
 			setModalOpen(false);
 		} catch (error: any) {
@@ -78,7 +78,7 @@ export default function Modal(props: Props) {
 		try {
 			setLoading(true);
 			if (isGeneratorFunction(onSubmit)) {
-				const genFunc = onSubmit(new FormData(form), form) as AsyncGenerator<
+				const genFunc = onSubmit(new ExtendedFormData(form), form) as AsyncGenerator<
 					undefined,
 					void,
 					void

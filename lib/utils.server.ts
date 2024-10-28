@@ -124,9 +124,9 @@ export const execTryCatch = async <T>(
 		else res = DataWrapper(response);
 	} catch (error: any) {
 		if (error instanceof Error) {
-			res = ErrorWrapper(errorMessage + " " + error.message);
+			res = ErrorWrapper((errorMessage || "") + " " + error.message);
 		} else {
-			res = ErrorWrapper(errorMessage);
+			res = ErrorWrapper((errorMessage || "") + " " + error);
 		}
 	}
 	return res;

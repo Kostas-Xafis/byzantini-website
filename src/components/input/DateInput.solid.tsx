@@ -37,7 +37,7 @@ const monthsFull = [
 type DateInputProps = {
 	name: string;
 	prefix: string;
-	placeholder?: string;
+	placeholder?: string | number;
 	value?: string | number;
 	required?: boolean;
 	iconClasses?: string;
@@ -47,7 +47,15 @@ type DateInputProps = {
 };
 
 export default function DateInput(props: DateInputProps) {
-	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
+	const {
+		name,
+		value,
+		required,
+		iconClasses,
+		disabled,
+		placeholder = 0,
+		blurDisabled = true,
+	} = props;
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
@@ -57,17 +65,18 @@ export default function DateInput(props: DateInputProps) {
 		if (!disabled) {
 			new AirDatepicker(dateInput, {
 				view: "years",
-				startDate: new Date(value || Date.now()),
 				firstDay: 0,
 				dateFormat: "yyyy-mm-dd",
 				autoClose: true,
 				isMobile: document.body.clientWidth < 768,
-				selectedDates: hasValue ? [value] : undefined,
+				selectedDates: hasValue ? [value] : [placeholder],
 				onSelect({ date, datepicker }) {
 					if (!date || Array.isArray(date)) return;
 					datepicker.hide();
-					dateInput.valueAsDate = new Date(
-						date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
+					dateInput.value = formatDateToMarineTime(
+						new Date(
+							date.getTime() + 1000 * 60 * 60 * 24 // add 1 day to fix timezone bug
+						)
 					);
 					setFocusFixed(dateInput.parentElement?.nextElementSibling as HTMLElement);
 				},
@@ -80,12 +89,22 @@ export default function DateInput(props: DateInputProps) {
 				},
 			});
 		}
-		if (!value) return;
 		// set value after datepicker is initialized because it resets the starting value
 		sleep(200).then(() => {
-			dateInput.valueAsDate = new Date(value);
+			dateInput.value = value ? formatDateToMarineTime(value as any) : "mm/dd/yyyy";
 		});
 	});
+	const formatDateToMarineTime = (date: Date | number) => {
+		let d;
+		if (typeof date === "number") d = new Date(date);
+		else d = date;
+
+		const year = d.getFullYear();
+		const month = d.getMonth() + 1;
+		const day = d.getDate();
+		return `${day < 10 ? "0" + day : day}/${month < 10 ? "0" + month : month}/${year}`;
+	};
+
 	return (
 		<>
 			<i
@@ -98,9 +117,14 @@ export default function DateInput(props: DateInputProps) {
 					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10" +
 					(disabled && blurDisabled ? " blur-[1px]" : "")
 				}
-				type={"date"}
+				type="text"
+				readOnly={true}
+				value={
+					((value || placeholder) &&
+						formatDateToMarineTime((value || placeholder) as any)) ||
+					"dd/mm/yyyy"
+				}
 				name={name}
-				readOnly={disabled || false}
 				onfocus={(e: FocusEvent) =>
 					required && (e.currentTarget as HTMLElement).removeAttribute("required")
 				}

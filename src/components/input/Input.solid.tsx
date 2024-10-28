@@ -30,7 +30,7 @@ export class InputFields<T extends Record<string, Partial<Props>>> {
 		return this;
 	}
 
-	pick(...keys: (keyof T)[]) {
+	pick(keys: (keyof T)[]) {
 		for (const key in this.#inputs) {
 			if (!keys.includes(key)) InputFields.disable(this.#inputs[key] as Props);
 		}
@@ -87,34 +87,6 @@ export class InputFields<T extends Record<string, Partial<Props>>> {
 		for (const key in inputs) inputs[key] = {};
 		return inputs;
 	}
-
-	static getMultiSelect(prefix: string, form?: HTMLFormElement, isSelected = true) {
-		return [
-			...(form || document.body).querySelectorAll<HTMLInputElement>(
-				`button[data-specifier='${prefix}'][data-selected='${
-					isSelected ? "true" : "false"
-				}']`
-			),
-		];
-	}
-
-	static getByName(name: string, strCmp?: "startsWith" | "endsWith" | "includes") {
-		switch (strCmp) {
-			case "endsWith":
-				return [
-					...document.querySelectorAll(`input[name$='${name}']`),
-				] as HTMLInputElement[];
-			case "includes":
-				return [
-					...document.querySelectorAll(`input[name*='${name}']`),
-				] as HTMLInputElement[];
-			case "startsWith":
-			default:
-				return [
-					...document.querySelectorAll(`input[name^='${name}']`),
-				] as HTMLInputElement[];
-		}
-	}
 }
 export function Pick<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
 	for (const key in inputs) {
@@ -142,26 +114,6 @@ export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
 	return inputs;
 }
 
-export function getMultiSelect(prefix: string, form?: HTMLFormElement, isSelected = true) {
-	return [
-		...(form || document.body).querySelectorAll<HTMLInputElement>(
-			`button[data-specifier='${prefix}'][data-selected='${isSelected ? "true" : "false"}']`
-		),
-	];
-}
-
-export function getByName(name: string, strCmp?: "startsWith" | "endsWith" | "includes") {
-	switch (strCmp) {
-		case "endsWith":
-			return [...document.querySelectorAll(`input[name$='${name}']`)] as HTMLInputElement[];
-		case "includes":
-			return [...document.querySelectorAll(`input[name*='${name}']`)] as HTMLInputElement[];
-		case "startsWith":
-		default:
-			return [...document.querySelectorAll(`input[name^='${name}']`)] as HTMLInputElement[];
-	}
-}
-
 type InputProps = {
 	type:
 		| null
@@ -184,7 +136,7 @@ type InputProps = {
 	name: string;
 	label: string;
 	prefix: string;
-	placeholder?: string;
+	placeholder?: string | number;
 	value?: string[] | string | number | FileInputProps["value"] | MultiFileInputProps["value"];
 	required?: boolean;
 	iconClasses?: string;
@@ -307,7 +259,7 @@ export default function Input(props: InputProps) {
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10"
 					type={type}
 					name={name}
-					placeholder={placeholder || ""}
+					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
 					min={minmax?.[0] || ""}
@@ -435,7 +387,7 @@ export default function Input(props: InputProps) {
 				<textarea
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
-					placeholder={placeholder || ""}
+					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
 					onfocus={(e: FocusEvent) =>

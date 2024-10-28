@@ -65,10 +65,8 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 			/**
 			 * @throws {LibsqlError}
 			 */
-			return async function <T = undefined>(query: string, args: QueryArguments = [], _?: any) {
-				const argsArr = Array.isArray(args) ? args : objectToArrayFromQuery(args, query);
-				const sql = query.replace("???", questionMarks(argsArr.length));
-				let res = await clientHandler.execute({ sql, args: argsArr }) as ResultSet;
+			return async function <T = undefined>(query: string, argsObj: QueryArguments = [], _?: any) {
+				let res = await clientHandler.execute(sqlPreprocessor(query, argsObj)) as ResultSet;
 				let resObj = {} as any;
 				if (res.lastInsertRowid && !Number.isNaN(res.lastInsertRowid)) resObj.insertId = "" + res.lastInsertRowid;
 				else {
@@ -128,8 +126,6 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 	return client as any;
 };
 
-
-
 const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][number], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
 	let argStr = JSON.stringify(Array.isArray(args) ? args : objectToArrayFromQuery(args, query));
@@ -144,6 +140,12 @@ const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][numb
 	}
 };
 
+
+const sqlPreprocessor = (query: string, args: QueryArguments) => {
+	const argsArr = Array.isArray(args) ? args : objectToArrayFromQuery(args, query);
+	const sql = query.replace("???", questionMarks(argsArr.length));
+	return { sql, args: argsArr };
+};
 
 const objectToArrayFromQuery = (obj: Record<string, any>, query: string) => {
 	let argsArr = [] as any[];

@@ -102,6 +102,8 @@ export type RemoveFlag<T extends Record<string, any>, Flag extends string> = {
 
 export type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
 
+export type StringTypeToType<S extends string> = S extends "string" ? string : S extends "number" ? number : S extends "bigint" ? bigint : S extends "boolean" ? boolean : S extends "symbol" ? symbol : S extends "undefined" ? undefined : S extends "null" ? null : S extends "never" ? never : S extends "unknown" ? unknown : S extends "any" ? any : never;
+
 // let t1: TypeGuard<any> = true;
 // let t2: TypeGuard<string> = true;
 // let t3: TypeGuard<number> = true;

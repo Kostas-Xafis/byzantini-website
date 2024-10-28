@@ -10,7 +10,8 @@ import {
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { AnimTimeline, deepCopy } from "../../../lib/utils.client";
+import { Random as R } from "../../../lib/random";
+import { AnimTimeline, ExtendedFormData, deepCopy } from "../../../lib/utils.client";
 import { customEvent } from "../../../types/custom-events";
 import type {
 	Instruments,
@@ -18,10 +19,9 @@ import type {
 	TeacherInstruments,
 	Teachers,
 } from "../../../types/entities";
-import Input, { getMultiSelect, type Props as InputProps } from "../input/Input.solid";
+import Input, { type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
 import Spinner from "../other/Spinner.solid";
-import { Random as R } from "../../../lib/random";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -550,32 +550,28 @@ export function RegistrationForm() {
 		if (!teachers) return;
 
 		const form = e.target as HTMLFormElement;
-		const formData = new FormData(form);
+		const formData = new ExtendedFormData<Registrations>(form);
 		const data: Omit<Registrations, "id" | "payment_amount" | "total_payment"> = {
-			last_name: formData.get("last_name") as string,
-			first_name: formData.get("first_name") as string,
-			am: formData.get("am") as string,
-			amka: formData.get("amka") as string,
-			fathers_name: formData.get("fathers_name") as string,
-			telephone: (formData.get("telephone") as string) || "-",
-			cellphone: formData.get("cellphone") as string,
-			email: formData.get("email") as string,
-			birth_date: new Date(formData.get("birth_date") as string).getTime(),
-			road: formData.get("road") as string,
-			number: Number(formData.get("number") as string),
-			tk: Number(formData.get("tk") as string),
-			region: formData.get("region") as string,
-			registration_year: formData.get("registration_year") as string,
-			class_year: formData.get("class_year") as string,
+			last_name: formData.string("last_name"),
+			first_name: formData.string("first_name"),
+			am: formData.string("am"),
+			amka: formData.string("amka"),
+			fathers_name: formData.string("fathers_name"),
+			telephone: formData.string("telephone", "-"),
+			cellphone: formData.string("cellphone"),
+			email: formData.string("email"),
+			birth_date: formData.date("birth_date").getTime(),
+			road: formData.string("road"),
+			number: formData.number("number"),
+			tk: formData.number("tk"),
+			region: formData.string("region"),
+			registration_year: formData.string("registration_year"),
+			class_year: formData.string("class_year"),
 			class_id: btns.findIndex((btn) => btn[1] === formSelected()),
-			teacher_id: Number(formData.get("teacher_id")) || -1,
+			teacher_id: formData.number("teacher_id", -1),
 			instrument_id:
-				getMultiSelect("instruments").map((btn) => {
-					const id = Number(btn.dataset.value) || null;
-					return id;
-				})[0] ||
-				Number(formData.get("instruments-all")) ||
-				0,
+				formData.multiSelect("instruments" as any, "number", { single: true }) ||
+				formData.number("instruments-all" as any, 0),
 			date: Date.now(),
 			registration_url: R.string(32),
 			pass: false,

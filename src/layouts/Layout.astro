@@ -76,7 +76,8 @@ const logoUrl = (new URL(Astro.request.url).origin + imageUrl) || "https://music
 			h1,
 			h2,
 			h3,
-			li {
+			li,
+			input[name*='date']::placeholder {
 				color: #282828;
 			}
 			select {

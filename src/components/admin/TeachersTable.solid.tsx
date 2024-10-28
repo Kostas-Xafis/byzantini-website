@@ -5,7 +5,11 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { loadXLSX } from "../../../lib/pdf.client";
-import { looseStringIncludes, teacherTitleByGender } from "../../../lib/utils.client";
+import {
+	ExtendedFormData,
+	looseStringIncludes,
+	teacherTitleByGender,
+} from "../../../lib/utils.client";
 import type {
 	ClassType,
 	Teachers as FullTeachers,
@@ -16,12 +20,7 @@ import type {
 	TeacherLocations,
 	SimpleTeacher as Teachers,
 } from "../../../types/entities";
-import {
-	InputFields,
-	getByName,
-	getMultiSelect,
-	type Props as InputProps,
-} from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import { SearchTable, type SearchColumn, type SearchSetter } from "./SearchTable.solid";
@@ -472,40 +471,32 @@ export default function TeachersTable() {
 		const instruments = store[API.Instruments.get];
 		if (!locations || !locationsList || !instruments) return addModal;
 
-		const submit = async function (formData: FormData) {
+		const submit = async function (form: ExtendedFormData<Teachers & TeacherJoins>) {
+			console.log(
+				form.getByName("teacherInstruments", "number", {
+					cmp: "includes",
+					single: false,
+				})
+			);
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
-				fullname: formData.get("fullname") as string,
-				amka: (formData.get("amka") as string) || "",
-				email: formData.get("email") as string,
-				telephone: formData.get("telephone") as string,
-				linktree: formData.get("linktree") as string,
-				gender: getMultiSelect("gender").map((btn) =>
-					Number(btn.dataset.value) ? "F" : "M"
-				)[0],
-				title: getMultiSelect("title").map((btn) => Number(btn.dataset.value))[0] as
-					| 0
-					| 1
-					| 2,
-				visible: getMultiSelect("visible").map((btn) => !!Number(btn.dataset.value))[0],
-				online: getMultiSelect("online").map((btn) => !!Number(btn.dataset.value))[0],
-				teacherClasses: getMultiSelect("teacherClasses").map((btn) =>
-					Number(btn.dataset.value)
-				),
-				teacherInstruments: [
-					...getMultiSelect("teacherInstrumentsTraditional"),
-					...getMultiSelect("teacherInstrumentsEuropean"),
-				].map((btn) => Number(btn.dataset.value)),
-				teacherLocations: getMultiSelect("teacherLocations").map((btn) =>
-					Number(btn.dataset.value)
-				),
-				priorities: getByName("priority", "startsWith")
-					.map((i) => Number(i.value))
-					.filter(Boolean),
-				registrations_number: getByName("ae-", "startsWith")
-					.map((i) => i.value)
-					.filter(Boolean),
-				// picture: FileHandler.getNewFiles(PREFIX + addModal.type + "picture").at(0)?.file,
-				// cv: FileHandler.getNewFiles(PREFIX + addModal.type + "cv").at(0)?.file,
+				fullname: form.string("fullname"),
+				amka: form.string("amka", ""),
+				email: form.string("email"),
+				telephone: form.string("telephone"),
+				linktree: form.string("linktree"),
+				gender: form.multiSelect("gender", "boolean", { single: true }) ? "F" : "M",
+				title: form.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
+				visible: form.multiSelect("visible", "boolean", { single: true }),
+				online: form.multiSelect("online", "boolean", { single: true }),
+				teacherClasses: form.multiSelect("teacherClasses", "number", { single: false }),
+				teacherLocations: form.multiSelect("teacherLocations", "number", { single: false }),
+				teacherInstruments: form.getByName("teacherInstruments", "number", {
+					cmp: "includes",
+					single: false,
+					isButton: true,
+				}),
+				priorities: form.getByName("priority", "number", { single: false }),
+				registrations_number: form.getByName("ae-", "string", { single: false }),
 			};
 			const res = await apiHook(API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
@@ -564,51 +555,47 @@ export default function TeachersTable() {
 		)
 			return modifyModal;
 
-		const submit = async function (formData: FormData, form?: HTMLFormElement) {
+		const submit = async function (
+			formData: ExtendedFormData<Teachers & TeacherJoins>,
+			form?: HTMLFormElement
+		) {
 			if (!form) return;
-			const classes = getMultiSelect("teacherClasses", form).map((btn) =>
-				Number(btn.dataset.value)
-			) as number[];
+			const classes = formData.multiSelect("teacherClasses", "number", { single: false });
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
-				fullname: formData.get("fullname") as string,
-				amka: (formData.get("amka") as string) || "",
-				email: formData.get("email") as string,
-				telephone: formData.get("telephone") as string,
-				linktree: formData.get("linktree") as string,
-				gender: getMultiSelect("gender", form).map((btn) =>
-					Number(btn.dataset.value) ? "F" : "M"
-				)[0],
-				title: getMultiSelect("title", form).map((btn) => Number(btn.dataset.value))[0] as
-					| 0
-					| 1
-					| 2,
-				visible: getMultiSelect("visible", form).map((btn) => {
-					return !!Number(btn.dataset.value);
-				})[0] as boolean,
-				online: getMultiSelect("online", form).map(
-					(btn) => !!Number(btn.dataset.value)
-				)[0] as boolean,
+				fullname: formData.string("fullname"),
+				amka: formData.string("amka", ""),
+				email: formData.string("email"),
+				telephone: formData.string("telephone"),
+				linktree: formData.string("linktree"),
+				gender: formData.multiSelect("gender", "number", { single: true }) ? "F" : "M",
+				title: formData.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
+				visible: formData.multiSelect("visible", "boolean", { single: true }),
+				online: formData.multiSelect("online", "boolean", { single: true }),
 				teacherClasses: classes,
-				teacherInstruments: (
-					[
-						classes.find((c) => c === 1) &&
-							getMultiSelect("teacherInstrumentsTraditional", form),
-						classes.find((c) => c === 2) &&
-							getMultiSelect("teacherInstrumentsEuropean", form),
-					].flat() as (HTMLInputElement | undefined)[]
-				)
-					.map((btn) => btn && Number(btn.dataset.value))
-					.filter((btn) => !!btn) as number[],
-				teacherLocations: getMultiSelect("teacherLocations", form).map((btn) =>
-					Number(btn.dataset.value)
-				) as number[],
-				priorities: getByName("priority", "startsWith")
-					.map((i) => Number(i.value))
-					.filter(Boolean),
-				registrations_number: getByName("ae-", "startsWith")
-					.map((i) => i.value)
-					.filter(Boolean),
+				teacherInstruments: classes
+					.map((c) => {
+						return formData.multiSelect(
+							(c === 1
+								? "teacherInstrumentsTraditional"
+								: c === 2
+								? "teacherInstrumentsEuropean"
+								: "") as any,
+							"number"
+						);
+					})
+					.flat() as number[],
+				teacherLocations: formData.multiSelect("teacherLocations", "number", {
+					single: false,
+				}),
+				priorities: formData.getByName("priority", "number", {
+					cmp: "startsWith",
+					single: false,
+				}),
+				registrations_number: formData.getByName("ae-", "string", {
+					cmp: "startsWith",
+					single: false,
+				}),
 			};
 			const res = await apiHook(API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;

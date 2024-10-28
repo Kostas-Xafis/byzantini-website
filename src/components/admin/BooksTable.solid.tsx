@@ -16,6 +16,7 @@ import {
 	TopTableGroup,
 	type Action,
 } from "./table/TableControls.solid";
+import type { ExtendedFormData } from "../../../lib/utils.client";
 
 const PREFIX = "books";
 
@@ -38,7 +39,7 @@ const BooksInputs = (wholesalers: Wholesalers[]): Record<keyof Books, InputProps
 			iconClasses: "fa-solid fa-book",
 		},
 		wholesaler_id: {
-			name: "wholesaler",
+			name: "wholesaler_id",
 			label: "Χονδρέμπορος",
 			type: "select",
 			iconClasses: "fa-solid fa-feather",
@@ -141,14 +142,14 @@ export default function BooksTable() {
 		if (!wholesalers) {
 			return addModal;
 		}
-		const submit = async function (formData: FormData) {
+		const submit = async function (form: ExtendedFormData<Books>) {
 			const data: Omit<Books, "id"> = {
-				title: formData.get("title") as string,
-				wholesaler_id: Number(formData.get("wholesaler")),
-				wholesale_price: parseInt(formData.get("wholesale_price") as string),
-				price: parseInt(formData.get("price") as string),
-				quantity: parseInt(formData.get("quantity") as string),
-				sold: parseInt(formData.get("sold") as string),
+				title: form.string("title"),
+				wholesaler_id: form.number("wholesaler_id"),
+				wholesale_price: form.number("wholesale_price"),
+				price: form.number("price"),
+				quantity: form.number("quantity"),
+				sold: form.number("sold"),
 			};
 			if (data.wholesale_price > data.price)
 				return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική");
@@ -183,10 +184,10 @@ export default function BooksTable() {
 		const wholesalers = store[API.Wholesalers.get];
 		if (!wholesalers || !books || selectedItems.length !== 1) return modifyModal;
 		const book = books.find((b) => b.id === selectedItems[0]) as Books;
-		const submit = async function (formData: FormData) {
+		const submit = async function (formData: ExtendedFormData<Books>) {
 			const data: Pick<Books, "id" | "quantity"> = {
 				id: book.id,
-				quantity: Number(formData.get("quantity") as string),
+				quantity: formData.number("quantity"),
 			};
 			const res = await apiHook(API.Books.updateQuantity, {
 				RequestObject: data,
@@ -214,9 +215,7 @@ export default function BooksTable() {
 		if (!wholesalers || !books || selectedItems.length < 1) return deleteModal;
 		const submit = async function () {
 			const data = selectedItems.map((id) => books.find((b) => b.id === id)?.id || -1);
-			const res = await apiHook(API.Books.delete, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Books.delete, { RequestObject: data });
 			if (!res.data && !res.message) return;
 			setBookHydrate({
 				action: ActionEnum.DELETE,
@@ -237,26 +236,20 @@ export default function BooksTable() {
 	});
 
 	const onAddWholesaler = createMemo((): Action | EmptyAction => {
-		const submit = async function (formData: FormData) {
-			const data = {
-				name: formData.get("name") as string,
-			};
-			const res = await apiHook(API.Wholesalers.post, {
-				RequestObject: data,
-			});
+		const submit = async function (formData: ExtendedFormData<{ wholesaler_name: string }>) {
+			const name = formData.string("wholesaler_name");
+			const res = await apiHook(API.Wholesalers.post, { RequestObject: { name } });
 			if (!res.data) return;
 			setWholesalerHydrate({
 				action: ActionEnum.ADD,
 				id: res.data.insertId,
 			});
-			pushAlert(
-				createAlert("success", "Επιτυχής προσθήκη χονδρέμπορου: " + (data.name || ""))
-			);
+			pushAlert(createAlert("success", "Επιτυχής προσθήκη χονδρέμπορου: " + (name || "")));
 		};
 		return {
 			inputs: {
 				name: {
-					name: "name",
+					name: "wholesaler_name",
 					label: "Όνομα",
 					type: "text",
 					iconClasses: "fa-solid fa-feather",
@@ -271,8 +264,8 @@ export default function BooksTable() {
 	});
 	const onDeleteWholesaler = createMemo((): Action | EmptyAction => {
 		const wholesalers = store[API.Wholesalers.get] || [];
-		const submit = async function (formData: FormData) {
-			const data = [Number(formData.get("name"))];
+		const submit = async function (formData: ExtendedFormData<{ wholesaler_id: string }>) {
+			const data = [formData.number("wholesaler_id")];
 			const res = await apiHook(API.Wholesalers.delete, {
 				RequestObject: data,
 			});
@@ -287,7 +280,7 @@ export default function BooksTable() {
 		return {
 			inputs: {
 				name: {
-					name: "name",
+					name: "wholesaler_id",
 					label: "Χονδρέμπορος",
 					type: "select",
 					iconClasses: "fa-solid fa-feather",

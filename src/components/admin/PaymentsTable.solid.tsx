@@ -5,7 +5,7 @@ import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
+import { Fill, Pick, type Props as InputProps, InputFields } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -16,6 +16,7 @@ import {
 	TopTableGroup,
 	type Action,
 } from "./table/TableControls.solid";
+import type { ExtendedFormData } from "../../../lib/utils.client";
 
 const PREFIX = "payments";
 
@@ -118,12 +119,12 @@ export default function PaymentsTable() {
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get] || [];
-		const submit = async function (formData: FormData) {
+		const submit = async function (form: ExtendedFormData<Payments>) {
 			const data: Omit<Payments, "id" | "amount"> = {
-				student_name: formData.get("student_name") as string,
-				book_id: Number(formData.get("book_id") as string),
-				book_amount: Number(formData.get("book_amount") as string) || 1,
-				date: new Date(formData.get("date") as string).getTime() / 1000,
+				student_name: form.string("student_name"),
+				book_id: form.number("book_id"),
+				book_amount: form.number("book_amount", 1),
+				date: form.date("payment_date").getTime() / 1000,
 			};
 
 			const res = await apiHook(API.Payments.post, { RequestObject: data });
@@ -135,7 +136,9 @@ export default function PaymentsTable() {
 			pushAlert(createAlert("success", "Η αγορά προστέθηκε επιτυχώς!"));
 		};
 		return {
-			inputs: Pick(PaymentsInputs(books), "book_id", "student_name", "book_amount", "date"),
+			inputs: new InputFields(PaymentsInputs(books))
+				.pick(["book_id", "student_name", "book_amount", "date"])
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Πληρωμής",
@@ -156,10 +159,10 @@ export default function PaymentsTable() {
 		const payment = payments.find((p) => p.id === selectedItems[0]) as Payments;
 		if (payment.payment_date !== 0) return modifyModal;
 
-		const submit = async function (formData: FormData) {
+		const submit = async function (form: ExtendedFormData<Payments>) {
 			const data: Pick<Payments, "id" | "amount"> = {
 				id: payment.id,
-				amount: Number(formData.get("amount") as string) as number,
+				amount: form.number("amount"),
 			};
 			if (data.amount > payment.amount || data.amount === 0 || !data.amount) {
 				alert("Καταχώρηση μη επιτρεπτού ποσού!");

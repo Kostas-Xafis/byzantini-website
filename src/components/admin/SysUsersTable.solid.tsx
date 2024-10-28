@@ -66,7 +66,6 @@ export default function SysUsersTable() {
 		const submit = async function* () {
 			if (link) return;
 
-			// Maybe make it a generator function?
 			await apiHook(API.SysUsers.createRegisterLink);
 			yield undefined;
 			pushAlert(createAlert("success", "Ο σύνδεσμος δημιουργήθηκε επιτυχώς!"));
@@ -107,9 +106,7 @@ export default function SysUsersTable() {
 
 		const submit = async function () {
 			const ids = selectedItems.map((i) => (sysusers.find((p) => p.id === i) as SysUsers).id);
-			const res = await apiHook(API.SysUsers.delete, {
-				RequestObject: ids,
-			});
+			const res = await apiHook(API.SysUsers.delete, { RequestObject: ids });
 			if (!res.data && !res.message) return;
 			setSysUserHydrate({ action: ActionEnum.DELETE, ids });
 			if (ids.length === 1) {

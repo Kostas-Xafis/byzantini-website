@@ -4,8 +4,9 @@ import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
+import type { ExtendedFormData } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
-import { InputFields, getMultiSelect, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -196,20 +197,20 @@ export default function LocationsTable() {
 		return locations ? locationsToTable(locations) : [];
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const submit = async function (formData: FormData) {
+		const submit = async function (form: ExtendedFormData<Locations>) {
 			const data: Omit<Locations, "id" | "image"> = {
-				name: formData.get("name") as string,
-				address: formData.get("address") as string,
-				areacode: Number(formData.get("areacode")),
-				municipality: formData.get("municipality") as string,
-				manager: formData.get("manager") as string,
-				email: formData.get("email") as string,
-				telephones: formData.get("telephones") as string,
-				priority: Number(formData.get("priority")),
-				map: formData.get("map") as string,
-				link: formData.get("link") as string,
-				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner").map((i) => !!Number(i.dataset.value))[0],
+				name: form.string("name"),
+				address: form.string("address"),
+				areacode: form.number("areacode"),
+				municipality: form.string("municipality"),
+				manager: form.string("manager"),
+				email: form.string("email"),
+				telephones: form.string("telephones"),
+				priority: form.number("priority"),
+				map: form.string("map"),
+				link: form.string("link"),
+				youtube: form.string("youtube"),
+				partner: form.multiSelect("partner", "boolean", { single: true }),
 			};
 			const res = await apiHook(API.Locations.post, {
 				RequestObject: data,
@@ -245,22 +246,25 @@ export default function LocationsTable() {
 		const location = locations.find((p) => p.id === selectedItems[0]);
 		if (!location) return modifyModal;
 
-		const submit = async function (formData: FormData, form?: HTMLFormElement) {
+		const submit = async function (
+			formData: ExtendedFormData<Locations>,
+			form?: HTMLFormElement
+		) {
 			if (!form) return;
 			const data: Omit<Locations, "image"> = {
 				id: location.id,
-				name: formData.get("name") as string,
-				address: formData.get("address") as string,
-				areacode: Number(formData.get("areacode")),
-				municipality: formData.get("municipality") as string,
-				manager: formData.get("manager") as string,
-				email: formData.get("email") as string,
-				telephones: formData.get("telephones") as string,
-				priority: Number(formData.get("priority")),
-				map: formData.get("map") as string,
-				link: formData.get("link") as string,
-				youtube: formData.get("youtube") as string,
-				partner: getMultiSelect("partner", form).map((i) => !!Number(i.dataset.value))[0],
+				name: formData.string("name"),
+				address: formData.string("address"),
+				areacode: formData.number("areacode"),
+				municipality: formData.string("municipality"),
+				manager: formData.string("manager"),
+				email: formData.string("email"),
+				telephones: formData.string("telephones"),
+				priority: formData.number("priority"),
+				map: formData.string("map"),
+				link: formData.string("link"),
+				youtube: formData.string("youtube"),
+				partner: formData.multiSelect("partner", "boolean", { single: true }),
 			};
 			const res = await apiHook(API.Locations.update, {
 				RequestObject: data,

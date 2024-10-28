@@ -4,7 +4,7 @@ import { FileHandler } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { asyncQueue, deepCopy, isSafeURLPath } from "../../../lib/utils.client";
+import { ExtendedFormData, asyncQueue, deepCopy, isSafeURLPath } from "../../../lib/utils.client";
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -201,16 +201,17 @@ export default function AnnouncementsTable() {
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const metadata = { is_main: true };
-		const submit = async function (formData: FormData) {
-			if (!isSafeURLPath(formData.get("title") as string)) {
+		const submit = async function (form: ExtendedFormData<Announcements>) {
+			if (!isSafeURLPath(form.string("title"))) {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
 			const data: Omit<Announcements, "id" | "views"> & { links: string } = {
-				title: formData.get("title") as string,
-				content: formData.get("content") as string,
-				date: new Date(formData.get("date") as string).getTime(),
-				links: (formData.get("links") as string)
+				title: form.string("title") as string,
+				content: form.string("content") as string,
+				date: form.date("date").getTime(),
+				links: form
+					.string("links")
 					.split("\n")
 					.map((l) => l.trim())
 					.join("|"),
@@ -261,26 +262,25 @@ export default function AnnouncementsTable() {
 		const announcements = store[API.Announcements.get];
 		const images = store[API.Announcements.getImages];
 		if (!announcements || !images || selectedItems.length !== 1) return modifyModal;
-		const submit = async function (formData: FormData) {
-			if (!isSafeURLPath(formData.get("title") as string)) {
+		const submit = async function (form: ExtendedFormData<Announcements>) {
+			if (!isSafeURLPath(form.string("title"))) {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
 			const announcement_id = selectedItems[0];
 			const data: Omit<Announcements, "views"> = {
 				id: announcement_id,
-				title: formData.get("title") as string,
-				content: formData.get("content") as string,
-				date: new Date(formData.get("date") as string).getTime(),
-				links: (formData.get("links") as string)
+				title: form.string("title"),
+				content: form.string("content"),
+				date: form.date("date").getTime(),
+				links: form
+					.string("links")
 					.split("\n")
 					.map((l) => l.trim())
 					.filter((l) => l.length > 0)
 					.join("|"),
 			};
-			const res = await apiHook(API.Announcements.update, {
-				RequestObject: data,
-			});
+			const res = await apiHook(API.Announcements.update, { RequestObject: data });
 			if (!res.message) return;
 
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
