@@ -9,7 +9,7 @@ import { SysUsersRoutes } from "./sysusers.client";
 const serverRoutes = deepCopy(SysUsersRoutes);
 
 serverRoutes.get.func = ({ ctx }) => {
-	return execTryCatch(() => executeQuery<Pick<SysUsers, "id" | "email" | "privilege">>("SELECT id, email, privilege FROM sys_users"));
+	return execTryCatch(() => executeQuery<Pick<SysUsers, "id" | "email" | "privilege">>("SELECT id, email, privilege FROM sys_users"), "Σφάλμα κατά την ανάκτηση των χρηστών");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -43,7 +43,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		if (body.length === 1) await T.executeQuery(`DELETE FROM sys_users WHERE id = ? AND privilege < ?`, [body[0], privilege]);
 		else await T.executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(body)}) AND privelege < ?`, [...body, privilege]);
 		return "User/s deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή των διαχειριστών");
 };
 
 
@@ -63,7 +63,7 @@ serverRoutes.registerSysUser.func = ({ ctx, slug }) => {
 		const args = { email, password: key, privilege: linkCheck[0].privilege, ...createSessionId() };
 		const { insertId } = await T.executeQuery(`INSERT INTO sys_users (email, password, privilege, session_id, session_exp_date) VALUES (???)`, args);
 		return { id: insertId, session_id: args.session_id };
-	});
+	}, "Σφάλμα κατά την εγγραφή του χρήστη");
 };
 
 serverRoutes.createRegisterLink.func = ({ ctx }) => {
@@ -75,7 +75,7 @@ serverRoutes.createRegisterLink.func = ({ ctx }) => {
 		const [{ privilege }] = await T.executeQuery<Pick<SysUsers, "privilege">>("SELECT privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date, privilege) VALUES (?, ?, ?)", [link, exp_date, privilege - 1]);
 		return { link };
-	});
+	}, "Σφάλμα κατά την δημιουργία του συνδέσμου εγγραφής");
 };
 
 serverRoutes.validateRegisterLink.func = ({ ctx: _ctx, slug }) => {
@@ -87,7 +87,7 @@ serverRoutes.validateRegisterLink.func = ({ ctx: _ctx, slug }) => {
 			throw new Error("Invalid Link");
 		}
 		return { isValid: true };
-	});
+	}, "Σφάλμα κατά τον έλεγχο του συνδέσμου εγγραφής");
 };
 
 export const SysUsersServerRoutes = serverRoutes;

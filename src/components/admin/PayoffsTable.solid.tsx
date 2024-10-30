@@ -161,7 +161,7 @@ export default function PayoffsTable() {
 				columns={columnNames}
 				structure={[
 					{
-						groupPosition: "top",
+						position: "top",
 						prefix: PREFIX,
 						controlGroups: [{ controls: [onModify, onDelete] }],
 					},

@@ -50,11 +50,11 @@ const bucketPrefix = "anakoinoseis/images/";
 let serverRoutes = deepCopy(AnnouncementsRoutes); // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"));
+	return execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"), "Σφάλμα κατά την ανάκτηση των ανακοινώσεων");
 };
 
 serverRoutes.getImages.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"));
+	return execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"), "Σφάλμα κατά την ανάκτηση των εικόνων των ανακοινώσεων");
 };
 
 serverRoutes.getForPage.func = ({ ctx: _ctx }) => {
@@ -64,7 +64,7 @@ serverRoutes.getForPage.func = ({ ctx: _ctx }) => {
 			COUNT(i.name) as total_images
 		FROM announcements as a LEFT JOIN announcement_images as i ON a.id = i.announcement_id
 		GROUP BY a.id ORDER BY a.date DESC`
-	));
+	), "Σφάλμα κατά την ανάκτηση των ανακοινώσεων");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -93,7 +93,7 @@ serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
 		if (!announcement) throw Error("Announcement not found");
 		await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 		return { ...announcement, images };
-	});
+	}, "Ανακοίνωση δεν βρέθηκε");
 };
 
 serverRoutes.post.func = ({ ctx }) => {
@@ -104,7 +104,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
 		// await insertAnnouncementToSitemap(ctx, body);
 		return { insertId };
-	});
+	}, "Σφάλμα κατά την προσθήκη της ανακοίνωσης");
 };
 
 serverRoutes.update.func = ({ ctx }) => {
@@ -116,7 +116,7 @@ serverRoutes.update.func = ({ ctx }) => {
 		// await removeAnnouncementFromSitemap(ctx, [body.title]);
 		// await insertAnnouncementToSitemap(ctx, body as Announcements);
 		return "Announcement updated successfully";
-	});
+	}, "Σφάλμα κατά την ενημέρωση της ανακοίνωσης");
 };
 
 serverRoutes.postImage.func = ({ ctx }) => {
@@ -133,7 +133,7 @@ serverRoutes.postImage.func = ({ ctx }) => {
 			await Bucket.put(ctx, await thumbData.arrayBuffer(), thumbFileName, fileType);
 		}
 		return { insertId: 0 };
-	});
+	}, "Σφάλμα κατά την προσθήκη της εικόνας");
 };
 
 serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
@@ -155,7 +155,7 @@ serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 			maxJobs: 10,
 		});
 		return "Images deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή των εικόνων");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -178,7 +178,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		});
 		await removeAnnouncementFromSitemap(ctx, announcements.map(({ title }) => title));
 		return "announcement deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή των ανακοινώσεων");
 };
 
 export const AnnouncementsServerRoutes = serverRoutes;

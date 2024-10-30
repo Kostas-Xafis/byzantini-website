@@ -258,7 +258,7 @@ export default function PaymentsTable() {
 				columns={columnNames}
 				structure={[
 					{
-						groupPosition: "top",
+						position: "top",
 						prefix: PREFIX,
 						controlGroups: [{ controls: [onAdd, onModify, onDelete, onComplete] }],
 					},

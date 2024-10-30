@@ -31,7 +31,7 @@ serverRoutes.get.func = ({ slug }) => {
 			throw Error("MySQL is not supported anymore");
 		}
 		throw Error(`The ${type} connector not supported`);
-	});
+	}, "Σφάλμα κατά την ανάκτηση του σχήματος");
 };
 
 // This is development only route
@@ -49,7 +49,7 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 			return "Reverted to previous schema";
 		}
 		throw Error(`The ${type} connector not supported anymore`);
-	});
+	}, "Σφάλμα κατά την ανάκτηση του προηγούμενου σχήματος");
 };
 
 serverRoutes.migrate.func = ({ ctx: _ctx }) => {
@@ -74,7 +74,7 @@ serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 			}
 		}
 		return "Migrated to latest schema";
-	});
+	}, "Σφάλμα κατά την μεταφορά στο τελευταίο σχήμα");
 };
 
 

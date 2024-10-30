@@ -6,7 +6,7 @@ import { PayoffsRoutes, type PayoffGetResponse } from "./payoffs.client";
 const serverRoutes = deepCopy(PayoffsRoutes);
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<PayoffGetResponse>("SELECT * FROM school_payoffs WHERE amount > 0"));
+	return execTryCatch(() => executeQuery<PayoffGetResponse>("SELECT * FROM school_payoffs WHERE amount > 0"), "Σφάλμα κατά την ανάκτηση των πληρωμών");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -34,7 +34,7 @@ serverRoutes.updateAmount.func = ({ ctx }) => {
 			T.executeQuery("UPDATE total_school_payoffs SET amount = amount - ?", [previousAmount - args[1]])
 		]);
 		return "Updated payoff amount successfully";
-	});
+	}, "Σφάλμα κατά την ενημέρωση του ποσού της πληρωμής");
 };
 
 serverRoutes.complete.func = ({ ctx }) => {
@@ -51,7 +51,7 @@ serverRoutes.complete.func = ({ ctx }) => {
 			T.executeQuery("UPDATE total_school_payoffs SET amount = amount - ?", [sum])
 		]);
 		return "Payoffs completed";
-	});
+	}, "Σφάλμα κατά την ολοκλήρωση των πληρωμών");
 };
 
 export const PayoffsServerRoutes = serverRoutes;

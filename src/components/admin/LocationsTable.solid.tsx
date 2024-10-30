@@ -334,7 +334,7 @@ export default function LocationsTable() {
 				columns={columnNames}
 				structure={[
 					{
-						groupPosition: "top",
+						position: "top",
 						prefix: PREFIX,
 						controlGroups: [{ controls: [onAdd, onModify, onDelete] }],
 					},

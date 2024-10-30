@@ -858,21 +858,21 @@ export default function RegistrationsTable() {
 					hasSelectBox
 					structure={[
 						{
-							groupPosition: "top",
+							position: "top",
 							prefix: PREFIX,
 							controlGroups: [
 								{ controls: [onModify, onDelete] },
 								{ controls: [onDownloadPDF, onDownloadExcel] },
-								{ controlType: "search", columns: searchColumns, setSearchQuery },
+								{ type: "search", columns: searchColumns, setSearchQuery },
 							],
 						},
 						{
-							groupPosition: "bottom",
+							position: "bottom",
 							prefix: PREFIX,
 							controlGroups: [
-								{ controlType: "pagination", pageSize: 100, dataSize: dataLength },
+								{ type: "pagination", pageSize: 100, dataSize: dataLength },
 								{
-									controlType: "custom",
+									type: "custom",
 									children: (
 										<div class="pb-2 flex items-center gap-x-4">
 											<button

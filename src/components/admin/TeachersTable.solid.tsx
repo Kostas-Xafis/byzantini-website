@@ -873,7 +873,7 @@ export default function TeachersTable() {
 				hasSelectBox
 				structure={[
 					{
-						groupPosition: "top",
+						position: "top",
 						controlGroups: [
 							{
 								prefix: PREFIX,
@@ -888,7 +888,7 @@ export default function TeachersTable() {
 								controls: [onDownloadExcel],
 							},
 							{
-								controlType: "search",
+								type: "search",
 								columns: searchColumns,
 								setSearchQuery,
 							},

@@ -27,7 +27,7 @@ serverRoutes.userLogin.func = ({ ctx }) => {
 			credentials.email
 		]);
 		return { isValid, session_id };
-	});
+	}, "Σφάλμα κατά την είσοδο");
 };
 
 serverRoutes.userLogout.func = ({ ctx }) => {

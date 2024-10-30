@@ -7,7 +7,7 @@ import { BooksRoutes } from "./books.client";
 const serverRoutes = deepCopy(BooksRoutes);
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Books>("SELECT * FROM books"));
+	return execTryCatch(() => executeQuery<Books>("SELECT * FROM books"), "Σφάλμα κατά την ανάκτηση των βιβλίων");
 };
 
 // The getById function should only accept multiple
@@ -37,7 +37,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			T.executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [body.wholesale_price * body.quantity])
 		]);
 		return res;
-	});
+	}, "Σφάλμα κατά την προσθήκη του βιβλίου");
 };
 
 serverRoutes.updateQuantity.func = ({ ctx }) => {
@@ -56,7 +56,7 @@ serverRoutes.updateQuantity.func = ({ ctx }) => {
 			T.executeQuery("UPDATE total_school_payoffs SET amount = amount + ?", [newAddedAmount])
 		]);
 		return "Quantity updated successfully";
-	});
+	}, "Σφάλμα κατά την ενημέρωση της ποσότητας του βιβλίου");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -78,7 +78,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		await T.executeQuery<Payments>(`DELETE FROM payments WHERE book_id IN (${questionMarks(ids)})`, ids);
 
 		return "Book deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή του βιβλίου");
 };
 
 export const BooksServerRoutes = serverRoutes;

@@ -129,7 +129,7 @@ export default function SysUsersTable() {
 				columns={columnNames}
 				structure={[
 					{
-						groupPosition: "top",
+						position: "top",
 						prefix: PREFIX,
 						controlGroups: [{ controls: [onAdd, onDelete] }],
 					},

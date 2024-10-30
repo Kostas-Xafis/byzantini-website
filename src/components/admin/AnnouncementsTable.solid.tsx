@@ -373,7 +373,7 @@ export default function AnnouncementsTable() {
 				columns={columnNames}
 				structure={[
 					{
-						groupPosition: "top",
+						position: "top",
 						prefix: PREFIX,
 						controlGroups: [
 							{

@@ -12,7 +12,7 @@ serverRoutes.get.func = ({ slug }) => {
 	return execTryCatch(() => {
 		const { year } = slug;
 		return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [`${year}-${year + 1}`]);
-	});
+	}, "Σφάλμα κατά την ανάκτηση των εγγραφών");
 };
 
 serverRoutes.getById.func = ({ slug }) => {
@@ -74,7 +74,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		}
 
 		return { insertId };
-	});
+	}, "Σφάλμα κατά την προσθήκη της εγγραφής");
 };
 
 serverRoutes.update.func = ({ ctx }) => {
@@ -82,7 +82,7 @@ serverRoutes.update.func = ({ ctx }) => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		await T.executeQuery(`UPDATE registrations SET am=?, amka=?, last_name=?, first_name=?, fathers_name=?, telephone=?, cellphone=?, email=?, birth_date=?, road=?, number=?, tk=?, region=?, registration_year=?, class_year=?, class_id=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=?, pass=? WHERE id=?`, body);
 		return "Registration updated successfully";
-	});
+	}, "Σφάλμα κατά την ενημέρωση της εγγραφής");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -93,7 +93,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		await T.executeQuery("UPDATE total_registrations SET amount = amount - ?", [body.length]);
 
 		return "Registration deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή των εγγραφών");
 };
 
 serverRoutes.emailSubscribe.func = ({ ctx }) => {
@@ -101,7 +101,7 @@ serverRoutes.emailSubscribe.func = ({ ctx }) => {
 		const body = (getUsedBody(ctx) || await ctx.request.json());
 		await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, R.link(16)]);
 		return { subscribed: true };
-	});
+	}, "Σφάλμα κατά την εγγραφή στο newsletter");
 };
 
 serverRoutes.emailUnsubscribe.func = ({ ctx }) => {
@@ -111,7 +111,7 @@ serverRoutes.emailUnsubscribe.func = ({ ctx }) => {
 		if (isSubscribed.length === 0) return { isValid: false };
 		await T.executeQuery("DELETE FROM email_subscriptions WHERE unsubscribe_token = ?", [body.token]);
 		return { isValid: true };
-	});
+	}, "Σφάλμα κατά την απεγγραφή από το newsletter");
 };
 
 serverRoutes.getSubscriptionToken.func = ({ ctx }) => {
@@ -120,7 +120,7 @@ serverRoutes.getSubscriptionToken.func = ({ ctx }) => {
 		const [isSubscribed] = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email = ?", [body.email]);
 		if (!isSubscribed) return { token: null };
 		return { token: isSubscribed.unsubscribe_token };
-	});
+	}, "Σφάλμα κατά την ανάκτηση του token απεγγραφής");
 };
 
 export const RegistrationsServerRoutes = serverRoutes;

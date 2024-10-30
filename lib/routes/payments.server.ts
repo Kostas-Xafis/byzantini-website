@@ -6,7 +6,7 @@ import { PaymentsRoutes } from "./payments.client";
 const serverRoutes = deepCopy(PaymentsRoutes);
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"));
+	return execTryCatch(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"), "Σφάλμα κατά την ανάκτηση των πληρωμών");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -45,7 +45,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		await T.executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]);
 
 		return res;
-	});
+	}, "Σφάλμα κατά την προσθήκη της πληρωμής");
 };
 
 serverRoutes.updatePayment.func = ({ ctx }) => {
@@ -58,7 +58,7 @@ serverRoutes.updatePayment.func = ({ ctx }) => {
 		}
 		await executeQuery("UPDATE payments SET amount = ? WHERE id = ?", [amount, id]);
 		return "Updated payment successfully";
-	});
+	}, "Σφάλμα κατά την ενημέρωση της πληρωμής");
 };
 
 serverRoutes.complete.func = ({ ctx }) => {
@@ -70,7 +70,7 @@ serverRoutes.complete.func = ({ ctx }) => {
 		await T.executeQuery(`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`, [Date.now(), ...ids]);
 		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids)}))`, [...ids]);
 		return "Completed payment successfully";
-	});
+	}, "Σφάλμα κατά την ολοκλήρωση της πληρωμής");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -82,7 +82,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		if (payments.length === 0) throw Error("Payments not found");
 		await T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		return "Deleted payment successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή της πληρωμής");
 };
 
 export const PaymentsServerRoutes = serverRoutes;

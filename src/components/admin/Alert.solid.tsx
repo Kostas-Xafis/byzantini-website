@@ -13,6 +13,69 @@ export type Alert = {
 	expires?: number;
 };
 
+export class AlertClass {
+	private static alerts = createSignal<Alert[]>([], { equals: false });
+
+	private alert: Alert = {} as Alert;
+	private id = R.hex(5);
+
+	constructor(
+		type: Alert["type"],
+		message: (Record<any, any> | string | number)[],
+		{ expires, onDidUpdate }: { expires?: number; onDidUpdate?: Function } = {}
+	) {
+		let msg = "";
+		message.forEach((m) => {
+			if (typeof m === "object") {
+				msg += JSON.stringify(m);
+			} else {
+				msg += m;
+			}
+		});
+		const alert: Alert = {
+			id: this.id,
+			message: msg,
+			type: type,
+			status: "push",
+			expires: expires || -1,
+			onDidUpdate: onDidUpdate,
+		};
+		AlertClass.alerts[1]((prevAlerts) => [...prevAlerts, alert]);
+	}
+
+	setStatus(status: Alert["status"]) {
+		AlertClass.alerts[1]((prevAlerts) => {
+			prevAlerts.forEach((a) => {
+				if (a.id === this.id) {
+					a.status = status;
+				}
+			});
+			return prevAlerts;
+		});
+	}
+
+	static removeAlert(alert: AlertClass) {
+		AlertClass.alerts[1]((prevAlerts) => {
+			prevAlerts.forEach((a) => {
+				if (a.id === alert.id) a.status = "remove";
+			});
+			return prevAlerts;
+		});
+	}
+
+	static updateAlert(alert: AlertClass, message: string) {
+		AlertClass.alerts[1]((prevAlerts) => {
+			prevAlerts.forEach((a) => {
+				if (a.id === alert.id) {
+					a.message = message;
+					a.status = "update";
+				}
+			});
+			return prevAlerts;
+		});
+	}
+}
+
 export function createAlert(
 	type: Alert["type"],
 	...message: (Record<any, any> | string | number)[]

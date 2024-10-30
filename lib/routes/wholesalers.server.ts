@@ -6,7 +6,7 @@ import { WholesalersRoutes } from "./wholesalers.client";
 const serverRoutes = deepCopy(WholesalersRoutes);
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"));
+	return execTryCatch(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"), "Σφάλμα κατά την ανάκτηση των χονδρεμπόρων");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -24,7 +24,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
 		await T.executeQuery("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
 		return result;
-	});
+	}, "Σφάλμα κατά την προσθήκη του χονδρεμπόρου");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -51,6 +51,6 @@ serverRoutes.delete.func = ({ ctx }) => {
 		}
 		await T.executeQuery(`DELETE FROM wholesalers WHERE id=?`, wholesaler_id);
 		return "Deleted wholesalers successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή του χονδρεμπόρου");
 };
 export const WholesalersServerRoutes = serverRoutes;

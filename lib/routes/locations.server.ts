@@ -11,7 +11,7 @@ const bucketPrefix = "spoudastiria/";
 const serverRoutes = deepCopy(LocationsRoutes);
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations"));
+	return execTryCatch(() => executeQuery<Locations>("SELECT * FROM locations"), "Σφάλμα κατά την ανάκτηση των σπουδαστηρίων");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -35,7 +35,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			body
 		);
 		return { insertId };
-	});
+	}, "Σφάλμα κατά την προσθήκη του σπουδαστηρίου");
 };
 
 serverRoutes.update.func = ({ ctx }) => {
@@ -45,7 +45,7 @@ serverRoutes.update.func = ({ ctx }) => {
 			body
 		);
 		return "Location updated successfully";
-	});
+	}, "Σφάλμα κατά την ενημέρωση του σπουδαστηρίου");
 };
 
 serverRoutes.fileUpload.func = ({ ctx, slug }) => {
@@ -64,7 +64,7 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 			return "Image uploaded successfully";
 		}
 		throw Error("Invalid filetype");
-	});
+	}, "Σφάλμα κατά το ανέβασμα της εικόνας");
 };
 
 serverRoutes.fileDelete.func = ({ ctx, slug }) => {
@@ -75,7 +75,7 @@ serverRoutes.fileDelete.func = ({ ctx, slug }) => {
 		if (location.image) await Bucket.delete(ctx, bucketPrefix + location.image);
 		await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, slug);
 		return "Image deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή της εικόνας");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -90,7 +90,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		}
 		await T.executeQuery(`DELETE FROM locations WHERE id IN (???)`, body);
 		return "Locations deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή των σπουδαστηρίων");
 };
 
 export const LocationsServerRoutes = serverRoutes;

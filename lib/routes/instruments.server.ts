@@ -7,7 +7,7 @@ import { InstrumentsRoutes } from "./instruments.client";
 let serverRoutes = deepCopy(InstrumentsRoutes); // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Instruments>("SELECT * FROM instruments ORDER BY name ASC"));
+	return execTryCatch(() => executeQuery<Instruments>("SELECT * FROM instruments ORDER BY name ASC"), "Σφάλμα κατά την ανάκτηση των μουσικών οργάνων");
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
@@ -25,7 +25,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		const args = Object.values(body);
 		const id = await T.executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
 		return id;
-	});
+	}, "Σφάλμα κατά την προσθήκη του μουσικού οργάνου");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
@@ -33,7 +33,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		await T.executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
-	});
+	}, "Σφάλμα κατά την διαγραφή του μουσικού οργάνου");
 };
 
 export const ClassTypeServerRoutes = serverRoutes;

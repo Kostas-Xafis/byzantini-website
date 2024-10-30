@@ -1,7 +1,7 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
 import { deepCopy } from "../utils.client";
-import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
+import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -43,7 +43,7 @@ serverRoutes.getClassesById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const id = getUsedBody(ctx) || await ctx.request.json();
 		return await executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", id);
-	}, "Σφάλμα κατά την  ανάκτηση των μαθημάτων του δασκάλου");
+	}, "Σφάλμα κατά την ανάκτηση των μαθημάτων του δασκάλου");
 };
 
 // TeachersLocations endpoints
@@ -84,7 +84,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			await T.executeQuery(`INSERT INTO teacher_instruments (teacher_id, instrument_id) VALUES (?, ?)`, [insertId, instrument_id]);
 		}
 		return { insertId };
-	});
+	}, "Σφάλμα κατά την προσθήκη του δασκάλου");
 };
 
 serverRoutes.update.func = ({ ctx }) => {
