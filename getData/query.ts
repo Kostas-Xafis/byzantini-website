@@ -12,11 +12,21 @@ type ArgsType = {
 	"--excel"?: string;
 	"--skip"?: boolean;
 	"--t"?: string;
+	"--time"?: string;
+	"--s"?: string;
+	"--silent"?: string;
 	"--h"?: string;
 	"--help"?: string;
 };
 const args = argReader<ArgsType>(argv, "--");
 const isProduction = args.dev ? false : args.prod || null;
+
+const isSilent = args.silent || args.s;
+const isTimed = args.time || args.t;
+const log = (...msg: any) => {
+	if (isSilent) return;
+	console.log(...msg);
+};
 
 const getQueries = (str: string) => {
 	const formatQuery = (query) => {
@@ -49,9 +59,9 @@ const executeQueries = async (queries: string[], db: SimpleConnection) => {
 			if (query === "") break;
 			try {
 				await db.execute(query);
-				console.log(`Executed query: ${query}`);
+				log(`Executed query: ${query}`);
 			} catch (err) {
-				console.log(`Query Error: ${err}`);
+				log(`Query Error: ${err}`);
 			}
 		}
 		return;
@@ -61,7 +71,7 @@ const executeQueries = async (queries: string[], db: SimpleConnection) => {
 			const query = queries[i];
 			if (query === "") break;
 			resArr.push(await db.execute(query));
-			console.log(`Executed query: ${query}`);
+			log(`Executed query: ${query}`);
 		}
 	} catch (error) {
 		console.error(error);
@@ -70,7 +80,7 @@ const executeQueries = async (queries: string[], db: SimpleConnection) => {
 };
 
 const asyncEscape = (msg) => {
-	console.log(msg);
+	log(msg);
 	throw new Error();
 };
 
@@ -107,7 +117,7 @@ const dbProcess = async function () {
 			asyncEscape("No query or file specified");
 		}
 	} catch (error) {
-		console.log(error);
+		log(error);
 	} finally {
 		conn.close();
 	}
@@ -122,7 +132,8 @@ const printUsage = () => {
 	console.log("  --f:\t\tFile path to query file");
 	console.log("  --out:\tOutput file path");
 	console.log("  --excel:\tOutput to excel file");
-	console.log("  --t:\t\tPrint execution time");
+	console.log("  --t, --time:\t\tPrint execution time");
+	console.log("  --s, --silent:\tSilent mode");
 	console.log("  --skip:\tSkip errors");
 	console.log("  --h, --help:\tPrint this message");
 };
@@ -142,9 +153,11 @@ async function main() {
 	let isProduction = args.dev ? false : args.prod || null;
 	if (isProduction === null) asyncEscape("No environment specified");
 
-	args.t && console.time("Execution Time");
+	log({ ...args });
+
+	isTimed && console.time("Execution Time");
 	let data = await dbProcess();
-	args.t && console.timeEnd("Execution Time");
+	isTimed && console.timeEnd("Execution Time");
 
 	if (args.excel) {
 		outputToExcel(data);
@@ -153,8 +166,8 @@ async function main() {
 		if (args.out) {
 			await writeFile(args.out, strData, { encoding: "utf8", flag: "w+" });
 		} else {
-			console.log(strData);
-			data?.rows && console.log("Returned rows: ", data.rows.length);
+			log(strData);
+			data?.rows && log("Returned rows: ", data.rows.length);
 		}
 	}
 }

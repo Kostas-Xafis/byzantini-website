@@ -83,7 +83,7 @@ async function productionDatabaseReplication(force = false) {
 
 	await CLI.executeCommands([
 		`cd ${PROJECT_ABSOLUTE_PATH}/dbSnapshots`,
-		"rm -f latest.db",
+		"rm -f latest*",
 		"sqlite3 latest.db < dev-snapshot.sql",
 	]);
 
