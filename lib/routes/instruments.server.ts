@@ -36,4 +36,4 @@ serverRoutes.delete.func = ({ ctx }) => {
 	}, "Σφάλμα κατά την διαγραφή του μουσικού οργάνου");
 };
 
-export const ClassTypeServerRoutes = serverRoutes;
+export const InstrumentsServerRoutes = serverRoutes;

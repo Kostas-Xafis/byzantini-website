@@ -1,16 +1,20 @@
 import type { APIBuilder, APIEndpointsBuilder, AnyEndpoint } from "../../types/routes";
 
-export const EndpointsConstructor = <K extends string, T extends Record<string, AnyEndpoint>>(baseRoute: K, routes: T) => {
-	const endpoints = {} as { [k: string]: {}; };
+export const EndpointsConstructor = <K extends string, T extends Record<string, AnyEndpoint>>(baseRoute: K, routes: T, raw: boolean = false) => {
+	const endpoints = {} as { [k: string]: any; };
 	Object.entries(routes).forEach(([key, route]) => {
-		endpoints[baseRoute + "." + key] = {
+		const fullKey = baseRoute + "." + key;
+		endpoints[fullKey] = {
 			method: route.method,
 			path: route.path,
-			endpoint: baseRoute + "." + key,
+			endpoint: fullKey,
 			hasUrlParams: route.hasUrlParams,
 			multipart: ("multipart" in route && route.multipart) || false,
 			validation: ("validation" in route && route.validation && route.validation()) || undefined
 		};
+		if (raw) {
+			endpoints[fullKey].func = route.func;
+		}
 	});
 	return endpoints as APIEndpointsBuilder<K, T> & {};
 };

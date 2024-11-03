@@ -9,6 +9,7 @@
 		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
 		"db-replicate": "bun --env-file='.env.development' ./getData/replicate.ts",
+		"db-check-logs": "bun run query --dev --q \"SELECT * FROM (SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs WHERE DATE(date / 1000, 'unixepoch') > '2024-09-15' ORDER BY date DESC LIMIT 100) ORDER BY date\"",
 		"start": "astro dev",
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",

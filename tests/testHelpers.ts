@@ -4,6 +4,7 @@ import { BaseSchema, parse } from "valibot";
 import { APIEndpoints, APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
 import { convertToUrlFromArgs } from "../lib/utils.client";
 import { assertOwnProp } from "../lib/utils.server";
+import { APIRaw } from "../lib/routes/index.server";
 import { TypeGuard } from "../types/helpers";
 import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
 
@@ -125,12 +126,12 @@ const test = (label: string, func: Function) => bun_test(label, func);
 type Function = () => (Promise<unknown> | void);
 type TestFunc = [string, Function];
 type TestChainFunc = [Function, Function];
-// TODO: If a chain link is updated, the whole chain needs to be re-run
 export async function chain(...tests: TestFunc[]) {
 	let forceTests = false;
 	for (let i = 0; i < tests.length; i++) {
 		const [testLabel, testFunc] = tests[i];
-		if (checkCache(testLabel, functionHash(testFunc))) {
+		const apiCalls = apiCallsHash(testFunc).map(item => checkCache(...item));
+		if (checkCache(testLabel, functionHash(testFunc)) || apiCalls.includes(true)) {
 			forceTests = true;
 			break;
 		}
@@ -142,9 +143,11 @@ export async function chain(...tests: TestFunc[]) {
 		const wrapper = async () => {
 			try {
 				await signal.wait();
-				// console.log("Running test", testLabel);
 				testFunc.constructor.name === "AsyncFunction" ? await testFunc() : testFunc();
 				cached_tests[testLabel] = functionHash(testFunc);
+				apiCallsHash(testFunc).forEach(([key, hash], i) => {
+					cached_tests[key] = hash;
+				});
 				nextSignal && nextSignal.signal();
 			} catch (error) {
 				sigTests.forEach(([, , s], j) => {
@@ -171,18 +174,26 @@ const cached_test_file = file("./.cache/tests.json");
 const cached_tests = (await cached_test_file.exists() && FORCE_TEST !== "true" ? await cached_test_file.json() : {}) as { [key: string]: string; };
 
 const functionHash = (func: Function) => hash(func.toString()).toString(16);
-const checkCache = (label: string, hash: string) => {
-	return !cached_tests[label] || cached_tests[label] !== hash;
+// Find all API calls inside a test function and return their hash
+const apiCallsHash = (func: Function): [string, string][] =>
+	[...func.toString().matchAll(/(useTestAPI\(\")[\w+.]+/g)]
+		.join("").replaceAll("useTestAPI(\"", "")
+		.split(",").filter(Boolean).map(EndpointName => [EndpointName, functionHash(APIRaw[EndpointName].func)]) as any;
+const checkCache = (key: string, hash: string) => {
+	return !cached_tests[key] || cached_tests[key] !== hash;
 };
 
 const cached_test = (label: string, func: Function, { force = false }: { force?: boolean; } = {}) => {
 	const testHash = functionHash(func);
-	// console.log("Checking cache", label, testHash, cached_tests[label]);
-	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
+	const apiCallHashes = apiCallsHash(func);
+	const apiCalls = apiCallHashes.map(item => checkCache(...item));
+	if (FORCE_TEST === "true" || checkCache(label, testHash) || apiCalls.includes(true) || force === true) {
 		test(label, async () => {
-			// console.log("Running test", label);
 			func.constructor.name === "AsyncFunction" ? await func() : func();
 			cached_tests[label] = testHash;
+			apiCallHashes.forEach(([key, hash], i) => {
+				cached_tests[key] = hash;
+			});
 			write("./.cache/tests.json", JSON.stringify(cached_tests, null, 2));
 		});
 	} else {

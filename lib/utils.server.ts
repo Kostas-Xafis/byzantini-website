@@ -159,12 +159,12 @@ export const DataWrapper = <T>(data: T) => {
  * @param {string} importStr - The string representing the module to import.
  * @returns {Promise<ImportType>} - A promise that resolves to the imported module or an empty object in production or on error.
  */
-export const silentImport = async <ImportType>(importStr: string) => {
+export const silentImport = <ImportType>(importStr: string) => {
 	if (isProduction()) {
 		return Promise.resolve({}) as Promise<ImportType>;
 	}
 	try {
-		return await eval(`import("${importStr}")`) as Promise<ImportType>;
+		return eval(`import("${importStr}")`) as Promise<ImportType>;
 	} catch (err) {
 		return Promise.resolve({}) as Promise<ImportType>;
 	}

@@ -2,7 +2,7 @@ import type { AnyEndpoint, HTTPMethods } from "../../types/routes";
 import { AnnouncementsServerRoutes } from "./announcement.server";
 import { AuthenticationServerRoutes } from "./authentication.server";
 import { BooksServerRoutes } from "./books.server";
-import { ClassTypeServerRoutes } from "./instruments.server";
+import { InstrumentsServerRoutes } from "./instruments.server";
 import { LocationsServerRoutes } from "./locations.server";
 import { PaymentsServerRoutes } from "./payments.server";
 import { PayoffsServerRoutes } from "./payoffs.server";
@@ -17,6 +17,8 @@ import { requestValidation } from "../middleware/requestValidation";
 import { authentication } from "../utils.auth";
 import { SchemaServerRoutes } from "./schema.server";
 import { unionHas, unionStringToSet } from "../utils.server";
+import { BaseRoutes } from "./index.client";
+import { EndpointsConstructor } from "./constructors.client";
 
 const raw_routes =
 	[BooksServerRoutes,
@@ -26,12 +28,27 @@ const raw_routes =
 		AuthenticationServerRoutes,
 		TeachersServerRoutes,
 		LocationsServerRoutes,
-		ClassTypeServerRoutes,
+		InstrumentsServerRoutes,
 		SysUsersServerRoutes,
 		RegistrationsServerRoutes,
 		AnnouncementsServerRoutes,
 		ReplicationServerRoutes,
 		SchemaServerRoutes];
+
+export const APIRaw = {
+	...EndpointsConstructor(BaseRoutes.Books, BooksServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Payments, PaymentsServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Payoffs, PayoffsServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Wholesalers, WholesalersServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Authentication, AuthenticationServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Teachers, TeachersServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Locations, LocationsServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Instruments, InstrumentsServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.SysUsers, SysUsersServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.Schema, SchemaServerRoutes, true)
+};
 
 function getAllRoutes() {
 	const allRoutes = raw_routes.map(routes => Object.values(routes)).flat() as (RemovePartial<AnyEndpoint, "func">)[];

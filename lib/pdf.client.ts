@@ -44,7 +44,7 @@ export class PDF {
 		const requestArr = arr.map((pdf) => async () => {
 			// let failTest = Math.random() > .75;
 			let expoTime = 1000;
-			while (expoTime < 8000) {
+			while (expoTime <= 8000) {
 				try {
 					let resp = await fetch("https://byz-pdfworker-1063742578003.europe-west1.run.app/" + pdf.student.class_id, {
 						method: "POST",
