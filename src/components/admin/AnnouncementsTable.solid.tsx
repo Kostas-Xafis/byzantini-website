@@ -130,13 +130,10 @@ export default function AnnouncementsTable() {
 					let thumbFile: File | Blob = file;
 					if (file.size > kb40) {
 						thumbFile = await (
-							await fetch(
-								"https://byz-imagecompression-1063742578003.europe-west1.run.app",
-								{
-									method: "POST",
-									body: await file.arrayBuffer(),
-								}
-							)
+							await fetch(import.meta.env.VITE_IMG_COMPRESSION_SERVICE_URL, {
+								method: "POST",
+								body: await file.arrayBuffer(),
+							})
 						).blob();
 					}
 					if (!thumbFile) throw new Error("Could not create thumbnail");

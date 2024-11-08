@@ -5,7 +5,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 import { asyncQueue, loadScript, looseStringEquals, sleep } from "./utils.client";
 
 export class PDF {
-	private static PDFWorkerURL = import.meta.env.VITE_PDF_SERVICE_URL || "https://byz-pdfworker-1063742578003.europe-west1.run.app/";
+	private static PDFWorkerURL = import.meta.env.VITE_PDF_SERVICE_URL;
 	private student: Registrations = {} as Registrations;
 	private teachersName: string = "";
 	private instrument: string = "";
