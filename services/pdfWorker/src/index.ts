@@ -1,7 +1,17 @@
 //@ts-ignore
-import { Registrations, Coords, TemplateCoords } from "./types";
+import { Registrations, TemplateCoords } from "./types";
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+
+type PDFRegstration = {
+	student: Registrations;
+	teachersName: string;
+	instrument?: string;
+};
+export type PDFRequestType<Multiple extends boolean> = {
+	isMultiple: Multiple;
+	data: Multiple extends false ? PDFRegstration : PDFRegstration[];
+};
 
 Bun.serve({
 	port: 3000,
@@ -32,22 +42,32 @@ Bun.serve({
 			}
 			return handleOptions(req);
 		} else if (req.method === "POST") {
-			let slug_id = Number(new URL(req.url).pathname.split("/")[1] || "-1");
-			if (isNaN(slug_id)) slug_id = -1;
-			if (slug_id < 0 || slug_id > 2) return new Response("Invalid slug_id", { status: 400 });
 
-			try {
-				const pdf = new PDF();
-				await pdf.fillTemplate(req, slug_id);
-				return new Response(await pdf.getBlob(), {
-					headers: {
-						...corsHeaders,
-						"Content-Type": "application/pdf",
-						"Access-Control-Allow-Origin": "*",
-					}
-				});
-			} catch (e) {
-				return new Response("Malformed request, please check the request body.", { status: 400 });
+			const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
+			if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
+
+			if (body.isMultiple) {
+				const pdfs = await Promise.all(body.data.map(async registration => {
+					const pdf = new PDF();
+					await pdf.fillTemplate(registration);
+					return pdf;
+				}));
+				const mergedBlob = await new PDF().mergePDFs(pdfs);
+				return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
+			} else {
+				try {
+					const pdf = new PDF();
+					await pdf.fillTemplate(body.data);
+					return new Response(await pdf.getBlob(), {
+						headers: {
+							...corsHeaders,
+							"Content-Type": "application/pdf",
+							"Access-Control-Allow-Origin": "*",
+						}
+					});
+				} catch (e) {
+					return new Response("Malformed request, please check the request body.", { status: 400 });
+				}
 			}
 		} else {
 			return new Response("Invalid request. This service accepts only POST requests", { status: 400 });
@@ -62,13 +82,12 @@ export class PDF {
 	private doc = {} as typeof PDFDocument.prototype;
 	constructor() { };
 
-	public async fillTemplate(req: Request, class_id: number): Promise<void> {
-		const [templateBuffer, fontBuffer, body] = await Promise.all([
+	public async fillTemplate(reg: PDFRegstration): Promise<void> {
+		const [templateBuffer, fontBuffer] = await Promise.all([
 			(async () =>
-				(await fetch(PDF.siteURL + this.getTemplateURL(class_id))).arrayBuffer()
+				(await fetch(PDF.siteURL + this.getTemplateURL(reg.student.class_id))).arrayBuffer()
 			)(),
-			DidactGothicFontBuff(),
-			req.json() as Promise<{ student: Registrations; teachersName: string; instrument?: string; }>
+			DidactGothicFontBuff()
 		]);
 		this.doc = await PDFDocument.load(templateBuffer);
 
@@ -81,7 +100,7 @@ export class PDF {
 		const fontSize = 14;
 		const smFontSize = 12;
 		const xsFontSize = 11;
-		let s = body.student;
+		let s = reg.student;
 		p.drawText("" + s.am, { x: c.am.x, y: c.am.y, size: fontSize, font });
 		p.drawText("" + s.last_name, { x: c.lastName.x, y: c.lastName.y, size: fontSize, font });
 		p.drawText("" + s.first_name, { x: c.firstName.x, y: c.firstName.y, size: fontSize, font });
@@ -96,8 +115,8 @@ export class PDF {
 		p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font });
 		p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font });
 		p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font });
-		if (body?.teachersName) {
-			p.drawText("" + body.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: body.teachersName.length <= 24 ? fontSize : (body.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
+		if (reg.teachersName) {
+			p.drawText("" + reg.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: reg.teachersName.length <= 24 ? fontSize : (reg.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
 		} else {
 			p.drawText("-", { x: c.teachersName.x, y: c.teachersName.y, size: fontSize, font });
 		}
@@ -119,11 +138,11 @@ export class PDF {
 		p.drawText("24", { x: c.year1.x, y: c.year1.y, size: fontSize, font });
 		p.drawText("25", { x: c.year2.x, y: c.year2.y, size: fontSize, font });
 
-		if (body.instrument && body.instrument.length > 15) {
-			p.drawText(body?.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
-		} else if (body.instrument) {
-			if (body.student.class_id === 1) p.drawText(body?.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
-			else if (body.student.class_id === 2) p.drawText(body?.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
+		if (reg?.instrument && reg?.instrument.length > 15) {
+			p.drawText(reg.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
+		} else if (reg.instrument) {
+			if (reg.student.class_id === 1) p.drawText(reg.instrument, { x: c.instrumentPar.x, y: c.instrumentPar.y, size: fontSize, font });
+			else if (reg.student.class_id === 2) p.drawText(reg.instrument, { x: c.instrumentEur.x, y: c.instrumentEur.y, size: fontSize, font });
 		}
 	}
 
@@ -133,6 +152,26 @@ export class PDF {
 
 	public getTemplateURL(id: number): string {
 		return PDF.TemplateFileName[id];
+	}
+
+	public async mergePDFs(pdfFiles: PDF[]): Promise<Uint8Array> {
+		// Create a new PDFDocument for the output
+		this.doc = await PDFDocument.create();
+
+		for (const pdfFile of pdfFiles) {
+			// Load each PDF file
+			const pdfBytes = await pdfFile.getBlob();
+			const pdfDoc = await PDFDocument.load(pdfBytes);
+
+			// Copy pages from the current PDF document to the merged document
+			const pages = await this.doc.copyPages(pdfDoc, pdfDoc.getPageIndices());
+			pages.forEach((page) => {
+				this.doc.addPage(page);
+			});
+		}
+
+		// Serialize the merged PDF to bytes
+		return await this.doc.save();
 	}
 }
 
