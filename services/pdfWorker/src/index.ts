@@ -37,7 +37,7 @@ Bun.serve({
 			}
 			return handleOptions(req);
 		} else if (req.method === "POST") {
-			if (new URL(req.url).hostname !== "localhost") {
+			if (new URL(req.url).hostname !== "musicschool-metamorfosi.gr") {
 				return new Response("Unauthorized access", { status: 401 });
 			}
 
