@@ -39,6 +39,7 @@ Bun.serve({
 		} else if (req.method === "POST") {
 			const { hostname } = new URL(req.url);
 			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev") {
+				console.log("Invalid request from: ", hostname);
 				return new Response("Unauthorized access", { status: 401 });
 			}
 
@@ -229,6 +230,7 @@ const authenticateUser = async (req: Request) => {
 		const data = await res.json() as { isValid: boolean; };
 		return data.isValid;
 	} catch (e) {
+		console.log("Could not authenticate user");
 		return false;
 	}
 };
