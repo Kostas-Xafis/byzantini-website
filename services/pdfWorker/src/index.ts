@@ -37,11 +37,12 @@ Bun.serve({
 			}
 			return handleOptions(req);
 		} else if (req.method === "POST") {
-			const { hostname } = new URL(req.url);
+			const { hostname } = new URL(req.headers.get("host") || "");
 			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev") {
 				console.log("Invalid request from: ", hostname);
 				return new Response("Unauthorized access", { status: 401 });
 			}
+			console.log("Request from: ", hostname);
 
 			//Authenticate the request
 			const isAuthenticated = await authenticateUser(req);
