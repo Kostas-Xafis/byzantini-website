@@ -37,7 +37,8 @@ Bun.serve({
 			}
 			return handleOptions(req);
 		} else if (req.method === "POST") {
-			if (new URL(req.url).hostname !== "musicschool-metamorfosi.gr") {
+			const { hostname } = new URL(req.url);
+			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev") {
 				return new Response("Unauthorized access", { status: 401 });
 			}
 
