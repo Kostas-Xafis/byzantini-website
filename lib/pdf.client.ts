@@ -2,7 +2,7 @@ import type { Registrations } from "../types/entities";
 import type { PDFRequestType } from "../pdfWorker/src/index";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
-import { asyncQueue, loadScript, looseStringEquals, sleep } from "./utils.client";
+import { asyncQueue, getCookie, loadScript, looseStringEquals, sleep } from "./utils.client";
 
 export class PDF {
 	private static PDFWorkerURL = import.meta.env.VITE_PDF_SERVICE_URL;
@@ -36,6 +36,9 @@ export class PDF {
 		};
 		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
 			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${getCookie("session_id")}`
+			},
 			body: JSON.stringify(body)
 		})).blob();
 
@@ -57,6 +60,9 @@ export class PDF {
 		};
 		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
 			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${getCookie("session_id")}`
+			},
 			body: JSON.stringify(body)
 		})).blob();
 		const fileURL = URL.createObjectURL(imgBlob);
@@ -71,12 +77,14 @@ export class PDF {
 			data: pdfs.map((pdf) => ({
 				student: pdf.student,
 				teachersName: pdf.teachersName,
-				class_id: pdf.student.class_id,
 				instrument: pdf.instrument,
 			}))
 		};
 		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
 			method: "POST",
+			headers: {
+				"Authorization": `Bearer ${getCookie("session_id")}`
+			},
 			body: JSON.stringify(body)
 		})).blob();
 		const fileURL = URL.createObjectURL(imgBlob);
@@ -100,6 +108,9 @@ export class PDF {
 				try {
 					let resp = await fetch(PDF.PDFWorkerURL, {
 						method: "POST",
+						headers: {
+							"Authorization": `Bearer ${getCookie("session_id")}`
+						},
 						body: JSON.stringify(body)
 					});
 					if (resp.status >= 400)
