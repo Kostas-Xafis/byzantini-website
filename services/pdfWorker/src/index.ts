@@ -1,7 +1,8 @@
-//@ts-ignore
 import { Registrations, TemplateCoords } from "./types";
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+
+const SITE_URL = "https://musicschool-metamorfosi.gr";
 
 type PDFRegstration = {
 	student: Registrations;
@@ -28,20 +29,21 @@ Bun.serve({
 					request.headers.get("Access-Control-Request-Method") !== null &&
 					request.headers.get("Access-Control-Request-Headers") !== null) {
 					// Handle CORS pre-flight request.
-					return new Response(null, {
-						headers: corsHeaders
-					});
+					return new Response(null, { headers: corsHeaders });
 				} else {
 					// Handle standard OPTIONS request.
-					return new Response(null, {
-						headers: {
-							"Allow": "GET, HEAD, POST, OPTIONS",
-						}
-					});
+					return new Response(null, { headers: { "Allow": "GET, HEAD, POST, OPTIONS" } });
 				}
 			}
 			return handleOptions(req);
 		} else if (req.method === "POST") {
+			if (new URL(req.url).hostname !== "localhost") {
+				return new Response("Unauthorized access", { status: 401 });
+			}
+
+			//Authenticate the request
+			const isAuthenticated = await authenticateUser(req);
+			if (!isAuthenticated) return new Response("Invalid credentials", { status: 401 });
 
 			const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
 			if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
@@ -77,7 +79,6 @@ Bun.serve({
 
 
 export class PDF {
-	private static siteURL = "https://musicschool-metamorfosi.gr";
 	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
 	private doc = {} as typeof PDFDocument.prototype;
 	constructor() { };
@@ -85,7 +86,7 @@ export class PDF {
 	public async fillTemplate(reg: PDFRegstration): Promise<void> {
 		const [templateBuffer, fontBuffer] = await Promise.all([
 			(async () =>
-				(await fetch(PDF.siteURL + this.getTemplateURL(reg.student.class_id))).arrayBuffer()
+				(await fetch(SITE_URL + this.getTemplateURL(reg.student.class_id))).arrayBuffer()
 			)(),
 			DidactGothicFontBuff()
 		]);
@@ -207,6 +208,26 @@ const TemplateCoords: TemplateCoords = {
 Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
 
 const DidactGothicFontBuff = async () => {
-	return await (await fetch("https://musicschool-metamorfosi.gr/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
+	return await (await fetch(SITE_URL + "/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
 };
 
+const authenticateUser = async (req: Request) => {
+	const authHeader = req.headers.get("Authorization");
+	if (!authHeader || !authHeader.startsWith("Bearer ")) return false;
+
+	const token = authHeader.split("Bearer ")[1].trim();
+	if (!token) return false;
+
+	try {
+		const res = await fetch(SITE_URL + "/api/auth/session", {
+			method: "POST",
+			headers: {
+				"Cookie": `session_id=${token}`
+			}
+		});
+		const data = await res.json() as { isValid: boolean; };
+		return data.isValid;
+	} catch (e) {
+		return false;
+	}
+};
