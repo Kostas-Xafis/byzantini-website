@@ -534,7 +534,11 @@ export const objToFormData = (obj: Record<string, any>): FormData => {
 	return fd;
 };
 
-export function loadScript(src: string, res?: () => boolean): Promise<void> {
+export function loadScript(src: string, res?: () => boolean, force = false): Promise<any> {
+	if (!force) {
+		if (res && res()) return Promise.resolve(res());
+		else if (!res && document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
+	}
 	return new Promise(async (resolve, reject) => {
 		let script = document.createElement("script");
 		script.src = src;
@@ -544,10 +548,10 @@ export function loadScript(src: string, res?: () => boolean): Promise<void> {
 			if (res) {
 				while (!res() && counter++ < 20) {
 					await sleep(200);
-					resolve();
+					resolve(res());
 				}
 			}
-			resolve();
+			resolve(null);
 		};
 		document.head.appendChild(script);
 	});

@@ -23,11 +23,7 @@ async function productionBucketReplication() {
 	const BUCKET_DATE = getCurrentFormattedDate();
 
 	// Wipe the dev bucket
-	await asyncQueue(devBucketList.map((file) => {
-		return () => Bucket.deleteDev(file);
-	}), {
-		maxJobs: 10,
-	});
+	await asyncQueue(devBucketList.map((file) => () => Bucket.deleteDev(file)), { maxJobs: 10 });
 	console.log("Dev bucket wiped");
 
 	const prodBucketList = await Bucket.listDev(S3_BUCKET_NAME);
@@ -55,27 +51,32 @@ async function productionBucketReplication() {
 }
 
 
-async function productionDatabaseReplication(force = false) {
+async function productionDatabaseReplication({ force = false, date }: { force?: boolean; date?: string; } = {}) {
 	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = import.meta.env;
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH) throw Error("Missing environment variables");
-	const SNAPSHOT_DATE = getCurrentFormattedDate();
+	const SNAPSHOT_DATE = date || getCurrentFormattedDate();
 
 	let fileBackup;
+	let createNewSnapshot = force;
 	if (!force) {
 		try {
-			fileBackup = await fs.readFile(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, {
-				encoding: "utf-8"
-			});
+			const location = `${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`;
+			fileBackup = await fs.readFile(location, { encoding: "utf-8" });
 		} catch (error) {
+			if (date) throw Error("Backup not found for the specified date");
+			createNewSnapshot = true;
 			console.log("No backup found for today, generating a new one");
 		}
 	}
 	const sqliteBackup = fileBackup || await sqliteGenerateBackup();
 
-	// Store sqlite file locally
-	await fs.writeFile(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
-		encoding: "utf-8"
-	});
+	// If the backup is already created, we don't need to create a new one
+	if (createNewSnapshot) {
+		// Store sqlite file locally
+		await fs.writeFile(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
+			encoding: "utf-8"
+		});
+	}
 
 	await fs.writeFile(DEV_SNAPSHOT_LOCATION, sqliteBackup, {
 		encoding: "utf-8"
@@ -90,6 +91,15 @@ async function productionDatabaseReplication(force = false) {
 	console.log("Database replicated successfully");
 }
 
+serverRoutes.replicationByDate.func = ({ ctx, slug }) => {
+	return execTryCatch(async () => {
+		const { date } = slug;
+		if (isProduction()) throw Error("This route is only available in development mode");
+		if (ctx.url.hostname !== "localhost") throw Error("This route is only available in development mode");
+		await productionDatabaseReplication({ force: false, date });
+		return "Database replicated";
+	});
+};
 
 serverRoutes.replication.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
@@ -100,19 +110,20 @@ serverRoutes.replication.func = ({ ctx, slug }) => {
 		// and even if it did, the edge environment doesn't
 		// support for the @aws-sdk/client-s3 package or the child_process api
 		// so it would throw an error regardless
-		const { service } = slug;
-		if (service === "database" || service === "database-force") {
-			await productionDatabaseReplication(service === "database-force");
-			return "Database replicated";
+		switch (slug.service) {
+			case "database":
+			case "database-force":
+				await productionDatabaseReplication({ force: slug.service === "database-force" });
+				return "Database replicated";
+			case "bucket":
+				await productionBucketReplication();
+				return "Bucket replicated";
+			case "both":
+				await Promise.all([productionDatabaseReplication({ force: true }), productionBucketReplication()]);
+				return "Database and bucket replicated";
+			default:
+				throw Error("Invalid service");
 		}
-		else if (service === "bucket") {
-			await productionBucketReplication();
-			return "Bucket replicated";
-		}
-		else if (service === "both") {
-			await Promise.all([productionDatabaseReplication(true), productionBucketReplication()]);
-			return "Database and bucket replicated";
-		} else throw Error("Invalid service");
 	});
 };
 

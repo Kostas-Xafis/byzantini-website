@@ -1,9 +1,11 @@
 import type { Registrations } from "../types/entities";
+import type { PDFRequestType } from "../pdfWorker/src/index";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 import { asyncQueue, loadScript, looseStringEquals, sleep } from "./utils.client";
 
 export class PDF {
+	private static PDFWorkerURL = import.meta.env.VITE_PDF_SERVICE_URL || "https://byz-pdfworker-1063742578003.europe-west1.run.app/";
 	private student: Registrations = {} as Registrations;
 	private teachersName: string = "";
 	private instrument: string = "";
@@ -24,13 +26,17 @@ export class PDF {
 	}
 
 	public async download(): Promise<void> {
-		const imgBlob = await (await fetch("https://byz-pdfworker-1063742578003.europe-west1.run.app/" + this.student.class_id, {
-			method: "POST",
-			body: JSON.stringify({
+		const body: PDFRequestType<false> = {
+			isMultiple: false,
+			data: {
 				student: this.student,
 				teachersName: this.teachersName,
 				instrument: this.instrument,
-			})
+			}
+		};
+		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
+			method: "POST",
+			body: JSON.stringify(body)
 		})).blob();
 
 		let a = document.createElement("a");
@@ -39,24 +45,66 @@ export class PDF {
 		a.click();
 	}
 
+	public async print() {
+		await loadScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js", () => !!window["printJS"]);
+		const body: PDFRequestType<false> = {
+			isMultiple: false,
+			data: {
+				student: this.student,
+				teachersName: this.teachersName,
+				instrument: this.instrument,
+			}
+		};
+		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
+			method: "POST",
+			body: JSON.stringify(body)
+		})).blob();
+		const fileURL = URL.createObjectURL(imgBlob);
+		const printWindow = window.open(fileURL, "_blank");
+		printWindow?.print();
+	}
+
+	public static async printBulk(pdfs: PDF[]) {
+		await loadScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js", () => !!window["printJS"]);
+		const body: PDFRequestType<true> = {
+			isMultiple: true,
+			data: pdfs.map((pdf) => ({
+				student: pdf.student,
+				teachersName: pdf.teachersName,
+				class_id: pdf.student.class_id,
+				instrument: pdf.instrument,
+			}))
+		};
+		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
+			method: "POST",
+			body: JSON.stringify(body)
+		})).blob();
+		const fileURL = URL.createObjectURL(imgBlob);
+		const printWindow = window.open(fileURL, "_blank");
+		printWindow?.print();
+	}
+
 	public static async downloadBulk(arr: PDF[], progressCallback?: (prog: number) => any): Promise<void> {
 		const namesArr: string[] = [];
 		const requestArr = arr.map((pdf) => async () => {
-			// let failTest = Math.random() > .75;
 			let expoTime = 1000;
+			const body: PDFRequestType<false> = {
+				isMultiple: false,
+				data: {
+					student: pdf.student,
+					teachersName: pdf.teachersName,
+					instrument: pdf.instrument,
+				}
+			};
 			while (expoTime <= 8000) {
 				try {
-					let resp = await fetch("https://byz-pdfworker-1063742578003.europe-west1.run.app/" + pdf.student.class_id, {
+					let resp = await fetch(PDF.PDFWorkerURL, {
 						method: "POST",
-						body: JSON.stringify({
-							student: pdf.student,
-							teachersName: pdf.teachersName,
-							instrument: pdf.instrument,
-						})
+						body: JSON.stringify(body)
 					});
-					if (resp.status >= 400) {
+					if (resp.status >= 400)
 						throw new Error("Server Error");
-					}
+
 					const imgBlob = await resp.blob();
 					let fileName = pdf.getFileName();
 					if (!namesArr.includes(fileName)) {

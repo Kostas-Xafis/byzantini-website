@@ -3,23 +3,48 @@ import { For, createMemo, createSignal, onCleanup, onMount, untrack } from "soli
 import { createStore, unwrap, type SetStoreFunction } from "solid-js/store";
 import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
 import { getParent, mappedValue } from "../../../../lib/utils.client";
+import { SearchTable, type SearchColumn } from "../SearchTable.solid";
 import type { Page } from "./Pagination.solid";
+import Pagination from "./Pagination.solid";
 import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
+import type { EmptyAction } from "./TableControlTypes";
 import {
-	TopTableGroup,
-	type Action,
-	TableControlsGroup,
-	TableControl,
 	BottomTableGroup,
 	LeftTableGroup,
+	TableControl,
+	TableControlsGroup,
+	TopTableGroup,
+	type Action,
 } from "./TableControls.solid";
-import type { EmptyAction } from "./TableControlTypes";
-import { SearchTable, type SearchColumn } from "../SearchTable.solid";
-import Pagination from "./Pagination.solid";
 
 type DOMElement = Element | JSX.Element;
 
 type GroupPositions = "top" | "left" | "bottom";
+type TableStructure = Array<{
+	prefix?: string;
+	position: GroupPositions;
+	controlGroups: Array<
+		| {
+				controls: Accessor<Action | EmptyAction>[];
+				type?: "simple";
+				prefix?: string;
+		  }
+		| {
+				type: "pagination";
+				pageSize: number;
+				dataSize: Accessor<number>;
+		  }
+		| {
+				type: "search";
+				columns: SearchColumn[];
+				setSearchQuery: SetStoreFunction<any>;
+		  }
+		| {
+				type: "custom";
+				children: DOMElement | DOMElement[];
+		  }
+	>;
+}>;
 export type Props = {
 	columns: Record<string, { type: CellValue; name: string; size?: number }>; // The column names and types
 	data: Accessor<any[]>; // The data to be displayed
@@ -27,31 +52,7 @@ export type Props = {
 	children?: DOMElement | DOMElement[];
 	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
 	pageSize?: number; // Number of items per page
-	structure?: Array<{
-		position: GroupPositions;
-		prefix?: string;
-		controlGroups: Array<
-			| {
-					controls: Accessor<Action | EmptyAction>[];
-					type?: "simple";
-					prefix?: string;
-			  }
-			| {
-					type: "pagination";
-					pageSize: number;
-					dataSize: Accessor<number>;
-			  }
-			| {
-					type: "search";
-					columns: SearchColumn[];
-					setSearchQuery: SetStoreFunction<any>;
-			  }
-			| {
-					type: "custom";
-					children: DOMElement | DOMElement[];
-			  }
-		>;
-	}>;
+	structure?: TableStructure;
 };
 
 export const enum SortDirection {
@@ -94,7 +95,7 @@ const computeColumns = (
 		return name;
 	});
 	columnWidths += ";";
-	// if (hasSelectBox) columnWidths += "padding-left: 1.5rem;";
+	// if (hasSelectBox) columnWidths += "padding-left: 1.5rem;";e
 	return { columnWidths, columns };
 };
 
@@ -108,8 +109,8 @@ export default function Table(props: Props) {
 		pageSize,
 		dataSize: data().length,
 	});
-	const hasControlGroup = (groupPosition: GroupPositions) => {
-		return props?.structure?.some((group) => group.position === groupPosition);
+	const hasControlGroup = (position: GroupPositions) => {
+		return props?.structure?.some((group) => group.position === position);
 	};
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
@@ -206,49 +207,45 @@ export default function Table(props: Props) {
 				(hasControlGroup("left") ? " pr-8" : "")
 			}
 			data-prefix={prefix}>
-			{props.structure?.map(
-				({ position: groupPosition, controlGroups, prefix: ParentPrefix }) => {
-					const TableControlsGroups = controlGroups.map((group) => {
-						const { type: controlType } = group;
-						switch (controlType) {
-							case "pagination":
-								return (
-									<Pagination
-										pageSize={group.pageSize}
-										dataSize={group.dataSize}
-									/>
-								);
-							case "search":
-								return (
-									<SearchTable
-										columns={group.columns}
-										setSearchQuery={group.setSearchQuery}
-									/>
-								);
-							case "custom":
-								return group.children;
-							case "simple":
-							default:
-								const prefix = group.prefix || ParentPrefix || "";
-								return (
-									<TableControlsGroup prefix={prefix}>
-										{group.controls.map((action) => (
-											<TableControl action={action} prefix={prefix} />
-										))}
-									</TableControlsGroup>
-								);
-						}
-					});
-					switch (groupPosition) {
-						case "top":
-							return <TopTableGroup children={TableControlsGroups} />;
-						case "bottom":
-							return <BottomTableGroup children={TableControlsGroups} />;
-						case "left":
-							return <LeftTableGroup children={TableControlsGroups} />;
+			{props.structure?.map(({ position, controlGroups, prefix: ParentPrefix }) => {
+				const TableControlsGroups = controlGroups.map((group) => {
+					switch (group.type) {
+						case "pagination":
+							return (
+								<Pagination pageSize={group.pageSize} dataSize={group.dataSize} />
+							);
+						case "search":
+							return (
+								<SearchTable
+									columns={group.columns}
+									setSearchQuery={group.setSearchQuery}
+								/>
+							);
+						case "custom":
+							return group.children;
+						case "simple":
+						default:
+							const prefix = group.prefix || ParentPrefix || "";
+							return (
+								<TableControlsGroup prefix={prefix}>
+									{group.controls.map((action) => (
+										<TableControl action={action} prefix={prefix} />
+									))}
+								</TableControlsGroup>
+							);
 					}
+				});
+				switch (position) {
+					case "top":
+						return <TopTableGroup children={TableControlsGroups} />;
+					case "bottom":
+						return <BottomTableGroup children={TableControlsGroups} />;
+					case "left":
+						return <LeftTableGroup children={TableControlsGroups} />;
+					default:
+						return null;
 				}
-			)}
+			})}
 			{props.children}
 			<div
 				id="tableContainer"

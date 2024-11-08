@@ -28,6 +28,7 @@ export default defineConfig({
 		defaultStrategy: "hover",
 	},
 	vite: {
+		envPrefix: "VITE_",
 		server: {
 			watch: {
 				ignored: [

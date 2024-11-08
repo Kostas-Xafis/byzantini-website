@@ -8,6 +8,15 @@ const replication: EndpointRoute<'/replication/[service:"bucket" | "database" | 
 	validation: undefined,
 };
 
+const replicationByDate: EndpointRoute<'/replication/date/[date:string]', null, string> = {
+	authentication: true,
+	method: "GET",
+	path: '/replication/date/[date:string]',
+	hasUrlParams: true,
+	validation: undefined,
+};
+
 export const ReplicationRoutes = {
 	replication,
+	replicationByDate,
 };

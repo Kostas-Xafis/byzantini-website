@@ -49,12 +49,17 @@ export class Random {
 	// 	return Random.array(size).string(, "ascii");
 	// }
 
-	static date(start: Date, end: Date) {
+	static date(): Date;
+	static date(start: Date): Date;
+	static date(start: Date, end: Date): Date;
+	static date(start?: Date, end?: Date) {
+		if (!start) return new Date(Random.int(0, Date.now()));
+		if (!end) return new Date(start.getTime() + Math.random() * (Date.now() - start.getTime()));
 		return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 	}
 
 	static standardRandomDate() {
-		return Random.date(new Date(0), new Date());
+		return Random.date();
 	}
 
 	static boolean() {

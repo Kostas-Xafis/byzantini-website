@@ -17,6 +17,7 @@ declare namespace App {
 declare global {
 	interface Window {
 		XLSX: typeof import("xlsx");
+		printJS: typeof import("print-js");
 	}
 }
 export { default as zip } from "client-zip";

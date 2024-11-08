@@ -1,4 +1,3 @@
-import type { DeleteObjectCommand, GetObjectCommand, ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { APIContext } from "astro";
 import { MIMETypeMap, isProduction, silentImport } from "../utils.server";
