@@ -1,19 +1,10 @@
-import { Registrations, TemplateCoords } from "./types";
+import { TemplateCoords, PDFRequestType, EndpointResponse, PDFRegstration } from "./types";
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 
 const SITE_URL = "https://musicschool-metamorfosi.gr";
 // const SITE_URL = "http://127.0.0.1:4321";
 
-type PDFRegstration = {
-	student: Registrations;
-	teachersName: string;
-	instrument?: string;
-};
-export type PDFRequestType<Multiple extends boolean> = {
-	isMultiple: Multiple;
-	data: Multiple extends false ? PDFRegstration : PDFRegstration[];
-};
 
 Bun.serve({
 	port: 3000,
@@ -229,8 +220,8 @@ const authenticateUser = async (req: Request) => {
 				"Cookie": `session_id=${token}`
 			}
 		});
-		const data = await res.json() as { isValid: boolean; };
-		return data.isValid;
+		const data = await res.json() as EndpointResponse<{ isValid: boolean; }>;
+		return data.res?.data?.isValid || false;
 	} catch (e) {
 		console.log("Could not authenticate user");
 		return "Could not connect to the authentication server";
