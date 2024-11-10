@@ -3,6 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 
 const SITE_URL = "https://musicschool-metamorfosi.gr";
+// const SITE_URL = "http://127.0.0.1:4321";
 
 type PDFRegstration = {
 	student: Registrations;
@@ -37,16 +38,16 @@ Bun.serve({
 			}
 			return handleOptions(req);
 		} else if (req.method === "POST") {
-			const { hostname } = new URL(req.headers.get("host") || "");
+			const { hostname } = new URL(req.headers.get("referer") || "");
 			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev") {
 				console.log("Invalid request from: ", hostname);
-				return new Response("Unauthorized access", { status: 401 });
+				return new Response("Invalid request from: " + req.headers, { status: 401, headers: corsHeaders });
 			}
 			console.log("Request from: ", hostname);
 
 			//Authenticate the request
 			const isAuthenticated = await authenticateUser(req);
-			if (!isAuthenticated) return new Response("Invalid credentials", { status: 401 });
+			if (isAuthenticated !== true) return new Response("Invalid credentials: " + isAuthenticated, { status: 401, headers: corsHeaders });
 
 			const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
 			if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
@@ -89,7 +90,7 @@ export class PDF {
 	public async fillTemplate(reg: PDFRegstration): Promise<void> {
 		const [templateBuffer, fontBuffer] = await Promise.all([
 			(async () =>
-				(await fetch(SITE_URL + this.getTemplateURL(reg.student.class_id))).arrayBuffer()
+				(await fetch("https://musicschool-metamorfosi.gr" + this.getTemplateURL(reg.student.class_id))).arrayBuffer()
 			)(),
 			DidactGothicFontBuff()
 		]);
@@ -216,10 +217,10 @@ const DidactGothicFontBuff = async () => {
 
 const authenticateUser = async (req: Request) => {
 	const authHeader = req.headers.get("Authorization");
-	if (!authHeader || !authHeader.startsWith("Bearer ")) return false;
+	if (!authHeader || !authHeader.startsWith("Bearer ")) return "No Authorization header provided";
 
 	const token = authHeader.split("Bearer ")[1].trim();
-	if (!token) return false;
+	if (!token) return "No token provided";
 
 	try {
 		const res = await fetch(SITE_URL + "/api/auth/session", {
@@ -232,6 +233,6 @@ const authenticateUser = async (req: Request) => {
 		return data.isValid;
 	} catch (e) {
 		console.log("Could not authenticate user");
-		return false;
+		return "Could not connect to the authentication server";
 	}
 };
