@@ -1,6 +1,6 @@
-import { TemplateCoords, PDFRequestType, EndpointResponse, PDFRegstration } from "./types";
-import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument } from "pdf-lib";
+import { EndpointResponse, PDFRegstration, PDFRequestType, TemplateCoords } from "./types";
 
 const { SITE_URL, IS_DEV, PORT } = Bun.env;
 
