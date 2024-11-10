@@ -6,7 +6,6 @@ import { AuthenticationRoutes } from "./authentication.client";
 
 const serverRoutes = deepCopy(AuthenticationRoutes);
 
-
 serverRoutes.userLogin.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const credentials = getUsedBody(ctx) || await ctx.request.json();

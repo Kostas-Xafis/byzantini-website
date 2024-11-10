@@ -1,5 +1,5 @@
 import type { Registrations } from "../types/entities";
-import type { PDFRequestType } from "../pdfWorker/src/index";
+import type { PDFRequestType } from "../pdfWorker/src/types";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 import { asyncQueue, getCookie, loadScript, looseStringEquals, sleep } from "./utils.client";

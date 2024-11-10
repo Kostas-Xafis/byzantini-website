@@ -3,23 +3,24 @@
 	"type": "module",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "bunx --bun astro dev",
 		"test": "bun test --env-file='./tests/.env.test'",
 		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
 		"db-replicate": "bun --env-file='.env.development' ./getData/replicate.ts",
 		"db-check-logs": "bun run query --dev --q \"SELECT * FROM (SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs WHERE DATE(date / 1000, 'unixepoch') > '2024-09-15' ORDER BY date DESC LIMIT 100) ORDER BY date\"",
+		"dev": "bunx --bun astro dev",
 		"start": "astro dev",
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",
 		"preview": "bunx --bun --env-file='.env.production' astro build && wrangler pages dev ./dist",
 
-		"docker-pdf": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker run -p 4322:3000 -d pdfworker --network='host'",
-		"docker-img": "docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/ && docker run -p 4323:3000 -d imgcomp",
+		"docker-pdf": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker run --network host -d pdfworker",
+		"docker-img": "docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/ && docker run --network host -d pdfworker",
 
 		"docker-build": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/",
-		"docker-run": "docker run -p 4322:3000 -d pdfworker && docker run -p 4323:3000 -d imgcomp"
+		"docker-run": "docker run --network host -d pdfworker && docker run --network host -d imgcomp",
+		"docker-logs": "docker logs -f $(docker ps -q --filter ancestor=pdfworker) && docker logs -f $(docker ps -q --filter ancestor=imgcomp)"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^9.2.1",
