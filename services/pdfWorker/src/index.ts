@@ -2,96 +2,89 @@ import { TemplateCoords, PDFRequestType, EndpointResponse, PDFRegstration } from
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 
-const SITE_URL = "https://musicschool-metamorfosi.gr";
-// const SITE_URL = "http://127.0.0.1:4321";
+const { SITE_URL, IS_DEV, PORT } = Bun.env;
 
+const corsHeaders = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+	"Access-Control-Allow-Headers": "*",
+};
+function handleOptions(request: Request) {
+	if (request.headers.get("Origin") !== null &&
+		request.headers.get("Access-Control-Request-Method") !== null &&
+		request.headers.get("Access-Control-Request-Headers") !== null) {
+		// Handle CORS pre-flight request
+		return new Response(null, { headers: corsHeaders });
+	} else {
+		// Handle standard OPTIONS request
+		return new Response(null, { headers: { "Allow": "GET, HEAD, POST, OPTIONS" } });
+	}
+}
 
 Bun.serve({
-	port: 3000,
+	port: PORT || 3000,
 	async fetch(req: Request): Promise<Response> {
-		const corsHeaders = {
-			"Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-			"Access-Control-Allow-Headers": "*",
-		};
-
-		if (req.method === "OPTIONS") {
-			function handleOptions(request: Request) {
-				if (request.headers.get("Origin") !== null &&
-					request.headers.get("Access-Control-Request-Method") !== null &&
-					request.headers.get("Access-Control-Request-Headers") !== null) {
-					// Handle CORS pre-flight request.
-					return new Response(null, { headers: corsHeaders });
-				} else {
-					// Handle standard OPTIONS request.
-					return new Response(null, { headers: { "Allow": "GET, HEAD, POST, OPTIONS" } });
-				}
-			}
+		if (SITE_URL === null || SITE_URL === undefined ||
+			IS_DEV === null || IS_DEV === undefined
+		) return new Response("Internall service error", { status: 500 });
+		if (req.method === "OPTIONS")
 			return handleOptions(req);
-		} else if (req.method === "POST") {
+		if (req.method !== "POST")
+			return new Response("Invalid request. This service accepts only POST requests", { status: 400 });
+
+		if (!IS_DEV) {
 			const { hostname } = new URL(req.headers.get("referer") || "");
-			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev") {
-				console.log("Invalid request from: ", hostname);
+			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev")
 				return new Response("Invalid request from: " + req.headers, { status: 401, headers: corsHeaders });
-			}
-			console.log("Request from: ", hostname);
 
 			//Authenticate the request
 			const isAuthenticated = await authenticateUser(req);
-			if (isAuthenticated !== true) return new Response("Invalid credentials: " + isAuthenticated, { status: 401, headers: corsHeaders });
+			if (isAuthenticated !== true)
+				return new Response("Invalid credentials: " + isAuthenticated, { status: 401, headers: corsHeaders });
+		}
 
-			const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
-			if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
+		const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
+		if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
 
-			if (body.isMultiple) {
-				const pdfs = await Promise.all(body.data.map(async registration => {
-					const pdf = new PDF();
-					await pdf.fillTemplate(registration);
-					return pdf;
-				}));
-				const mergedBlob = await new PDF().mergePDFs(pdfs);
-				return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
-			} else {
-				try {
-					const pdf = new PDF();
-					await pdf.fillTemplate(body.data);
-					return new Response(await pdf.getBlob(), {
-						headers: {
-							...corsHeaders,
-							"Content-Type": "application/pdf",
-							"Access-Control-Allow-Origin": "*",
-						}
-					});
-				} catch (e) {
-					return new Response("Malformed request, please check the request body.", { status: 400 });
-				}
-			}
+		if (body.isMultiple) {
+			const pdfs = await Promise.all(body.data.map(async registration => {
+				const pdf = new PDF();
+				await pdf.fillTemplate(registration);
+				return pdf;
+			}));
+			const mergedBlob = await new PDF().mergePDFs(pdfs);
+			return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
 		} else {
-			return new Response("Invalid request. This service accepts only POST requests", { status: 400 });
+			try {
+				const pdf = new PDF();
+				await pdf.fillTemplate(body.data);
+				return new Response(await pdf.getBlob(), {
+					headers: {
+						...corsHeaders,
+						"Content-Type": "application/pdf",
+						"Access-Control-Allow-Origin": "*",
+					}
+				});
+			} catch (e) {
+				return new Response("Malformed request, please check the request body.", { status: 400 });
+			}
 		}
 	},
 });
 
 
 export class PDF {
-	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
 	private doc = {} as typeof PDFDocument.prototype;
 	constructor() { };
 
 	public async fillTemplate(reg: PDFRegstration): Promise<void> {
-		const [templateBuffer, fontBuffer] = await Promise.all([
-			(async () =>
-				(await fetch("https://musicschool-metamorfosi.gr" + this.getTemplateURL(reg.student.class_id))).arrayBuffer()
-			)(),
-			DidactGothicFontBuff()
-		]);
-		this.doc = await PDFDocument.load(templateBuffer);
+		this.doc = await PDFDocument.load(await PDF.getTemplateBuffer(reg.student.class_id));
 
 		const p = this.doc.getPages()[0];
 		const c = TemplateCoords;
 
 		this.doc.registerFontkit(fontkit);
-		const font = await this.doc.embedFont(fontBuffer);
+		const font = await this.doc.embedFont(await PDF.getFont());
 
 		const fontSize = 14;
 		const smFontSize = 12;
@@ -146,10 +139,6 @@ export class PDF {
 		return this.doc.save();
 	}
 
-	public getTemplateURL(id: number): string {
-		return PDF.TemplateFileName[id];
-	}
-
 	public async mergePDFs(pdfFiles: PDF[]): Promise<Uint8Array> {
 		// Create a new PDFDocument for the output
 		this.doc = await PDFDocument.create();
@@ -168,6 +157,24 @@ export class PDF {
 
 		// Serialize the merged PDF to bytes
 		return await this.doc.save();
+	}
+
+	private static Font: ArrayBuffer | null = null;
+	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
+	private static TemplateCache: { [key: number]: ArrayBuffer; } = {};
+
+	private static async getFont(): Promise<ArrayBuffer> {
+		if (!PDF.Font) {
+			PDF.Font = await DidactGothicFontBuffer();
+		}
+		return PDF.Font;
+	}
+
+	private static async getTemplateBuffer(id: number): Promise<ArrayBuffer> {
+		if (!PDF.TemplateCache[id]) {
+			PDF.TemplateCache[id] = await (await fetch(SITE_URL + PDF.TemplateFileName[id])).arrayBuffer();
+		}
+		return PDF.TemplateCache[id];
 	}
 }
 
@@ -202,7 +209,7 @@ const TemplateCoords: TemplateCoords = {
 };
 Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
 
-const DidactGothicFontBuff = async () => {
+const DidactGothicFontBuffer = async () => {
 	return await (await fetch(SITE_URL + "/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
 };
 
@@ -223,7 +230,6 @@ const authenticateUser = async (req: Request) => {
 		const data = await res.json() as EndpointResponse<{ isValid: boolean; }>;
 		return data.res?.data?.isValid || false;
 	} catch (e) {
-		console.log("Could not authenticate user");
 		return "Could not connect to the authentication server";
 	}
 };
