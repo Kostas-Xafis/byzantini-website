@@ -46,16 +46,16 @@ Bun.serve({
 		const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
 		if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
 
-		if (body.isMultiple) {
-			const pdfs = await Promise.all(body.data.map(async registration => {
-				const pdf = new PDF();
-				await pdf.fillTemplate(registration);
-				return pdf;
-			}));
-			const mergedBlob = await new PDF().mergePDFs(pdfs);
-			return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
-		} else {
-			try {
+		try {
+			if (body.isMultiple) {
+				const pdfs = await Promise.all(body.data.map(async registration => {
+					const pdf = new PDF();
+					await pdf.fillTemplate(registration);
+					return pdf;
+				}));
+				const mergedBlob = await new PDF().mergePDFs(pdfs);
+				return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
+			} else {
 				const pdf = new PDF();
 				await pdf.fillTemplate(body.data);
 				return new Response(await pdf.getBlob(), {
@@ -65,9 +65,9 @@ Bun.serve({
 						"Access-Control-Allow-Origin": "*",
 					}
 				});
-			} catch (e) {
-				return new Response("Malformed request, please check the request body.", { status: 400 });
 			}
+		} catch (e) {
+			return new Response("Malformed request, please check the request body.", { status: 400 });
 		}
 	},
 });
