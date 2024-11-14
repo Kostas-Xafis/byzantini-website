@@ -1,6 +1,6 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument } from "pdf-lib";
-import { EndpointResponse, PDFRegstration, PDFRequestType, TemplateCoords } from "./types";
+import { EndpointResponse, PDFRegstration, PDFRequest, TemplateCoords } from "./types";
 
 const { SITE_URL, IS_DEV, PORT } = Bun.env;
 
@@ -43,28 +43,15 @@ Bun.serve({
 				return new Response("Invalid credentials: " + isAuthenticated, { status: 401, headers: corsHeaders });
 		}
 
-		const body = await req.json() as PDFRequestType<false> | PDFRequestType<true>;
+		const body = await req.json() as PDFRequest;
 		if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
 
+		const requestType = body.type;
 		try {
-			if (body.isMultiple) {
-				const pdfs = await Promise.all(body.data.map(async registration => {
-					const pdf = new PDF();
-					await pdf.fillTemplate(registration);
-					return pdf;
-				}));
-				const mergedBlob = await new PDF().mergePDFs(pdfs);
-				return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
+			if (requestType === "registration") {
+				return handleRegistrationPDFRequest(body);
 			} else {
-				const pdf = new PDF();
-				await pdf.fillTemplate(body.data);
-				return new Response(await pdf.getBlob(), {
-					headers: {
-						...corsHeaders,
-						"Content-Type": "application/pdf",
-						"Access-Control-Allow-Origin": "*",
-					}
-				});
+				return new Response("Invalid request type. This service accepts only 'registration' requests", { status: 400 });
 			}
 		} catch (e) {
 			return new Response("Malformed request, please check the request body.", { status: 400 });
@@ -73,12 +60,35 @@ Bun.serve({
 });
 
 
+async function handleRegistrationPDFRequest(body: PDFRequest): Promise<Response> {
+	const req = body.request;
+	if (req.isMultiple) {
+		const pdfs = await Promise.all(req.data.map(async registration => {
+			const pdf = new PDF();
+			await pdf.fillTemplate(registration);
+			return pdf;
+		}));
+		const mergedBlob = await new PDF().mergePDFs(pdfs);
+		return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
+	} else {
+		const pdf = new PDF();
+		await pdf.fillTemplate(req.data);
+		return new Response(await pdf.getBlob(), {
+			headers: {
+				...corsHeaders,
+				"Content-Type": "application/pdf",
+				"Access-Control-Allow-Origin": "*",
+			}
+		});
+	}
+}
+
 export class PDF {
 	private doc = {} as typeof PDFDocument.prototype;
 	constructor() { };
 
 	public async fillTemplate(reg: PDFRegstration): Promise<void> {
-		this.doc = await PDFDocument.load(await PDF.getTemplateBuffer(reg.student.class_id));
+		this.doc = await PDFDocument.load(await PDF.getBuffer(reg.url));
 
 		const p = this.doc.getPages()[0];
 		const c = TemplateCoords;
@@ -160,8 +170,7 @@ export class PDF {
 	}
 
 	private static Font: ArrayBuffer | null = null;
-	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
-	private static TemplateCache: { [key: number]: ArrayBuffer; } = {};
+	private static TemplateCache: Record<string, ArrayBuffer> = {};
 
 	private static async getFont(): Promise<ArrayBuffer> {
 		if (!PDF.Font) {
@@ -170,11 +179,11 @@ export class PDF {
 		return PDF.Font;
 	}
 
-	private static async getTemplateBuffer(id: number): Promise<ArrayBuffer> {
-		if (!PDF.TemplateCache[id]) {
-			PDF.TemplateCache[id] = await (await fetch(SITE_URL + PDF.TemplateFileName[id])).arrayBuffer();
+	private static async getBuffer(url: string): Promise<ArrayBuffer> {
+		if (!PDF.TemplateCache[url]) {
+			PDF.TemplateCache[url] = await (await fetch(SITE_URL + url)).arrayBuffer();
 		}
-		return PDF.TemplateCache[id];
+		return PDF.TemplateCache[url];
 	}
 }
 

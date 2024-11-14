@@ -79,11 +79,26 @@ export type EndpointResponseError = {
 };
 
 export type PDFRegstration = {
+	url: string;
 	student: Registrations;
 	teachersName: string;
 	instrument?: string;
 };
-export type PDFRequestType<Multiple extends boolean> = {
-	isMultiple: Multiple;
-	data: Multiple extends false ? PDFRegstration : PDFRegstration[];
+
+type PDFRequestType = "registration" | "toImage";
+export type PDFRequest<Type extends PDFRequestType = "registration"> = Type extends "registration" ? {
+	type: "registration",
+	request: {
+		isMultiple: false;
+		data: PDFRegstration;
+	} | {
+		isMultiple: true;
+		data: PDFRegstration[];
+	};
+} : {
+	type: "toImage",
+	request: {
+		pages: number[];
+		url: string;
+	};
 };
