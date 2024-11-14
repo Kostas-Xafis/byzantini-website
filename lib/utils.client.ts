@@ -534,6 +534,15 @@ export const objToFormData = (obj: Record<string, any>): FormData => {
 	return fd;
 };
 
+export async function dynamicImport<T>(src: string, name: string): Promise<T> {
+	// @ts-ignore
+	if (window[name]) return window[name];
+	const module = await import(src);
+	// @ts-ignore
+	window[name] = module;
+	return module;
+}
+
 export function loadScript(src: string, res?: () => boolean, force = false): Promise<any> {
 	if (!force) {
 		if (res && res()) return Promise.resolve(res());

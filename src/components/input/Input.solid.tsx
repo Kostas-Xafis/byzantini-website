@@ -1,16 +1,13 @@
-import { Index, Show, onMount } from "solid-js";
+import { Index, Show, createSignal, onMount } from "solid-js";
+import type { FileProxy } from "../../../lib/fileHandling.client";
+import { AnimTimeline } from "../../../lib/utils.client";
 import type { CustomEvents } from "../../../types/custom-events";
+import type { AnyRecord, DOMElement } from "../../../types/global";
 import type { PartialBy } from "../../../types/helpers";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";
 import MultiFileInput, { type MultiFileInputProps } from "./MultiFileInput.solid";
-import { createSignal } from "solid-js";
-import { AnimTimeline } from "../../../lib/utils.client";
-
-function disable(input: Props) {
-	input.disabled = true;
-}
 
 export class InputFields<T extends Record<string, Partial<Props>>> {
 	#inputs: T = {} as T;
@@ -88,31 +85,6 @@ export class InputFields<T extends Record<string, Partial<Props>>> {
 		return inputs;
 	}
 }
-export function Pick<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
-	for (const key in inputs) {
-		if (!keys.includes(key)) disable(inputs[key]);
-	}
-	return inputs;
-}
-
-export function Omit<T>(inputs: { [key in keyof T]: Props }, ...keys: (keyof T)[]) {
-	for (const key of keys) {
-		disable(inputs[key]);
-	}
-	return inputs;
-}
-
-export function Fill<T extends {}>(inputs: { [key in keyof T]: Props }, obj: T) {
-	for (const key in obj) {
-		if (key in inputs) inputs[key].value = obj[key] as string;
-	}
-	return inputs;
-}
-
-export function Empty<T>(inputs: { [key in keyof T]: Partial<Props> }) {
-	for (const key in inputs) inputs[key] = {};
-	return inputs;
-}
 
 type InputProps = {
 	type:
@@ -151,13 +123,15 @@ type InputProps = {
 		selected: boolean | undefined;
 	}[];
 	multiselectOnce?: boolean;
-	fileExtension?: string;
-	metadata?: Record<string, any>;
 	minmax?: [number, number];
 	onchange?: (e: Event) => void;
 	tooltip?: TooltipProps;
 	listeners?: boolean;
 	show?: boolean;
+	isExtended?: boolean;
+	fileExtension?: string;
+	metadata?: AnyRecord;
+	filePreview?: (file: FileProxy<AnyRecord>) => Promise<DOMElement>;
 };
 
 export type Props = PartialBy<InputProps, "prefix">;
@@ -183,6 +157,7 @@ export default function Input(props: InputProps) {
 		tooltip,
 		listeners = false,
 		show = true,
+		isExtended,
 	} = props;
 	if (type === null) return <></>;
 
@@ -230,13 +205,27 @@ export default function Input(props: InputProps) {
 		});
 	}
 
-	const isExtended = type === "textarea" || type === "multifile";
+	const getInputSpecific = (type: InputProps["type"]) => {
+		const isExt = isExtended || false;
+		switch (type) {
+			case "textarea":
+				return " col-span-full max-w-full !h-[300px] max-h-[300px]";
+			case "multifile":
+				return " col-span-full max-w-full !h-[400px] max-h-[400px]";
+			case "file":
+				return ` ${
+					isExt ? "col-span-full" : ""
+				} w-[50%] justify-self-center !h-[300px] max-h-[300px]`;
+			default:
+				return "";
+		}
+	};
 	return (
 		<label
 			for={name}
 			class={
 				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
-				(isExtended ? " col-span-full max-w-full !h-[300px] max-h-[300px]" : "") +
+				getInputSpecific(type) +
 				(disabled && blurDisabled ? " blur-[1px]" : "") +
 				(isShown() ? "" : " hidden")
 			}>

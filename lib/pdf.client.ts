@@ -1,10 +1,20 @@
 import type { Registrations } from "../types/entities";
-import type { PDFRequestType } from "../pdfWorker/src/types";
+import type { PDFRequest } from "../pdfWorker/src/types";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
-import { asyncQueue, getCookie, loadScript, looseStringEquals, sleep } from "./utils.client";
+import { asyncQueue, dynamicImport, getCookie, loadScript, looseStringEquals, sleep } from "./utils.client";
+
+const PDFTypeWrap = <Type extends PDFRequest["type"]>(type: Type, data: PDFRequest<Type>["request"]) => {
+	return {
+		type,
+		request: data
+	};
+};
+
+
 
 export class PDF {
+	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
 	private static PDFWorkerURL = import.meta.env.VITE_PDF_SERVICE_URL;
 	private student: Registrations = {} as Registrations;
 	private teachersName: string = "";
@@ -26,14 +36,15 @@ export class PDF {
 	}
 
 	public async download(): Promise<void> {
-		const body: PDFRequestType<false> = {
+		const body: PDFRequest = PDFTypeWrap("registration", {
 			isMultiple: false,
 			data: {
+				url: PDF.TemplateFileName[this.student.class_id],
 				student: this.student,
 				teachersName: this.teachersName,
 				instrument: this.instrument,
 			}
-		};
+		});
 		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
 			method: "POST",
 			headers: {
@@ -50,14 +61,15 @@ export class PDF {
 
 	public async print() {
 		await loadScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js", () => !!window["printJS"]);
-		const body: PDFRequestType<false> = {
+		const body: PDFRequest = PDFTypeWrap("registration", {
 			isMultiple: false,
 			data: {
+				url: PDF.TemplateFileName[this.student.class_id],
 				student: this.student,
 				teachersName: this.teachersName,
 				instrument: this.instrument,
 			}
-		};
+		});
 		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
 			method: "POST",
 			headers: {
@@ -70,16 +82,48 @@ export class PDF {
 		printWindow?.print();
 	}
 
+	public static async convertFirstPageToImage(file: ArrayBuffer | string): Promise<string> {
+		const { getDocument, GlobalWorkerOptions } = await dynamicImport<typeof import("pdfjs-dist")>("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs", "pdfjsLib");
+		if (!GlobalWorkerOptions.workerSrc)
+			GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs';
+
+		console.log("Converting PDF to Image");
+		console.log({ file });
+		// Load the PDF document
+		const pdf = await getDocument({ data: file }).promise;
+
+		// Get the first page
+		const page = await pdf.getPage(1);
+
+		// Set up a canvas with page dimensions
+		const viewport = page.getViewport({ scale: 1 });
+		const canvas = document.createElement('canvas');
+		const context = canvas.getContext('2d')!;
+		canvas.width = viewport.width;
+		canvas.height = viewport.height;
+
+		// Render the page onto the canvas
+		await page.render({
+			canvasContext: context,
+			viewport: viewport,
+		}).promise;
+
+		// Convert the canvas to a data URL
+		return canvas.toDataURL('image/png');
+	}
+
 	public static async printBulk(pdfs: PDF[]) {
 		await loadScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js", () => !!window["printJS"]);
-		const body: PDFRequestType<true> = {
+
+		const body: PDFRequest = PDFTypeWrap("registration", {
 			isMultiple: true,
 			data: pdfs.map((pdf) => ({
+				url: PDF.TemplateFileName[pdf.student.class_id],
 				student: pdf.student,
 				teachersName: pdf.teachersName,
 				instrument: pdf.instrument,
 			}))
-		};
+		});
 		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
 			method: "POST",
 			headers: {
@@ -96,14 +140,15 @@ export class PDF {
 		const namesArr: string[] = [];
 		const requestArr = arr.map((pdf) => async () => {
 			let expoTime = 1000;
-			const body: PDFRequestType<false> = {
+			const body: PDFRequest = PDFTypeWrap("registration", {
 				isMultiple: false,
 				data: {
+					url: PDF.TemplateFileName[pdf.student.class_id],
 					student: pdf.student,
 					teachersName: pdf.teachersName,
 					instrument: pdf.instrument,
 				}
-			};
+			});
 			while (expoTime <= 8000) {
 				try {
 					let resp = await fetch(PDF.PDFWorkerURL, {

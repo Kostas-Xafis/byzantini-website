@@ -1,18 +1,20 @@
 import { For, createSignal, onMount } from "solid-js";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { FileHandler, type FileProxy } from "../../../lib/fileHandling.client";
+import type { AnyRecord, DOMElement } from "../../../types/global";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 export type MultiFileInputProps = {
 	name: string;
 	prefix: string;
 	// value: [filename, metadata per file][]
-	value?: [string, Record<string, any>][];
+	value?: [string, AnyRecord][];
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
 	fileExtension?: string;
 	// Metadata for new files
-	metadata?: Record<string, any>[];
+	metadata?: AnyRecord[];
+	filePreview?: (file: FileProxy<AnyRecord>) => DOMElement;
 };
 
 export default function MultiFileInput(props: MultiFileInputProps) {
@@ -25,25 +27,32 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 		disabled,
 		fileExtension,
 		metadata,
+		filePreview,
 	} = props;
 
 	const [input, setInput] = createSignal<HTMLInputElement>();
-	const [fileList, setFileList] = createSignal<typeof initFiles>(initFiles); // Need to be a signal to update the component
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: false,
 		files: initFiles.map(([name, metadata]) => FileHandler.createFileProxy(name, { metadata })),
 		metadata: metadata || {},
 	});
+	const [fileList, setFileList] = createSignal(
+		fileHandler.getFiles().map((f) => [f, f.getMetadata()])
+	); // Need to be a signal to update the component
 	const setFiles = () => {
-		setFileList(fileHandler.getFiles().map((f) => [f.name, f.metadata]) as typeof initFiles);
+		setFileList(fileHandler.getFiles().map((f) => [f, f.getMetadata()]));
 	};
 
 	const onFileClick = (e: MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
-		input()?.click();
+		if (
+			e.target === document.querySelector(`[data-name='${name}'] > .fileContainer`) ||
+			e.target === document.querySelector("#multifileDropZone")
+		)
+			input()?.click();
 	};
-	const onFileChange = async (e: Event) => {
+	const onFileChange = async (_: Event) => {
 		const files = input()?.files;
 		if (!files) return;
 		fileHandler.addFiles(files);
@@ -102,20 +111,30 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 						</p>
 					</div>
 				</div>
-				<div class="flex flex-row flex-wrap gap-4 p-4 self-start">
+				<div class="fileContainer flex flex-row flex-wrap w-full justify-evenly gap-2 gap-y-4 p-2 self-start">
 					<For each={fileList()}>
-						{([fname, _], index) => (
+						{([file, _], index) => (
 							<div
 								style={{ "word-break": "break-all" }}
-								class="flex flex-row items-center h-min w-[25ch] px-4 pl-3 py-1 gap-x-2 border-[2px] border-gray-600 rounded-lg bg-red-100 cursor-default">
-								<CloseButton
-									onClick={() => onFileRemove(index())}
-									classes="text-lg hover:text-red-800 hover:bg-transparent"></CloseButton>
-								<p>
-									{fname.length > 20
-										? fname.slice(0, 12) + " ... " + fname.slice(-7)
-										: fname}
-								</p>
+								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 rounded-lg cursor-default overflow-hidden">
+								{filePreview && (
+									<div class="absolute flex -z-10 inset-0 w-full h-full place-self-center rounded-md overflow-hidden">
+										{filePreview(file as FileProxy<AnyRecord>)}
+									</div>
+								)}
+
+								<div class="flex flex-col h-max pb-2 items-center w-full rounded-b-[0.575rem]  bg-[rgb(255,255,255,0.55)] backdrop-blur-[3px]">
+									<p>
+										{(file.getName().length > 20
+											? file.getName().slice(0, 12) +
+											  " ... " +
+											  file.getName().slice(-7)
+											: file.getName()) || ""}
+									</p>
+									<CloseButton
+										onClick={() => onFileRemove(index())}
+										classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
+								</div>
 							</div>
 						)}
 					</For>

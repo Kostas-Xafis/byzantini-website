@@ -6,7 +6,7 @@ import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { ExtendedFormData } from "../../../lib/utils.client";
 import type { Books, Payments } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import { Fill, InputFields, Pick, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -172,9 +172,11 @@ export default function PaymentsTable() {
 			});
 			pushAlert(createAlert("success", "Η αγορά ενημερώθηκε επιτυχώς!"));
 		};
-		const filledInputs = Fill(PaymentsInputs(books), payment);
 		return {
-			inputs: Pick(filledInputs, "amount"),
+			inputs: new InputFields(PaymentsInputs(books))
+				.pick(["amount"])
+				.fill(payment as any)
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση πληρωμής",

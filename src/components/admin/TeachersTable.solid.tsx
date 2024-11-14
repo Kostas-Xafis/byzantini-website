@@ -1,13 +1,15 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { FileHandler, type FileProxy } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { loadXLSX } from "../../../lib/pdf.client";
+import { Random } from "../../../lib/random";
 import {
 	ExtendedFormData,
 	looseStringIncludes,
+	sleep,
 	teacherTitleByGender,
 } from "../../../lib/utils.client";
 import type {
@@ -346,6 +348,39 @@ const columnNames: ColumnType<TeachersTableType> = {
 	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 10 },
 };
 
+function picturePreview(file: FileProxy<TeachersMetadata>) {
+	const id = Random.string(12, "hex");
+
+	(async function () {
+		await sleep(10);
+		const src = !file.isProxy()
+			? await FileHandler.fileToImageUrl(file)
+			: `/kathigites/picture/${file.getName()}`;
+		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
+	})();
+
+	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
+}
+function cvPreview(file: FileProxy<TeachersMetadata>) {
+	const id = Random.string(12, "hex");
+
+	// (async function () {
+	// 	await sleep(10);
+	// 	const pdf = await (await fetch("/kathigites/cv/" + file.getName())).blob();
+	// 	file.setFile(pdf, { type: "application/pdf" });
+	// 	const src = await FileHandler.fileToImageUrl(file);
+	// 	document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
+	// })();
+
+	return (
+		<img
+			data-id={id}
+			// alt="Βιογραφικό"
+			class="object-cover w-full overflow-hidden scale-[1.5] translate-y-[25%]"
+		/>
+	);
+}
+
 type TeachersMetadata = { teacher_id: number; type: "cv" | "picture" };
 export default function TeachersTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
@@ -390,7 +425,7 @@ export default function TeachersTable() {
 	const fileUpload = async (fileHandler: FileHandler<TeachersMetadata>) => {
 		const newFile = fileHandler.getNewFiles().at(0);
 		if (!newFile) return;
-		const id = newFile.metadata.teacher_id;
+		const id = newFile.getMetadata().teacher_id;
 		return apiHook(API.Teachers.fileUpload, {
 			RequestObject: await fileHandler.fileToBlob(0),
 			UrlArgs: { id },
@@ -400,7 +435,10 @@ export default function TeachersTable() {
 		const deletedFile = fileHandler.getDeletedFiles().at(0);
 		if (!deletedFile) return;
 		return apiHook(API.Teachers.fileDelete, {
-			RequestObject: { id: deletedFile.metadata.teacher_id, type: deletedFile.metadata.type },
+			RequestObject: {
+				id: deletedFile.getMetadata().teacher_id,
+				type: deletedFile.getMetadata().type,
+			},
 		});
 	};
 
@@ -466,32 +504,32 @@ export default function TeachersTable() {
 		const instruments = store[API.Instruments.get];
 		if (!locations || !locationsList || !instruments) return addModal;
 
-		const submit = async function (form: ExtendedFormData<Teachers & TeacherJoins>) {
+		const submit = async function (f: ExtendedFormData<Teachers & TeacherJoins>) {
 			console.log(
-				form.getByName("teacherInstruments", "number", {
+				f.getByName("teacherInstruments", "number", {
 					cmp: "includes",
 					single: false,
 				})
 			);
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
-				fullname: form.string("fullname"),
-				amka: form.string("amka", ""),
-				email: form.string("email"),
-				telephone: form.string("telephone"),
-				linktree: form.string("linktree"),
-				gender: form.multiSelect("gender", "boolean", { single: true }) ? "F" : "M",
-				title: form.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
-				visible: form.multiSelect("visible", "boolean", { single: true }),
-				online: form.multiSelect("online", "boolean", { single: true }),
-				teacherClasses: form.multiSelect("teacherClasses", "number", { single: false }),
-				teacherLocations: form.multiSelect("teacherLocations", "number", { single: false }),
-				teacherInstruments: form.getByName("teacherInstruments", "number", {
+				fullname: f.string("fullname"),
+				amka: f.string("amka", ""),
+				email: f.string("email"),
+				telephone: f.string("telephone"),
+				linktree: f.string("linktree"),
+				gender: f.multiSelect("gender", "boolean", { single: true }) ? "F" : "M",
+				title: f.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
+				visible: f.multiSelect("visible", "boolean", { single: true }),
+				online: f.multiSelect("online", "boolean", { single: true }),
+				teacherClasses: f.multiSelect("teacherClasses", "number", { single: false }),
+				teacherLocations: f.multiSelect("teacherLocations", "number", { single: false }),
+				teacherInstruments: f.getByName("teacherInstruments", "number", {
 					cmp: "includes",
 					single: false,
 					isButton: true,
 				}),
-				priorities: form.getByName("priority", "number", { single: false }),
-				registrations_number: form.getByName("ae-", "string", { single: false }),
+				priorities: f.getByName("priority", "number", { single: false }),
+				registrations_number: f.getByName("ae-", "string", { single: false }),
 			};
 			const res = await apiHook(API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
@@ -515,8 +553,10 @@ export default function TeachersTable() {
 				.fill((field, key) => {
 					if (key === "picture") {
 						field.metadata = { teacher_id: 0, type: "picture" };
+						field.filePreview = picturePreview as any;
 					} else if (key === "cv") {
 						field.metadata = { teacher_id: 0, type: "cv" };
+						field.filePreview = cvPreview as any;
 					}
 				})
 				.getInputs(),
@@ -551,26 +591,26 @@ export default function TeachersTable() {
 			return modifyModal;
 
 		const submit = async function (
-			formData: ExtendedFormData<Teachers & TeacherJoins>,
+			fd: ExtendedFormData<Teachers & TeacherJoins>,
 			form?: HTMLFormElement
 		) {
 			if (!form) return;
-			const classes = formData.multiSelect("teacherClasses", "number", { single: false });
+			const classes = fd.multiSelect("teacherClasses", "number", { single: false });
 			const data: Teachers & TeacherJoins = {
 				id: teacher.id,
-				fullname: formData.string("fullname"),
-				amka: formData.string("amka", ""),
-				email: formData.string("email"),
-				telephone: formData.string("telephone"),
-				linktree: formData.string("linktree"),
-				gender: formData.multiSelect("gender", "number", { single: true }) ? "F" : "M",
-				title: formData.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
-				visible: formData.multiSelect("visible", "boolean", { single: true }),
-				online: formData.multiSelect("online", "boolean", { single: true }),
+				fullname: fd.string("fullname"),
+				amka: fd.string("amka", ""),
+				email: fd.string("email"),
+				telephone: fd.string("telephone"),
+				linktree: fd.string("linktree"),
+				gender: fd.multiSelect("gender", "number", { single: true }) ? "F" : "M",
+				title: fd.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
+				visible: fd.multiSelect("visible", "boolean", { single: true }),
+				online: fd.multiSelect("online", "boolean", { single: true }),
 				teacherClasses: classes,
 				teacherInstruments: classes
 					.map((c) => {
-						return formData.multiSelect(
+						return fd.multiSelect(
 							(c === 1
 								? "teacherInstrumentsTraditional"
 								: c === 2
@@ -580,14 +620,14 @@ export default function TeachersTable() {
 						);
 					})
 					.flat() as number[],
-				teacherLocations: formData.multiSelect("teacherLocations", "number", {
+				teacherLocations: fd.multiSelect("teacherLocations", "number", {
 					single: false,
 				}),
-				priorities: formData.getByName("priority", "number", {
+				priorities: fd.getByName("priority", "number", {
 					cmp: "startsWith",
 					single: false,
 				}),
-				registrations_number: formData.getByName("ae-", "string", {
+				registrations_number: fd.getByName("ae-", "string", {
 					cmp: "startsWith",
 					single: false,
 				}),
@@ -632,10 +672,12 @@ export default function TeachersTable() {
 						const metadata = { teacher_id: teacher.id, type: "picture" };
 						field.value = [teacher.picture, metadata];
 						field.metadata = metadata;
+						field.filePreview = picturePreview as any;
 					} else if (key === "cv" && teacher.cv) {
 						const metadata = { teacher_id: teacher.id, type: "cv" };
 						field.value = [teacher.cv, metadata];
 						field.metadata = metadata;
+						field.filePreview = cvPreview as any;
 						//@ts-ignore
 					} else if (key in teacher) field.value = teacher[key];
 				})

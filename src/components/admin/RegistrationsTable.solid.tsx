@@ -11,7 +11,7 @@ import {
 	onElementMount,
 } from "../../../lib/utils.client";
 import type { Instruments, Registrations, Teachers } from "../../../types/entities";
-import { Fill, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import {
 	CompareList,
@@ -413,19 +413,23 @@ export default function RegistrationsTable() {
 			});
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
 		};
-		const filledInputs = Fill(
-			RegistrationsInputs(registration, teachers, instruments) as Record<
-				keyof Registrations,
-				InputProps
-			>,
-			registration
-		);
-		filledInputs.class_id.value = registration.class_id;
-		filledInputs.teacher_id.value = registration.teacher_id;
-		filledInputs.instrument_id.value =
-			instruments.find((i) => i.id === registration.instrument_id)?.id || 0; // findIndex because the instruments are sorted by name
+
+		const inputs = RegistrationsInputs(registration, teachers, instruments) as Record<
+			keyof Registrations,
+			InputProps
+		>;
+
 		return {
-			inputs: filledInputs,
+			inputs: new InputFields(inputs)
+				.fill((field, key) => {
+					if (key === "instrument_id") {
+						field.value =
+							instruments.find((i) => i.id === registration.instrument_id)?.id || 0;
+					} else {
+						field.value = registration[key] as any;
+					}
+				})
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Εγγραφής",

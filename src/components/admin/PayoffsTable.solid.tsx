@@ -6,7 +6,7 @@ import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { ExtendedFormData } from "../../../lib/utils.client";
 import type { Payoffs, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import { Fill, Pick, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -108,10 +108,12 @@ export default function PayoffsTable() {
 			});
 			pushAlert(createAlert("success", "Η οφειλή ενημερώθηκε επιτυχώς!"));
 		};
-		const filledInputs = Fill(SchoolPayoffsInputs(wholesalers), payoff);
 
 		return {
-			inputs: Pick(filledInputs, "amount"),
+			inputs: new InputFields(SchoolPayoffsInputs(wholesalers))
+				.pick(["amount"])
+				.fill(payoff)
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",

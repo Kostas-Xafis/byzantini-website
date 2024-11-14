@@ -1,10 +1,17 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { FileHandler, type FileProxy } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { ExtendedFormData, asyncQueue, deepCopy, isSafeURLPath } from "../../../lib/utils.client";
+import { Random } from "../../../lib/random";
+import {
+	ExtendedFormData,
+	asyncQueue,
+	deepCopy,
+	isSafeURLPath,
+	sleep,
+} from "../../../lib/utils.client";
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -93,6 +100,18 @@ const columnNames: ColumnType<AnnouncementTable> = {
 
 function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> {}
 
+function imagePreview(file: FileProxy<AnnouncementImageMetadata>) {
+	const id = Random.string(12, "hex");
+	(async function () {
+		await sleep(10);
+		const src = !file.isProxy()
+			? await FileHandler.fileToImageUrl(file)
+			: `/anakoinoseis/images/${file.getMetadata().announcement_id}/thumb_${file.getName()}`;
+		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
+	})();
+	return <img data-id={id} alt={file.getName()} class="object-cover w-full overflow-hidden" />;
+}
+
 type AnnouncementImageMetadata = { is_main: boolean; announcement_id: number; id: number };
 export default function AnnouncementsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
@@ -122,9 +141,13 @@ export default function AnnouncementsTable() {
 
 		const photos = fileHandler.getNewFiles();
 		if (photos.length === 0) return;
-		const uploadQueue = photos.map(({ name, file, metadata }) => {
-			assertNotNull(file);
+		const uploadQueue = photos.map((fileProxy) => {
+			assertNotNull(fileProxy);
 			return async function () {
+				const file = fileProxy.getFile();
+				if (!file) return;
+				const metadata = fileProxy.getMetadata();
+				const name = fileProxy.getName();
 				const { type: fileType } = file;
 				try {
 					let thumbFile: File | Blob = file;
@@ -176,7 +199,7 @@ export default function AnnouncementsTable() {
 
 		if (deletedFiles.length === 0) return;
 
-		const ids = deletedFiles.map((f) => f.metadata.id);
+		const ids = deletedFiles.map((f) => f.getMetadata().id);
 		fileHandler.removeDeletedFiles();
 
 		// Remove the marked files from the handler
@@ -237,6 +260,9 @@ export default function AnnouncementsTable() {
 					if (key === "images") {
 						field.metadata = { is_main: false };
 					}
+					if (key === "mainImage" || key === "images") {
+						field.filePreview = imagePreview as any;
+					}
 				})
 				.getInputs(),
 			onSubmit: submit,
@@ -295,34 +321,35 @@ export default function AnnouncementsTable() {
 		return {
 			inputs: new InputFields(AnnouncementsInputs())
 				.fill((field, key) => {
+					const announcId = announcement.id;
 					if (key === "mainImage") {
 						field.value = [
 							mainImage.name,
 							{
 								is_main: true,
-								announcement_id: announcement.id,
+								announcement_id: announcId,
 								id: mainImage.id,
 							},
 						];
-						field.metadata = {
-							is_main: true,
-							announcement_id: announcement.id,
-						};
+						field.metadata = { is_main: true, announcement_id: announcId };
 					} else if (key === "images") {
 						field.value = images
-							.filter((i) => i.announcement_id === announcement.id && !i.is_main)
+							.filter((i) => i.announcement_id === announcId && !i.is_main)
 							.map(({ name, id, announcement_id }) => [
 								name,
 								{ is_main: false, announcement_id, id },
 							]) as any;
 						field.metadata = {
 							is_main: false,
-							announcement_id: announcement.id,
+							announcement_id: announcId,
 							id: 0,
 						};
 					} else if (key === "links") {
 						field.value = announcement.links.replaceAll("|", "\n");
 					} else field.value = announcement[key];
+					if (key === "mainImage" || key === "images") {
+						field.filePreview = imagePreview as any;
+					}
 				})
 				.getInputs(),
 			onSubmit: submit,

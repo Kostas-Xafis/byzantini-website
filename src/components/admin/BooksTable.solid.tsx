@@ -6,7 +6,7 @@ import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import type { ExtendedFormData } from "../../../lib/utils.client";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
-import { Fill, Omit, Pick, type Props as InputProps } from "../input/Input.solid";
+import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -163,7 +163,7 @@ export default function BooksTable() {
 			pushAlert(createAlert("success", "Επιτυχής προσθήκη βιβλίου: " + (data.title || "")));
 		};
 		return {
-			inputs: Omit(BooksInputs(wholesalers), "id"),
+			inputs: new InputFields(BooksInputs(wholesalers)).omit(["id"]).getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Βιβλίου",
@@ -192,7 +192,10 @@ export default function BooksTable() {
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση βιβλίου: " + (book.title || "")));
 		};
 		return {
-			inputs: Pick(Fill(BooksInputs(wholesalers), book), "quantity"),
+			inputs: new InputFields(BooksInputs(wholesalers))
+				.fill(book)
+				.pick(["quantity"])
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
