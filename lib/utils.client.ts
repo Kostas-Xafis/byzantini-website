@@ -537,7 +537,7 @@ export const objToFormData = (obj: Record<string, any>): FormData => {
 export async function dynamicImport<T>(src: string, name: string): Promise<T> {
 	// @ts-ignore
 	if (window[name]) return window[name];
-	const module = await import(src);
+	const module = await import(/* @vite-ignore */src);
 	// @ts-ignore
 	window[name] = module;
 	return module;

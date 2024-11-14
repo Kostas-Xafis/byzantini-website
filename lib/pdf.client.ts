@@ -87,8 +87,6 @@ export class PDF {
 		if (!GlobalWorkerOptions.workerSrc)
 			GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs';
 
-		console.log("Converting PDF to Image");
-		console.log({ file });
 		// Load the PDF document
 		const pdf = await getDocument({ data: file }).promise;
 

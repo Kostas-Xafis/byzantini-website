@@ -204,7 +204,6 @@ const cached_test = (label: string, func: Function, { force = false }: { force?:
 const chain_cached_test = (label: string, func: TestChainFunc, { force = false }: { force?: boolean; } = {}) => {
 	const [wrapper, testFunc] = func;
 	const testHash = functionHash(testFunc);
-	// console.log("Checking cache", label, testHash, cached_tests[label]);
 	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
 		test(label, wrapper);
 	} else {

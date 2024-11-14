@@ -402,7 +402,6 @@ export default function RegistrationsTable() {
 				payment_date: form.date("payment_date")?.getTime() || null,
 				pass: form.multiSelect("pass", "boolean", { single: true }),
 			};
-			console.log({ data });
 			await apiHook(API.Registrations.update, {
 				RequestObject: data,
 			});

@@ -2,10 +2,10 @@ import { batch, createEffect, createSignal } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
-import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIResponse } from "../routes/index.client";
+import type { DefaultEndpointResponse } from "../../types/routes";
+import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../routes/index.client";
 import { convertToUrlFromArgs, objToFormData } from "../utils.client";
 import { assertOwnProp } from "../utils.server";
-import type { DefaultEndpointResponse } from "../../types/routes";
 
 export type APIStore = Partial<APIResponse>;
 export { API };
@@ -59,7 +59,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			if (Mutations && Mutations.endpoint) {
 				// If a mutation is assigned then do an in place replacement of the data in the store.
 				if (Mutations.type === ActionEnum.ADD) {
-					setStore(Mutations.endpoint as APIEndpointNames, (prev) => {
+					setStore(Mutations.endpoint as APIEndpointNames, (prev: any) => {
 						let data = response.data;
 						if (!data) return prev;
 

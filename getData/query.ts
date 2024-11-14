@@ -3,6 +3,7 @@ import { argv } from "process";
 import XLSX from "xlsx";
 import { SimpleConnection, createDbConnection } from "../lib/db";
 import { argReader } from "../lib/utils.cli";
+
 type ArgsType = {
 	"--dev"?: boolean;
 	"--prod"?: boolean;
@@ -125,17 +126,17 @@ const dbProcess = async function () {
 };
 
 const printUsage = () => {
-	console.log("Usage: node query.js --dev|--prod --q <query>|--f <file> [--out <file>]\n");
-	console.log("  --dev:\tDevelopment environment");
-	console.log("  --prod:\tProduction environment");
-	console.log("  --q:\t\tQuery string");
-	console.log("  --f:\t\tFile path to query file");
-	console.log("  --out:\tOutput file path");
-	console.log("  --excel:\tOutput to excel file");
-	console.log("  --t, --time:\t\tPrint execution time");
-	console.log("  --s, --silent:\tSilent mode");
-	console.log("  --skip:\tSkip errors");
-	console.log("  --h, --help:\tPrint this message");
+	log("Usage: node query.js --dev|--prod --q <query>|--f <file> [--out <file>]\n"
+		, "  --dev:\tDevelopment environment\n"
+		, "  --prod:\tProduction environment\n"
+		, "  --q:\t\tQuery string\n"
+		, "  --f:\t\tFile path to query file\n"
+		, "  --out:\tOutput file path\n"
+		, "  --excel:\tOutput to excel file\n"
+		, "  --t, --time:\t\tPrint execution time\n"
+		, "  --s, --silent:\tSilent mode\n"
+		, "  --skip:\tSkip errors\n"
+		, "  --h, --help:\tPrint this message\n");
 };
 
 /**

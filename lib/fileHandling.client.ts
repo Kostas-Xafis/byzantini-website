@@ -158,7 +158,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		this.initialFileProxies = this.initialFileProxies.filter(f => !f.isProxy() || !f.isMarkedForDeletion());
 	}
 	getFile(index: number) {
-		if (index < 0 || index >= this.files.length) throw Error("Index out of bounds");
+		if (index < 0 || index >= this.files.length) return null;
 		return this.files[index];
 	}
 	fillProxy(file: File, index?: number) {

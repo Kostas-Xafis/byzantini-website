@@ -1,10 +1,10 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { FileHandler } from "../../../lib/fileHandling.client";
+import { FileHandler, FileProxy } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import type { ExtendedFormData } from "../../../lib/utils.client";
+import { sleep, type ExtendedFormData } from "../../../lib/utils.client";
 import type { Locations } from "../../../types/entities";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -12,6 +12,7 @@ import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
+import { Random } from "../../../lib/random";
 
 const PREFIX = "locations";
 
@@ -151,6 +152,20 @@ const columnNames: ColumnType<LocationsTable> = {
 	},
 };
 
+function picturePreview(file: FileProxy<LocationsMetadata>) {
+	const id = Random.string(12, "hex");
+
+	(async function () {
+		await sleep(10);
+		const src = !file.isProxy()
+			? await FileHandler.fileToImageUrl(file)
+			: `/spoudastiria/${file.getName()}`;
+		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
+	})();
+
+	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
+}
+
 type LocationsMetadata = { location_id: number };
 export default function LocationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
@@ -173,7 +188,7 @@ export default function LocationsTable() {
 		if (!newFile) return;
 		return apiHook(API.Locations.fileUpload, {
 			RequestObject: await fileHandler.fileToBlob(0),
-			UrlArgs: { id: newFile.metadata.location_id },
+			UrlArgs: { id: newFile.getMetadata().location_id },
 		});
 	};
 	const fileDelete = (fileHandler: FileHandler<LocationsMetadata>) => {
@@ -181,7 +196,7 @@ export default function LocationsTable() {
 		if (!deletedFile) return;
 		return apiHook(API.Locations.fileDelete, {
 			UrlArgs: {
-				id: deletedFile.metadata.location_id,
+				id: deletedFile.getMetadata().location_id,
 			},
 		});
 	};
@@ -222,7 +237,15 @@ export default function LocationsTable() {
 			pushAlert(createAlert("success", `Το παράρτημα ${data.name} προστέθηκε επιτυχώς!`));
 		};
 		return {
-			inputs: new InputFields(LocationsInputs()).omit(["id"]).getInputs(),
+			inputs: new InputFields(LocationsInputs())
+				.omit(["id"])
+				.fill((field, key) => {
+					if (field.name === "image") {
+						field.metadata = { location_id: 0 };
+						field.filePreview = picturePreview as any;
+					}
+				})
+				.getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Παραρτήματος",
@@ -286,6 +309,7 @@ export default function LocationsTable() {
 					if (field.name === "image") {
 						field.value = [location.image || "", { location_id: location.id }];
 						field.metadata = { location_id: location.id };
+						field.filePreview = picturePreview as any;
 					} else if (key in location) field.value = location[key] as any;
 				})
 				.getInputs(),

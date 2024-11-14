@@ -505,12 +505,6 @@ export default function TeachersTable() {
 		if (!locations || !locationsList || !instruments) return addModal;
 
 		const submit = async function (f: ExtendedFormData<Teachers & TeacherJoins>) {
-			console.log(
-				f.getByName("teacherInstruments", "number", {
-					cmp: "includes",
-					single: false,
-				})
-			);
 			const data: Omit<Teachers & TeacherJoins, "id"> = {
 				fullname: f.string("fullname"),
 				amka: f.string("amka", ""),
