@@ -15,7 +15,7 @@
 		"bun-build": "bunx --bun astro build",
 		"preview": "bunx --bun --env-file='.env.production' astro build && wrangler pages dev ./dist",
 		"docker-pdf": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker run --network host -d pdfworker",
-		"docker-img": "docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/ && docker run --network host -d pdfworker",
+		"docker-img": "docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/ && docker run --network host -d imgcomp",
 		"docker-build": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/",
 		"docker-run": "docker run --network host -d pdfworker && docker run --network host -d imgcomp",
 		"docker-logs": "docker logs -f $(docker ps -q --filter ancestor=pdfworker) && docker logs -f $(docker ps -q --filter ancestor=imgcomp)"

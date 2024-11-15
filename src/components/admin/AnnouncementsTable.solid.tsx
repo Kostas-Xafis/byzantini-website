@@ -216,16 +216,16 @@ export default function AnnouncementsTable() {
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const metadata = { is_main: true };
-		const submit = async function (form: ExtendedFormData<Announcements>) {
-			if (!isSafeURLPath(form.string("title"))) {
+		const submit = async function (f: ExtendedFormData<Announcements>) {
+			if (!isSafeURLPath(f.string("title"))) {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
 			const data: Omit<Announcements, "id" | "views"> & { links: string } = {
-				title: form.string("title") as string,
-				content: form.string("content") as string,
-				date: form.date("date").getTime(),
-				links: form
+				title: f.string("title") as string,
+				content: f.string("content") as string,
+				date: f.date("date").getTime(),
+				links: f
 					.string("links")
 					.split("\n")
 					.map((l) => l.trim())
@@ -280,18 +280,18 @@ export default function AnnouncementsTable() {
 		const announcements = store[API.Announcements.get];
 		const images = store[API.Announcements.getImages];
 		if (!announcements || !images || selectedItems.length !== 1) return modifyModal;
-		const submit = async function (form: ExtendedFormData<Announcements>) {
-			if (!isSafeURLPath(form.string("title"))) {
+		const submit = async function (f: ExtendedFormData<Announcements>) {
+			if (!isSafeURLPath(f.string("title"))) {
 				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
 				throw new Error("Invalid title");
 			}
 			const announcement_id = selectedItems[0];
 			const data: Omit<Announcements, "views"> = {
 				id: announcement_id,
-				title: form.string("title"),
-				content: form.string("content"),
-				date: form.date("date").getTime(),
-				links: form
+				title: f.string("title"),
+				content: f.string("content"),
+				date: f.date("date").getTime(),
+				links: f
 					.string("links")
 					.split("\n")
 					.map((l) => l.trim())
@@ -323,14 +323,16 @@ export default function AnnouncementsTable() {
 				.fill((field, key) => {
 					const announcId = announcement.id;
 					if (key === "mainImage") {
-						field.value = [
-							mainImage.name,
-							{
-								is_main: true,
-								announcement_id: announcId,
-								id: mainImage.id,
-							},
-						];
+						if (mainImage) {
+							field.value = [
+								mainImage.name,
+								{
+									is_main: true,
+									announcement_id: announcId,
+									id: mainImage.id,
+								},
+							];
+						}
 						field.metadata = { is_main: true, announcement_id: announcId };
 					} else if (key === "images") {
 						field.value = images
