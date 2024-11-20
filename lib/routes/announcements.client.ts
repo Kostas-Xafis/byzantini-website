@@ -1,4 +1,4 @@
-import { any, array, blob, merge, number, object, omit, optional, string } from "valibot";
+import { blob, merge, number, object, omit, optional, string } from "valibot";
 import {
 	v_AnnouncementImages,
 	v_Announcements,
@@ -15,7 +15,6 @@ const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	hasUrlParams: false,
 	validation: undefined,
 };
-
 // I will need to paginate it. That will come later though.
 export type PageAnnouncement = Announcements & { main_image: string, total_images: number; };
 const getForPage: EndpointRoute<"/announcements/page", any, PageAnnouncement[]> = {

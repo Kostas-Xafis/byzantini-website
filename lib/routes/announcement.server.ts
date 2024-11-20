@@ -1,51 +1,56 @@
 import type { APIContext } from "astro";
+import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
+import type { SitemapItem } from "../../types/global";
 import { Bucket } from "../bucket";
 import { asyncQueue, deepCopy } from "../utils.client";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 
-async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<Announcements, "id" | "views">) {
-	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
-	if (!sitemap) return;
-
-	let sitemapStr: string = "";
-	if ("byteLength" in sitemap) sitemapStr = new TextDecoder("utf-8").decode(sitemap);
-	else sitemapStr = await sitemap.text();
-
-	const title = announcement.title.replaceAll(/ /g, "-");
-	const lastmod = new Date(announcement.date).toISOString();
-	const url = `<url><loc>https://musicschool-metamorfosi.gr/sxoli/anakoinoseis/${title}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>`;
-	sitemapStr = sitemapStr.replace("</urlset>", url + "</urlset>");
-
-	const sitemapBuf = new TextEncoder().encode(sitemapStr);
-	await Bucket.put(ctx, sitemapBuf.buffer as ArrayBuffer, "sitemap-announcements.xml", "application/xml");
-}
-
-// Doesn't work as expected
-async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
-	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
-	if (!sitemap) return;
-
-	let sitemapStr: string = "";
-	if ("byteLength" in sitemap) sitemapStr = new TextDecoder("utf-8").decode(sitemap);
-	else sitemapStr = await sitemap.text();
-
-
-	// Replace url that contains the announcement title
-	titles.forEach(title => {
-		if (!sitemapStr.includes(title)) return;
-		const regexedTitle = title.replace(/[\/\\^$*+?.()|[\]{}]/g, "\\$&").replaceAll(" ", "%20");
-		const regex = new RegExp(`<url>(.|\n)*?${regexedTitle}(.|\n)*?<\/url>`, "g");
-		sitemapStr = sitemapStr.replace(regex, "");
-	});
-
-	const sitemapBuf = new TextEncoder().encode(sitemapStr);
-	await Bucket.put(ctx, sitemapBuf.buffer as ArrayBuffer, "sitemap-announcements.xml", "application/xml");
-}
-
-
 const bucketPrefix = "anakoinoseis/images/";
+const xmlopts: X2jOptions = { ignoreAttributes: false, attributeNamePrefix: "@" };
+const { WEBSITE_URL } = import.meta.env;
+
+async function getSitemapXml(ctx: APIContext) {
+	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
+	if (!sitemap) throw Error("Sitemap not found");
+	return new XMLParser(xmlopts).parse(Buffer.from('byteLength' in sitemap ? sitemap : await sitemap.arrayBuffer()));
+}
+function jsonToXml(json: any) {
+	return new XMLBuilder({ ...xmlopts, format: true } as any).build(json) as string;
+}
+
+async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<Announcements, "id" | "views">) {
+	const jsonSitemap = await getSitemapXml(ctx);
+	const urls = (typeof jsonSitemap.urlset === "string" ? [jsonSitemap.urlset.url] : jsonSitemap.urlset.url) as SitemapItem[];
+	const newUrl = { loc: `${WEBSITE_URL}/sxoli/anakoinoseis/${announcement.title.replaceAll(" ", "%20")}`, lastmod: new Date(announcement.date).toISOString(), changefreq: "monthly", priority: "1.0" };
+	urls.push(newUrl);
+
+	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
+	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+}
+
+async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
+	const jsonSitemap = await getSitemapXml(ctx);
+	let urls = (typeof jsonSitemap.urlset === "string" ? [jsonSitemap.urlset.url] : jsonSitemap.urlset.url) as SitemapItem[];
+	urls = urls.filter(url => !titles.some(title => url.loc.endsWith(title)));
+
+	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
+	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+}
+
+async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, newTitle: string) {
+	const jsonSitemap = await getSitemapXml(ctx);
+	let urls = (typeof jsonSitemap.urlset === "string" ? [jsonSitemap.urlset.url] : jsonSitemap.urlset.url) as SitemapItem[];
+	const url = urls.find(url => url.loc.endsWith(title.replaceAll(" ", "%20")));
+	if (!url) return insertAnnouncementToSitemap(ctx, { title: newTitle, content: "", date: Date.now(), links: "" });
+	url.lastmod = new Date().toISOString();
+	url.loc = `${WEBSITE_URL}/sxoli/anakoinoseis/${newTitle.replaceAll(" ", "%20")}`;
+
+	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
+	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+}
+
 
 let serverRoutes = deepCopy(AnnouncementsRoutes); // Copy the routes object to split it into client and server routes
 
@@ -102,7 +107,7 @@ serverRoutes.post.func = ({ ctx }) => {
 		body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 		body.links = body.links.replaceAll('youtu.be/', "www.youtube.com/embed/").replaceAll('watch?v=', "embed/");
 		const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
-		// await insertAnnouncementToSitemap(ctx, body);
+		await insertAnnouncementToSitemap(ctx, body);
 		return { insertId };
 	}, "Σφάλμα κατά την προσθήκη της ανακοίνωσης");
 };
@@ -110,11 +115,11 @@ serverRoutes.post.func = ({ ctx }) => {
 serverRoutes.update.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
+		const [{ title: oldTitle }] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
 		body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 		body.links = body.links.replaceAll('youtu.be/', "www.youtube.com/embed/").replaceAll('watch?v=', "embed/");
 		await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
-		// await removeAnnouncementFromSitemap(ctx, [body.title]);
-		// await insertAnnouncementToSitemap(ctx, body as Announcements);
+		await updateAnnouncementFromSitemap(ctx, oldTitle, body.title);
 		return "Announcement updated successfully";
 	}, "Σφάλμα κατά την ενημέρωση της ανακοίνωσης");
 };
@@ -123,16 +128,15 @@ serverRoutes.postImage.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
 		const { announcement_id, fileData, thumbData, fileType, name: fileName } = body as (typeof body) & { fileData: File; };
-		if (!fileName.startsWith("thumb_")) {
-			await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
-		};
+
+		const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
 		const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;
 		await Bucket.put(ctx, await fileData.arrayBuffer(), bucketFileName, fileType);
 		if (thumbData) {
 			const thumbFileName = bucketPrefix + `${announcement_id}/thumb_` + fileName;
 			await Bucket.put(ctx, await thumbData.arrayBuffer(), thumbFileName, fileType);
 		}
-		return { insertId: 0 };
+		return { insertId };
 	}, "Σφάλμα κατά την προσθήκη της εικόνας");
 };
 
@@ -177,7 +181,7 @@ serverRoutes.delete.func = ({ ctx }) => {
 			maxJobs: 10,
 		});
 		await removeAnnouncementFromSitemap(ctx, announcements.map(({ title }) => title));
-		return "announcement deleted successfully";
+		return "Announcement/s deleted successfully";
 	}, "Σφάλμα κατά την διαγραφή των ανακοινώσεων");
 };
 

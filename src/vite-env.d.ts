@@ -5,7 +5,7 @@ interface ImportMetaEnv {
 	readonly TURSO_DB_URL: string;
 	readonly TURSO_DB_TOKEN: string;
 	readonly SECRET: string;
-	readonly URL: string;
+	readonly VITE_URL: string;
 	readonly WEBSITE_URL: string;
 	readonly GOOGLE_MAPS_KEY: string;
 	readonly S3_ENDPOINT: string;

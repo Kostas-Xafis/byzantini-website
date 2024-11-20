@@ -6,9 +6,7 @@ const awsSdk = await silentImport<typeof import("@aws-sdk/client-s3")>("@aws-sdk
 const { S3_DEV_BUCKET_NAME } = import.meta.env;
 
 const createS3Client = async () => {
-	const { S3Client } = awsSdk;
-
-	return new S3Client({
+	return new awsSdk.S3Client({
 		region: "auto",
 		endpoint: import.meta.env.S3_ENDPOINT,
 		credentials: {
@@ -17,7 +15,6 @@ const createS3Client = async () => {
 		},
 	});
 };
-
 
 // Development functions can have access to any bucket by passing the bucket name as an argument
 // But it by default uses the dev bucket
@@ -54,13 +51,13 @@ export class Bucket {
 		return (await Body.transformToByteArray()).buffer as ArrayBuffer;
 	}
 
-	static async putDev(file: ArrayBuffer, filename: string, filetype: string, bucketName?: string) {
+	static async putDev(file: ArrayBuffer | string, filename: string, filetype: string, bucketName?: string) {
 		const { PutObjectCommand } = awsSdk;
 		let client = await createS3Client();
 		await client.send(new PutObjectCommand({
 			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
 			Key: filename,
-			Body: new Uint8Array(file),
+			Body: typeof file === "string" ? new TextEncoder().encode(file) : new Uint8Array(file),
 			ContentType: filetype,
 		}));
 	}
@@ -97,7 +94,7 @@ export class Bucket {
 		return S3.get(filename);
 	};
 
-	static put(context: APIContext, file: ArrayBuffer, filename: string, filetype: string) {
+	static put(context: APIContext, file: ArrayBuffer | string, filename: string, filetype: string) {
 		if (!isProduction()) return Bucket.putDev(file, filename, filetype);
 		const S3 = Bucket.getS3Bucket(context);
 		return S3.put(filename, file, { httpMetadata: { "contentType": filetype } });

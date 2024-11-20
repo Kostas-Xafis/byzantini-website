@@ -12,7 +12,7 @@ export { API };
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
-const URL = (import.meta.env.URL as string) ?? "";
+const { VITE_URL = "" } = import.meta.env;
 
 export type StoreMutation<T extends APIEndpointNames> = {
 	endpoint?: T,
@@ -27,7 +27,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 	try {
 		let fetcher: ReturnType<typeof fetch>;
 		if (req === undefined) {
-			const url = URL + "/api" + Route.path;
+			const url = VITE_URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method });
 		} else {
 			assertOwnProp(req, "RequestObject");
@@ -41,7 +41,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
 			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
+			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
 				headers: Route.multipart ? {} : {
 					"Content-Type": (IsBlob && RequestObject.type) || "application/json"

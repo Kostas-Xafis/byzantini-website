@@ -1,13 +1,13 @@
 import { parse } from "valibot";
-import { APIEndpoints, API, type APIEndpointNames, type APIArgs, type APIResponse } from "../routes/index.client";
-import { convertToUrlFromArgs } from "../utils.client";
 import type { DefaultEndpointResponse } from "../../types/routes";
+import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../routes/index.client";
+import { convertToUrlFromArgs } from "../utils.client";
 import { assertOwnProp } from "../utils.server";
 export { API };
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
-const URL = (import.meta.env.URL as string) ?? "";
+const { VITE_URL = "" } = import.meta.env;
 
 
 // Astro version
@@ -16,7 +16,7 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 	try {
 		let fetcher: any = undefined;
 		if (req === undefined) {
-			const url = URL + "/api" + Route.path;
+			const url = VITE_URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method });
 		} else {
 			assertOwnProp(req, "RequestObject");
@@ -26,7 +26,7 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 			}
 			const { RequestObject } = req;
 			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(URL + "/api" + convertToUrlFromArgs(Route.path, req.UrlArgs), {
+			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, req.UrlArgs), {
 				method: Route.method,
 				headers: {
 					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"

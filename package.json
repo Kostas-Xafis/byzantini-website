@@ -5,7 +5,7 @@
 	"scripts": {
 		"test": "bun test --env-file='./tests/.env.test'",
 		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
-		"testf": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
+		"tests-force": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
 		"db-replicate": "bun --env-file='.env.development' ./getData/replicate.ts",
 		"db-check-logs": "bun run query --dev --q \"SELECT * FROM (SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs WHERE DATE(date / 1000, 'unixepoch') > '2024-09-15' ORDER BY date DESC LIMIT 100) ORDER BY date\"",
@@ -31,6 +31,7 @@
 		"air-datepicker": "^3.5.3",
 		"astro": "^4.16.10",
 		"astro-seo": "^0.7.6",
+		"fast-xml-parser": "^4.5.0",
 		"solid-js": "^1.9.3",
 		"tailwindcss": "^3.4.14",
 		"valibot": "^0.13.1"
