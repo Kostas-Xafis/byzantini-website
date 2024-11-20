@@ -2,13 +2,13 @@ import { file, hash, write } from "bun";
 import { test as bun_test, expect } from "bun:test";
 import { BaseSchema, parse } from "valibot";
 import { APIEndpoints, APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
-import { convertToUrlFromArgs } from "../lib/utils.client";
-import { assertOwnProp } from "../lib/utils.server";
 import { APIRaw } from "../lib/routes/index.server";
+import { convertToUrlFromArgs, isAsyncFunction, objToFormData } from "../lib/utils.client";
+import { assertOwnProp } from "../lib/utils.server";
 import { TypeGuard } from "../types/helpers";
 import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
 
-const { URL, FORCE_TEST } = import.meta.env as { URL: string, FORCE_TEST: string; };
+const { VITE_URL = "", FORCE_TEST = false } = import.meta.env;
 let session_id = "";
 let collectingId = false;
 async function setSessionId() {
@@ -42,23 +42,27 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 	try {
 		let fetcher: any = undefined;
 		if (req === undefined) {
-			const url = URL + "/api" + Route.path;
+			const url = VITE_URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method, headers: { "Cookie": `session_id=${session_id}` } });
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
 			if ("validation" in Route && Route.validation) {
 				parse(Route.validation, req.RequestObject);
+				if (Route.multipart) {
+					req.RequestObject = objToFormData(req.RequestObject as any);
+				}
 			}
-			const { RequestObject } = req;
-			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(URL + "/api" + convertToUrlFromArgs(Route.path, req.UrlArgs), {
+			const { RequestObject, UrlArgs } = req;
+			const IsBlob = RequestObject instanceof Blob;
+			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
+			const headers = {
+				"Cookie": `session_id=${session_id}`
+			};
+			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
-				headers: {
-					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json",
-					"Cookie": `session_id=${session_id}`
-				},
-				body
+				headers: Route.multipart ? headers : { ...headers, "Content-Type": (IsBlob && RequestObject.type) || "application/json" },
+				body,
 			});
 		}
 		return fetcher as Promise<Response>;
@@ -120,14 +124,27 @@ class Signal {
 
 }
 
+type TestOpts = {
+	timeout?: number;
+	retry?: number;
+	repeats?: number;
+};
+
 const skip = (label: string, func: Function) => bun_test.skip(label, func);
-const test = (label: string, func: Function) => bun_test(label, func);
+const test = (label: string, func: Function, opts: TestOpts = {}) => bun_test(label, func, opts);
 
 type Function = () => (Promise<unknown> | void);
-type TestFunc = [string, Function];
-type TestChainFunc = [Function, Function];
+type TestFunc = [string, Function] | [string, Function, TestOpts | undefined];
+type TestChainLink = {
+	label: string;
+	func: Function;
+	wrapper: Function;
+	opts: TestOpts;
+	signal: Signal;
+};
 export async function chain(...tests: TestFunc[]) {
 	let forceTests = false;
+	// Check if any of the tests have been cached else force all tests to run in the chain
 	for (let i = 0; i < tests.length; i++) {
 		const [testLabel, testFunc] = tests[i];
 		const apiCalls = apiCallsHash(testFunc).map(item => checkCache(...item));
@@ -136,21 +153,28 @@ export async function chain(...tests: TestFunc[]) {
 			break;
 		}
 	}
-	let sigTests = tests.map((test) => [...test, new Signal()]) as [string, Function, Signal][];
+
+	let sigTests: TestChainLink[] = tests.map((test) => {
+		return { label: test[0], func: test[1], opts: test.at(2) || {}, signal: new Signal() } as any;
+	});
 	for (let i = 0; i < sigTests.length; i++) {
-		const [testLabel, testFunc, signal] = sigTests[i];
-		const nextSignal = i + 1 < sigTests.length ? sigTests[i + 1][2] : null;
+		const { label, func, signal } = sigTests[i];
+		const nextSignal = i + 1 < sigTests.length ? sigTests[i + 1].signal : null;
 		const wrapper = async () => {
 			try {
 				await signal.wait();
-				testFunc.constructor.name === "AsyncFunction" ? await testFunc() : testFunc();
-				cached_tests[testLabel] = functionHash(testFunc);
-				apiCallsHash(testFunc).forEach(([key, hash], i) => {
+				isAsyncFunction(func) ? await func() : func();
+
+				// Generate and store the new hash
+				cached_tests[label] = functionHash(func);
+				apiCallsHash(func).forEach(([key, hash], i) => {
 					cached_tests[key] = hash;
 				});
+
+				// Signal the next test in the chain
 				nextSignal && nextSignal.signal();
 			} catch (error) {
-				sigTests.forEach(([, , s], j) => {
+				sigTests.forEach(({ signal: s }, j) => {
 					if (j > i) {
 						s.abort("Test chain aborted");
 					}
@@ -162,12 +186,13 @@ export async function chain(...tests: TestFunc[]) {
 				}
 			}
 		};
+		sigTests[i].wrapper = wrapper;
 
 		// Initialize the tests in the chain
-		chain_cached_test(testLabel, [wrapper, testFunc], { force: forceTests });
+		chain_cached_test(sigTests[i], { force: forceTests });
 	}
 	// Start the chain
-	sigTests[0][2].signal();
+	sigTests[0].signal.signal();
 }
 
 const cached_test_file = file("./.cache/tests.json");
@@ -189,7 +214,7 @@ const cached_test = (label: string, func: Function, { force = false }: { force?:
 	const apiCalls = apiCallHashes.map(item => checkCache(...item));
 	if (FORCE_TEST === "true" || checkCache(label, testHash) || apiCalls.includes(true) || force === true) {
 		test(label, async () => {
-			func.constructor.name === "AsyncFunction" ? await func() : func();
+			isAsyncFunction(func) ? await func() : func();
 			cached_tests[label] = testHash;
 			apiCallHashes.forEach(([key, hash], i) => {
 				cached_tests[key] = hash;
@@ -201,13 +226,22 @@ const cached_test = (label: string, func: Function, { force = false }: { force?:
 	}
 };
 
-const chain_cached_test = (label: string, func: TestChainFunc, { force = false }: { force?: boolean; } = {}) => {
-	const [wrapper, testFunc] = func;
-	const testHash = functionHash(testFunc);
+type ChainOpts = {
+	force?: boolean;
+};
+const defaultTestOpts: TestOpts = {
+	timeout: 10000,
+	retry: 0,
+	repeats: 0,
+};
+const chain_cached_test = (link: TestChainLink, chainOpts?: ChainOpts) => {
+	const { force = false } = chainOpts || {};
+	const { label, func, wrapper, opts } = link;
+	const testHash = functionHash(func);
 	if (FORCE_TEST === "true" || checkCache(label, testHash) || force === true) {
-		test(label, wrapper);
+		test(label, wrapper, { ...defaultTestOpts, ...opts });
 	} else {
-		skip(label, testFunc);
+		skip(label, func);
 	}
 };
 

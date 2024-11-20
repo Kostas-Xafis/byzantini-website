@@ -183,11 +183,7 @@ export async function asyncQueue<T>(
 
 				// Logging progress
 				if (progressCallback) {
-					if (progressCallback.constructor.name === "AsyncFunction") {
-						await progressCallback(jobsCompleted);
-					} else {
-						progressCallback(jobsCompleted);
-					}
+					isAsyncFunction(progressCallback) ? await progressCallback(jobsCompleted) : progressCallback(jobsCompleted);
 				}
 				if (verbose && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs)) {
 					console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
@@ -607,7 +603,7 @@ export class ExecutionQueue<T> {
 			if (!item) break;
 			const { executionId, task } = item;
 
-			if (this.isAsync || this.func.constructor.name === "AsyncFunction") {
+			if (this.isAsync || isAsyncFunction(this.func)) {
 				await this.func(task);
 			} else {
 				this.func(task);
@@ -646,19 +642,23 @@ export class ExecutionQueue<T> {
 	}
 }
 
-export const GeneratorFunction = async function* (args: any) {
-	yield undefined;
-}.constructor;
-
 export const Function = function () { }.constructor;
-
-export function isGeneratorFunction(func: any): func is GeneratorFunction {
-	return func.constructor === GeneratorFunction;
-}
-
 export function isFunction(func: any): func is Function {
 	return func.constructor === Function;
 }
+export const AsyncFunction = async function () { }.constructor;
+export function isAsyncFunction(func: any): func is (...args: any) => Promise<any> {
+	return func.constructor === AsyncFunction;
+}
+export const GeneratorFunction = function* () { }.constructor;
+export function isGeneratorFunction(func: any): func is GeneratorFunction {
+	return func.constructor === GeneratorFunction;
+}
+export const AsyncGeneratorFunction = async function* () { }.constructor;
+export function isAsyncGeneratorFunction(func: any): func is AsyncGeneratorFunction {
+	return func.constructor === AsyncGeneratorFunction;
+}
+
 
 // Recursive object copy
 export const deepCopy = <T>(obj: T): T => {

@@ -119,7 +119,7 @@ export const v_Teachers = object({
 	fullname: string("Μη έγκυρο ονοματεπώνυμο", [minLength(1)]),
 	picture: nullable(string("Μη έγκυρη εικόνα")),
 	cv: nullable(string("Μη έγκυρο βιογραφικό")),
-	email: optional(string("Μη έγκυρο email", [email()])),
+	email: optional(union([string("Μη έγκυρο email", [email()]), literal("")])),
 	telephone: optional(string("Μη έγκυρο τηλέφωνο")),
 	linktree: optional(string("Μη έγκυρο linktree")),
 	gender: union([literal("M"), literal("F")], "Μη έγκυρο φύλο"),

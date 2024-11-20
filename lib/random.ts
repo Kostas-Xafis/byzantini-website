@@ -1,9 +1,10 @@
 type Charset = "a-z" | "A-Z" | "0-9" | "a-Z" | "a-9" | "A-9" | "a-Z-9" | "ascii" | "hex" | "HEX" | "oct" | "decimal" | "binary" | "base64";
 type RandomType = typeof Random;
-type RandomArrayType = {
-	[key in keyof Omit<RandomType, "array" | "prototype">]: RandomType[key] extends (...args: infer A) => infer R ? (...args: A) => R[] : never;
+type RandomArrayType<T> = {
+	[key in keyof Omit<RandomType, "array" | "prototype">]: RandomType[key] extends (...args: infer A) => any ? (...args: A) => T[] : never;
 };
-const arrFunctions = ["string", "hex", "link", "mail", "date", "standardRandomDate", "boolean", "item", "number", "int", "uniqueArray"];
+
+const arrFunctions: (keyof typeof Random)[] = ["string", "hex", "link", "email", "date", "standardRandomDate", "boolean", "item", "float", "int", "uniqueArray"];
 export class Random {
 	private static charsets: Record<Charset, string> = {
 		"a-z": "abcdefghijklmnopqrstuvwxyz",
@@ -42,12 +43,8 @@ export class Random {
 	}
 
 	static email() {
-		return `${Random.string(10)}@${Random.string(5, "a-Z")}.com`;
+		return `${Random.string(10, "a-Z")}@${Random.string(5, "a-Z")}.com`;
 	}
-
-	// static paragraph(size = 5) {
-	// 	return Random.array(size).string(, "ascii");
-	// }
 
 	static date(): Date;
 	static date(start: Date): Date;
@@ -66,12 +63,16 @@ export class Random {
 		return Math.random() < 0.5;
 	}
 
-	static item<T>(arr: T[]) {
+	static item<T>(arr: T[]): T {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
 
 	static items<T>(arr: T[], size: number = Random.int(1, arr.length)) {
-		return Random.array(size).item(arr);
+		return Random.array<T>(size).item(arr);
+	}
+
+	static uniqueItems<T>(arr: T[], size: number = Random.int(1, arr.length)) {
+		return Random.uniqueArray<T>(size, () => Random.item(arr));
 	}
 
 	static float(min: number, max: number, precision?: number) {
@@ -83,21 +84,18 @@ export class Random {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
 
-	private static multiDimArray<T>(dimensionsSize: number[], cb: () => T): any {
-		if (dimensionsSize.length === 1) {
-			return new Array(dimensionsSize[0]).fill(null).map(cb);
-		} else {
-			return new Array(dimensionsSize[0]).fill(null).map(() => Random.multiDimArray(dimensionsSize.slice(1), cb));
-		}
+	private static multiDimArray<T>(dimensionsSize: number | number[], cb: () => T): any {
+		let d = Array.isArray(dimensionsSize) ? dimensionsSize : [dimensionsSize];
+		return new Array(d[0]).fill(null).map(d.length === 1
+			? cb
+			: () => Random.multiDimArray(d.slice(1), cb));
 	}
 
-	static array<T>(dimensionsSize: number | number[]): RandomArrayType {
-		dimensionsSize = Array.isArray(dimensionsSize) ? dimensionsSize : [dimensionsSize];
+	static array<T>(dimensionsSize: number | number[]): RandomArrayType<T> {
 		let objRef = {} as any;
 		for (let f of arrFunctions) {
 			objRef[f] = (...args: any[]) => {
-				// @ts-ignore --- ts is too dumb
-				return Random.multiDimArray(dimensionsSize, () => (Random[f]).apply(null, args)) as T[];
+				return Random.multiDimArray<T>(dimensionsSize, () => (Random[f] as any).apply(null, args));
 			};
 		}
 		return objRef;
@@ -107,7 +105,9 @@ export class Random {
 		const arr: T[] = [];
 		for (let i = 0; i < size; i++) {
 			const item = cb();
-			(!arr.includes(item)) && arr.push(item);
+			if (!arr.includes(item)) {
+				arr.push(item);
+			} else i--;
 		}
 		return arr;
 	}
