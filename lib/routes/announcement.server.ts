@@ -8,7 +8,11 @@ import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 
 const bucketPrefix = "anakoinoseis/images/";
-const xmlopts: X2jOptions = { ignoreAttributes: false, attributeNamePrefix: "@" };
+const xmlopts: X2jOptions = {
+	ignoreAttributes: false, attributeNamePrefix: "@", isArray: (tagName) => {
+		return tagName === "url";
+	},
+};
 const { WEBSITE_URL } = import.meta.env;
 
 async function getSitemapXml(ctx: APIContext) {
@@ -22,7 +26,7 @@ function jsonToXml(json: any) {
 
 async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<Announcements, "id" | "views">) {
 	const jsonSitemap = await getSitemapXml(ctx);
-	const urls = (typeof jsonSitemap.urlset === "string" ? [jsonSitemap.urlset.url] : jsonSitemap.urlset.url) as SitemapItem[];
+	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
 	const newUrl = { loc: `${WEBSITE_URL}/sxoli/anakoinoseis/${announcement.title.replaceAll(" ", "%20")}`, lastmod: new Date(announcement.date).toISOString(), changefreq: "monthly", priority: "1.0" };
 	urls.push(newUrl);
 
@@ -30,26 +34,34 @@ async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<A
 	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
-async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
+async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, newTitle: string) {
+	title = title.replaceAll(" ", "%20");
+	newTitle = newTitle.replaceAll(" ", "%20");
 	const jsonSitemap = await getSitemapXml(ctx);
-	let urls = (typeof jsonSitemap.urlset === "string" ? [jsonSitemap.urlset.url] : jsonSitemap.urlset.url) as SitemapItem[];
+
+	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
+	const url = urls.find(url => url.loc.endsWith(title));
+	if (!url) return insertAnnouncementToSitemap(ctx, { title: newTitle, content: "", date: Date.now(), links: "" });
+	url.lastmod = new Date().toISOString();
+	url.loc = `${WEBSITE_URL}/sxoli/anakoinoseis/${newTitle}`;
+
+	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
+	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+}
+
+async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
+	titles = titles.map(title => title.replaceAll(" ", "%20"));
+	const jsonSitemap = await getSitemapXml(ctx);
+	console.log(jsonSitemap);
+
+	let urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
+	console.log(urls.map(url => url.loc), titles);
 	urls = urls.filter(url => !titles.some(title => url.loc.endsWith(title)));
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
 	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
-async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, newTitle: string) {
-	const jsonSitemap = await getSitemapXml(ctx);
-	let urls = (typeof jsonSitemap.urlset === "string" ? [jsonSitemap.urlset.url] : jsonSitemap.urlset.url) as SitemapItem[];
-	const url = urls.find(url => url.loc.endsWith(title.replaceAll(" ", "%20")));
-	if (!url) return insertAnnouncementToSitemap(ctx, { title: newTitle, content: "", date: Date.now(), links: "" });
-	url.lastmod = new Date().toISOString();
-	url.loc = `${WEBSITE_URL}/sxoli/anakoinoseis/${newTitle.replaceAll(" ", "%20")}`;
-
-	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
-}
 
 
 let serverRoutes = deepCopy(AnnouncementsRoutes); // Copy the routes object to split it into client and server routes

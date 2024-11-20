@@ -102,11 +102,9 @@ function announcementsTest() {
 			}],
 		[
 			label("DELETE /announcements/images"), async () => {
-				const imageIds = R.uniqueItems(newImageIds, 2);
-				console.log({ imageIds });
 				const res = await useTestAPI("Announcements.imagesDelete", {
 					UrlArgs: { announcement_id: newAnnouncementId as number },
-					RequestObject: imageIds
+					RequestObject: R.uniqueItems(newImageIds, 2)
 				});
 
 				const json = await getJson<APIResponse["Announcements.imagesDelete"]>(res);
@@ -155,7 +153,7 @@ function announcementsTest() {
 				expect(sitemap).not.toBeNull();
 
 				const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-				expect(sitemapStr).not.toContain(announcement.title.replaceAll(" ", "%20"));
+				expect(sitemapStr).not.toContain(newTitle.replaceAll(" ", "%20"));
 			}]
 	);
 }

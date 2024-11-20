@@ -4,6 +4,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"test": "bun test --env-file='./tests/.env.test'",
+		"test-force": "bun test --env-file='./tests/.env.testforce'",
 		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"tests-force": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"query": "bun --env-file='.env.development' ./getData/query.ts",
