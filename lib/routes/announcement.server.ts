@@ -1,4 +1,5 @@
 import type { APIContext } from "astro";
+import { Buffer } from "node:buffer";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import type { SitemapItem } from "../../types/global";
@@ -35,9 +36,9 @@ async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<A
 }
 
 async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, newTitle: string) {
+	const jsonSitemap = await getSitemapXml(ctx);
 	title = title.replaceAll(" ", "%20");
 	newTitle = newTitle.replaceAll(" ", "%20");
-	const jsonSitemap = await getSitemapXml(ctx);
 
 	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
 	const url = urls.find(url => url.loc.endsWith(title));
@@ -50,13 +51,11 @@ async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, new
 }
 
 async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
-	titles = titles.map(title => title.replaceAll(" ", "%20"));
 	const jsonSitemap = await getSitemapXml(ctx);
-	console.log(jsonSitemap);
+	titles = titles.map(title => title.replaceAll(" ", "%20"));
 
-	let urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
-	console.log(urls.map(url => url.loc), titles);
-	urls = urls.filter(url => !titles.some(title => url.loc.endsWith(title)));
+	let urls = ((jsonSitemap.urlset?.url || []) as SitemapItem[])
+		.filter(url => !titles.some(title => url.loc.endsWith(title)));
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
 	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
