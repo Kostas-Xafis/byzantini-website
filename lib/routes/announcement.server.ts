@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
-import { Buffer } from "node:buffer";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
+import { Buffer } from "node:buffer";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import type { SitemapItem } from "../../types/global";
 import { Bucket } from "../bucket";
@@ -32,7 +32,7 @@ async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<A
 	urls.push(newUrl);
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+	return Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
 async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, newTitle: string) {
@@ -47,7 +47,7 @@ async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, new
 	url.loc = `${WEBSITE_URL}/sxoli/anakoinoseis/${newTitle}`;
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+	return Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
 async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
@@ -58,7 +58,7 @@ async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) 
 		.filter(url => !titles.some(title => url.loc.endsWith(title)));
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	await Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+	return Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
 

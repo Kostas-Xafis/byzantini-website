@@ -9,13 +9,11 @@ const serverRoutes = deepCopy(AuthenticationRoutes);
 serverRoutes.userLogin.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const credentials = getUsedBody(ctx) || await ctx.request.json();
-
 		const [sysUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]);
 		if (!sysUser) return { isValid: false };
 
 		const [hash, salt] = sysUser.password.split(":");
 		const key = (await generateShaKey(credentials.password, salt)).split(":")[0];
-
 		const isValid = key === hash;
 		if (!isValid) return { isValid };
 

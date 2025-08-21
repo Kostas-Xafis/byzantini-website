@@ -49,24 +49,12 @@ export const createSessionId = (size = 32) => {
 	return { session_id: R.hex(size), session_exp_date: Date.now() + 1000 * 60 * 60 * 24 * 7 };
 };
 
-export const getSessionId = (req: Request) => {
-	const cookies = req.headers.get("cookie");
-	if (!cookies) return null;
-	let cookie = "" as string | undefined;
-	if (cookies.indexOf(";") === -1) { cookie = cookies; }
-	else {
-		cookie = cookies
-			.replace(" ", "")
-			.split(";")
-			.find(cookie => cookie.startsWith("session_id"));
-	}
-
-	if (!cookie) return null;
-	return cookie.split("=")[1];
+export const getSessionId = (ctx: APIContext) => {
+	return ctx.cookies.get("session_id")?.value;
 };
 
 export async function authentication(ctx: APIContext) {
-	const session_id = getSessionId(ctx.request);
+	const session_id = getSessionId(ctx);
 	if (!session_id) return false;
 	if (small_cache.has(session_id)) {
 		return true;

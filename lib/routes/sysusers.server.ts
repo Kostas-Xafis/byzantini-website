@@ -24,7 +24,7 @@ serverRoutes.getById.func = ({ ctx }) => {
 
 serverRoutes.getBySid.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const session_id = getSessionId(ctx.request) as string;
+		const session_id = getSessionId(ctx) as string;
 		const [user] = await executeQuery<SysUsers>("SELECT id, email, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		return user;
 	});
@@ -33,7 +33,7 @@ serverRoutes.getBySid.func = ({ ctx }) => {
 serverRoutes.delete.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		let body = getUsedBody(ctx) || await ctx.request.json();
-		const session_id = getSessionId(ctx.request) as string;
+		const session_id = getSessionId(ctx) as string;
 		const [{ id, privilege }] = await T.executeQuery<Pick<SysUsers, "id" | "privilege">>("SELECT id, privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		if (body.includes(id)) {
 			body = body.filter(id => id !== id);
@@ -71,7 +71,7 @@ serverRoutes.createRegisterLink.func = ({ ctx }) => {
 		const link = R.link(64);
 		// 24 hours expiration
 		const exp_date = Date.now() + 1000 * 60 * 60 * 24;
-		const session_id = getSessionId(ctx.request);
+		const session_id = getSessionId(ctx);
 		const [{ privilege }] = await T.executeQuery<Pick<SysUsers, "privilege">>("SELECT privilege FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
 		await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date, privilege) VALUES (?, ?, ?)", [link, exp_date, privilege - 1]);
 		return { link };

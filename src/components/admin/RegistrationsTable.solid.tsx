@@ -972,6 +972,12 @@ export default function RegistrationsTable() {
 												onClick={() => setYear(2024)}>
 												2024-25
 											</button>
+											<button
+												data-active={year() === 2025}
+												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
+												onClick={() => setYear(2025)}>
+												2025-26
+											</button>
 										</div>
 									),
 								},

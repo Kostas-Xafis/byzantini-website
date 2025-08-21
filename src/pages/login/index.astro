@@ -80,7 +80,6 @@ export const prerender = true;
 			password: inputs.password.value,
 		};
 		const res = await useAPI("Authentication.userLogin", { RequestObject: data });
-
 		if (res.data && res.data.isValid) {
 			const { session_id } = res.data;
 			setCookie("session_id", session_id || "", 14);

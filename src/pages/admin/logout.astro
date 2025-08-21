@@ -3,7 +3,7 @@ import { getSessionId } from "../../../lib/utils.auth";
 import SigninLayout from "../../layouts/SigninLayout.astro";
 export const prerender = false;
 
-const sid = getSessionId(Astro.request);
+const sid = getSessionId(Astro);
 if (!sid) return Astro.redirect("/admin");
 ---
 
