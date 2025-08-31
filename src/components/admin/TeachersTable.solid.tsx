@@ -635,6 +635,9 @@ export default function TeachersTable() {
 			const cvHandler = FileHandler.getHandler<TeachersMetadata>(
 				PREFIX + modifyModal.type + "cv"
 			);
+			pictureHandler.setMetadata({ teacher_id: teacher.id, type: "picture" });
+			cvHandler.setMetadata({ teacher_id: teacher.id, type: "cv" });
+
 			await Promise.all([fileDelete(pictureHandler), fileDelete(cvHandler)]);
 			await Promise.all([fileUpload(pictureHandler), fileUpload(cvHandler)]);
 
@@ -662,18 +665,24 @@ export default function TeachersTable() {
 				)
 			)
 				.fill((field, key) => {
-					if (key === "picture" && teacher.picture) {
+					if (key === "picture") {
 						const metadata = { teacher_id: teacher.id, type: "picture" };
-						field.value = [teacher.picture, metadata];
 						field.metadata = metadata;
 						field.filePreview = picturePreview as any;
-					} else if (key === "cv" && teacher.cv) {
+						if (teacher.picture) {
+							field.value = [teacher.picture, metadata];
+						}
+					} else if (key === "cv") {
 						const metadata = { teacher_id: teacher.id, type: "cv" };
-						field.value = [teacher.cv, metadata];
 						field.metadata = metadata;
 						field.filePreview = cvPreview as any;
+						if (teacher.cv) {
+							field.value = [teacher.cv, metadata];
+						}
+					} else if (key in teacher) {
 						//@ts-ignore
-					} else if (key in teacher) field.value = teacher[key];
+						field.value = teacher[key];
+					}
 				})
 				.omit(["id"])
 				.getInputs(),
