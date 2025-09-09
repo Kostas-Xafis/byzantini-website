@@ -134,8 +134,18 @@ export class PDF {
 		p.drawText(month, { x: c.dateMM.x, y: c.dateMM.y, size: fontSize, font });
 		p.drawText(year, { x: c.dateYYYY.x, y: c.dateYYYY.y, size: fontSize, font });
 
-		p.drawText("24", { x: c.year1.x, y: c.year1.y, size: fontSize, font });
-		p.drawText("25", { x: c.year2.x, y: c.year2.y, size: fontSize, font });
+
+		const currentDate = new Date();
+		const currentYear = currentDate.getFullYear();
+		const currentMonth = currentDate.getMonth(); // 0-based, so September is 8
+
+		// If we're in September or later, show current year and next year
+		// Otherwise, show previous year and current year
+		const year1 = currentMonth >= 8 ? currentYear : currentYear - 1;
+		const year2 = year1 + 1;
+
+		p.drawText((year1 % 100).toString().padStart(2, '0'), { x: c.year1.x, y: c.year1.y, size: fontSize, font });
+		p.drawText((year2 % 100).toString().padStart(2, '0'), { x: c.year2.x, y: c.year2.y, size: fontSize, font });
 
 		if (reg?.instrument && reg?.instrument.length > 15) {
 			p.drawText(reg.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
