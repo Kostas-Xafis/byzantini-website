@@ -37,8 +37,7 @@ const monthsFull = [
 type DateInputProps = {
 	name: string;
 	prefix: string;
-	placeholder?: string | number;
-	value?: string | number;
+	value?: number;
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
@@ -47,15 +46,8 @@ type DateInputProps = {
 };
 
 export default function DateInput(props: DateInputProps) {
-	const {
-		name,
-		value,
-		required,
-		iconClasses,
-		disabled,
-		placeholder = 0,
-		blurDisabled = true,
-	} = props;
+	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
+	console.log({ name, value, required, iconClasses, disabled, blurDisabled });
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
@@ -64,14 +56,14 @@ export default function DateInput(props: DateInputProps) {
 		) as HTMLInputElement;
 		// initialize datepicker
 		if (!disabled) {
-			let finalDate = new Date(hasValue ? (value as number) : (placeholder as number));
+			let finalDate = new Date(hasValue ? (value as number) : Date.now());
 			new AirDatepicker(dateInput, {
 				view: "days",
 				firstDay: 0,
 				dateFormat: "dd-mm-yyyy",
 				autoClose: false,
 				isMobile: document.body.clientWidth < 768,
-				selectedDates: hasValue ? [value] : [placeholder],
+				selectedDates: hasValue ? [value] : false,
 				onSelect({ date, datepicker }) {
 					if (!date || Array.isArray(date)) return;
 					if (datepicker.currentView == "days") {
@@ -156,12 +148,7 @@ export default function DateInput(props: DateInputProps) {
 				}
 				type="text"
 				readOnly={true}
-				lang="en-GB"
-				value={
-					((value || placeholder) &&
-						formatDateToMarineTime((value || placeholder) as any)) ||
-					"dd/mm/yyyy"
-				}
+				value={(value && formatDateToMarineTime(value as number)) || "dd/mm/yyyy"}
 				name={name}
 				onfocus={(e: FocusEvent) =>
 					required && (e.currentTarget as HTMLElement).removeAttribute("required")

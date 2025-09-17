@@ -3,17 +3,21 @@ import { createDbConnection } from "../lib/db";
 import { CLI } from "../lib/utils.cli";
 
 const sqliteGenerateBackup = async () => {
-	const new_schema = ["PRAGMA journal_mode=WAL;"];
+	const schema = ["PRAGMA journal_mode=WAL;"];
+	const insertStatements = [];
+
 	const conn = createDbConnection("sqlite-prod");
 	const { rows: tables } = await conn.execute(
 		"SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'"
 	);
+
 	for (const table of tables) {
 		const tableName = table[2];
 		const createTableSql = table[4] + ";";
-		new_schema.push(createTableSql);
+		schema.push(createTableSql);
+
 		const { columns, rows } = await conn.execute(`SELECT * FROM ${tableName}`);
-		const insertStatements = rows
+		const tableInserts = rows
 			.map((row) => {
 				return `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${columns
 					.map((col) => JSON.stringify(row[col]))
@@ -21,9 +25,14 @@ const sqliteGenerateBackup = async () => {
 			})
 			.join("\n")
 			.replaceAll('\\"', '""');
-		new_schema.push(insertStatements);
+		insertStatements.push(tableInserts);
 	}
-	return new_schema.join("\n");
+
+	return {
+		schema: schema.join("\n"),
+		data: insertStatements.join("\n"),
+		full: [...schema, ...insertStatements].join("\n")
+	};
 };
 
 const getCurrentFormattedDate = () => {
@@ -48,13 +57,14 @@ async function productionDatabaseReplication(force = false) {
 			console.log("No backup found for today, generating a new one");
 		}
 	} else {
-		sqliteBackup = await sqliteGenerateBackup();
+		const { schema, data, full } = await sqliteGenerateBackup();
 		// Create sqlite backup file locally
-		await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
+		await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, full, {
 			createPath: true,
 		});
 		// Latest backup
-		await Bun.write(DEV_SNAPSHOT_LOCATION, sqliteBackup);
+		await Bun.write(DEV_SNAPSHOT_LOCATION, full);
+		await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/latest-schema.sql`, schema);
 	}
 
 	await CLI.executeCommands([

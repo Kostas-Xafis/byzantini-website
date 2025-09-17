@@ -265,7 +265,7 @@ export default function Input(props: InputProps) {
 				/>
 			</Show>
 			<Show when={type === "date"}>
-				<DateInput {...(props as InputProps & { value?: string | number })} />
+				<DateInput {...(props as InputProps & { value?: number })} />
 			</Show>
 			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>

@@ -215,6 +215,7 @@ const registrationsToTable = (
 		columns[17] = instruments.find((i) => i.id === columns[17])?.name;
 		if (columns[19] === 0 || !columns[19]) columns[19] = null;
 		if (columns[20] === 0 || !columns[20]) columns[20] = null;
+		// if (columns[21] === 0 || !columns[21]) columns[21] = null;
 		columns[22] = reg.amka;
 		columns[23] = reg.pass;
 		// Removing the subscription_url column
@@ -417,18 +418,16 @@ export default function RegistrationsTable() {
 			keyof Registrations,
 			InputProps
 		>;
-
+		let inputFields = new InputFields(inputs).fill((field, key) => {
+			if (key === "instrument_id") {
+				field.value = instruments.find((i) => i.id === registration.instrument_id)?.id || 0;
+			} else {
+				console.log(key, registration[key]);
+				field.value = registration[key] as any;
+			}
+		});
 		return {
-			inputs: new InputFields(inputs)
-				.fill((field, key) => {
-					if (key === "instrument_id") {
-						field.value =
-							instruments.find((i) => i.id === registration.instrument_id)?.id || 0;
-					} else {
-						field.value = registration[key] as any;
-					}
-				})
-				.getInputs(),
+			inputs: inputFields.getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Εγγραφής",
