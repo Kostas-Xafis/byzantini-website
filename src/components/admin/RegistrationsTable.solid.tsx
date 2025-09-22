@@ -422,7 +422,6 @@ export default function RegistrationsTable() {
 			if (key === "instrument_id") {
 				field.value = instruments.find((i) => i.id === registration.instrument_id)?.id || 0;
 			} else {
-				console.log(key, registration[key]);
 				field.value = registration[key] as any;
 			}
 		});
@@ -474,79 +473,49 @@ export default function RegistrationsTable() {
 				icon: ActionIcon.DOWNLOAD_SINGLE,
 			};
 
-		let bulk = selectedItems.length > 1;
-
-		const submit = !bulk
-			? async function () {
-					const student = registrations.find(
-						(r) => r.id === selectedItems[0]
-					) as Registrations;
-					const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
-					const instrument =
-						(student.class_id &&
-							(instruments.find(
-								(i) => i.id === student.instrument_id
-							) as Instruments)) ||
-						null;
-					try {
-						const pdf = new PDF();
-						pdf.setTemplateData(
-							student,
-							teacher?.fullname || "",
-							instrument?.name || ""
-						);
-						await pdf.download();
-						pushAlert(createAlert("success", "Επιτυχής λήψη PDF"));
-					} catch (error: any) {
-						pushAlert(createAlert("error", "Σφάλμα κατά την λήψη του PDF: ", error));
-					}
-			  }
-			: async function () {
-					const items = selectedItems.map((id) => {
-						const student = registrations.find((r) => r.id === id) as Registrations;
-						const teacher = teachers.find(
-							(t) => t.id === student.teacher_id
-						) as Teachers;
-						const instrument =
-							(student.class_id &&
-								(instruments.find(
-									(i) => i.id === student.instrument_id
-								) as Instruments)) ||
-							null;
-						return { student, teacher, instrument };
+		const submit = async function () {
+			const items = selectedItems.map((id) => {
+				const student = registrations.find((r) => r.id === id) as Registrations;
+				const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
+				const instrument =
+					(student.class_id &&
+						(instruments.find((i) => i.id === student.instrument_id) as Instruments)) ||
+					null;
+				return { student, teacher, instrument };
+			});
+			let pdfArr: PDF[] = [];
+			try {
+				for (const item of items) {
+					const pdf = new PDF();
+					pdf.setTemplateData(
+						item.student,
+						item.teacher?.fullname || "",
+						item.instrument?.name || ""
+					);
+					pdfArr.push(pdf);
+				}
+				const alert = pushAlert(
+					createAlert("success", "Λήψη των PDF: 0 από " + pdfArr.length)
+				);
+				await PDF.downloadBulk(pdfArr, (pg) => {
+					alert.message = "Λήψη των PDF: " + pg + " από " + pdfArr.length;
+					updateAlert(alert);
+					return new Promise((res, rej) => {
+						alert.onDidUpdate = res;
 					});
-					let pdfArr: PDF[] = [];
-					try {
-						for (const item of items) {
-							const pdf = new PDF();
-							pdf.setTemplateData(
-								item.student,
-								item.teacher?.fullname || "",
-								item.instrument?.name || ""
-							);
-							pdfArr.push(pdf);
-						}
-						const alert = pushAlert(
-							createAlert("success", "Λήψη των PDF: 0 από " + pdfArr.length)
-						);
-						await PDF.downloadBulk(pdfArr, (pg) => {
-							alert.message = "Λήψη των PDF: " + pg + " από " + pdfArr.length;
-							updateAlert(alert);
-							return new Promise((res, rej) => {
-								alert.onDidUpdate = res;
-							});
-						});
-					} catch (error: any) {
-						pushAlert(createAlert("error", "Σφάλμα κατά την λήψη των PDF: ", error));
-					}
-			  };
+				});
+			} catch (error: any) {
+				pushAlert(createAlert("error", "Σφάλμα κατά την λήψη των PDF: ", error));
+			}
+		};
+		let bulk = selectedItems.length > 1;
 		return {
 			inputs: {},
 			onSubmit: submit,
 			submitText: "Λήψη",
-			headerText: bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγραφής σε PDF",
+			headerText: "Επιτυχής " + (bulk ? "Λήψη Εγγραφών σε PDF" : "Λήψη Εγγραφής σε PDF"),
 			type: ActionEnum.DOWNLOAD_PDF,
-			icon: selectedItems.length > 1 ? ActionIcon.DOWNLOAD_ZIP : ActionIcon.DOWNLOAD_SINGLE,
+			icon: bulk ? ActionIcon.DOWNLOAD_ZIP : ActionIcon.DOWNLOAD_SINGLE,
 		};
 	});
 
@@ -796,73 +765,42 @@ export default function RegistrationsTable() {
 		if (!teachers || !registrations || !instruments || selectedItems.length <= 0)
 			return printModal;
 
+		const submit = async function () {
+			const items = selectedItems.map((id) => {
+				const student = registrations.find((r) => r.id === id) as Registrations;
+				const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
+				const instrument =
+					(student.class_id &&
+						(instruments.find((i) => i.id === student.instrument_id) as Instruments)) ||
+					null;
+				return { student, teacher, instrument };
+			});
+			let pdfArr: PDF[] = [];
+			try {
+				for (const item of items) {
+					const pdf = new PDF();
+					pdf.setTemplateData(
+						item.student,
+						item.teacher?.fullname || "",
+						item.instrument?.name || ""
+					);
+					pdfArr.push(pdf);
+				}
+				await PDF.printBulk(pdfArr);
+				pushAlert(
+					createAlert("success", "Επιτυχής εκτύπωση των " + pdfArr.length + " PDF")
+				);
+			} catch (error: any) {
+				pushAlert(createAlert("error", "Σφάλμα κατά την εκτύπωση των PDF: ", error));
+			}
+		};
 		let bulk = selectedItems.length > 1;
-
-		const submit = !bulk
-			? async function () {
-					const student = registrations.find(
-						(r) => r.id === selectedItems[0]
-					) as Registrations;
-					const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
-					const instrument =
-						(student.class_id &&
-							(instruments.find(
-								(i) => i.id === student.instrument_id
-							) as Instruments)) ||
-						null;
-					try {
-						const pdf = new PDF();
-						pdf.setTemplateData(
-							student,
-							teacher?.fullname || "",
-							instrument?.name || ""
-						);
-						await pdf.print();
-						pushAlert(createAlert("success", "Επιτυχής εκτύπωση PDF"));
-					} catch (error: any) {
-						pushAlert(
-							createAlert("error", "Σφάλμα κατά την εκτύπωση του PDF: ", error)
-						);
-					}
-			  }
-			: async function () {
-					const items = selectedItems.map((id) => {
-						const student = registrations.find((r) => r.id === id) as Registrations;
-						const teacher = teachers.find(
-							(t) => t.id === student.teacher_id
-						) as Teachers;
-						const instrument =
-							(student.class_id &&
-								(instruments.find(
-									(i) => i.id === student.instrument_id
-								) as Instruments)) ||
-							null;
-						return { student, teacher, instrument };
-					});
-					let pdfArr: PDF[] = [];
-					try {
-						for (const item of items) {
-							const pdf = new PDF();
-							pdf.setTemplateData(
-								item.student,
-								item.teacher?.fullname || "",
-								item.instrument?.name || ""
-							);
-							pdfArr.push(pdf);
-						}
-						await PDF.printBulk(pdfArr);
-						pushAlert(createAlert("success", "Εκτύπωση των " + pdfArr.length + " PDF"));
-					} catch (error: any) {
-						pushAlert(
-							createAlert("error", "Σφάλμα κατά την εκτύπωση των PDF: ", error)
-						);
-					}
-			  };
 		return {
 			inputs: {},
 			onSubmit: submit,
 			submitText: "Εκτύπωση",
-			headerText: bulk ? "Εκτύπωση Εγγραφών σε PDF" : "Εκτύπωση Εγγραφής σε PDF",
+			headerText:
+				"Επιτυχής " + (bulk ? "εκτύπωση Εγγραφών σε PDF" : "εκτύπωση Εγγραφής σε PDF"),
 			...printModal,
 		};
 	});
