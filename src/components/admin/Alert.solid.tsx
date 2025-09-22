@@ -82,7 +82,9 @@ export function createAlert(
 ): Alert {
 	let msg = "";
 	message.forEach((m) => {
-		if (typeof m === "object") {
+		if (m instanceof Error) {
+			msg += m.message;
+		} else if (typeof m === "object") {
 			msg += JSON.stringify(m);
 		} else {
 			msg += m;
