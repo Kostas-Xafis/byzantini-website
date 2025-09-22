@@ -118,9 +118,13 @@ export default function Modal(props: Props) {
 								each={Object.values(actionStore.action.inputs).filter(
 									(input) => !!input.name
 								)}>
-								{(input) => (
-									<Input {...(input as InputProps)} prefix={MODAL_PREFIX}></Input>
-								)}
+								{(inputProps) => {
+									return (
+										<Input
+											{...(inputProps as InputProps)}
+											prefix={MODAL_PREFIX}></Input>
+									);
+								}}
 							</For>
 						</Show>
 					</form>
