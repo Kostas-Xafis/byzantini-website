@@ -183,13 +183,13 @@ export class PDF {
 		a.remove();
 	}
 
-	public static async convertFirstPageToImage(file: ArrayBuffer | string): Promise<string> {
+	public static async convertFirstPageToImage(buffer: Uint8Array): Promise<string> {
 		const { getDocument, GlobalWorkerOptions } = await dynamicImport<typeof import("pdfjs-dist")>("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs", "pdfjsLib");
 		if (!GlobalWorkerOptions.workerSrc)
 			GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs';
 
 		// Load the PDF document
-		const pdf = await getDocument({ data: file }).promise;
+		const pdf = await getDocument({ data: buffer }).promise;
 
 		// Get the first page
 		const page = await pdf.getPage(1);

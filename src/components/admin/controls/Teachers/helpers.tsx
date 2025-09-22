@@ -299,19 +299,24 @@ export function picturePreview(file: FileProxy<TeachersMetadata>) {
 export function cvPreview(file: FileProxy<TeachersMetadata>) {
 	const id = Random.string(12, "hex");
 
-	// (async function () {
-	// 	await sleep(10);
-	// 	const pdf = await (await fetch("/kathigites/cv/" + file.getName())).blob();
-	// 	file.setFile(pdf, { type: "application/pdf" });
-	// 	const src = await FileHandler.fileToImageUrl(file);
-	// 	document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	// })();
+	(async function () {
+		await sleep(10);
+		let pdf: ArrayBuffer;
+		if (file.isProxy()) {
+			pdf = await (await fetch("/kathigites/cv/" + file.getName())).arrayBuffer();
+		} else {
+			pdf = await (file.getFile() as File).arrayBuffer();
+		}
+		file.setFile(pdf, { type: "application/pdf" });
+		const src = await FileHandler.fileToImageUrl(file);
+		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
+	})();
 
 	return (
 		<img
 			data-id={id}
 			// alt="Βιογραφικό"
-			class="object-cover w-full overflow-hidden scale-[1.5] translate-y-[25%]"
+			class="object-cover w-full overflow-hidden scale-[1.3]"
 		/>
 	);
 }

@@ -1,4 +1,4 @@
-import { batch } from "solid-js";
+import { batch, type Setter } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import { useAPI, type APIStore, API } from "./useAPI.solid";
@@ -29,6 +29,7 @@ type HydrateById = {
 	id: number;
 	isMultiple: false;
 };
+
 
 
 export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>, mutations: Mutation<any>[]; sort?: "ascending" | "descending"; }) {
@@ -82,3 +83,5 @@ export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>, mut
 
 	return setHydration;
 }
+
+export type HydrateByIdReturnType = Setter<HydrateById>;

@@ -105,9 +105,9 @@ export default function SysUsersTable() {
 			if (!res.data && !res.message) return;
 			setSysUserHydrate({ action: ActionEnum.DELETE, ids });
 			if (ids.length === 1) {
-				pushAlert(createAlert("success", "Ο χρήστης διαγράφηκε επιτυχώς!"));
+				pushAlert(createAlert("success", "Ο διαχειριστής διαγράφηκε επιτυχώς!"));
 			} else {
-				pushAlert(createAlert("success", "Οι χρήστες διαγράφηκαν επιτυχώς!"));
+				pushAlert(createAlert("success", "Οι διαχειριστές διαγράφηκαν επιτυχώς!"));
 			}
 		};
 		return {

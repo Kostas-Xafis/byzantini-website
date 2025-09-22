@@ -315,11 +315,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		});
 	}
 
-	static async fileToUint8Array(file: File): Promise<Uint8Array> {
-		return new Uint8Array(await file.arrayBuffer());
-	}
-
-	static async fileToUint8(file?: File | null): Promise<Uint8Array | null> {
+	static async fileToUint8Array(file?: File | null): Promise<Uint8Array | null> {
 		if (!file || !file.name) return Promise.resolve(null);
 		return new Uint8Array(await file.arrayBuffer());
 	}
@@ -330,12 +326,12 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		const type = fileProxy.getFile()?.type;
 		if (!type) throw Error("File type not found");
 
-		if (fileProxy.isProxy()) throw Error("File is a proxy");
+		if (fileProxy.isProxy()) throw Error("Tried to convert a proxy file to an image");
 
 		if (type.includes("image")) {
 			return URL.createObjectURL(file);
 		} else if (type.includes("pdf")) {
-			return await PDF.convertFirstPageToImage(await file.arrayBuffer());
+			return await PDF.convertFirstPageToImage(new Uint8Array(await file.arrayBuffer()));
 		} else {
 			throw Error("File type not supported");
 		}
