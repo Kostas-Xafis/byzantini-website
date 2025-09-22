@@ -159,7 +159,7 @@ export default function Input(props: InputProps) {
 		show = true,
 		isExtended,
 	} = props;
-	if (type === null) return <></>;
+	if (type === null || type === "hidden") return <></>;
 
 	let [isShown, setIsShown] = createSignal(show);
 
@@ -220,6 +220,7 @@ export default function Input(props: InputProps) {
 				return "";
 		}
 	};
+
 	return (
 		<label
 			for={name}
