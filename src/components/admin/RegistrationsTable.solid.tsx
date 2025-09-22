@@ -28,13 +28,11 @@ import { toggleCheckbox, toggleCheckboxes } from "./table/Row.solid";
 
 const PREFIX = "registrations";
 
-type RegistrationsTable = Omit<Registrations, "registration_url">;
-
 const RegistrationsInputs = (
 	student: Registrations,
 	teachers: Teachers[],
 	instruments: Instruments[]
-): Record<keyof RegistrationsTable, InputProps> => {
+): Record<keyof Registrations, InputProps> => {
 	let sortTeachers = teachers
 		.map((t) => t)
 		.sort((a, b) => {
@@ -198,6 +196,12 @@ const RegistrationsInputs = (
 				{ value: 0, label: "Όχι", selected: !student?.pass },
 			],
 		},
+		registration_url: {
+			label: "URL Εγγραφής",
+			name: "registration_url",
+			type: "hidden",
+			iconClasses: "fa-solid fa-link",
+		},
 	};
 };
 
@@ -218,12 +222,12 @@ const registrationsToTable = (
 		// if (columns[21] === 0 || !columns[21]) columns[21] = null;
 		columns[22] = reg.amka;
 		columns[23] = reg.pass;
-		// Removing the subscription_url column
-		return columns.slice(0, 24) as unknown as RegistrationsTable;
+		columns[24] = location.origin + "/eggrafes/?regid=" + reg.registration_url;
+		return columns;
 	});
 };
 
-const columns: ColumnType<RegistrationsTable> = {
+const columns: ColumnType<Registrations> = {
 	id: { type: "number", name: "Id" },
 	am: { type: "number", name: "Αριθμός Μητρώου", size: 7 },
 	last_name: { type: "string", name: "Επώνυμο", size: 15 },
@@ -248,6 +252,7 @@ const columns: ColumnType<RegistrationsTable> = {
 	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής", size: 12 },
 	amka: { type: "string", name: "ΑΜΚΑ", size: 15 },
 	pass: { type: "boolean", name: "Προάχθει", size: 8 },
+	registration_url: { type: "link", name: "URL Εγγραφής", size: 12 },
 };
 
 const searchColumns: SearchColumn[] = [
