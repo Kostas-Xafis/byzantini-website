@@ -1,5 +1,5 @@
 import { createDbConnection } from "../db";
-import { deepCopy } from "../utils.client";
+import { deepCopy } from "../utilities/objects";
 import { execTryCatch, silentImport } from "../utils.server";
 import { SchemaRoutes } from "./schema.client";
 
@@ -58,7 +58,7 @@ serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 		if (CONNECTOR === "mysql") {
 			throw Error(`Cannot revert schema for '${CONNECTOR}' connector`);
 		}
-		if (!SAFE_BACKUP_SNAPSHOT && !(await fs.exists(SAFE_BACKUP_SNAPSHOT))) {
+		if (SAFE_BACKUP_SNAPSHOT && !(await fs.exists(SAFE_BACKUP_SNAPSHOT))) {
 			throw Error("No safe schema found. Please create a safe schema before migrating");
 		}
 		const migrationFile = await fs.readFile(LATEST_MIGRATION_FILE, "utf-8");

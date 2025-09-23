@@ -138,10 +138,10 @@
 	</style>
 </main>
 <script>
-	import { iOS, onElementMount } from "../../../lib/utils.client";
+	import { iOS, onElementMount } from "../../../lib/utilities/dom";
 	onElementMount("#welcome-page > h1", () => {
 		const heads = [
-			...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3"),
+			...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")
 		] as HTMLElement[];
 		heads.forEach((head, i) => {
 			let txt = head.innerText;
@@ -163,7 +163,7 @@
 	});
 	onElementMount("#xairetismos-btn", () => {
 		const btn = document.querySelector("#xairetismos-btn") as HTMLElement;
-		btn.addEventListener("click", (e) => {
+		btn.addEventListener("click", e => {
 			e.preventDefault();
 			const xairetismos = document.querySelector("#xairetismos-mitropolitou") as HTMLElement;
 			xairetismos.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -172,9 +172,9 @@
 	if (iOS()) {
 		onElementMount("#welcome-page > h1", () => {
 			const heads = [
-				...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3"),
+				...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")
 			] as HTMLElement[];
-			heads.forEach((head) => {
+			heads.forEach(head => {
 				head.style.setProperty("letter-spacing", "-1px");
 			});
 		});

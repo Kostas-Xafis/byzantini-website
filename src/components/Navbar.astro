@@ -251,8 +251,7 @@ const isMainPage = Astro.url.pathname === "/";
 	</style>
 </>
 <script>
-	import { getParent } from "../../lib/utils.client";
-	import { AnimTimeline, iOS, onElementMount } from "../../lib/utils.client";
+	import { AnimTimeline, getParent, iOS, onElementMount } from "../../lib/utilities/dom";
 	window.location.pathname === "/" &&
 		onElementMount("#welcome-page", () => {
 			const obsv = new IntersectionObserver(

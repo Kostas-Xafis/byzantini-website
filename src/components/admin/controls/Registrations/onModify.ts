@@ -1,7 +1,7 @@
 import { createMemo } from "solid-js";
 import type { HydrateByIdReturnType } from "../../../../../lib/hooks/useHydrateById.solid";
 import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import { type ExtendedFormData } from "../../../../../lib/utils.client";
+import { type ExtendedFormData } from "../../../../../lib/utilities/forms";
 import type { Registrations } from "../../../../../types/entities";
 import { InputFields, type Props as InputProps } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";

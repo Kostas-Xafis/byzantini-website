@@ -1,5 +1,5 @@
 import type { Payoffs } from "../../types/entities";
-import { deepCopy } from "../utils.client";
+import { deepCopy } from "../utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { PayoffsRoutes, type PayoffGetResponse } from "./payoffs.client";
 

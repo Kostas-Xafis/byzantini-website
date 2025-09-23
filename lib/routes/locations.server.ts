@@ -1,6 +1,6 @@
 import type { Locations } from "../../types/entities";
 import { Bucket } from "../bucket";
-import { deepCopy } from "../utils.client";
+import { deepCopy } from "../utilities/objects";
 import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { LocationsRoutes } from "./locations.client";
 

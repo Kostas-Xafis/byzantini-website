@@ -2,7 +2,7 @@ import { createMemo } from "solid-js";
 import { FileHandler } from "../../../../../lib/fileHandling.client";
 import type { HydrateByIdReturnType } from "../../../../../lib/hooks/useHydrateById.solid";
 import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import { type ExtendedFormData } from "../../../../../lib/utils.client";
+import { type ExtendedFormData } from "../../../../../lib/utilities/forms";
 import type { SimpleTeacher as Teachers } from "../../../../../types/entities";
 import { InputFields } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";

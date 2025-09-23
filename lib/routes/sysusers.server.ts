@@ -1,7 +1,7 @@
 import type { SysUserRegisterLink, SysUsers } from "../../types/entities";
 import { Random as R } from "../random";
-import { createSessionId, generateShaKey, getSessionId } from "../utils.auth";
-import { deepCopy } from "../utils.client";
+import { createSessionId, generateShaKey, getSessionId } from "../utilities/authentication";
+import { deepCopy } from "../utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { SysUsersRoutes } from "./sysusers.client";
 

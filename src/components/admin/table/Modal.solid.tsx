@@ -1,12 +1,13 @@
 import { For, Show, batch, createEffect, createSignal, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
-import { ExtendedFormData, isAsyncGeneratorFunction } from "../../../../lib/utils.client";
+import { ExtendedFormData } from "../../../../lib/utilities/forms";
+import { isAsyncGeneratorFunction } from "../../../../lib/utilities/functionValidation";
 import type { Props as InputProps } from "../../input/Input.solid";
 import Input from "../../input/Input.solid";
+import Spinner from "../../other/Spinner.solid";
 import { createAlert, pushAlert } from "../Alert.solid";
 import { CloseButton } from "./CloseButton.solid";
 import type { Action } from "./TableControls.solid";
-import Spinner from "../../other/Spinner.solid";
 
 type Props = {
 	prefix: string;

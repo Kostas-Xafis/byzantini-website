@@ -1,6 +1,6 @@
 ---
 import { API, useAPI } from "../../../lib/hooks/useAPI.astro";
-import { teacherTitleByGender } from "../../../lib/utils.client";
+import { teacherTitleByGender } from "../../../lib/utilities/text";
 import type { Instruments } from "../../../types/entities";
 import Layout from "../../layouts/Layout.astro";
 
@@ -215,7 +215,8 @@ const cvSrc = "kathigites/cv/";
 	</style>
 </Layout>
 <script>
-	import { AnimTimeline, onElementMount, UpdateHandler } from "../../../lib/utils.client";
+	import { UpdateHandler } from "../../../lib/utilities/UpdateHandler";
+	import { AnimTimeline, onElementMount } from "../../../lib/utilities/dom";
 
 	document.querySelectorAll("div > button[data-type]").forEach(btnChild => {
 		const btn = btnChild.parentElement as HTMLElement;

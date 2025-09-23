@@ -1,8 +1,12 @@
-import type { Registrations } from "../types/entities";
 import type { PDFRequest } from "../pdfWorker/src/types";
+import type { Registrations } from "../types/entities";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
-import { asyncQueue, dynamicImport, getCookie, loadScript, looseStringEquals, sleep } from "./utils.client";
+import { asyncQueue } from "./utilities/AsyncQueue";
+import { getCookie } from "./utilities/cookies";
+import { dynamicImport, loadScript } from "./utilities/scripts";
+import { sleep } from "./utilities/sleep";
+import { looseStringEquals } from "./utilities/string";
 
 const PDFTypeWrap = <Type extends PDFRequest["type"]>(type: Type, data: PDFRequest<Type>["request"]) => {
 	return {

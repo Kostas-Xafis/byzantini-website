@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import type { ExtendedFormData } from "../../../lib/utils.client";
+import type { ExtendedFormData } from "../../../lib/utilities/forms";
 import type { Books, Wholesalers } from "../../../types/entities";
 import type { ReplaceName } from "../../../types/helpers";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";

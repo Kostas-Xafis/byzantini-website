@@ -58,7 +58,7 @@ const { title, content, okButton = "Εντάξει", cancelButton } = Astro.prop
 	</div>
 </div>
 <script>
-	import { AnimTimeline } from "../../../lib/utils.client.ts";
+	import { AnimTimeline } from "../../../lib/utilities/dom.ts";
 	const popup = document.getElementById("popup");
 
 	popup?.addEventListener("show", () => {

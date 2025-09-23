@@ -1,6 +1,6 @@
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
 import { Bucket } from "../bucket";
-import { deepCopy } from "../utils.client";
+import { deepCopy } from "../utilities/objects";
 import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody } from "../utils.server";
 import { TeachersRoutes } from "./teachers.client";
 

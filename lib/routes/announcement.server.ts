@@ -4,7 +4,8 @@ import { Buffer } from "node:buffer";
 import type { AnnouncementImages, Announcements } from "../../types/entities";
 import type { SitemapItem } from "../../types/global";
 import { Bucket } from "../bucket";
-import { asyncQueue, deepCopy } from "../utils.client";
+import { asyncQueue } from "../utilities/AsyncQueue";
+import { deepCopy } from "../utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 

@@ -2,7 +2,7 @@ import { FileHandler, FileProxy } from "../../../../../lib/fileHandling.client";
 import { useAPI } from "../../../../../lib/hooks/useAPI.solid";
 import { Random } from "../../../../../lib/random";
 import { API } from "../../../../../lib/routes/index.client";
-import { sleep } from "../../../../../lib/utils.client";
+import { sleep } from "../../../../../lib/utilities/sleep";
 import type {
 	ClassType,
 	Teachers as FullTeachers,
@@ -300,25 +300,41 @@ export function cvPreview(file: FileProxy<TeachersMetadata>) {
 	const id = Random.string(12, "hex");
 
 	(async function () {
-		await sleep(10);
-		let pdf: ArrayBuffer;
 		if (file.isProxy()) {
-			pdf = await (await fetch("/kathigites/cv/" + file.getName())).arrayBuffer();
-		} else {
-			pdf = await (file.getFile() as File).arrayBuffer();
+			const pdf = await (await fetch("/kathigites/cv/" + file.getName())).arrayBuffer();
+			file.setFile(pdf, { type: "application/pdf" });
 		}
-		file.setFile(pdf, { type: "application/pdf" });
 		const src = await FileHandler.fileToImageUrl(file);
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
+		const canvas = document.querySelector(`canvas[data-id="${id}"]`) as HTMLCanvasElement;
+		if (!canvas) return;
+
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		const img = new Image();
+		img.onload = function () {
+			// Set canvas size to match the container
+			const rect = canvas.getBoundingClientRect();
+			canvas.width = rect.width;
+			canvas.height = rect.height;
+
+			// Calculate scaled dimensions (0.85x scale)
+			const scale = 0.6;
+			const scaledWidth = img.width * scale;
+			const scaledHeight = img.height * scale;
+
+			// Calculate position to align to top-left corner
+			const x = -50; // Left alignment
+			const y = -50; // Top alignment
+
+			// Clear canvas and draw scaled image
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+		};
+		img.src = src;
 	})();
 
-	return (
-		<img
-			data-id={id}
-			// alt="Βιογραφικό"
-			class="object-cover w-full overflow-hidden scale-[1.3]"
-		/>
-	);
+	return <canvas data-id={id} class="w-full overflow-hidden" style="object-fit: cover;" />;
 }
 
 export const PREFIX = "teachers";

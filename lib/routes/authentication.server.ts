@@ -1,6 +1,6 @@
 import type { SysUsers } from "../../types/entities";
-import { authentication, createSessionId, generateShaKey } from "../utils.auth";
-import { deepCopy } from "../utils.client";
+import { authentication, createSessionId, generateShaKey } from "../utilities/authentication";
+import { deepCopy } from "../utilities/objects";
 import { execTryCatch, getUsedBody } from "../utils.server";
 import { AuthenticationRoutes } from "./authentication.client";
 

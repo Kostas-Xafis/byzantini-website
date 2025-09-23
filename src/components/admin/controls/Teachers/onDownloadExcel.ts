@@ -1,7 +1,7 @@
 import { createMemo } from "solid-js";
 import { loadXLSX } from "../../../../../lib/pdf.client";
 import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import { teacherTitleByGender } from "../../../../../lib/utils.client";
+import { teacherTitleByGender } from "../../../../../lib/utilities/text";
 import type { SimpleTeacher as Teachers } from "../../../../../types/entities";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";

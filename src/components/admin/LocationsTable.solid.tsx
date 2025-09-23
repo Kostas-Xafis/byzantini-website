@@ -4,7 +4,9 @@ import { FileHandler, FileProxy } from "../../../lib/fileHandling.client";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { sleep, type ExtendedFormData } from "../../../lib/utils.client";
+import { Random } from "../../../lib/random";
+import type { ExtendedFormData } from "../../../lib/utilities/forms";
+import { sleep } from "../../../lib/utilities/sleep";
 import type { Locations } from "../../../types/entities";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -12,7 +14,6 @@ import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
-import { Random } from "../../../lib/random";
 
 const PREFIX = "locations";
 

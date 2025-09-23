@@ -1,6 +1,6 @@
 import type { EmailSubscriptions, Registrations } from "../../types/entities";
 import { Random as R } from "../random";
-import { deepCopy } from "../utils.client";
+import { deepCopy } from "../utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, isProduction } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 

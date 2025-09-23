@@ -1,12 +1,14 @@
 import { file, hash, write } from "bun";
 import { test as bun_test, expect } from "bun:test";
-import { BaseSchema, parse } from "valibot";
-import { APIEndpoints, APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
+import { type BaseSchema, parse } from "valibot";
+import { APIEndpoints, type APIResponse, type APIArgs, type APIEndpointNames } from "../lib/routes/index.client";
 import { APIRaw } from "../lib/routes/index.server";
-import { convertToUrlFromArgs, isAsyncFunction, objToFormData } from "../lib/utils.client";
+import { convertToUrlFromArgs } from "../lib/utilities/url";
+import { objToFormData } from "../lib/utilities/forms";
+import { isAsyncFunction } from "../lib/utilities/functionValidation";
 import { assertOwnProp } from "../lib/utils.server";
-import { TypeGuard } from "../types/helpers";
-import { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
+import type { TypeGuard } from "../types/helpers";
+import type { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
 
 const { VITE_URL = "", FORCE_TEST = false } = import.meta.env;
 let session_id = "";
@@ -88,7 +90,7 @@ export function expectBody(body: DefaultEndpointResponse["res"], expected: strin
 			expect(body.data).toBeDefined();
 			try {
 				expect(parse(expected, body.data)).toBeObject();
-			} catch (err) {
+			} catch (err: any) {
 				throw new Error(err);
 			}
 		}
@@ -103,8 +105,8 @@ export async function getJson<T>(res: Response): Promise<TypeGuard<T> extends fa
 }
 
 class Signal {
-	#res: (value: boolean) => void;
-	#rej: (err: unknown) => void;
+	#res!: (value: boolean) => void;
+	#rej!: (err: unknown) => void;
 	#promise: Promise<boolean>;
 	constructor() {
 		this.#promise = new Promise((res, rej) => {
@@ -203,6 +205,7 @@ const functionHash = (func: Function) => hash(func.toString()).toString(16);
 const apiCallsHash = (func: Function): [string, string][] =>
 	[...func.toString().matchAll(/(useTestAPI\(\")[\w+.]+/g)]
 		.join("").replaceAll("useTestAPI(\"", "")
+		//@ts-ignore
 		.split(",").filter(Boolean).map(EndpointName => [EndpointName, functionHash(APIRaw[EndpointName].func)]) as any;
 const checkCache = (key: string, hash: string) => {
 	return !cached_tests[key] || cached_tests[key] !== hash;

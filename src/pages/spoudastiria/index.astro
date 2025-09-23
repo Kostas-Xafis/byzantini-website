@@ -219,7 +219,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 </Layout>
 
 <script>
-	import { AnimTimeline, onElementMount } from "../../../lib/utils.client";
+	import { AnimTimeline, onElementMount } from "../../../lib/utilities/dom";
 
 	window.matchMedia("(min-width: 641px)").matches &&
 		onElementMount("#locationsContainer", async function () {
@@ -286,22 +286,24 @@ const otherLocations = _locations.filter(l => !!l.partner);
 					container
 						.querySelector(`div[data-name='${locationName}']`)
 						?.classList.forEach(v => selectedClassList.push(v));
-				}).step({
-					time: 300,
-					anim: () => {
-						prevLocation.classList.remove("show", "remove");
-						void prevLocation.offsetWidth;
-						container
-							.querySelector(`div[data-name='${locationName}']`)
-							?.classList.add("show");
-						heading.innerText = locationName;
+				})
+					.step({
+						time: 300,
+						anim: () => {
+							prevLocation.classList.remove("show", "remove");
+							void prevLocation.offsetWidth;
+							container
+								.querySelector(`div[data-name='${locationName}']`)
+								?.classList.add("show");
+							heading.innerText = locationName;
 
-						prevLocation.classList.forEach(v => locationClassList.push(v));
-						container
-							.querySelector(`div[data-name='${locationName}']`)
-							?.classList.forEach(v => selectedClassList.push(v));
-					}
-				}).start();
+							prevLocation.classList.forEach(v => locationClassList.push(v));
+							container
+								.querySelector(`div[data-name='${locationName}']`)
+								?.classList.forEach(v => selectedClassList.push(v));
+						}
+					})
+					.start();
 			});
 		});
 	onElementMount("#btsContainer", () => {

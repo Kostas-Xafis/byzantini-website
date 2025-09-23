@@ -3,7 +3,8 @@ import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { looseStringIncludes, teacherTitleByGender } from "../../../lib/utils.client";
+import { looseStringIncludes } from "../../../lib/utilities/string";
+import { teacherTitleByGender } from "../../../lib/utilities/text";
 import type {
 	Teachers as FullTeachers,
 	TeacherClasses,

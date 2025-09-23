@@ -4,7 +4,8 @@ import { parse } from "valibot";
 import { ActionEnum } from "../../src/components/admin/table/TableControlTypes";
 import type { DefaultEndpointResponse } from "../../types/routes";
 import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../routes/index.client";
-import { convertToUrlFromArgs, objToFormData } from "../utils.client";
+import { objToFormData } from "../utilities/forms";
+import { convertToUrlFromArgs } from "../utilities/url";
 import { assertOwnProp } from "../utils.server";
 
 export type APIStore = Partial<APIResponse>;

@@ -1,0 +1,16 @@
+{
+	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+        "module": "es2022",
+    	"noErrorTruncation": true,
+		"strict": true,
+		"allowUnusedLabels": true,
+		"diagnostics": true,
+		"extendedDiagnostics": true,
+		"noImplicitAny": true,
+		"skipLibCheck": true,
+		"alwaysStrict": true,
+		"noUncheckedIndexedAccess": false,
+		"noEmit": true,
+	}
+}

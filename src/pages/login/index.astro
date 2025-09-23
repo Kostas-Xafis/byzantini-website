@@ -68,7 +68,7 @@ export const prerender = true;
 </SigninLayout>
 <script>
 	import { useAPI } from "../../../lib/hooks/useAPI.astro";
-	import { setCookie } from "../../../lib/utils.client";
+	import { setCookie } from "../../../lib/utilities/cookies";
 
 	let tid: number | null = null;
 	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {

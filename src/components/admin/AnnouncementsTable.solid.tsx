@@ -5,13 +5,11 @@ import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAP
 import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
 import { Random } from "../../../lib/random";
-import {
-	ExtendedFormData,
-	asyncQueue,
-	deepCopy,
-	isSafeURLPath,
-	sleep,
-} from "../../../lib/utils.client";
+import { asyncQueue } from "../../../lib/utilities/AsyncQueue";
+import { ExtendedFormData } from "../../../lib/utilities/forms";
+import { deepCopy } from "../../../lib/utilities/objects";
+import { sleep } from "../../../lib/utilities/sleep";
+import { isSafeURLPath } from "../../../lib/utilities/url";
 import type { AnnouncementImages, Announcements } from "../../../types/entities";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";

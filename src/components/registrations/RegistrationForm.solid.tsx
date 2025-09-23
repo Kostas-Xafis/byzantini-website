@@ -11,7 +11,9 @@ import {
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { Random as R } from "../../../lib/random";
-import { AnimTimeline, ExtendedFormData, deepCopy } from "../../../lib/utils.client";
+import { AnimTimeline } from "../../../lib/utilities/dom";
+import { ExtendedFormData } from "../../../lib/utilities/forms";
+import { deepCopy } from "../../../lib/utilities/objects";
 import { customEvent } from "../../../types/custom-events";
 import type {
 	Instruments,

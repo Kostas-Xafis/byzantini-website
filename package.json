@@ -15,11 +15,11 @@
 		"build": "astro build",
 		"bun-build": "bunx --bun astro build",
 		"preview": "bunx --bun --env-file='.env.production' astro build && wrangler pages dev ./dist",
-		"docker-pdf": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker run --network host -d pdfworker",
-		"docker-img": "docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/ && docker run --network host -d imgcomp",
-		"docker-build": "docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/",
-		"docker-run": "docker run --network host -d pdfworker && docker run --network host -d imgcomp",
-		"docker-logs": "docker logs -f $(docker ps -q --filter ancestor=pdfworker) && docker logs -f $(docker ps -q --filter ancestor=imgcomp)"
+		"docker-pdf": "sudo docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && sudo docker run --network host -d pdfworker",
+		"docker-img": "sudo docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/ && sudo docker run --network host -d imgcomp",
+		"docker-build": "sudo docker build -f ./pdfWorker/local.Dockerfile -t pdfworker ./pdfWorker/ && sudo docker build -f ./imageCompression/local.Dockerfile -t imgcomp ./imageCompression/",
+		"docker-run": "sudo docker run --network host -d pdfworker && sudo docker run --network host -d imgcomp",
+		"docker-logs": "sudo docker logs -f $(sudo docker ps -q --filter ancestor=pdfworker) && sudo docker logs -f $(sudo docker ps -q --filter ancestor=imgcomp)"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^9.2.1",

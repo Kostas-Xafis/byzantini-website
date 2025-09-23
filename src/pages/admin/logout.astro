@@ -1,5 +1,5 @@
 ---
-import { getSessionId } from "../../../lib/utils.auth";
+import { getSessionId } from "../../../lib/utilities/authentication";
 import SigninLayout from "../../layouts/SigninLayout.astro";
 export const prerender = false;
 
@@ -11,7 +11,7 @@ if (!sid) return Astro.redirect("/admin");
 	<h1>Αποσύνδεση...</h1>
 	<script>
 		import { useAPI } from "../../../lib/hooks/useAPI.astro";
-		import { getCookie, setCookie } from "../../../lib/utils.client";
+		import { getCookie, setCookie } from "../../../lib/utilities/cookies";
 		const sid = getCookie("session_id");
 		try {
 			await useAPI("Authentication.userLogout", { RequestObject: { sid } });

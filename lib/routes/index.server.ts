@@ -14,7 +14,7 @@ import { WholesalersServerRoutes } from "./wholesalers.server";
 
 import type { RemovePartial } from "../../types/helpers";
 import { requestValidation } from "../middleware/requestValidation";
-import { authentication } from "../utils.auth";
+import { authentication } from "../utilities/authentication";
 import { SchemaServerRoutes } from "./schema.server";
 import { unionHas, unionStringToSet } from "../utils.server";
 import { BaseRoutes } from "./index.client";

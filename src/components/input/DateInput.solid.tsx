@@ -1,6 +1,7 @@
 import AirDatepicker from "air-datepicker";
 import { onMount } from "solid-js";
-import { setFocusFixed, sleep } from "../../../lib/utils.client";
+import { setFocusFixed } from "../../../lib/utilities/dom";
+import { sleep } from "../../../lib/utilities/sleep";
 
 const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 

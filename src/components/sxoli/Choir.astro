@@ -84,12 +84,10 @@
 	</style>
 </>
 <script>
-	import {
-		onElementMount,
-		UpdateHandler,
-		mappedValue,
-		loadImage,
-	} from "../../../lib/utils.client";
+	import { UpdateHandler } from "../../../lib/utilities/UpdateHandler";
+	import { onElementMount } from "../../../lib/utilities/dom";
+	import { loadImage } from "../../../lib/utilities/images";
+	import { mappedValue } from "../../../lib/utilities/objects";
 
 	onElementMount("#choir", (choir) => {
 		const obsv = new IntersectionObserver(

@@ -1,5 +1,5 @@
 import { onMount, type JSX, createSignal, on, createEffect } from "solid-js";
-import { AnimTimeline } from "../../../lib/utils.client.ts";
+import { AnimTimeline } from "../../../lib/utilities/dom";
 
 type StringOrElement = string | JSX.Element;
 

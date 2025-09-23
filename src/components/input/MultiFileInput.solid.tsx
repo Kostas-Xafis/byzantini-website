@@ -6,13 +6,11 @@ import { CloseButton } from "../admin/table/CloseButton.solid";
 export type MultiFileInputProps = {
 	name: string;
 	prefix: string;
-	// value: [filename, metadata per file][]
 	value?: [string, AnyRecord][];
 	required?: boolean;
 	iconClasses?: string;
 	disabled?: boolean;
 	fileExtension?: string;
-	// Metadata for new files
 	metadata?: AnyRecord[];
 	filePreview?: (file: FileProxy<AnyRecord>) => DOMElement;
 };
@@ -42,6 +40,36 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 	const setFiles = () => {
 		setFileList(fileHandler.getFiles().map((f) => [f, f.getMetadata()]));
 	};
+
+	// const onAllowDrop = (e: DragEvent) => {
+	// 	e.preventDefault();
+	// 	e.stopPropagation();
+	// };
+
+	// const onDropImageContainer = (e: DragEvent) => {
+	// 	e.preventDefault();
+	// 	e.stopPropagation();
+	// 	const sfileIdx = e.dataTransfer?.getData("fileIdx");
+	// 	if (!sfileIdx) return;
+	// 	const dropFileIdx = parseInt(sfileIdx);
+	// 	const currentFileIdx = parseInt((e.target as HTMLElement).dataset["file-idx"] || "");
+	// 	const file = fileHandler.getFile(dropFileIdx);
+	// 	if (!file) return;
+	// 	let files = fileHandler.getFiles();
+	// 	// Insert the dropped file at the new index and all the other files will be shifted to the right
+	// 	files.splice(currentFileIdx, 0, file);
+	// 	// Remove the file from the old index
+	// 	files = files.filter((_, idx) => idx !== dropFileIdx);
+	// 	setFiles();
+	// };
+
+	// const onDragOver = (e: DragEvent) => {
+	// 	if (!e.dataTransfer) throw new Error("No dataTransfer");
+	// 	e.preventDefault();
+	// 	const fileIdx = (e.target as HTMLElement).dataset["file-idx"];
+	// 	e.dataTransfer.dropEffect = "move";
+	// 	e.dataTransfer.setData("fileIdx", "" + fileIdx);
+	// };
 
 	const onFileClick = (e: MouseEvent) => {
 		e.stopPropagation();
@@ -115,8 +143,13 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 					<For each={fileList()}>
 						{([file, _], index) => (
 							<div
+								// draggable
+								// ondragover={(e) => onDragOver(e)}
+								// ondrop={(e) => onDropImageContainer(e)}
+								// ondragenter={(e) => onAllowDrop(e)}
+								// data-file-idx={index()}
 								style={{ "word-break": "break-all" }}
-								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 rounded-lg cursor-default overflow-hidden">
+								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 rounded-lg cursor-default overflow-hidden z-[1]">
 								{filePreview && (
 									<div class="absolute flex -z-10 inset-0 w-full h-full place-self-center rounded-md overflow-hidden">
 										{filePreview(file as FileProxy<AnyRecord>)}
