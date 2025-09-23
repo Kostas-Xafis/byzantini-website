@@ -1,4 +1,4 @@
-type Charset = "a-z" | "A-Z" | "0-9" | "a-Z" | "a-9" | "A-9" | "a-Z-9" | "ascii" | "hex" | "HEX" | "oct" | "decimal" | "binary" | "base64";
+type Charset = "a-z" | "A-Z" | "0-9" | "{1-9}0-9" | "1-9" | "a-Z" | "a-9" | "A-9" | "a-Z-9" | "ascii" | "hex" | "HEX" | "oct" | "decimal" | "binary" | "base64";
 type RandomType = typeof Random;
 type RandomArrayType<T> = {
 	[key in keyof Omit<RandomType, "array" | "prototype">]: RandomType[key] extends (...args: infer A) => any ? (...args: A) => T[] : never;
@@ -6,10 +6,17 @@ type RandomArrayType<T> = {
 
 const arrFunctions: (keyof typeof Random)[] = ["string", "hex", "link", "email", "date", "standardRandomDate", "boolean", "item", "float", "int", "uniqueArray"];
 export class Random {
+
+	private static throwIfInvalidSize(size: number) {
+		if (size < 1) throw new Error("Size must be a positive integer");
+	}
+
 	private static charsets: Record<Charset, string> = {
 		"a-z": "abcdefghijklmnopqrstuvwxyz",
 		"A-Z": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		"0-9": "0123456789",
+		"{1-9}0-9": "0123456789",
+		"1-9": "123456789",
 		"a-Z": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		"a-9": "abcdefghijklmnopqrstuvwxyz0123456789",
 		"A-9": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
@@ -23,9 +30,15 @@ export class Random {
 		"base64": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
 	};
 
-	static string(size = 16, set: Charset = "a-Z-9") {
+	static string(size = 16, set: Charset = "a-Z-9"): string {
+		Random.throwIfInvalidSize(size);
+
 		const strLookup = Random.charsets[set];
 		const luSize = strLookup.length; // lookup string size
+
+		if (set === "{1-9}0-9" && size > 1) {
+			return Random.string(1, "1-9") + Random.string(size - 1, "0-9");
+		}
 
 		let str = "";
 		for (let j = 0; j < size; j++) {
@@ -35,10 +48,12 @@ export class Random {
 	};
 
 	static hex(size = 16) {
+		Random.throwIfInvalidSize(size);
 		return Random.string(size, "hex");
 	}
 
 	static link(size = 16) {
+		Random.throwIfInvalidSize(size);
 		return Random.string(size, "a-Z-9");
 	}
 
@@ -85,13 +100,16 @@ export class Random {
 	}
 
 	private static multiDimArray<T>(dimensionsSize: number | number[], cb: () => T): any {
-		let d = Array.isArray(dimensionsSize) ? dimensionsSize : [dimensionsSize];
-		return new Array(d[0]).fill(null).map(d.length === 1
+		let dims = Array.isArray(dimensionsSize) ? dimensionsSize : [dimensionsSize];
+		return new Array(dims[0]).fill(null).map(dims.length === 1
 			? cb
-			: () => Random.multiDimArray(d.slice(1), cb));
+			: () => Random.multiDimArray(dims.slice(1), cb));
 	}
 
-	static array<T>(dimensionsSize: number | number[]): RandomArrayType<T> {
+	static array<T>(...dimensionsSize: number[]): RandomArrayType<T> {
+		for (let size of dimensionsSize)
+			Random.throwIfInvalidSize(size);
+
 		let objRef = {} as any;
 		for (let f of arrFunctions) {
 			objRef[f] = (...args: any[]) => {
