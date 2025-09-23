@@ -1,8 +1,9 @@
 import { readFile, writeFile } from "fs/promises";
 import { argv } from "process";
 import XLSX from "xlsx";
-import { SimpleConnection, createDbConnection } from "../lib/db";
-import { argReader } from "../lib/utils.cli";
+import { type SimpleConnection, createDbConnection } from "../lib/db";
+import { argReader } from "../lib/utilities/cli";
+import type { ResultSet } from "@libsql/client";
 
 type ArgsType = {
 	"--dev"?: boolean;
@@ -30,17 +31,17 @@ const log = (...msg: any) => {
 };
 
 const getQueries = (str: string) => {
-	const formatQuery = (query) => {
+	const formatQuery = (query: string) => {
 		query = query.replace(/\r\n/g, "");
 		query = query.replace(/\n/g, "");
 		return query;
 	};
 
-	const separateQueries = (query) => {
+	const separateQueries = (query: string) => {
 		return query.split(";");
 	};
 
-	const filterComments = (queries) => {
+	const filterComments = (queries: string[]) => {
 		return queries.filter((query) => !query.startsWith("--"));
 	};
 	return filterComments(separateQueries(str).map((query) => formatQuery(query)));
@@ -80,7 +81,7 @@ const executeQueries = async (queries: string[], db: SimpleConnection) => {
 	return resArr;
 };
 
-const asyncEscape = (msg) => {
+const asyncEscape = (msg: string) => {
 	log(msg);
 	throw new Error();
 };
@@ -89,7 +90,7 @@ const asyncEscape = (msg) => {
  *
  * @param {Object<string, string | number>[]} data
  */
-const outputToExcel = (data) => {
+const outputToExcel = (data: any[]) => {
 	const headers = Object.keys(data[0]);
 	const wb = XLSX.utils.book_new();
 	const ws = XLSX.utils.aoa_to_sheet([headers].concat(data.map((row) => Object.values(row))));
@@ -161,14 +162,14 @@ async function main() {
 	isTimed && console.timeEnd("Execution Time");
 
 	if (args.excel) {
-		outputToExcel(data);
+		outputToExcel(data as any);
 	} else {
 		const strData = JSON.stringify(data, null, 4);
 		if (args.out) {
 			await writeFile(args.out, strData, { encoding: "utf8", flag: "w+" });
 		} else {
 			log(strData);
-			data?.rows && log("Returned rows: ", data.rows.length);
+			(data as ResultSet)?.rows && log("Returned rows: ", (data as ResultSet).rows.length);
 		}
 	}
 }
