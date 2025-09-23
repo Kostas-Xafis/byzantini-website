@@ -37,6 +37,19 @@ serverRoutes.getTotal.func = () => {
 	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_registrations"))[0]);
 };
 
+serverRoutes.getTotalByYear.func = ({ ctx }) => {
+	let firstYear = 2023;
+	const currentYear = new Date().getFullYear();
+	return execTryCatch(async () => {
+		const result = await executeQuery<{ total: number; }>("SELECT COUNT(*) AS total FROM registrations GROUP BY registration_year");
+		const returnObj = {} as Record<number, number>;
+		for (let year = firstYear; year <= currentYear; year++) {
+			returnObj[year] = result[year - firstYear]?.total || 0;
+		}
+		return returnObj;
+	});
+};
+
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();

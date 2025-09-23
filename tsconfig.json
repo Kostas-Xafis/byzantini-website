@@ -7,7 +7,6 @@
 		"./pdfWorker/**",
 		"./node_modules/**",
 		"./tests/**",
-		"./getData/**",
 		"./pdfWorker/**"
 	],
 	"compilerOptions": {

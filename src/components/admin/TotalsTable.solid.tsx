@@ -5,51 +5,47 @@ import Spinner from "../other/Spinner.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 
 type TotalsTable = {
-	total_payments: number;
-	total_school_payoffs: number;
 	total_registrations: number;
 };
 
+const firstYear = 2023;
+const currentYear = new Date().getFullYear();
+const years = new Array<number>(currentYear - firstYear + 1).fill(1).map((_, i) => firstYear + i);
+console.log(years);
 export default function TotalsTable() {
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
+
 	useHydrate(() => {
-		apiHook(API.Payments.getTotal);
-		apiHook(API.Payoffs.getTotal);
-		apiHook(API.Registrations.getTotal);
+		apiHook(API.Registrations.getTotalByYear);
 	});
-	const columnNames: ColumnType<TotalsTable> = {
-		total_payments: {
-			type: "number",
-			name: "Συνολικές Οφειλές Μαθητών",
-			size: 24,
-		},
-		total_school_payoffs: {
-			type: "number",
-			name: "Συνολικές Οφειλές Σχολής",
-			size: 24,
-		},
-		total_registrations: {
-			type: "number",
-			name: "Συνολικές Εγγραφές",
-			size: 20,
-		},
-	};
+	let columnNames: ColumnType<TotalsTable> = {} as any;
+	for (let year of years) {
+		columnNames = {
+			...columnNames,
+			["total_registrations_" + year]: {
+				type: "number",
+				name: "Σύνολο Εγγραφών " + year,
+				size: 24,
+			},
+		};
+	}
 
 	let shapedData = createMemo(() => {
-		const payments = store[API.Payments.getTotal];
-		const payoffs = store[API.Payoffs.getTotal];
-		const registrations = store[API.Registrations.getTotal];
-		if (!payments || !payoffs || !registrations) return [];
-		return [[payments.total + "€", payoffs.total + "€", registrations.total]];
+		console.log("Shaping data");
+		const registrations = store[API.Registrations.getTotalByYear];
+		console.log(registrations);
+		if (!registrations) return [];
+		let data: number[] = [];
+		for (let year of years) {
+			data.push(registrations[year] || 0);
+		}
+		console.log(data);
+		return [data];
 	});
 	return (
 		<Show
-			when={
-				store[API.Payoffs.getTotal] &&
-				store[API.Payments.getTotal] &&
-				store[API.Registrations.getTotal]
-			}
+			when={store[API.Registrations.getTotalByYear]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table data={shapedData} columns={columnNames} />
 		</Show>

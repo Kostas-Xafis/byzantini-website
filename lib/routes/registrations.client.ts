@@ -34,6 +34,14 @@ const getTotal: EndpointRoute<"/registrations/total", any, { total: number; }> =
 	validation: undefined,
 };
 
+const getTotalByYear: EndpointRoute<"/registrations/totalByYear", any, Record<number, number>> = {
+	authentication: true,
+	method: "GET",
+	path: "/registrations/totalByYear",
+	hasUrlParams: false,
+	validation: undefined,
+};
+
 const postReq = omit(v_Registrations, [
 	"id",
 	"payment_date",
@@ -103,6 +111,7 @@ export const RegistrationsRoutes = {
 	getById,
 	getByReregistrationUrl,
 	getTotal,
+	getTotalByYear,
 	post,
 	update,
 	delete: del,
