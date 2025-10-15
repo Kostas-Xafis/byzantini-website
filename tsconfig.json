@@ -18,6 +18,7 @@
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"alwaysStrict": true,
+		"allowImportingTsExtensions": true,
 		"noUncheckedIndexedAccess": false,
 		"noEmit": true,
 		"jsx": "preserve",
