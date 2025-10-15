@@ -29,6 +29,7 @@ async function productionBucketReplication() {
 
 	const prodBucketList = await Bucket.listDev(S3_BUCKET_NAME);
 	let totalReplicatedFiles = 0;
+	// Replicate the prod bucket to the dev bucket
 	await asyncQueue(prodBucketList.map((fileName) => {
 		return async () => {
 			const fileType = fileName.split(".").at(-1);
@@ -46,6 +47,13 @@ async function productionBucketReplication() {
 		maxJobs: 10,
 		verbose: true
 	});
+
+	// Copy the new local bucket to the latest folder
+	await CLI.executeCommands([
+		`rm -rf ${DEV_BUCKET_LOCATION}/latest`,
+		`cp -r ${DEV_BUCKET_LOCATION}/${BUCKET_DATE} ${DEV_BUCKET_LOCATION}/latest`
+	]);
+
 
 	if (totalReplicatedFiles !== prodBucketList.length) console.warn("Prod bucket replicated to dev bucket unsuccessfully");
 	else console.log("Prod bucket replicated to dev bucket successfully");
