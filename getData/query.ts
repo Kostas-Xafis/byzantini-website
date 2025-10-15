@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "fs/promises";
 import { argv } from "process";
 import XLSX from "xlsx";
-import { type SimpleConnection, createDbConnection } from "../lib/db";
+import { type SimpleConnection, createSimpleDbConnection } from "../lib/db";
 import { argReader } from "../lib/utilities/cli";
 import type { ResultSet } from "@libsql/client";
 
@@ -101,9 +101,10 @@ const outputToExcel = (data: any[]) => {
 
 
 const dbProcess = async function () {
-	const conn = createDbConnection(isProduction ? "sqlite-prod" : "sqlite-dev");
+	let conn: SimpleConnection = null as any;
 	let data;
 	try {
+		conn = createSimpleDbConnection(isProduction ? "sqlite-prod" : "sqlite-dev");
 		if (args.f) {
 			const file = args.f;
 			if (typeof file !== "string" || file === "") asyncEscape("No file specified");
@@ -113,7 +114,6 @@ const dbProcess = async function () {
 		} else if (args.q) {
 			const query = args.q;
 			if (typeof query !== "string" || query === "") asyncEscape("No query specified");
-
 			data = await conn.execute(query);
 		} else {
 			asyncEscape("No query or file specified");
@@ -121,7 +121,7 @@ const dbProcess = async function () {
 	} catch (error) {
 		log(error);
 	} finally {
-		conn.close();
+		if (conn) conn.close();
 	}
 	return data;
 };

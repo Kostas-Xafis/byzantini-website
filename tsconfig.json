@@ -4,10 +4,10 @@
 		"./.vscode",
 		"./dist/**",
 		"./.wrangler/**",
-		"./pdfWorker/**",
+		"services/pdfWorker/**",
 		"./node_modules/**",
 		"./tests/**",
-		"./pdfWorker/**"
+		"services/pdfWorker/**"
 	],
 	"compilerOptions": {
 		"noErrorTruncation": true,

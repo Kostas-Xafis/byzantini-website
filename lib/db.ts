@@ -34,15 +34,15 @@ export type SimpleConnection = Client;
 type ConnectionType<ShouldWrap extends boolean> =
 	ShouldWrap extends true ? WrappedConnection : SimpleConnection;
 
-export function createDbConnection<T extends boolean = false>(type?: DBType, wrapper?: T): ConnectionType<T> {
+export function createSimpleDbConnection(type?: DBType): SimpleConnection {
 	const {
 		// Local snaphot env variables for development
 		DEV_DB_ABSOLUTE_LOCATION,
 		// Turso env variables for production
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
-		CONNECTOR } = import.meta.env;
-
+		CONNECTOR
+	} = import.meta.env;
 	// ! SQLITE does not support LIMIT in UPDATE queries
 	let client: SimpleConnection = null as any;
 	if (type === "sqlite-prod" || CONNECTOR === "sqlite-prod") {
@@ -59,7 +59,14 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 	} else {
 		throw new Error("Database connector is not specified.");
 	}
+	return client as any;
+}
 
+export function createDbConnection<T extends boolean = false>(type?: DBType, wrapper?: T): ConnectionType<T> {
+	const client = createSimpleDbConnection(type);
+
+	// If wrapper is true, return a wrapped connection with transaction support
+	// Otherwise, return the simple connection
 	if (client && wrapper) {
 		const execute = function (clientHandler: libsqlTransaction | Client) {
 			/**

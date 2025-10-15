@@ -1,12 +1,12 @@
 import { argv } from "bun";
-import { createDbConnection } from "../lib/db";
-import { CLI } from "../lib/utils.cli";
+import { createSimpleDbConnection } from "../lib/db";
+import { CLI } from "../lib/utilities/cli";
 
 const sqliteGenerateBackup = async () => {
 	const schema = ["PRAGMA journal_mode=WAL;"];
 	const insertStatements = [];
 
-	const conn = createDbConnection("sqlite-prod");
+	const conn = createSimpleDbConnection("sqlite-prod");
 	const { rows: tables } = await conn.execute(
 		"SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'"
 	);
@@ -47,16 +47,16 @@ async function productionDatabaseReplication(force = false) {
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH)
 		throw Error("Missing environment variables");
 	const SNAPSHOT_DATE = getCurrentFormattedDate();
-
-	let sqliteBackup: string;
 	if (!force) {
 		try {
-			let file = Bun.file(DEV_SNAPSHOT_LOCATION);
-			sqliteBackup = await file.text();
+			let file = Bun.file(BACKUP_SNAPSHOT_LOCATION + `/snap-${SNAPSHOT_DATE}.sql`);
+			if (!(await file.exists())) throw Error("File does not exist");
 		} catch (error) {
+			force = true;
 			console.log("No backup found for today, generating a new one");
 		}
-	} else {
+	}
+	if (force) {
 		const { schema, data, full } = await sqliteGenerateBackup();
 		// Create sqlite backup file locally
 		await Bun.write(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, full, {

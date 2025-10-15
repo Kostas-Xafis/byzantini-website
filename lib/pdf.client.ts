@@ -1,4 +1,4 @@
-import type { PDFRequest } from "../pdfWorker/src/types";
+import type { PDFRequest } from "../services/pdfWorker/src/types";
 import type { Registrations } from "../types/entities";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
