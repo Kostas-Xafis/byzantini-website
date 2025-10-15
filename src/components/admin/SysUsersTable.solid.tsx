@@ -1,9 +1,9 @@
+import type { SysUsers as FullSysUser } from "@_types/entities";
+import { API, useAPI, useHydrate, type APIStore } from "@lib/hooks/useAPI.solid";
+import { useHydrateById } from "@lib/hooks/useHydrateById.solid";
+import { SelectedRows } from "@lib/hooks/useSelectedRows.solid";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import type { SysUsers as FullSysUser } from "../../../types/entities";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";

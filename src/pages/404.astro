@@ -1,7 +1,9 @@
 ---
-import SigninLayout from "../layouts/SigninLayout.astro";
----
+import SigninLayout from "@layouts/SigninLayout.astro";
+import { getUrlSearchParams } from "@utilities/url";
 
+const { url } = getUrlSearchParams(Astro.request.url);
+---
 <SigninLayout title="404">
 	<div
 		class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-12">
@@ -16,6 +18,7 @@ import SigninLayout from "../layouts/SigninLayout.astro";
 			</a>
 		</div>
 		<div class="text-center flex flex-col gap-y-8 items-center">
+			<h2 class="text-3xl font-didact">/{url}</h2>
 			<h2 class="text-3xl font-didact">Η σελίδα που ψάχνετε δεν υπάρχει</h2>
 			<a href="/">
 				<button

@@ -1,6 +1,6 @@
+import { v_Wholesalers, type Insert, type Wholesalers } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { omit } from "valibot";
-import { v_Wholesalers, type Insert, type Wholesalers } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/wholesalers", any, Wholesalers[]> = {
 	authentication: true,

@@ -1,7 +1,7 @@
 import { batch, createSignal, onCleanup } from "solid-js";
-import { Random as R } from "../../../lib/random";
-import { ExecutionQueue } from "../../../lib/utilities/ExecutionQueue";
-import { AnimTimeline } from "../../../lib/utilities/dom";
+import { Random as R } from "@lib/random";
+import { ExecutionQueue } from "@utilities/ExecutionQueue";
+import { AnimTimeline } from "@utilities/dom";
 
 //TODO: Refactor all this code to be included in a single class
 

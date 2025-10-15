@@ -1,5 +1,5 @@
-import { onMount, type JSX, createSignal, on, createEffect } from "solid-js";
-import { AnimTimeline } from "../../../lib/utilities/dom";
+import { AnimTimeline } from "@utilities/dom";
+import { createEffect, createSignal, on, onMount, type JSX } from "solid-js";
 
 type StringOrElement = string | JSX.Element;
 

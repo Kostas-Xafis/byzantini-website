@@ -1,8 +1,8 @@
 ---
-import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
-import type { AnnouncementImages, Announcements } from "../../../../types/entities";
-import Spinner from "../../../components/other/Spinner.astro";
-import Layout from "../../../layouts/Layout.astro";
+import type { AnnouncementImages, Announcements } from "@_types/entities";
+import Spinner from "@components/other/Spinner.astro";
+import Layout from "@layouts/Layout.astro";
+import { API, useAPI } from "@lib/hooks/useAPI.astro";
 
 let url = Astro.url.pathname;
 url = url.endsWith("/") ? url.slice(0, -1) : url;
@@ -170,9 +170,9 @@ if (!mainImg) return Astro.redirect("/404");
 		}
 	</style>
 	<script>
-		import { asyncQueue } from "../../../../lib/utilities/AsyncQueue";
-		import { onElementMount } from "../../../../lib/utilities/dom";
-		import { sleep } from "../../../../lib/utilities/sleep";
+		import { asyncQueue } from "@utilities/AsyncQueue";
+		import { onElementMount } from "@utilities/dom";
+		import { sleep } from "@utilities/sleep";
 		onElementMount("#announcementSection", async el => {
 			const imgs = [...el.querySelectorAll("img")];
 			const imgContainers = [...el.querySelectorAll(".imgLoader")] as HTMLElement[];

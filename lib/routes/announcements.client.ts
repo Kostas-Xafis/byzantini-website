@@ -1,12 +1,12 @@
-import { blob, merge, number, object, omit, optional, string } from "valibot";
 import {
 	v_AnnouncementImages,
 	v_Announcements,
 	type AnnouncementImages,
 	type Announcements,
 	type Insert,
-} from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
+} from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
+import { blob, merge, number, object, omit, optional, string } from "valibot";
 
 const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	authentication: false,

@@ -1,4 +1,4 @@
-import type { EndpointRoute } from "../../types/routes";
+import type { EndpointRoute } from "@_types/routes";
 
 const get: EndpointRoute<'/schema/backup/[type:"mysql" | "sqlite"]', null, string> = {
 	authentication: true,

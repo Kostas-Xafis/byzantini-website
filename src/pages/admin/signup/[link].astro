@@ -1,7 +1,7 @@
 ---
-import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
-import Input from "../../../components/input/Input.astro";
-import SigninLayout from "../../../layouts/SigninLayout.astro";
+import Input from "@components/input/Input.astro";
+import { API, useAPI } from "@hooks/useAPI.astro";
+import SigninLayout from "@layouts/SigninLayout.astro";
 
 const { link } = Astro.params;
 if (!link) {
@@ -83,7 +83,7 @@ if (res.data && !res.data.isValid) {
 	</style>
 </SigninLayout>
 <script>
-	import { API, useAPI } from "../../../../lib/hooks/useAPI.astro";
+	import { API, useAPI } from "@hooks/useAPI.astro";
 	function setCookie(name: string, value: string, exdays: number) {
 		const d = new Date();
 		d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);

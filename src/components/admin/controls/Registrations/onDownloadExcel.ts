@@ -1,7 +1,7 @@
+import type { Instruments, Registrations, Teachers } from "@_types/entities";
+import { PDF } from "@lib/pdf.client";
+import { API, type APIResponse } from "@lib/routes/index.client";
 import { createMemo } from "solid-js";
-import { PDF } from "../../../../../lib/pdf.client";
-import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import type { Instruments, Registrations, Teachers } from "../../../../../types/entities";
 import { createAlert, pushAlert, updateAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon } from "../../table/TableControlTypes";
 

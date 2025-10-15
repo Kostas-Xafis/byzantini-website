@@ -1,17 +1,14 @@
+import type { SimpleTeacher as Teachers } from "@_types/entities";
+import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import { FileHandler } from "@lib/fileHandling.client";
+import { API, type APIResponse } from "@routes/index.client";
+import { type ExtendedFormData } from "@utilities/forms";
 import { createMemo } from "solid-js";
-import { FileHandler } from "../../../../../lib/fileHandling.client";
-import type { HydrateByIdReturnType } from "../../../../../lib/hooks/useHydrateById.solid";
-import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import { type ExtendedFormData } from "../../../../../lib/utilities/forms";
-import type { SimpleTeacher as Teachers } from "../../../../../types/entities";
 import { InputFields } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";
 import type { Action } from "../../table/TableControls.solid";
 import {
-	type APIHook,
-	type TeacherJoins,
-	type TeachersMetadata,
 	PREFIX,
 	TeachersInputs,
 	class_types,
@@ -19,6 +16,9 @@ import {
 	fileDelete,
 	fileUpload,
 	picturePreview,
+	type APIHook,
+	type TeacherJoins,
+	type TeachersMetadata,
 } from "./helpers";
 
 export const onModify = function (

@@ -1,6 +1,6 @@
 ---
-import { useAPI } from "../../../lib/hooks/useAPI.astro";
-import SigninLayout from "../../layouts/SigninLayout.astro";
+import { useAPI } from "@hooks/useAPI.astro";
+import SigninLayout from "@layouts/SigninLayout.astro";
 
 // The url link is not properly constructed as I didn't encode to a URI component
 let restoredUrl = new URL(Astro.url.href.replace("/?token", "?token"));

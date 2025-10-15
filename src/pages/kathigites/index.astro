@@ -1,8 +1,8 @@
 ---
-import { API, useAPI } from "../../../lib/hooks/useAPI.astro";
-import { teacherTitleByGender } from "../../../lib/utilities/text";
-import type { Instruments } from "../../../types/entities";
-import Layout from "../../layouts/Layout.astro";
+import type { Instruments } from "@_types/entities";
+import { API, useAPI } from "@hooks/useAPI.astro";
+import Layout from "@layouts/Layout.astro";
+import { teacherTitleByGender } from "@utilities/text";
 
 const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}),
@@ -215,8 +215,8 @@ const cvSrc = "kathigites/cv/";
 	</style>
 </Layout>
 <script>
-	import { UpdateHandler } from "../../../lib/utilities/UpdateHandler";
-	import { AnimTimeline, onElementMount } from "../../../lib/utilities/dom";
+	import { UpdateHandler } from "@utilities/UpdateHandler";
+	import { AnimTimeline, onElementMount } from "@utilities/dom";
 
 	document.querySelectorAll("div > button[data-type]").forEach(btnChild => {
 		const btn = btnChild.parentElement as HTMLElement;

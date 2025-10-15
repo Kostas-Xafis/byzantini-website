@@ -1,4 +1,4 @@
-import type { APIBuilder, APIEndpointsBuilder, AnyEndpoint } from "../../types/routes";
+import type { APIBuilder, APIEndpointsBuilder, AnyEndpoint } from "@_types/routes";
 
 export const EndpointsConstructor = <K extends string, T extends Record<string, AnyEndpoint>>(baseRoute: K, routes: T, raw: boolean = false) => {
 	const endpoints = {} as { [k: string]: any; };

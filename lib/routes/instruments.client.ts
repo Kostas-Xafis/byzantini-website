@@ -1,6 +1,6 @@
+import { v_Instruments, type Insert, type Instruments } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { omit } from "valibot";
-import { v_Instruments, type Instruments, type Insert } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/instruments", any, Instruments[]> = {
 	authentication: false,

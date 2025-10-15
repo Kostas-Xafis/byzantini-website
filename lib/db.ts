@@ -1,7 +1,7 @@
+import type { Insert } from "@_types/entities";
+import { Random as R } from "@lib/random";
+import { questionMarks } from "@lib/utils.server";
 import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction } from "@libsql/client";
-import type { Insert } from "../types/entities";
-import { Random as R } from "./random";
-import { questionMarks } from "./utils.server";
 export type ExecReturn<T> = { insertId: '0', rows: T[]; };
 export type Exec = <T = undefined>(query: string, args?: QueryArguments, _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
 

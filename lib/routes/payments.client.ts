@@ -1,6 +1,6 @@
+import { v_Payments, type Insert, type Payments } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { omit, pick } from "valibot";
-import { v_Payments, type Insert, type Payments } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/payments", any, Payments[]> = {
 	authentication: true,

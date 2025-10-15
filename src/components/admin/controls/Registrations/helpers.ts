@@ -1,5 +1,5 @@
-import { useAPI } from "../../../../../lib/hooks/useAPI.solid";
-import type { Instruments, Registrations, Teachers } from "../../../../../types/entities";
+import type { Instruments, Registrations, Teachers } from "@_types/entities";
+import { useAPI } from "@lib/hooks/useAPI.solid";
 import { type Props as InputProps } from "../../../input/Input.solid";
 
 export const PREFIX = "registrations";

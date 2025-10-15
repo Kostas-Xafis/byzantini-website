@@ -1,4 +1,4 @@
-import type { EndpointRoute } from "../../types/routes";
+import type { EndpointRoute } from "@_types/routes";
 
 const replication: EndpointRoute<'/replication/[service:"bucket" | "database" | "database-force" | "both"]', null, string> = {
 	authentication: true,

@@ -1,6 +1,6 @@
+import { v_Locations, type Insert, type Locations } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { omit } from "valibot";
-import { v_Locations, type Locations, type Insert } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/locations", any, Locations[]> = {
 	authentication: false,

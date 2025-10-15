@@ -1,4 +1,4 @@
-import type { StringTypeToType } from "../../types/helpers";
+import type { StringTypeToType } from "@_types/helpers";
 
 type DateFormatType = "dd/mm/yyyy" | "mm/dd/yyyy" | "yyyy/mm/dd";
 type MultiSelectType = "string" | "number" | "boolean";

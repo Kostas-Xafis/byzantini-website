@@ -1,8 +1,3 @@
-import { FileHandler, FileProxy } from "../../../../../lib/fileHandling.client";
-import { useAPI } from "../../../../../lib/hooks/useAPI.solid";
-import { Random } from "../../../../../lib/random";
-import { API } from "../../../../../lib/routes/index.client";
-import { sleep } from "../../../../../lib/utilities/sleep";
 import type {
 	ClassType,
 	Teachers as FullTeachers,
@@ -11,7 +6,12 @@ import type {
 	TeacherClasses,
 	TeacherInstruments,
 	TeacherLocations,
-} from "../../../../../types/entities";
+} from "@_types/entities";
+import { useAPI } from "@hooks/useAPI.solid";
+import { FileHandler, FileProxy } from "@lib/fileHandling.client";
+import { Random } from "@lib/random";
+import { API } from "@routes/index.client";
+import { sleep } from "@utilities/sleep";
 import { type Props as InputProps } from "../../../input/Input.solid";
 
 export type TeachersMetadata = { teacher_id: number; type: "cv" | "picture" };

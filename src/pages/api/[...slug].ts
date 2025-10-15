@@ -1,7 +1,7 @@
+import type { RemovePartial } from "@_types/helpers";
+import type { AnyEndpoint, HTTPMethods } from "@_types/routes";
+import { matchRoute } from "@routes/index.server";
 import type { APIContext } from "astro";
-import { matchRoute } from "../../../lib/routes/index.server";
-import type { RemovePartial } from "../../../types/helpers";
-import type { AnyEndpoint, HTTPMethods } from "../../../types/routes";
 
 export const prerender = false;
 

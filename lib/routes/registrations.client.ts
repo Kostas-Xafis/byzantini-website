@@ -1,6 +1,6 @@
+import { v_Registrations, type Insert, type Registrations } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { object, omit, string } from "valibot";
-import { v_Registrations, type Registrations, type Insert } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 const get: EndpointRoute<"/registrations/[year:number]", any, Registrations[]> = {
 	authentication: true,

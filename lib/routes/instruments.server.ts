@@ -1,5 +1,5 @@
-import type { Instruments } from "../../types/entities";
-import { deepCopy } from "../utilities/objects";
+import type { Instruments } from "@_types/entities";
+import { deepCopy } from "@utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { InstrumentsRoutes } from "./instruments.client";
 

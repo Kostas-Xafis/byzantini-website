@@ -1,7 +1,7 @@
+import type { Insert, TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "@_types/entities";
+import { v_SimpleTeacher } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { array, integer, merge, number, object, omit, string } from "valibot";
-import type { Insert, TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "../../types/entities";
-import { v_SimpleTeacher } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 
 const get: EndpointRoute<"/teachers", any, Teachers[]> = {

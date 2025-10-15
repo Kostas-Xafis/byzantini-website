@@ -1,8 +1,8 @@
+import type { Insert } from "@_types/entities";
+import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "@_types/routes";
+import { createDbConnection, type QueryArguments, type Transaction } from "@lib/db";
+import { Random as R } from "@lib/random";
 import type { Output } from "valibot";
-import type { Insert } from "../types/entities";
-import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "../types/routes";
-import { createDbConnection, type QueryArguments, type Transaction } from "./db";
-import { Random as R } from "./random";
 
 const { MODE, PROD } = import.meta.env;
 export function isProduction() {

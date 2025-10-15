@@ -1,9 +1,9 @@
+import { createSimpleDbConnection, type SimpleConnection } from "@lib/db";
+import type { ResultSet } from "@libsql/client";
+import { argReader } from "@utilities/cli";
 import { readFile, writeFile } from "fs/promises";
 import { argv } from "process";
 import XLSX from "xlsx";
-import { type SimpleConnection, createSimpleDbConnection } from "../lib/db";
-import { argReader } from "../lib/utilities/cli";
-import type { ResultSet } from "@libsql/client";
 
 type ArgsType = {
 	"--dev"?: boolean;

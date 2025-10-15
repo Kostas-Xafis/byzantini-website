@@ -1,15 +1,15 @@
+import type { Registrations } from "@_types/entities";
+import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import { API, type APIResponse } from "@routes/index.client";
+import { type ExtendedFormData } from "@utilities/forms";
 import { createMemo } from "solid-js";
-import type { HydrateByIdReturnType } from "../../../../../lib/hooks/useHydrateById.solid";
-import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import { type ExtendedFormData } from "../../../../../lib/utilities/forms";
-import type { Registrations } from "../../../../../types/entities";
 import { InputFields, type Props as InputProps } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";
 import type { Action } from "../../table/TableControls.solid";
 import {
-	type APIHook,
 	RegistrationsInputs,
+	type APIHook,
 } from "./helpers";
 
 export const onModify = function (

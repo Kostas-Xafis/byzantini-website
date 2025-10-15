@@ -1,4 +1,4 @@
-import type { AnyRecord } from "../types/global";
+import type { AnyRecord } from "@_types/global";
 import { PDF } from "./pdf.client";
 
 type DragEvents = {

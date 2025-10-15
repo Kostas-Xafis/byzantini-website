@@ -1,10 +1,10 @@
+import type { DOMElement } from "@_types/global";
+import { TypeEffectEnum, selectedRowsEvent } from "@hooks/useSelectedRows.solid";
+import { getParent } from "@utilities/dom";
+import { mappedValue } from "@utilities/objects";
 import type { Accessor } from "solid-js";
 import { For, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { createStore, unwrap, type SetStoreFunction } from "solid-js/store";
-import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
-import { getParent } from "../../../../lib/utilities/dom";
-import { mappedValue } from "../../../../lib/utilities/objects";
-import type { DOMElement } from "../../../../types/global";
 import { SearchTable, type SearchColumn } from "../SearchTable.solid";
 import type { Page } from "./Pagination.solid";
 import Pagination from "./Pagination.solid";

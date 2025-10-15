@@ -1,6 +1,6 @@
+import { TypeEffectEnum, selectedRowsEvent } from "@hooks/useSelectedRows.solid";
+import { getParent } from "@utilities/dom";
 import { For, type Setter } from "solid-js";
-import { TypeEffectEnum, selectedRowsEvent } from "../../../../lib/hooks/useSelectedRows.solid";
-import { getParent } from "../../../../lib/utilities/dom";
 import { SortDirection } from "./Table.solid";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean";

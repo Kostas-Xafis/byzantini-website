@@ -1,7 +1,7 @@
+import type { Instruments } from "@_types/entities";
+import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import { API } from "@routes/index.client";
 import { createMemo } from "solid-js";
-import type { HydrateByIdReturnType } from "../../../../../lib/hooks/useHydrateById.solid";
-import { API } from "../../../../../lib/routes/index.client";
-import type { Instruments } from "../../../../../types/entities";
 import { type Props as InputProps } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";

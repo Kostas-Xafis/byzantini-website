@@ -1,9 +1,9 @@
+import type { CustomEvents } from "@_types/custom-events";
+import type { AnyRecord, DOMElement } from "@_types/global";
+import type { PartialBy } from "@_types/helpers";
+import type { FileProxy } from "@lib/fileHandling.client";
+import { AnimTimeline } from "@utilities/dom";
 import { Index, Show, createSignal, onMount } from "solid-js";
-import type { FileProxy } from "../../../lib/fileHandling.client";
-import { AnimTimeline } from "../../../lib/utilities/dom";
-import type { CustomEvents } from "../../../types/custom-events";
-import type { AnyRecord, DOMElement } from "../../../types/global";
-import type { PartialBy } from "../../../types/helpers";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";

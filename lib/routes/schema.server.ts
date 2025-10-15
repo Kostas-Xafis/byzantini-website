@@ -1,5 +1,5 @@
-import { createDbConnection } from "../db";
-import { deepCopy } from "../utilities/objects";
+import { createDbConnection } from "@lib/db";
+import { deepCopy } from "@utilities/objects";
 import { execTryCatch, silentImport } from "../utils.server";
 import { SchemaRoutes } from "./schema.client";
 

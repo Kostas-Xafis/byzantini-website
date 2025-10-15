@@ -1,6 +1,6 @@
+import type { AnyRecord, DOMElement } from "@_types/global";
+import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
 import { createMemo, createSignal } from "solid-js";
-import { FileHandler, type FileProxy } from "../../../lib/fileHandling.client";
-import type { AnyRecord, DOMElement } from "../../../types/global";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 export type FileInputProps = {

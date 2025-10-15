@@ -1,7 +1,7 @@
+import { customEvent } from "@_types/custom-events";
+import { getParent } from "@utilities/dom";
 import { Show, createEffect, createMemo, on, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
-import { getParent } from "../../../../lib/utilities/dom";
-import { customEvent } from "../../../../types/custom-events";
 
 export type Page = {
 	page: number;

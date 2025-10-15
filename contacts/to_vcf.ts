@@ -1,5 +1,5 @@
-import type { Registrations } from '../types/entities';
-import { createDbConnection } from '../lib/db';
+import type { Registrations } from '@_types/entities';
+import { createDbConnection } from '@lib/db';
 
 
 async function loadRegistrations() {

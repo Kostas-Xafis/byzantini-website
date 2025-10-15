@@ -1,15 +1,15 @@
-import { Show, createMemo } from "solid-js";
-import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { looseStringIncludes } from "../../../lib/utilities/string";
-import { teacherTitleByGender } from "../../../lib/utilities/text";
 import type {
 	Teachers as FullTeachers,
 	TeacherClasses,
 	SimpleTeacher as Teachers,
-} from "../../../types/entities";
+} from "@_types/entities";
+import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
+import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { looseStringIncludes } from "@utilities/string";
+import { teacherTitleByGender } from "@utilities/text";
+import { Show, createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { type SearchColumn, type SearchSetter } from "./SearchTable.solid";
 import {

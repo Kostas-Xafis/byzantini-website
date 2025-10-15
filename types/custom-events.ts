@@ -1,6 +1,6 @@
-import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid";
-import type { Alert } from "../src/components/admin/Alert.solid";
-import type { Page } from "../src/components/admin/table/Pagination.solid";
+import type { TypeEffect } from "@hooks/useSelectedRows.solid";
+import type { Alert } from "@components/admin/Alert.solid";
+import type { Page } from "@components/admin/table/Pagination.solid";
 
 export type CustomEvents = {
 	hydrate: CustomEvent<undefined>;

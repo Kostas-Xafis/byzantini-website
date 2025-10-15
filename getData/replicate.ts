@@ -1,6 +1,6 @@
+import { createSimpleDbConnection } from "@lib/db";
+import { CLI } from "@utilities/cli";
 import { argv } from "bun";
-import { createSimpleDbConnection } from "../lib/db";
-import { CLI } from "../lib/utilities/cli";
 
 const sqliteGenerateBackup = async () => {
 	const schema = ["PRAGMA journal_mode=WAL;"];

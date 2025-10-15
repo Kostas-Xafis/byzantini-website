@@ -1,11 +1,11 @@
 import { createMemo, createSignal } from "solid-js";
-import { API, type APIResponse } from "../../../../../lib/routes/index.client";
-import { looseStringIncludes } from "../../../../../lib/utilities/string";
-import type { Instruments, Registrations, Teachers } from "../../../../../types/entities";
+import { API, type APIResponse } from "@lib/routes/index.client";
+import { looseStringIncludes } from "@utilities/string";
+import type { Instruments, Registrations, Teachers } from "@_types/entities";
 import { CompareList, getCompareFn, type SearchColumn, type SearchSetter } from "../../SearchTable.solid";
 import { toggleCheckboxes } from "../../table/Row.solid";
 import type { ColumnType } from "../../table/Table.solid";
-import { getKeyIndex } from "../../../../../lib/utilities/objects";
+import { getKeyIndex } from "@utilities/objects";
 
 const registrationsToTable = (
     registrations: Registrations[],

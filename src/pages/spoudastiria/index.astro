@@ -1,7 +1,7 @@
 ---
-import { useAPI } from "../../../lib/hooks/useAPI.astro";
-import Layout from "../../layouts/Layout.astro";
-import GMap from "../../components/other/GMap.astro";
+import GMap from "@components/other/GMap.astro";
+import { useAPI } from "@hooks/useAPI.astro";
+import Layout from "@layouts/Layout.astro";
 let _locations = (await useAPI("Locations.getByPriority"))?.data || [];
 const imgSrc = "/spoudastiria/";
 const schoolLocations = _locations.filter(l => !l.partner);
@@ -219,7 +219,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 </Layout>
 
 <script>
-	import { AnimTimeline, onElementMount } from "../../../lib/utilities/dom";
+	import { AnimTimeline, onElementMount } from "@utilities/dom";
 
 	window.matchMedia("(min-width: 641px)").matches &&
 		onElementMount("#locationsContainer", async function () {

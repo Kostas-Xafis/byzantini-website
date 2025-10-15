@@ -1,7 +1,7 @@
-import type { TypeEffect } from "../lib/hooks/useSelectedRows.solid.ts";
-import type { ObjectValuesToUnion } from "../types/helpers.ts";
-import type { Alert } from "./components/admin/Alert.solid.tsx";
-import type { Page } from "./components/admin/table/Pagination.solid.tsx";
+import type { ObjectValuesToUnion } from "@_types/helpers.ts";
+import type { Alert } from "@components/admin/Alert.solid.tsx";
+import type { Page } from "@components/admin/table/Pagination.solid.tsx";
+import type { TypeEffect } from "@hooks/useSelectedRows.solid.ts";
 
 type HTMLElementTags = ObjectValuesToUnion<HTMLElementTagNameMap>;
 

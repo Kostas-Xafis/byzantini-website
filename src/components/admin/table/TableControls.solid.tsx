@@ -1,6 +1,6 @@
+import type { ExtendedFormData } from "@utilities/forms";
 import { Show, createEffect, type Accessor, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
-import type { ExtendedFormData } from "../../../../lib/utilities/forms";
 import type { InputFields, Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";

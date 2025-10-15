@@ -1,4 +1,4 @@
-import { type RemoveFlag } from "../../types/helpers";
+import { type RemoveFlag } from "@_types/helpers";
 import { silentImport } from "../utils.server";
 type CLI_Profile = "pwsh" | "bash";
 

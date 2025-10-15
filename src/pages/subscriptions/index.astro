@@ -1,7 +1,7 @@
 ---
-import Input from "../../components/input/Input.astro";
-import Popup from "../../components/other/Popup.astro";
-import SigninLayout from "../../layouts/SigninLayout.astro";
+import Input from "@components/input/Input.astro";
+import Popup from "@components/other/Popup.astro";
+import SigninLayout from "@layouts/SigninLayout.astro";
 ---
 
 <SigninLayout title="Εγγραφή">
@@ -45,7 +45,7 @@ import SigninLayout from "../../layouts/SigninLayout.astro";
 	</div>
 </SigninLayout>
 <script>
-	import { useAPI } from "../../../lib/hooks/useAPI.astro";
+	import { useAPI } from "@hooks/useAPI.astro";
 
 	let tid: number | null = null;
 	document.getElementById("subForm")?.addEventListener("submit", async e => {

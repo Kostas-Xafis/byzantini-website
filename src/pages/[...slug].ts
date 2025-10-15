@@ -1,15 +1,15 @@
+import { Bucket } from "@lib/bucket";
 import type { APIContext } from "astro";
-import { Bucket } from "../../lib/bucket";
 
-export async function GET(context: APIContext) {
+export async function GET(ctx: APIContext) {
+	const url = ctx.params.slug as string;
 	try {
-		const url = context.params.slug as string;
-		const file = await Bucket.get(context, url);
-		if (!file) return context.redirect("/404");
+		const file = await Bucket.get(ctx, url);
+		if (!file) return ctx.redirect("/404");
 
 		if ("byteLength" in file) return new Response(file, { status: 200 });
 		else return new Response(await file.arrayBuffer(), { status: 200 });
 	} catch (error: any) {
-		return context.redirect("/404");
+		return ctx.redirect("/404?url=" + encodeURIComponent(url));
 	}
 }

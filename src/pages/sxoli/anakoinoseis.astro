@@ -1,7 +1,7 @@
 ---
-import { API, useAPI } from "../../../lib/hooks/useAPI.astro";
-import { type PageAnnouncement } from "../../../lib/routes/announcements.client";
-import Layout from "../../layouts/Layout.astro";
+import { API, useAPI } from "@hooks/useAPI.astro";
+import { type PageAnnouncement } from "@routes/announcements.client";
+import Layout from "@layouts/Layout.astro";
 export const prerender = false;
 
 const announcements = (await useAPI(API.Announcements.getForPage)).data || [];

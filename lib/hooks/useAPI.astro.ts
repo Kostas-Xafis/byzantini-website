@@ -1,7 +1,7 @@
+import type { DefaultEndpointResponse } from "@_types/routes";
+import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
+import { convertToUrlFromArgs } from "@utilities/url";
 import { parse } from "valibot";
-import type { DefaultEndpointResponse } from "../../types/routes";
-import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../routes/index.client";
-import { convertToUrlFromArgs } from "../utilities/url";
 import { assertOwnProp } from "../utils.server";
 export { API };
 

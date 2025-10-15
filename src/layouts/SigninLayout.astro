@@ -1,6 +1,5 @@
 ---
-import { SEO } from "astro-seo";
-import Links from "../components/headers/Links.astro";
+import Links from "@components/headers/Links.astro";
 export interface Props {
 	title: string;
 	imageUrl?: string;
@@ -15,26 +14,7 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 	<head>
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<SEO
-			charset="utf-8"
-			title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"
-			description="Σχολή Βυζαντινής & Παραδοσιακής & Ευρωπαικής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως"
-			openGraph={{
-				basic: {
-					title,
-					url: Astro.url,
-					image: logoUrl,
-					type: "website",
-				},
-				image: {
-					url: logoUrl,
-				},
-				optional: {
-					locale: "el_GR",
-				},
-			}}
-		/>
-		<Links />
+		<Links title={title} imageURL={logoUrl} />
 	</head>
 	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100dvh] overflow-hidden">
 		<slot />

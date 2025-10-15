@@ -1,17 +1,17 @@
-import { BooksRoutes } from "./books.client";
+import { type APIArguments, type APIResponse as APIRes } from "@_types/routes";
+import { AnnouncementsRoutes } from "./announcements.client";
 import { AuthenticationRoutes } from "./authentication.client";
+import { BooksRoutes } from "./books.client";
+import { APIBuilderConstructor, EndpointsConstructor } from "./constructors.client";
+import { InstrumentsRoutes } from "./instruments.client";
+import { LocationsRoutes } from "./locations.client";
 import { PaymentsRoutes } from "./payments.client";
 import { PayoffsRoutes } from "./payoffs.client";
-import { WholesalersRoutes } from "./wholesalers.client";
-import { TeachersRoutes } from "./teachers.client";
-import { LocationsRoutes } from "./locations.client";
-import { InstrumentsRoutes } from "./instruments.client";
-import { SysUsersRoutes } from "./sysusers.client";
 import { RegistrationsRoutes } from "./registrations.client";
-import { AnnouncementsRoutes } from "./announcements.client";
-import { EndpointsConstructor, APIBuilderConstructor } from "./constructors.client";
-import { type APIArguments, type APIResponse as APIRes } from "../../types/routes";
 import { SchemaRoutes } from "./schema.client";
+import { SysUsersRoutes } from "./sysusers.client";
+import { TeachersRoutes } from "./teachers.client";
+import { WholesalersRoutes } from "./wholesalers.client";
 
 export const enum BaseRoutes {
 	Books = "Books",

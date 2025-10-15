@@ -1,10 +1,10 @@
 import { Show, createEffect, createSignal, on, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { useHydrateById } from "../../../lib/hooks/useHydrateById.solid";
-import { SelectedRows } from "../../../lib/hooks/useSelectedRows.solid";
-import { onElementMount } from "../../../lib/utilities/dom";
-import type { Registrations } from "../../../types/entities";
+import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
+import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { onElementMount } from "@utilities/dom";
+import type { Registrations } from "@_types/entities";
 import Spinner from "../other/Spinner.solid";
 import { type SearchSetter } from "./SearchTable.solid";
 import Table from "./table/Table.solid";

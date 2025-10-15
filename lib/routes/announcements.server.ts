@@ -1,11 +1,11 @@
+import type { AnnouncementImages, Announcements } from "@_types/entities";
+import type { SitemapItem } from "@_types/global";
+import { Bucket } from "@lib/bucket";
+import { asyncQueue } from "@utilities/AsyncQueue";
+import { deepCopy } from "@utilities/objects";
 import type { APIContext } from "astro";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { Buffer } from "node:buffer";
-import type { AnnouncementImages, Announcements } from "../../types/entities";
-import type { SitemapItem } from "../../types/global";
-import { Bucket } from "../bucket";
-import { asyncQueue } from "../utilities/AsyncQueue";
-import { deepCopy } from "../utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 

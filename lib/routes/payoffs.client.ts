@@ -1,6 +1,6 @@
+import { v_Payoffs, type Payoffs, type Wholesalers } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 import { pick } from "valibot";
-import { v_Payoffs, type Payoffs, type Wholesalers } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
 
 export type PayoffGetResponse = Pick<Payoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
 

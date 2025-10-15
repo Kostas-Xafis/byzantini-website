@@ -1,5 +1,5 @@
-import type { AnyEndpoint, HTTPMethods } from "../../types/routes";
-import { AnnouncementsServerRoutes } from "./announcement.server";
+import type { AnyEndpoint, HTTPMethods } from "@_types/routes";
+import { AnnouncementsServerRoutes } from "./announcements.server";
 import { AuthenticationServerRoutes } from "./authentication.server";
 import { BooksServerRoutes } from "./books.server";
 import { InstrumentsServerRoutes } from "./instruments.server";
@@ -12,9 +12,9 @@ import { SysUsersServerRoutes } from "./sysusers.server";
 import { TeachersServerRoutes } from "./teachers.server";
 import { WholesalersServerRoutes } from "./wholesalers.server";
 
-import type { RemovePartial } from "../../types/helpers";
+import type { RemovePartial } from "@_types/helpers";
 import { requestValidation } from "../middleware/requestValidation";
-import { authentication } from "../utilities/authentication";
+import { authentication } from "@utilities/authentication";
 import { SchemaServerRoutes } from "./schema.server";
 import { unionHas, unionStringToSet } from "../utils.server";
 import { BaseRoutes } from "./index.client";

@@ -1,5 +1,5 @@
-import type { Books, Payments } from "../../types/entities";
-import { deepCopy } from "../utilities/objects";
+import type { Books, Payments } from "@_types/entities";
+import { deepCopy } from "@utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { PaymentsRoutes } from "./payments.client";
 

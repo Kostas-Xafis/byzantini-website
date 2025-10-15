@@ -1,5 +1,5 @@
-import { v_LoginCredentials, type SysUsers } from "../../types/entities";
-import type { EndpointRoute } from "../../types/routes";
+import { v_LoginCredentials, type SysUsers } from "@_types/entities";
+import type { EndpointRoute } from "@_types/routes";
 
 type SysUsersGetById = Pick<SysUsers, "id" | "email" | "privilege">;
 const get: EndpointRoute<"/sys", any, SysUsersGetById[]> = {

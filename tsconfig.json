@@ -23,6 +23,17 @@
 		"noEmit": true,
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
-		"types": ["@types/bun", "@cloudflare/workers-types"]
+		"types": ["@types/bun", "@cloudflare/workers-types"],
+		"baseUrl": ".",
+		"paths": {
+			"@hooks/*": ["lib/hooks/*"],
+			"@utilities/*": ["lib/utilities/*"],
+			"@routes/*": ["lib/routes/*"],
+			"@lib/*": ["lib/*"],
+			"@_types/*": ["types/*"],
+			"@components/*": ["src/components/*"],
+			"@layouts/*": ["src/layouts/*"],
+			"@pages/*": ["src/pages/*"]
+		}
 	}
 }

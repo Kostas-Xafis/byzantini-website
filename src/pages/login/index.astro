@@ -1,6 +1,6 @@
 ---
-import Input from "../../components/input/Input.astro";
-import SigninLayout from "../../layouts/SigninLayout.astro";
+import Input from "@components/input/Input.astro";
+import SigninLayout from "@layouts/SigninLayout.astro";
 export const prerender = true;
 ---
 
@@ -67,8 +67,8 @@ export const prerender = true;
 	</style>
 </SigninLayout>
 <script>
-	import { useAPI } from "../../../lib/hooks/useAPI.astro";
-	import { setCookie } from "../../../lib/utilities/cookies";
+	import { useAPI } from "@hooks/useAPI.astro";
+	import { setCookie } from "@utilities/cookies";
 
 	let tid: number | null = null;
 	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {

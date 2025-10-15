@@ -1,6 +1,6 @@
+import type { AnyObjectSchema } from "@_types/routes";
 import type { APIContext } from "astro";
 import { parse } from "valibot";
-import type { AnyObjectSchema } from "../../types/routes";
 import { formDataToObject, getUsedBody } from "../utils.server";
 
 export function requestValidation(validation: () => AnyObjectSchema, multipart: boolean) {
