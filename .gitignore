@@ -39,4 +39,5 @@ pnpm-debug.log*
 /pdfWorker
 /imageCompression
 /test.ts
-/**/*.vcf
+/services/vcf
+/contacts/*.vcf

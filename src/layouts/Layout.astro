@@ -1,5 +1,4 @@
 ---
-import { SEO } from "astro-seo";
 import Navbar from "../components/Navbar.astro";
 import Links from "../components/headers/Links.astro";
 import Contact from "../components/contact/Contact.astro";
@@ -11,56 +10,14 @@ export interface Props {
 
 const { title, imageUrl } = Astro.props;
 
-const logoUrl = (new URL(Astro.request.url).origin + imageUrl) || "https://musicschool-metamorfosi.gr/logo.png";
+const logoUrl = (new URL(Astro.request.url).origin + imageUrl) || ""
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<meta name="theme-color" content="#7f1d1d" />
-		<SEO
-			charset="utf-8"
-			title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"
-			description="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως"
-			openGraph={{
-				basic: {
-					title,
-					url: Astro.url,
-					image: logoUrl,
-					type: "website",
-				},
-				image: {
-					url: logoUrl,
-				},
-				optional: {
-					locale: "el_GR",
-				},
-			}}
-			extend={{
-				link: [
-					{ rel: "icon", href: "/logo_small.png" },
-					{ rel: "sitemap", href: "/sitemap-index.xml" },
-					{ rel: "robots", href: "/sitemap-index.xml" },
-				],
-				meta: [
-					{
-						name: "facebook:image",
-						content: logoUrl,
-					},
-					{
-						name: "messenger:image",
-						content: logoUrl,
-					},
-					{
-						name: "viber:image",
-						content: logoUrl,
-					},
-				],
-			}}
-		/>
-		<Links />
+
+		<Links title={title} imageURL={logoUrl}/>
 		<style is:inline>
 			html {
 				font-family: system-ui, sans-serif;

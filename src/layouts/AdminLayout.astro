@@ -14,9 +14,9 @@ const { title } = Astro.props;
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="description" content="Διαχείρηση Σχολής" />
-		<title>{title}</title>
-		<Links />
+		<meta name="theme-color" content="#7f1d1d" />
+
+		<Links title={title} />
 		<style is:inline>
 			html {
 				font-family: system-ui, sans-serif;

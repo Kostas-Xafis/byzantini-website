@@ -1,11 +1,68 @@
 ---
 import { isProduction } from "../../../lib/utils.server.ts";
+import { SEO } from "astro-seo";
+export interface Props {
+	title: string;
+	imageURL?: string;
+}
+const { title, imageURL } = Astro.props;
 const hasBrandIcons = !Astro.url.pathname.includes("login");
+const logoUrl = imageURL || "https://musicschool-metamorfosi.gr/logo.png";
+const openGraphImg = !imageURL ? {
+	url: logoUrl,
+	alt: "Λογότυπο Σχολής Βυζαντινής & Παραδοσιακής Μουσικής",
+	height: 549,
+	width: 549,
+	type: "image/png",
+	secureUrl: logoUrl
+} : {
+	url: logoUrl
+}
+console.log({title, imageURL, logoUrl});
 ---
 
 <>
-	<link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
-	<link rel="sitemap" href="/sitemap-index.xml" />
+	<meta name="viewport" content="width=device-width" />
+	<meta name="generator" content={Astro.generator} />
+	<meta name="theme-color" content="#7f1d1d" />
+	<SEO
+		charset="utf-8"
+		title={title || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"}
+		description="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως"
+		openGraph={{
+			basic: {
+				title: title || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής",
+				url: Astro.url,
+				image: logoUrl,
+				type: "website"
+			},
+			image: openGraphImg,
+			optional: {
+				locale: "el_GR"
+			}
+		}}
+		extend={{
+			link: [
+				{ rel: "icon", href: "/logo_small.png" },
+				{ rel: "sitemap", href: "/sitemap-index.xml" },
+				{ rel: "robots", href: "/robots.txt" }
+			],
+			meta: [
+				{
+					name: "facebook:image",
+					content: logoUrl
+				},
+				{
+					name: "messenger:image",
+					content: logoUrl
+				},
+				{
+					name: "viber:image",
+					content: logoUrl
+				}
+			]
+		}}
+	/>
 	<link rel="preload" href="/fonts/ANAKTORIA.OTF" as="font" crossorigin="" />
 	<style is:inline>
 		@font-face {
