@@ -158,9 +158,7 @@ function picturePreview(file: FileProxy<LocationsMetadata>) {
 
 	(async function () {
 		await sleep(10);
-		const src = !file.isProxy()
-			? await FileHandler.fileToImageUrl(file)
-			: `/spoudastiria/${file.getName()}`;
+		const src = !file.isProxy() ? await file.toImageUrl() : `/spoudastiria/${file.getName()}`;
 		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
 	})();
 
@@ -229,7 +227,7 @@ export default function LocationsTable() {
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const imageHandler = FileHandler.getHandler<LocationsMetadata>(
-				PREFIX + ActionEnum.ADD + "image"
+				PREFIX + ActionEnum.ADD + "image",
 			);
 			imageHandler.setMetadata({ location_id: id });
 			await fileUpload(imageHandler);
@@ -267,7 +265,7 @@ export default function LocationsTable() {
 
 		const submit = async function (
 			formData: ExtendedFormData<Locations>,
-			form?: HTMLFormElement
+			form?: HTMLFormElement,
 		) {
 			if (!form) return;
 			const data: Omit<Locations, "image"> = {
@@ -290,7 +288,7 @@ export default function LocationsTable() {
 			});
 			if (!res.data && !res.message) return;
 			const imageHandler = FileHandler.getHandler<LocationsMetadata>(
-				PREFIX + ActionEnum.MODIFY + "image"
+				PREFIX + ActionEnum.MODIFY + "image",
 			);
 
 			await fileDelete(imageHandler);
@@ -338,7 +336,7 @@ export default function LocationsTable() {
 				pushAlert(createAlert("success", `Το παράρτημα διαγράφηκε επιτυχώς!`));
 			} else {
 				pushAlert(
-					createAlert("success", `Διαγράφηκαν επιτυχώς ${data.length} παραρτήματα!`)
+					createAlert("success", `Διαγράφηκαν επιτυχώς ${data.length} παραρτήματα!`),
 				);
 			}
 		};

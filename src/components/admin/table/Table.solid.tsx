@@ -86,7 +86,7 @@ const move = (e: MouseEvent) => {
 
 const computeColumns = (
 	columnNames: Record<string, { type: CellValue; name: string; size?: number }>,
-	hasSelectBox: boolean
+	hasSelectBox: boolean,
 ) => {
 	let columnWidths = "grid-template-columns: " + (hasSelectBox ? "5ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
@@ -152,7 +152,7 @@ export default function Table(props: Props) {
 		}
 		let res = data.slice(
 			page * pageSize,
-			mappedValue((page + 1) * pageSize, 0, dataLength, 0, dataLength)
+			mappedValue((page + 1) * pageSize, 0, dataLength, 0, dataLength),
 		);
 		// In case of table sorting with pagination, the payment status of each row must be updated
 		setTimeout(() => document.dispatchEvent(new CustomEvent("hydrate")), 0);
@@ -251,10 +251,10 @@ export default function Table(props: Props) {
 				id="tableContainer"
 				style={{
 					"--tools_bottom": hasControlGroup("bottom") ? "1" : "0",
-					"grid-area": "table",
+					"grid-row": "table",
 				}}
 				class={
-					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-span-full grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
+					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
 					(hasControlGroup("left")
 						? " max-w-[100%] max-sm:max-w-[97.5%]"
 						: " max-w-[90%] max-sm:max-w-[92.5%]")
@@ -310,8 +310,8 @@ export default function Table(props: Props) {
 				hasControlGroup("left") && hasControlGroup("bottom")
 					? '"left_tools bottom_tools"'
 					: hasControlGroup("bottom")
-					? '"bottom_tools bottom_tools"'
-					: ""
+						? '"bottom_tools bottom_tools"'
+						: ""
 			};
 
 	}

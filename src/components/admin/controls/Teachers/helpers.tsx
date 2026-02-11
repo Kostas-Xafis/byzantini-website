@@ -44,7 +44,7 @@ export const TeachersInputs = (
 	teacher?: FullTeachers,
 	classList?: TeacherClasses[],
 	locationsList?: TeacherLocations[],
-	instrumentsList?: TeacherInstruments[]
+	instrumentsList?: TeacherInstruments[],
 ): Record<keyof FullTeachers | ExtraInputs, InputProps> => {
 	const teacherClasses = classList?.filter((c) => c.teacher_id === teacher?.id) || [];
 	const teacherPriorities = teacherClasses.map((c) => {
@@ -274,11 +274,15 @@ export const fileUpload = async (fileHandler: FileHandler<TeachersMetadata>, api
 };
 export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: APIHook) => {
 	const deletedFile = fileHandler.getDeletedFiles().at(0);
-	if (!deletedFile) return;
+	if (!deletedFile) {
+		return;
+	}
+	// console.log("Deleting file: ", deletedFile);
+	const { teacher_id, type } = deletedFile.getMetadata();
 	return apiHook(API.Teachers.fileDelete, {
 		RequestObject: {
-			id: deletedFile.getMetadata().teacher_id,
-			type: deletedFile.getMetadata().type,
+			id: teacher_id,
+			type: type,
 		},
 	});
 };
@@ -289,7 +293,7 @@ export function picturePreview(file: FileProxy<TeachersMetadata>) {
 	(async function () {
 		await sleep(10);
 		const src = !file.isProxy()
-			? await FileHandler.fileToImageUrl(file)
+			? await file.toImageUrl()
 			: `/kathigites/picture/${file.getName()}`;
 		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
 	})();
@@ -300,11 +304,7 @@ export function cvPreview(file: FileProxy<TeachersMetadata>) {
 	const id = Random.string(12, "hex");
 
 	(async function () {
-		if (file.isProxy()) {
-			const pdf = await (await fetch("/kathigites/cv/" + file.getName())).arrayBuffer();
-			file.setFile(pdf, { type: "application/pdf" });
-		}
-		const src = await FileHandler.fileToImageUrl(file);
+		const src = await file.toImageUrl();
 		const canvas = document.querySelector(`canvas[data-id="${id}"]`) as HTMLCanvasElement;
 		if (!canvas) return;
 

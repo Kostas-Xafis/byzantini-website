@@ -40,17 +40,13 @@ export class FileProxy<T extends Record<string, any>> {
 	#markForDeletion: boolean;
 	#metadata: T;
 
-	constructor({ name, file = null, markForDeletion = false, metadata = {} as any }:
+	constructor({ isProxy, name, file = null, markForDeletion = false, metadata = {} as any }:
 		{ isProxy: boolean, name: string, file?: File | null, markForDeletion?: boolean, metadata?: T; }) {
-		this.#isFileProxy = file === null;
+		this.#isFileProxy = isProxy;
 		this.#name = name;
 		this.#file = file;
 		this.#markForDeletion = markForDeletion;
 		this.#metadata = metadata;
-	}
-
-	static isFileProxy<T extends Record<string, any>>(file: FileProxy<T>): file is FileProxy<T> {
-		return file.#isFileProxy === false;
 	}
 
 	isProxy() {
@@ -63,7 +59,7 @@ export class FileProxy<T extends Record<string, any>> {
 		if (this.#isFileProxy) return null;
 		return this.#file;
 	}
-	setFile(file: File | Blob | ArrayBuffer, { type }: { type?: string; } = {}) {
+	setFileData(file: File | Blob | ArrayBuffer, { type }: { type?: string; } = {}) {
 		if (file instanceof Blob) {
 			this.#file = new File([file], this.#name, { type });
 		} else if (file instanceof ArrayBuffer) {
@@ -71,7 +67,9 @@ export class FileProxy<T extends Record<string, any>> {
 		} else {
 			this.#file = file;
 		}
-		this.#isFileProxy = false;
+	}
+	setProxy(isProxy: boolean) {
+		this.#isFileProxy = isProxy;
 	}
 	getMetadata() {
 		return this.#metadata;
@@ -86,10 +84,35 @@ export class FileProxy<T extends Record<string, any>> {
 		this.#name = name;
 	}
 	setMarkForDeletion(value: boolean) {
+		// console.log(`Setting mark for deletion for file ${this.#name} to ${value}`);
 		this.#markForDeletion = value;
 	}
 	equalsByName(file: FileProxy<AnyRecord>) {
 		return this.#name == file.#name;
+	}
+	toString() {
+		return `FileProxy(${this.#name}, isProxy=${this.#isFileProxy}, markedForDeletion=${this.#markForDeletion}, metadata=${JSON.stringify(this.#metadata)})`;
+	}
+
+	async toImageUrl(): Promise<string> {
+		let file = this.getFile();
+		let type: string;
+		if (this.#isFileProxy && this.#name.endsWith(".pdf")) {
+			const pdf = await (await fetch("/kathigites/cv/" + this.#name)).arrayBuffer();
+			type = "application/pdf";
+			file = new File([pdf], this.#name, { type });
+		} else if (file) {
+			type = file.type;
+			if (!type) throw Error("File type not found");
+		} else throw Error("File not found");
+
+		if (type.includes("image")) {
+			return URL.createObjectURL(file);
+		} else if (type.includes("pdf")) {
+			return await PDF.convertFirstPageToImage(new Uint8Array(await file.arrayBuffer()));
+		} else {
+			throw Error("File type not supported");
+		}
 	}
 }
 
@@ -118,8 +141,9 @@ export class FileHandler<Metadata extends Record<string, any>> {
 
 	addFiles(files: File[] | FileList, metadata?: Metadata) {
 		if (files.length == 0) return;
-		const proxyFiles = Array.from(files).map(file => FileHandler.createFileProxy<Metadata>(file.name, { isProxy: false, file, metadata: metadata || this.metadata }));
-
+		// console.log("Adding files: ", files, " with metadata: ", metadata);
+		const proxyFiles = Array.from(files).map(file => FileHandler.createFileProxy<Metadata>(file.name, { file, metadata: metadata || this.metadata }));
+		// console.log("Adding files: ", proxyFiles);
 		if (this.isSingleFile) {
 			this.files = [proxyFiles[0]];
 			return;
@@ -146,7 +170,8 @@ export class FileHandler<Metadata extends Record<string, any>> {
 
 		const file = this.files[index];
 		if (file.isProxy()) {
-			if (force) this.initialFileProxies = this.initialFileProxies.filter(f => !f.equalsByName(file));
+			const index = this.initialFileProxies.findIndex(f => f.equalsByName(file));
+			if (force && index !== -1) this.initialFileProxies.splice(index, 1);
 			else this.markAsDeleteFileProxy(file);
 		}
 		if (this.isSingleFile) this.files = [];
@@ -161,13 +186,6 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		if (index < 0 || index >= this.files.length) return null;
 		return this.files[index];
 	}
-	fillProxy(file: File, index?: number) {
-		if (index == undefined && this.isSingleFile) index = 0;
-		else if (index == undefined) throw Error("Index not provided");
-		if (index < 0 || index >= this.files.length) throw Error("Index out of bounds");
-		if (!this.files[index].isProxy()) throw Error("File is not a proxy");
-		this.files[index].setFile(file);
-	};
 	getFiles() {
 		return this.files;
 	}
@@ -253,12 +271,12 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		if (FileHandler.AllFiles[prefix] == null) return [];
 		return FileHandler.AllFiles[prefix].getInitialFiles();
 	}
-	static createFileProxy<K extends Record<string, any>>(name?: string, { isProxy = true, file = null, metadata = {} as K }: { isProxy?: boolean, file?: File | null; metadata?: K; } = {}): FileProxy<K> {
-		if (typeof name !== "string") throw Error("Name not provided");
-		if (isProxy)
-			return new FileProxy({ isProxy, name, metadata });
-		if (file == null || !("name" in file)) throw Error("File is null");
-		return new FileProxy({ isProxy, name, file, metadata });
+	static createFileProxy<K extends Record<string, any>>(name?: string, { file = null, metadata = {} as K }: { isProxy?: boolean, file?: File | null; metadata?: K; } = {}) {
+		if (typeof name !== "string" || (file && !("name" in file))) throw Error("Name not provided");
+		const isProxy = file === null;
+		const fileProxy = new FileProxy<K>({ isProxy, name, file, metadata });
+		// console.log("Created FileProxy: ", fileProxy);
+		return fileProxy;
 	}
 	static getHandler<Metadata extends Record<string, any>>(prefix: string) {
 		return FileHandler.AllFiles[prefix] as FileHandler<Metadata>;
@@ -325,8 +343,6 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		if (!file) throw Error("File not found");
 		const type = fileProxy.getFile()?.type;
 		if (!type) throw Error("File type not found");
-
-		if (fileProxy.isProxy()) throw Error("Tried to convert a proxy file to an image");
 
 		if (type.includes("image")) {
 			return URL.createObjectURL(file);

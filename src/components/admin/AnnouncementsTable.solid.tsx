@@ -103,7 +103,7 @@ function imagePreview(file: FileProxy<AnnouncementImageMetadata>) {
 	(async function () {
 		await sleep(10);
 		const src = !file.isProxy()
-			? await FileHandler.fileToImageUrl(file)
+			? await file.toImageUrl()
 			: `/anakoinoseis/images/${file.getMetadata().announcement_id}/thumb_${file.getName()}`;
 		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
 	})();
@@ -171,7 +171,7 @@ export default function AnnouncementsTable() {
 				} catch (e) {
 					console.error(e);
 					pushAlert(
-						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`)
+						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`),
 					);
 				}
 			};
@@ -179,7 +179,7 @@ export default function AnnouncementsTable() {
 		if (photos.length !== 0) {
 			const photosLength = photos.length;
 			const alert = pushAlert(
-				createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength)
+				createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength),
 			);
 			await asyncQueue(uploadQueue, {
 				maxJobs: 4,
@@ -235,10 +235,10 @@ export default function AnnouncementsTable() {
 			if (!res.data) return;
 			const id = res.data.insertId;
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.ADD + "mainImage"
+				PREFIX + ActionEnum.ADD + "mainImage",
 			);
 			const imagesHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.ADD + "photos"
+				PREFIX + ActionEnum.ADD + "photos",
 			);
 
 			mainImageHandler.setMetadata({ is_main: true, announcement_id: id, id: 0 });
@@ -300,10 +300,10 @@ export default function AnnouncementsTable() {
 			if (!res.message) return;
 
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.MODIFY + "mainImage"
+				PREFIX + ActionEnum.MODIFY + "mainImage",
 			);
 			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.MODIFY + "photos"
+				PREFIX + ActionEnum.MODIFY + "photos",
 			);
 
 			await Promise.all([imagesDelete(mainImageHandler), imagesDelete(photosHandler)]);
@@ -314,7 +314,7 @@ export default function AnnouncementsTable() {
 		};
 		const announcement = announcements.find((a) => a.id === selectedItems[0]) as Announcements;
 		const mainImage = images.find(
-			(i) => i.is_main && i.announcement_id === announcement.id
+			(i) => i.is_main && i.announcement_id === announcement.id,
 		) as AnnouncementImages;
 		return {
 			inputs: new InputFields(AnnouncementsInputs())
