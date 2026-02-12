@@ -1,3 +1,10 @@
+import { customEvent } from "@_types/custom-events";
+import type { Instruments, Registrations, TeacherInstruments, Teachers } from "@_types/entities";
+import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
+import { Random as R } from "@lib/random";
+import { AnimTimeline } from "@utilities/dom";
+import { ExtendedFormData } from "@utilities/forms";
+import { deepCopy } from "@utilities/objects";
 import {
 	For,
 	Show,
@@ -9,18 +16,6 @@ import {
 	type Setter,
 } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { Random as R } from "../../../lib/random";
-import { AnimTimeline } from "../../../lib/utilities/dom";
-import { ExtendedFormData } from "../../../lib/utilities/forms";
-import { deepCopy } from "../../../lib/utilities/objects";
-import { customEvent } from "../../../types/custom-events";
-import type {
-	Instruments,
-	Registrations,
-	TeacherInstruments,
-	Teachers,
-} from "../../../types/entities";
 import Input, { type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
 import Spinner from "../other/Spinner.solid";
@@ -172,7 +167,7 @@ const genericInputs: Record<
 };
 
 const byzantineInputs = (
-	teachers: Teachers[]
+	teachers: Teachers[],
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -226,7 +221,7 @@ const byzantineInputs = (
 const traditionalInputs = (
 	teachers: Teachers[],
 	resetTeacher: Setter<Teachers | undefined>,
-	onTeacherChange?: (e: Event) => void
+	onTeacherChange?: (e: Event) => void,
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -287,7 +282,7 @@ const traditionalInputs = (
 const europeanInputs = (
 	teachers: Teachers[],
 	resetTeacher: Setter<Teachers | undefined>,
-	onTeacherChange?: (e: Event) => void
+	onTeacherChange?: (e: Event) => void,
 ): Record<keyof Pick<Registrations, "class_year" | "teacher_id">, InputProps> => {
 	return {
 		class_year: {
@@ -437,14 +432,14 @@ export function RegistrationForm() {
 
 	const onTeacherChange = (e: Event) => {
 		setSelectedTeacher(
-			TeachersByType().find((t) => t.id === Number((e.target as HTMLSelectElement).value))
+			TeachersByType().find((t) => t.id === Number((e.target as HTMLSelectElement).value)),
 		);
 	};
 
 	createEffect(
 		on(formSelected, () => {
 			setSelectedTeacher(undefined);
-		})
+		}),
 	);
 
 	onMount(async () => {
@@ -496,8 +491,8 @@ export function RegistrationForm() {
 		return teachers.filter((teacher) =>
 			teacher_classes.find(
 				(teacher_class) =>
-					teacher_class.teacher_id === teacher.id && teacher_class.class_id === id
-			)
+					teacher_class.teacher_id === teacher.id && teacher_class.class_id === id,
+			),
 		);
 	});
 	const InstrumentsByTeacher = createMemo(() => {
@@ -589,7 +584,7 @@ export function RegistrationForm() {
 				data.class_year !== "Α' Ετος"
 			) {
 				alert(
-					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζεται το ΑΜ, θα το βρείτε σε προσωπικό μαιλ, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής."
+					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζεται το ΑΜ, θα το βρείτε σε προσωπικό μαιλ, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής.",
 				);
 				throw Error("");
 			}
@@ -597,11 +592,7 @@ export function RegistrationForm() {
 				alert("Ο ΑΜΚΑ αποτελείται μόνο από 11 ψηφία.");
 				throw Error("");
 			}
-			if (
-				data.teacher_id === -1 &&
-				data.class_year !== "Υπό Κατάταξη" &&
-				data.class_year !== "Α' Προκαταρκτική"
-			) {
+			if (data.teacher_id === -1 && data.class_year !== "Α' Προκαταρκτική") {
 				alert("Παρακαλώ επιλέξτε καθηγητή");
 				throw Error("");
 			}
@@ -728,27 +719,27 @@ export function RegistrationForm() {
 							{formSelected() === MusicType.Byzantine
 								? Object.values(byzantineInputs(TeachersByType())).map((input) => (
 										<Input {...input} prefix={PREFIX} />
-								  ))
+									))
 								: formSelected() === MusicType.Traditional
-								? Object.values(
-										traditionalInputs(
-											TeachersByType(),
-											setSelectedTeacher,
-											onTeacherChange
-										)
-								  ).map((input) => <Input {...input} prefix={PREFIX} />)
-								: Object.values(
-										europeanInputs(
-											TeachersByType(),
-											setSelectedTeacher,
-											onTeacherChange
-										)
-								  ).map((input) => <Input {...input} prefix={PREFIX} />)}
+									? Object.values(
+											traditionalInputs(
+												TeachersByType(),
+												setSelectedTeacher,
+												onTeacherChange,
+											),
+										).map((input) => <Input {...input} prefix={PREFIX} />)
+									: Object.values(
+											europeanInputs(
+												TeachersByType(),
+												setSelectedTeacher,
+												onTeacherChange,
+											),
+										).map((input) => <Input {...input} prefix={PREFIX} />)}
 							{formSelected() === MusicType.Traditional ||
 							formSelected() === MusicType.European
 								? Object.values(
-										instrumentsByTeacherInput(InstrumentsByTeacher())
-								  ).map((input) => <Input {...input} prefix={PREFIX} />)
+										instrumentsByTeacherInput(InstrumentsByTeacher()),
+									).map((input) => <Input {...input} prefix={PREFIX} />)
 								: ""}
 							{formSelected() === MusicType.Traditional ? (
 								<Input
@@ -792,14 +783,14 @@ export function RegistrationForm() {
 					!DiplomaClasses.includes(registrationData["class_year"])
 						? "Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."
 						: registrationData["class_year"] === "Β' Ανωτέρα"
-						? [
-								"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας.",
-								" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
-						  ]
-						: [
-								"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας και το Πτυχίο σας.",
-								" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
-						  ]
+							? [
+									"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας.",
+									" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
+								]
+							: [
+									"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας και το Πτυχίο σας.",
+									" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
+								]
 				}
 				onClose={() => {
 					setFormSelected(MusicType.None);

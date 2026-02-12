@@ -165,6 +165,11 @@ function picturePreview(file: FileProxy<LocationsMetadata>) {
 	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
 }
 
+function stripSrcFromIFrame(str: string) {
+	const match = str.match(/src="([^"]*)"/);
+	return match ? match[1] : str;
+}
+
 type LocationsMetadata = { location_id: number };
 export default function LocationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
@@ -206,21 +211,22 @@ export default function LocationsTable() {
 		return locations ? locationsToTable(locations) : [];
 	});
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const submit = async function (form: ExtendedFormData<Locations>) {
+		const submit = async function (fd: ExtendedFormData<Locations>) {
 			const data: Omit<Locations, "id" | "image"> = {
-				name: form.string("name"),
-				address: form.string("address"),
-				areacode: form.number("areacode"),
-				municipality: form.string("municipality"),
-				manager: form.string("manager"),
-				email: form.string("email"),
-				telephones: form.string("telephones"),
-				priority: form.number("priority"),
-				map: form.string("map"),
-				link: form.string("link"),
-				youtube: form.string("youtube"),
-				partner: form.multiSelect("partner", "boolean", { single: true }),
+				name: fd.string("name"),
+				address: fd.string("address"),
+				areacode: fd.number("areacode"),
+				municipality: fd.string("municipality"),
+				manager: fd.string("manager"),
+				email: fd.string("email"),
+				telephones: fd.string("telephones"),
+				priority: fd.number("priority"),
+				map: stripSrcFromIFrame(fd.string("map")),
+				link: fd.string("link"),
+				youtube: fd.string("youtube"),
+				partner: fd.multiSelect("partner", "boolean", { single: true }),
 			};
+
 			const res = await apiHook(API.Locations.post, {
 				RequestObject: data,
 			});
@@ -263,25 +269,22 @@ export default function LocationsTable() {
 		const location = locations.find((p) => p.id === selectedItems[0]);
 		if (!location) return modifyModal;
 
-		const submit = async function (
-			formData: ExtendedFormData<Locations>,
-			form?: HTMLFormElement,
-		) {
+		const submit = async function (fd: ExtendedFormData<Locations>, form?: HTMLFormElement) {
 			if (!form) return;
 			const data: Omit<Locations, "image"> = {
 				id: location.id,
-				name: formData.string("name"),
-				address: formData.string("address"),
-				areacode: formData.number("areacode"),
-				municipality: formData.string("municipality"),
-				manager: formData.string("manager"),
-				email: formData.string("email"),
-				telephones: formData.string("telephones"),
-				priority: formData.number("priority"),
-				map: formData.string("map"),
-				link: formData.string("link"),
-				youtube: formData.string("youtube"),
-				partner: formData.multiSelect("partner", "boolean", { single: true }),
+				name: fd.string("name"),
+				address: fd.string("address"),
+				areacode: fd.number("areacode"),
+				municipality: fd.string("municipality"),
+				manager: fd.string("manager"),
+				email: fd.string("email"),
+				telephones: fd.string("telephones"),
+				priority: fd.number("priority"),
+				map: stripSrcFromIFrame(fd.string("map")),
+				link: fd.string("link"),
+				youtube: fd.string("youtube"),
+				partner: fd.multiSelect("partner", "boolean", { single: true }),
 			};
 			const res = await apiHook(API.Locations.update, {
 				RequestObject: data,
