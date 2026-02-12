@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/wrangler/config-schema.json",
-	"main": "dist/_worker.js",
+	"main": "dist/_worker.js/_index.js",
 	"name": "byzantini-website", 
 	"compatibility_date": "2025-03-25",
 	"compatibility_flags": ["nodejs_compat"],
