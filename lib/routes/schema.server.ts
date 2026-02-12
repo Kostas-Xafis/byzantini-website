@@ -2,9 +2,11 @@ import { createDbConnection } from "@lib/db";
 import { deepCopy } from "@utilities/objects";
 import { execTryCatch, silentImport } from "../utils.server";
 import { SchemaRoutes } from "./schema.client";
+import { CLI } from "@utilities/cli";
 
 const serverRoutes = deepCopy(SchemaRoutes);
-const fs = await silentImport<typeof import("fs/promises")>("fs/promises");
+const fs = await silentImport<typeof import("fs")>("fs/promises");
+const fsp = await silentImport<typeof import("fs/promises")>("fs/promises");
 export const sqliteGenerateBackup = async () => {
 	const new_schema = ["PRAGMA journal_mode=WAL;"];
 	const conn = createDbConnection("sqlite-prod");
@@ -45,7 +47,7 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 
 		if (type === "sqlite") {
 			const sqliteConn = createDbConnection("sqlite-dev");
-			await sqliteConn.execute(await fs.readFile(SAFE_BACKUP_SNAPSHOT, "utf-8"));
+			await sqliteConn.execute(await fsp.readFile(SAFE_BACKUP_SNAPSHOT, "utf-8"));
 			return "Reverted to previous schema";
 		}
 		throw Error(`The ${type} connector not supported anymore`);
@@ -54,25 +56,20 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 
 serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
-		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, LATEST_MIGRATION_FILE } = import.meta.env;
+		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, PROJECT_ABSOLUTE_PATH } = import.meta.env;
 		if (CONNECTOR === "mysql") {
 			throw Error(`Cannot revert schema for '${CONNECTOR}' connector`);
 		}
-		if (SAFE_BACKUP_SNAPSHOT && !(await fs.exists(SAFE_BACKUP_SNAPSHOT))) {
+		if (SAFE_BACKUP_SNAPSHOT && !(fs.existsSync(SAFE_BACKUP_SNAPSHOT))) {
 			throw Error("No safe schema found. Please create a safe schema before migrating");
 		}
-		const migrationFile = await fs.readFile(LATEST_MIGRATION_FILE, "utf-8");
-		const sqliteConn = createDbConnection("sqlite-dev");
-		for (const query of migrationFile.split("\n")) {
-			if (query.startsWith("--")) continue;
-			try {
-				if (query.trim() === "") continue;
-				await sqliteConn.execute(query);
-			} catch (error) {
-				console.error("Schema migration error:", error);
-				throw Error("Migration failed");
-			}
+		if (CONNECTOR !== "sqlite-dev") {
+			throw Error(`The ${CONNECTOR} connector is not supported for migration`);
 		}
+		await CLI.executeCommands([
+			`cd ${PROJECT_ABSOLUTE_PATH}/dbSnapshots`,
+			`sqlite3 latest.db < ./migrations/latest.sql`,
+		]);
 		return "Migrated to latest schema";
 	}, "Σφάλμα κατά την μεταφορά στο τελευταίο σχήμα");
 };
