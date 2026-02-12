@@ -1,0 +1,14 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+	"main": "dist/_worker.js",
+	"name": "byzantini-website", 
+	"compatibility_date": "2025-03-25",
+	"compatibility_flags": ["nodejs_compat"],
+    "r2_buckets": [
+        {
+            "binding": "S3_BUCKET",
+            "bucket_name": "byzantini-bucket",
+            "preview_bucket_name": "bucket-dev"
+        }
+    ],
+}
