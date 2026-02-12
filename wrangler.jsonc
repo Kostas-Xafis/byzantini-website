@@ -10,5 +10,5 @@
             "bucket_name": "byzantini-bucket",
             "preview_bucket_name": "bucket-dev"
         }
-    ],
+    ]
 }
