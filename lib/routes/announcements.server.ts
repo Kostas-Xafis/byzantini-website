@@ -5,7 +5,6 @@ import { asyncQueue } from "@utilities/AsyncQueue";
 import { deepCopy } from "@utilities/objects";
 import type { APIContext } from "astro";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
-import { Buffer } from "node:buffer";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
 
@@ -20,7 +19,9 @@ const { WEBSITE_URL } = import.meta.env;
 async function getSitemapXml(ctx: APIContext) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
 	if (!sitemap) throw Error("Sitemap not found");
-	return new XMLParser(xmlopts).parse(Buffer.from('byteLength' in sitemap ? sitemap : await sitemap.arrayBuffer()));
+	const sitemapText = 'byteLength' in sitemap ? new TextDecoder().decode(sitemap) : await sitemap.text();
+	console.log(sitemapText);
+	return new XMLParser(xmlopts).parse(sitemapText);
 }
 function jsonToXml(json: any) {
 	return new XMLBuilder({ ...xmlopts, format: true } as any).build(json) as string;
