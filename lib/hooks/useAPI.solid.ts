@@ -1,6 +1,7 @@
 import type { DefaultEndpointResponse } from "@_types/routes";
 import { ActionEnum } from "@components/admin/table/TableControlTypes";
 import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
+import { getAPIBaseURL } from "@utilities/api";
 import { objToFormData } from "@utilities/forms";
 import { convertToUrlFromArgs } from "@utilities/url";
 import { batch, createEffect, createSignal } from "solid-js";
@@ -13,7 +14,7 @@ export { API };
 
 // IMPORTANT: The useAPI can be called from the server or the client.
 // To accurately determine the URL, I prepend the website url to the request when called from the server.
-const { VITE_URL = "" } = import.meta.env;
+const API_BASE_URL = getAPIBaseURL();
 
 export type StoreMutation<T extends APIEndpointNames> = {
 	endpoint?: T,
@@ -28,7 +29,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 	try {
 		let fetcher: ReturnType<typeof fetch>;
 		if (req === undefined) {
-			const url = VITE_URL + "/api" + Route.path;
+			const url = API_BASE_URL + "/api" + Route.path;
 			fetcher = fetch(url, { method: Route.method });
 		} else {
 			assertOwnProp(req, "RequestObject");
@@ -42,7 +43,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
 			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
+			fetcher = fetch(API_BASE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
 				headers: Route.multipart ? {} : {
 					"Content-Type": (IsBlob && RequestObject.type) || "application/json"

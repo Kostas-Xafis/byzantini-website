@@ -5,10 +5,13 @@ import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
 
 const unmappedRoutes = (page) => page.includes("admin") || page.includes("login");
+const productionSite = "https://musicschool-metamorfosi.gr";
+const isMainBranch = process.env.CF_PAGES_BRANCH === "main";
+const site = (isMainBranch && productionSite) || process.env.CF_PAGES_URL || productionSite;
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://musicschool-metamorfosi.gr",
+	site,
 	integrations: [
 		tailwind(),
 		solidJs(),
