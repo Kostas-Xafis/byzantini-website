@@ -2,16 +2,15 @@ import type { SysUsers } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import type { APIContext } from "astro";
-import { createHash } from "node:crypto";
 
 
 
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || R.hex();
-	const hmac = createHash("sha256");
-	hmac.update(key + (import.meta.env.SECRET));
-	hmac.update(salt);
-	return hmac.digest("hex").toString() + ":" + salt;
+	const data = new TextEncoder().encode(key + import.meta.env.SECRET + salt);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+	const hashHex = Array.from(new Uint8Array(hashBuffer)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+	return hashHex + ":" + salt;
 }
 
 // This class is used to authenticate a user by his session id

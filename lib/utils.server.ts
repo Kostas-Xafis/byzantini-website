@@ -123,6 +123,7 @@ export const execTryCatch = async <T>(
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);
 	} catch (error: any) {
+		console.log(error);
 		if (error instanceof Error) {
 			res = ErrorWrapper((errorMessage || "") + " " + error.message);
 		} else {
