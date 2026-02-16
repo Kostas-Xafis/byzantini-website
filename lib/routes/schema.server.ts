@@ -3,6 +3,7 @@ import { deepCopy } from "@utilities/objects";
 import { execTryCatch, silentImport } from "../utils.server";
 import { SchemaRoutes } from "./schema.client";
 import { CLI } from "@utilities/cli";
+import { Env } from "@env/env";
 
 const serverRoutes = deepCopy(SchemaRoutes);
 const fs = await silentImport<typeof import("fs")>("fs/promises");
@@ -40,7 +41,7 @@ serverRoutes.get.func = ({ slug }) => {
 serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 	return execTryCatch(async () => {
 		const { type } = slug;
-		const { SAFE_BACKUP_SNAPSHOT } = import.meta.env;
+		const { SAFE_BACKUP_SNAPSHOT } = Env.env;
 		if (!SAFE_BACKUP_SNAPSHOT) {
 			throw Error("No safe schema found");
 		}
@@ -56,7 +57,7 @@ serverRoutes.revertToPreviousSchema.func = ({ slug }) => {
 
 serverRoutes.migrate.func = ({ ctx: _ctx }) => {
 	return execTryCatch(async () => {
-		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, PROJECT_ABSOLUTE_PATH } = import.meta.env;
+		const { CONNECTOR, SAFE_BACKUP_SNAPSHOT, PROJECT_ABSOLUTE_PATH } = Env.env;
 		if (CONNECTOR === "mysql") {
 			throw Error(`Cannot revert schema for '${CONNECTOR}' connector`);
 		}

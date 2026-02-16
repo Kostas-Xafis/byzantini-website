@@ -2,6 +2,7 @@
 import Input from "@components/input/Input.astro";
 import { API, useAPI } from "@hooks/useAPI.astro";
 import SigninLayout from "@layouts/SigninLayout.astro";
+export const prerender = false;
 
 const { link } = Astro.params;
 if (!link) {

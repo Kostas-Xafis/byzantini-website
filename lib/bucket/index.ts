@@ -1,17 +1,22 @@
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { APIContext } from "astro";
 import { MIMETypeMap, isProduction, silentImport } from "../utils.server";
+import { Env } from "@env/env";
 
 const awsSdk = await silentImport<typeof import("@aws-sdk/client-s3")>("@aws-sdk/client-s3");
-const { S3_DEV_BUCKET_NAME } = import.meta.env;
+const env = Env.env;
+const { S3_DEV_BUCKET_NAME } = env;
 
 const createS3Client = async () => {
+	if (!env.S3_ENDPOINT || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
+		throw new Error("Missing S3 configuration in environment variables.");
+	}
 	return new awsSdk.S3Client({
 		region: "auto",
-		endpoint: import.meta.env.S3_ENDPOINT,
+		endpoint: env.S3_ENDPOINT,
 		credentials: {
-			accessKeyId: import.meta.env.S3_ACCESS_KEY_ID,
-			secretAccessKey: import.meta.env.S3_SECRET_ACCESS_KEY,
+			accessKeyId: env.S3_ACCESS_KEY_ID,
+			secretAccessKey: env.S3_SECRET_ACCESS_KEY,
 		},
 	});
 };

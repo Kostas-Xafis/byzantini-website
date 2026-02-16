@@ -3,6 +3,7 @@ import type { AnnouncementImages, Announcements } from "@_types/entities";
 import Spinner from "@components/other/Spinner.astro";
 import Layout from "@layouts/Layout.astro";
 import { API, useAPI } from "@lib/hooks/useAPI.astro";
+export const prerender = false;
 
 let url = Astro.url.pathname;
 url = url.endsWith("/") ? url.slice(0, -1) : url;

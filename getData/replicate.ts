@@ -1,3 +1,4 @@
+import { Env } from "@env/env";
 import { createSimpleDbConnection } from "@lib/db";
 import { CLI } from "@utilities/cli";
 import { argv } from "bun";
@@ -43,7 +44,7 @@ const getCurrentFormattedDate = () => {
 };
 
 async function productionDatabaseReplication(force = false) {
-	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = import.meta.env;
+	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = Env.env;
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH)
 		throw Error("Missing environment variables");
 	const SNAPSHOT_DATE = getCurrentFormattedDate();

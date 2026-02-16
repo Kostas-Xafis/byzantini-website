@@ -1,6 +1,7 @@
 ---
 import { useAPI } from "@hooks/useAPI.astro";
 import SigninLayout from "@layouts/SigninLayout.astro";
+export const prerender = false;
 
 // The url link is not properly constructed as I didn't encode to a URI component
 let restoredUrl = new URL(Astro.url.href.replace("/?token", "?token"));

@@ -1,5 +1,5 @@
-import { v_LoginCredentials } from "../../types/entities";
-import type { EndpointRoute, } from "../../types/routes";
+import { v_LoginCredentials } from "@_types/entities";
+import type { EndpointRoute, } from "@_types/routes";
 
 const authenticateSession: EndpointRoute<"/auth/session", any, { isValid: boolean; }> = {
 	authentication: true,
@@ -34,8 +34,27 @@ const userLogout: EndpointRoute<"/auth/logout", { sid: string; }, string> = {
 	validation: undefined,
 };
 
+const getGoogleOAuthState: EndpointRoute<"/auth/google", any, { OAuthUrl: string; }> = {
+	authentication: false,
+	method: "GET",
+	path: "/auth/google",
+	hasUrlParams: false,
+	validation: undefined,
+};
+
+const oauthCallback: EndpointRoute<"/auth/google/callback", any, any> = {
+	authentication: false,
+	method: "GET",
+	path: "/auth/google/callback",
+	hasUrlParams: false,
+	validation: undefined,
+};
+
+
 export const AuthenticationRoutes = {
 	authenticateSession,
 	userLogin,
 	userLogout,
+	getGoogleOAuthState,
+	oauthCallback,
 };

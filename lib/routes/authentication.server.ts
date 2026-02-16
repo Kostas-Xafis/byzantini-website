@@ -1,8 +1,11 @@
-import type { SysUsers } from "../../types/entities";
-import { authentication, createSessionId, generateShaKey } from "../utilities/authentication";
-import { deepCopy } from "../utilities/objects";
+// import { OAuth2Tokens, decodeIdToken, generateCodeVerifier, generateState } from "arctic";
+import type { SysUsers } from "@_types/entities";
+import { authentication, createSessionId, generateShaKey } from "@utilities/authentication";
+import { deepCopy } from "@utilities/objects";
 import { execTryCatch, getUsedBody } from "../utils.server";
 import { AuthenticationRoutes } from "./authentication.client";
+import { Env } from "@env/env";
+// import { google } from "@utilities/Google";
 
 const serverRoutes = deepCopy(AuthenticationRoutes);
 
@@ -41,5 +44,85 @@ serverRoutes.authenticateSession.func = ({ ctx }) => {
 		return { isValid: isAuthenticated };
 	});
 };
+// serverRoutes.getGoogleOAuthState.func = ({ ctx }) => {
+// 	return execTryCatch(async () => {
+// 		const state = generateState();
+// 		const codeVerifier = generateCodeVerifier();
+// 		const url = google.createAuthorizationURL(state, codeVerifier, ["openid", "profile"]);
+// 		ctx.cookies.set("google_oauth_state", state, {
+// 			path: "/",
+// 			secure: Env.env.PROD,
+// 			httpOnly: true,
+// 			maxAge: 60 * 10, // 10 minutes
+// 			sameSite: "lax"
+// 		});
+// 		ctx.cookies.set("google_code_verifier", codeVerifier, {
+// 			path: "/",
+// 			secure: Env.env.PROD,
+// 			httpOnly: true,
+// 			maxAge: 60 * 10, // 10 minutes
+// 			sameSite: "lax"
+// 		});
+// 		return { OAuthUrl: url.toString() };
+// 	});
+// };
 
+// serverRoutes.oauthCallback.func = ({ ctx }) => {
+// 	return execTryCatch(async T => {
+// 		const url = new URL(ctx.request.url);
+// 		const code = url.searchParams.get("code");
+// 		const state = url.searchParams.get("state");
+// 		const storedState = ctx.cookies.get("google_oauth_state")?.value;
+// 		const codeVerifier = ctx.cookies.get("google_code_verifier")?.value;
+
+// 		console.log("OAuth Callback Invoked");
+// 		console.log("Received code:", code);
+// 		console.log("Received state:", state);
+// 		console.log("Stored state:", storedState);
+// 		console.log("Code verifier:", codeVerifier);
+
+// 		if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
+// 			return { error: "Invalid request", isValid: false };
+// 		}
+
+// 		if (state !== storedState) {
+// 			return { error: "State mismatch", isValid: false };
+// 		}
+
+// 		let tokens: OAuth2Tokens;
+// 		try {
+// 			tokens = await google.validateAuthorizationCode(code, codeVerifier);
+// 		} catch (e) {
+// 			// Invalid code or client credentials
+// 			return { error: "Invalid authorization code", isValid: false };
+// 		}
+// 		const claims = decodeIdToken(tokens.idToken()) as { sub: string; name: string; email: string; };
+// 		const googleEmail = claims.email;
+
+// 		if (!googleEmail) {
+// 			return { error: "No email found in Google account", isValid: false };
+// 		}
+
+// 		// Check if user exists with this email
+// 		const [existingUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [googleEmail]);
+
+// 		if (!existingUser) {
+// 			return { error: "No user found with this email", isValid: false };
+// 		}
+
+// 		// Create session for the user
+// 		const { session_exp_date, session_id } = createSessionId();
+// 		await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
+// 			session_id,
+// 			session_exp_date,
+// 			googleEmail
+// 		]);
+
+// 		// Clear OAuth cookies
+// 		ctx.cookies.delete("google_oauth_state", { path: "/" });
+// 		ctx.cookies.delete("google_code_verifier", { path: "/" });
+
+// 		return { isValid: true, session_id };
+// 	}, "Σφάλμα κατά την είσοδο με Google");
+// };
 export const AuthenticationServerRoutes = serverRoutes;

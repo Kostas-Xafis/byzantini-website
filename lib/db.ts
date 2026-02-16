@@ -1,4 +1,5 @@
 import type { Insert } from "@_types/entities";
+import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { questionMarks } from "@lib/utils.server";
 import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction } from "@libsql/client";
@@ -42,7 +43,11 @@ export function createSimpleDbConnection(type?: DBType): SimpleConnection {
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
 		CONNECTOR
-	} = import.meta.env;
+	} = Env.env;
+	if (!DEV_DB_ABSOLUTE_LOCATION || !TURSO_DB_URL || !TURSO_DB_TOKEN || !CONNECTOR) {
+		throw new Error("Database environment variables are not set.");
+	}
+
 	// ! SQLITE does not support LIMIT in UPDATE queries
 	let client: SimpleConnection = null as any;
 	if (type === "sqlite-prod" || CONNECTOR === "sqlite-prod") {

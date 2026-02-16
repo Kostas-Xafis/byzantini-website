@@ -1,0 +1,38 @@
+export type EnvTypes = {
+    MODE: string;
+    DEV: boolean;
+    PROD: boolean;
+    SSR: boolean;
+    BASE_URL: string;
+    SITE?: string;
+    CF_PAGES_BRANCH?: string;
+    CF_PAGES_URL?: string;
+
+    CONNECTOR?: string;
+    TURSO_DB_URL?: string;
+    TURSO_DB_TOKEN?: string;
+    SAFE_BACKUP_SNAPSHOT?: string;
+    BACKUP_SNAPSHOT_LOCATION?: string;
+    DEV_SNAPSHOT_LOCATION?: string;
+    DEV_DB_ABSOLUTE_LOCATION?: string;
+    DEV_BUCKET_LOCATION?: string;
+    LATEST_MIGRATION_FILE?: string;
+    SECRET?: string;
+    VITE_URL?: string;
+    WEBSITE_URL?: string;
+    GOOGLE_MAPS_KEY?: string;
+    GOOGLE_CLIENT_ID?: string;
+    GOOGLE_CLIENT_SECRET?: string;
+    S3_ENDPOINT?: string;
+    S3_ACCESS_KEY_ID?: string;
+    S3_SECRET_ACCESS_KEY?: string;
+    S3_DEV_BUCKET_NAME?: string;
+    S3_BUCKET_NAME?: string;
+    PROJECT_ABSOLUTE_PATH?: string;
+    AUTOMATED_EMAILS_SERVICE_URL?: string;
+    AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN?: string;
+    VITE_PDF_SERVICE_URL?: string;
+    VITE_IMG_COMPRESSION_SERVICE_URL?: string;
+    TEST_EMAIL?: string;
+    TEST_PASSWORD?: string;
+};

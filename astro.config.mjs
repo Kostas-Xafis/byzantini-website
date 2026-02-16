@@ -22,7 +22,6 @@ export default defineConfig({
 			lastmod: new Date(),
 		}),
 	],
-	output: "server",
 	adapter: cloudflare({
 		mode: "advanced",
 	}),

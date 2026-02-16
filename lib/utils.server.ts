@@ -1,10 +1,11 @@
 import type { Insert } from "@_types/entities";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "@_types/routes";
+import { Env } from "@env/env";
 import { createDbConnection, type QueryArguments, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
 import type { Output } from "valibot";
 
-const { MODE, PROD } = import.meta.env;
+const { MODE, PROD } = Env.env;
 export function isProduction() {
 	return MODE === "production" && PROD === true;
 }

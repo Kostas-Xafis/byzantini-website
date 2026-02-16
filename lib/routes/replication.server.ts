@@ -5,6 +5,7 @@ import { deepCopy } from "@utilities/objects";
 import { sqliteGenerateBackup } from "../routes/schema.server";
 import { MIMETypeMap, execTryCatch, isProduction, silentImport } from "../utils.server";
 import { ReplicationRoutes } from "./replication.client";
+import { Env } from "@env/env";
 
 const serverRoutes = deepCopy(ReplicationRoutes); // Copy the routes object to split it into client and server routes
 
@@ -15,7 +16,7 @@ const getCurrentFormattedDate = () => {
 };
 
 async function productionBucketReplication() {
-	const { DEV_BUCKET_LOCATION, S3_BUCKET_NAME } = import.meta.env;
+	const { DEV_BUCKET_LOCATION, S3_BUCKET_NAME } = Env.env;
 	if (!DEV_BUCKET_LOCATION) throw Error("Missing environment variables");
 	// This is a dev only function to replicate the dev bucket from the prod bucket
 	// Locally and in cloudflare
@@ -61,7 +62,7 @@ async function productionBucketReplication() {
 
 
 async function productionDatabaseReplication({ force = false, date }: { force?: boolean; date?: string; } = {}) {
-	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = import.meta.env;
+	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = Env.env;
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH) throw Error("Missing environment variables");
 	const SNAPSHOT_DATE = date || getCurrentFormattedDate();
 

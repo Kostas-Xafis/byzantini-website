@@ -1,5 +1,6 @@
 import { Bucket } from "@lib/bucket";
 import type { APIContext } from "astro";
+export const prerender = false;
 
 export async function GET(ctx: APIContext) {
 	const url = ctx.params.slug as string;

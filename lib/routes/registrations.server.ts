@@ -3,6 +3,7 @@ import { Random as R } from "@lib/random";
 import { deepCopy } from "@utilities/objects";
 import { execTryCatch, executeQuery, getUsedBody, isProduction } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
+import { Env } from "@env/env";
 
 
 // Include this in all .server.ts files
@@ -69,7 +70,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			const {
 				AUTOMATED_EMAILS_SERVICE_URL: service_url,
 				AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken
-			} = import.meta.env;
+			} = Env.env;
 			if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
 			await fetch(service_url, {
 				method: "POST",

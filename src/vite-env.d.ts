@@ -16,7 +16,6 @@ interface ImportMetaEnv {
 	readonly AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: string;
 	readonly VITE_PDF_SERVICE_URL: string;
 	readonly VITE_IMG_COMPRESSION_SERVICE_URL: string;
-	readonly ENV: string;
 	readonly SAFE_BACKUP_SNAPSHOT?: string;
 	readonly BACKUP_SNAPSHOT_LOCATION?: string;
 	readonly DEV_SNAPSHOT_LOCATION?: string;

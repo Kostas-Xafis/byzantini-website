@@ -1,5 +1,6 @@
 import type { RemovePartial } from "@_types/helpers";
 import type { AnyEndpoint, HTTPMethods } from "@_types/routes";
+import { Env } from "@env/env";
 import { matchRoute } from "@routes/index.server";
 import type { APIContext } from "astro";
 
@@ -37,6 +38,7 @@ const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) =>
 };
 
 const RequestTemplate = function (ctx: APIContext) {
+	Env.setEnv(ctx);
 	const slug = ctx.params.slug?.split("/") ?? [];
 	const route = matchRoute(slug, ctx.request.method.toUpperCase() as HTTPMethods);
 	if (!route) return ctx.redirect("/404");

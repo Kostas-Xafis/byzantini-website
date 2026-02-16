@@ -1,4 +1,5 @@
 import type { SysUsers } from "@_types/entities";
+import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import type { APIContext } from "astro";
@@ -7,7 +8,7 @@ import type { APIContext } from "astro";
 
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || R.hex();
-	const data = new TextEncoder().encode(key + import.meta.env.SECRET + salt);
+	const data = new TextEncoder().encode(key + Env.env.SECRET + salt);
 	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
 	const hashHex = Array.from(new Uint8Array(hashBuffer)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 	return hashHex + ":" + salt;

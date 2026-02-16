@@ -7,6 +7,7 @@ import type { APIContext } from "astro";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
 import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.client";
+import { Env } from "@env/env";
 
 const bucketPrefix = "anakoinoseis/images/";
 const xmlopts: X2jOptions = {
@@ -14,7 +15,7 @@ const xmlopts: X2jOptions = {
 		return tagName === "url";
 	},
 };
-const { WEBSITE_URL } = import.meta.env;
+const { WEBSITE_URL } = Env.env;
 
 async function getSitemapXml(ctx: APIContext) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
