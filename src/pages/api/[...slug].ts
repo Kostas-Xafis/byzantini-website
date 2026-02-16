@@ -28,6 +28,8 @@ const generateResponse = (ctx: APIContext, route: Route, urlSlug: string[]) => {
 };
 
 const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) => {
+	//@ts-ignore
+	Env.setEnv(ctx);
 	for (const middleware of (route.middleware ?? [])) {
 		const response = await middleware(ctx);
 		if (response) return response;
@@ -38,7 +40,6 @@ const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) =>
 };
 
 const RequestTemplate = function (ctx: APIContext) {
-	Env.setEnv(ctx);
 	const slug = ctx.params.slug?.split("/") ?? [];
 	const route = matchRoute(slug, ctx.request.method.toUpperCase() as HTTPMethods);
 	if (!route) return ctx.redirect("/404");

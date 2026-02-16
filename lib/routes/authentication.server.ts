@@ -4,7 +4,7 @@ import { authentication, createSessionId, generateShaKey } from "@utilities/auth
 import { deepCopy } from "@utilities/objects";
 import { execTryCatch, getUsedBody } from "../utils.server";
 import { AuthenticationRoutes } from "./authentication.client";
-import { Env } from "@env/env";
+// import { Env } from "@env/env";
 // import { google } from "@utilities/Google";
 
 const serverRoutes = deepCopy(AuthenticationRoutes);

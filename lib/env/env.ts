@@ -1,30 +1,32 @@
 import type { EnvTypes } from "@_types/env";
+import { isEmptyObject } from "@utilities/objects";
 import type { APIContext } from "astro";
 
 export class Env {
-    static _env: EnvTypes = {} as EnvTypes;
-    static initialized = false;
+    static #_env: EnvTypes = {} as EnvTypes;
+    static #initialized = 0;
 
     static get env(): EnvTypes {
-        if (!this.initialized) this.setEnv(undefined);
-        return this._env;
+        return this.#_env;
     }
 
     static setEnv(ctx: APIContext | undefined) {
-        if (this.initialized) return;
-        const env =
-            ((ctx && ctx.locals && (ctx.locals as any).runtime)
-                && (ctx.locals as any).runtime.env)
-            || import.meta.env;
-        if (env) {
+        if (this.#initialized >= 3) return;
+        const ime = (import.meta.env && { ...import.meta.env }) || {};
+        const rnv = ((ctx?.locals as any).runtime.env) || {};
+        if (!isEmptyObject(ime) && !isEmptyObject(rnv)) {
+            const env = { ...ime, ...rnv };
             for (const key in env) {
                 //@ts-ignore
-                this._env[key] = env[key];
+                this.#_env[key] = env[key];
             }
-            this.initialized = true;
-            Env.setEnv = function () { };
-        } else {
-            throw new Error("Failed to initialize environment variables. No valid source found.");
+            if (ctx) {
+                this.#initialized += 2;
+            }
+            if (import.meta.env) {
+                this.#initialized += 1;
+            }
         }
+        console.log(`Environment initialized with ${this.#initialized} sources. Current env:`, this.#_env);
     }
 }

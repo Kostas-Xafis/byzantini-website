@@ -44,19 +44,22 @@ export function createSimpleDbConnection(type?: DBType): SimpleConnection {
 		// Connector type
 		CONNECTOR
 	} = Env.env;
-	if (!DEV_DB_ABSOLUTE_LOCATION || !TURSO_DB_URL || !TURSO_DB_TOKEN || !CONNECTOR) {
-		throw new Error("Database environment variables are not set.");
-	}
 
 	// ! SQLITE does not support LIMIT in UPDATE queries
 	let client: SimpleConnection = null as any;
 	if (type === "sqlite-prod" || CONNECTOR === "sqlite-prod") {
+		if (!TURSO_DB_URL || !TURSO_DB_TOKEN) {
+			throw new Error("Turso database URL or token is not set in environment variables.");
+		}
 		client = createClient({
 			url: TURSO_DB_URL,
 			authToken: TURSO_DB_TOKEN,
 			intMode: "number",
 		});
 	} else if (type === "sqlite-dev" || CONNECTOR === "sqlite-dev") {
+		if (!DEV_DB_ABSOLUTE_LOCATION) {
+			throw new Error("Development database absolute location is not set in environment variables.");
+		}
 		client = createClient({
 			url: `file://${DEV_DB_ABSOLUTE_LOCATION}`,
 			intMode: "number",
