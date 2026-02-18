@@ -1,14 +1,24 @@
 {
-    "$schema": "./node_modules/wrangler/config-schema.json",
+	"$schema": "./node_modules/wrangler/config-schema.json",
 	"main": "dist/_worker.js/_index.js",
-	"name": "byzantini-website", 
+	"name": "byzantini-website",
 	"compatibility_date": "2025-03-25",
-	"compatibility_flags": ["nodejs_compat"],
-    "r2_buckets": [
-        {
-            "binding": "S3_BUCKET",
-            "bucket_name": "byzantini-bucket",
-            "preview_bucket_name": "bucket-dev"
-        }
-    ]
+	"compatibility_flags": [
+		"nodejs_compat", 
+		"global_fetch_strictly_public"
+	],
+	"r2_buckets": [
+		{
+			"binding": "S3_BUCKET",
+			"bucket_name": "byzantini-bucket",
+			"preview_bucket_name": "bucket-dev",
+		},
+	],
+	// "env": {
+	// 	"development": {},
+	// 	"production": {},
+	// },
+	"observability": {
+		"enabled": true,
+	},
 }
