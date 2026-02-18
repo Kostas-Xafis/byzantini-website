@@ -3,6 +3,11 @@ import tailwind from "@astrojs/tailwind";
 import solidJs from "@astrojs/solid-js";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
+import { loadEnvVars } from "./loadEnvVars.ts";
+
+const cloudflareEnv =
+	process.env.CLOUDFLARE_ENV ||
+	(process.env.NODE_ENV === "production" ? "production" : "development");
 
 const unmappedRoutes = (page) => page.includes("admin") || page.includes("login");
 const productionSite = "https://musicschool-metamorfosi.gr";
@@ -23,7 +28,10 @@ export default defineConfig({
 		}),
 	],
 	adapter: cloudflare({
-		mode: "advanced",
+		platformProxy: {
+			enabled: true,
+			environment: cloudflareEnv,
+		},
 	}),
 	prefetch: {
 		prefetchAll: false,
@@ -53,6 +61,9 @@ export default defineConfig({
 		build: {
 			cssMinify: true,
 			minify: true,
+		},
+		define: {
+			...loadEnvVars(cloudflareEnv),
 		},
 	},
 });

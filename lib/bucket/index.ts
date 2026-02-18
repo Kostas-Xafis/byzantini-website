@@ -25,9 +25,8 @@ const createS3Client = async () => {
 // But it by default uses the dev bucket
 export class Bucket {
 
-	static getS3Bucket(context: APIContext) {
-		//@ts-ignore
-		return (context.locals.runtime.env as { S3_BUCKET: R2Bucket; }).S3_BUCKET;
+	static getS3Bucket(ctx: APIContext): R2Bucket {
+		return ctx.locals.runtime.env.S3_BUCKET as any as R2Bucket;
 	}
 
 	// Development functions

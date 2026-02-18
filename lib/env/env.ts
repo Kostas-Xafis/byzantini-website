@@ -1,5 +1,4 @@
 import type { EnvTypes } from "@_types/env";
-import { isEmptyObject } from "@utilities/objects";
 import type { APIContext } from "astro";
 
 export class Env {
@@ -7,14 +6,24 @@ export class Env {
     static #initialized = 0;
 
     static get env(): EnvTypes {
+        if (this.#initialized === 3) {
+            Object.defineProperty(Env, "env", {
+                get() {
+                    return this.#_env;
+                }
+            });
+        }
+        if (this.#initialized !== 1) {
+            Env.setEnv(null as any);
+        }
         return this.#_env;
     }
 
-    static setEnv(ctx: APIContext | undefined) {
+    static setEnv(ctx: APIContext) {
         if (this.#initialized >= 3) return;
-        const ime = (import.meta.env && { ...import.meta.env }) || {};
-        const rnv = ((ctx?.locals as any).runtime.env) || {};
-        if (!isEmptyObject(ime) && !isEmptyObject(rnv)) {
+        const ime = (import.meta.env && { ...import.meta.env }) || null;
+        const rnv = ctx?.locals.runtime.env || null;
+        if (ime || rnv) {
             const env = { ...ime, ...rnv };
             for (const key in env) {
                 //@ts-ignore
@@ -27,6 +36,8 @@ export class Env {
                 this.#initialized += 1;
             }
         }
-        console.log(`Environment initialized with ${this.#initialized} sources. Current env:`, this.#_env);
+        if (this.#initialized === 3) {
+            console.log("Environment variables loaded from both import.meta.env and runtime env.");
+        }
     }
 }
