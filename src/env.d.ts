@@ -17,7 +17,7 @@ declare global {
 		XLSX: typeof import("xlsx");
 		printJS: typeof import("print-js");
 		pdfjsLib: typeof import("pdfjs-dist");
+		zip: typeof import("client-zip");
 	}
 }
-export { default as zip } from "client-zip";
 export { };

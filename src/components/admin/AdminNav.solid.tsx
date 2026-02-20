@@ -11,6 +11,7 @@ const links = [
 	{ name: "Παραρτήματα", url: "/admin/locations", force: false },
 	{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false },
 	{ name: "Διαχειριστές", url: "/admin/sysusers", force: false },
+	{ name: "Ρυθμίσεις", url: "/admin/settings", force: false },
 	{ name: "Έξοδος", url: "/admin/logout", force: true },
 ];
 
@@ -21,7 +22,8 @@ export default function AdminNav(props: RouterProps) {
 	const firstPage =
 		links.find(
 			(link) =>
-				link.url === window.location.pathname || link.url + "/" === window.location.pathname
+				link.url === window.location.pathname ||
+				link.url + "/" === window.location.pathname,
 		)?.name ?? "Αρχική";
 	const [currentPage, setCurrentPage] = createSignal(firstPage);
 	return (
