@@ -1,12 +1,10 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"main": "dist/_worker.js/_index.js",
 	"name": "byzantini-website",
+	"main": "dist/_worker.js/index.js",
+	// "pages_build_output_dir": "dist",
 	"compatibility_date": "2025-11-17",
-	"compatibility_flags": [
-		"nodejs_compat", 
-		"global_fetch_strictly_public"
-	],
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"r2_buckets": [
 		{
 			"binding": "S3_BUCKET",
