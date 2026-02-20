@@ -8,7 +8,7 @@ let restoredUrl = new URL(Astro.url.href.replace("/?token", "?token"));
 
 const token = restoredUrl.searchParams.get("token") || "";
 
-const res = await useAPI("Registrations.emailUnsubscribe", { RequestObject: { token } });
+const res = await useAPI("Registrations.emailUnsubscribe", { RequestObject: { token } }, Astro);
 let success = res.data?.isValid || false;
 ---
 

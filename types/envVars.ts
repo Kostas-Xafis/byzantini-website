@@ -3,8 +3,6 @@ export interface EnvironmentVariables {
     readonly TURSO_DB_URL: string;
     readonly TURSO_DB_TOKEN: string;
     readonly SECRET: string;
-    readonly VITE_URL: string;
-    readonly WEBSITE_URL: string;
     readonly GOOGLE_MAPS_KEY: string;
     readonly S3_ENDPOINT: string;
     readonly S3_ACCESS_KEY_ID: string;

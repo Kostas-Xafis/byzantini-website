@@ -1,8 +1,8 @@
 ---
 import GMap from "@components/other/GMap.astro";
-import { useAPI } from "@hooks/useAPI.astro";
+import { useAPI, API } from "@hooks/useAPI.astro";
 import Layout from "@layouts/Layout.astro";
-let _locations = (await useAPI("Locations.getByPriority"))?.data || [];
+let _locations = (await useAPI(API.Locations.getByPriority, undefined, Astro))?.data || [];
 const imgSrc = "/spoudastiria/";
 const schoolLocations = _locations.filter(l => !l.partner);
 const otherLocations = _locations.filter(l => !!l.partner);

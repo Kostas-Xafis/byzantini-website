@@ -5,13 +5,13 @@ import Layout from "@layouts/Layout.astro";
 import { teacherTitleByGender } from "@utilities/text";
 
 const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
-	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}),
-	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "par"}}),
-	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "eur"}}),
-	useAPI(API.Teachers.getLocations),
-	useAPI(API.Locations.get),
-	useAPI(API.Teachers.getInstruments),
-	useAPI(API.Instruments.get),
+	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}, Astro),
+	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "par"}}, Astro),
+	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "eur"}}, Astro),
+	useAPI(API.Teachers.getLocations, undefined, Astro),
+	useAPI(API.Locations.get, undefined, Astro),
+	useAPI(API.Teachers.getInstruments, undefined, Astro),
+	useAPI(API.Instruments.get, undefined, Astro),
 ]);
 
 let byz_teachers = byz_teachers_res.data || [],

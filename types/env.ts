@@ -18,8 +18,6 @@ export type EnvTypes = {
     DEV_BUCKET_LOCATION?: string;
     LATEST_MIGRATION_FILE?: string;
     SECRET?: string;
-    VITE_URL?: string;
-    WEBSITE_URL?: string;
     GOOGLE_MAPS_KEY?: string;
     GOOGLE_CLIENT_ID?: string;
     GOOGLE_CLIENT_SECRET?: string;
