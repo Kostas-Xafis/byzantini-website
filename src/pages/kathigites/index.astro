@@ -4,6 +4,8 @@ import { API, useAPI } from "@hooks/useAPI.astro";
 import Layout from "@layouts/Layout.astro";
 import { teacherTitleByGender } from "@utilities/text";
 
+export const prerender = false;
+
 const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] = await Promise.all([
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "byz"}}, Astro),
 	useAPI(API.Teachers.getByPriorityClasses, {UrlArgs: {"class_type": "par"}}, Astro),
