@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, onCleanup } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
 import { loadScript } from "@utilities/scripts";
@@ -32,6 +32,17 @@ export default function TotalsTable() {
 	const apiHook = useAPI(setStore);
 	let growthCanvas: HTMLCanvasElement | undefined;
 	let growthChartInstance: { destroy: () => void } | null = null;
+	const [isDarkMode, setIsDarkMode] = createSignal(false);
+	let themeObserver: MutationObserver | undefined;
+
+	onMount(() => {
+		const root = document.documentElement;
+		setIsDarkMode(root.classList.contains("dark"));
+		themeObserver = new MutationObserver(() => {
+			setIsDarkMode(root.classList.contains("dark"));
+		});
+		themeObserver.observe(root, { attributes: true, attributeFilter: ["class"] });
+	});
 
 	useHydrate(() => {
 		apiHook(API.Registrations.getTotalByYear);
@@ -75,6 +86,7 @@ export default function TotalsTable() {
 
 	createEffect(async () => {
 		const chartData = growthChart();
+		const darkMode = isDarkMode();
 		if (!growthCanvas || !chartData.labels.length) return;
 
 		await loadScript(
@@ -96,10 +108,12 @@ export default function TotalsTable() {
 					{
 						label: "Σύνολο εγγραφών",
 						data: chartData.values,
-						borderColor: "rgb(127, 29, 29)",
-						backgroundColor: "rgba(127, 29, 29, 0.15)",
-						pointBackgroundColor: "rgb(127, 29, 29)",
-						pointBorderColor: "rgb(255,255,255)",
+						borderColor: darkMode ? "rgb(248, 113, 113)" : "rgb(127, 29, 29)",
+						backgroundColor: darkMode
+							? "rgba(248, 113, 113, 0.2)"
+							: "rgba(127, 29, 29, 0.15)",
+						pointBackgroundColor: darkMode ? "rgb(252, 165, 165)" : "rgb(127, 29, 29)",
+						pointBorderColor: darkMode ? "rgb(26,26,26)" : "rgb(255,255,255)",
 						pointRadius: 3,
 						tension: 0.3,
 						fill: true,
@@ -115,7 +129,9 @@ export default function TotalsTable() {
 					},
 					tooltip: {
 						displayColors: false,
-						backgroundColor: "rgba(127, 29, 29, 0.95)",
+						backgroundColor: darkMode
+							? "rgba(17, 24, 39, 0.95)"
+							: "rgba(127, 29, 29, 0.95)",
 						titleColor: "rgb(254, 242, 242)",
 						bodyColor: "rgb(254, 242, 242)",
 						callbacks: {
@@ -127,12 +143,25 @@ export default function TotalsTable() {
 				scales: {
 					x: {
 						grid: { display: false },
-						ticks: { color: "rgba(127, 29, 29, 0.8)" },
+						ticks: {
+							color: darkMode
+								? "rgba(248, 250, 252, 0.92)"
+								: "rgba(127, 29, 29, 0.8)",
+						},
 					},
 					y: {
 						beginAtZero: true,
-						grid: { color: "rgba(127, 29, 29, 0.08)" },
-						ticks: { precision: 0, color: "rgba(127, 29, 29, 0.8)" },
+						grid: {
+							color: darkMode
+								? "rgba(148, 163, 184, 0.22)"
+								: "rgba(127, 29, 29, 0.08)",
+						},
+						ticks: {
+							precision: 0,
+							color: darkMode
+								? "rgba(248, 250, 252, 0.92)"
+								: "rgba(127, 29, 29, 0.8)",
+						},
 					},
 				},
 			},
@@ -140,6 +169,7 @@ export default function TotalsTable() {
 	});
 
 	onCleanup(() => {
+		if (themeObserver) themeObserver.disconnect();
 		if (growthChartInstance) growthChartInstance.destroy();
 	});
 
@@ -177,25 +207,31 @@ export default function TotalsTable() {
 		<Show
 			when={store[API.Registrations.getTotalByYear]}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8">
+			<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-red-950 dark:text-red-50">
 				<div class="w-full max-w-5xl justify-self-center grid grid-cols-2 max-md:grid-cols-1 gap-4">
-					<div class="rounded-xl border border-red-900/20 shadow-md shadow-gray-300 bg-white p-4">
-						<p class="text-lg font-bold tracking-wide text-red-900/80">
+					<div class="rounded-xl border border-red-900/20 dark:border-red-800/50 shadow-md shadow-gray-300 dark:shadow-gray-700 bg-white dark:bg-dark p-4">
+						<p class="text-lg font-bold tracking-wide text-red-900/80 dark:text-red-100">
 							Αυτή την εβδομάδα
 						</p>
-						<p class="text-3xl font-bold text-red-900 mt-1">{summary().weekCount}</p>
-						<p class="text-sm text-gray-600 mt-1">Νέες εγγραφές</p>
+						<p class="text-3xl font-bold text-red-900 dark:text-red-50 mt-1">
+							{summary().weekCount}
+						</p>
+						<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Νέες εγγραφές</p>
 					</div>
-					<div class="rounded-xl border border-red-900/20 shadow-md shadow-gray-300 bg-white p-4">
-						<p class="text-lg font-bold tracking-wide text-red-900/80">
+					<div class="rounded-xl border border-red-900/20 dark:border-red-800/50 shadow-md shadow-gray-300 dark:shadow-gray-700 bg-white dark:bg-dark p-4">
+						<p class="text-lg font-bold tracking-wide text-red-900/80 dark:text-red-100">
 							Αυτόν τον μήνα
 						</p>
-						<p class="text-3xl font-bold text-red-900 mt-1">{summary().monthCount}</p>
-						<p class="text-sm text-gray-600 mt-1">{summary().monthLabel}</p>
+						<p class="text-3xl font-bold text-red-900 dark:text-red-50 mt-1">
+							{summary().monthCount}
+						</p>
+						<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+							{summary().monthLabel}
+						</p>
 					</div>
 				</div>
-				<div class="w-full max-w-5xl justify-self-center rounded-xl border border-red-900/20 shadow-md shadow-gray-300 bg-white p-4">
-					<p class="text-xl font-bold tracking-wide text-red-900/80">
+				<div class="w-full max-w-5xl justify-self-center rounded-xl border border-red-900/20 dark:border-red-800/50 shadow-md shadow-gray-300 dark:shadow-gray-700 bg-white dark:bg-dark p-4">
+					<p class="text-xl font-bold tracking-wide text-red-900/80 dark:text-red-100">
 						Γρήγορες ενέργειες
 					</p>
 					<div class="mt-3 grid grid-cols-2 max-sm:grid-cols-1 gap-2 h-max">
@@ -211,22 +247,22 @@ export default function TotalsTable() {
 						</a>
 						<a
 							href="/admin/payments"
-							class="text-center px-3 py-2 text-lg rounded-md border border-red-900 text-red-900 hover:bg-red-50 transition-colors">
+							class="text-center px-3 py-2 text-lg rounded-md border border-red-900 dark:border-red-700 text-red-900 dark:text-red-100 hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
 							Οφειλές
 						</a>
 						<a
 							href="/admin/teachers"
-							class="text-center px-3 py-2 text-lg rounded-md border border-red-900 text-red-900 hover:bg-red-50 transition-colors">
+							class="text-center px-3 py-2 text-lg rounded-md border border-red-900 dark:border-red-700 text-red-900 dark:text-red-100 hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
 							Καθηγητές
 						</a>
 					</div>
 				</div>
-				<div class="w-full max-w-5xl justify-self-center rounded-xl border border-red-900/20 shadow-md shadow-gray-300 bg-white p-4">
+				<div class="w-full max-w-5xl justify-self-center rounded-xl border border-red-900/20 dark:border-red-800/50 shadow-md shadow-gray-300 dark:shadow-gray-700 bg-white dark:bg-dark p-4">
 					<div class="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-						<p class="text-lg font-semibold tracking-wide text-red-900/80">
+						<p class="text-lg font-semibold tracking-wide text-red-900/80 dark:text-red-100">
 							Εξέλιξη συνολικών εγγραφών
 						</p>
-						<p class="text-sm text-gray-600">
+						<p class="text-sm text-gray-600 dark:text-gray-300">
 							Τελευταίο έτος: {growthChart().lastValue}
 						</p>
 					</div>
@@ -235,25 +271,27 @@ export default function TotalsTable() {
 							<canvas ref={growthCanvas}></canvas>
 						</div>
 						<div class="grid grid-cols-1 gap-2">
-							<p class="text-sm font-semibold text-red-900/80">
+							<p class="text-sm font-semibold text-red-900/80 dark:text-red-100">
 								Τελευταία 3 σχολικά έτη
 							</p>
 							{recentGrowth().map((item) => (
-								<div class="rounded-md border border-red-900/15 bg-red-50/40 px-3 py-2 flex items-center justify-between gap-3">
+								<div class="rounded-md border border-red-900/15 dark:border-red-800/40 bg-red-50/40 dark:bg-red-900/20 px-3 py-2 flex items-center justify-between gap-3">
 									<div>
-										<p class="text-sm font-semibold text-red-900">
+										<p class="text-sm font-semibold text-red-900 dark:text-red-100">
 											{item.label}
 										</p>
-										<p class="text-xs text-gray-600">{item.total} εγγραφές</p>
+										<p class="text-xs text-gray-600 dark:text-gray-300">
+											{item.total} εγγραφές
+										</p>
 									</div>
 									<p
 										class={
 											"text-sm font-semibold " +
 											(item.yoy === null
-												? "text-gray-500"
+												? "text-gray-500 dark:text-gray-300"
 												: item.yoy >= 0
-													? "text-emerald-700"
-													: "text-red-800")
+													? "text-emerald-700 dark:text-emerald-400"
+													: "text-red-800 dark:text-red-300")
 										}>
 										{item.yoy === null
 											? "—"

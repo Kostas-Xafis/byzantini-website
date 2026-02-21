@@ -52,7 +52,7 @@ export default function DateInput(props: DateInputProps) {
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
 		const dateInput = document.querySelector(
-			`form[data-prefix='${props.prefix}'] input[name='${name}']`
+			`form[data-prefix='${props.prefix}'] input[name='${name}']`,
 		) as HTMLInputElement;
 		// initialize datepicker
 		if (!disabled) {
@@ -75,7 +75,7 @@ export default function DateInput(props: DateInputProps) {
 								view: "months",
 								selectedDates: [finalDate.getTime()],
 							},
-							{ silent: true }
+							{ silent: true },
 						);
 						setAfterDatePicker(finalDate, 1);
 					} else if (datepicker.currentView == "months") {
@@ -87,7 +87,7 @@ export default function DateInput(props: DateInputProps) {
 								view: "years",
 								selectedDates: [finalDate.getTime()],
 							},
-							{ silent: true }
+							{ silent: true },
 						);
 						setAfterDatePicker(finalDate, 1);
 					} else {
@@ -99,7 +99,7 @@ export default function DateInput(props: DateInputProps) {
 								view: "days",
 								selectedDates: [finalDate.getTime()],
 							},
-							{ silent: true }
+							{ silent: true },
 						);
 						setAfterDatePicker(finalDate, 1);
 						datepicker.hide();
@@ -138,12 +138,12 @@ export default function DateInput(props: DateInputProps) {
 		<>
 			<i
 				class={
-					"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
+					"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 					(iconClasses || "")
 				}></i>
 			<input
 				class={
-					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10" +
+					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-none z-10" +
 					(disabled && blurDisabled ? " blur-[1px]" : "")
 				}
 				type="text"

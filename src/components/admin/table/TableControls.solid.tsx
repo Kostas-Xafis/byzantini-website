@@ -11,7 +11,7 @@ export type Action = {
 		| ((formData: ExtendedFormData<any>, form?: HTMLFormElement) => Promise<void>)
 		| ((
 				formData: ExtendedFormData<any>,
-				form?: HTMLFormElement
+				form?: HTMLFormElement,
 		  ) => AsyncGenerator<undefined, void, unknown>);
 	submitText: string;
 	headerText: string;
@@ -44,7 +44,7 @@ export function TableControl(props: Props) {
 			fallback={
 				<button
 					class={
-						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 blur-[1px]"
+						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 dark:text-neutral-400 blur-[1px]"
 					}>
 					<i
 						class={
@@ -56,7 +56,7 @@ export function TableControl(props: Props) {
 			<>
 				<button
 					class={
-						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl transition-colors duration-300 hover:bg-red-200"
+						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl transition-colors duration-300 hover:bg-red-200 dark:hover:bg-red-900/70"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
 					<i
@@ -76,7 +76,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 rounded-xl bg-transparent">
+			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-xl bg-transparent text-red-950 dark:text-red-50">
 			{props.children}
 		</div>
 	);

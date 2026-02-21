@@ -1,6 +1,7 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { API, useAPI } from "@hooks/useAPI.solid";
+import { isDashboardDarkMode, toggleDashboardTheme } from "@utilities/theme";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 
@@ -17,7 +18,12 @@ type ZipEntry = {
 
 export default function SettingsPage() {
 	const [isDownloading, setIsDownloading] = createSignal(false);
+	const [isDarkMode, setIsDarkMode] = createSignal(false);
 	const apiHook = useAPI();
+
+	onMount(() => {
+		setIsDarkMode(isDashboardDarkMode());
+	});
 
 	const base64ToBlob = (base64: string, type = "application/octet-stream") => {
 		const binaryString = atob(base64);
@@ -104,20 +110,61 @@ export default function SettingsPage() {
 		}
 	};
 
+	const onThemeToggle = () => {
+		const nextTheme = toggleDashboardTheme();
+		setIsDarkMode(nextTheme === "dark");
+	};
+
 	return (
-		<div class="w-full min-h-screen p-6 sm:p-10 bg-red-50 text-red-950">
-			<div class="max-w-xl grid gap-4">
+		<div class="w-full min-h-screen p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
+			<div class="max-w-3xl grid gap-6">
 				<h1 class="font-anaktoria text-4xl">Ρυθμίσεις</h1>
-				<p class="text-sm sm:text-base">
-					Λήψη πλήρους αντιγράφου ασφαλείας βάσης δεδομένων και bucket.
+				<p class="text-sm sm:text-base dark:text-gray-300">
+					Διαχείριση εμφάνισης και αντιγράφων ασφαλείας του πίνακα διαχείρισης.
 				</p>
-				<button
-					type="button"
-					onClick={onDownload}
-					disabled={isDownloading()}
-					class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
-					{isDownloading() ? "Προετοιμασία αντιγράφου..." : "Λήψη Backup (.zip)"}
-				</button>
+
+				<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
+					<div class="grid gap-1">
+						<h2 class="font-anaktoria text-2xl">Εμφάνιση</h2>
+						<p class="text-sm dark:text-gray-300">
+							Επιλέξτε πώς θα εμφανίζεται ο πίνακας διαχείρισης σε αυτή τη συσκευή.
+						</p>
+					</div>
+					<div class="grid gap-2">
+						<p class="text-sm dark:text-gray-300">
+							Σκοτεινή λειτουργία: {isDarkMode() ? "Ενεργή" : "Ανενεργή"}
+						</p>
+						<button
+							type="button"
+							onClick={onThemeToggle}
+							class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+							aria-label="Εναλλαγή σκοτεινής λειτουργίας πίνακα διαχείρισης">
+							{isDarkMode()
+								? "Απενεργοποίηση σκοτεινής λειτουργίας"
+								: "Ενεργοποίηση σκοτεινής λειτουργίας"}
+						</button>
+						<p class="text-xs text-gray-600 dark:text-gray-300">
+							Η επιλογή αποθηκεύεται στον browser και ισχύει μόνο για αυτή τη συσκευή.
+						</p>
+					</div>
+				</section>
+
+				<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
+					<div class="grid gap-1">
+						<h2 class="font-anaktoria text-2xl">Ασφάλεια Δεδομένων</h2>
+						<p class="text-sm dark:text-gray-300">
+							Λήψη πλήρους αντιγράφου ασφαλείας βάσης δεδομένων και bucket σε αρχείο
+							.zip.
+						</p>
+					</div>
+					<button
+						type="button"
+						onClick={onDownload}
+						disabled={isDownloading()}
+						class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
+						{isDownloading() ? "Προετοιμασία αντιγράφου..." : "Λήψη Backup (.zip)"}
+					</button>
+				</section>
 			</div>
 		</div>
 	);

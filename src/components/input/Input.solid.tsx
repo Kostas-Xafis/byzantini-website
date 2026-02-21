@@ -242,11 +242,11 @@ export default function Input(props: InputProps) {
 				}>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
+						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}></i>
 				<input
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10"
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-none z-10"
 					type={type}
 					name={name}
 					placeholder={(placeholder as string) || ""}
@@ -272,11 +272,11 @@ export default function Input(props: InputProps) {
 			<Show when={type === "select"}>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
+						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}></i>
 				<select
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10"
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
 					onblur={(e: FocusEvent) =>
 						required && (e.currentTarget as HTMLElement).removeAttribute("required")
@@ -294,15 +294,15 @@ export default function Input(props: InputProps) {
 									valueLiteral
 										? selectItem() === value
 										: valueList
-										? valueList[index] === value
-										: index === value
+											? valueList[index] === value
+											: index === value
 								}
 								value={
 									valueLiteral
 										? selectItem()
 										: valueList
-										? valueList[index]
-										: index
+											? valueList[index]
+											: index
 								}>
 								{selectItem()}
 							</option>
@@ -317,7 +317,7 @@ export default function Input(props: InputProps) {
 						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}></i>
-				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg overflow-x-hidden z-10">
+				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg overflow-x-hidden z-10">
 					<Index each={multiselectList}>
 						{(selectItem) =>
 							selectItem().value !== null || selectItem().value !== undefined ? (
@@ -329,7 +329,7 @@ export default function Input(props: InputProps) {
 									onClick={(e: MouseEvent) => {
 										if (multiselectOnce) {
 											const buttons = document.querySelectorAll(
-												`button[data-specifier=${name}][data-selected='true']`
+												`button[data-specifier=${name}][data-selected='true']`,
 											);
 											buttons.forEach((button) => {
 												button.setAttribute("data-selected", "false");
@@ -340,12 +340,12 @@ export default function Input(props: InputProps) {
 											"data-selected",
 											button.getAttribute("data-selected") === "true"
 												? "false"
-												: "true"
+												: "true",
 										);
 									}}
 									type="button">
-									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
-									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
+									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
+									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
 									<p
 										class="p-2 font-didact text-start"
 										style={{ "grid-column": "2 / 3" }}>
@@ -371,11 +371,11 @@ export default function Input(props: InputProps) {
 			<Show when={type === "textarea"}>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
+						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}></i>
 				<textarea
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none z-10"
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
@@ -390,7 +390,7 @@ export default function Input(props: InputProps) {
 					}
 				/>
 			</Show>
-			<p class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10">
+			<p class="absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10">
 				{label}
 				{required ? (
 					<i class="absolute bg-transparent left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
@@ -398,7 +398,7 @@ export default function Input(props: InputProps) {
 					<></>
 				)}
 			</p>
-			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 peer-[:not(:focus-within):invalid]:border-red-400"></div>
+			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
 			{tooltip ? <Tooltip {...tooltip} /> : <></>}
 		</label>
 	);

@@ -26,11 +26,12 @@ export default function AdminNav(props: RouterProps) {
 				link.url + "/" === window.location.pathname,
 		)?.name ?? "Αρχική";
 	const [currentPage, setCurrentPage] = createSignal(firstPage);
+
 	return (
 		<>
 			<nav
 				class={
-					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex max-sm:z-50 flex-col max-sm:overflow-visible max-sm:sticky max-sm:top-0" +
+					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 dark:bg-red-950 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex max-sm:z-50 flex-col max-sm:overflow-visible max-sm:sticky max-sm:top-0" +
 					" max-sm:flex-row max-sm:p-1"
 				}>
 				<div class="relative grid place-items-center gap-x-4 font-anaktoria">
@@ -76,7 +77,7 @@ export default function AdminNav(props: RouterProps) {
 					<div class="hidden fixed top-[3.5rem] left-0 right-0 h-max flex-col w-full z-[5000]">
 						{links.map((link) => (
 							<A
-								class="relative grid py-4 bg-red-900 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
+								class="relative grid py-4 bg-red-900 dark:bg-red-950 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
 								onClick={
 									(link.force && (() => forceURLChange(link.url))) ||
 									(() => setCurrentPage(link.name))
