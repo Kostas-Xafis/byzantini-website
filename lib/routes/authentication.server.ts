@@ -48,7 +48,7 @@ serverRoutes.getGoogleOAuthState.func = ({ ctx }) => {
 	return execTryCatch(async () => {
 		const state = generateState();
 		const codeVerifier = generateCodeVerifier();
-		const url = google.createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
+		const url = google(ctx).createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
 		ctx.cookies.set("google_oauth_state", state, {
 			path: "/",
 			secure: Env.env.PROD,
@@ -80,7 +80,7 @@ serverRoutes.getGoogleOAuthStateForSignup.func = ({ ctx, slug }) => {
 
 		const state = generateState();
 		const codeVerifier = generateCodeVerifier();
-		const url = google.createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
+		const url = google(ctx).createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
 
 		ctx.cookies.set("google_oauth_state", state, {
 			path: "/",
@@ -133,7 +133,7 @@ serverRoutes.oauthCallback.func = ({ ctx }) => {
 
 		let tokens: OAuth2Tokens;
 		try {
-			tokens = await google.validateAuthorizationCode(code, codeVerifier);
+			tokens = await google(ctx).validateAuthorizationCode(code, codeVerifier);
 		} catch (e) {
 			// Invalid code or client credentials
 			return { error: "Invalid authorization code", isValid: false };
