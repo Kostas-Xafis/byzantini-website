@@ -1,6 +1,7 @@
 import { createSimpleDbConnection, type SimpleConnection } from "@lib/db";
 import type { ResultSet } from "@libsql/client";
 import { argReader } from "@utilities/cli";
+import { parseEnvFile } from "../loadEnvVars";
 import { readFile, writeFile } from "fs/promises";
 import { argv } from "process";
 import XLSX from "xlsx";
@@ -21,7 +22,6 @@ type ArgsType = {
 	"--help"?: string;
 };
 const args = argReader<ArgsType>(argv, "--");
-const isProduction = args.dev ? false : args.prod || null;
 
 const isSilent = args.silent || args.s;
 const isTimed = args.time || args.t;
@@ -30,21 +30,61 @@ const log = (...msg: any) => {
 	console.log(...msg);
 };
 
+const loadCloudflareEnv = async (isProduction: boolean) => {
+	const fileName = isProduction ? ".dev.vars" : ".dev.vars.development";
+	const filePath = `${process.cwd()}/${fileName}`;
+	const envContents = await readFile(filePath, { encoding: "utf8" });
+	const parsed = parseEnvFile(envContents);
+
+	Object.assign(process.env, parsed);
+	if (!(import.meta as any).env) {
+		(import.meta as any).env = {};
+	}
+	Object.assign((import.meta as any).env, parsed);
+	log(`[query] Loaded environment from ${fileName}`);
+};
+
 const getQueries = (str: string) => {
+	const splitSqlStatements = (sql: string): string[] => {
+		const statements: string[] = [];
+		let curr = "";
+		let inSingle = false;
+		let inDouble = false;
+		let inBacktick = false;
+
+		for (let i = 0; i < sql.length; i++) {
+			const ch = sql[i];
+			const prev = sql[i - 1];
+
+			if (ch === "'" && prev !== "\\" && !inDouble && !inBacktick) inSingle = !inSingle;
+			else if (ch === '"' && prev !== "\\" && !inSingle && !inBacktick) inDouble = !inDouble;
+			else if (ch === "`" && prev !== "\\" && !inSingle && !inDouble) inBacktick = !inBacktick;
+
+			if (ch === ";" && !inSingle && !inDouble && !inBacktick) {
+				const statement = curr.trim();
+				if (statement) statements.push(statement);
+				curr = "";
+				continue;
+			}
+			curr += ch;
+		}
+
+		const tail = curr.trim();
+		if (tail) statements.push(tail);
+
+		return statements;
+	};
+
 	const formatQuery = (query: string) => {
 		query = query.replace(/\r\n/g, "");
 		query = query.replace(/\n/g, "");
 		return query;
 	};
 
-	const separateQueries = (query: string) => {
-		return query.split(";");
-	};
-
 	const filterComments = (queries: string[]) => {
 		return queries.filter((query) => !query.startsWith("--"));
 	};
-	return filterComments(separateQueries(str).map((query) => formatQuery(query)));
+	return filterComments(splitSqlStatements(str).map((query) => formatQuery(query)));
 };
 
 /**
@@ -100,7 +140,7 @@ const outputToExcel = (data: any[]) => {
 };
 
 
-const dbProcess = async function () {
+const dbProcess = async function (isProduction: boolean) {
 	let conn: SimpleConnection = null as any;
 	let data;
 	try {
@@ -154,11 +194,13 @@ async function main() {
 
 	let isProduction = args.dev ? false : args.prod || null;
 	if (isProduction === null) asyncEscape("No environment specified");
+	const selectedIsProduction = isProduction as boolean;
+	await loadCloudflareEnv(selectedIsProduction);
 
 	log({ ...args });
 
 	isTimed && console.time("Execution Time");
-	let data = await dbProcess();
+	let data = await dbProcess(selectedIsProduction);
 	isTimed && console.timeEnd("Execution Time");
 
 	if (args.excel) {

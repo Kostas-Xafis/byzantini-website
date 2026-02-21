@@ -33,13 +33,14 @@
 		"@solidjs/router": "^0.15.4",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"air-datepicker": "^3.5.3",
+		"arctic": "^3.7.0",
 		"astro": "^5.17.2",
 		"astro-seo": "^1.1.0",
 		"fast-xml-parser": "^4.5.3",
 		"solid-js": "^1.9.11",
 		"tailwindcss": "^3.4.17",
-		"wrangler": "^4.67.0",
-		"valibot": "^0.13.1"
+		"valibot": "^0.13.1",
+		"wrangler": "^4.67.0"
 	},
 	"devDependencies": {
 		"@aws-sdk/client-s3": "^3.758.0",

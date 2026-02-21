@@ -7,13 +7,9 @@ import { batch, createEffect, createSignal } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
 import { assertOwnProp } from "../utils.server";
-import type { APIContext } from "astro";
 
 export type APIStore = Partial<APIResponse>;
 export { API };
-
-// IMPORTANT: The useAPI can be called from the server or the client.
-// To accurately determine the URL, I prepend the website url to the request when called from the server.
 
 export type StoreMutation<T extends APIEndpointNames> = {
 	endpoint?: T,
@@ -30,8 +26,7 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 	try {
 		let fetcher: ReturnType<typeof fetch>;
 		if (req === undefined) {
-			const url = `${origin}/api${Route.path}`;
-			fetcher = fetch(url, { method: Route.method });
+			fetcher = fetch(`${origin}/api${Route.path}`, { method: Route.method });
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
@@ -44,14 +39,15 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
 			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			const url = `${origin}/api${convertToUrlFromArgs(Route.path, UrlArgs)}`;
-			fetcher = fetch(url, {
-				method: Route.method,
-				headers: Route.multipart ? {} : {
-					"Content-Type": (IsBlob && RequestObject.type) || "application/json"
-				},
-				body,
-			});
+			fetcher = fetch(`${origin}/api${convertToUrlFromArgs(Route.path, UrlArgs)}`,
+				{
+					method: Route.method,
+					headers: Route.multipart ? {} : {
+						"Content-Type": (IsBlob && RequestObject.type) || "application/json"
+					},
+					body,
+				}
+			);
 		}
 		const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.type === "error") {

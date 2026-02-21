@@ -16,11 +16,11 @@ const revertToPreviousSchema: EndpointRoute<'/schema/revert/[type:"mysql" | "sql
 	validation: undefined,
 };
 
-const migrate: EndpointRoute<'/schema/migrate', null> = {
+const migrate: EndpointRoute<'/schema/migrate/[target:"local" | "production"]', null> = {
 	authentication: true,
 	method: "GET",
-	path: '/schema/migrate',
-	hasUrlParams: false,
+	path: '/schema/migrate/[target:"local" | "production"]',
+	hasUrlParams: true,
 	validation: undefined,
 };
 

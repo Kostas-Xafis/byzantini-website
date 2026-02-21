@@ -19,6 +19,11 @@ type ZipEntry = {
 export default function SettingsPage() {
 	const [isDownloading, setIsDownloading] = createSignal(false);
 	const [isDarkMode, setIsDarkMode] = createSignal(false);
+	const [isMigratingTarget, setIsMigratingTarget] = createSignal<"local" | "production" | null>(
+		null,
+	);
+	const [migrationResult, setMigrationResult] = createSignal<string>("");
+	const isDevelopmentMode = import.meta.env.MODE === "development";
 	const apiHook = useAPI();
 
 	onMount(() => {
@@ -115,6 +120,27 @@ export default function SettingsPage() {
 		setIsDarkMode(nextTheme === "dark");
 	};
 
+	const onMigrate = async (target: "local" | "production") => {
+		if (isMigratingTarget()) return;
+		setIsMigratingTarget(target);
+		setMigrationResult("");
+		try {
+			const res = await apiHook(API.Schema.migrate, {
+				UrlArgs: { target },
+			});
+			if (res.message) {
+				setMigrationResult(res.message);
+				return;
+			}
+			throw new Error((res as any).error || "Αποτυχία migration");
+		} catch (error) {
+			console.error(error);
+			setMigrationResult("Αποτυχία migration");
+		} finally {
+			setIsMigratingTarget(null);
+		}
+	};
+
 	return (
 		<div class="w-full min-h-screen p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
 			<div class="max-w-3xl grid gap-6">
@@ -165,6 +191,41 @@ export default function SettingsPage() {
 						{isDownloading() ? "Προετοιμασία αντιγράφου..." : "Λήψη Backup (.zip)"}
 					</button>
 				</section>
+
+				{isDevelopmentMode && (
+					<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
+						<div class="grid gap-1">
+							<h2 class="font-anaktoria text-2xl">Migrations (Development ONLY)</h2>
+							<p class="text-sm dark:text-gray-300">
+								Εκτέλεση του {"latest.sql"} migration είτε στη local είτε στην
+								production βάση.
+							</p>
+						</div>
+						<div class="flex flex-wrap gap-3">
+							<button
+								type="button"
+								onClick={() => onMigrate("local")}
+								disabled={isMigratingTarget() !== null}
+								class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
+								{isMigratingTarget() === "local"
+									? "Εκτέλεση migration..."
+									: "Migration στη Local βάση"}
+							</button>
+							<button
+								type="button"
+								onClick={() => onMigrate("production")}
+								disabled={isMigratingTarget() !== null}
+								class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
+								{isMigratingTarget() === "production"
+									? "Εκτέλεση migration..."
+									: "Migration στην Production βάση"}
+							</button>
+						</div>
+						{migrationResult() && (
+							<p class="text-sm dark:text-gray-300">{migrationResult()}</p>
+						)}
+					</section>
+				)}
 			</div>
 		</div>
 	);

@@ -2,8 +2,10 @@ import type { SysUsers as FullSysUser } from "@_types/entities";
 import { API, useAPI, useHydrate, type APIStore } from "@lib/hooks/useAPI.solid";
 import { useHydrateById } from "@lib/hooks/useHydrateById.solid";
 import { SelectedRows } from "@lib/hooks/useSelectedRows.solid";
+import type { ExtendedFormData } from "@utilities/forms";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
+import type { Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -11,19 +13,13 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTy
 import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "sysusers";
+const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
 
-type SysUsers = Pick<FullSysUser, "id" | "email" | "privilege">;
+type SysUsers = Pick<FullSysUser, "id" | "email">;
 
 const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
 	return sysusers.map((u) => {
-		const columns = Object.values(u);
-		columns[2] =
-			columns[2] === 2
-				? "Super Admin"
-				: columns[2] === 1
-				? "Διαχειριστής Συστήματος"
-				: "Διαχειριστής";
-		return columns as unknown as SysUsers;
+		return Object.values(u) as unknown as SysUsers;
 	});
 };
 
@@ -46,32 +42,39 @@ export default function SysUsersTable() {
 	});
 
 	const columnNames: ColumnType<SysUsers> = {
-		id: { type: "number", name: "Id" },
-		email: { type: "string", name: "Email", size: 25 },
-		privilege: { type: "string", name: "Δικαιώματα", size: 25 },
+		id: { type: "number", name: "Id", size: 4 },
+		email: { type: "string", name: "Email", size: 30 },
 	};
 
 	const shapedData = createMemo(() => {
 		const sysusers = store[API.SysUsers.get];
-		return sysusers ? sysusersToTable(sysusers) : [];
+		return Array.isArray(sysusers) ? sysusersToTable(sysusers as SysUsers[]) : [];
 	});
 
 	const onAdd = createMemo((): Action | EmptyAction => {
-		const link = store[API.SysUsers.createRegisterLink]?.link;
-		const submit = async function* () {
-			if (link) return;
+		const submit = async function (formData: ExtendedFormData<{ invite_email: string }>) {
+			const inviteEmail = formData.string("invite_email").trim();
+			if (!inviteEmail) throw new Error("Συμπληρώστε έγκυρο email");
 
-			await apiHook(API.SysUsers.createRegisterLink);
-			yield undefined;
-			pushAlert(createAlert("success", "Ο σύνδεσμος δημιουργήθηκε επιτυχώς!"));
+			const res = await apiHook(API.SysUsers.createRegisterLink, {
+				RequestObject: { email: inviteEmail },
+			});
+			if (!res.data && !res.message) return;
+			pushAlert(createAlert("success", "Το email πρόσκλησης στάλθηκε επιτυχώς!"));
 		};
 		return {
-			inputs: {},
+			inputs: {
+				email: {
+					name: "invite_email",
+					label: "Email νέου διαχειριστή",
+					type: "email",
+					iconClasses: "fa-solid fa-envelope",
+					required: true,
+				} as InputProps,
+			},
 			onSubmit: submit,
-			submitText: !link ? "Δημιουργία" : "Ολοκλήρωση",
-			headerText: !link
-				? "Δημιουργία link εγγραφής"
-				: `Link εγγραφής:\n ${window.location.origin}/admin/signup/${link}`,
+			submitText: "Αποστολή",
+			headerText: "Αποστολή πρόσκλησης εγγραφής",
 			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_USER,
 		};
@@ -86,18 +89,9 @@ export default function SysUsersTable() {
 		const self = store[API.SysUsers.getBySid];
 		if (!sysusers || selectedItems.length < 1 || !self) return deleteModal;
 
-		const selectedSysUsers = selectedItems.map(
-			(i) => sysusers.find((p) => p.id === i) as SysUsers
-		);
-
-		if (
-			!selectedSysUsers.find(
-				(s) =>
-					s.privilege < self.privilege ||
-					(s.privilege === self.privilege && s.id === self.id)
-			)
-		)
-			return deleteModal;
+		const canDeleteOthers = self.email === SYSUSER_OWNER_EMAIL;
+		const hasOthersSelected = selectedItems.some((id) => id !== self.id);
+		if (!canDeleteOthers && hasOthersSelected) return deleteModal;
 
 		const submit = async function () {
 			const ids = selectedItems.map((i) => (sysusers.find((p) => p.id === i) as SysUsers).id);
@@ -118,10 +112,9 @@ export default function SysUsersTable() {
 			...deleteModal,
 		};
 	});
-
 	return (
 		<Show
-			when={store[API.SysUsers.get] && store[API.SysUsers.getBySid]}
+			when={store[API.SysUsers.get] !== undefined}
 			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}

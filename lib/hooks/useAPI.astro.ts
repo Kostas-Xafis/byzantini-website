@@ -14,9 +14,7 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 	try {
 		let fetcher: any = undefined;
 		if (req === undefined) {
-			const url = `${origin}/api${Route.path}`;
-			console.log("===============\nFetching:", url, "\n===============");
-			fetcher = fetch(url, { method: Route.method });
+			fetcher = fetch(`${origin}/api${Route.path}`, { method: Route.method });
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
@@ -25,15 +23,15 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 			}
 			const { RequestObject } = req;
 			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			const url = `${origin}/api${convertToUrlFromArgs(Route.path, req.UrlArgs)}`;
-			console.log("===============\nFetching:", url, "\n===============");
-			fetcher = fetch(url, {
-				method: Route.method,
-				headers: {
-					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"
-				},
-				body
-			});
+			fetcher = fetch(`${origin}/api${convertToUrlFromArgs(Route.path, req.UrlArgs)}`,
+				{
+					method: Route.method,
+					headers: {
+						"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"
+					},
+					body
+				}
+			);
 		}
 		const response = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.res.type === "error") {
