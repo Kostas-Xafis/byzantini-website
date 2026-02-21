@@ -16,6 +16,8 @@
 		"bun-build": "CLOUDFLARE_ENV=production bunx --bun astro build",
 		"preview": "CLOUDFLARE_ENV=production wrangler pages dev dist",
 		"build-preview": "bun run bun-build && bun run preview",
+		"deploy:test": "bun run build && bunx wrangler pages deploy dist --project-name byzantini-website --branch local-test",
+		"logs:test": "bunx wrangler pages deployment tail $(bunx wrangler pages deployment list --project-name byzantini-website --environment preview --json | bun -e 'const text = await new Response(Bun.stdin.stream()).text(); const deployments = JSON.parse(text); const deployment = deployments.find((d) => d.Branch === \"local-test\"); if (!deployment) { console.error(\"No preview deployment found for branch local-test\"); process.exit(1); } process.stdout.write(deployment.Id);') --project-name byzantini-website",
 		"docker-pdf": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker run --network host -d pdfworker",
 		"docker-img": "sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/ && sudo docker run --network host -d imgcomp",
 		"docker-build": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/",
@@ -36,6 +38,7 @@
 		"fast-xml-parser": "^4.5.3",
 		"solid-js": "^1.9.11",
 		"tailwindcss": "^3.4.17",
+		"wrangler": "^4.67.0",
 		"valibot": "^0.13.1"
 	},
 	"devDependencies": {
@@ -47,7 +50,6 @@
 		"print-js": "^1.6.0",
 		"ts-morph": "^24.0.0",
 		"typescript": "5.3.3",
-		"wrangler": "^4.65.0",
 		"xlsx": "^0.18.5"
 	}
 }
