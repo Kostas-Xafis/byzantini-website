@@ -15,6 +15,11 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<Links title={title} imageURL={logoUrl} />
+		<script>
+			import { applyDashboardTheme, resolveDashboardTheme } from "@utilities/theme";
+
+			applyDashboardTheme(resolveDashboardTheme(), { persist: false });
+		</script>
 	</head>
 	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100dvh] overflow-hidden">
 		<slot />
@@ -33,6 +38,19 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 			}
 			body {
 				background: radial-gradient(ellipse at top, rgb(153 27 27 / 0.45), white);
+				background-repeat: no-repeat;
+			}
+			html.dark p,
+			html.dark a,
+			html.dark button,
+			html.dark h1,
+			html.dark h2,
+			html.dark h3,
+			html.dark span {
+				color: #f6f6f6;
+			}
+			html.dark body {
+				background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.35), rgb(26 26 26));
 				background-repeat: no-repeat;
 			}
 		</style>

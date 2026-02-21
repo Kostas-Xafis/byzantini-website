@@ -173,11 +173,11 @@ export class PDF {
 			}
 			throw new Error("Server Timeout");
 		});
-		let t = Date.now();
+		// let t = Date.now();
 		let queueResult = await asyncQueue(requestArr, { maxJobs: 6, verbose: true, progressCallback, progressOnThrow: true });
-		console.log("Queue took", Date.now() - t);
+		// console.log("Queue took", Date.now() - t);
 
-		let z = zip as typeof zip;
+		let z = zip as Window["zip"];
 		const zipFile = await z.downloadZip(queueResult).blob();
 
 		let a = document.createElement("a");

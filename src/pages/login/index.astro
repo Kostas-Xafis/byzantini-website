@@ -6,7 +6,7 @@ export const prerender = true;
 
 <SigninLayout title="Είσοδος Διαχειριστή">
 	<div
-		class="p-12 max-sm:px-6 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
+		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 border border-transparent dark:border-gray-700">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
@@ -17,7 +17,7 @@ export const prerender = true;
 				/>
 			</a>
 		</div>
-		<h2 class="text-3xl font-didact text-center">Είσοδος Διαχειρηστή</h2>
+		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">Είσοδος Διαχειρηστή</h2>
 		<form id="loginForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
 			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
 			<Input
@@ -28,10 +28,22 @@ export const prerender = true;
 				required
 			/>
 			<button
-				class="text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]:bg-red-500"
+				class="text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
 				type="submit">Είσοδος</button
 			>
 		</form>
+		<div class="flex items-center gap-4 my-4">
+			<div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+			<span class="text-gray-500 dark:text-gray-300 text-sm">ή</span>
+			<div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+		</div>
+		<button
+			id="googleLoginBtn"
+			class="w-full flex items-center justify-center gap-3 px-6 py-3 text-lg font-medium text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md dark:shadow-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg transition-all duration-300"
+			type="button">
+			<i class="fa-brands fa-google text-xl"></i>
+			<span>Είσοδος με Google</span>
+		</button>
 	</div>
 	<style is:inline>
 		@keyframes ShakeAnimation {
@@ -70,6 +82,8 @@ export const prerender = true;
 	import { useAPI } from "@hooks/useAPI.astro";
 	import { setCookie } from "@utilities/cookies";
 
+	
+
 	let tid: number | null = null;
 	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
@@ -94,6 +108,18 @@ export const prerender = true;
 			tid = setTimeout(() => {
 				form.classList.remove("animate-shake");
 			}, 1000) as unknown as number;
+		}
+	});
+
+	// Google login button handler
+	document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
+		try {
+			const res = await useAPI("Authentication.getGoogleOAuthState", {});
+			if (res.data && res.data.OAuthUrl) {
+				window.location.href = res.data.OAuthUrl;
+			}
+		} catch (error) {
+			console.error("Error initiating Google login:", error);
 		}
 	});
 </script>

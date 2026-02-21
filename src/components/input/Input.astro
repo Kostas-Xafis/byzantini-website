@@ -46,12 +46,12 @@ const {
 			<>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
+						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
 						(iconClasses || "")
 					}
 				/>
 				<input
-					class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg !outline-none z-10"
+					class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-none z-10"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -65,12 +65,12 @@ const {
 			/*--------------------------------SELECT INPUT---------------------------------------- */ <>
 				<i
 					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " +
+						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " +
 						(iconClasses || "")
 					}
 				/>
 				<select
-					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] shadow-md shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none"
+					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none"
 					name={name}
 					required={required || false}
 					disabled={disabled || false}>
@@ -84,18 +84,18 @@ const {
 		)
 	}
 	<p
-		class="absolute w-min bg-white rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
+		class="absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
 		{label}
 		{
 			required ? (
-				<i class="absolute bg-white left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
+				<i class="absolute bg-white dark:bg-dark left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
 			) : (
 				""
 			)
 		}
 	</p>
 	<div
-		class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400 -z-10">
+		class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-500 dark:border-gray-600 peer-[:not(:focus-within):invalid]:border-red-400 -z-10">
 	</div>
 	<style is:inline>
 		label {

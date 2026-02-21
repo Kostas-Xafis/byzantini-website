@@ -70,9 +70,9 @@ const cvSrc = "kathigites/cv/";
 					music.map(([str, type], ind) => (
 						<div id={type} data-show={ind === 0} data-type={type} class={
 							"group/btn relative cursor-pointer w-full h-max py-[1vw] max-sm:pt-2 place-self-center red-300 grid grid-cols-[1fr_max-content] max-sm:grid-cols-[100%] max-sm:justify-items-center"
-							+ " transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900"}>
+							+ " transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show=true]:bg-red-900"}>
 							<button
-								class="p-[0.8vw] text-[1.5vw] max-sm:text-base max-3xs:text-sm max-sm:w-[13ch] first-of-type:max-sm:w-[12ch] z-10 group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
+								class="p-[0.8vw] text-[1.5vw] max-sm:text-base max-3xs:text-sm max-sm:w-[13ch] first-of-type:max-sm:w-[12ch] z-10 group-hover/btn:text-white group-data-[show=true]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]"
 								data-type={type}
 							>
 								{str}
