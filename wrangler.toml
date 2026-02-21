@@ -1,6 +1,5 @@
 name = "byzantini-website"
 main = "dist/_worker.js/index.js"
-pages_build_output_dir = "dist"
 compatibility_date = "2025-11-17"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public", "disable_nodejs_process_v2"]
 
