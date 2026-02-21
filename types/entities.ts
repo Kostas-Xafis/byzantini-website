@@ -84,7 +84,6 @@ export const v_SysUsers = object({
 	password: string("Μη έγκυρος κωδικός", [minLength(1)]),
 	session_id: string("Μη έγκυρο session_id", [minLength(1)]),
 	session_exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης session"),
-	privilege: number("Μη έγκυρο προνόμιο διαχειριστή"),
 });
 export interface SysUsers {
 	id: number;
@@ -92,18 +91,15 @@ export interface SysUsers {
 	password: string;
 	session_id: string;
 	session_exp_date: number;
-	privilege: number;
 };
 
 export const v_SysUserRegisterLink = object({
 	link: string("Μη έγκυρος σύνδεσμος", [minLength(1)]),
 	exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης"),
-	privilege: positiveInt("Μη έγκυρο προνόμιο")
 });
 export interface SysUserRegisterLink {
 	link: string;
 	exp_date: number;
-	privilege: number;
 };
 
 export const v_LoginCredentials = object({
@@ -286,6 +282,52 @@ export interface Registrations {
 	registration_url?: string | undefined;
 	pass: boolean;
 };
+
+// export const v_StudentRecord = object({
+// 	id: positiveInt("Μη έγκυρο id"),
+// 	am: string("Μη έγκυρο ΑΜ"),
+// 	amka: union([string([length(11)]), literal("")], "Μη έγκυρο ΑΜΚΑ"),
+// 	first_name: string("Μη έγκυρο όνομα"),
+// 	last_name: string("Μη έγκυρο επώνυμο"),
+// 	fathers_name: string("Μη έγκυρο όνομα πατέρα"),
+// 	birth_date: number("Μη έγκυρη ημερομηνία γέννησης", [integer()]),
+// 	telephone: string("Μη έγκυρο τηλέφωνο"),
+// 	cellphone: string("Μη έγκυρο κινητό τηλέφωνο"),
+// 	email: string("Μη έγκυρο email", [email()]),
+// 	road: string("Μη έγκυρος δρόμος"),
+// 	number: positiveInt("Μη έγκυρος αριθμός"),
+// 	tk: positiveInt("Μη έγκυρος ταχυδρομικός κώδικας"),
+// 	region: string("Μη έγκυρη περιοχή")
+// });
+
+// export interface StudentRecord {
+// 	id: number;
+// 	am: string;
+// 	amka: string;
+// 	first_name: string;
+// 	last_name: string;
+// 	fathers_name: string;
+// 	birth_date: number;
+// 	telephone: string;
+// 	cellphone: string;
+// 	email: string;
+// 	road: string;
+// 	number: number;
+// 	tk: number;
+// 	region: string;
+// }
+
+// export interface StudentClass {
+// 	id: number;
+// 	registration_id: number;
+// 	class_id: number;
+// 	teacher_id: number;
+// 	instrument_id: number;
+// 	payment_amount: number;
+// 	total_payment: number;
+// 	payment_date?: number | null;
+// 	pass: boolean;
+// }
 
 export const v_EmailSubscriptions = object({
 	email: string([email("Μη έγκυρο email")]),

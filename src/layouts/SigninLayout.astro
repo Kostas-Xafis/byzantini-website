@@ -50,8 +50,43 @@ const logoUrl = imageUrl || "https://musicschool-metamorfosi.gr/logo.png";
 				color: #f6f6f6;
 			}
 			html.dark body {
-				background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.35), rgb(26 26 26));
+				background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.5) -50%, rgb(12 12 12));
 				background-repeat: no-repeat;
+			}
+			input:-webkit-autofill,
+			input:-webkit-autofill:hover,
+			input:-webkit-autofill:focus,
+			textarea:-webkit-autofill,
+			textarea:-webkit-autofill:hover,
+			textarea:-webkit-autofill:focus,
+			select:-webkit-autofill,
+			select:-webkit-autofill:hover,
+			select:-webkit-autofill:focus,
+			input:autofill,
+			textarea:autofill,
+			select:autofill {
+				-webkit-text-fill-color: #282828;
+				caret-color: #282828;
+				box-shadow: 0 0 0 1000px #ffffff inset !important;
+				-webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+				transition: background-color 9999s ease-out;
+			}
+			html.dark input:-webkit-autofill,
+			html.dark input:-webkit-autofill:hover,
+			html.dark input:-webkit-autofill:focus,
+			html.dark textarea:-webkit-autofill,
+			html.dark textarea:-webkit-autofill:hover,
+			html.dark textarea:-webkit-autofill:focus,
+			html.dark select:-webkit-autofill,
+			html.dark select:-webkit-autofill:hover,
+			html.dark select:-webkit-autofill:focus,
+			html.dark input:autofill,
+			html.dark textarea:autofill,
+			html.dark select:autofill {
+				-webkit-text-fill-color: #f6f6f6;
+				caret-color: #f6f6f6;
+				box-shadow: 0 0 0 1000px #1a1a1a inset !important;
+				-webkit-box-shadow: 0 0 0 1000px #1a1a1a inset !important;
 			}
 		</style>
 	</body>

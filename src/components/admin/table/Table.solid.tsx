@@ -254,7 +254,7 @@ export default function Table(props: Props) {
 					"grid-row": "table",
 				}}
 				class={
-					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-lg font-didact border-2 border-red-900 dark:border-red-800" +
+					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-lg font-didact border-2 border-red-900 dark:border-red-800" +
 					(hasControlGroup("left")
 						? " max-w-[100%] max-sm:max-w-[97.5%]"
 						: " max-w-[90%] max-sm:max-w-[92.5%]")

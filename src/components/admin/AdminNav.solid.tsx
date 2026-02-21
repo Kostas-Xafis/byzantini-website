@@ -1,5 +1,5 @@
 import { A, type RouterProps } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 
 const links = [
 	{ name: "Αρχική", url: "/admin", force: false },
@@ -19,6 +19,11 @@ const links = [
 const forceURLChange = (pathname: string) => (window.location.pathname = pathname);
 
 export default function AdminNav(props: RouterProps) {
+	type StoredSysUser = {
+		email?: string | null;
+		avatar_url?: string | null;
+	};
+
 	const firstPage =
 		links.find(
 			(link) =>
@@ -26,28 +31,67 @@ export default function AdminNav(props: RouterProps) {
 				link.url + "/" === window.location.pathname,
 		)?.name ?? "Αρχική";
 	const [currentPage, setCurrentPage] = createSignal(firstPage);
+	const [userEmail, setUserEmail] = createSignal("");
+	const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null);
+
+	onMount(() => {
+		const raw = localStorage.getItem("sys_user");
+		if (!raw) return;
+		try {
+			const user = JSON.parse(raw) as StoredSysUser;
+			setUserEmail(user.email || "");
+			setAvatarUrl(user.avatar_url || null);
+		} catch {
+			setUserEmail("");
+			setAvatarUrl(null);
+		}
+	});
 
 	return (
 		<>
 			<nav
 				class={
-					"pt-4 grid grid-rows-[80px_1fr] bg-red-900 dark:bg-red-950 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex max-sm:z-50 flex-col max-sm:overflow-visible max-sm:sticky max-sm:top-0" +
+					"pt-4 grid grid-rows-[auto_1fr] bg-red-900 dark:bg-red-950 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex max-sm:z-50 flex-col max-sm:overflow-visible max-sm:sticky max-sm:top-0" +
 					" max-sm:flex-row max-sm:p-1"
 				}>
-				<div class="relative grid place-items-center gap-x-4 font-anaktoria">
+				<div class="relative grid justify-items-center content-start gap-y-2 font-anaktoria">
 					<a
 						href="/"
-						class="logoImg w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20"
+						class="w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20 relative"
 						onClick={(e) => {
 							e.preventDefault(); // prevent router from changing url
 							forceURLChange("/");
 						}}>
-						<div class="w-full h-full bg-red-50"></div>
-						<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
+						<img
+							src="/logo.png"
+							alt="Λογότυπο Σχολής"
+							class="h-full w-full object-contain brightness-0 invert contrast-125 drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
+						/>
 					</a>
 					{/* <!-- 50% width - 40px (50% of img) - 2px offset --> */}
-					<div class="logoImg w-[70px] max-sm:w-[50px] aspect-square absolute top-[6px] blur-2xl z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px]">
-						<div class="w-full h-full bg-[rgb(0_0_0_/_0.75)]"></div>
+					<div class="w-[70px] max-sm:w-[50px] aspect-square absolute top-[2px] blur-xl opacity-40 z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px] pointer-events-none">
+						<img
+							src="/logo.png"
+							alt=""
+							aria-hidden="true"
+							class="h-full w-full object-contain brightness-0"
+						/>
+					</div>
+					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
+						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
+							{avatarUrl() ? (
+								<img
+									src={avatarUrl()!}
+									alt="Avatar"
+									class="h-full w-full object-cover"
+								/>
+							) : (
+								<i class="fa-solid fa-user"></i>
+							)}
+						</div>
+						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">
+							{userEmail()}
+						</p>
 					</div>
 				</div>
 				<div
@@ -91,13 +135,7 @@ export default function AdminNav(props: RouterProps) {
 					</div>
 				</div>
 				<style>
-					{`.logoImg {
-				mask-image: url("/logo.png");
-				-webkit-mask-image: url("/logo.png");
-				mask-size: contain;
-				-webkit-mask-size: contain;
-			}
-			/* Subpixel gaps for no reason at all.... */
+					{`/* Subpixel gaps for no reason at all.... */
 			#burgerNav a:nth-child(10) {
 				transition-duration: 0.475s;
 				transform: translateY(-10px);

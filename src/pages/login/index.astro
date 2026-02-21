@@ -82,8 +82,6 @@ export const prerender = true;
 	import { useAPI } from "@hooks/useAPI.astro";
 	import { setCookie } from "@utilities/cookies";
 
-	
-
 	let tid: number | null = null;
 	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
@@ -94,9 +92,17 @@ export const prerender = true;
 			password: inputs.password.value,
 		};
 		const res = await useAPI("Authentication.userLogin", { RequestObject: data });
+		console.log(res);
 		if (res.data && res.data.isValid) {
-			const { session_id } = res.data;
+			const { session_id, email, avatar_url } = res.data;
 			setCookie("session_id", session_id || "", 14);
+			localStorage.setItem(
+				"sys_user",
+				JSON.stringify({
+					email,
+					avatar_url: avatar_url ?? null,
+				}),
+			);
 			window.location.href = "/admin";
 		} else {
 			if (tid) {

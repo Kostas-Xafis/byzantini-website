@@ -13,6 +13,8 @@ type UserLoginRes =
 	| {
 		isValid: true;
 		session_id: string;
+		email: string;
+		avatar_url: string | null;
 	}
 	| {
 		isValid: false;
@@ -42,7 +44,27 @@ const getGoogleOAuthState: EndpointRoute<"/auth/google", any, { OAuthUrl: string
 	validation: undefined,
 };
 
-const oauthCallback: EndpointRoute<"/auth/google/callback", any, any> = {
+const getGoogleOAuthStateForSignup: EndpointRoute<"/auth/google/signup/[link:string]", any, { OAuthUrl: string; }> = {
+	authentication: false,
+	method: "GET",
+	path: "/auth/google/signup/[link:string]",
+	hasUrlParams: true,
+	validation: undefined,
+};
+
+type OAuthCallbackRes =
+	| {
+		isValid: true;
+		session_id: string;
+		email: string;
+		avatar_url: string | null;
+	}
+	| {
+		isValid: false;
+		error: string;
+	};
+
+const oauthCallback: EndpointRoute<"/auth/google/callback", any, OAuthCallbackRes> = {
 	authentication: false,
 	method: "GET",
 	path: "/auth/google/callback",
@@ -56,5 +78,6 @@ export const AuthenticationRoutes = {
 	userLogin,
 	userLogout,
 	getGoogleOAuthState,
+	getGoogleOAuthStateForSignup,
 	oauthCallback,
 };

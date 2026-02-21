@@ -1,7 +1,8 @@
 import { v_LoginCredentials, type SysUsers } from "@_types/entities";
 import type { EndpointRoute } from "@_types/routes";
+import { email, object, string } from "valibot";
 
-type SysUsersGetById = Pick<SysUsers, "id" | "email" | "privilege">;
+type SysUsersGetById = Pick<SysUsers, "id" | "email">;
 const get: EndpointRoute<"/sys", any, SysUsersGetById[]> = {
 	authentication: true,
 	method: "GET",
@@ -34,7 +35,12 @@ const del: EndpointRoute<"/sys", number[]> = {
 	validation: undefined,
 };
 
-const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, { session_id: string; id: number; }> = {
+const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, {
+	session_id: string;
+	id: number;
+	email: string;
+	avatar_url: string | null;
+}> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/[link:string]",
@@ -42,12 +48,16 @@ const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_Log
 	validation: () => v_LoginCredentials,
 };
 
-const createRegisterLink: EndpointRoute<"/sys/register", any, { link: string; }> = {
+const v_SysUserInviteEmail = object({
+	email: string("Μη έγκυρο email", [email()]),
+});
+
+const createRegisterLink: EndpointRoute<"/sys/register", typeof v_SysUserInviteEmail, { link: string; }> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/register",
 	hasUrlParams: false,
-	validation: undefined,
+	validation: () => v_SysUserInviteEmail,
 };
 
 const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", any, { isValid: boolean; }> = {

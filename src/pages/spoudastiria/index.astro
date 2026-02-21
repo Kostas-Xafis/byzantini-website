@@ -9,7 +9,6 @@ let _locations = (await useAPI(API.Locations.getByPriority, undefined, Astro))?.
 const imgSrc = "/spoudastiria/";
 const schoolLocations = _locations.filter(l => !l.partner);
 const otherLocations = _locations.filter(l => !!l.partner);
-console.log(schoolLocations);
 ---
 
 <Layout title="Σπουδαστήρια">
