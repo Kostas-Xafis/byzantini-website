@@ -254,7 +254,7 @@ export default function Table(props: Props) {
 					"grid-row": "table",
 				}}
 				class={
-					"relative z-[1000] min-w-[40%] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 rounded-lg font-didact border-2 border-red-900" +
+					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-lg font-didact border-2 border-red-900 dark:border-red-800" +
 					(hasControlGroup("left")
 						? " max-w-[100%] max-sm:max-w-[97.5%]"
 						: " max-w-[90%] max-sm:max-w-[92.5%]")
@@ -271,7 +271,7 @@ export default function Table(props: Props) {
 					sortOnClick={setSorted}
 					hasSelectBox={!!props.hasSelectBox}
 				/>
-				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg">
+				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg dark:bg-dark">
 					<For each={readPageData()}>
 						{(item) => {
 							return (
@@ -354,10 +354,20 @@ export default function Table(props: Props) {
 	.row:nth-child(even)::before {
 		background-color: white;
 	}
+	html.dark .row:nth-child(odd)::before {
+		background-color: rgb(38, 38, 38);
+	}
+	html.dark .row:nth-child(even)::before {
+		background-color: rgb(30, 30, 30);
+	}
 
 	.row:is(.selectedRow):nth-child(odd)::before,
 	.row:is(.selectedRow)::before {
 		background-color: rgb(254,202,202);
+	}
+	html.dark .row:is(.selectedRow):nth-child(odd)::before,
+	html.dark .row:is(.selectedRow)::before {
+		background-color: rgb(68, 30, 30);
 	}
 	.row:is(.selectedRow):hover {
 		--tw-shadow-color: #6b7280 !important;
@@ -376,6 +386,9 @@ export default function Table(props: Props) {
 		left: 0;
 		transform: translate(-50%, -50%);
 		color: rgb(55 65 81);
+	}
+	html.dark .selectBox {
+		color: rgb(209 213 219);
 	}
 	@keyframes ShakeAnimation {
 		0% {

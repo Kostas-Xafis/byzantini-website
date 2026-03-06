@@ -1,8 +1,16 @@
 import { Bucket } from "@lib/bucket";
 import type { APIContext } from "astro";
+export const prerender = false;
 
 export async function GET(ctx: APIContext) {
-	const url = ctx.params.slug as string;
+	const rawUrl = ctx.params.slug as string;
+	const url = (() => {
+		try {
+			return decodeURIComponent(rawUrl);
+		} catch {
+			return rawUrl;
+		}
+	})();
 	try {
 		const file = await Bucket.get(ctx, url);
 		if (!file) return ctx.redirect("/404");

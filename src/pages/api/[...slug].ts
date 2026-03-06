@@ -1,5 +1,6 @@
 import type { RemovePartial } from "@_types/helpers";
 import type { AnyEndpoint, HTTPMethods } from "@_types/routes";
+import { Env } from "@env/env";
 import { matchRoute } from "@routes/index.server";
 import type { APIContext } from "astro";
 
@@ -27,6 +28,8 @@ const generateResponse = (ctx: APIContext, route: Route, urlSlug: string[]) => {
 };
 
 const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) => {
+	//@ts-ignore
+	Env.setEnv(ctx);
 	for (const middleware of (route.middleware ?? [])) {
 		const response = await middleware(ctx);
 		if (response) return response;

@@ -31,3 +31,7 @@ export const deepCopy = <T>(obj: T): T => {
     if (Array.isArray(obj)) return obj.map(deepCopy) as any;
     return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, deepCopy(v)])) as any;
 };
+
+export function isEmptyObject(obj: object): boolean {
+    return Object.keys(obj).length === 0 && obj.constructor === Object;
+}

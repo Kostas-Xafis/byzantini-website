@@ -39,7 +39,7 @@ const submitWrapper = (
 	onSubmit:
 		| ((formData: FormData, form?: HTMLFormElement | undefined) => Promise<void>)
 		| AsyncGenerator<undefined, void, unknown>,
-	setModalOpen: (set: boolean) => void
+	setModalOpen: (set: boolean) => void,
 ) => {
 	return async function (form: HTMLFormElement, e: Event) {
 		try {
@@ -54,7 +54,7 @@ const submitWrapper = (
 			console.error(error);
 			pushAlert(createAlert("error", "Error: ", error.message));
 			const form = document.querySelector(
-				".modal:is(:not(.hidden)) > div > form"
+				".modal:is(:not(.hidden)) > div > form",
 			) as HTMLFormElement;
 			void form.report;
 			form.classList.add("animate-shake");
@@ -97,7 +97,7 @@ export default function Modal(props: Props) {
 	const onClose = () => {
 		setOpenState(MODAL_PREFIX, false);
 		document.dispatchEvent(
-			new CustomEvent("modal_close", { detail: { prefix: MODAL_PREFIX } })
+			new CustomEvent("modal_close", { detail: { prefix: MODAL_PREFIX } }),
 		);
 	};
 
@@ -105,9 +105,9 @@ export default function Modal(props: Props) {
 		<Show when={openState()}>
 			<div
 				class={
-					"modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)] backdrop-blur-sm"
+					"modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] dark:bg-[rgb(0_0_0_/_0.6)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)] backdrop-blur-sm"
 				}>
-				<div class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-white place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center">
+				<div class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-white dark:bg-dark place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center text-red-950 dark:text-red-50">
 					<p class="text-4xl p-2 w-full text-center max-sm:text-3xl">
 						{actionStore.action.headerText}
 					</p>
@@ -117,7 +117,7 @@ export default function Modal(props: Props) {
 						<Show when={Object.entries(actionStore.action.inputs).length > 0}>
 							<For
 								each={Object.values(actionStore.action.inputs).filter(
-									(input) => !!input.name
+									(input) => !!input.name,
 								)}>
 								{(inputProps) => {
 									return (
@@ -134,7 +134,7 @@ export default function Modal(props: Props) {
 						fallback={<Spinner classes="max-sm:h-[100svh]"></Spinner>}>
 						<button
 							class={
-								"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors bg-green-300 hover:bg-green-500 focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-500" +
+								"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors bg-green-500 text-white hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-600 dark:peer-[:is(.animate-shake)]/form:bg-red-700" +
 								" max-sm:text-2xl"
 							}
 							type="submit"

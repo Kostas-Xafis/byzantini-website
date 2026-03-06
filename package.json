@@ -7,19 +7,24 @@
 		"test-force": "bun test --env-file='./tests/.env.testforce'",
 		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"tests-force": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
-		"query": "bun --env-file='.env.development' ./getData/query.ts",
-		"db-replicate": "bun --env-file='.env.development' ./getData/replicate.ts",
-		"db-check-logs": "bun run query --dev --q \"SELECT * FROM (SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs WHERE DATE(date / 1000, 'unixepoch') > '2025-10-14' ORDER BY date DESC LIMIT 100) ORDER BY date\"",
+		"query": "bun --env-file='.dev.vars.development' ./getData/query.ts",
+		"db:replicate": "bun --env-file='.dev.vars.development' ./getData/replicate.ts",
+		"db:logs": "bun run query --dev --q \"SELECT * FROM (SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs WHERE DATE(date / 1000, 'unixepoch') > '2025-10-14' ORDER BY date DESC LIMIT 100) ORDER BY date\"",
+		"db:query": "bun run query --dev --q ",
+		"db:query:prod": "bun run query --prod",
 		"dev": "bunx --bun astro dev",
-		"start": "astro dev",
-		"build": "astro build",
-		"bun-build": "bunx --bun astro build",
-		"preview": "bunx --bun --env-file='.env.production' astro build && wrangler pages dev ./dist",
-		"docker-pdf": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker run --network host -d pdfworker",
-		"docker-img": "sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/ && sudo docker run --network host -d imgcomp",
-		"docker-build": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/",
-		"docker-run": "sudo docker run --network host -d pdfworker && sudo docker run --network host -d imgcomp",
-		"docker-logs": "sudo docker logs -f $(sudo docker ps -q --filter ancestor=pdfworker) && sudo docker logs -f $(sudo docker ps -q --filter ancestor=imgcomp)"
+		"start": "CLOUDFLARE_ENV=development astro dev",
+		"build": "CLOUDFLARE_ENV=production astro build",
+		"bun-build": "CLOUDFLARE_ENV=production bunx --bun astro build",
+		"preview": "CLOUDFLARE_ENV=production wrangler pages dev dist",
+		"build-preview": "bun run bun-build && bun run preview",
+		"deploy:test": "bun run build && bunx wrangler pages deploy dist --project-name byzantini-website --branch local-test",
+		"logs:test": "bunx wrangler pages deployment tail $(bunx wrangler pages deployment list --project-name byzantini-website --environment preview --json | bun -e 'const text = await new Response(Bun.stdin.stream()).text(); const deployments = JSON.parse(text); const deployment = deployments.find((d) => d.Branch === \"local-test\"); if (!deployment) { console.error(\"No preview deployment found for branch local-test\"); process.exit(1); } process.stdout.write(deployment.Id);') --project-name byzantini-website",
+		"docker:pdf": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker run --network host -d pdfworker",
+		"docker:img": "sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/ && sudo docker run --network host -d imgcomp",
+		"docker:build": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/",
+		"docker:run": "sudo docker run --network host -d pdfworker && sudo docker run --network host -d imgcomp",
+		"docker:logs": "sudo docker logs -f $(sudo docker ps -q --filter ancestor=pdfworker) && sudo docker logs -f $(sudo docker ps -q --filter ancestor=imgcomp)"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^12.6.12",
@@ -31,13 +36,13 @@
 		"@tailwindcss/container-queries": "^0.1.1",
 		"air-datepicker": "^3.5.3",
 		"arctic": "^3.7.0",
-		"astro": "^5.17.2",
+		"astro": "5.18.0",
 		"astro-seo": "^1.1.0",
 		"fast-xml-parser": "^4.5.3",
-		"lucia": "^3.2.2",
 		"solid-js": "^1.9.11",
 		"tailwindcss": "^3.4.17",
-		"valibot": "^0.13.1"
+		"valibot": "^0.13.1",
+		"wrangler": "^4.67.0"
 	},
 	"devDependencies": {
 		"@aws-sdk/client-s3": "^3.758.0",
@@ -48,7 +53,6 @@
 		"print-js": "^1.6.0",
 		"ts-morph": "^24.0.0",
 		"typescript": "5.3.3",
-		"wrangler": "^4.65.0",
 		"xlsx": "^0.18.5"
 	}
 }

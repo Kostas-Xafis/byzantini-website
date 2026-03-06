@@ -19,6 +19,7 @@ import { SchemaServerRoutes } from "./schema.server";
 import { unionHas, unionStringToSet } from "../utils.server";
 import { BaseRoutes } from "./index.client";
 import { EndpointsConstructor } from "./constructors.client";
+import { SettingsBackupServerRoutes } from "./settingsBackup.server";
 
 const raw_routes =
 	[BooksServerRoutes,
@@ -33,7 +34,8 @@ const raw_routes =
 		RegistrationsServerRoutes,
 		AnnouncementsServerRoutes,
 		ReplicationServerRoutes,
-		SchemaServerRoutes];
+		SchemaServerRoutes,
+		SettingsBackupServerRoutes];
 
 export const APIRaw = {
 	...EndpointsConstructor(BaseRoutes.Books, BooksServerRoutes, true),
@@ -47,7 +49,8 @@ export const APIRaw = {
 	...EndpointsConstructor(BaseRoutes.SysUsers, SysUsersServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsServerRoutes, true),
-	...EndpointsConstructor(BaseRoutes.Schema, SchemaServerRoutes, true)
+	...EndpointsConstructor(BaseRoutes.Schema, SchemaServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.SettingsBackup, SettingsBackupServerRoutes, true)
 };
 
 function getAllRoutes() {

@@ -1,0 +1,12 @@
+name = "byzantini-website"
+main = "dist/_worker.js/index.js"
+compatibility_date = "2025-11-17"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public", "disable_nodejs_process_v2"]
+
+[[r2_buckets]]
+binding = "S3_BUCKET"
+bucket_name = "byzantini-bucket"
+preview_bucket_name = "bucket-dev"
+
+[observability]
+enabled = true

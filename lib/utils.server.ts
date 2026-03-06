@@ -1,11 +1,12 @@
 import type { Insert } from "@_types/entities";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "@_types/routes";
-import { createDbConnection, type QueryArguments, type Transaction } from "@lib/db";
+import { Env } from "@env/env";
+import { createDbConnection, type DBType, type QueryArguments, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
 import type { Output } from "valibot";
 
-const { MODE, PROD } = import.meta.env;
 export function isProduction() {
+	const { MODE, PROD } = Env.env;
 	return MODE === "production" && PROD === true;
 }
 
@@ -97,24 +98,28 @@ export const executeQuery = async <T = undefined>(query: string, args: QueryArgu
 	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 };
 
+export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>, connector: DBType = null) => {
+	const conn = createDbConnection(connector, true);
+	return conn.transaction((tx) => {
+		tx.executeQuery = <T>(query: string, args?: QueryArguments, log = false) => {
+			return executeQuery<T>(query, args, tx, log);
+		};
+		return func(tx) as Promise<T>;
+	}) as T;
+};
+
 export const execTryCatch = async <T>(
 	func: (t: Transaction) => Promise<T>,
 	errorMessage?: string
 ): Promise<EndpointResponse<T> | EndpointResponseError> => {
 	// This is a work around because if I return inside the try-catch blocks, the return type is not inferred correctly
 	let res: EndpointResponse<T> | EndpointResponseError;
-	const hasTransaction: boolean = func.length === 1;
+	const needsTransaction: boolean = func.length === 1;
 	try {
 		let response;
 
-		if (hasTransaction) {
-			const conn = createDbConnection(null, true);
-			response = await conn.transaction((tx) => {
-				tx.executeQuery = <T>(query: string, args?: QueryArguments, log = false) => {
-					return executeQuery<T>(query, args, tx, log);
-				};
-				return func(tx) as Promise<T>;
-			}) as T;
+		if (needsTransaction) {
+			response = await executeTransaction(func as (t: Transaction) => Promise<T>);
 		} else {
 			response = (await (func as () => Promise<T>)()) as T;
 		}
@@ -123,6 +128,7 @@ export const execTryCatch = async <T>(
 		if (typeof response === "string") res = MessageWrapper(response);
 		else res = DataWrapper(response);
 	} catch (error: any) {
+		console.log(error);
 		if (error instanceof Error) {
 			res = ErrorWrapper((errorMessage || "") + " " + error.message);
 		} else {

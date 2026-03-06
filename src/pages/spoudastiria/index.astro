@@ -1,8 +1,11 @@
 ---
 import GMap from "@components/other/GMap.astro";
-import { useAPI } from "@hooks/useAPI.astro";
+import { useAPI, API } from "@hooks/useAPI.astro";
 import Layout from "@layouts/Layout.astro";
-let _locations = (await useAPI("Locations.getByPriority"))?.data || [];
+
+export const prerender = false;
+
+let _locations = (await useAPI(API.Locations.getByPriority, undefined, Astro))?.data || [];
 const imgSrc = "/spoudastiria/";
 const schoolLocations = _locations.filter(l => !l.partner);
 const otherLocations = _locations.filter(l => !!l.partner);
@@ -35,12 +38,12 @@ const otherLocations = _locations.filter(l => !!l.partner);
 						<div
 							data-show={ind === 0}
 							data-name={l.name}
-							class="btn group/btn relative w-full py-[1vw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900">
-							<button class="p-[0.75vw] w-[20ch] text-[1.25vw] group-hover/btn:text-white group-data-[show]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
+							class="btn group/btn relative w-full py-[1vw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show=true]/btn:bg-red-900">
+							<button class="p-[0.75vw] w-[20ch] text-[1.25vw] group-hover/btn:text-white group-data-[show=true]/btn:text-white transition-colors duration-500 ease-in-out drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)]">
 								{l.name}
 							</button>
 							<div class="absolute right-[0.625vw] top-[50%] translate-y-[-50%] font-bold text-[1.25vw]">
-								<i class="fa-solid fa-chevron-right text-red-50 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] group-data-[show]/btn:opacity-100" />
+								<i class="fa-solid fa-chevron-right text-red-50 opacity-0 drop-shadow-[-2px_1px_1px_rgba(15,15,15,0.15)] group-data-[show=true]/btn:opacity-100" />
 							</div>
 						</div>
 					))

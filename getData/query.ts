@@ -1,6 +1,7 @@
 import { createSimpleDbConnection, type SimpleConnection } from "@lib/db";
 import type { ResultSet } from "@libsql/client";
 import { argReader } from "@utilities/cli";
+import { parseEnvFile } from "../loadEnvVars";
 import { readFile, writeFile } from "fs/promises";
 import { argv } from "process";
 import XLSX from "xlsx";
@@ -12,6 +13,10 @@ type ArgsType = {
 	"--f"?: string;
 	"--out"?: string;
 	"--excel"?: string;
+	"--json"?: boolean;
+	"--j"?: boolean;
+	"--json-out"?: string;
+	"--jo"?: string;
 	"--skip"?: boolean;
 	"--t"?: string;
 	"--time"?: string;
@@ -21,7 +26,6 @@ type ArgsType = {
 	"--help"?: string;
 };
 const args = argReader<ArgsType>(argv, "--");
-const isProduction = args.dev ? false : args.prod || null;
 
 const isSilent = args.silent || args.s;
 const isTimed = args.time || args.t;
@@ -30,21 +34,61 @@ const log = (...msg: any) => {
 	console.log(...msg);
 };
 
+const loadCloudflareEnv = async (isProduction: boolean) => {
+	const fileName = isProduction ? ".dev.vars" : ".dev.vars.development";
+	const filePath = `${process.cwd()}/${fileName}`;
+	const envContents = await readFile(filePath, { encoding: "utf8" });
+	const parsed = parseEnvFile(envContents);
+
+	Object.assign(process.env, parsed);
+	if (!(import.meta as any).env) {
+		(import.meta as any).env = {};
+	}
+	Object.assign((import.meta as any).env, parsed);
+	log(`[query] Loaded environment from ${fileName}`);
+};
+
 const getQueries = (str: string) => {
+	const splitSqlStatements = (sql: string): string[] => {
+		const statements: string[] = [];
+		let curr = "";
+		let inSingle = false;
+		let inDouble = false;
+		let inBacktick = false;
+
+		for (let i = 0; i < sql.length; i++) {
+			const ch = sql[i];
+			const prev = sql[i - 1];
+
+			if (ch === "'" && prev !== "\\" && !inDouble && !inBacktick) inSingle = !inSingle;
+			else if (ch === '"' && prev !== "\\" && !inSingle && !inBacktick) inDouble = !inDouble;
+			else if (ch === "`" && prev !== "\\" && !inSingle && !inDouble) inBacktick = !inBacktick;
+
+			if (ch === ";" && !inSingle && !inDouble && !inBacktick) {
+				const statement = curr.trim();
+				if (statement) statements.push(statement);
+				curr = "";
+				continue;
+			}
+			curr += ch;
+		}
+
+		const tail = curr.trim();
+		if (tail) statements.push(tail);
+
+		return statements;
+	};
+
 	const formatQuery = (query: string) => {
 		query = query.replace(/\r\n/g, "");
 		query = query.replace(/\n/g, "");
 		return query;
 	};
 
-	const separateQueries = (query: string) => {
-		return query.split(";");
-	};
-
 	const filterComments = (queries: string[]) => {
 		return queries.filter((query) => !query.startsWith("--"));
 	};
-	return filterComments(separateQueries(str).map((query) => formatQuery(query)));
+	return filterComments(splitSqlStatements(str).map((query) => formatQuery(query)));
 };
 
 /**
@@ -86,6 +130,37 @@ const asyncEscape = (msg: string) => {
 	throw new Error();
 };
 
+const isResultSetLike = (value: unknown): value is ResultSet => {
+	if (!value || typeof value !== "object") return false;
+	return "rows" in value && "columns" in value;
+};
+
+const normalizeForJson = (value: unknown): unknown => {
+	if (Array.isArray(value)) {
+		return value.map((item) => normalizeForJson(item));
+	}
+	if (!isResultSetLike(value)) return value;
+
+	return {
+		columns: value.columns,
+		rows: value.rows,
+		rowsAffected: value.rowsAffected,
+		lastInsertRowid: value.lastInsertRowid,
+	};
+};
+
+const getReturnedRowsCount = (value: unknown) => {
+	if (Array.isArray(value)) {
+		return value.reduce((sum, item) => sum + (isResultSetLike(item) ? item.rows.length : 0), 0);
+	}
+	if (isResultSetLike(value)) return value.rows.length;
+	return null;
+};
+
+const ensureJsonExtension = (filePath: string) => {
+	return filePath.toLowerCase().endsWith(".json") ? filePath : `${filePath}.json`;
+};
+
 /**
  *
  * @param {Object<string, string | number>[]} data
@@ -100,7 +175,7 @@ const outputToExcel = (data: any[]) => {
 };
 
 
-const dbProcess = async function () {
+const dbProcess = async function (isProduction: boolean) {
 	let conn: SimpleConnection = null as any;
 	let data;
 	try {
@@ -134,6 +209,8 @@ const printUsage = () => {
 		, "  --f:\t\tFile path to query file\n"
 		, "  --out:\tOutput file path\n"
 		, "  --excel:\tOutput to excel file\n"
+		, "  --json, --j:\tPrint query output as JSON\n"
+		, "  --json-out, --jo:\tStore query output as JSON (adds .json if missing)\n"
 		, "  --t, --time:\t\tPrint execution time\n"
 		, "  --s, --silent:\tSilent mode\n"
 		, "  --skip:\tSkip errors\n"
@@ -145,6 +222,8 @@ const printUsage = () => {
  * Query database: node query.js --dev|--prod --q "SELECT * FROM users"
  * Query from file: node query.js --prod --f queries.sql
  * Query from file and output to file: node query.js --prod --f queries.sql --out output.json
+ * Print query output as JSON: node query.js --dev --q "SELECT * FROM users" --json
+ * Print and store JSON output: node query.js --prod --f queries.sql --json --json-out output
  */
 async function main() {
 	if (args.h || args.help || Object.keys(args).length === 0) {
@@ -154,22 +233,36 @@ async function main() {
 
 	let isProduction = args.dev ? false : args.prod || null;
 	if (isProduction === null) asyncEscape("No environment specified");
+	const selectedIsProduction = isProduction as boolean;
+	await loadCloudflareEnv(selectedIsProduction);
 
 	log({ ...args });
 
 	isTimed && console.time("Execution Time");
-	let data = await dbProcess();
+	let data = await dbProcess(selectedIsProduction);
 	isTimed && console.timeEnd("Execution Time");
 
 	if (args.excel) {
 		outputToExcel(data as any);
 	} else {
-		const strData = JSON.stringify(data, null, 4);
-		if (args.out) {
-			await writeFile(args.out, strData, { encoding: "utf8", flag: "w+" });
-		} else {
+		const printJson = Boolean(args.json || args.j);
+		const requestedJsonOut = (args["json-out"] || args.jo || args.out) as string | undefined;
+		const shouldStoreJson = typeof requestedJsonOut === "string" && requestedJsonOut !== "";
+		const jsonOutputPath = shouldStoreJson ? ensureJsonExtension(requestedJsonOut) : null;
+		const normalizedData = normalizeForJson(data);
+		const strData = JSON.stringify(normalizedData, null, 4);
+
+		if (jsonOutputPath) {
+			await writeFile(jsonOutputPath, strData, { encoding: "utf8", flag: "w+" });
+			log(`[query] JSON output saved to ${jsonOutputPath}`);
+		}
+
+		if (printJson || !shouldStoreJson) {
 			log(strData);
-			(data as ResultSet)?.rows && log("Returned rows: ", (data as ResultSet).rows.length);
+			const rowsCount = getReturnedRowsCount(data);
+			if (rowsCount !== null) {
+				log("Returned rows: ", rowsCount);
+			}
 		}
 	}
 }

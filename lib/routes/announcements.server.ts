@@ -15,13 +15,13 @@ const xmlopts: X2jOptions = {
 		return tagName === "url";
 	},
 };
-const { WEBSITE_URL } = import.meta.env;
 
 async function getSitemapXml(ctx: APIContext) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
 	if (!sitemap) throw Error("Sitemap not found");
 	return new XMLParser(xmlopts).parse(Buffer.from('byteLength' in sitemap ? sitemap : await sitemap.arrayBuffer()));
 }
+
 function jsonToXml(json: any) {
 	return new XMLBuilder({ ...xmlopts, format: true } as any).build(json) as string;
 }
@@ -29,7 +29,7 @@ function jsonToXml(json: any) {
 async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<Announcements, "id" | "views">) {
 	const jsonSitemap = await getSitemapXml(ctx);
 	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
-	const newUrl = { loc: `${WEBSITE_URL}/sxoli/anakoinoseis/${announcement.title.replaceAll(" ", "%20")}`, lastmod: new Date(announcement.date).toISOString(), changefreq: "monthly", priority: "1.0" };
+	const newUrl = { loc: `${ctx.url.origin}/sxoli/anakoinoseis/${announcement.title.replaceAll(" ", "%20")}`, lastmod: new Date(announcement.date).toISOString(), changefreq: "monthly", priority: "1.0" };
 	urls.push(newUrl);
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
@@ -45,7 +45,7 @@ async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, new
 	const url = urls.find(url => url.loc.endsWith(title));
 	if (!url) return insertAnnouncementToSitemap(ctx, { title: newTitle, content: "", date: Date.now(), links: "" });
 	url.lastmod = new Date().toISOString();
-	url.loc = `${WEBSITE_URL}/sxoli/anakoinoseis/${newTitle}`;
+	url.loc = `${ctx.url.origin}/sxoli/anakoinoseis/${newTitle}`;
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
 	return Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");

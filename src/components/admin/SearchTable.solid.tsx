@@ -96,19 +96,19 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 	};
 
 	return (
-		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2 max-sm:px-8 max-sm:justify-center max-sm:w-min border-[2px] border-red-900 px-4 py-2 gap-x-3 items-center rounded-[4px]">
+		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2 max-sm:px-8 max-sm:justify-center max-sm:w-min border-[2px] border-red-900 dark:border-red-800 px-4 py-2 gap-x-3 items-center rounded-[4px]">
 			<div
 				class="group relative w-max flex flex-row gap-x-2 !font-didact"
 				onClick={(e) => columnSelect(e)}>
-				<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md self-center"></i>
-				<p class="py-1 px-3 w-full bg-red-300 text-red-900 font-bold text-sm cursor-pointer rounded-md shadow-md">
+				<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200 drop-shadow-md self-center"></i>
+				<p class="py-1 px-3 w-full bg-red-300 dark:bg-red-900 text-red-900 dark:text-red-50 font-bold text-sm cursor-pointer rounded-md shadow-md dark:shadow-gray-700">
 					{column().name} :
 				</p>
-				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 rounded-md overflow-hidden ">
+				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 dark:shadow-black rounded-md overflow-hidden ">
 					<Index each={props.columns}>
 						{(c) => (
 							<p
-								class="py-1 px-3 bg-red-50 hover:bg-red-200 text-red-900 cursor-pointer"
+								class="py-1 px-3 bg-red-50 dark:bg-dark hover:bg-red-200 dark:hover:bg-red-900/70 text-red-900 dark:text-red-50 cursor-pointer"
 								data-colname={c().columnName}
 								data-name={c().name}
 								data-type={c().type}>
@@ -120,7 +120,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 			</div>
 			<input
 				id="search"
-				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-sm shadow-gray-400 rounded-md focus:shadow-gray-500 focus:shadow-lg focus-visible:outline-none max-sm:self-center"
+				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-sm shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none max-sm:self-center bg-white dark:bg-dark"
 				type="text"
 				name="search"
 				autocomplete="off"
@@ -128,7 +128,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 				onChange={(e) => searchHandler(e)}
 			/>
 			<i
-				class="absolute fa-solid fa-xmark text-red-900 drop-shadow-md right-4 max-sm:right-2 max-sm:top-2 sm:translate-x-[-25%] hover:bg-red-200 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
+				class="absolute fa-solid fa-xmark text-red-900 dark:text-red-200 drop-shadow-md right-4 max-sm:right-2 max-sm:top-2 sm:translate-x-[-25%] hover:bg-red-200 dark:hover:bg-red-900/70 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
 				onClick={(e) => clearSearch()}></i>
 		</div>
 	);

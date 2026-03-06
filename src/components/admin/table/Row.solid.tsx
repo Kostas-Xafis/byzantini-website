@@ -66,7 +66,7 @@ export function toggleCheckboxes(force?: boolean) {
 				selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 			} else if (force === true) {
 				const ids = [...allCbs].map(
-					(el) => Number((el.parentElement as HTMLElement).dataset.id) //Get the id of the row;
+					(el) => Number((el.parentElement as HTMLElement).dataset.id), //Get the id of the row;
 				);
 				selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
 			}
@@ -82,7 +82,7 @@ export function toggleCheckboxes(force?: boolean) {
 				selectedRowsEvent({ type: TypeEffectEnum.REMOVE_ALL });
 			} else {
 				const ids = [...allCbs].map(
-					(el) => Number((el.parentElement as HTMLElement).dataset.id) //Get the id of the row
+					(el) => Number((el.parentElement as HTMLElement).dataset.id), //Get the id of the row
 				);
 				selectedRowsEvent({ type: TypeEffectEnum.ADD_MANY, ids });
 			}
@@ -135,7 +135,7 @@ export default function Row(props: Props) {
 				class={
 					"row max-sm:text-sm" +
 					(header
-						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 rounded-t-xl before:content-[none] hover:shadow-gray-500  before:!bg-white border-b-2 border-b-red-900"
+						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-t-xl before:content-[none] hover:shadow-gray-500 dark:hover:shadow-gray-700 before:!bg-white dark:before:!bg-[rgb(26_26_26)] border-b-2 border-b-red-900 dark:border-b-red-800"
 						: "")
 				}>
 				{hasSelectBox && (
@@ -170,7 +170,7 @@ export default function Row(props: Props) {
 										href={item as string}
 										target="_blank"
 										class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
-										<i class="fa-solid fa-up-right-from-square text-red-900"></i>
+										<i class="fa-solid fa-up-right-from-square text-red-900 dark:text-red-300"></i>
 									</a>
 								);
 							}
@@ -183,7 +183,7 @@ export default function Row(props: Props) {
 								class={
 									"cell" +
 									(header
-										? " group/head grid h-full items-center data-[asc]:bg-red-900 data-[desc]:bg-red-900 data-[asc]:text-white data-[desc]:text-white"
+										? " group/head grid h-full items-center data-[asc]:bg-red-900 data-[desc]:bg-red-900 dark:data-[asc]:bg-red-800 dark:data-[desc]:bg-red-800 data-[asc]:text-white data-[desc]:text-white"
 										: "")
 								}
 								data-col-ind={header && colIndex()}

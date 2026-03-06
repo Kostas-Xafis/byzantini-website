@@ -35,7 +35,7 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 		metadata: metadata || {},
 	});
 	const [fileList, setFileList] = createSignal(
-		fileHandler.getFiles().map((f) => [f, f.getMetadata()])
+		fileHandler.getFiles().map((f) => [f, f.getMetadata()]),
 	); // Need to be a signal to update the component
 	const setFiles = () => {
 		setFileList(fileHandler.getFiles().map((f) => [f, f.getMetadata()]));
@@ -120,13 +120,13 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 			<div
 				data-name={name}
 				onclick={onFileClick}
-				class="relative peer peer-[:is(.show)]/file:hidden show w-[95%] h-[85%] justify-self-center self-center font-didact border-dashed border-2 border-gray-600 rounded-md cursor-pointer z-10 overflow-y-auto">
+				class="relative peer peer-[:is(.show)]/file:hidden show w-[95%] h-[85%] justify-self-center self-center font-didact border-dashed border-2 border-gray-600 dark:border-gray-400 rounded-md cursor-pointer z-10 overflow-y-auto">
 				<div
 					id="multifileDropZone"
 					class={
 						"absolute inset-0 grid items-center" +
 						((fileList().length > 0 && " -z-10 blur-[2px]") ||
-							" hover:bg-gray-600 group/file")
+							" hover:bg-gray-600 dark:hover:bg-gray-700 group/file")
 					}>
 					<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
 						<i
@@ -149,19 +149,19 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 								// ondragenter={(e) => onAllowDrop(e)}
 								// data-file-idx={index()}
 								style={{ "word-break": "break-all" }}
-								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 rounded-lg cursor-default overflow-hidden z-[1]">
+								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 dark:border-gray-400 rounded-lg cursor-default overflow-hidden z-[1]">
 								{filePreview && (
 									<div class="absolute flex -z-10 inset-0 w-full h-full place-self-center rounded-md overflow-hidden">
 										{filePreview(file as FileProxy<AnyRecord>)}
 									</div>
 								)}
 
-								<div class="flex flex-col h-max pb-2 items-center w-full rounded-b-[0.575rem]  bg-[rgb(255,255,255,0.55)] backdrop-blur-[3px]">
+								<div class="flex flex-col h-max pb-2 items-center w-full rounded-b-[0.575rem] bg-[rgb(255,255,255,0.55)] dark:bg-[rgb(26,26,26,0.7)] text-red-950 dark:text-red-50 backdrop-blur-[3px]">
 									<p>
 										{(file.getName().length > 20
 											? file.getName().slice(0, 12) +
-											  " ... " +
-											  file.getName().slice(-7)
+												" ... " +
+												file.getName().slice(-7)
 											: file.getName()) || ""}
 									</p>
 									<CloseButton

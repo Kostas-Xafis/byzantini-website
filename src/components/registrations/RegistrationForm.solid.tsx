@@ -768,7 +768,7 @@ export function RegistrationForm() {
 									</div>
 								}>
 								<button
-									class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-medium p-2 px-6 shadow-lg shadow-gray-400 rounded-lg transition-colors ease-in-out bg-green-300 hover:bg-green-400 focus:bg-green-400 group-[:is(.animate-shake)]/form:bg-red-500"
+									class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-none focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
 									type="submit">
 									Εγγραφή
 								</button>

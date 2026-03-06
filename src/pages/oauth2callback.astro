@@ -1,0 +1,221 @@
+---
+import { getUrlSearchParams } from "@utilities/url";
+export const prerender = false;
+
+// Get the query parameters from the URL
+const { code, state } = getUrlSearchParams(Astro.request.url) as { code?: string; state?: string };
+
+// If we don't have the required parameters, redirect to login
+if (!code || !state) {
+	return Astro.redirect("/login");
+}
+
+// Call the OAuth callback API endpoint
+const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
+---
+
+<!doctype html>
+<html lang="el">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Σύνδεση...</title>
+		<style>
+			html {
+				font-family:
+					system-ui,
+					-apple-system,
+					sans-serif;
+			}
+			body {
+				margin: 0;
+				padding: 1rem;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				min-height: 100vh;
+				background: radial-gradient(ellipse at top, rgb(153 27 27 / 0.45), white);
+				background-repeat: no-repeat;
+				box-sizing: border-box;
+			}
+			.container {
+				max-width: 460px;
+				width: 100%;
+				background: white;
+				border: 1px solid rgba(127, 29, 29, 0.15);
+				box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+				border-radius: 12px;
+				padding: 1.5rem 1.25rem;
+				text-align: center;
+				color: #282828;
+			}
+			.spinner {
+				width: 44px;
+				height: 44px;
+				margin: 0 auto 14px;
+				border: 4px solid rgba(127, 29, 29, 0.2);
+				border-top-color: rgb(127, 29, 29);
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			h1 {
+				font-size: 1.6rem;
+				margin: 0;
+				color: rgb(127, 29, 29);
+			}
+			p,
+			a {
+				color: #282828;
+			}
+			#status {
+				font-size: 1rem;
+				margin: 0.65rem 0 0;
+				opacity: 0.85;
+			}
+			.actions {
+				margin-top: 1.1rem;
+				display: grid;
+				gap: 0.6rem;
+			}
+			.action-link {
+				display: inline-block;
+				text-decoration: none;
+				padding: 0.65rem 0.9rem;
+				border-radius: 8px;
+				font-size: 0.95rem;
+				font-weight: 600;
+				transition: background-color 0.2s ease;
+			}
+			.action-link.primary {
+				background: rgb(127, 29, 29);
+				color: rgb(254, 242, 242);
+			}
+			.action-link.primary:hover {
+				background: rgb(127, 29, 29);
+				filter: brightness(0.9);
+			}
+			.action-link.secondary {
+				border: 1px solid rgba(127, 29, 29, 0.45);
+				background: rgba(127, 29, 29, 0.07);
+				color: rgb(127, 29, 29);
+			}
+			.action-link.secondary:hover {
+				background: rgba(127, 29, 29, 0.12);
+			}
+			@media (prefers-color-scheme: dark) {
+				body {
+					background: radial-gradient(
+						ellipse at top,
+						rgb(127 29 29 / 0.5),
+						rgb(12 12 12)
+					);
+					background-repeat: no-repeat;
+				}
+				.container {
+					background: #1a1a1a;
+					border-color: rgba(153, 27, 27, 0.5);
+				}
+				h1,
+				.action-link.secondary {
+					color: rgb(252, 165, 165);
+				}
+				p,
+				a {
+					color: rgb(246, 246, 246);
+				}
+				.spinner {
+					border-color: rgba(248, 113, 113, 0.2);
+					border-top-color: rgb(248, 113, 113);
+				}
+				.action-link.secondary {
+					border-color: rgba(248, 113, 113, 0.55);
+					background: rgba(248, 113, 113, 0.1);
+				}
+				.action-link.secondary:hover {
+					background: rgba(248, 113, 113, 0.18);
+				}
+			}
+			@media (max-width: 480px) {
+				.container {
+					padding: 1.25rem 1rem;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="spinner"></div>
+			<h1>Ολοκλήρωση σύνδεσης</h1>
+			<p id="status">Παρακαλώ περιμένετε, γίνεται επεξεργασία των στοιχείων σας...</p>
+			<div class="actions">
+				<a class="action-link primary" href="/admin">Μετάβαση στο Dashboard</a>
+				<a class="action-link secondary" href="/login">Επιστροφή στη Σύνδεση</a>
+			</div>
+			<p id="oauthCallbackUrl" style="display: none;" aria-hidden="true">{callbackUrl}</p>
+		</div>
+	</body>
+</html>
+<script>
+	import { setCookie } from "@utilities/cookies";
+
+	const statusEl = document.getElementById("status");
+	const callbackUrl = document.getElementById("oauthCallbackUrl")?.textContent?.trim() || "";
+
+	if (!callbackUrl) {
+		if (statusEl) {
+			statusEl.textContent = "Προέκυψε σφάλμα. Επιστροφή στη σελίδα εισόδου...";
+		}
+		setTimeout(() => {
+			window.location.href = "/login";
+		}, 800);
+		throw new Error("Missing OAuth callback URL");
+	}
+
+	fetch(callbackUrl, {
+		method: "GET",
+		credentials: "include"
+	})
+		.then(response => response.json())
+		.then((payload: any) => {
+			const data = payload?.res?.data ?? payload?.data ?? payload;
+			console.log("OAuth callback response:", data);
+			if (data?.isValid && data?.session_id) {
+				if (statusEl) statusEl.textContent = "Η σύνδεση ολοκληρώθηκε. Μεταφορά...";
+
+				// Store session cookie for 14 days
+				setCookie("session_id", data.session_id, 14);
+				localStorage.setItem(
+					"sys_user",
+					JSON.stringify({
+						email: data.email ?? null,
+						avatar_url: data.avatar_url ?? null
+					})
+				);
+				setTimeout(() => {
+					window.location.href = "/admin";
+				}, 150);
+			} else {
+				console.error("OAuth callback failed:", data?.error || "Unknown error");
+				if (statusEl) {
+					statusEl.textContent = "Η σύνδεση απέτυχε. Επιστροφή στη σελίδα εισόδου...";
+				}
+				setTimeout(() => {
+					window.location.href = "/login";
+				}, 800);
+			}
+		})
+		.catch(error => {
+			console.error("Error during OAuth callback:", error);
+			if (statusEl) {
+				statusEl.textContent = "Προέκυψε σφάλμα. Επιστροφή στη σελίδα εισόδου...";
+			}
+			setTimeout(() => {
+				window.location.href = "/login";
+			}, 800);
+		});
+</script>

@@ -17,9 +17,17 @@ const { title } = Astro.props;
 		<meta name="theme-color" content="#7f1d1d" />
 
 		<Links title={title} />
+		<script>
+			import { applyDashboardTheme, resolveDashboardTheme } from "@utilities/theme";
+
+			applyDashboardTheme(resolveDashboardTheme(), { persist: false });
+		</script>
 		<style is:inline>
 			html {
 				font-family: system-ui, sans-serif;
+				background-color: #f6f6f6;
+			}
+			body {
 				background-color: #f6f6f6;
 			}
 			#AdminPage {
@@ -42,6 +50,86 @@ const { title } = Astro.props;
 				/* firefox fix from gray -> white */
 				background-color: white;
 			}
+			html.dark,
+			html.dark body {
+				background-color: #1a1a1a;
+			}
+			html.dark #AdminPage {
+				background: #1a1a1a;
+			}
+			html.dark p,
+			html.dark a,
+			html.dark button,
+			html.dark input,
+			html.dark textarea,
+			html.dark input[name*="date"]::placeholder {
+				color: #f6f6f6;
+			}
+			html.dark select {
+				background-color: #2d2d2d;
+				color: #f6f6f6;
+			}
+			html.dark .bg-white {
+				background-color: #242424;
+			}
+			html.dark .text-gray-600,
+			html.dark .text-gray-500 {
+				color: #cfcfcf;
+			}
+			html.dark .text-gray-300 {
+				color: #9a9a9a;
+			}
+			html.dark .shadow-gray-300,
+			html.dark .shadow-gray-400,
+			html.dark .shadow-gray-500,
+			html.dark .shadow-gray-700 {
+				--tw-shadow-color: rgb(0 0 0 / 0.6);
+			}
+
+			#AdminPage,
+			#AdminPage * {
+				scrollbar-width: thin;
+				scrollbar-color: rgba(127, 29, 29, 0.55) rgba(127, 29, 29, 0.1);
+			}
+			#AdminPage::-webkit-scrollbar,
+			#AdminPage *::-webkit-scrollbar {
+				width: 10px;
+				height: 10px;
+			}
+			#AdminPage::-webkit-scrollbar-track,
+			#AdminPage *::-webkit-scrollbar-track {
+				background: rgba(127, 29, 29, 0.1);
+				border-radius: 999px;
+			}
+			#AdminPage::-webkit-scrollbar-thumb,
+			#AdminPage *::-webkit-scrollbar-thumb {
+				background: rgba(127, 29, 29, 0.55);
+				border-radius: 999px;
+				border: 2px solid rgba(255, 255, 255, 0);
+				background-clip: padding-box;
+			}
+			#AdminPage::-webkit-scrollbar-thumb:hover,
+			#AdminPage *::-webkit-scrollbar-thumb:hover {
+				background: rgba(127, 29, 29, 0.75);
+			}
+
+			html.dark #AdminPage,
+			html.dark #AdminPage * {
+				scrollbar-color: rgba(148, 163, 184, 0.55) rgba(51, 65, 85, 0.35);
+			}
+			html.dark #AdminPage::-webkit-scrollbar-track,
+			html.dark #AdminPage *::-webkit-scrollbar-track {
+				background: rgba(51, 65, 85, 0.35);
+			}
+			html.dark #AdminPage::-webkit-scrollbar-thumb,
+			html.dark #AdminPage *::-webkit-scrollbar-thumb {
+				background: rgba(148, 163, 184, 0.55);
+				border-color: rgba(26, 26, 26, 0);
+			}
+			html.dark #AdminPage::-webkit-scrollbar-thumb:hover,
+			html.dark #AdminPage *::-webkit-scrollbar-thumb:hover {
+				background: rgba(203, 213, 225, 0.7);
+			}
 			input[type="number"] {
 				appearance: textfield;
 				-moz-appearance: textfield;
@@ -51,6 +139,41 @@ const { title } = Astro.props;
 			input::-webkit-inner-spin-button {
 				display: none;
 				-webkit-appearance: none;
+			}
+			input:-webkit-autofill,
+			input:-webkit-autofill:hover,
+			input:-webkit-autofill:focus,
+			textarea:-webkit-autofill,
+			textarea:-webkit-autofill:hover,
+			textarea:-webkit-autofill:focus,
+			select:-webkit-autofill,
+			select:-webkit-autofill:hover,
+			select:-webkit-autofill:focus,
+			input:autofill,
+			textarea:autofill,
+			select:autofill {
+				-webkit-text-fill-color: #282828;
+				caret-color: #282828;
+				box-shadow: 0 0 0 1000px #ffffff inset !important;
+				-webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+				transition: background-color 9999s ease-out;
+			}
+			html.dark input:-webkit-autofill,
+			html.dark input:-webkit-autofill:hover,
+			html.dark input:-webkit-autofill:focus,
+			html.dark textarea:-webkit-autofill,
+			html.dark textarea:-webkit-autofill:hover,
+			html.dark textarea:-webkit-autofill:focus,
+			html.dark select:-webkit-autofill,
+			html.dark select:-webkit-autofill:hover,
+			html.dark select:-webkit-autofill:focus,
+			html.dark input:autofill,
+			html.dark textarea:autofill,
+			html.dark select:autofill {
+				-webkit-text-fill-color: #f6f6f6;
+				caret-color: #f6f6f6;
+				box-shadow: 0 0 0 1000px #1a1a1a inset !important;
+				-webkit-box-shadow: 0 0 0 1000px #1a1a1a inset !important;
 			}
 			@keyframes ShakeAnimation {
 				0% {

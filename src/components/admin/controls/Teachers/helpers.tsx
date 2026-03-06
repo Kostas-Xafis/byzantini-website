@@ -277,7 +277,6 @@ export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: 
 	if (!deletedFile) {
 		return;
 	}
-	// console.log("Deleting file: ", deletedFile);
 	const { teacher_id, type } = deletedFile.getMetadata();
 	return apiHook(API.Teachers.fileDelete, {
 		RequestObject: {

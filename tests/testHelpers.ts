@@ -8,9 +8,10 @@ import { objToFormData } from "../lib/utilities/forms";
 import { isAsyncFunction } from "../lib/utilities/functionValidation";
 import { assertOwnProp } from "../lib/utils.server";
 import type { TypeGuard } from "../types/helpers";
+import { Env } from "../lib/env/env";
 import type { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
 
-const { VITE_URL = "", FORCE_TEST = false } = import.meta.env;
+const { VITE_URL = "", FORCE_TEST = false } = Env.env;
 let session_id = "";
 let collectingId = false;
 async function setSessionId() {
@@ -19,7 +20,7 @@ async function setSessionId() {
 	}
 	if (session_id !== "") return;
 	collectingId = true;
-	const { TEST_EMAIL, TEST_PASSWORD } = import.meta.env;
+	const { TEST_EMAIL, TEST_PASSWORD } = Env.env;
 	if (TEST_EMAIL == null || TEST_PASSWORD == null) throw new Error("TEST_MAIL and TEST_PASSWORD must be set in the environment");
 	const response = (await useTestAPI("Authentication.userLogin", {
 		RequestObject: { email: TEST_EMAIL, password: TEST_PASSWORD },

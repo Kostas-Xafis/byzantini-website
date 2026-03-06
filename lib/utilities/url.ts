@@ -1,3 +1,5 @@
+import type { APIContext } from "astro";
+
 export function convertToUrlFromArgs(url: string, args: any): string {
     let newUrl = url.slice();
     url.split("/")
@@ -19,4 +21,14 @@ export function getUrlSearchParams(url: string): Record<string, string> {
         params[key] = value;
     });
     return params;
+}
+
+export function getOriginFromContext(ctx?: APIContext) {
+    if (ctx != undefined) {
+        return ctx.url.origin;
+    } else if (typeof window !== "undefined") {
+        return window.location.origin;
+    } else {
+        throw new Error("No context or window available to determine origin");
+    }
 }

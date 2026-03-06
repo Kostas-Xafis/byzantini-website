@@ -1,4 +1,5 @@
 import type { Insert } from "@_types/entities";
+import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { questionMarks } from "@lib/utils.server";
 import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction } from "@libsql/client";
@@ -29,7 +30,7 @@ export type WrappedConnection = {
 	isClosed: () => boolean;
 };
 
-type DBType = "sqlite-prod" | "sqlite-dev" | null;
+export type DBType = "sqlite-prod" | "sqlite-dev" | null;
 export type SimpleConnection = Client;
 type ConnectionType<ShouldWrap extends boolean> =
 	ShouldWrap extends true ? WrappedConnection : SimpleConnection;
@@ -42,16 +43,23 @@ export function createSimpleDbConnection(type?: DBType): SimpleConnection {
 		TURSO_DB_URL, TURSO_DB_TOKEN,
 		// Connector type
 		CONNECTOR
-	} = import.meta.env;
+	} = Env.env;
+
 	// ! SQLITE does not support LIMIT in UPDATE queries
 	let client: SimpleConnection = null as any;
 	if (type === "sqlite-prod" || CONNECTOR === "sqlite-prod") {
+		if (!TURSO_DB_URL || !TURSO_DB_TOKEN) {
+			throw new Error("Turso database URL or token is not set in environment variables.");
+		}
 		client = createClient({
 			url: TURSO_DB_URL,
 			authToken: TURSO_DB_TOKEN,
 			intMode: "number",
 		});
 	} else if (type === "sqlite-dev" || CONNECTOR === "sqlite-dev") {
+		if (!DEV_DB_ABSOLUTE_LOCATION) {
+			throw new Error("Development database absolute location is not set in environment variables.");
+		}
 		client = createClient({
 			url: `file://${DEV_DB_ABSOLUTE_LOCATION}`,
 			intMode: "number",

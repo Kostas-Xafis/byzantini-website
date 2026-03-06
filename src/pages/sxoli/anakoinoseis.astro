@@ -4,7 +4,7 @@ import { type PageAnnouncement } from "@routes/announcements.client";
 import Layout from "@layouts/Layout.astro";
 export const prerender = false;
 
-const announcements = (await useAPI(API.Announcements.getForPage)).data || [];
+const announcements = (await useAPI(API.Announcements.getForPage, undefined, Astro)).data || [];
 
 const imgThumbSrc = (a: PageAnnouncement) =>
 	"/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;

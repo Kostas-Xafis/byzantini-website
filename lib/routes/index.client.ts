@@ -9,6 +9,7 @@ import { PaymentsRoutes } from "./payments.client";
 import { PayoffsRoutes } from "./payoffs.client";
 import { RegistrationsRoutes } from "./registrations.client";
 import { SchemaRoutes } from "./schema.client";
+import { SettingsBackupRoutes } from "./settingsBackup.client";
 import { SysUsersRoutes } from "./sysusers.client";
 import { TeachersRoutes } from "./teachers.client";
 import { WholesalersRoutes } from "./wholesalers.client";
@@ -26,6 +27,7 @@ export const enum BaseRoutes {
 	Registrations = "Registrations",
 	Announcements = "Announcements",
 	Schema = "Schema",
+	SettingsBackup = "SettingsBackup",
 }
 
 export const API = {
@@ -41,6 +43,7 @@ export const API = {
 	...APIBuilderConstructor(BaseRoutes.Registrations, RegistrationsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Announcements, AnnouncementsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Schema, SchemaRoutes),
+	...APIBuilderConstructor(BaseRoutes.SettingsBackup, SettingsBackupRoutes),
 };
 
 export const APIEndpoints = {
@@ -56,6 +59,7 @@ export const APIEndpoints = {
 	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsRoutes),
 	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsRoutes),
 	...EndpointsConstructor(BaseRoutes.Schema, SchemaRoutes),
+	...EndpointsConstructor(BaseRoutes.SettingsBackup, SettingsBackupRoutes),
 };
 
 export type APIEndpointNames = keyof (typeof APIEndpoints); // Union of all the keys in APIEndpoints
@@ -72,7 +76,8 @@ export interface APIArgs extends
 	APIArguments<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
 	APIArguments<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
 	APIArguments<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
-	APIArguments<BaseRoutes.Schema, typeof SchemaRoutes> { }
+	APIArguments<BaseRoutes.Schema, typeof SchemaRoutes>,
+	APIArguments<BaseRoutes.SettingsBackup, typeof SettingsBackupRoutes> { }
 
 export interface APIResponse extends
 	APIRes<BaseRoutes.Books, typeof BooksRoutes>,
@@ -86,4 +91,5 @@ export interface APIResponse extends
 	APIRes<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
 	APIRes<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
 	APIRes<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
-	APIRes<BaseRoutes.Schema, typeof SchemaRoutes> { }
+	APIRes<BaseRoutes.Schema, typeof SchemaRoutes>,
+	APIRes<BaseRoutes.SettingsBackup, typeof SettingsBackupRoutes> { }

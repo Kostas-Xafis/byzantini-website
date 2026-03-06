@@ -50,7 +50,7 @@ export default function RegistrationsTable() {
 		on(year, (y) => {
 			setSearchQuery({}); // Reset search on year change
 			apiHook(API.Registrations.get, { UrlArgs: { year: y } });
-		})
+		}),
 	);
 
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
@@ -94,6 +94,8 @@ export default function RegistrationsTable() {
 				}
 				for (let i = 0; i < resultArray.length; i++) {
 					const { row, registration } = resultArray[i];
+					row.removeAttribute("data-paid");
+					row.removeAttribute("data-partially-paid");
 					const payment_status = registration.total_payment - registration.payment_amount;
 					if (registration.payment_amount === 0 && registration.total_payment === 0)
 						continue;
@@ -194,19 +196,17 @@ export default function RegistrationsTable() {
 				.row[data-paid]::before {
 					background: linear-gradient(to right, #6FD286, calc(var(--gradient-left-offset) + 80px), white calc(var(--gradient-left-offset) + 160px));
 				}
-				.row[data-paid]:is(.selectedRow){
+				html.dark .row[data-paid]:nth-of-type(odd)::before {
+					background: linear-gradient(to right, #2f7a44, calc(var(--gradient-left-offset) + 80px), rgb(38, 38, 38) calc(var(--gradient-left-offset) + 160px));
+				}
+				html.dark .row[data-paid]::before {
+					background: linear-gradient(to right, #2f7a44, calc(var(--gradient-left-offset) + 80px), rgb(30, 30, 30) calc(var(--gradient-left-offset) + 160px));
+				}
+				.row[data-paid]:is(.selectedRow)::before {
 					background: linear-gradient(to right, #6FD286, calc(var(--gradient-left-offset) + 80px), rgb(254,202,202) calc(var(--gradient-left-offset) + 160px));
 				}
-
-				/* Partially-Paid rows */
-				.row[data-partially-paid]:nth-of-type(odd)::before {
-					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(243,244,246) calc(var(--gradient-left-offset) + 160px));
-				}
-				.row[data-partially-paid]::before {
-					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), white calc(var(--gradient-left-offset) + 160px));
-				}
-				.row[data-partially-paid]:is(.selectedRow){
-					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(254,202,202) calc(var(--gradient-left-offset) + 160px));
+				html.dark .row[data-paid]:is(.selectedRow)::before {
+					background: linear-gradient(to right, #2f7a44, calc(var(--gradient-left-offset) + 80px), rgb(68, 30, 30) calc(var(--gradient-left-offset) + 160px));
 				}
 
 				/* Partially-Paid rows */
@@ -216,8 +216,17 @@ export default function RegistrationsTable() {
 				.row[data-partially-paid]::before {
 					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), white calc(var(--gradient-left-offset) + 160px));
 				}
-				.row[data-partially-paid]:is(.selectedRow){
+				html.dark .row[data-partially-paid]:nth-of-type(odd)::before {
+					background: linear-gradient(to right, #8f7800, calc(var(--gradient-left-offset) + 80px), rgb(38, 38, 38) calc(var(--gradient-left-offset) + 160px));
+				}
+				html.dark .row[data-partially-paid]::before {
+					background: linear-gradient(to right, #8f7800, calc(var(--gradient-left-offset) + 80px), rgb(30, 30, 30) calc(var(--gradient-left-offset) + 160px));
+				}
+				.row[data-partially-paid]:is(.selectedRow)::before {
 					background: linear-gradient(to right, #FDE85A, calc(var(--gradient-left-offset) + 80px), rgb(254,202,202) calc(var(--gradient-left-offset) + 160px));
+				}
+				html.dark .row[data-partially-paid]:is(.selectedRow)::before {
+					background: linear-gradient(to right, #8f7800, calc(var(--gradient-left-offset) + 80px), rgb(68, 30, 30) calc(var(--gradient-left-offset) + 160px));
 				}
 				`}
 			</style>

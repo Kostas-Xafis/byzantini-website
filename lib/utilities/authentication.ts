@@ -1,15 +1,14 @@
 import type { SysUsers } from "@_types/entities";
+import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import type { APIContext } from "astro";
 import { createHash } from "node:crypto";
 
-
-
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || R.hex();
 	const hmac = createHash("sha256");
-	hmac.update(key + (import.meta.env.SECRET));
+	hmac.update(key + Env.env.SECRET);
 	hmac.update(salt);
 	return hmac.digest("hex").toString() + ":" + salt;
 }

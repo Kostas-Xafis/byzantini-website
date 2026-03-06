@@ -2,7 +2,7 @@ import type { DefaultEndpointResponse } from "@_types/routes";
 import { ActionEnum } from "@components/admin/table/TableControlTypes";
 import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
 import { objToFormData } from "@utilities/forms";
-import { convertToUrlFromArgs } from "@utilities/url";
+import { convertToUrlFromArgs, getOriginFromContext } from "@utilities/url";
 import { batch, createEffect, createSignal } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 import { parse } from "valibot";
@@ -10,10 +10,6 @@ import { assertOwnProp } from "../utils.server";
 
 export type APIStore = Partial<APIResponse>;
 export { API };
-
-// IMPORTANT: The useAPI can be called from the server or the client.
-// To accurately determine the URL, I prepend the website url to the request when called from the server.
-const { VITE_URL = "" } = import.meta.env;
 
 export type StoreMutation<T extends APIEndpointNames> = {
 	endpoint?: T,
@@ -24,12 +20,13 @@ export type StoreMutation<T extends APIEndpointNames> = {
 };
 
 export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], { Mutations }: { toFormData?: boolean, Mutations?: StoreMutation<T>; } = {}) => {
+	// useAPI of solid will only ever be called in a client context, so it's safe to get the origin from the window location. 
+	const origin = getOriginFromContext();
 	const Route = APIEndpoints[endpoint] as (typeof APIEndpoints)[T];
 	try {
 		let fetcher: ReturnType<typeof fetch>;
 		if (req === undefined) {
-			const url = VITE_URL + "/api" + Route.path;
-			fetcher = fetch(url, { method: Route.method });
+			fetcher = fetch(`${origin}/api${Route.path}`, { method: Route.method });
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
@@ -42,13 +39,15 @@ export const useAPI = (setStore?: SetStoreFunction<APIStore>) => async<T extends
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
 			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
-				method: Route.method,
-				headers: Route.multipart ? {} : {
-					"Content-Type": (IsBlob && RequestObject.type) || "application/json"
-				},
-				body,
-			});
+			fetcher = fetch(`${origin}/api${convertToUrlFromArgs(Route.path, UrlArgs)}`,
+				{
+					method: Route.method,
+					headers: Route.multipart ? {} : {
+						"Content-Type": (IsBlob && RequestObject.type) || "application/json"
+					},
+					body,
+				}
+			);
 		}
 		const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.type === "error") {

@@ -3,12 +3,20 @@ import tailwind from "@astrojs/tailwind";
 import solidJs from "@astrojs/solid-js";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
+import { loadEnvVars } from "./loadEnvVars.ts";
+
+const cloudflareEnv =
+	process.env.CLOUDFLARE_ENV ||
+	(process.env.NODE_ENV === "production" ? "production" : "development");
 
 const unmappedRoutes = (page) => page.includes("admin") || page.includes("login");
+const productionSite = "https://musicschool-metamorfosi.gr";
+const isMainBranch = process.env.CF_PAGES_BRANCH === "main";
+const site = (isMainBranch && productionSite) || process.env.CF_PAGES_URL || productionSite;
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://musicschool-metamorfosi.gr",
+	site,
 	integrations: [
 		tailwind(),
 		solidJs(),
@@ -19,9 +27,11 @@ export default defineConfig({
 			lastmod: new Date(),
 		}),
 	],
-	output: "server",
 	adapter: cloudflare({
-		mode: "advanced",
+		platformProxy: {
+			enabled: true,
+			environment: cloudflareEnv,
+		},
 	}),
 	prefetch: {
 		prefetchAll: false,
@@ -51,6 +61,9 @@ export default defineConfig({
 		build: {
 			cssMinify: true,
 			minify: true,
+		},
+		define: {
+			...loadEnvVars(cloudflareEnv),
 		},
 	},
 });
