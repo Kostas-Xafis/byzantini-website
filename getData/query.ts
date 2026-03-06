@@ -13,6 +13,10 @@ type ArgsType = {
 	"--f"?: string;
 	"--out"?: string;
 	"--excel"?: string;
+	"--json"?: boolean;
+	"--j"?: boolean;
+	"--json-out"?: string;
+	"--jo"?: string;
 	"--skip"?: boolean;
 	"--t"?: string;
 	"--time"?: string;
@@ -126,6 +130,37 @@ const asyncEscape = (msg: string) => {
 	throw new Error();
 };
 
+const isResultSetLike = (value: unknown): value is ResultSet => {
+	if (!value || typeof value !== "object") return false;
+	return "rows" in value && "columns" in value;
+};
+
+const normalizeForJson = (value: unknown): unknown => {
+	if (Array.isArray(value)) {
+		return value.map((item) => normalizeForJson(item));
+	}
+	if (!isResultSetLike(value)) return value;
+
+	return {
+		columns: value.columns,
+		rows: value.rows,
+		rowsAffected: value.rowsAffected,
+		lastInsertRowid: value.lastInsertRowid,
+	};
+};
+
+const getReturnedRowsCount = (value: unknown) => {
+	if (Array.isArray(value)) {
+		return value.reduce((sum, item) => sum + (isResultSetLike(item) ? item.rows.length : 0), 0);
+	}
+	if (isResultSetLike(value)) return value.rows.length;
+	return null;
+};
+
+const ensureJsonExtension = (filePath: string) => {
+	return filePath.toLowerCase().endsWith(".json") ? filePath : `${filePath}.json`;
+};
+
 /**
  *
  * @param {Object<string, string | number>[]} data
@@ -174,6 +209,8 @@ const printUsage = () => {
 		, "  --f:\t\tFile path to query file\n"
 		, "  --out:\tOutput file path\n"
 		, "  --excel:\tOutput to excel file\n"
+		, "  --json, --j:\tPrint query output as JSON\n"
+		, "  --json-out, --jo:\tStore query output as JSON (adds .json if missing)\n"
 		, "  --t, --time:\t\tPrint execution time\n"
 		, "  --s, --silent:\tSilent mode\n"
 		, "  --skip:\tSkip errors\n"
@@ -185,6 +222,8 @@ const printUsage = () => {
  * Query database: node query.js --dev|--prod --q "SELECT * FROM users"
  * Query from file: node query.js --prod --f queries.sql
  * Query from file and output to file: node query.js --prod --f queries.sql --out output.json
+ * Print query output as JSON: node query.js --dev --q "SELECT * FROM users" --json
+ * Print and store JSON output: node query.js --prod --f queries.sql --json --json-out output
  */
 async function main() {
 	if (args.h || args.help || Object.keys(args).length === 0) {
@@ -206,12 +245,24 @@ async function main() {
 	if (args.excel) {
 		outputToExcel(data as any);
 	} else {
-		const strData = JSON.stringify(data, null, 4);
-		if (args.out) {
-			await writeFile(args.out, strData, { encoding: "utf8", flag: "w+" });
-		} else {
+		const printJson = Boolean(args.json || args.j);
+		const requestedJsonOut = (args["json-out"] || args.jo || args.out) as string | undefined;
+		const shouldStoreJson = typeof requestedJsonOut === "string" && requestedJsonOut !== "";
+		const jsonOutputPath = shouldStoreJson ? ensureJsonExtension(requestedJsonOut) : null;
+		const normalizedData = normalizeForJson(data);
+		const strData = JSON.stringify(normalizedData, null, 4);
+
+		if (jsonOutputPath) {
+			await writeFile(jsonOutputPath, strData, { encoding: "utf8", flag: "w+" });
+			log(`[query] JSON output saved to ${jsonOutputPath}`);
+		}
+
+		if (printJson || !shouldStoreJson) {
 			log(strData);
-			(data as ResultSet)?.rows && log("Returned rows: ", (data as ResultSet).rows.length);
+			const rowsCount = getReturnedRowsCount(data);
+			if (rowsCount !== null) {
+				log("Returned rows: ", rowsCount);
+			}
 		}
 	}
 }
