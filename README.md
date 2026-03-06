@@ -1,4 +1,4 @@
-# Byzantini Website
+# Byzantini Website 🎼
 
 A full-stack music school platform built with Astro + Solid and deployed on Cloudflare Pages/Workers.
 
@@ -8,7 +8,7 @@ This repository contains:
 - Database tooling for querying and snapshot replication
 - Utility services for PDF generation and image compression
 
-## Tech Stack
+## Tech Stack 🛠️
 
 - Runtime: Bun
 - Frontend: Astro 5, SolidJS, Tailwind CSS
@@ -46,7 +46,7 @@ tests/
   testHelpers.ts         Test API helper + endpoint/function hash cache
 ```
 
-## Architecture Overview
+## Architecture Overview 🧭
 
 ### 1) Route Contracts + Implementations
 
@@ -101,7 +101,7 @@ Endpoint keys are strongly typed and follow the format:
 - Access to required environment variables
 - Local SQLite snapshot (for development connector mode)
 
-## Environment Variables
+## Environment Variables 🔐
 
 Environment files:
 - `.dev.vars.development` for local development
@@ -150,7 +150,7 @@ Notes:
 bun install
 ```
 
-## Run Locally
+## Run Locally 🚀
 
 ### Main app (development)
 
@@ -171,7 +171,7 @@ bun run preview
 bun run build-preview
 ```
 
-## Scripts Reference
+## Scripts Reference 📜
 
 ### App and deployment
 
@@ -208,7 +208,7 @@ bun run build-preview
 - `bun run docker:run`: Run both worker containers
 - `bun run docker:logs`: Tail logs for both containers
 
-## Testing Notes
+## Testing Notes ✅
 
 - Tests use `tests/testHelpers.ts` and `useTestAPI(...)`.
 - Endpoint/function hashes are cached in `.cache/tests.json` to skip unchanged tests.
@@ -241,7 +241,7 @@ Common operations:
 - `Bucket.delete(...)`
 - `Bucket.move(...)`
 
-## PDF and Image Services
+## PDF and Image Services 📄🖼️
 
 ### PDF worker
 
@@ -255,7 +255,7 @@ Common operations:
 - Local service under `services/imageCompression`
 - Used through `VITE_IMG_COMPRESSION_SERVICE_URL`
 
-## Deployment
+## Deployment ☁️
 
 This project is configured for Cloudflare Pages/Workers:
 - Wrangler config in `wrangler.toml`
@@ -292,7 +292,7 @@ Typical release path:
 - DB connection errors: verify `CONNECTOR` and corresponding DB env vars.
 - Missing bucket access: verify R2 binding in Cloudflare and S3-compatible creds for local mode.
 
-## Security Notes
+## Security Notes 🔒
 
 - Keep `.dev.vars*` and credentials out of version control.
 - Do not store production secrets in source files.
