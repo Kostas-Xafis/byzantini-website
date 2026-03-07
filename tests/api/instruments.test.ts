@@ -1,12 +1,9 @@
+import { v_Instruments, type Instruments } from "@_types/entities";
+import { Random as R } from "@lib/random";
+import { type APIResponse } from "@lib/routes/index.client";
+import { chain, test } from "tests/TestChain";
 import { array, number, object } from "valibot";
-import { Random as R } from "../../lib/random";
-import { APIResponse } from "../../lib/routes/index.client";
-import { Instruments, v_Instruments } from "../../types/entities";
-import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers";
-
-const label = (str: string) => {
-	return "--instruments-- " + str;
-};
+import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 function instrumentsTest() {
 	const instrument: Omit<Instruments, "id"> = {
@@ -16,8 +13,8 @@ function instrumentsTest() {
 	};
 	let newInstrumentId: number | null;
 
-	chain([
-		label("POST /instruments"), async () => {
+	chain("--instruments--",
+		async () => {
 			const res = await useTestAPI("Instruments.post", {
 				RequestObject: instrument,
 			});
@@ -26,31 +23,29 @@ function instrumentsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newInstrumentId = json.data.insertId;
-		}],
-		[
-			label("GET /instruments/id"), async () => {
-				const res = await useTestAPI("Instruments.getById", {
-					RequestObject: [newInstrumentId as number]
-				});
+		},
+		async () => {
+			const res = await useTestAPI("Instruments.getById", {
+				RequestObject: [newInstrumentId as number]
+			});
 
-				const json = await getJson<APIResponse["Instruments.getById"]>(res);
-				expectBody(json, v_Instruments);
-			}],
-		[
-			label("DELETE /instruments"), async () => {
-				const res = await useTestAPI("Instruments.delete", {
-					RequestObject: [newInstrumentId as number]
-				});
+			const json = await getJson<APIResponse["Instruments.getById"]>(res);
+			expectBody(json, v_Instruments);
+		},
+		async () => {
+			const res = await useTestAPI("Instruments.delete", {
+				RequestObject: [newInstrumentId as number]
+			});
 
-				const json = await getJson<APIResponse["Instruments.delete"]>(res);
-				expectBody(json, "Teacher/s deleted successfully");
-			}]
+			const json = await getJson<APIResponse["Instruments.delete"]>(res);
+			expectBody(json, "Teacher/s deleted successfully");
+		}
 	);
 }
 
 instrumentsTest();
 
-test(label("GET /instruments"), async () => {
+test("--instruments--", async () => {
 	const res = await useTestAPI("Instruments.get");
 
 	const json = await getJson<APIResponse["Instruments.get"]>(res);

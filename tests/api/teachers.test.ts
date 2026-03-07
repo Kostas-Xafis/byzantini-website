@@ -1,12 +1,9 @@
+import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers } from "@_types/entities";
+import { Random as R } from "@lib/random.ts";
+import { type APIResponse } from "@lib/routes/index.client.ts";
+import { chain, test } from "tests/TestChain";
 import { array, number, object } from "valibot";
-import { APIResponse } from "../../lib/routes/index.client.ts";
-import { v_Teachers, v_TeacherClasses, v_TeacherLocations, v_TeacherInstruments } from "../../types/entities";
-import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers.ts";
-import { Random as R } from "../../lib/random.ts";
-
-const label = (str: string) => {
-	return "--teachers-- " + str;
-};
+import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
 function teachersTest() {
 	const teacher = {
@@ -27,8 +24,8 @@ function teachersTest() {
 	};
 	let newTeacherId: number | null;
 
-	chain([
-		label("POST /teachers"), async () => {
+	chain("--teachers--",
+		async () => {
 			const res = await useTestAPI("Teachers.post", {
 				RequestObject: teacher,
 			});
@@ -37,82 +34,76 @@ function teachersTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newTeacherId = json.data.insertId;
-		}],
-		[
-			// TODO: Test that the file is actually uploaded and is the same as the one we sent
-			label("POST PDF /teachers/file/[id:number]"), async () => {
-				const pdfBlob = Bun.file("./notAssets/pdf_templates/byz_template.pdf");
-				const res = await useTestAPI("Teachers.fileUpload", {
-					UrlArgs: { id: newTeacherId as number },
-					RequestObject: pdfBlob,
-				});
+		},
+		// TODO: Test that the file is actually uploaded and is the same as the one we sent
+		async () => {
+			const pdfBlob = Bun.file("./notAssets/pdf_templates/byz_template.pdf");
+			const res = await useTestAPI("Teachers.fileUpload", {
+				UrlArgs: { id: newTeacherId as number },
+				RequestObject: pdfBlob,
+			});
 
-				const json = await getJson<APIResponse["Teachers.fileUpload"]>(res);
-				expectBody(json, "Pdf uploaded successfully");
-			}],
-		[
-			label("PUT /teachers/file/rename/[id:number]"), async () => {
-				const res = await useTestAPI("Teachers.fileRename", {
-					UrlArgs: { id: newTeacherId as number },
-				});
+			const json = await getJson<APIResponse["Teachers.fileUpload"]>(res);
+			expectBody(json, "Pdf uploaded successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Teachers.fileRename", {
+				UrlArgs: { id: newTeacherId as number },
+			});
 
-				const json = await getJson<APIResponse["Teachers.fileRename"]>(res);
-				expectBody(json, "Files renamed successfully");
-			}],
-		[
-			label("DELETE /teachers/file"), async () => {
-				const res = await useTestAPI("Teachers.fileDelete", {
-					RequestObject: { id: newTeacherId as number, type: "cv" }
-				});
+			const json = await getJson<APIResponse["Teachers.fileRename"]>(res);
+			expectBody(json, "Files renamed successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Teachers.fileDelete", {
+				RequestObject: { id: newTeacherId as number, type: "cv" }
+			});
 
-				const json = await getJson<APIResponse["Teachers.fileDelete"]>(res);
-				expectBody(json, "Pdf deleted successfully");
-			}],
-		[
-			label("GET /teachers/:id"), async () => {
-				const res = await useTestAPI("Teachers.getById", {
-					RequestObject: [newTeacherId as number]
-				});
+			const json = await getJson<APIResponse["Teachers.fileDelete"]>(res);
+			expectBody(json, "Pdf deleted successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Teachers.getById", {
+				RequestObject: [newTeacherId as number]
+			});
 
-				const json = await getJson<APIResponse["Teachers.getById"]>(res);
-				expectBody(json, v_Teachers);
-			}],
-		[
-			label("PUT /teachers"), async () => {
-				const updatedTeacher = {
-					...teacher,
-					id: newTeacherId as number,
-					email: R.email(),
-					telephone: R.string(10, "0-9"),
-					visible: R.boolean(),
-				};
-				const res = await useTestAPI("Teachers.update", {
-					RequestObject: updatedTeacher,
-				});
+			const json = await getJson<APIResponse["Teachers.getById"]>(res);
+			expectBody(json, v_Teachers);
+		},
+		async () => {
+			const updatedTeacher = {
+				...teacher,
+				id: newTeacherId as number,
+				email: R.email(),
+				telephone: R.string(10, "0-9"),
+				visible: R.boolean(),
+			};
+			const res = await useTestAPI("Teachers.update", {
+				RequestObject: updatedTeacher,
+			});
 
-				const json = await getJson<APIResponse["Teachers.update"]>(res);
-				expectBody(json, "Teacher added successfully");
-			}],
-		[
-			label("DELETE /teachers"), async () => {
-				const res = await useTestAPI("Teachers.delete", {
-					RequestObject: [newTeacherId as number]
-				});
+			const json = await getJson<APIResponse["Teachers.update"]>(res);
+			expectBody(json, "Teacher added successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Teachers.delete", {
+				RequestObject: [newTeacherId as number]
+			});
 
-				const json = await getJson<APIResponse["Teachers.delete"]>(res);
-				expectBody(json, "Teacher/s deleted successfully");
-			}]
+			const json = await getJson<APIResponse["Teachers.delete"]>(res);
+			expectBody(json, "Teacher/s deleted successfully");
+		}
 	);
 }
 
 function teachersClassesTest() {
-	test(label("GET /teachers/classes"), async () => {
+	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getClasses");
 
 		const json = await getJson<APIResponse["Teachers.getClasses"]>(res);
 		expectBody(json, array(v_TeacherClasses));
 	});
-	test(label("GET /teachers/classes/:id"), async () => {
+	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getClassesById", {
 			RequestObject: [1]
 		});
@@ -123,13 +114,13 @@ function teachersClassesTest() {
 }
 
 function teachersLocationsTest() {
-	test(label("GET /teachers/locations"), async () => {
+	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getLocations");
 
 		const json = await getJson<APIResponse["Teachers.getLocations"]>(res);
 		expectBody(json, array(v_TeacherLocations));
 	});
-	test(label("GET /teachers/locations/:id"), async () => {
+	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getLocationsById", {
 			RequestObject: [1]
 		});
@@ -140,13 +131,13 @@ function teachersLocationsTest() {
 }
 
 function teachersInstrumentsTest() {
-	test(label("GET /teachers/instruments"), async () => {
+	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getInstruments");
 
 		const json = await getJson<APIResponse["Teachers.getInstruments"]>(res);
 		expectBody(json, array(v_TeacherInstruments));
 	});
-	test(label("GET /teachers/instruments/:id"), async () => {
+	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getInstrumentsById", {
 			RequestObject: [1]
 		});
@@ -161,7 +152,7 @@ teachersClassesTest();
 teachersLocationsTest();
 teachersInstrumentsTest();
 
-test(label("GET /teachers"), async () => {
+test("--teachers--", async () => {
 	try {
 		const res = await useTestAPI("Teachers.get");
 
@@ -172,14 +163,14 @@ test(label("GET /teachers"), async () => {
 	}
 });
 
-test(label("GET /teachers/fullnames"), async () => {
+test("--teachers--", async () => {
 	const res = await useTestAPI("Teachers.getByFullnames");
 
 	const json = await getJson<APIResponse["Teachers.getByFullnames"]>(res);
 	expectBody(json, array(v_Teachers));
 });
 
-test(label("GET /teachers/priority-classes/:slug"), async () => {
+test("--teachers--", async () => {
 	const res = await useTestAPI("Teachers.getByPriorityClasses", {
 		UrlArgs: { class_type: "byz" }
 	});

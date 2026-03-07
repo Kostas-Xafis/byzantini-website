@@ -1,12 +1,9 @@
+import { v_Books } from "@_types/entities";
+import { Random as R } from "@lib/random";
+import { type APIResponse } from "@lib/routes/index.client";
+import { chain, test } from "tests/TestChain";
 import { array, number, object } from "valibot";
-import { Random as R } from "../../lib/random";
-import { APIResponse } from "../../lib/routes/index.client";
-import { v_Books } from "../../types/entities";
-import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers";
-
-const label = (str: string) => {
-	return "--books-- " + str;
-};
+import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 function booksTest() {
 	const bookPrice = R.int(10, 100);
@@ -21,8 +18,8 @@ function booksTest() {
 	};
 	let newBookId: number | null;
 
-	chain([
-		label("POST /books"), async () => {
+	chain("--books--",
+		async () => {
 			const res = await useTestAPI("Books.post", {
 				RequestObject: book,
 			});
@@ -31,44 +28,41 @@ function booksTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newBookId = json.data.insertId;
-		}],
-		[
-			label("GET /books/:id"), async () => {
-				const res = await useTestAPI("Books.getById", {
-					RequestObject: [newBookId as number]
-				});
+		},
+		async () => {
+			const res = await useTestAPI("Books.getById", {
+				RequestObject: [newBookId as number]
+			});
 
-				const json = await getJson<APIResponse["Books.getById"]>(res);
-				expectBody(json, v_Books);
-			}],
-		[
-			label("PUT /books/quantity"), async () => {
-				const updatedBook = {
-					id: newBookId as number,
-					quantity: book.quantity + 10
-				};
-				const res = await useTestAPI("Books.updateQuantity", {
-					RequestObject: updatedBook,
-				});
+			const json = await getJson<APIResponse["Books.getById"]>(res);
+			expectBody(json, v_Books);
+		},
+		async () => {
+			const updatedBook = {
+				id: newBookId as number,
+				quantity: book.quantity + 10
+			};
+			const res = await useTestAPI("Books.updateQuantity", {
+				RequestObject: updatedBook,
+			});
 
-				const json = await getJson<APIResponse["Books.updateQuantity"]>(res);
-				expectBody(json, "Quantity updated successfully");
-			}],
-		[
-			label("DELETE /books"), async () => {
-				const res = await useTestAPI("Books.delete", {
-					RequestObject: [newBookId as number]
-				});
+			const json = await getJson<APIResponse["Books.updateQuantity"]>(res);
+			expectBody(json, "Quantity updated successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Books.delete", {
+				RequestObject: [newBookId as number]
+			});
 
-				const json = await getJson<APIResponse["Books.delete"]>(res);
-				expectBody(json, "Book deleted successfully");
-			}]
+			const json = await getJson<APIResponse["Books.delete"]>(res);
+			expectBody(json, "Book deleted successfully");
+		}
 	);
 }
 
 booksTest();
 
-test(label("GET /books"), async () => {
+test("--books--", async () => {
 	const res = await useTestAPI("Books.get");
 
 	const json = await getJson<APIResponse["Books.get"]>(res);

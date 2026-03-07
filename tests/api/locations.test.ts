@@ -1,14 +1,10 @@
+import { v_Locations, type Locations } from "@_types/entities";
+import { Random as R } from "@lib/random";
+import { type APIResponse } from "@lib/routes/index.client";
 import { expect } from "bun:test";
+import { chain, test } from "tests/TestChain";
 import { array, number, object } from "valibot";
-import { APIResponse } from "../../lib/routes/index.client";
-import { Locations, v_Locations } from "../../types/entities";
-import { getJson, expectBody, useTestAPI, chain, test } from "../testHelpers";
-import { Random as R } from "../../lib/random";
-
-
-const label = (str: string) => {
-	return "--locations-- " + str;
-};
+import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 
 function locationsTest() {
@@ -27,8 +23,8 @@ function locationsTest() {
 		partner: R.boolean(),
 	} as Locations;
 	let newLocationId: number | null = null;
-	chain([
-		label("POST /locations"), async () => {
+	chain("--locations--",
+		async () => {
 			const res = await useTestAPI("Locations.post", {
 				RequestObject: location,
 			});
@@ -36,64 +32,59 @@ function locationsTest() {
 			const json = await getJson<APIResponse["Locations.post"]>(res);
 			expectBody(json, object({ insertId: number() }));
 			newLocationId = json.data.insertId;
-		}],
-		[
-			label("PUT /locations/file/[id:number]"), async () => {
-				const imgBlob = Bun.file("./public/logo.png");
-				const res = await useTestAPI("Locations.fileUpload", {
-					UrlArgs: { id: newLocationId as number },
-					RequestObject: imgBlob,
-				});
+		},
+		async () => {
+			const imgBlob = Bun.file("./public/logo.png");
+			const res = await useTestAPI("Locations.fileUpload", {
+				UrlArgs: { id: newLocationId as number },
+				RequestObject: imgBlob,
+			});
 
-				const text = await getJson<APIResponse["Locations.fileUpload"]>(res);
-				expectBody(text, "Image uploaded successfully");
-			}],
-		[
-			label("GET /locations/:id"), async () => {
-				const res = await useTestAPI("Locations.getById", {
-					RequestObject: [newLocationId as number]
-				});
+			const text = await getJson<APIResponse["Locations.fileUpload"]>(res);
+			expectBody(text, "Image uploaded successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Locations.getById", {
+				RequestObject: [newLocationId as number]
+			});
 
-				const json = await getJson<APIResponse["Locations.getById"]>(res);
-				expectBody(json, v_Locations);
-			}],
-		[
-			label("PUT /locations"), async () => {
-				const updatedLocation = {
-					...location,
-					id: newLocationId as number,
-					name: "Updated Location"
-				};
-				const res = await useTestAPI("Locations.update", {
-					RequestObject: updatedLocation,
-				});
+			const json = await getJson<APIResponse["Locations.getById"]>(res);
+			expectBody(json, v_Locations);
+		},
+		async () => {
+			const updatedLocation = {
+				...location,
+				id: newLocationId as number,
+				name: "Updated Location"
+			};
+			const res = await useTestAPI("Locations.update", {
+				RequestObject: updatedLocation,
+			});
 
-				const text = await getJson<APIResponse["Locations.update"]>(res);
-				expectBody(text, "Location updated successfully");
-			}],
-		[
-			label("DELETE /locations"), async () => {
-				const res = await useTestAPI("Locations.delete", {
-					RequestObject: [newLocationId as number]
-				});
+			const text = await getJson<APIResponse["Locations.update"]>(res);
+			expectBody(text, "Location updated successfully");
+		},
+		async () => {
+			const res = await useTestAPI("Locations.delete", {
+				RequestObject: [newLocationId as number]
+			});
 
-				const text = await getJson<APIResponse["Locations.delete"]>(res);
-				expectBody(text, "Locations deleted successfully");
-			}
-		]
+			const text = await getJson<APIResponse["Locations.delete"]>(res);
+			expectBody(text, "Locations deleted successfully");
+		}
 	);
 }
 
 locationsTest();
 
-test(label("GET /locations"), async () => {
+test("--locations--", async () => {
 	const res = await useTestAPI("Locations.get");
 
 	const json = await getJson<APIResponse["Locations.get"]>(res);
 	expectBody(json, array(v_Locations));
 });
 
-test(label("GET /locations/priority"), async () => {
+test("--locations--", async () => {
 	const res = await useTestAPI("Locations.getByPriority");
 
 	const json = await getJson<APIResponse["Locations.getByPriority"]>(res);

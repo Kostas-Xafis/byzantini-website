@@ -33,4 +33,12 @@ export type EnvTypes = {
     VITE_IMG_COMPRESSION_SERVICE_URL?: string;
     TEST_EMAIL?: string;
     TEST_PASSWORD?: string;
+
+};
+
+export type TestEnvTypes = EnvTypes & {
+    VITE_URL: string;
+    FORCE_TEST: boolean;
+    TEST_EMAIL: string;
+    TEST_PASSWORD: string;
 };

@@ -1,12 +1,9 @@
 import { array, length, number, object, pick } from "valibot";
-import { Random as R } from "../../lib/random";
-import { APIResponse } from "../../lib/routes/index.client";
-import { Payoffs, v_Payoffs } from "../../types/entities";
-import { chain, expectBody, getJson, test, useTestAPI } from "../testHelpers";
-
-const label = (str: string) => {
-	return "--payoffs-- " + str;
-};
+import { Random as R } from "@lib/random";
+import { type APIResponse } from "@lib/routes/index.client";
+import { type Payoffs, v_Payoffs } from "@_types/entities";
+import { expectBody, getJson, useTestAPI } from "../testHelpers";
+import { chain, test } from "tests/chain";
 
 const SimplePayoff = pick(v_Payoffs, ["id", "wholesaler_id", "amount"]);
 
@@ -31,8 +28,9 @@ function payoffsTest() {
 	};
 
 
-	chain([
-		label("POST /wholesalers"), async () => {
+	chain(
+		"--payoffs--",
+		async () => {
 			const res = await useTestAPI("Wholesalers.post", {
 				RequestObject: wholesaler,
 			});
@@ -41,8 +39,8 @@ function payoffsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newWholesalerId = json.data.insertId;
-		}],
-		[label("POST /books"), async () => {
+		},
+		async () => {
 			if (!newWholesalerId) {
 				throw new Error("Wholesaler not found");
 			}
@@ -52,69 +50,63 @@ function payoffsTest() {
 
 			const json = await getJson<APIResponse["Books.post"]>(res);
 			expectBody(json, object({ insertId: number() }));
-		}],
-		[
-			label("GET /payoffs"), async () => {
-				const res = await useTestAPI("Payoffs.get");
-				const json = await getJson<APIResponse["Payoffs.get"]>(res);
-				expectBody(json, array(SimplePayoff));
-				newPayoff = json.data.find(p => p.wholesaler_id === newWholesalerId) as Payoffs;
+		},
+		async () => {
+			const res = await useTestAPI("Payoffs.get");
+			const json = await getJson<APIResponse["Payoffs.get"]>(res);
+			expectBody(json, array(SimplePayoff));
+			newPayoff = json.data.find(p => p.wholesaler_id === newWholesalerId) as Payoffs;
+		},
+		async () => {
+			if (!newPayoff) {
+				throw new Error("Payoff not found");
 			}
-		],
-		[
-			label("GET /payoffs/id"), async () => {
-				if (!newPayoff) {
-					throw new Error("Payoff not found");
-				}
-				const res = await useTestAPI("Payoffs.getById", {
-					RequestObject: [newPayoff?.id]
-				});
+			const res = await useTestAPI("Payoffs.getById", {
+				RequestObject: [newPayoff?.id]
+			});
 
-				const json = await getJson<APIResponse["Payoffs.getById"]>(res);
-				expectBody(json, array(SimplePayoff, [length(1)]));
-			}],
-		[
-			label("GET /payoffs/total"), async () => {
-				const res = await useTestAPI("Payoffs.getTotal");
+			const json = await getJson<APIResponse["Payoffs.getById"]>(res);
+			expectBody(json, array(SimplePayoff, [length(1)]));
+		},
+		async () => {
+			const res = await useTestAPI("Payoffs.getTotal");
 
-				const json = await getJson<APIResponse["Payoffs.getTotal"]>(res);
-				expectBody(json, object({ total: number() }));
-			}],
-		[
-			label("PUT /payoffs"), async () => {
-				if (!newPayoff) {
-					throw new Error("Payoff not found");
-				}
-				const updatedPayoff = {
-					id: newPayoff.id,
-					amount: newPayoff.amount - 1,
-				};
+			const json = await getJson<APIResponse["Payoffs.getTotal"]>(res);
+			expectBody(json, object({ total: number() }));
+		},
+		async () => {
+			if (!newPayoff) {
+				throw new Error("Payoff not found");
+			}
+			const updatedPayoff = {
+				id: newPayoff.id,
+				amount: newPayoff.amount - 1,
+			};
 
-				const res = await useTestAPI("Payoffs.updateAmount", {
-					RequestObject: updatedPayoff,
-				});
+			const res = await useTestAPI("Payoffs.updateAmount", {
+				RequestObject: updatedPayoff,
+			});
 
-				const json = await getJson<APIResponse["Payoffs.updateAmount"]>(res);
-				expectBody(json, "Updated payoff amount successfully");
-			}],
-		[
-			label("DELETE /payoffs"), async () => {
-				if (!newPayoff) {
-					throw new Error("Payoff not found");
-				}
-				const res = await useTestAPI("Payoffs.complete", {
-					RequestObject: [newPayoff.id]
-				});
+			const json = await getJson<APIResponse["Payoffs.updateAmount"]>(res);
+			expectBody(json, "Updated payoff amount successfully");
+		}
+		, async () => {
+			if (!newPayoff) {
+				throw new Error("Payoff not found");
+			}
+			const res = await useTestAPI("Payoffs.complete", {
+				RequestObject: [newPayoff.id]
+			});
 
-				const json = await getJson<APIResponse["Payoffs.complete"]>(res);
-				expectBody(json, "Payoffs completed");
-			}]
+			const json = await getJson<APIResponse["Payoffs.complete"]>(res);
+			expectBody(json, "Payoffs completed");
+		}
 	);
 }
 
 payoffsTest();
 
-test(label("GET /payoffs"), async () => {
+test("GET /payoffs", async () => {
 	const res = await useTestAPI("Payoffs.get");
 
 	const json = await getJson<APIResponse["Payoffs.get"]>(res);
