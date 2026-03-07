@@ -1,11 +1,11 @@
 import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
 import { Env } from "@env/env";
+import { Random as R } from "@lib/random";
 import { createSessionId, generateShaKey, getSessionId } from "@utilities/authentication";
 import { deepCopy } from "@utilities/objects";
-import { Random as R } from "@lib/random";
-import { execTryCatch, executeQuery, getUsedBody, isProduction, questionMarks } from "../utils.server";
-import { SysUsersRoutes } from "./sysusers.client";
 import { getOriginFromContext } from "@utilities/url";
+import { execTryCatch, executeQuery, getUsedBody, questionMarks } from "../utils.server";
+import { SysUsersRoutes } from "./sysusers.client";
 
 const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
 
@@ -109,7 +109,6 @@ serverRoutes.createRegisterLink.func = ({ ctx }) => {
 				templateData: { token: signupLink }
 			})
 		});
-		// }
 
 		return { link };
 	}, "Σφάλμα κατά την δημιουργία του συνδέσμου εγγραφής");

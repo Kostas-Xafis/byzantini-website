@@ -117,11 +117,11 @@ serverRoutes.oauthCallback.func = ({ ctx }) => {
 		const codeVerifier = ctx.cookies.get("google_code_verifier")?.value;
 		const signupLink = ctx.cookies.get("google_signup_link")?.value;
 
-		console.log("OAuth Callback Invoked");
-		console.log("Received code:", code);
-		console.log("Received state:", state);
-		console.log("Stored state:", storedState);
-		console.log("Code verifier:", codeVerifier);
+		// console.log("OAuth Callback Invoked");
+		// console.log("Received code:", code);
+		// console.log("Received state:", state);
+		// console.log("Stored state:", storedState);
+		// console.log("Code verifier:", codeVerifier);
 
 		if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
 			return { error: "Invalid request", isValid: false };
