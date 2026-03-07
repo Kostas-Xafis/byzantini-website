@@ -1,6 +1,6 @@
+import type { HydrateByIdReturnType } from "@lib/hooks/useHydrateById.solid";
+import { API, type APIResponse } from "@lib/routes/index.client";
 import { createMemo } from "solid-js";
-import type { HydrateByIdReturnType } from "../../../../../lib/hooks/useHydrateById.solid";
-import { API, type APIResponse } from "../../../../../lib/routes/index.client";
 import { type Props as InputProps } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";

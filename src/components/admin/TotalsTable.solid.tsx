@@ -1,7 +1,7 @@
+import { API, useAPI, useHydrate, type APIStore } from "@lib/hooks/useAPI.solid";
+import { loadScript } from "@utilities/scripts";
 import { Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "../../../lib/hooks/useAPI.solid";
-import { loadScript } from "@utilities/scripts";
 import Spinner from "../other/Spinner.solid";
 
 type TotalsTable = {
