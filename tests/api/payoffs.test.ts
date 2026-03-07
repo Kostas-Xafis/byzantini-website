@@ -3,7 +3,7 @@ import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { type Payoffs, v_Payoffs } from "@_types/entities";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
-import { chain, test } from "tests/chain";
+import { chain, test } from "tests/TestChain";
 
 const SimplePayoff = pick(v_Payoffs, ["id", "wholesaler_id", "amount"]);
 
