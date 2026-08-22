@@ -1,4 +1,4 @@
-import { Show, createEffect, createSignal, on, onMount, untrack } from "solid-js";
+import { For, Show, createEffect, createSignal, on, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
 import { useHydrateById } from "@hooks/useHydrateById.solid";
@@ -22,11 +22,17 @@ import {
 import { PREFIX } from "./controls/Registrations/helpers";
 import { toggleCheckbox } from "./table/Row.solid";
 
+const schoolYearLabel = (registrationYear: string) => {
+	const [start, end] = registrationYear.split("-");
+	return `${start}-${end.slice(2)}`;
+};
+
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 
-	const [year, setYear] = createSignal(new Date().getFullYear());
+	const [year, setYear] = createSignal<number | null>(null);
+	const [years, setYears] = createSignal<string[]>([]);
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 	const setRegistrationHydrate = useHydrateById({
@@ -40,18 +46,33 @@ export default function RegistrationsTable() {
 	});
 
 	useHydrate(() => {
-		apiHook(API.Registrations.get, { UrlArgs: { year: year() } });
-		apiHook(API.Registrations.get);
+		apiHook(API.Registrations.getYears);
 		apiHook(API.Teachers.getByFullnames);
 		apiHook(API.Instruments.get);
 	});
 
 	createEffect(
 		on(year, (y) => {
+			if (y === null) return;
 			setSearchQuery({}); // Reset search on year change
 			apiHook(API.Registrations.get, { UrlArgs: { year: y } });
 		}),
 	);
+
+	// Automatically select the latest available school year once known,
+	// so the table opens populated without requiring a button press.
+	createEffect(() => {
+		const availableYears = store[API.Registrations.getYears];
+		if (!availableYears) return;
+		const currentYear = new Date().getFullYear();
+		if (availableYears.length === 0) {
+			setYears([`${currentYear}-${currentYear + 1}`]);
+			if (year() === null) setYear(currentYear);
+			return;
+		}
+		setYears(availableYears);
+		if (year() === null) setYear(Number(availableYears[0].split("-")[0]));
+	});
 
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
 
@@ -157,24 +178,28 @@ export default function RegistrationsTable() {
 									type: "custom",
 									children: (
 										<div class="pb-2 flex items-center gap-x-4">
-											<button
-												data-active={year() === 2023}
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
-												onClick={() => setYear(2023)}>
-												2023-24
-											</button>
-											<button
-												data-active={year() === 2024}
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
-												onClick={() => setYear(2024)}>
-												2024-25
-											</button>
-											<button
-												data-active={year() === 2025}
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:text-white hover:bg-red-900 data-[active='true']:text-white data-[active='true']:bg-red-900"
-												onClick={() => setYear(2025)}>
-												2025-26
-											</button>
+											<select
+												aria-label="Σχολική χρονιά"
+												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-none dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
+												onChange={(e) => {
+													const value = e.currentTarget.value;
+													if (value === "") return;
+													setYear(Number(value));
+												}}>
+												<Show when={year() === null}>
+													<option value="" selected></option>
+												</Show>
+												<For each={years()}>
+													{(schoolYear) => {
+														const startYear = Number(schoolYear.split("-")[0]);
+														return (
+															<option value={startYear} selected={year() === startYear}>
+																{schoolYearLabel(schoolYear)}
+															</option>
+														);
+													}}
+												</For>
+											</select>
 										</div>
 									),
 								},

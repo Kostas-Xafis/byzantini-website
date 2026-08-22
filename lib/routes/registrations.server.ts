@@ -51,6 +51,15 @@ serverRoutes.getTotalByYear.func = ({ ctx }) => {
 	});
 };
 
+serverRoutes.getYears.func = () => {
+	return execTryCatch(async () => {
+		const result = await executeQuery<{ registration_year: string }>(
+			"SELECT DISTINCT registration_year FROM registrations ORDER BY registration_year DESC",
+		);
+		return result.map((row) => row.registration_year);
+	}, "Σφάλμα κατά την ανάκτηση των διαθέσιμων σχολικών ετών");
+};
+
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async T => {
 		const body = getUsedBody(ctx) || await ctx.request.json();
