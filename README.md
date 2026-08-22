@@ -11,6 +11,7 @@ This repository contains:
 ## Tech Stack 🛠️
 
 - Runtime: Bun
+- Typing: TypeScript 6 (`astro/tsconfigs/strict`, no `baseUrl`)
 - Frontend: Astro 5, SolidJS, Tailwind CSS
 - API: Astro catch-all route (`src/pages/api/[...slug].ts`) with typed endpoint metadata
 - Validation: Valibot
@@ -291,6 +292,17 @@ Typical release path:
 - Unauthorized responses: confirm session cookie/token and `authentication` flag behavior.
 - DB connection errors: verify `CONNECTOR` and corresponding DB env vars.
 - Missing bucket access: verify R2 binding in Cloudflare and S3-compatible creds for local mode.
+
+## AI-Assisted Development 🤖
+
+- `AGENTS.md` (repo root) is the canonical guidance file for AI coding agents
+  (Codex, Cursor, Claude Code, Zed, Windsurf, GitHub Copilot, ...).
+- `CLAUDE.md` is a symlink to `AGENTS.md` for Claude Code compatibility.
+- `.github/copilot-instructions.md` is the GitHub Copilot mirror of the same
+  guidance — keep it in sync with `AGENTS.md`.
+- Fast verification gates: `bun run typecheck`, `bun run test` (or
+  `bun run check` for typecheck + tests). Note: the existing codebase is not
+  fully prettier-formatted, so format only the files you touch.
 
 ## Security Notes 🔒
 

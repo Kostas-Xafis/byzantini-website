@@ -3,5 +3,6 @@
 	"bracketSameLine": true,
 	"tabWidth": 4,
 	"useTabs": true,
-	"bracketSpacing": true
+	"bracketSpacing": true,
+	"plugins": ["prettier-plugin-astro"]
 }

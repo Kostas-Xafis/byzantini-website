@@ -5,6 +5,11 @@
 	"scripts": {
 		"test": "bun test --env-file='./tests/.env.test'",
 		"test-force": "bun test --env-file='./tests/.env.testforce'",
+		"typecheck": "tsc --noEmit",
+		"astro-check": "bunx --bun astro check",
+		"check": "bun run typecheck && bun run test",
+		"format": "prettier --write src lib types getData tests",
+		"format:check": "prettier --check src lib types getData tests",
 		"tests": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.test'",
 		"tests-force": "find ./tests -wholename '*.test.ts' | xargs -I $ bun test $ --env-file='./tests/.env.testforce'",
 		"db:query": "bun ./getData/query.ts --dev --q",
