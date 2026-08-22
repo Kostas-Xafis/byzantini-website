@@ -1,8 +1,7 @@
 import { v_Locations, type Locations } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { expect } from "bun:test";
-import { chain, test } from "tests/TestChain";
+import { expect, test } from "bun:test";
 import { array, number, object } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
@@ -23,7 +22,7 @@ function locationsTest() {
 		partner: R.boolean(),
 	} as Locations;
 	let newLocationId: number | null = null;
-	chain("--locations--",
+	test("--locations-- #1",
 		async () => {
 			const res = await useTestAPI("Locations.post", {
 				RequestObject: location,
@@ -32,7 +31,9 @@ function locationsTest() {
 			const json = await getJson<APIResponse["Locations.post"]>(res);
 			expectBody(json, object({ insertId: number() }));
 			newLocationId = json.data.insertId;
-		},
+		}
+	);
+	test("--locations-- #2",
 		async () => {
 			const imgBlob = Bun.file("./public/logo.png");
 			const res = await useTestAPI("Locations.fileUpload", {
@@ -42,7 +43,9 @@ function locationsTest() {
 
 			const text = await getJson<APIResponse["Locations.fileUpload"]>(res);
 			expectBody(text, "Image uploaded successfully");
-		},
+		}
+	);
+	test("--locations-- #3",
 		async () => {
 			const res = await useTestAPI("Locations.getById", {
 				RequestObject: [newLocationId as number]
@@ -50,7 +53,9 @@ function locationsTest() {
 
 			const json = await getJson<APIResponse["Locations.getById"]>(res);
 			expectBody(json, v_Locations);
-		},
+		}
+	);
+	test("--locations-- #4",
 		async () => {
 			const updatedLocation = {
 				...location,
@@ -63,7 +68,9 @@ function locationsTest() {
 
 			const text = await getJson<APIResponse["Locations.update"]>(res);
 			expectBody(text, "Location updated successfully");
-		},
+		}
+	);
+	test("--locations-- #5",
 		async () => {
 			const res = await useTestAPI("Locations.delete", {
 				RequestObject: [newLocationId as number]

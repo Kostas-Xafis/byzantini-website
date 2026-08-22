@@ -35,12 +35,6 @@ bun run preview
 bun run test
 ```
 
-Force full re-run:
-
-```bash
-bun run test-force
-```
-
 ## 6) Useful DB Commands
 
 Run a query (development DB):

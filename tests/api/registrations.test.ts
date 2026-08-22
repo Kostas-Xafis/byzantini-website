@@ -1,7 +1,7 @@
 import { v_Registrations, type Registrations } from "@_types/entities";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 import { array, boolean, number, object, string } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
@@ -50,7 +50,7 @@ function registrationsTest() {
 	} as Registrations;
 	let newRegId: number | null;
 	let newRegUrl: string | null;
-	chain("--registrations--",
+	test("--registrations-- #1",
 		async () => {
 
 			let res = await useTestAPI("Registrations.post", {
@@ -61,7 +61,9 @@ function registrationsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newRegId = json.data.insertId;
-		},
+		}
+	);
+	test("--registrations-- #2",
 		async () => {
 			const res = await useTestAPI("Registrations.getById", {
 				UrlArgs: { id: newRegId as number }
@@ -70,7 +72,9 @@ function registrationsTest() {
 			const json = await getJson<APIResponse["Registrations.getById"]>(res);
 			expectBody(json, v_Registrations);
 			newRegUrl = json.data.registration_url || "";
-		},
+		}
+	);
+	test("--registrations-- #3",
 		async () => {
 			const res = await useTestAPI("Registrations.getByReregistrationUrl", {
 				UrlArgs: { url: newRegUrl as string }
@@ -78,7 +82,9 @@ function registrationsTest() {
 
 			const json = await getJson<APIResponse["Registrations.getByReregistrationUrl"]>(res);
 			expectBody(json, v_Registrations);
-		},
+		}
+	);
+	test("--registrations-- #4",
 		async () => {
 			const registration = {
 				id: 503,
@@ -112,7 +118,9 @@ function registrationsTest() {
 
 			const json = await getJson<APIResponse["Registrations.update"]>(res);
 			expectBody(json, "Registration updated successfully");
-		},
+		}
+	);
+	test("--registrations-- #5",
 		async () => {
 			const res = await useTestAPI("Registrations.delete", {
 				RequestObject: [newRegId as number]
@@ -128,7 +136,7 @@ function registrationsTest() {
 function emailRegistrationsTest() {
 	let email = R.email();
 	let token = "";
-	chain("--registrations--",
+	test("--registrations-email-- #1",
 		async () => {
 			const res = await useTestAPI("Registrations.emailSubscribe", {
 				RequestObject: { email }
@@ -136,7 +144,9 @@ function emailRegistrationsTest() {
 
 			const json = await getJson<APIResponse["Registrations.emailSubscribe"]>(res);
 			expectBody(json, object({ subscribed: boolean() }));
-		},
+		}
+	);
+	test("--registrations-email-- #2",
 		async () => {
 			const res = await useTestAPI("Registrations.getSubscriptionToken", {
 				RequestObject: { email }
@@ -145,7 +155,9 @@ function emailRegistrationsTest() {
 			const json = await getJson<APIResponse["Registrations.getSubscriptionToken"]>(res);
 			expectBody(json, object({ token: string() }));
 			token = json.data.token ?? "";
-		},
+		}
+	);
+	test("--registrations-email-- #3",
 		async () => {
 			const res = await useTestAPI("Registrations.emailUnsubscribe", {
 				RequestObject: { token }

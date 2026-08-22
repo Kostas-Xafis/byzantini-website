@@ -2,7 +2,7 @@ import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers 
 import { Bucket } from "@bucket/index.ts";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 import { array, number, object } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
@@ -41,7 +41,7 @@ function teachersTest() {
 	};
 	let newTeacherId: number | null;
 
-	chain("--teachers--",
+	test("--teachers-- #1",
 		async () => {
 			const res = await useTestAPI("Teachers.post", {
 				RequestObject: teacher,
@@ -51,7 +51,9 @@ function teachersTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newTeacherId = json.data.insertId;
-		},
+		}
+	);
+	test("--teachers-- #2",
 		async () => {
 			const pdfBlob = Bun.file("./notAssets/pdf_templates/byz_template.pdf");
 			const expectedBuffer = await pdfBlob.arrayBuffer();
@@ -81,7 +83,9 @@ function teachersTest() {
 			if (!areBuffersEqual(expectedBuffer, uploadedFile)) {
 				throw new Error("Uploaded teacher CV content does not match the source file");
 			}
-		},
+		}
+	);
+	test("--teachers-- #3",
 		async () => {
 			const res = await useTestAPI("Teachers.fileRename", {
 				UrlArgs: { id: newTeacherId as number },
@@ -89,7 +93,9 @@ function teachersTest() {
 
 			const json = await getJson<APIResponse["Teachers.fileRename"]>(res);
 			expectBody(json, "Files renamed successfully");
-		},
+		}
+	);
+	test("--teachers-- #4",
 		async () => {
 			const beforeDeleteRes = await useTestAPI("Teachers.getById", {
 				RequestObject: [newTeacherId as number]
@@ -125,7 +131,9 @@ function teachersTest() {
 			} catch (err) {
 				if (!isMissingObjectError(err)) throw err;
 			}
-		},
+		}
+	);
+	test("--teachers-- #5",
 		async () => {
 			const res = await useTestAPI("Teachers.getById", {
 				RequestObject: [newTeacherId as number]
@@ -133,7 +141,9 @@ function teachersTest() {
 
 			const json = await getJson<APIResponse["Teachers.getById"]>(res);
 			expectBody(json, v_Teachers);
-		},
+		}
+	);
+	test("--teachers-- #6",
 		async () => {
 			const updatedTeacher = {
 				...teacher,
@@ -148,7 +158,9 @@ function teachersTest() {
 
 			const json = await getJson<APIResponse["Teachers.update"]>(res);
 			expectBody(json, "Teacher added successfully");
-		},
+		}
+	);
+	test("--teachers-- #7",
 		async () => {
 			const res = await useTestAPI("Teachers.delete", {
 				RequestObject: [newTeacherId as number]

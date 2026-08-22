@@ -1,7 +1,7 @@
 import { v_SysUsers, type SysUsers } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 import { array, literal, number, object, pick, string } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
@@ -15,7 +15,7 @@ function sysUsersTest() {
 	let newSysUserLink: string | null;
 	let newSysUserId: number | null;
 
-	chain("--sysusers--",
+	test("--sysusers-- #1",
 		async () => {
 			const res = await useTestAPI("SysUsers.createRegisterLink", {
 				RequestObject: { email: sysUser.email }
@@ -25,7 +25,9 @@ function sysUsersTest() {
 			expectBody(json, object({ link: string() }));
 
 			newSysUserLink = json.data.link;
-		},
+		}
+	);
+	test("--sysusers-- #2",
 		async () => {
 			const res = await useTestAPI("SysUsers.validateRegisterLink", {
 				UrlArgs: { link: newSysUserLink as string }
@@ -33,7 +35,9 @@ function sysUsersTest() {
 
 			const json = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(res);
 			expectBody(json, object({ isValid: literal(true) }));
-		},
+		}
+	);
+	test("--sysusers-- #3",
 		async () => {
 			const res = await useTestAPI("SysUsers.registerSysUser", {
 				RequestObject: sysUser,
@@ -44,7 +48,9 @@ function sysUsersTest() {
 			expectBody(json, object({ session_id: string(), id: number() }));
 
 			newSysUserId = json.data.id;
-		},
+		}
+	);
+	test("--sysusers-- #4",
 		async () => {
 			const res = await useTestAPI("SysUsers.getById", {
 				RequestObject: [newSysUserId as number]
@@ -52,7 +58,9 @@ function sysUsersTest() {
 
 			const json = await getJson<APIResponse["SysUsers.getById"]>(res);
 			expectBody(json, sysUsersSimple);
-		},
+		}
+	);
+	test("--sysusers-- #5",
 		async () => {
 			const res = await useTestAPI("SysUsers.delete", {
 				RequestObject: [newSysUserId as number]

@@ -3,7 +3,7 @@ import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { type Payoffs, v_Payoffs } from "@_types/entities";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 
 const SimplePayoff = pick(v_Payoffs, ["id", "wholesaler_id", "amount"]);
 
@@ -28,8 +28,7 @@ function payoffsTest() {
 	};
 
 
-	chain(
-		"--payoffs--",
+	test("--payoffs-- #1",
 		async () => {
 			const res = await useTestAPI("Wholesalers.post", {
 				RequestObject: wholesaler,
@@ -39,7 +38,9 @@ function payoffsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newWholesalerId = json.data.insertId;
-		},
+		}
+	);
+	test("--payoffs-- #2",
 		async () => {
 			if (!newWholesalerId) {
 				throw new Error("Wholesaler not found");
@@ -50,13 +51,17 @@ function payoffsTest() {
 
 			const json = await getJson<APIResponse["Books.post"]>(res);
 			expectBody(json, object({ insertId: number() }));
-		},
+		}
+	);
+	test("--payoffs-- #3",
 		async () => {
 			const res = await useTestAPI("Payoffs.get");
 			const json = await getJson<APIResponse["Payoffs.get"]>(res);
 			expectBody(json, array(SimplePayoff));
 			newPayoff = json.data.find(p => p.wholesaler_id === newWholesalerId) as Payoffs;
-		},
+		}
+	);
+	test("--payoffs-- #4",
 		async () => {
 			if (!newPayoff) {
 				throw new Error("Payoff not found");
@@ -67,13 +72,17 @@ function payoffsTest() {
 
 			const json = await getJson<APIResponse["Payoffs.getById"]>(res);
 			expectBody(json, array(SimplePayoff, [length(1)]));
-		},
+		}
+	);
+	test("--payoffs-- #5",
 		async () => {
 			const res = await useTestAPI("Payoffs.getTotal");
 
 			const json = await getJson<APIResponse["Payoffs.getTotal"]>(res);
 			expectBody(json, object({ total: number() }));
-		},
+		}
+	);
+	test("--payoffs-- #6",
 		async () => {
 			if (!newPayoff) {
 				throw new Error("Payoff not found");
@@ -90,7 +99,9 @@ function payoffsTest() {
 			const json = await getJson<APIResponse["Payoffs.updateAmount"]>(res);
 			expectBody(json, "Updated payoff amount successfully");
 		}
-		, async () => {
+	);
+	test("--payoffs-- #7",
+		async () => {
 			if (!newPayoff) {
 				throw new Error("Payoff not found");
 			}

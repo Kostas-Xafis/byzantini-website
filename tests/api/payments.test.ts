@@ -1,7 +1,7 @@
 import { v_Books, v_Payments } from "@_types/entities";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 import { array, number, object } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
@@ -13,7 +13,7 @@ function paymentsTest() {
 	};
 	let newPaymentId: number | null;
 
-	chain("--payments--",
+	test("--payments-- #1",
 		async () => {
 			const res = await useTestAPI("Payments.post", {
 				RequestObject: payment,
@@ -23,7 +23,9 @@ function paymentsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newPaymentId = json.data.insertId;
-		},
+		}
+	);
+	test("--payments-- #2",
 		async () => {
 			const res = await useTestAPI("Payments.getById", {
 				RequestObject: [newPaymentId as number]
@@ -31,7 +33,9 @@ function paymentsTest() {
 
 			const json = await getJson<APIResponse["Payments.getById"]>(res);
 			expectBody(json, array(v_Payments));
-		},
+		}
+	);
+	test("--payments-- #3",
 		async () => {
 			let res = await useTestAPI("Books.getById", {
 				RequestObject: [payment.book_id as number]
@@ -50,7 +54,9 @@ function paymentsTest() {
 
 			json = await getJson<APIResponse["Payments.updatePayment"]>(res);
 			expectBody(json, "Updated payment successfully");
-		},
+		}
+	);
+	test("--payments-- #4",
 		async () => {
 			const res = await useTestAPI("Payments.complete", {
 				RequestObject: [newPaymentId as number]
@@ -58,7 +64,9 @@ function paymentsTest() {
 
 			const json = await getJson<APIResponse["Payments.complete"]>(res);
 			expectBody(json, "Completed payment successfully");
-		},
+		}
+	);
+	test("--payments-- #5",
 		async () => {
 			const res = await useTestAPI("Payments.delete", {
 				RequestObject: [newPaymentId as number]

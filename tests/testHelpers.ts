@@ -8,7 +8,7 @@ import { assertOwnProp } from "../lib/utils.server";
 import type { TypeGuard } from "../types/helpers";
 import type { DefaultEndpointResponse, EndpointResponse } from "../types/routes";
 
-const { VITE_URL = "http://localhost:4321/", FORCE_TEST = false } = Env.testEnv;
+const { VITE_URL = "http://localhost:4321/" } = Env.testEnv;
 let session_id = "";
 let collectingId = false;
 async function setSessionId() {

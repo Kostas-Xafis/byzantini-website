@@ -44,8 +44,7 @@ Core loop:
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | `bun test` with `tests/.env.test` |
-| Tests (full re-run) | `bun run test-force` | forces cache invalidation |
+| Tests | `bun run test` | full suite; env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -116,9 +115,9 @@ Deploy (requires Cloudflare credentials — do NOT run casually, do not run in t
 ## Secrets policy (hard rules)
 
 - `.dev.vars`, `.dev.vars.development`, `tests/.env.test`,
-  `tests/.env.testforce`, `email/credentials.json` and any `**/.env*` are
-  gitignored and must NEVER be: committed, copied into source files, or have
-  their values printed into diffs/logs/chats.
+  `email/credentials.json` and any `**/.env*` are gitignored and must NEVER
+  be: committed, copied into source files, or have their values printed into
+  diffs/logs/chats.
 - Never write real credentials or tokens into code, tests or docs. Use env
   vars / placeholders.
 - If you see a credential that was committed historically, flag it for the
@@ -160,11 +159,9 @@ Deploy (requires Cloudflare credentials — do NOT run casually, do not run in t
 
 - Test files: `tests/api/*.test.ts`; helpers in `tests/testHelpers.ts`
   (`useTestAPI(...)`).
-- Tests run against the dev DB via `tests/.env.test` (and `.testforce` for
-  forced runs) — these files must exist locally; run `bun run test` after
-  touching an API endpoint.
-- Endpoint/function hashes are cached in `.cache/tests.json`; unchanged tests
-  are skipped. Use `bun run test-force` when in doubt.
+- Tests require `tests/.env.test` (`VITE_URL`, `TEST_EMAIL`, `TEST_PASSWORD`)
+  and a running dev API server; run `bun run test` after touching an API
+  endpoint.
 - `TEST_EMAIL` / `TEST_PASSWORD` come from the test env files — never hardcode
   them.
 

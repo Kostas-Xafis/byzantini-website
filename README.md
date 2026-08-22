@@ -44,7 +44,7 @@ dbSnapshots/
   sqlite/                SQLite-related files
 tests/
   api/                   API tests
-  testHelpers.ts         Test API helper + endpoint/function hash cache
+  testHelpers.ts         Test API helper
 ```
 
 ## Architecture Overview 🧭
@@ -187,10 +187,7 @@ bun run build-preview
 
 ### Tests
 
-- `bun run test`: Run test suite with `tests/.env.test`
-- `bun run test-force`: Run tests with forced cache invalidation env
-- `bun run tests`: Run each `*.test.ts` with test env
-- `bun run tests-force`: Run each `*.test.ts` with forced env
+- `bun run test`: Run the full API test suite (env from `tests/.env.test`, 10s per-test timeout); tests now run fully every time (no hash-skip cache).
 
 ### Database tooling
 
@@ -211,9 +208,8 @@ bun run build-preview
 
 ## Testing Notes ✅
 
-- Tests use `tests/testHelpers.ts` and `useTestAPI(...)`.
-- Endpoint/function hashes are cached in `.cache/tests.json` to skip unchanged tests.
-- `TEST_EMAIL` and `TEST_PASSWORD` are required for auth-related helper flows.
+- Tests live in `tests/api/*.test.ts` and use `tests/testHelpers.ts` (`useTestAPI`, `expectBody`, `getJson`) against the dev API server at `VITE_URL` (from `tests/.env.test`).
+- `TEST_EMAIL` and `TEST_PASSWORD` are required.
 
 ## Data and Snapshot Workflow
 

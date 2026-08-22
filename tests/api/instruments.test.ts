@@ -1,7 +1,7 @@
 import { v_Instruments, type Instruments } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 import { array, number, object } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
@@ -13,7 +13,7 @@ function instrumentsTest() {
 	};
 	let newInstrumentId: number | null;
 
-	chain("--instruments--",
+	test("--instruments-- #1",
 		async () => {
 			const res = await useTestAPI("Instruments.post", {
 				RequestObject: instrument,
@@ -23,7 +23,9 @@ function instrumentsTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newInstrumentId = json.data.insertId;
-		},
+		}
+	);
+	test("--instruments-- #2",
 		async () => {
 			const res = await useTestAPI("Instruments.getById", {
 				RequestObject: [newInstrumentId as number]
@@ -31,7 +33,9 @@ function instrumentsTest() {
 
 			const json = await getJson<APIResponse["Instruments.getById"]>(res);
 			expectBody(json, v_Instruments);
-		},
+		}
+	);
+	test("--instruments-- #3",
 		async () => {
 			const res = await useTestAPI("Instruments.delete", {
 				RequestObject: [newInstrumentId as number]

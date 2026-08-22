@@ -1,7 +1,7 @@
 import { v_Books } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { chain, test } from "tests/TestChain";
+import { test } from "bun:test";
 import { array, number, object } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
@@ -18,7 +18,7 @@ function booksTest() {
 	};
 	let newBookId: number | null;
 
-	chain("--books--",
+	test("--books-- #1",
 		async () => {
 			const res = await useTestAPI("Books.post", {
 				RequestObject: book,
@@ -28,7 +28,9 @@ function booksTest() {
 			expectBody(json, object({ insertId: number() }));
 
 			newBookId = json.data.insertId;
-		},
+		}
+	);
+	test("--books-- #2",
 		async () => {
 			const res = await useTestAPI("Books.getById", {
 				RequestObject: [newBookId as number]
@@ -36,7 +38,9 @@ function booksTest() {
 
 			const json = await getJson<APIResponse["Books.getById"]>(res);
 			expectBody(json, v_Books);
-		},
+		}
+	);
+	test("--books-- #3",
 		async () => {
 			const updatedBook = {
 				id: newBookId as number,
@@ -48,7 +52,9 @@ function booksTest() {
 
 			const json = await getJson<APIResponse["Books.updateQuantity"]>(res);
 			expectBody(json, "Quantity updated successfully");
-		},
+		}
+	);
+	test("--books-- #4",
 		async () => {
 			const res = await useTestAPI("Books.delete", {
 				RequestObject: [newBookId as number]

@@ -54,10 +54,10 @@
 
 ## Workflows and conventions
 - Core commands: `bun run dev`, `bun run build`, `bun run preview`,
-  `bun run test`, `bun run test-force`, `bun run db:query --q "..."`,
-  `bun run db:replicate`, `bun run typecheck`, `bun run check`.
-- Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`) and cache
-  hashes in `.cache/tests.json` — use `bun run test-force` when in doubt.
+  `bun run test`, `bun run db:query --q "..."`, `bun run db:replicate`,
+  `bun run typecheck`, `bun run check`.
+- Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
+  from `tests/.env.test`, 10s per-test timeout.
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,

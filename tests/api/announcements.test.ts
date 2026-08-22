@@ -1,4 +1,4 @@
-import { expect } from "bun:test";
+import { expect, test } from "bun:test";
 import fs from 'fs';
 import path from 'path';
 import { array, number, object } from "valibot";
@@ -8,7 +8,6 @@ import { type APIResponse } from "@lib/routes/index.client.ts";
 import { MIMETypeMap } from "@lib/utils.server.ts";
 import { v_AnnouncementImages, v_Announcements } from "@_types/entities";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
-import { chain, test } from "tests/TestChain.ts";
 
 function announcementsTest() {
 	const announcement = {
@@ -61,9 +60,8 @@ function announcementsTest() {
 			newImageIds.push(json.data.insertId);
 		}
 	};
-	uploadImages.opts = { timeout: 20000 };
 
-	chain("--announcements--",
+	test("--announcements-- #1",
 		async () => {
 			const res = await useTestAPI("Announcements.post", { RequestObject: announcement });
 
@@ -77,7 +75,9 @@ function announcementsTest() {
 
 			const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
 			expect(sitemapStr).toContain(announcement.title.replaceAll(" ", "%20"));
-		},
+		}
+	);
+	test("--announcements-- #2",
 		async () => {
 			const res = await useTestAPI("Announcements.getById", {
 				RequestObject: [newAnnouncementId as number]
@@ -85,8 +85,10 @@ function announcementsTest() {
 
 			const json = await getJson<APIResponse["Announcements.getById"]>(res);
 			expectBody(json, v_Announcements);
-		},
-		uploadImages,
+		}
+	);
+	test("--announcements-- #3", uploadImages, { timeout: 20000 });
+	test("--announcements-- #4",
 		async () => {
 			const res = await useTestAPI("Announcements.getImagesById", {
 				UrlArgs: { id: newAnnouncementId as number }
@@ -94,7 +96,9 @@ function announcementsTest() {
 			const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
 			expectBody(json, array(v_AnnouncementImages));
 			expect(json.data).toHaveLength(5);
-		},
+		}
+	);
+	test("--announcements-- #5",
 		async () => {
 			const res = await useTestAPI("Announcements.imagesDelete", {
 				UrlArgs: { announcement_id: newAnnouncementId as number },
@@ -103,7 +107,9 @@ function announcementsTest() {
 
 			const json = await getJson<APIResponse["Announcements.imagesDelete"]>(res);
 			expectBody(json, "Images deleted successfully");
-		},
+		}
+	);
+	test("--announcements-- #6",
 		async () => {
 			const res = await useTestAPI("Announcements.getImagesById", {
 				UrlArgs: { id: newAnnouncementId as number }
@@ -112,7 +118,9 @@ function announcementsTest() {
 			const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
 			expectBody(json, array(v_AnnouncementImages));
 			expect(json.data).toHaveLength(3);
-		},
+		}
+	);
+	test("--announcements-- #7",
 		async () => {
 			const res = await useTestAPI("Announcements.update", {
 				RequestObject: {
@@ -131,7 +139,9 @@ function announcementsTest() {
 			const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
 			expect(sitemapStr).toContain(newTitle.replaceAll(" ", "%20"));
 			expect(sitemapStr).not.toContain(announcement.title.replaceAll(" ", "%20"));
-		},
+		}
+	);
+	test("--announcements-- #8",
 		async () => {
 			const res = await useTestAPI("Announcements.delete", {
 				RequestObject: [newAnnouncementId as number]

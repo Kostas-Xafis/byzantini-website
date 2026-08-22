@@ -38,7 +38,6 @@ export type EnvTypes = {
 
 export type TestEnvTypes = EnvTypes & {
     VITE_URL: string;
-    FORCE_TEST: boolean;
     TEST_EMAIL: string;
     TEST_PASSWORD: string;
 };
