@@ -23,7 +23,7 @@ export default function Popup(props: Props) {
 
 	createEffect(on(() => props.content, setContent));
 
-	let popup: HTMLElement | undefined = undefined;
+	let popup!: HTMLDivElement;
 	onMount(() => {
 		popup?.addEventListener("show", (e) => {
 			// if (e instanceof CustomEvent && e.detail && e.detail.id !== props.id) return;

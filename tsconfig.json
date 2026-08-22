@@ -7,15 +7,10 @@
 		"services/pdfWorker/**",
 		"./node_modules/**",
 		"./tests/**",
-		"services/pdfWorker/**"
+		"services/pdfWorker/**",
+		"/email/**",
 	],
-	"include": [
-		".astro/types.d.ts",
-		"lib",
-		"getData",
-		"src",
-		"types"
-	],
+	"include": [".astro/types.d.ts", "lib", "getData", "src", "types"],
 	"compilerOptions": {
 		"noErrorTruncation": true,
 		"strict": true,
@@ -31,18 +26,17 @@
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
 		"types": ["@types/bun", "@cloudflare/workers-types"],
-		"baseUrl": ".",
 		"paths": {
-			"@bucket/*": ["lib/bucket/*"],
-			"@env/*": ["lib/env/*"],
-			"@hooks/*": ["lib/hooks/*"],
-			"@routes/*": ["lib/routes/*"],
-			"@utilities/*": ["lib/utilities/*"],
-			"@lib/*": ["lib/*"],
-			"@_types/*": ["types/*"],
-			"@components/*": ["src/components/*"],
-			"@layouts/*": ["src/layouts/*"],
-			"@pages/*": ["src/pages/*"]
-		}
-	}
+			"@bucket/*": ["./lib/bucket/*"],
+			"@env/*": ["./lib/env/*"],
+			"@hooks/*": ["./lib/hooks/*"],
+			"@routes/*": ["./lib/routes/*"],
+			"@utilities/*": ["./lib/utilities/*"],
+			"@lib/*": ["./lib/*"],
+			"@_types/*": ["./types/*"],
+			"@components/*": ["./src/components/*"],
+			"@layouts/*": ["./src/layouts/*"],
+			"@pages/*": ["./src/pages/*"],
+		},
+	},
 }

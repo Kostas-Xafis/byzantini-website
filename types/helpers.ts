@@ -58,7 +58,10 @@
 
 
 export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
-export type IsAny<T> = 0 extends 1 & T ? true : false;
+// Note: the classic `0 extends 1 & T ? true : false` form mis-evaluates when T is a
+// generic type parameter instantiated with `any` under TypeScript 6; this
+// function-variance form is instantiation-safe.
+export type IsAny<T> = (<G>() => G extends T ? 1 : 2) extends (<G>() => G extends any ? 1 : 2) ? true : false;
 
 export type PartialBy<Obj, OKey> = OKey extends keyof Obj
 	? Omit<Obj, OKey> & {
@@ -75,6 +78,32 @@ export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Re
 		[K in Replacement]: Value;
 	};
 export type ObjectValuesToUnion<T extends Record<any, any>> = T[keyof T];
+
+type ObjectKeysToUnion<T extends Record<any, any>> = keyof T;
+
+export type NestedObjectKeysToUnion<T extends Record<string, any>, Prefix extends string = ""> = {
+	[K in keyof T]: T[K] extends Record<string, any>
+	? `${Prefix}${Extract<K, string | number>}` | NestedObjectKeysToUnion<T[K], `${Prefix}${Extract<K, string | number>}.`>
+	: `${Prefix}${Extract<K, string | number>}`;
+}[keyof T];
+
+const object = {
+	1: "one",
+	"abc": 123,
+	"def": "hello",
+	"ghi": true,
+	"jkl": null,
+	"mno": undefined,
+	"pqr": Symbol("test"),
+	"stu": [1, 2, 3],
+	"vwx": { a: 1, b: 2 },
+	"yz": () => { },
+};
+
+type T1 = NestedObjectKeysToUnion<typeof object>;
+
+const t1: T1 = "vwx.b";
+
 
 type IsOptional<T, U extends keyof T> = Pick<T, U> extends {
 	[K in U]-?: T[K]

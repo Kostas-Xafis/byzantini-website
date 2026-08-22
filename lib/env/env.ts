@@ -37,7 +37,7 @@ export class Env {
                         env[key] = true;
                     } else if (env[key] === "false" || env[key] === "False" || env[key] === "FALSE") {
                         env[key] = false;
-                    } else if (!isNaN(env[key]) && env[key].trim() !== "") {
+                    } else if (!isNaN(Number(env[key])) && env[key].trim() !== "") {
                         env[key] = Number(env[key]);
                     } else if (env[key] === "null") {
                         env[key] = null;

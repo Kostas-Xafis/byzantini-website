@@ -1,11 +1,13 @@
 ---
-import type { ComponentInstance } from "astro";
+// ComponentInstance was removed from astro's public types in Astro 5;
+// astroHTML.JSX.Element is the equivalent for "any rendered element".
+type ElementInstance = astroHTML.JSX.Element;
 
 export interface Props {
-	title: string | ComponentInstance;
-	content: string | ComponentInstance;
-	okButton?: string | ComponentInstance;
-	cancelButton?: string | ComponentInstance;
+	title: string | ElementInstance;
+	content: string | ElementInstance;
+	okButton?: string | ElementInstance;
+	cancelButton?: string | ElementInstance;
 }
 const { title, content, okButton = "Εντάξει", cancelButton } = Astro.props;
 ---
