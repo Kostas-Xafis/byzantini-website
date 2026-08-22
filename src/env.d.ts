@@ -19,5 +19,11 @@ declare global {
 		pdfjsLib: typeof import("pdfjs-dist");
 		zip: typeof import("client-zip");
 	}
+	// Required VITE_ env vars (see types/envVars.ts). Without this augmentation,
+	// @types/bun's ImportMetaEnv index signature types them as `string | undefined`.
+	interface ImportMetaEnv {
+		readonly VITE_PDF_SERVICE_URL: string;
+		readonly VITE_IMG_COMPRESSION_SERVICE_URL: string;
+	}
 }
 export { };
