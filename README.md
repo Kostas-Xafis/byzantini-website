@@ -196,7 +196,8 @@ bun run build-preview
 - `bun run db:query --dev --q "..."`: Shortcut for query script
 - `bun run db:query:prod --q "..."`: Production query shortcut
 - `bun run db:logs`: Query recent `query_logs`
-- `bun run db:replicate`: Generate/refresh SQLite snapshot artifacts
+- `bun run db:replicate`: Generate/refresh SQLite snapshot artifacts (pulls the latest prod backup, then resets `latest.db`)
+- `bun run db:reset`: Rebuild the local dev DB (`latest.db`) from `dbSnapshots/dev-snapshot.sql`
 
 ### Worker services (local Docker)
 

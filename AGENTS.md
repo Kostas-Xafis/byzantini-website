@@ -55,7 +55,8 @@ Database tooling:
 | Query dev DB | `bun run db:query --q "SELECT 1"` | script already carries `--dev --q` |
 | Query prod DB | `bun run db:query:prod --q "..."` | reads `.dev.vars` — careful |
 | Recent query logs | `bun run db:logs` | |
-| Refresh snapshots | `bun run db:replicate` | uses `.dev.vars.development` |
+| Refresh snapshots | `bun run db:replicate` | pulls the latest prod backup, then resets `latest.db` |
+| Reset dev DB | `bun run db:reset` | local-only: rebuild `latest.db` from `dbSnapshots/dev-snapshot.sql` |
 
 Worker services (local Docker only — `sudo docker`, not needed for most work):
 `bun run docker:build` / `docker:pdf` / `docker:img` / `docker:run` / `docker:logs`.
