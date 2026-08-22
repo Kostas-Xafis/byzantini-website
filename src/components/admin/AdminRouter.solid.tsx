@@ -5,6 +5,7 @@ import BooksTable from "./BooksTable.solid.tsx";
 import LocationsTable from "./LocationsTable.solid.tsx";
 import PaymentsTable from "./PaymentsTable.solid.tsx";
 import PayoffsTable from "./PayoffsTable.solid.tsx";
+import QueryLogsTable from "./QueryLogsTable.solid.tsx";
 import RegistrationsTable from "./RegistrationsTable.solid.tsx";
 import SettingsPage from "./SettingsPage.solid";
 import SysUsersTable from "./SysUsersTable.solid.tsx";
@@ -24,6 +25,7 @@ export default function AdminRouter() {
 				<Route path="/admin/locations" component={LocationsTable} />
 				<Route path="/admin/announcements" component={AnnouncementsTable} />
 				<Route path="/admin/sysusers" component={SysUsersTable} />
+				<Route path="/admin/query-logs" component={QueryLogsTable} />
 				<Route path="/admin/settings" component={SettingsPage} />
 				<Route
 					path="/admin/*"

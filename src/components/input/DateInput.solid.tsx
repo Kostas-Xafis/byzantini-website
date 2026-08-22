@@ -121,7 +121,7 @@ export default function DateInput(props: DateInputProps) {
 				dateInput.value = date ? formatDateToMarineTime(date) : "dd/mm/yyyy";
 			});
 		}
-		setAfterDatePicker(hasValue ? new Date(value as number) : undefined);
+		setAfterDatePicker(hasValue ? new Date(value as number) : undefined, 1000);
 	});
 	const formatDateToMarineTime = (date: Date | number) => {
 		let d;

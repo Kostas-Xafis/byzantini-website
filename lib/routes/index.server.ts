@@ -6,6 +6,7 @@ import { InstrumentsServerRoutes } from "./instruments.server";
 import { LocationsServerRoutes } from "./locations.server";
 import { PaymentsServerRoutes } from "./payments.server";
 import { PayoffsServerRoutes } from "./payoffs.server";
+import { QueryLogsServerRoutes } from "./queryLogs.server";
 import { RegistrationsServerRoutes } from "./registrations.server";
 import { ReplicationServerRoutes } from "./replication.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
@@ -31,6 +32,7 @@ const raw_routes =
 		LocationsServerRoutes,
 		InstrumentsServerRoutes,
 		SysUsersServerRoutes,
+		QueryLogsServerRoutes,
 		RegistrationsServerRoutes,
 		AnnouncementsServerRoutes,
 		ReplicationServerRoutes,
@@ -47,6 +49,7 @@ export const APIRaw = {
 	...EndpointsConstructor(BaseRoutes.Locations, LocationsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Instruments, InstrumentsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.SysUsers, SysUsersServerRoutes, true),
+	...EndpointsConstructor(BaseRoutes.QueryLogs, QueryLogsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Schema, SchemaServerRoutes, true),

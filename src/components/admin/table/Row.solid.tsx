@@ -1,9 +1,10 @@
 import { TypeEffectEnum, selectedRowsEvent } from "@hooks/useSelectedRows.solid";
 import { getParent } from "@utilities/dom";
+import { createAlert, pushAlert } from "../Alert.solid";
 import { For, type Setter } from "solid-js";
 import { SortDirection } from "./Table.solid";
 
-export type CellValue = "string" | "number" | "date" | "link" | "boolean";
+export type CellValue = "string" | "number" | "date" | "link" | "boolean" | "copy";
 
 interface Props {
 	data: (number | string | undefined | null)[]; // data[0] must always be the id of the item
@@ -101,6 +102,16 @@ export function toggleCheckboxes(force?: boolean) {
 export default function Row(props: Props) {
 	const { data, columnTypes, header, sortOnClick, hasSelectBox } = props;
 
+	const copyCellValue = async (e: MouseEvent, value: string) => {
+		e.stopPropagation();
+		try {
+			await navigator.clipboard.writeText(value);
+			pushAlert(createAlert("success", "Το αναγνωριστικό αντιγράφηκε"));
+		} catch {
+			pushAlert(createAlert("error", "Αποτυχία αντιγραφής αναγνωριστικού"));
+		}
+	};
+
 	let onClickSort: ((e: MouseEvent) => void) | undefined;
 	if (header) {
 		onClickSort = (e: MouseEvent) => {
@@ -160,10 +171,10 @@ export default function Row(props: Props) {
 				)}
 				<For each={data}>
 					{(item, colIndex) => {
+						const type = (!header && columnTypes[colIndex()]) || ""; // If it's a header row there is no type
 						if (item === undefined || item === null || item === "") {
 							item = "-";
 						} else {
-							let type = (!header && columnTypes[colIndex()]) || ""; // If it's a header row there is no type
 							if (type === "link") {
 								return (
 									<a
@@ -172,6 +183,19 @@ export default function Row(props: Props) {
 										class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
 										<i class="fa-solid fa-up-right-from-square text-red-900 dark:text-red-300"></i>
 									</a>
+								);
+							}
+							if (type === "copy") {
+								return (
+									<div class="cell flex items-center justify-center">
+										<button
+											type="button"
+											class="text-xl leading-none transition-transform duration-150 hover:scale-110 focus-visible:outline-none"
+											onClick={(e) => copyCellValue(e, String(item))}>
+											<i class="fa-regular fa-copy text-red-900 dark:text-red-300"></i>
+											<span class="sr-only">Αντιγραφή αναγνωριστικού</span>
+										</button>
+									</div>
 								);
 							}
 							if (type === "date" && item !== 0)

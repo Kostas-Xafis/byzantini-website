@@ -11,6 +11,7 @@ const links = [
 	{ name: "Παραρτήματα", url: "/admin/locations", force: false },
 	{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false },
 	{ name: "Διαχειριστές", url: "/admin/sysusers", force: false },
+	{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false },
 	{ name: "Ρυθμίσεις", url: "/admin/settings", force: false },
 	{ name: "Έξοδος", url: "/admin/logout", force: true },
 ];
@@ -136,45 +137,49 @@ export default function AdminNav(props: RouterProps) {
 				</div>
 				<style>
 					{`/* Subpixel gaps for no reason at all.... */
-			#burgerNav a:nth-child(10) {
+			#burgerNav a:nth-child(11) {
 				transition-duration: 0.475s;
 				transform: translateY(-10px);
 			}
-			#burgerNav a:nth-child(9) {
+			#burgerNav a:nth-child(10) {
 				transition-duration: 0.5s;
 				transform: translateY(-9px);
 			}
-			#burgerNav a:nth-child(8) {
+			#burgerNav a:nth-child(9) {
 				transition-duration: 0.525s;
 				transform: translateY(-8px);
 			}
-			#burgerNav a:nth-child(7) {
+			#burgerNav a:nth-child(8) {
 				transition-duration: 0.55s;
 				transform: translateY(-7px);
 			}
-			#burgerNav a:nth-child(6) {
+			#burgerNav a:nth-child(7) {
 				transition-duration: 0.575s;
 				transform: translateY(-6px);
 			}
-			#burgerNav a:nth-child(5) {
+			#burgerNav a:nth-child(6) {
 				transition-duration: 0.6s;
 				transform: translateY(-5px);
 			}
-			#burgerNav a:nth-child(4) {
+			#burgerNav a:nth-child(5) {
 				transition-duration: 0.625s;
 				transform: translateY(-4px);
 			}
-			#burgerNav a:nth-child(3) {
+			#burgerNav a:nth-child(4) {
 				transition-duration: 0.65s;
 				transform: translateY(-3px);
 			}
-			#burgerNav a:nth-child(2) {
+			#burgerNav a:nth-child(3) {
 				transition-duration: 0.675s;
 				transform: translateY(-2px);
 			}
-			#burgerNav a:nth-child(1) {
+			#burgerNav a:nth-child(2) {
 				transition-duration: 0.7s;
 				transform: translateY(-1px);
+			}
+			#burgerNav a:nth-child(1) {
+				transition-duration: 0.725s;
+				transform: translateY(0px);
 			}
 			#burgerNav:is(.open) a:nth-child(1) {
 				transition-duration: 0.6s;
@@ -187,6 +192,9 @@ export default function AdminNav(props: RouterProps) {
 			}
 			#burgerNav:is(.open) a:nth-child(4) {
 				transition-duration: 0.675s;
+			}
+			#burgerNav:is(.open) a:nth-child(11) {
+				transition-duration: 0.85s;
 			}
 			#burgerNav:is(.open) a:nth-child(5) {
 				transition-duration: 0.7s;

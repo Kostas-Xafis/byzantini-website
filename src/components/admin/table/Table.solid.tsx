@@ -132,7 +132,7 @@ export default function Table(props: Props) {
 				if (b[col_ind] === undefined || b[col_ind] === null) return -1;
 				return (a[col_ind] - b[col_ind]) * revOrder;
 			});
-		} else if (columnType === "link" || columnType === "string") {
+		} else if (columnType === "link" || columnType === "string" || columnType === "copy") {
 			rows.sort((a, b) => {
 				if (a[col_ind] === "" || !a[col_ind]) return 1;
 				if (b[col_ind] === "" || !b[col_ind]) return -1;

@@ -17,6 +17,7 @@ const site = (isMainBranch && productionSite) || process.env.CF_PAGES_URL || pro
 // https://astro.build/config
 export default defineConfig({
 	site,
+	port: 3000,
 	integrations: [
 		tailwind(),
 		solidJs(),

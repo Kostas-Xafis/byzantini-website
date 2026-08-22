@@ -7,6 +7,7 @@ import { InstrumentsRoutes } from "./instruments.client";
 import { LocationsRoutes } from "./locations.client";
 import { PaymentsRoutes } from "./payments.client";
 import { PayoffsRoutes } from "./payoffs.client";
+import { QueryLogsRoutes } from "./queryLogs.client";
 import { RegistrationsRoutes } from "./registrations.client";
 import { SchemaRoutes } from "./schema.client";
 import { SettingsBackupRoutes } from "./settingsBackup.client";
@@ -24,6 +25,7 @@ export const enum BaseRoutes {
 	Locations = "Locations",
 	Instruments = "Instruments",
 	SysUsers = "SysUsers",
+	QueryLogs = "QueryLogs",
 	Registrations = "Registrations",
 	Announcements = "Announcements",
 	Schema = "Schema",
@@ -40,6 +42,7 @@ export const API = {
 	...APIBuilderConstructor(BaseRoutes.Locations, LocationsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Instruments, InstrumentsRoutes),
 	...APIBuilderConstructor(BaseRoutes.SysUsers, SysUsersRoutes),
+	...APIBuilderConstructor(BaseRoutes.QueryLogs, QueryLogsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Registrations, RegistrationsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Announcements, AnnouncementsRoutes),
 	...APIBuilderConstructor(BaseRoutes.Schema, SchemaRoutes),
@@ -56,6 +59,7 @@ export const APIEndpoints = {
 	...EndpointsConstructor(BaseRoutes.Locations, LocationsRoutes),
 	...EndpointsConstructor(BaseRoutes.Instruments, InstrumentsRoutes),
 	...EndpointsConstructor(BaseRoutes.SysUsers, SysUsersRoutes),
+	...EndpointsConstructor(BaseRoutes.QueryLogs, QueryLogsRoutes),
 	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsRoutes),
 	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsRoutes),
 	...EndpointsConstructor(BaseRoutes.Schema, SchemaRoutes),
@@ -74,6 +78,7 @@ export interface APIArgs extends
 	APIArguments<BaseRoutes.Locations, typeof LocationsRoutes>,
 	APIArguments<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
 	APIArguments<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
+	APIArguments<BaseRoutes.QueryLogs, typeof QueryLogsRoutes>,
 	APIArguments<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
 	APIArguments<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
 	APIArguments<BaseRoutes.Schema, typeof SchemaRoutes>,
@@ -89,6 +94,7 @@ export interface APIResponse extends
 	APIRes<BaseRoutes.Locations, typeof LocationsRoutes>,
 	APIRes<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
 	APIRes<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
+	APIRes<BaseRoutes.QueryLogs, typeof QueryLogsRoutes>,
 	APIRes<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
 	APIRes<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
 	APIRes<BaseRoutes.Schema, typeof SchemaRoutes>,
