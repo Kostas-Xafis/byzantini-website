@@ -34,7 +34,6 @@
 
 // type InUnion<T, U> = T extends U ? true : false;
 
-
 // For each kv pair, assign the kv pair as the value of the key to separate the object into a "union" of objects
 // type ObjectSplit<T extends Record<string, any>> = { [K in keyof T]: Pick<T, K> };
 
@@ -56,82 +55,98 @@
 // 	[P in Replaced]: Value
 // };
 
-
-export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
+export type ConcatStrings<
+	A extends string,
+	B extends string,
+	Separator extends string = "",
+> = `${A}${Separator}${B}`;
 // Note: the classic `0 extends 1 & T ? true : false` form mis-evaluates when T is a
 // generic type parameter instantiated with `any` under TypeScript 6; this
 // function-variance form is instantiation-safe.
-export type IsAny<T> = (<G>() => G extends T ? 1 : 2) extends (<G>() => G extends any ? 1 : 2) ? true : false;
+export type IsAny<T> =
+	(<G>() => G extends T ? 1 : 2) extends <G>() => G extends any ? 1 : 2 ? true : false;
 
 export type PartialBy<Obj, OKey> = OKey extends keyof Obj
 	? Omit<Obj, OKey> & {
-		[Key in OKey]?: Obj[Key];
-	}
+			[Key in OKey]?: Obj[Key];
+		}
 	: Obj;
-export type RemovePartial<T extends Record<string, any>, KeyUnion extends keyof T> = Omit<T, KeyUnion> & {
+export type RemovePartial<T extends Record<string, any>, KeyUnion extends keyof T> = Omit<
+	T,
+	KeyUnion
+> & {
 	[K in KeyUnion]-?: Exclude<T[K], undefined>;
 };
 export type IsNull<T> = TypeGuard<T> extends true ? false : true;
 
-export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol, Value = any> =
-	Omit<T, Replaced> & {
-		[K in Replacement]: Value;
-	};
+export type ReplaceName<
+	T extends Record<any, any>,
+	Replaced extends keyof T,
+	Replacement extends string | number | symbol,
+	Value = any,
+> = Omit<T, Replaced> & {
+	[K in Replacement]: Value;
+};
 export type ObjectValuesToUnion<T extends Record<any, any>> = T[keyof T];
 
 type ObjectKeysToUnion<T extends Record<any, any>> = keyof T;
 
 export type NestedObjectKeysToUnion<T extends Record<string, any>, Prefix extends string = ""> = {
 	[K in keyof T]: T[K] extends Record<string, any>
-	? `${Prefix}${Extract<K, string | number>}` | NestedObjectKeysToUnion<T[K], `${Prefix}${Extract<K, string | number>}.`>
-	: `${Prefix}${Extract<K, string | number>}`;
+		?
+				| `${Prefix}${Extract<K, string | number>}`
+				| NestedObjectKeysToUnion<T[K], `${Prefix}${Extract<K, string | number>}.`>
+		: `${Prefix}${Extract<K, string | number>}`;
 }[keyof T];
 
-const object = {
-	1: "one",
-	"abc": 123,
-	"def": "hello",
-	"ghi": true,
-	"jkl": null,
-	"mno": undefined,
-	"pqr": Symbol("test"),
-	"stu": [1, 2, 3],
-	"vwx": { a: 1, b: 2 },
-	"yz": () => { },
-};
-
-type T1 = NestedObjectKeysToUnion<typeof object>;
-
-const t1: T1 = "vwx.b";
-
-
-type IsOptional<T, U extends keyof T> = Pick<T, U> extends {
-	[K in U]-?: T[K]
-} ? false : true;
+type IsOptional<T, U extends keyof T> =
+	Pick<T, U> extends {
+		[K in U]-?: T[K];
+	}
+		? false
+		: true;
 
 type GetUndefinedFields<T extends Record<string, any>> = keyof T extends `${infer K}`
 	? K extends keyof T
-	? IsOptional<T, K> extends false
-	? IsNull<T[K]> extends true
-	? K
-	: never
-	: never
-	: never
+		? IsOptional<T, K> extends false
+			? IsNull<T[K]> extends true
+				? K
+				: never
+			: never
+		: never
 	: never;
 
-export type RemoveNullishFields<T extends Record<string, any>> =
-	{
-		[K in keyof Omit<T, GetUndefinedFields<T>>]: T[K];
-	} & {};
+export type RemoveNullishFields<T extends Record<string, any>> = {
+	[K in keyof Omit<T, GetUndefinedFields<T>>]: T[K];
+} & {};
 
 export type RemoveFlag<T extends Record<string, any>, Flag extends string> = {
 	[K in keyof T as K extends `${Flag}${infer Key}` ? Key : K]: T[K];
 };
 
-
 export type TypeGuard<T> = [T] extends [{}] ? ([T] extends [never] ? false : true) : false;
 
-export type StringTypeToType<S extends string> = S extends "string" ? string : S extends "number" ? number : S extends "bigint" ? bigint : S extends "boolean" ? boolean : S extends "symbol" ? symbol : S extends "undefined" ? undefined : S extends "null" ? null : S extends "never" ? never : S extends "unknown" ? unknown : S extends "any" ? any : never;
+export type StringTypeToType<S extends string> = S extends "string"
+	? string
+	: S extends "number"
+		? number
+		: S extends "bigint"
+			? bigint
+			: S extends "boolean"
+				? boolean
+				: S extends "symbol"
+					? symbol
+					: S extends "undefined"
+						? undefined
+						: S extends "null"
+							? null
+							: S extends "never"
+								? never
+								: S extends "unknown"
+									? unknown
+									: S extends "any"
+										? any
+										: never;
 
 // let t1: TypeGuard<any> = true;
 // let t2: TypeGuard<string> = true;

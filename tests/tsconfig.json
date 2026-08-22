@@ -1,13 +1,6 @@
 {
 	"extends": "astro/tsconfigs/strict",
-	"include": [
-		"../.astro/types.d.ts",
-		"../lib",
-		"../getData",
-		"../src",
-		"../types",
-		"./**/*.ts"
-	],
+	"include": ["../.astro/types.d.ts", "../lib", "../getData", "../src", "../types", "./**/*.ts"],
 	"compilerOptions": {
 		"noErrorTruncation": true,
 		"strict": true,
@@ -35,7 +28,7 @@
 			"@_types/*": ["types/*"],
 			"@components/*": ["src/components/*"],
 			"@layouts/*": ["src/layouts/*"],
-			"@pages/*": ["src/pages/*"]
-		}
-	}
+			"@pages/*": ["src/pages/*"],
+		},
+	},
 }
