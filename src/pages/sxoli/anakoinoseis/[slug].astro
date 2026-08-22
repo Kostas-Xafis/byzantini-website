@@ -3,16 +3,28 @@ import type { AnnouncementImages, Announcements } from "@_types/entities";
 import Spinner from "@components/other/Spinner.astro";
 import Layout from "@layouts/Layout.astro";
 import { API, useAPI } from "@lib/hooks/useAPI.astro";
+import { unescapeNewlines } from "@utilities/text";
 export const prerender = false;
 
 let url = Astro.url.pathname;
 url = url.endsWith("/") ? url.slice(0, -1) : url;
-const announcement_title = (url.split("/").pop() as string).replaceAll("%20", " ");
+let announcement_title = url.split("/").pop() as string;
+// The path is only partially decoded; decodeURIComponent also handles characters like
+// commas in titles (e.g. "%2C") that .replaceAll("%20", " ") would miss.
+try {
+	announcement_title = decodeURIComponent(announcement_title);
+} catch {
+	// Malformed percent-encoding → keep the raw segment and let the 404 redirect handle it
+}
 let announcement: (Announcements & { images: AnnouncementImages[] }) | undefined;
 try {
-	const res_announcement = await useAPI(API.Announcements.getByTitle, {
-		UrlArgs: { title: announcement_title }
-	}, Astro);
+	const res_announcement = await useAPI(
+		API.Announcements.getByTitle,
+		{
+			UrlArgs: { title: announcement_title },
+		},
+		Astro,
+	);
 	announcement = res_announcement.data;
 	if (!announcement) return Astro.redirect("/404");
 } catch (e) {
@@ -21,92 +33,234 @@ try {
 const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
-const mainImg = announcement.images.find(img => img.is_main) as AnnouncementImages;
+const mainImg = announcement.images.find((img) => img.is_main) as AnnouncementImages;
 announcement.images = announcement.images.filter(
-	img => !img.is_main && !img.name.startsWith("thumb_")
+	(img) => !img.is_main && !img.name.startsWith("thumb_"),
 );
 if (!mainImg) return Astro.redirect("/404");
+
+const formatDate = (d: number) =>
+	new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
+
+// Dev/replication snapshots store newlines as the two characters "\n";
+// unescapeNewlines is a no-op on production data and makes paragraphs split
+// correctly in both worlds.
+const paragraphs = unescapeNewlines(announcement.content)
+	.split("\n")
+	.map((p) => p.trim())
+	.filter(Boolean);
+const links = announcement.links
+	? unescapeNewlines(announcement.links)
+			.split("|")
+			.map((l) => l.trim())
+			.filter(Boolean)
+	: [];
+
+// The server wraps bare URLs in <a href='...'>...</a> when saving; render them as
+// real links without using set:html (content stays text, only links become anchors).
+const contentAnchorPattern = /<a href='([^']+)'>([^<]*)<\/a>/g;
+
+// Extract a YouTube video id from an embed link (e.g. "https://www.youtube.com/embed/ZI5ocBAaHEc").
+const youtubeId = (link: string) => link.match(/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)/)?.[1];
 ---
 
 <Layout title={announcement.title} imageUrl={imgThumbSrc + mainImg.name}>
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}
-		class="relative flex flex-col p-12 max-sm:p-4 max-sm:px-0 max-sm:pb-20 overflow-auto items-center gap-y-6">
+		class="relative flex flex-col items-center gap-y-6 overflow-auto px-10 py-10 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
+		<a
+			href="/sxoli/anakoinoseis"
+			class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+			<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+			Οι Ανακοινώσεις
+		</a>
+
 		<h1
-			class="heading min-w-[30ch] max-w-[45ch] max-sm:w-[95dvw] text-5xl max-sm:text-2xl max-sm:px-4 text-center font-bold text-red-900 font-anaktoria drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
+			class="max-w-[60ch] text-center text-4xl max-sm:text-2xl font-bold text-red-900 font-anaktoria break-words drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 			{announcement.title}
 		</h1>
-		<div class="imgLoader group/img max-sm:px-4">
+
+		<div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+			<span
+				class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
+				<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+				<time datetime={new Date(announcement.date).toISOString()}>
+					{formatDate(announcement.date)}
+				</time>
+			</span>
+			<span
+				class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
+				<i class="fa-solid fa-eye" aria-hidden="true"></i>
+				{announcement.views}
+				{announcement.views > 1 ? "προβολές" : "προβολή"}
+			</span>
+			{
+				isRecent(announcement.date) && (
+					<span
+						class="inline-flex items-center rounded-md bg-amber-400/95 px-2.5 py-1 text-sm max-sm:text-xs font-bold text-amber-950"
+						aria-label="Νέα ανακοίνωση">
+						Νέο
+					</span>
+				)
+			}
+		</div>
+
+		<div class="imgLoader group/img relative w-full max-w-[780px]">
 			<div
-				class="hidden group-[:is(.loading)]/img:block w-[780px] h-[640px] max-sm:max-h-[420px] overflow-hidden">
+				class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-sm bg-red-50/40 backdrop-blur-[2px]">
 				<Spinner />
 			</div>
-			<div class="group-[:is(.loaded)]/img:block max-w-[780px] border-2 border-red-900">
+			<div
+				class="group-[:is(.loaded)]/img:block w-full overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600">
 				<img
+					id="posterImg"
 					fetchpriority="high"
 					data-src={imgSrc + mainImg.name}
 					src={imgSrc + mainImg.name}
-					alt={announcement?.title as string}
+					alt={announcement.title}
+					width="780"
 					height="640"
-					class="w-full max-w-[780px] object-cover max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px] shadow-md shadow-slate-600"
+					class="w-full max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px] object-cover"
 				/>
 			</div>
 		</div>
-		<div class="text-xl mt-4 self-start pl-8 max-sm:px-4 max-sm:text-base">
-			{announcement.content.split("\n").map(p => <p class="pb-2">{p}</p>)}
-		</div>
+
 		{
-			announcement.links && (
-				<div class="flex w-full items-center">
-					<div class="flex flex-row flex-wrap w-full mt-4 gap-y-6 loading items-center justify-evenly self-center">
-						{announcement.links.split("|").map(link => (
-							<div class="imgLoader group/img">
-								<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px]">
+			paragraphs.length > 0 && (
+				<article class="w-full max-w-[75ch] mt-2 text-xl max-sm:text-base leading-relaxed">
+					{paragraphs.map((p) => (
+						<p class="pb-4 last:pb-0">
+							{p.split(contentAnchorPattern).map((part, i, arr) =>
+								i % 3 === 1 ? (
+									<a
+										href={part}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="text-red-800 underline decoration-1 underline-offset-2 hover:text-red-950">
+										{arr[i + 1]}
+									</a>
+								) : i % 3 === 2 ? null : (
+									part
+								),
+							)}
+						</p>
+					))}
+				</article>
+			)
+		}
+
+		{
+			links.length > 0 && (
+				<div class="flex w-full max-w-[720px] flex-col items-center gap-y-4 mt-2">
+					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Βίντεο</h2>
+					<div class="flex w-full flex-wrap items-center justify-center gap-6">
+						{links.map((link) => {
+							const ytId = youtubeId(link);
+							// YouTube embeds use a click-to-play facade with a real, high-res
+							// thumbnail. Loading the player while hidden makes YouTube pick its
+							// tiny 120x90 `default.jpg` poster; showing the thumbnail ourselves
+							// guarantees sharp quality (up to 1280x720) and defers the heavy
+							// player until the user actually wants to watch.
+							if (ytId) {
+								return (
+									<div
+										class="videoWrap group/video relative w-full max-w-[720px] aspect-video overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600"
+										data-video-id={ytId}>
+										<button
+											type="button"
+											class="videoPoster absolute inset-0 w-full h-full cursor-pointer"
+											data-embed-src={
+												link +
+												(link.includes("?") ? "&" : "?") +
+												"autoplay=1"
+											}
+											aria-label="Αναπαραγωγή βίντεο">
+											<img
+												src={`https://i.ytimg.com/vi/${ytId}/maxresdefault.jpg`}
+												alt="Προεπισκόπηση βίντεο"
+												loading="lazy"
+												decoding="async"
+												class="w-full h-full object-cover"
+											/>
+											<span class="absolute inset-0 grid place-items-center bg-black/20 transition-colors duration-300 hover:bg-black/10">
+												<span class="grid place-items-center w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full bg-red-900 text-red-50 text-2xl max-sm:text-xl shadow-lg transition-transform duration-300 group-hover/video:scale-110">
+													<i
+														class="fa-solid fa-play"
+														aria-hidden="true"
+													/>
+												</span>
+											</span>
+										</button>
+										<div class="videoFrame hidden w-full h-full">
+											<iframe
+												title="Βίντεο ανακοίνωσης"
+												class="w-full h-full"
+												frameborder="0"
+												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+												referrerpolicy="strict-origin-when-cross-origin"
+												allowfullscreen
+											/>
+										</div>
+									</div>
+								);
+							}
+							return (
+								<div class="imgLoader group/img relative w-full max-w-[720px] aspect-video">
+									<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 rounded-sm">
+										<Spinner />
+									</div>
+									<div class="hidden group-[:is(.loaded)]/img:block w-full h-full overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600">
+										<iframe
+											data-src={link}
+											title="Βίντεο ανακοίνωσης"
+											class="w-full h-full"
+											frameborder="0"
+											allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+											referrerpolicy="strict-origin-when-cross-origin"
+											allowfullscreen
+										/>
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+			)
+		}
+
+		{
+			announcement.images.length > 0 && (
+				<div id="imgContainer" class="flex w-full flex-col items-center gap-y-4 mt-2">
+					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Φωτογραφίες</h2>
+					<div class="flex w-full flex-wrap items-center justify-center gap-6">
+						{announcement.images.map((image, i) => (
+							<div
+								class="imgLoader group/img relative w-[400px] max-w-[85vw] h-[320px]"
+								data-imgIndex={i}>
+								<div class="hidden group-[:is(.loading)]/img:block absolute inset-0">
 									<Spinner />
 								</div>
-								<iframe
-									class="hidden group-[:is(.loaded)]/img:block w-[38.5dvw] max-sm:max-w-[95dvw] h-[calc((9_*_38.5dvw)_/_16)] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden border-2 border-red-900"
-									src={link}
-									title="YouTube video player"
-									frameborder="0"
-									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-									referrerpolicy="strict-origin-when-cross-origin"
-									allowfullscreen
-								/>
+								<button
+									type="button"
+									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-sm border-2 border-red-900 transition-shadow hover:shadow-lg !shadow-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+									<img
+										data-src={imgThumbSrc + image.name}
+										alt={announcement.title}
+										width="400"
+										height="320"
+										class="w-full h-full object-cover"
+									/>
+								</button>
 							</div>
 						))}
 					</div>
 				</div>
 			)
 		}
-		<div id="imgContainer" class="flex w-full items-center">
-			<div
-				class="flex flex-row flex-wrap w-full mt-4 gap-6 loading items-center justify-center self-center">
-				{
-					announcement.images.map((image, i) => {
-						return (
-							<div class="imgLoader group/img" data-imgIndex={i - 1}>
-								<div class="hidden group-[:is(.loading)]/img:block w-[460px] h-[320px]">
-									<Spinner />
-								</div>
-								<button
-									type="button"
-									class="hidden group-[:is(.loaded)]/img:block max-w-[400px] max-sm:max-w-[95dvw] h-[320px] max-sm:h-auto max-sm:max-h-[420px] transition-shadow hover:shadow-lg !shadow-slate-800 max-sm:shadow-slate-600 max-sm:shadow-md cursor-pointer overflow-hidden border-2 border-red-900">
-									<img
-										data-src={imgThumbSrc + image.name}
-										alt={announcement?.title as string}
-										width="400px"
-										class="w-[400px] object-cover h-full"
-									/>
-								</button>
-							</div>
-						);
-					})
-				}
-			</div>
-		</div>
 	</section>
+
 	<div
 		id="imageCarouselContainer"
 		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" +
@@ -133,7 +287,9 @@ if (!mainImg) return Astro.redirect("/404");
 							id="mainCarouselImg"
 							alt={announcement.title}
 							class="object-cover h-[clamp(0px,100vh,calc(95dvh_-_79px))] hover:shadow-lg !shadow-red-950"
-							src={imgSrc + announcement.images.at(1)?.name}
+							data-src={announcement.images[0]
+								? imgSrc + announcement.images[0].name
+								: ""}
 						/>
 					</div>
 				</div>
@@ -143,13 +299,12 @@ if (!mainImg) return Astro.redirect("/404");
 						class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
 					></i>
 					{
-						// Have at least up to 5 preview thumbnails in the carousel
 						announcement.images
 							.slice(0, 5)
-							.map((image, i) => (
+							.map((image) => (
 								<img
 									class="w-[60px] aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
-									alt={announcement?.title}
+									alt={announcement.title}
 									src={imgThumbSrc + image.name}
 								/>
 							))
@@ -162,6 +317,7 @@ if (!mainImg) return Astro.redirect("/404");
 			</div>
 		</div>
 	</div>
+
 	<style>
 		body {
 			background: radial-gradient(circle at 50% -50%, rgb(234 212 212), transparent);
@@ -170,167 +326,250 @@ if (!mainImg) return Astro.redirect("/404");
 			transition: box-shadow 0.2s cubic-bezier(0, 0.8, 0.43, 0.64);
 		}
 	</style>
+
 	<script>
-		import { asyncQueue } from "@utilities/AsyncQueue";
 		import { onElementMount } from "@utilities/dom";
 		import { sleep } from "@utilities/sleep";
-		onElementMount("#announcementSection", async el => {
-			const imgs = [...el.querySelectorAll("img")];
-			const imgContainers = [...el.querySelectorAll(".imgLoader")] as HTMLElement[];
-			const jobs = imgs.map((img, i) => async () => {
-				let loaded = false;
-				imgContainers[i].classList.add("loading");
-				img.addEventListener("load", () => {
-					loaded = true;
-					if (i === 0) {
-						// Change object-fit to object-contain if the first poster image is has vertical aspect ratio
-						if (img.naturalHeight > img.naturalWidth) {
-							img.classList.remove("object-cover");
-							img.style.setProperty("object-fit", "contain");
-						}
-					}
-					imgContainers[i].classList.remove("loading");
-					imgContainers[i].classList.add("loaded");
-				});
-				img.src = img.dataset.src as string;
-				while (!loaded) {
-					await sleep(20);
-				}
-			});
-			await asyncQueue(jobs, {
-				maxJobs: 5
-			});
-			imgContainers.forEach((imgContainer, i) => {
-				if (i === 0) return;
-				imgContainer.addEventListener("click", () => {
-					document.dispatchEvent(
-						new CustomEvent("open_carousel", {
-							detail: { index: Number(imgContainer.dataset.imgindex as string) + 1 }
-						})
-					);
-				});
-			});
-		});
-		!!window.matchMedia("(min-width: 640px)").matches &&
-			onElementMount("i[data-direction]", () => {
-				const imgSrcArr = (
-					[...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]
-				).map(img =>
-					(img.dataset.src as string).split("/").pop()?.replace("thumb_", "")
-				) as string[];
-				const announcementId = (
-					document.querySelector("section[data-announcement-id]") as HTMLElement
-				).dataset.announcementId as string;
-				const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
-				const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
 
-				const leftBtn = document.querySelector("i[data-direction='left']") as HTMLElement;
-				const rightBtn = document.querySelector("i[data-direction='right']") as HTMLElement;
-				const carousel = document.querySelector("#imageCarousel") as HTMLElement;
-				const thumbContainer = document.querySelector(
-					"#thumbContainer"
-				) as HTMLImageElement;
+		onElementMount("#announcementSection", async (section) => {
+			const loaders = [...section.querySelectorAll(".imgLoader")] as HTMLElement[];
 
-				const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
-				const carouselLength = imgSrcArr.length >= 5 ? 5 : imgSrcArr.length;
-				const totalLength = imgSrcArr.length;
-				const mainCarouselImg = document.querySelector(
-					"#mainCarouselImg"
-				) as HTMLImageElement;
+			// ------- Progressive media loading (poster, gallery thumbnails, YouTube embeds) -------
+			const runLoader = (loader: HTMLElement) => {
+				const img = loader.querySelector<HTMLImageElement>("img[data-src]");
+				const frame = loader.querySelector<HTMLIFrameElement>("iframe[data-src]");
+				if (!img && !frame) return Promise.resolve();
 
-				function transitionToNextImage(nextIndex: number) {
-					const imgLoader = carousel.querySelector(".imgLoader") as HTMLElement;
-					imgLoader.classList.add("loading");
-					imgLoader.classList.remove("loaded");
-					let timer = Date.now();
-					mainCarouselImg.addEventListener(
-						"load",
-						async () => {
-							if (Date.now() - timer < 300) {
-								await sleep(200); // To avoid the image flickering
+				loader.classList.add("loading");
+				return new Promise<void>((resolve) => {
+					let settled = false;
+					const settle = () => {
+						if (settled) return;
+						settled = true;
+						loader.classList.remove("loading");
+						loader.classList.add("loaded");
+						resolve();
+					};
+					const target = (img || frame) as HTMLImageElement | HTMLIFrameElement;
+					target.addEventListener("load", settle, { once: true });
+					target.addEventListener("error", settle, { once: true });
+
+					if (img) {
+						// Letterbox (don't crop) vertically-oriented poster images.
+						const applyPosterAspect = () => {
+							if (img.naturalHeight > img.naturalWidth) {
+								img.classList.remove("object-cover");
+								img.style.setProperty("object-fit", "contain");
 							}
-							imgLoader.classList.remove("loading");
-							imgLoader.classList.add("loaded");
-						},
-						{ once: true }
-					);
-					mainCarouselImg.src = imgSrc + imgSrcArr.at(nextIndex);
-				}
-				function carouselShift(direction: "left" | "right") {
-					currIndex =
-						(direction === "left" ? currIndex - 1 : currIndex + 1) % imgSrcArr.length;
-					transitionToNextImage(currIndex);
-					if (totalLength <= 5) return;
-					for (let i = 0; i < carouselLength; i++) {
-						const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-						thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
+						};
+						if (img.id === "posterImg") {
+							img.addEventListener("load", applyPosterAspect, { once: true });
+							if (img.complete && img.naturalWidth > 0) applyPosterAspect();
+						}
+						// Gallery images start WITHOUT a src (only data-src). Note: an <img>
+						// with no src has img.complete === true, so "complete" must not be
+						// treated as "already loaded" unless a src was actually set.
+						const hasSrc = !!img.getAttribute("src");
+						if (!hasSrc) {
+							img.src = img.dataset.src as string; // load/error listeners settle
+						} else if (img.complete) {
+							settle(); // already loaded (or already failed) before this script ran
+						}
+						// src set but still loading: the listeners above settle it
+					} else {
+						(frame as HTMLIFrameElement).src = (frame as HTMLIFrameElement).dataset
+							.src as string;
 					}
-				}
-				function carouselGoto(index: number) {
-					currIndex = index;
-					transitionToNextImage(currIndex);
-					if (totalLength <= 5) return;
-					for (let i = 0; i < carouselLength; i++) {
-						const nextIndex = (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-						thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr.at(nextIndex);
-					}
-				}
+				});
+			};
 
-				let currIndex = Number(carousel.dataset.index || 0);
-				leftBtn.addEventListener("click", () => {
-					carouselShift("left");
-					carousel.dataset.index = currIndex.toString();
+			// Small concurrency pool (max 5), fed by an IntersectionObserver so below-the-fold
+			// media (and heavy YouTube embeds) load only when scrolled near + a 6s safety net.
+			let queue: (() => Promise<void>)[] = [];
+			let running = 0;
+			const MAX_RUNNING = 5;
+			const pump = () => {
+				while (running < MAX_RUNNING && queue.length) {
+					running++;
+					queue.shift()!().finally(() => {
+						running--;
+						pump();
+					});
+				}
+			};
+			const enqueue = (loader: HTMLElement) => {
+				queue.push(() => runLoader(loader));
+				pump();
+			};
+
+			const obsv = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							obsv.unobserve(entry.target);
+							enqueue(entry.target as HTMLElement);
+						}
+					});
+				},
+				{ root: null, rootMargin: "300px 0px", threshold: 0.01 },
+			);
+			loaders.forEach((loader) => obsv.observe(loader));
+			setTimeout(() => {
+				loaders.forEach((loader) => {
+					if (
+						!loader.classList.contains("loaded") &&
+						!loader.classList.contains("loading")
+					) {
+						obsv.unobserve(loader);
+						enqueue(loader);
+					}
 				});
-				rightBtn.addEventListener("click", () => {
-					carouselShift("right");
-					carousel.dataset.index = currIndex.toString();
-				});
-				thumbCarouselImgs.forEach((thumb, i) => {
-					thumb.addEventListener("click", () => {
-						let index = totalLength <= 5 ? i : (currIndex + i - 2) % imgSrcArr.length; // -2 for the previous 2 images and +1 for the next image
-						carouselGoto(index);
-						carousel.dataset.index = currIndex.toString();
+			}, 6000);
+
+			// ------- Gallery clicks: carousel on desktop, full image in a new tab on mobile -------
+			section
+				.querySelector("#imgContainer")
+				?.querySelectorAll(".imgLoader")
+				.forEach((container) => {
+					container.addEventListener("click", () => {
+						const index = Number((container as HTMLElement).dataset.imgindex ?? 0);
+						if (window.matchMedia("(max-width: 639px)").matches) {
+							const img = container.querySelector("img") as HTMLImageElement | null;
+							if (img?.src) window.open(img.src.replace("thumb_", ""), "_blank");
+						} else {
+							document.dispatchEvent(
+								new CustomEvent("open_carousel", { detail: { index } }),
+							);
+						}
 					});
 				});
 
-				const carouselContainer = document.querySelector(
-					"#imageCarouselContainer"
-				) as HTMLElement;
-
-				document.addEventListener("open_carousel", e => {
-					carouselGoto(Number(e.detail.index || 0));
-					carousel.dataset.index = currIndex.toString();
-					carouselContainer.classList.remove("hidden");
-				});
-				document.addEventListener("close_carousel", () => {
-					carouselContainer.classList.add("hidden");
-				});
-				document.addEventListener("keydown", e => {
-					if (e.key === "ArrowLeft") {
-						carouselShift("left");
-					} else if (e.key === "ArrowRight") {
-						carouselShift("right");
-					} else if (e.key === "Escape") {
-						carouselContainer.classList.add("hidden");
-					}
+			// ------- Video facade: high-res thumbnail, click-to-play embed -------
+			section.querySelectorAll("[data-video-id] img").forEach((img) => {
+				const id = (img.closest("[data-video-id]") as HTMLElement).dataset.videoId;
+				// Some videos have no HD thumbnail; fall back to 640x480 and then 480x360.
+				const fallbacks = [
+					`https://i.ytimg.com/vi/${id}/sddefault.jpg`,
+					`https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+				];
+				let fallbackIdx = 0;
+				img.addEventListener("error", () => {
+					if (fallbackIdx < fallbacks.length) img.src = fallbacks[fallbackIdx++];
 				});
 			});
-		!!window.matchMedia("(min-width: 640px)").matches &&
-			onElementMount("#carouselClose", el => {
+			section.querySelectorAll(".videoPoster").forEach((poster) => {
+				poster.addEventListener("click", () => {
+					const wrap = poster.closest(".videoWrap") as HTMLElement | null;
+					const frame = wrap?.querySelector(".videoFrame") as HTMLElement | null;
+					const iframe = frame?.querySelector("iframe") as HTMLIFrameElement | null;
+					if (!wrap || !frame || !iframe) return;
+					frame.classList.remove("hidden");
+					iframe.src = poster.getAttribute("data-embed-src") as string;
+					poster.classList.add("hidden");
+				});
+			});
+		});
+
+		// ------- Image carousel (desktop only) -------
+		function setupCarousel() {
+			const imgSrcArr = (
+				[...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]
+			).map((img) =>
+				(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
+			) as string[];
+			if (!imgSrcArr.length) return;
+
+			const announcementId = (
+				document.querySelector("section[data-announcement-id]") as HTMLElement
+			).dataset.announcementId as string;
+			const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
+			const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
+
+			const carousel = document.querySelector("#imageCarousel") as HTMLElement;
+			const mainCarouselImg = document.querySelector("#mainCarouselImg") as HTMLImageElement;
+			const thumbContainer = document.querySelector("#thumbContainer") as HTMLElement;
+			const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
+			const totalLength = imgSrcArr.length;
+			const carouselLength = Math.min(5, totalLength);
+			let currIndex = Number(carousel.dataset.index || 0);
+
+			function transitionToNextImage(nextIndex: number) {
+				const imgLoader = carousel.querySelector(".imgLoader") as HTMLElement;
+				const started = Date.now();
+				let done = false;
+				const finish = async () => {
+					if (done) return;
+					done = true;
+					await sleep(Math.max(0, 250 - (Date.now() - started))); // avoid flicker
+					imgLoader.classList.remove("loading");
+					imgLoader.classList.add("loaded");
+				};
+				mainCarouselImg.addEventListener("load", finish, { once: true });
+				mainCarouselImg.addEventListener("error", finish, { once: true });
+				imgLoader.classList.add("loading");
+				imgLoader.classList.remove("loaded");
+				mainCarouselImg.src = imgSrc + imgSrcArr[nextIndex];
+			}
+			function updateThumbs() {
+				if (totalLength <= 5) return;
+				for (let i = 0; i < carouselLength; i++) {
+					const nextIndex = (currIndex + i - 2 + totalLength) % totalLength;
+					thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr[nextIndex];
+				}
+			}
+			function carouselShift(direction: "left" | "right") {
+				currIndex =
+					(currIndex + (direction === "left" ? -1 : 1) + totalLength) % totalLength;
+				transitionToNextImage(currIndex);
+				updateThumbs();
+			}
+			function carouselGoto(index: number) {
+				currIndex = index;
+				transitionToNextImage(currIndex);
+				updateThumbs();
+			}
+
+			document.querySelector("i[data-direction='left']")?.addEventListener("click", () => {
+				carouselShift("left");
+				carousel.dataset.index = currIndex.toString();
+			});
+			document.querySelector("i[data-direction='right']")?.addEventListener("click", () => {
+				carouselShift("right");
+				carousel.dataset.index = currIndex.toString();
+			});
+			thumbCarouselImgs.forEach((thumb, i) => {
+				thumb.addEventListener("click", () => {
+					const index =
+						totalLength <= 5 ? i : (currIndex + i - 2 + totalLength) % totalLength;
+					carouselGoto(index);
+					carousel.dataset.index = currIndex.toString();
+				});
+			});
+
+			const carouselContainer = document.querySelector(
+				"#imageCarouselContainer",
+			) as HTMLElement;
+			document.addEventListener("open_carousel", (e) => {
+				carouselGoto(Number((e as CustomEvent).detail.index ?? 0));
+				carousel.dataset.index = currIndex.toString();
+				carouselContainer.classList.remove("hidden");
+			});
+			document.addEventListener("close_carousel", () => {
+				carouselContainer.classList.add("hidden");
+			});
+			document.addEventListener("keydown", (e) => {
+				if (e.key === "ArrowLeft") carouselShift("left");
+				else if (e.key === "ArrowRight") carouselShift("right");
+				else if (e.key === "Escape") carouselContainer.classList.add("hidden");
+			});
+
+			onElementMount("#carouselClose", (el) => {
 				el.addEventListener("click", () => {
 					document.dispatchEvent(new CustomEvent("close_carousel"));
 				});
 			});
-		window.matchMedia("(max-width: 640px)").matches &&
-			onElementMount("#imgContainer", () => {
-				const imgs = [
-					...document.querySelectorAll("#imgContainer img")
-				] as HTMLImageElement[];
-				imgs.forEach(img => {
-					img.addEventListener("click", e => {
-						window.open(img.src.replace("thumb_", ""), "_blank");
-					});
-				});
-			});
+		}
+
+		window.matchMedia("(min-width: 640px)").matches && setupCarousel();
 	</script>
 </Layout>

@@ -2,61 +2,212 @@
 import { API, useAPI } from "@hooks/useAPI.astro";
 import { type PageAnnouncement } from "@routes/announcements.client";
 import Layout from "@layouts/Layout.astro";
+import { unescapeNewlines } from "@utilities/text";
 export const prerender = false;
 
 const announcements = (await useAPI(API.Announcements.getForPage, undefined, Astro)).data || [];
 
 const imgThumbSrc = (a: PageAnnouncement) =>
 	"/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;
-const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR");
+const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title}`;
+const formatDate = (d: number) =>
+	new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
+
+// Safe, word-boundary excerpt. (The old slice(0, indexOf(" ")) trick broke when the content
+// had no space at/after the cut point and silently dropped the last character.)
+const excerpt = (content: string, max = 220) => {
+	const clean = unescapeNewlines(content).replace(/\s+/g, " ").trim();
+	if (clean.length <= max) return clean;
+	const cut = clean.slice(0, max);
+	const lastSpace = cut.lastIndexOf(" ");
+	return cut.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…";
+};
 ---
 
 <Layout title="Ανακοινώσεις">
-	<div class="p-10 max-sm:px-4 flex flex-col gap-y-10 h-full overflow-y-auto">
-		<h1
-			id="announcementHead"
-			class="heading relative p-2 text-center w-[11ch] place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full after:left-[calc(100%_+_2.15ch)] after:w-[11ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px] tracking-wide">
-			Ανακοινώσεις
-		</h1>
-		{
-			announcements.map(a => {
-				return (
-					<div class="flex flex-row gap-x-4 gap-y-4 h-[400px] max-sm:flex-col max-sm:h-auto">
-						<h2 class="hidden max-sm:block text-2xl text-center font-anaktoria font-bold text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.2)]">
-							{a.title}
-						</h2>
-						<div class="max-w-[400px] min-w-[200px] max-sm:w-full max-sm:max-h-[300px] rounded-[3px] max-h-[450px] overflow-hidden shadow-md shadow-gray-600 border-2 border-red-900">
-							<img
-								src={imgThumbSrc(a)}
-								alt={a.title}
-								width="400"
-								height="500"
-								class="object-cover h-full"
-							/>
-						</div>
-						<div class="flex flex-col mb-4 w-[calc(100vw_-_500px)] max-sm:w-full min-w-[200px] gap-y-4">
-							<h2 class="max-sm:hidden text-3xl font-anaktoria font-bold text-red-900 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.2)]">
-								{a.title}
-							</h2>
-							<p class="text-lg max-sm:text-base text-gray-100 bg-red-900 w-fit px-2 py-1 rounded-md shadow-md shadow-slate-300 tracking-wider">
-								{formatDate(a.date) + " • "} {a.views}{" "}
-								{a.views > 1 ? "Προβολές" : "Προβολή"}
-							</p>
+	<main
+		id="announcementsPage"
+		class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-10 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
+		<header class="flex flex-col items-center gap-y-2">
+			<h1
+				id="announcementsHead"
+				class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
+				Ανακοινώσεις
+			</h1>
+			<p
+				class="inline-flex items-center gap-2 rounded-full border border-red-900/25 bg-red-900/[0.07] px-4 py-1.5 text-base max-sm:text-sm font-semibold tracking-wide text-red-900/90">
+				<i class="fa-solid fa-newspaper text-sm" aria-hidden="true"></i>
+				<span>
+					{
+						announcements.length > 0
+							? announcements.length +
+								(announcements.length === 1 ? " ανακοίνωση" : " ανακοινώσεις")
+							: "Νέα και ενημερώσεις της Σχολής"
+					}
+				</span>
+			</p>
+		</header>
 
-							<p class="text-lg max-sm:text-base pl-1 max-h-[60%] max-sm:max-h-max overflow-hidden whitespace-break-spaces">
-								{a.content
-									? a.content.slice(0, a.content.indexOf(" ", 200)) + "..."
-									: ""}
-							</p>
-							<a
-								href={`/sxoli/anakoinoseis/${a.title}`}
-								class="text-lg max-sm:text-base  text-gray-100 bg-red-900 w-fit px-2 py-1 rounded-md shadow-md shadow-slate-300">
-								Περισσότερα <i class="fa-solid fa-arrow-right" />
-							</a>
-						</div>
-					</div>
-				);
-			})
+		{
+			announcements.length === 0 ? (
+				<div class="flex flex-col items-center gap-y-4 py-16 text-center">
+					<i class="fa-solid fa-bullhorn text-6xl text-red-900/40" aria-hidden="true" />
+					<p class="text-2xl max-sm:text-xl font-semibold text-gray-700">
+						Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.
+					</p>
+					<p class="text-lg max-sm:text-base text-gray-500">
+						Επισκεφθείτε τη σελίδα σύντομα για νεότερες ανακοινώσεις της Σχολής.
+					</p>
+				</div>
+			) : (
+				<div class="flex flex-col gap-y-8 max-sm:gap-y-6 w-full">
+					{announcements.map((a, i) => (
+						<a
+							href={detailHref(a)}
+							aria-label={"Διαβάστε την ανακοίνωση: " + a.title}
+							class={
+								"announcementCard group/card relative flex flex-col sm:flex-row" +
+								(i % 2 === 1 ? " sm:flex-row-reverse" : "") +
+								" overflow-hidden rounded-xl border-2 border-red-900 bg-white shadow-md shadow-gray-400" +
+								" transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-red-900/25" +
+								" focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2"
+							}>
+							<div class="announcementMedia relative overflow-hidden sm:w-[clamp(220px,32%,400px)] sm:shrink-0 sm:self-stretch">
+								<div
+									class="announcementPlaceholder w-full aspect-[16/9] max-sm:max-h-[300px] sm:aspect-auto sm:h-full grid place-items-center bg-red-900/[0.06]"
+									class:list={[a.main_image ? "hidden" : ""]}>
+									<i
+										class="fa-solid fa-bullhorn text-5xl sm:text-6xl text-red-900/50"
+										aria-hidden="true"
+									/>
+								</div>
+								{a.main_image && (
+									<img
+										src={imgThumbSrc(a)}
+										alt={"Φωτογραφία: " + a.title}
+										width="400"
+										height="300"
+										loading="lazy"
+										decoding="async"
+										class="w-full aspect-[16/9] max-sm:max-h-[300px] sm:aspect-auto sm:h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]"
+									/>
+								)}
+								{isRecent(a.date) && (
+									<span
+										class="absolute top-2 left-2 rounded-md bg-amber-400/95 px-2 py-0.5 text-sm max-sm:text-xs font-bold text-amber-950 shadow-sm"
+										aria-label="Νέα ανακοίνωση">
+										Νέο
+									</span>
+								)}
+								{a.total_images > 1 && (
+									<span
+										class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-md bg-red-900/85 px-2 py-1 text-sm max-sm:text-xs text-red-50 backdrop-blur-[2px]"
+										aria-label={`${a.total_images} φωτογραφίες`}>
+										<i class="fa-solid fa-images" aria-hidden="true" />
+										{a.total_images}
+									</span>
+								)}
+							</div>
+							<div class="flex flex-col gap-y-3 flex-1 min-w-0 p-5 sm:p-6">
+								<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+									<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
+										<i class="fa-solid fa-calendar-days" aria-hidden="true" />
+										<time datetime={new Date(a.date).toISOString()}>
+											{formatDate(a.date)}
+										</time>
+									</span>
+									<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
+										<i class="fa-solid fa-eye" aria-hidden="true" />
+										{a.views} {a.views > 1 ? "προβολές" : "προβολή"}
+									</span>
+								</div>
+								<h2 class="font-anaktoria text-2xl sm:text-3xl font-bold text-red-900 leading-snug line-clamp-2">
+									{a.title}
+								</h2>
+								{a.content && (
+									<p class="text-lg max-sm:text-base text-gray-700 leading-relaxed line-clamp-3">
+										{excerpt(a.content)}
+									</p>
+								)}
+								<span class="mt-auto pt-3 self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-base max-sm:text-sm text-red-900 transition-colors duration-300 group-hover/card:bg-red-900 group-hover/card:text-red-50">
+									Περισσότερα
+									<i
+										class="fa-solid fa-arrow-right transition-transform duration-300 group-hover/card:translate-x-1"
+										aria-hidden="true"
+									/>
+								</span>
+							</div>
+						</a>
+					))}
+				</div>
+			)
 		}
-	</div>
+	</main>
+
+	<style>
+		.announcementCard:is(.show) {
+			opacity: 0.01;
+			animation: fadeIn 0.6s ease-in-out forwards;
+		}
+		.announcementCard:is(.remove) {
+			opacity: 1;
+			animation: fadeOut 0.3s ease-in-out forwards;
+		}
+	</style>
+
+	<script>
+		import { onElementMount } from "@utilities/dom";
+
+		// Slide the heading underline in (same emphasis pattern as the rest of the site).
+		onElementMount("#announcementsHead", (head) => {
+			const obsv = new IntersectionObserver(
+				(entries) => {
+					if (entries[0].intersectionRatio >= 0.3) head.classList.add("emphasis");
+					else head.classList.remove("emphasis");
+				},
+				{ rootMargin: "0px", threshold: [0.2, 0.3, 0.5] },
+			);
+			obsv.observe(document.querySelector("#announcementsPage") as Element);
+		});
+
+		// Fade cards in/out as they enter/leave the scroll area (same pattern as the teachers page).
+		onElementMount("#announcementsPage", (page) => {
+			const obsv = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						const card = entry.target as HTMLElement;
+						const isVisible = card.classList.contains("show");
+						if (entry.intersectionRatio <= 0.05 && isVisible) {
+							card.classList.remove("show");
+							card.classList.add("remove");
+						} else if (entry.intersectionRatio >= 0.2 && !isVisible) {
+							card.classList.remove("remove");
+							card.classList.add("show");
+						}
+					});
+				},
+				{
+					rootMargin: "0px",
+					threshold: [0.05, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+				},
+			);
+			page.querySelectorAll(".announcementCard").forEach((card) => {
+				obsv.observe(card);
+			});
+
+			// If a thumbnail fails to load (missing/corrupted image), swap in the placeholder
+			// instead of showing a broken image + raw alt text.
+			const applyImgFallback = (img: HTMLImageElement) => {
+				const media = img.closest(".announcementMedia");
+				img.classList.add("hidden");
+				media?.querySelector(".announcementPlaceholder")?.classList.remove("hidden");
+			};
+			page.querySelectorAll(".announcementMedia img").forEach((img) => {
+				img.addEventListener("error", () => applyImgFallback(img), { once: true });
+				// The image may have already failed before this script attached its listener.
+				if (img.complete && img.naturalWidth === 0) applyImgFallback(img);
+			});
+		});
+	</script>
 </Layout>

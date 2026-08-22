@@ -51,7 +51,7 @@
 			Εγγραφές
 		</h3>
 		<h3 class="text-[2.25vw] h-min font-bold text-red-50 self-center max-sm:text-xl">
-			Σχoλικού Έτους 2025-26
+			Σχoλικού Έτους 2026-27
 		</h3>
 		<h3 class="text-[2.25vw] h-min font-bold text-red-50 self-center max-sm:text-xl">
 			1/9 έως 30/10
@@ -84,7 +84,8 @@
 	</a>
 	<style is:inline>
 		#welcome-page {
-			background: linear-gradient(to bottom left, rgba(12 10 9 / 0.5), rgba(12 10 9 / 0.9)),
+			background:
+				linear-gradient(to bottom left, rgba(12 10 9 / 0.5), rgba(12 10 9 / 0.9)),
 				url("/church.jpg"), url("/church_low.jpg");
 			background-size: cover;
 		}
@@ -141,7 +142,7 @@
 	import { iOS, onElementMount } from "@utilities/dom";
 	onElementMount("#welcome-page > h1", () => {
 		const heads = [
-			...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")
+			...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3"),
 		] as HTMLElement[];
 		heads.forEach((head, i) => {
 			let txt = head.innerText;
@@ -163,7 +164,7 @@
 	});
 	onElementMount("#xairetismos-btn", () => {
 		const btn = document.querySelector("#xairetismos-btn") as HTMLElement;
-		btn.addEventListener("click", e => {
+		btn.addEventListener("click", (e) => {
 			e.preventDefault();
 			const xairetismos = document.querySelector("#xairetismos-mitropolitou") as HTMLElement;
 			xairetismos.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -172,9 +173,9 @@
 	if (iOS()) {
 		onElementMount("#welcome-page > h1", () => {
 			const heads = [
-				...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")
+				...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3"),
 			] as HTMLElement[];
-			heads.forEach(head => {
+			heads.forEach((head) => {
 				head.style.setProperty("letter-spacing", "-1px");
 			});
 		});

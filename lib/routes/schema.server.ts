@@ -52,15 +52,20 @@ const splitSqlStatements = (sql: string): string[] => {
 export const sqliteGenerateBackup = async () => {
 	const new_schema = ["PRAGMA journal_mode=WAL;"];
 	const conn = createDbConnection("sqlite-prod");
-	const { rows: tables } = await conn.execute("SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'");
+	const { rows: tables } = await conn.execute(
+		"SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'",
+	);
 	for (const table of tables) {
 		const tableName = table[2];
 		const createTableSql = table[4] + ";";
 		new_schema.push(createTableSql);
 		const { columns, rows } = await conn.execute(`SELECT * FROM ${tableName}`);
-		const insertStatements = rows.map(row => {
-			return `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${columns.map(col => JSON.stringify(row[col])).join(", ")});`;
-		}).join("\n").replaceAll("\\\"", "\"\"");
+		const insertStatements = rows
+			.map((row) => {
+				return `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${columns.map((col) => JSON.stringify(row[col])).join(", ")});`;
+			})
+			.join("\n")
+			.replaceAll('\\"', '""');
 		new_schema.push(insertStatements);
 	}
 	return new_schema.join("\n");
@@ -104,13 +109,16 @@ serverRoutes.migrate.func = ({ slug }) => {
 
 		const { target } = slug;
 		const dbType = target === "local" ? "sqlite-dev" : "sqlite-prod";
-		const sql = await fsp.readFile(`${PROJECT_ABSOLUTE_PATH}/dbSnapshots/migrations/latest.sql`, "utf-8");
+		const sql = await fsp.readFile(
+			`${PROJECT_ABSOLUTE_PATH}/dbSnapshots/migrations/latest.sql`,
+			"utf-8",
+		);
 		const statements = splitSqlStatements(sql);
 		if (statements.length === 0) {
 			throw Error("Migration file is empty");
 		}
 
-		await executeTransaction(async (t) => {
+		executeTransaction(async (t) => {
 			for (const statement of statements) {
 				await t.executeQuery(statement);
 			}
@@ -119,6 +127,5 @@ serverRoutes.migrate.func = ({ slug }) => {
 		return `Migrated ${target} database to latest schema`;
 	}, "Σφάλμα κατά την μεταφορά στο τελευταίο σχήμα");
 };
-
 
 export const SchemaServerRoutes = serverRoutes;

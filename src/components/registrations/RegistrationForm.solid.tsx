@@ -162,7 +162,7 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-calendar-days",
 		disabled: true,
 		blurDisabled: false,
-		value: "2025-2026",
+		value: "2026-2027",
 	},
 };
 
