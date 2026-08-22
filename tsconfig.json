@@ -1,14 +1,14 @@
 {
 	"extends": "astro/tsconfigs/strict",
 	"exclude": [
+		"./.astro",
 		"./.vscode",
-		"./dist/**",
-		"./.wrangler/**",
-		"services/pdfWorker/**",
-		"./node_modules/**",
-		"./tests/**",
-		"services/pdfWorker/**",
-		"/email/**",
+		"./.wrangler",
+		"./dist",
+		"./node_modules",
+		"./tests",
+		"./services",
+		"./email",
 	],
 	"include": [".astro/types.d.ts", "lib", "getData", "src", "types"],
 	"compilerOptions": {

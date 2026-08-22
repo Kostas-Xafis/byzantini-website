@@ -38,12 +38,11 @@ dist/
 /pdfWorker
 /imageCompression
 /test.ts
-/services/vcf
 # AI tooling state (local session/cache data, not guidance files)
 .claude/
 .cursor/
 .codex/
 .aider*
 .continue/
-
+/services
 /contacts/*.vcf
