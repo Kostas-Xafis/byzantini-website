@@ -390,10 +390,16 @@ export default function Input(props: InputProps) {
 					}
 				/>
 			</Show>
-			<p class="absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10">
+			<p
+				class={
+					"absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-t-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10" +
+					(required
+						? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400"
+						: "")
+				}>
 				{label}
 				{required ? (
-					<i class="absolute bg-transparent left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
+					<i class="absolute bg-transparent left-[0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
 				) : (
 					<></>
 				)}

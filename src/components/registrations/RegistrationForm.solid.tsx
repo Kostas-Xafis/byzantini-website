@@ -667,38 +667,21 @@ export function RegistrationForm() {
 						</div>
 					</div>
 				}>
-				<div class="h-max pb-20">
+				<div class="relative h-max pb-[6rem] max-lg:pb-[9.5rem]">
+					<img
+						id="registrationFormBg"
+						src={`/${formSelected()}.jpg`}
+						alt=""
+						aria-hidden="true"
+						class="fixed inset-0 h-full w-full object-cover blur-[2px] z-0 pointer-events-none"
+					/>
 					<div
 						id="registrationContainer"
-						class="w-full h-full flex flex-col grid-cols-1 gap-y-4 place-items-center font-dicact max-sm:gap-y-12">
-						<div
-							id="registrationSelect"
-							class="py-6 max-sm:py-1 max-sm:w-full flex flex-row gap-x-16 max-sm:gap-x-0 max-sm:pt-0 place-items-center z-[100]">
-							{btns.map(([str, type]) => (
-								<div
-									class={
-										"group self-center grid grid-cols-1 border-solid border-2 border-red-900 max-sm:border-0 max-sm:border-b-[1px] rounded-md max-sm:rounded-none shadow-md max-sm:shadow-none shadow-gray-400 transition-colors ease-in-out " +
-										(type === formSelected()
-											? "bg-red-900"
-											: "hover:bg-red-900")
-									}
-									onClick={() => onSelectClick(type)}>
-									<button
-										class={
-											"p-6 max-sm:p-2 text-2xl font-didact font-medium bg-transparent group-hover:text-white transition-colors ease-in-out max-sm:text-base" +
-											(type === formSelected()
-												? " text-white"
-												: " group-hover:text-white")
-										}>
-										{str}
-									</button>
-								</div>
-							))}
-						</div>
+						class="relative z-10 w-full h-full flex flex-col grid-cols-1 py-10 gap-y-4 place-items-center font-dicact max-sm:gap-y-12">
 						<form
 							id="registrationForm"
 							data-prefix={PREFIX}
-							class="group/form px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-600 rounded-md border-solid border-2 border-red-900"
+							class="group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/75 backdrop-blur-md"
 							onSubmit={onSubmit}>
 							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
@@ -775,6 +758,36 @@ export function RegistrationForm() {
 							</Show>
 						</form>
 					</div>
+					<nav
+						id="registrationSelect"
+						class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] max-lg:bottom-[5.5rem] -translate-x-1/2 z-[1001]"
+						aria-label="Κατηγορίες μαθημάτων">
+						<div class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
+							<For each={btns}>
+								{([str, type]) => (
+									<div class="group/btn relative">
+										<button
+											type="button"
+											aria-pressed={
+												type === formSelected() ? "true" : "false"
+											}
+											class={
+												"rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-3 max-sm:py-1.5 text-[1.05vw] max-sm:text-xs font-medium whitespace-nowrap transition-colors duration-300 ease-in-out " +
+												(type === formSelected()
+													? "bg-red-50 text-red-900 font-semibold shadow-md"
+													: "text-red-50 hover:bg-red-800 hover:text-white")
+											}
+											onClick={() => onSelectClick(type)}>
+											<span class="max-xs:hidden">{str}</span>
+											<span class="hidden max-xs:inline">
+												{str.replace(" Μουσική", "")}
+											</span>
+										</button>
+									</div>
+								)}
+							</For>
+						</div>
+					</nav>
 				</div>
 			</Show>
 			<Popup
@@ -802,6 +815,10 @@ export function RegistrationForm() {
 	#registrationForm {
 		opacity: 0.0001;
         animation: fadeIn 0.3s ease-in-out forwards;
+    }
+	#registrationFormBg {
+		opacity: 0.0001;
+        animation: fadeIn 0.7s ease-in-out 0.3s forwards;
     }
 	#registrationContainer:is(:not(.remove)),
 	#submitMessage:is(:not(.hidden)) {
