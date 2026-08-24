@@ -29,7 +29,7 @@ const excerpt = (content: string, max = 220) => {
 	<main
 		id="announcementsPage"
 		class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-10 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
-		<header class="flex flex-col items-center gap-y-2">
+		<header class="flex flex-col items-center gap-y-6">
 			<h1
 				id="announcementsHead"
 				class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
@@ -130,10 +130,10 @@ const excerpt = (content: string, max = 220) => {
 										{excerpt(a.content)}
 									</p>
 								)}
-								<span class="mt-auto pt-3 self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-base max-sm:text-sm text-red-900 transition-colors duration-300 group-hover/card:bg-red-900 group-hover/card:text-red-50">
+								<span class="mt-auto self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-base max-sm:text-sm text-red-900 transition-colors duration-300 group-hover/card:bg-red-900 group-hover/card:text-red-50">
 									Περισσότερα
 									<i
-										class="fa-solid fa-arrow-right transition-transform duration-300 group-hover/card:translate-x-1"
+										class="fa-solid fa-arrow-right transition-transform duration-300 pt-0.5 group-hover/card:translate-x-1"
 										aria-hidden="true"
 									/>
 								</span>
@@ -203,11 +203,13 @@ const excerpt = (content: string, max = 220) => {
 				img.classList.add("hidden");
 				media?.querySelector(".announcementPlaceholder")?.classList.remove("hidden");
 			};
-			page.querySelectorAll(".announcementMedia img").forEach((img) => {
-				img.addEventListener("error", () => applyImgFallback(img), { once: true });
-				// The image may have already failed before this script attached its listener.
-				if (img.complete && img.naturalWidth === 0) applyImgFallback(img);
-			});
+			([...page.querySelectorAll(".announcementMedia img")] as HTMLImageElement[]).forEach(
+				(img) => {
+					img.addEventListener("error", () => applyImgFallback(img), { once: true });
+					// The image may have already failed before this script attached its listener.
+					if (img.complete && img.naturalWidth === 0) applyImgFallback(img);
+				},
+			);
 		});
 	</script>
 </Layout>
