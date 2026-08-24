@@ -3,12 +3,18 @@ import Navbar from "@components/Navbar.astro";
 import Links from "@components/headers/Links.astro";
 import Contact from "@components/contact/Contact.astro";
 import ContactPhone from "@components/contact/ContactPhone.astro";
+
+export interface Props {
+	description?: string;
+}
+
+const { description } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="el">
 	<head>
-		<Links title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"/>
+		<Links title="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής" description={description} />
 		<style is:inline>
 			html {
 				font-family:

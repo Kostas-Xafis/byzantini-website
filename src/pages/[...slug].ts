@@ -13,11 +13,11 @@ export async function GET(ctx: APIContext) {
 	})();
 	try {
 		const file = await Bucket.get(ctx, url);
-		if (!file) return ctx.redirect("/404");
+		if (!file) return ctx.rewrite("/404");
 
 		if ("byteLength" in file) return new Response(file, { status: 200 });
 		else return new Response(await file.arrayBuffer(), { status: 200 });
-	} catch (error: any) {
-		return ctx.redirect("/404?url=" + encodeURIComponent(url));
+	} catch {
+		return ctx.rewrite("/404");
 	}
 }

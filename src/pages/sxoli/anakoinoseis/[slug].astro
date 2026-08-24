@@ -1,8 +1,10 @@
 ---
 import type { AnnouncementImages, Announcements } from "@_types/entities";
+import JsonLd from "@components/seo/JsonLd.astro";
 import Spinner from "@components/other/Spinner.astro";
 import Layout from "@layouts/Layout.astro";
 import { API, useAPI } from "@lib/hooks/useAPI.astro";
+import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { unescapeNewlines } from "@utilities/text";
 export const prerender = false;
 
@@ -26,9 +28,9 @@ try {
 		Astro,
 	);
 	announcement = res_announcement.data;
-	if (!announcement) return Astro.redirect("/404");
+	if (!announcement) return Astro.rewrite("/404");
 } catch (e) {
-	return Astro.redirect("/404");
+	return Astro.rewrite("/404");
 }
 const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
@@ -37,7 +39,7 @@ const mainImg = announcement.images.find((img) => img.is_main) as AnnouncementIm
 announcement.images = announcement.images.filter(
 	(img) => !img.is_main && !img.name.startsWith("thumb_"),
 );
-if (!mainImg) return Astro.redirect("/404");
+if (!mainImg) return Astro.rewrite("/404");
 
 const formatDate = (d: number) =>
 	new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
@@ -61,11 +63,44 @@ const links = announcement.links
 // real links without using set:html (content stays text, only links become anchors).
 const contentAnchorPattern = /<a href='([^']+)'>([^<]*)<\/a>/g;
 
+// Meta description: first ~155 characters of the announcement text.
+const announcementDescription = paragraphs
+	.join(" ")
+	.replace(/<[^>]*>/g, "")
+	.slice(0, 155)
+	.trim();
+
 // Extract a YouTube video id from an embed link (e.g. "https://www.youtube.com/embed/ZI5ocBAaHEc").
 const youtubeId = (link: string) => link.match(/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)/)?.[1];
+
+// Structured data: Article + BreadcrumbList for this announcement.
+const canonicalPath = Astro.url.pathname;
+const articleSchema = {
+	"@context": "https://schema.org",
+	"@type": "Article",
+	"@id": `${SCHOOL.url}${canonicalPath}#article`,
+	headline: announcement.title,
+	description: announcementDescription,
+	datePublished: new Date(announcement.date).toISOString(),
+	image: [`${SCHOOL.url}${imgSrc}${mainImg.name}`],
+	author: { "@type": "Organization", "@id": SCHOOL_ID },
+	publisher: { "@type": "Organization", "@id": SCHOOL_ID },
+	mainEntityOfPage: `${SCHOOL.url}${canonicalPath}`,
+	inLanguage: "el-GR",
+};
+const breadcrumbs = breadcrumbsSchema([
+	{ name: "Αρχική", url: "/" },
+	{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
+	{ name: announcement.title, url: canonicalPath },
+]);
 ---
 
-<Layout title={announcement.title} imageUrl={imgThumbSrc + mainImg.name}>
+<Layout
+	title={announcement.title}
+	description={announcementDescription}
+	imageUrl={imgThumbSrc + mainImg.name}>
+	<JsonLd data={articleSchema} />
+	<JsonLd data={breadcrumbs} />
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}

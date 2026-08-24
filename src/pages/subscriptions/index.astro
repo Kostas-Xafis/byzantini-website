@@ -4,7 +4,9 @@ import Popup from "@components/other/Popup.astro";
 import SigninLayout from "@layouts/SigninLayout.astro";
 ---
 
-<SigninLayout title="Εγγραφή">
+<SigninLayout
+	title="Εγγραφή στο Newsletter"
+	description="Εγγραφείτε στη λίστα email της Σχολής για να λαμβάνετε νέα, ανακοινώσεις και ενημερώσεις για τις εγγραφές.">
 	<div
 		class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-8">
 		<div class="grid justify-center content-center">
@@ -48,7 +50,7 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 	import { useAPI } from "@hooks/useAPI.astro";
 
 	let tid: number | null = null;
-	document.getElementById("subForm")?.addEventListener("submit", async e => {
+	document.getElementById("subForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
 		const inputs = form.elements as any;
@@ -61,7 +63,7 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 				throw new Error("Το πεδίο διεύθυνσης email είναι υποχρεωτικό.");
 			}
 			const res = await useAPI("Registrations.emailSubscribe", {
-				RequestObject: data
+				RequestObject: data,
 			});
 			if (res.data && res.data.subscribed) {
 				document.getElementById("popup")?.dispatchEvent(new CustomEvent("show"));

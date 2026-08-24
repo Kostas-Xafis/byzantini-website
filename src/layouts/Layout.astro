@@ -6,18 +6,26 @@ import ContactPhone from "@components/contact/ContactPhone.astro";
 export interface Props {
 	title: string;
 	imageUrl?: string;
+	description?: string;
+	canonical?: string;
+	noindex?: boolean;
 }
 
-const { title, imageUrl } = Astro.props;
+const { title, imageUrl, description, canonical, noindex } = Astro.props;
 
-const logoUrl = (new URL(Astro.request.url).origin + imageUrl) || ""
+const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).href : undefined;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="el">
 	<head>
-
-		<Links title={title} imageURL={logoUrl}/>
+		<Links
+			title={title}
+			imageURL={logoUrl}
+			description={description}
+			canonical={canonical}
+			noindex={noindex}
+		/>
 		<style is:inline>
 			html {
 				font-family: system-ui, sans-serif;
@@ -34,7 +42,7 @@ const logoUrl = (new URL(Astro.request.url).origin + imageUrl) || ""
 			h2,
 			h3,
 			li,
-			input[name*='date']::placeholder {
+			input[name*="date"]::placeholder {
 				color: #282828;
 			}
 			select {

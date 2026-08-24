@@ -1,11 +1,63 @@
 ---
+import JsonLd from "@components/seo/JsonLd.astro";
 import DatepickerCSS from "@components/DatepickerCSS.astro";
 import { RegistrationForm } from "@components/registrations/RegistrationForm.solid";
 import Layout from "@layouts/Layout.astro";
+import { breadcrumbsSchema, SCHOOL } from "@utilities/schema";
 export const prerender = true;
+
+// FAQ answers mirror the registration form's own helper texts (tooltips/alerts).
+const faqSchema = {
+	"@context": "https://schema.org",
+	"@type": "FAQPage",
+	"@id": `${SCHOOL.url}/eggrafes#faq`,
+	mainEntity: [
+		{
+			"@type": "Question",
+			name: "Τι σημαίνει ο αριθμός μητρώου «000»;",
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: "Για νέες εγγραφές ο αριθμός μητρώου είναι 000. Για επανεγγραφές αναζητήστε τον αριθμό μητρώου στην περσινή αίτηση, η οποία θα σας αποσταλεί με email, ή συμβουλευτείτε τη Γραμματεία της Σχολής.",
+			},
+		},
+		{
+			"@type": "Question",
+			name: "Πώς συμπληρώνω το ΑΜΚΑ;",
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: "Συμπληρώνετε τον Αριθμό Μητρώου Κοινωνικής Ασφάλισης (ΑΜΚΑ). Ο ΑΜΚΑ αποτελείται από 11 ψηφία.",
+			},
+		},
+		{
+			"@type": "Question",
+			name: "Πώς συμπληρώνω τα προσωπικά μου στοιχεία;",
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: "Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (π.χ. Παπαδόπουλος Αντώνης). Το ονοματεπώνυμό σας συμπληρώνεται όπως ακριβώς αναγράφεται στην ταυτότητά σας.",
+			},
+		},
+		{
+			"@type": "Question",
+			name: "Πώς επιλέγω καθηγητή και μάθημα;",
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: "Επιλέγετε τον καθηγητή σας από τη λίστα του τμήματος. Στα τμήματα παραδοσιακής και ευρωπαϊκής μουσικής, όταν έχετε ορίσει καθηγητή, επιλέγετε το όργανο ή το μάθημα που διδάσκει ο καθηγητής.",
+			},
+		},
+	],
+};
+
+const breadcrumbs = breadcrumbsSchema([
+	{ name: "Αρχική", url: "/" },
+	{ name: "Εγγραφές", url: "/eggrafes" },
+]);
 ---
 
-<Layout title="Εγγραφές">
+<Layout
+	title="Εγγραφές"
+	description="Ηλεκτρονική εγγραφή στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής: τμήματα βυζαντινής, παραδοσιακής και ευρωπαϊκής μουσικής. Συμπληρώστε τη φόρμα εγγραφής.">
+	<JsonLd data={faqSchema} />
+	<JsonLd data={breadcrumbs} />
 	<RegistrationForm client:idle client:only="solid-js" />
 	<DatepickerCSS />
 </Layout>

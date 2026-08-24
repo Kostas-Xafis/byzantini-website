@@ -1,10 +1,20 @@
 ---
-import Layout from "@layouts/Layout.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
 import Administration from "@components/sxoli/Administration.astro";
+import Layout from "@layouts/Layout.astro";
+import { breadcrumbsSchema } from "@utilities/schema";
 export const prerender = true;
 ---
 
-<Layout title="Η Σχολή μας">
+<Layout
+	title="Διοικητικό Συμβούλιο"
+	description="Το Διοικητικό Συμβούλιο και ο Διευθυντής της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής της Ι. Μητρόπολης Κηφισίας, Αμαρουσίου, Ωρωπού και Μαραθώνος.">
+	<JsonLd
+		data={breadcrumbsSchema([
+			{ name: "Αρχική", url: "/" },
+			{ name: "Διοικητικό Συμβούλιο", url: "/sxoli/dioikitiko-symvoulio" },
+		])}
+	/>
 	<main
 		id="sxoli"
 		class="w-full h-max flex flex-col font-didact overflow-hidden px-12 py-6 max-sm:px-4">

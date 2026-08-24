@@ -12,9 +12,9 @@ const res = await useAPI("Registrations.emailUnsubscribe", { RequestObject: { to
 let success = res.data?.isValid || false;
 ---
 
-<SigninLayout title="Απεγγραφή">
+<SigninLayout title="Απεγγραφή" noindex>
 	<div
-		class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12">
+		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 border border-transparent dark:border-gray-700">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
@@ -28,15 +28,15 @@ let success = res.data?.isValid || false;
 		{
 			success ? (
 				<div class="text-center">
-					<h2 class="text-3xl font-didact">Επιτυχής απεγγραφή</h2>
-					<p class="text-xl font-didact">
+					<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Επιτυχής απεγγραφή</h2>
+					<p class="text-xl font-didact text-red-950 dark:text-red-50">
 						Έχετε απεγγραφεί από την λίστα αλληλογραφίας της Σχολής.
 					</p>
 				</div>
 			) : (
 				<div class="text-center">
-					<h2 class="text-3xl font-didact">Αποτυχία απεγγραφής</h2>
-					<p class="text-xl font-didact">
+					<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Αποτυχία απεγγραφής</h2>
+					<p class="text-xl font-didact text-red-950 dark:text-red-50">
 						Δεν ήταν δυνατή η απεγγραφή σας από την λίστα αλληλογραφίας της Σχολής.
 					</p>
 				</div>

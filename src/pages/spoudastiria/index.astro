@@ -1,17 +1,27 @@
 ---
 import GMap from "@components/other/GMap.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
 import { useAPI, API } from "@hooks/useAPI.astro";
 import Layout from "@layouts/Layout.astro";
+import { breadcrumbsSchema } from "@utilities/schema";
 
 export const prerender = false;
 
 let _locations = (await useAPI(API.Locations.getByPriority, undefined, Astro))?.data || [];
 const imgSrc = "/spoudastiria/";
-const schoolLocations = _locations.filter(l => !l.partner);
-const otherLocations = _locations.filter(l => !!l.partner);
+const schoolLocations = _locations.filter((l) => !l.partner);
+const otherLocations = _locations.filter((l) => !!l.partner);
 ---
 
-<Layout title="Σπουδαστήρια">
+<Layout
+	title="Σπουδαστήρια"
+	description="Τα σπουδαστήρια και τα παραρτήματα της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής της Ι. Μητρόπολης Κηφισίας: διευθύνσεις, τηλέφωνα και στοιχεία επικοινωνίας.">
+	<JsonLd
+		data={breadcrumbsSchema([
+			{ name: "Αρχική", url: "/" },
+			{ name: "Σπουδαστήρια", url: "/spoudastiria" },
+		])}
+	/>
 	<style is:inline>
 		#btsContainer > div {
 			-ms-overflow-style: none !important; /* Internet Explorer 10+ */
@@ -56,7 +66,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 					></i>
 				</div>
 				{
-					otherLocations.map(l => (
+					otherLocations.map((l) => (
 						<div
 							data-name={l.name}
 							class="btn group/btn relative w-full py-[1vw] flex justify-center bg-white transition-colors duration-500 ease-in-out hover:bg-red-900 border-b-2 border-red-900 data-[show]/btn:bg-red-900">
@@ -95,7 +105,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 						label="Συνεργαζόμενες Σχολές"
 						class="bg-red-900 text-center text-white">
 						{
-							otherLocations.map(l => (
+							otherLocations.map((l) => (
 								<option
 									data-name={l.name}
 									value={l.name}
@@ -159,7 +169,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 										{l.email ?? ""}&NegativeThinSpace;
 									</a>
 									<span class="text-[1.25vw] max-sm:text-lg px-1">•</span>
-									{l.telephones.split(",").map(tel => {
+									{l.telephones.split(",").map((tel) => {
 										return (
 											<a target="_blank" href={`tel:${tel}`}>
 												{tel}
@@ -226,7 +236,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 
 	window.matchMedia("(min-width: 641px)").matches &&
 		onElementMount("#locationsContainer", async function () {
-			document.querySelectorAll("#btsContainer div[data-name]").forEach(btn =>
+			document.querySelectorAll("#btsContainer div[data-name]").forEach((btn) =>
 				btn.addEventListener("click", () => {
 					const name = btn.getAttribute("data-name") as string;
 					const shown = document.querySelector("[data-show]") as HTMLElement | null;
@@ -244,7 +254,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 									location.classList.remove("show", "remove");
 									shown.removeAttribute("data-show");
 									void shown.offsetWidth;
-								}
+								},
 							})
 							.step(() => {
 								container
@@ -259,13 +269,13 @@ const otherLocations = _locations.filter(l => !!l.partner);
 						heading.innerText = name;
 						btn.setAttribute("data-show", "");
 					}
-				})
+				}),
 			);
 			if (window.location.hash) {
 				const hash = window.location.hash.replace("#", "");
 				const location = decodeURI(hash);
 				const btn = document.querySelector(
-					`#btsContainer div[data-name='${location}'] button`
+					`#btsContainer div[data-name='${location}'] button`,
 				) as HTMLElement;
 				btn.click();
 			}
@@ -273,7 +283,7 @@ const otherLocations = _locations.filter(l => !!l.partner);
 	window.matchMedia("(max-width: 640px)").matches &&
 		onElementMount("#locationsContainer", async function () {
 			const select = document.querySelector(
-				"#btsMobileContainer select"
+				"#btsMobileContainer select",
 			) as unknown as HTMLSelectElement;
 			select.addEventListener("change", () => {
 				const atl = new AnimTimeline();
@@ -285,10 +295,10 @@ const otherLocations = _locations.filter(l => !!l.partner);
 					selectedClassList = [] as any;
 				atl.step(() => {
 					prevLocation.classList.add("remove");
-					prevLocation.classList.forEach(v => locationClassList.push(v));
+					prevLocation.classList.forEach((v) => locationClassList.push(v));
 					container
 						.querySelector(`div[data-name='${locationName}']`)
-						?.classList.forEach(v => selectedClassList.push(v));
+						?.classList.forEach((v) => selectedClassList.push(v));
 				})
 					.step({
 						time: 300,
@@ -300,11 +310,11 @@ const otherLocations = _locations.filter(l => !!l.partner);
 								?.classList.add("show");
 							heading.innerText = locationName;
 
-							prevLocation.classList.forEach(v => locationClassList.push(v));
+							prevLocation.classList.forEach((v) => locationClassList.push(v));
 							container
 								.querySelector(`div[data-name='${locationName}']`)
-								?.classList.forEach(v => selectedClassList.push(v));
-						}
+								?.classList.forEach((v) => selectedClassList.push(v));
+						},
 					})
 					.start();
 			});
@@ -312,8 +322,8 @@ const otherLocations = _locations.filter(l => !!l.partner);
 	onElementMount("#btsContainer", () => {
 		// Create an instersection observer that when the are more elements to be scrolled a shadow is added to the bottom of the container. Same case for the top.
 		const observer = new IntersectionObserver(
-			entries => {
-				entries.forEach(entry => {
+			(entries) => {
+				entries.forEach((entry) => {
 					const container = document.querySelector("#btsContainer") as HTMLElement;
 					if (entry.target === container.querySelector("div:first-child")) {
 						if (entry.intersectionRatio <= 0.4) {
@@ -333,14 +343,14 @@ const otherLocations = _locations.filter(l => !!l.partner);
 			{
 				root: document.querySelector("#btsContainer") as HTMLElement,
 				rootMargin: "0px",
-				threshold: [0.1, 0.4, 0.5, 0.6, 0.9]
-			}
+				threshold: [0.1, 0.4, 0.5, 0.6, 0.9],
+			},
 		);
 		observer.observe(
-			document.querySelector("#btsContainer > div > div:first-child") as HTMLElement
+			document.querySelector("#btsContainer > div > div:first-child") as HTMLElement,
 		);
 		observer.observe(
-			document.querySelector("#btsContainer > div > div:last-child") as HTMLElement
+			document.querySelector("#btsContainer > div > div:last-child") as HTMLElement,
 		);
 	});
 	onElementMount("#btsContainer", () => {
@@ -349,14 +359,14 @@ const otherLocations = _locations.filter(l => !!l.partner);
 		btnUp.addEventListener("click", () => {
 			container.scrollBy({
 				top: -container.offsetHeight / 4,
-				behavior: "smooth"
+				behavior: "smooth",
 			});
 		});
 		const btnDown = document.querySelector(".down") as HTMLElement;
 		btnDown.addEventListener("click", () => {
 			container.scrollBy({
 				top: container.offsetHeight / 4,
-				behavior: "smooth"
+				behavior: "smooth",
 			});
 		});
 	});

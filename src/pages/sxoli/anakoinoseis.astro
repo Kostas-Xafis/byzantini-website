@@ -1,7 +1,9 @@
 ---
 import { API, useAPI } from "@hooks/useAPI.astro";
 import { type PageAnnouncement } from "@routes/announcements.client";
+import JsonLd from "@components/seo/JsonLd.astro";
 import Layout from "@layouts/Layout.astro";
+import { breadcrumbsSchema } from "@utilities/schema";
 import { unescapeNewlines } from "@utilities/text";
 export const prerender = false;
 
@@ -25,7 +27,15 @@ const excerpt = (content: string, max = 220) => {
 };
 ---
 
-<Layout title="Ανακοινώσεις">
+<Layout
+	title="Ανακοινώσεις"
+	description="Ανακοινώσεις της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής: εξετάσεις, εκδηλώσεις, αγιασμοί, συναυλίες και νέα της σχολικής κοινότητας.">
+	<JsonLd
+		data={breadcrumbsSchema([
+			{ name: "Αρχική", url: "/" },
+			{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
+		])}
+	/>
 	<main
 		id="announcementsPage"
 		class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-10 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-24">

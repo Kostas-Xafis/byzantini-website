@@ -1,7 +1,9 @@
 ---
 import type { Instruments } from "@_types/entities";
+import JsonLd from "@components/seo/JsonLd.astro";
 import { API, useAPI } from "@hooks/useAPI.astro";
 import Layout from "@layouts/Layout.astro";
+import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { teacherTitleByGender } from "@utilities/text";
 
 export const prerender = false;
@@ -92,9 +94,41 @@ const monogram = (fullname: string) => {
 	if (!words.length) return "Σ";
 	return words[0][0] + (words.length > 1 ? words[words.length - 1][0] : "");
 };
+
+// Structured data: one ItemList of Person entries (deduplicated by teacher id,
+// a teacher may teach in more than one department).
+const schemaTeachers = [
+	...new Map([...byz_teachers, ...par_teachers, ...eur_teachers].map((t) => [t.id, t])).values(),
+];
+const teachersSchema = {
+	"@context": "https://schema.org",
+	"@type": "ItemList",
+	"@id": `${SCHOOL.url}/kathigites#teachers`,
+	name: "Καθηγητές και δάσκαλοι της Σχολής",
+	itemListElement: schemaTeachers.map((teacher, index) => ({
+		"@type": "ListItem",
+		position: index + 1,
+		item: {
+			"@type": "Person",
+			name: teacher.fullname,
+			jobTitle: teacherTitleByGender(teacher.title, teacher.gender),
+			...(teacher.linktree ? { sameAs: [teacher.linktree] } : {}),
+			...(teacher.picture ? { image: `${SCHOOL.url}/${imgSrc}${teacher.picture}` } : {}),
+			worksFor: { "@id": SCHOOL_ID },
+		},
+	})),
+};
+const breadcrumbs = breadcrumbsSchema([
+	{ name: "Αρχική", url: "/" },
+	{ name: "Καθηγητές", url: "/kathigites" },
+]);
 ---
 
-<Layout title="Καθηγητές">
+<Layout
+	title="Καθηγητές"
+	description="Γνωρίστε τους καθηγητές και δασκάλους της Σχολής: βυζαντινή, παραδοσιακή και ευρωπαϊκή μουσική, μουσικά όργανα, βιογραφικά και στοιχεία επικοινωνίας.">
+	<JsonLd data={teachersSchema} />
+	<JsonLd data={breadcrumbs} />
 	<div id="teachersPage" class="group/type byz w-full font-didact">
 		<div
 			id="teachersContainer"

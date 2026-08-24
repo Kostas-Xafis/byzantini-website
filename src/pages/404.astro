@@ -1,12 +1,21 @@
 ---
 import SigninLayout from "@layouts/SigninLayout.astro";
-import { getUrlSearchParams } from "@utilities/url";
 
-const { url } = getUrlSearchParams(Astro.request.url);
+export const prerender = false;
+
+Astro.response.status = 404;
+
+// The path the visitor actually requested. When this page is reached through
+// Astro.rewrite (e.g. from the catch-all route), originPathname keeps the
+// original URL, while Astro.url.pathname points to "/404".
+const requestedPath = ["/404", "/404/", "/"].includes(Astro.originPathname)
+	? "/"
+	: Astro.originPathname;
 ---
-<SigninLayout title="404">
+
+<SigninLayout title="404" noindex>
 	<div
-		class="p-12 h-max place-self-center bg-white grid grid-rows-[100px_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-12">
+		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid grid-rows-[100px_min-content] shadow-lg shadow-gray-700 rounded-md gap-y-12 border border-transparent dark:border-gray-700">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
@@ -18,14 +27,15 @@ const { url } = getUrlSearchParams(Astro.request.url);
 			</a>
 		</div>
 		<div class="text-center flex flex-col gap-y-8 items-center">
-			<h2 class="text-3xl font-didact">/{url}</h2>
-			<h2 class="text-3xl font-didact">Η σελίδα που ψάχνετε δεν υπάρχει</h2>
-			<a href="/">
-				<button
-					class="text-xl font-didact p-2 bg-red-900 text-white w-[20ch] shadow-md shadow-stone-700 rounded-md"
-					>Πίσω στην αρχική σελίδα</button
-				>
-			</a>
+			<h2 class="max-w-[min(44ch,76vw)] break-all text-3xl font-didact text-red-950 dark:text-red-50">{requestedPath}</h2>
+			<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">
+				Η σελίδα που ψάχνετε δεν υπάρχει
+			</h2>
+			<a
+				href="/"
+				class="block text-xl text-center font-didact p-2 bg-red-900 text-white w-[20ch] shadow-md shadow-stone-700 rounded-md transition-colors duration-300 hover:bg-red-950 focus:bg-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+				>Πίσω στην αρχική σελίδα</a
+			>
 		</div>
 	</div>
 </SigninLayout>

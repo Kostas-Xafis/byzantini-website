@@ -4,7 +4,10 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 export const prerender = true;
 ---
 
-<SigninLayout title="Είσοδος Διαχειριστή">
+<SigninLayout
+	title="Είσοδος Διαχειριστή"
+	description="Είσοδος στο σύστημα διαχείρισης της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής."
+	noindex>
 	<div
 		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 border border-transparent dark:border-gray-700">
 		<div class="grid justify-center content-center">
@@ -17,7 +20,9 @@ export const prerender = true;
 				/>
 			</a>
 		</div>
-		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">Είσοδος Διαχειρηστή</h2>
+		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">
+			Είσοδος Διαχειρηστή
+		</h2>
 		<form id="loginForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
 			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
 			<Input

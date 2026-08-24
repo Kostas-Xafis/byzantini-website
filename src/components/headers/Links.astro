@@ -1,23 +1,40 @@
 ---
 import { isProduction } from "@lib/utils.server.ts";
 import { SEO } from "astro-seo";
+
 export interface Props {
 	title: string;
+	description?: string;
 	imageURL?: string;
+	canonical?: string;
+	noindex?: boolean;
 }
-const { title, imageURL } = Astro.props;
+
+const { title, description, imageURL, canonical, noindex } = Astro.props;
+
+const SITE_NAME = "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής";
+const SITE_URL = (Astro.site ?? new URL(Astro.request.url)).origin;
 const hasBrandIcons = !Astro.url.pathname.includes("login");
-const logoUrl = imageURL || "https://musicschool-metamorfosi.gr/logo.png";
-const openGraphImg = !imageURL ? {
-	url: logoUrl,
-	alt: "Λογότυπο Σχολής Βυζαντινής & Παραδοσιακής Μουσικής",
-	height: 549,
-	width: 549,
-	type: "image/png",
-	secureUrl: logoUrl
-} : {
-	url: logoUrl
-}
+
+// `<title>` uses titleTemplate (suffix added only on non-home pages); OG/Twitter
+// reuse the same composed title for consistency.
+const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
+const pageDescription =
+	description ||
+	"Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως";
+// Canonical is the clean URL: no query strings (?regid=…) and no fragments.
+const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_URL).href;
+
+// Default social share image (1200x630) unless the page provides its own.
+const defaultShareImage = {
+	url: new URL("/og-image.jpg", SITE_URL).href,
+	alt: SITE_NAME,
+	height: 630,
+	width: 1200,
+	type: "image/jpeg",
+	secureUrl: new URL("/og-image.jpg", SITE_URL).href,
+};
+const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 ---
 
 <>
@@ -26,40 +43,52 @@ const openGraphImg = !imageURL ? {
 	<meta name="theme-color" content="#7f1d1d" />
 	<SEO
 		charset="utf-8"
-		title={title || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής"}
-		description="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως"
+		title={title}
+		titleTemplate={title === SITE_NAME ? undefined : `%s | ${SITE_NAME}`}
+		description={pageDescription}
+		canonical={canonicalUrl}
+		noindex={noindex}
 		openGraph={{
 			basic: {
-				title: title || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής",
-				url: Astro.url,
-				image: logoUrl,
-				type: "website"
+				title: fullTitle,
+				url: canonicalUrl,
+				image: shareImage.url,
+				type: "website",
 			},
-			image: openGraphImg,
+			image: shareImage,
 			optional: {
-				locale: "el_GR"
-			}
+				description: pageDescription,
+				locale: "el_GR",
+				siteName: SITE_NAME,
+			},
+		}}
+		twitter={{
+			card: "summary_large_image",
+			title: fullTitle,
+			description: pageDescription,
+			image: shareImage.url,
+			imageAlt: shareImage.alt,
 		}}
 		extend={{
 			link: [
 				{ rel: "icon", href: "/logo_small.png" },
 				{ rel: "sitemap", href: "/sitemap-index.xml" },
-				{ rel: "robots", href: "/robots.txt" }
+				{ rel: "robots", href: "/robots.txt" },
 			],
 			meta: [
 				{
 					name: "facebook:image",
-					content: logoUrl
+					content: shareImage.url,
 				},
 				{
 					name: "messenger:image",
-					content: logoUrl
+					content: shareImage.url,
 				},
 				{
 					name: "viber:image",
-					content: logoUrl
-				}
-			]
+					content: shareImage.url,
+				},
+			],
 		}}
 	/>
 	<link rel="preload" href="/fonts/ANAKTORIA.OTF" as="font" crossorigin="" />

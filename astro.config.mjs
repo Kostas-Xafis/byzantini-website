@@ -9,7 +9,11 @@ const cloudflareEnv =
 	process.env.CLOUDFLARE_ENV ||
 	(process.env.NODE_ENV === "production" ? "production" : "development");
 
-const unmappedRoutes = (page) => page.includes("admin") || page.includes("login");
+const unmappedRoutes = (page) =>
+	page.includes("admin") ||
+	page.includes("login") ||
+	page.includes("oauth2callback") ||
+	page.includes("unsubscribe");
 const productionSite = "https://musicschool-metamorfosi.gr";
 const isMainBranch = process.env.CF_PAGES_BRANCH === "main";
 const site = (isMainBranch && productionSite) || process.env.CF_PAGES_URL || productionSite;

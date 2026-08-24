@@ -1,12 +1,16 @@
 ---
-import MainPageLayout from "@layouts/MainPageLayout.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
 import Landing from "@components/mainpage/Landing.astro";
 import Lessons from "@components/mainpage/Lessons.astro";
 import Welcoming from "@components/mainpage/Welcoming.astro";
+import MainPageLayout from "@layouts/MainPageLayout.astro";
+import { organizationSchema } from "@utilities/schema";
 export const prerender = true;
 ---
 
-<MainPageLayout>
+<MainPageLayout
+	description="Σχολή Βυζαντινής & Παραδοσιακής Μουσικής της Ι. Μητρόπολης Κηφισίας. Μαθήματα βυζαντινής ψαλτικής, παραδοσιακών οργάνων και ευρωπαϊκής μουσικής στη Μεταμόρφωση.">
+	<JsonLd data={organizationSchema()} />
 	<div id="landing-page" class="w-full h-full grid auto-rows-max grid-flow-row grid-cols-1">
 		<Landing />
 		<Welcoming />

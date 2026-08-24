@@ -9,14 +9,14 @@ const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="el">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="theme-color" content="#7f1d1d" />
 
-		<Links title={title} />
+		<Links title={title} noindex />
 		<script>
 			import { applyDashboardTheme, resolveDashboardTheme } from "@utilities/theme";
 
@@ -289,7 +289,7 @@ const { title } = Astro.props;
 								atl.step(() => menu.parentElement?.classList.remove("open"))
 									.step({
 										time: 700,
-										anim: () => menu.classList.add("hidden", "flex")
+										anim: () => menu.classList.add("hidden", "flex"),
 									})
 									.start();
 							} else {
