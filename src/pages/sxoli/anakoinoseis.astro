@@ -11,7 +11,10 @@ const announcements = (await useAPI(API.Announcements.getForPage, undefined, Ast
 
 const imgThumbSrc = (a: PageAnnouncement) =>
 	"/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;
-const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title}`;
+// Announcement URLs must be safe in every path: stripped commas (cloudflare
+// rejects %2C before the app ever sees it). Kept in sync with the [slug]
+// page, the api lookup and the sitemap generator.
+const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
 const formatDate = (d: number) =>
 	new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
 const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;

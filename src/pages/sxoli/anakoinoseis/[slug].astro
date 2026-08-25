@@ -18,6 +18,9 @@ try {
 } catch {
 	// Malformed percent-encoding → keep the raw segment and let the 404 redirect handle it
 }
+// Commas are stripped from announcement URLs (the platform router rejects %2C
+// before the app sees it); the lookup below matches by comma-less title.
+announcement_title = announcement_title.replaceAll(",", "");
 let announcement: (Announcements & { images: AnnouncementImages[] }) | undefined;
 try {
 	const res_announcement = await useAPI(
@@ -93,6 +96,21 @@ const breadcrumbs = breadcrumbsSchema([
 	{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
 	{ name: announcement.title, url: canonicalPath },
 ]);
+
+// One VideoObject per embedded YouTube video in this announcement.
+const videoSchemas = links
+	.filter((link) => youtubeId(link))
+	.map((embedUrl) => ({
+		"@context": "https://schema.org",
+		"@type": "VideoObject",
+		name: announcement.title,
+		description: announcementDescription,
+		thumbnailUrl: [`${SCHOOL.url}${imgSrc}${mainImg.name}`],
+		uploadDate: new Date(announcement.date).toISOString(),
+		embedUrl,
+		publisher: { "@type": "Organization", "@id": SCHOOL_ID },
+		inLanguage: "el-GR",
+	}));
 ---
 
 <Layout
@@ -101,6 +119,19 @@ const breadcrumbs = breadcrumbsSchema([
 	imageUrl={imgThumbSrc + mainImg.name}>
 	<JsonLd data={articleSchema} />
 	<JsonLd data={breadcrumbs} />
+	{videoSchemas.map((video) => <JsonLd data={video} key={video.embedUrl} />)}
+	<div
+		id="readingProgressBar"
+		class="pointer-events-none fixed left-0 right-0 z-[999] h-[3px]"
+		role="progressbar"
+		aria-label="Πρόοδος ανάγνωσης"
+		aria-valuemin="0"
+		aria-valuemax="100"
+		aria-valuenow="0">
+		<div
+			class="h-full w-full origin-left bg-red-900 shadow-[0_1px_3px_rgba(127,29,29,0.35)] transition-transform duration-75 ease-out will-change-transform">
+		</div>
+	</div>
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}
@@ -606,5 +637,43 @@ const breadcrumbs = breadcrumbsSchema([
 		}
 
 		window.matchMedia("(min-width: 640px)").matches && setupCarousel();
+
+		// ------- Reading progress bar: thin bar tucked right under the navbar -------
+		onElementMount("#announcementSection", (section) => {
+			const bar = document.querySelector<HTMLElement>("#readingProgressBar");
+			const fill = bar?.querySelector<HTMLElement>("div");
+			if (!bar || !fill) return;
+
+			// The fixed navbar has a breakpoint-dependent height (4.2vw on desktop,
+			// content-sized on small screens), so measure it and sit below its bottom edge.
+			const nav = document.querySelector<HTMLElement>("nav");
+			const placeBar = () => {
+				if (nav) bar.style.top = `${nav.getBoundingClientRect().height}px`;
+			};
+
+			const update = () => {
+				// The announcement section is its own scroll container (overflow-auto),
+				// but fall back to the document scroller in case the layout ever changes.
+				const scroller: Element =
+					section.scrollHeight > section.clientHeight + 1
+						? section
+						: (document.scrollingElement ?? document.documentElement);
+				const max = scroller.scrollHeight - scroller.clientHeight;
+				const progress = max > 0 ? Math.min(1, Math.max(0, scroller.scrollTop / max)) : 0;
+				fill.style.transform = `scaleX(${progress})`;
+				bar.setAttribute("aria-valuenow", Math.round(progress * 100).toString());
+			};
+
+			section.addEventListener("scroll", update, { passive: true });
+			window.addEventListener("scroll", update, { passive: true });
+			window.addEventListener("resize", () => {
+				placeBar();
+				update();
+			});
+			// Fonts can shift the content-sized mobile navbar height; re-measure once loaded.
+			window.addEventListener("load", placeBar);
+			placeBar();
+			update();
+		});
 	</script>
 </Layout>

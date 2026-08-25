@@ -32,8 +32,10 @@ export async function GET(ctx: APIContext) {
 		);
 		urlsXml = announcements
 			.map((announcement) => {
+				// Announcement URLs drop commas (platform rejects %2C), matching
+				// the list links and the [slug] lookup.
 				const loc = xmlEscape(
-					`${origin}/sxoli/anakoinoseis/${announcement.title.replaceAll(" ", "%20")}`,
+					`${origin}/sxoli/anakoinoseis/${announcement.title.replaceAll(",", "").replaceAll(" ", "%20")}`,
 				);
 				return `  <url><loc>${loc}</loc><lastmod>${new Date(announcement.date).toISOString()}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>`;
 			})

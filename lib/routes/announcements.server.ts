@@ -11,7 +11,9 @@ import { AnnouncementsRoutes, type PageAnnouncement } from "./announcements.clie
 
 const bucketPrefix = "anakoinoseis/images/";
 const xmlopts: X2jOptions = {
-	ignoreAttributes: false, attributeNamePrefix: "@", isArray: (tagName) => {
+	ignoreAttributes: false,
+	attributeNamePrefix: "@",
+	isArray: (tagName) => {
 		return tagName === "url";
 	},
 };
@@ -19,17 +21,31 @@ const xmlopts: X2jOptions = {
 async function getSitemapXml(ctx: APIContext) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
 	if (!sitemap) throw Error("Sitemap not found");
-	return new XMLParser(xmlopts).parse(Buffer.from('byteLength' in sitemap ? sitemap : await sitemap.arrayBuffer()));
+	return new XMLParser(xmlopts).parse(
+		Buffer.from("byteLength" in sitemap ? sitemap : await sitemap.arrayBuffer()),
+	);
 }
 
 function jsonToXml(json: any) {
 	return new XMLBuilder({ ...xmlopts, format: true } as any).build(json) as string;
 }
 
-async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<Announcements, "id" | "views">) {
+// Announcement URLs drop commas (the platform router rejects %2C), matching
+// the site's links, the [slug] lookup and the sitemap route.
+const urlTitle = (title: string) => title.replaceAll(",", "").replaceAll(" ", "%20");
+
+async function insertAnnouncementToSitemap(
+	ctx: APIContext,
+	announcement: Omit<Announcements, "id" | "views">,
+) {
 	const jsonSitemap = await getSitemapXml(ctx);
 	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
-	const newUrl = { loc: `${ctx.url.origin}/sxoli/anakoinoseis/${announcement.title.replaceAll(" ", "%20")}`, lastmod: new Date(announcement.date).toISOString(), changefreq: "monthly", priority: "1.0" };
+	const newUrl = {
+		loc: `${ctx.url.origin}/sxoli/anakoinoseis/${urlTitle(announcement.title)}`,
+		lastmod: new Date(announcement.date).toISOString(),
+		changefreq: "monthly",
+		priority: "1.0",
+	};
 	urls.push(newUrl);
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
@@ -38,12 +54,18 @@ async function insertAnnouncementToSitemap(ctx: APIContext, announcement: Omit<A
 
 async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, newTitle: string) {
 	const jsonSitemap = await getSitemapXml(ctx);
-	title = title.replaceAll(" ", "%20");
-	newTitle = newTitle.replaceAll(" ", "%20");
+	title = urlTitle(title);
+	newTitle = urlTitle(newTitle);
 
 	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
-	const url = urls.find(url => url.loc.endsWith(title));
-	if (!url) return insertAnnouncementToSitemap(ctx, { title: newTitle, content: "", date: Date.now(), links: "" });
+	const url = urls.find((url) => url.loc.endsWith(title));
+	if (!url)
+		return insertAnnouncementToSitemap(ctx, {
+			title: newTitle,
+			content: "",
+			date: Date.now(),
+			links: "",
+		});
 	url.lastmod = new Date().toISOString();
 	url.loc = `${ctx.url.origin}/sxoli/anakoinoseis/${newTitle}`;
 
@@ -53,41 +75,53 @@ async function updateAnnouncementFromSitemap(ctx: APIContext, title: string, new
 
 async function removeAnnouncementFromSitemap(ctx: APIContext, titles: string[]) {
 	const jsonSitemap = await getSitemapXml(ctx);
-	titles = titles.map(title => title.replaceAll(" ", "%20"));
+	titles = titles.map(urlTitle);
 
-	let urls = ((jsonSitemap.urlset?.url || []) as SitemapItem[])
-		.filter(url => !titles.some(title => url.loc.endsWith(title)));
+	let urls = ((jsonSitemap.urlset?.url || []) as SitemapItem[]).filter(
+		(url) => !titles.some((title) => url.loc.endsWith(title)),
+	);
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
 	return Bucket.put(ctx, jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
-
-
 let serverRoutes = deepCopy(AnnouncementsRoutes); // Copy the routes object to split it into client and server routes
 
 serverRoutes.get.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<Announcements>("SELECT * FROM announcements"), "Σφάλμα κατά την ανάκτηση των ανακοινώσεων");
+	return execTryCatch(
+		() => executeQuery<Announcements>("SELECT * FROM announcements"),
+		"Σφάλμα κατά την ανάκτηση των ανακοινώσεων",
+	);
 };
 
 serverRoutes.getImages.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"), "Σφάλμα κατά την ανάκτηση των εικόνων των ανακοινώσεων");
+	return execTryCatch(
+		() => executeQuery<AnnouncementImages>("SELECT * FROM announcement_images"),
+		"Σφάλμα κατά την ανάκτηση των εικόνων των ανακοινώσεων",
+	);
 };
 
 serverRoutes.getForPage.func = ({ ctx: _ctx }) => {
-	return execTryCatch(() => executeQuery<PageAnnouncement>(
-		`SELECT a.id, a.title, a.date, a.content, a.views,
+	return execTryCatch(
+		() =>
+			executeQuery<PageAnnouncement>(
+				`SELECT a.id, a.title, a.date, a.content, a.views,
 			(SELECT ai.name FROM announcement_images as ai WHERE ai.announcement_id = a.id AND ai.is_main) as main_image,
 			COUNT(i.name) as total_images
 		FROM announcements as a LEFT JOIN announcement_images as i ON a.id = i.announcement_id
-		GROUP BY a.id ORDER BY a.date DESC`
-	), "Σφάλμα κατά την ανάκτηση των ανακοινώσεων");
+		GROUP BY a.id ORDER BY a.date DESC`,
+			),
+		"Σφάλμα κατά την ανάκτηση των ανακοινώσεων",
+	);
 };
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const [id] = getUsedBody(ctx) || await ctx.request.json();
-		const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", [id]);
+		const [id] = getUsedBody(ctx) || (await ctx.request.json());
+		const [announcement] = await executeQuery<Announcements>(
+			"SELECT * FROM announcements WHERE id = ?",
+			[id],
+		);
 		if (!announcement) throw Error("Announcement not found");
 		return announcement;
 	});
@@ -96,41 +130,73 @@ serverRoutes.getById.func = ({ ctx }) => {
 serverRoutes.getImagesById.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
 		const { id } = slug;
-		const images = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
+		const images = await executeQuery<AnnouncementImages>(
+			"SELECT * FROM announcement_images WHERE announcement_id = ?",
+			[id],
+		);
 		if (!images || !images.length) throw Error("Images not found");
 		return images;
 	});
 };
 
-
 serverRoutes.getByTitle.func = ({ ctx: _ctx, slug }) => {
-	return execTryCatch(async T => {
-		const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE title = ?", slug);
-		const images = await T.executeQuery<AnnouncementImages>("SELECT name, is_main FROM announcement_images WHERE announcement_id = ?", [announcement.id]);
+	return execTryCatch(async (T) => {
+		// Titles are matched by their comma-less form: announcement URLs drop
+		// commas (the platform router rejects %2C), so lookups receive the
+		// comma-stripped title ("… μουσικής, 25 Ιουνίου" → "… μουσικής 25 Ιουνίου").
+		const [announcement] = await T.executeQuery<Announcements>(
+			"SELECT * FROM announcements WHERE REPLACE(title, ',', '') = ? LIMIT 1",
+			[slug.title],
+		);
+		const images = await T.executeQuery<AnnouncementImages>(
+			"SELECT name, is_main FROM announcement_images WHERE announcement_id = ?",
+			[announcement.id],
+		);
 		if (!announcement) throw Error("Announcement not found");
-		await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
+		await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [
+			announcement.id,
+		]);
 		return { ...announcement, images };
 	}, "Ανακοίνωση δεν βρέθηκε");
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
-		body.links = body.links.replaceAll('youtu.be/', "www.youtube.com/embed/").replaceAll('watch?v=', "embed/");
-		const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		body.content = body.content.replaceAll(
+			/https:\/\/[^\s\/$.?#].[^\s]*/g,
+			"<a href='$&'>$&</a>",
+		);
+		body.links = body.links
+			.replaceAll("youtu.be/", "www.youtube.com/embed/")
+			.replaceAll("watch?v=", "embed/");
+		const { insertId } = await T.executeQuery(
+			`INSERT INTO announcements (title, content, date, links) VALUES (???)`,
+			body,
+		);
 		await insertAnnouncementToSitemap(ctx, body);
 		return { insertId };
 	}, "Σφάλμα κατά την προσθήκη της ανακοίνωσης");
 };
 
 serverRoutes.update.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		const [{ title: oldTitle }] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
-		body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
-		body.links = body.links.replaceAll('youtu.be/', "www.youtube.com/embed/").replaceAll('watch?v=', "embed/");
-		await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		const [{ title: oldTitle }] = await T.executeQuery<Pick<Announcements, "title">>(
+			"SELECT title FROM announcements WHERE id = ?",
+			[body.id],
+		);
+		body.content = body.content.replaceAll(
+			/https:\/\/[^\s\/$.?#].[^\s]*/g,
+			"<a href='$&'>$&</a>",
+		);
+		body.links = body.links
+			.replaceAll("youtu.be/", "www.youtube.com/embed/")
+			.replaceAll("watch?v=", "embed/");
+		await T.executeQuery(
+			`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`,
+			body,
+		);
 		await updateAnnouncementFromSitemap(ctx, oldTitle, body.title);
 		return "Announcement updated successfully";
 	}, "Σφάλμα κατά την ενημέρωση της ανακοίνωσης");
@@ -138,10 +204,19 @@ serverRoutes.update.func = ({ ctx }) => {
 
 serverRoutes.postImage.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		const { announcement_id, fileData, thumbData, fileType, name: fileName } = body as (typeof body) & { fileData: File; };
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		const {
+			announcement_id,
+			fileData,
+			thumbData,
+			fileType,
+			name: fileName,
+		} = body as typeof body & { fileData: File };
 
-		const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
+		const { insertId } = await executeQuery(
+			`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`,
+			body,
+		);
 		const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;
 		await Bucket.put(ctx, await fileData.arrayBuffer(), bucketFileName, fileType);
 		if (thumbData) {
@@ -154,8 +229,11 @@ serverRoutes.postImage.func = ({ ctx }) => {
 
 serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 	return execTryCatch(async () => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE id IN (???)`, ids);
+		const ids = getUsedBody(ctx) || (await ctx.request.json());
+		const images = await executeQuery<AnnouncementImages>(
+			`SELECT * FROM announcement_images WHERE id IN (???)`,
+			ids,
+		);
 		if (!images || !images.length) throw Error("images not found");
 		await executeQuery(`DELETE FROM announcement_images WHERE id IN (???)`, ids);
 
@@ -164,7 +242,7 @@ serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 		for (const { name } of images) {
 			deletionJobs.push(
 				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
-				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name)
+				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name),
 			);
 		}
 		await asyncQueue(deletionJobs, {
@@ -175,24 +253,34 @@ serverRoutes.imagesDelete.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
-		const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
+	return execTryCatch(async (T) => {
+		const ids = getUsedBody(ctx) || (await ctx.request.json());
+		const announcements = await T.executeQuery<Announcements>(
+			`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`,
+			ids,
+		);
 		if (!announcements || !announcements.length) throw Error("announcements not found");
 		await T.executeQuery(`DELETE FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
-		const images = await T.executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id IN (???)", ids);
+		const images = await T.executeQuery<AnnouncementImages>(
+			"SELECT * FROM announcement_images WHERE announcement_id IN (???)",
+			ids,
+		);
 		await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id IN (???)`, ids);
 
 		const deletionJobs = [];
 		for (const { name, announcement_id } of images) {
 			deletionJobs.push(
 				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/" + name),
-				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name));
+				() => Bucket.delete(ctx, bucketPrefix + announcement_id + "/thumb_" + name),
+			);
 		}
 		await asyncQueue(deletionJobs, {
 			maxJobs: 10,
 		});
-		await removeAnnouncementFromSitemap(ctx, announcements.map(({ title }) => title));
+		await removeAnnouncementFromSitemap(
+			ctx,
+			announcements.map(({ title }) => title),
+		);
 		return "Announcement/s deleted successfully";
 	}, "Σφάλμα κατά την διαγραφή των ανακοινώσεων");
 };
