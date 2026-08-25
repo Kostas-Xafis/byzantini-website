@@ -640,7 +640,10 @@ export function RegistrationForm() {
 					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
 					<div
 						id="registrationContainer"
-						class="w-full max-sm:w-[100dvw] h-full max-sm:h-[calc(100dvh_-_8rem)] max-3xs:h-[calc(100dvh_-_6rem)] place-items-center font-dicact">
+						class="w-full max-sm:w-[100dvw] h-full max-sm:h-[calc(100dvh_-_6rem)] max-3xs:h-[calc(100dvh_-_4rem)] place-items-center font-dicact">
+						<h1 class="sr-only">
+							Εγγραφές στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+						</h1>
 						<div
 							id="firstSelect"
 							class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
@@ -658,7 +661,9 @@ export function RegistrationForm() {
 										</div>
 										<img
 											src={`/${type}.jpg`}
-											alt="Φόντο εισόδου εγγραφής"
+											alt=""
+											aria-hidden="true"
+											decoding="async"
 											class="absolute inset-0 h-full max-sm:w-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105 group-focus-within/select:scale-105"
 										/>
 									</div>
@@ -681,7 +686,7 @@ export function RegistrationForm() {
 						<form
 							id="registrationForm"
 							data-prefix={PREFIX}
-							class="group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/75 backdrop-blur-md"
+							class="group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm"
 							onSubmit={onSubmit}>
 							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 								{heading[formSelected()]}
@@ -760,7 +765,7 @@ export function RegistrationForm() {
 					</div>
 					<nav
 						id="registrationSelect"
-						class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] max-lg:bottom-[5.5rem] -translate-x-1/2 z-[1001]"
+						class="fixed left-1/2 bottom-[max(1.25rem, 2.5vh)] max-lg:bottom-[5.5rem] -translate-x-1/2 z-[1001]"
 						aria-label="Κατηγορίες μαθημάτων">
 						<div class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 							<For each={btns}>

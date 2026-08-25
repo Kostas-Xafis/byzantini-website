@@ -135,16 +135,9 @@ const breadcrumbs = breadcrumbsSchema([
 			class="justify-evenly max-w-full h-min flex flex-wrap content-start gap-x-[1.25%] pt-[2vw] px-4 pb-[6rem] gap-y-8 max-sm:px-2 max-sm:pt-5 max-lg:pb-[9.5rem] max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
 			<header class="w-full flex-grow pb-[1.2vw] max-sm:pb-4 text-center">
 				<h1
-					class="group-[:is(:not(.byz))]/type:hidden text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 leading-tight drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">
+					id="teachersHead"
+					class="text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 leading-tight drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">
 					Καθηγητές Βυζαντινής Μουσικής
-				</h1>
-				<h1
-					class="group-[:is(:not(.par))]/type:hidden text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 leading-tight drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">
-					Καθηγητές Παραδοσιακής Μουσικής
-				</h1>
-				<h1
-					class="group-[:is(:not(.eur))]/type:hidden text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 leading-tight drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">
-					Καθηγητές Ευρωπαϊκής Μουσικής
 				</h1>
 			</header>
 			{
@@ -201,6 +194,7 @@ const breadcrumbs = breadcrumbsSchema([
 												width={240}
 												height={320}
 												alt={"Φωτογραφία Καθηγητή " + teacher.fullname}
+												loading="lazy"
 												decoding="async"
 												class="absolute inset-0 w-full h-full object-cover"
 											/>
@@ -383,6 +377,14 @@ const breadcrumbs = breadcrumbsSchema([
 						btn.querySelector("button")?.setAttribute("aria-pressed", "true");
 						teachersPage.classList.remove("byz", "par", "eur");
 						teachersPage.classList.add(type);
+						// Single semantic h1: swap its text with the active category
+						const headTitles = {
+							byz: "Καθηγητές Βυζαντινής Μουσικής",
+							par: "Καθηγητές Παραδοσιακής Μουσικής",
+							eur: "Καθηγητές Ευρωπαϊκής Μουσικής",
+						} as Record<string, string>;
+						const head = document.querySelector("#teachersHead") as HTMLElement;
+						if (head) head.textContent = headTitles[type];
 						document.querySelector("#teachersContainer")?.scrollTo({
 							top: 0,
 							behavior: "smooth",
