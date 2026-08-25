@@ -765,7 +765,7 @@ export function RegistrationForm() {
 					</div>
 					<nav
 						id="registrationSelect"
-						class="fixed left-1/2 bottom-[max(1.25rem, 2.5vh)] max-lg:bottom-[5.5rem] -translate-x-1/2 z-[1001]"
+						class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] max-lg:bottom-[5.5rem] -translate-x-1/2 z-[1001]"
 						aria-label="Κατηγορίες μαθημάτων">
 						<div class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 							<For each={btns}>
