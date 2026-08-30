@@ -462,7 +462,6 @@ export function RegistrationForm() {
 					UrlArgs: { url: reg_url },
 				});
 				if (!res.data) return;
-				res.data.registration_year = "2025-2026";
 				res.data.class_year = "";
 				res.data.teacher_id = 0;
 				setRegistrationData(res.data);
