@@ -35,7 +35,7 @@ Core loop:
 
 | Task | Command | Notes |
 | --- | --- | --- |
-| Install | `bun install` | lockfile `bun.lockb` is gitignored |
+| Install | `bun install` | real lockfile is `bun.lock`; an EMPTY `bun.lockb` is committed only so Cloudflare Pages' package-manager detection picks Bun (it doesn't recognize `bun.lock`) — see `.gitignore` comment |
 | Dev server | `bun run dev` | Astro dev, port 3000 |
 | Dev server (CF env) | `bun run start` | sets `CLOUDFLARE_ENV=development` |
 | Build | `bun run build` | production build (`CLOUDFLARE_ENV=production`) |
