@@ -24,7 +24,12 @@ dist/
 *.txt
 .wrangler
 .mf
-**/bun.lockb
+# bun.lockb is committed (as an EMPTY file) ONLY so Cloudflare Pages'
+# automatic package-manager detection picks Bun — its detector only
+# recognizes the legacy binary lockfile name, not bun.lock. The real
+# lockfile is bun.lock, which Bun v1.2+ prioritizes over bun.lockb.
+# Do not remove it without an alternative that makes CF use Bun.
+#bun.lockb
 
 *credentials.*
 

@@ -1,0 +1,689 @@
+---
+import GMap from "@components/other/GMap.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import { API, useAPI } from "@hooks/useAPI.astro";
+import Layout from "@layouts/Layout.astro";
+import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import type { Locations } from "@_types/entities";
+
+export const prerender = false;
+
+// Στοιχεία επικοινωνίας ανά τμήμα — αντιστοιχούν στο widget επικοινωνίας που εμφανίζεται σε όλες τις σελίδες.
+const departments = [
+	{
+		title: "Βυζαντινή Μουσική",
+		icon: "fa-solid fa-church",
+		description:
+			"Ψαλτική: θεωρία και πράξη, λειτουργικό και τυπικό, υμνολογία, χορωδιακά μαθήματα.",
+		phones: ["6983380631"],
+		email: "byzscholemousikhs@gmail.com",
+	},
+	{
+		title: "Παραδοσιακή & Ευρωπαϊκή Μουσική",
+		icon: "fa-solid fa-music",
+		description:
+			"Παραδοσιακά όργανα και τραγούδι, ορχήστρα, καθώς και πιάνο, φλάουτο, σολφέζ και θεωρία.",
+		phones: ["6975843887"],
+		email: "parschole@gmail.com",
+	},
+] as const;
+
+const hoursRanges = [
+	{
+		days: "Καθημερινά (Δευτέρα – Κυριακή)",
+		range: "9:00 π.μ. – 2:00 μ.μ. & 4:30 μ.μ. – 9:00 μ.μ.",
+	},
+];
+
+const socials = [
+	{
+		name: "Facebook",
+		icon: "fa-brands fa-facebook",
+		url: "https://www.facebook.com/profile.php?id=100032307446762",
+	},
+	{
+		name: "YouTube",
+		icon: "fa-brands fa-youtube",
+		url: "https://www.youtube.com/@user-sx5os9rc1k",
+	},
+	{
+		name: "Ιστοσελίδα Ενορίας",
+		icon: "fa-solid fa-link",
+		url: "https://inmm.gr/",
+	},
+];
+
+const faqs = [
+	{
+		q: "Πώς κάνω εγγραφή στη Σχολή;",
+		a: "Οι εγγραφές ολοκληρώνονται ηλεκτρονικά μέσα από τη σελίδα «Εγγραφές» ή με την υποβολή της αίτησης στη γραμματεία της Σχολής. Για αναλυτικές οδηγίες και προθεσμίες επικοινωνήστε μαζί μας τηλεφωνικά ή με e-mail.",
+		link: { name: "Σελίδα Εγγραφών", url: "/eggrafes" },
+	},
+	{
+		q: "Πού πραγματοποιούνται τα μαθήματα;",
+		a: "Βασική έδρα είναι ο Ι. Ναός Μεταμορφώσεως του Σωτήρος στη Μεταμόρφωση, ενώ μαθήματα διεξάγονται και στα σπουδαστήρια της Σχολής σε πολλές περιοχές της Αττικής, καθώς και σε συνεργαζόμενες σχολές.",
+		link: { name: "Σπουδαστήρια & Παραρτήματα", url: "/spoudastiria" },
+	},
+	{
+		q: "Ποια τμήματα λειτουργούν στη Σχολή;",
+		a: "Λειτουργούν τμήματα Βυζαντινής Μουσικής (πτυχίο και δίπλωμα αναγνωρισμένα από το κράτος), Παραδοσιακής Μουσικής (τραγούδι και παραδοσιακά όργανα) και Ευρωπαϊκής Μουσικής (πιάνο, φλάουτο, σολφέζ, θεωρία και άλλα).",
+		link: { name: "Μαθήματα", url: "/#lessons" },
+	},
+	{
+		q: "Πώς ενημερώνομαι για ανακοινώσεις και εκδηλώσεις;",
+		a: "Όλα τα νέα της Σχολής — εκδηλώσεις, συναυλίες, εξετάσεις και αγιασμοί — αναρτώνται στη σελίδα «Ανακοινώσεις» και στα μέσα κοινωνικής δικτύωσης της Σχολής.",
+		link: { name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
+	},
+	{
+		q: "Υπάρχει χορωδία στη Σχολή;",
+		a: "Ναι, η χορωδία «Άδοντες & Ψάλλοντες» της Σχολής συμμετέχει σε ιερές ακολουθίες, εκδηλώσεις και συναυλίες. Όσοι ενδιαφέρονται μπορούν να δηλώσουν συμμετοχή στη γραμματεία.",
+		link: { name: "Χορωδία", url: "/sxoli/xorodia" },
+	},
+] as const;
+
+// Σπουδαστήρια και παραρτήματα — δυναμικά από τη βάση δεδομένων (όπως και στη σελίδα «Σπουδαστήρια»).
+let locations: Locations[] = [];
+try {
+	const res = await useAPI(API.Locations.getByPriority, undefined, Astro);
+	locations = res?.data || [];
+} catch (error) {
+	console.error("Σελίδα Επικοινωνία: αποτυχία φόρτωσης σπουδαστηρίων.", error);
+}
+
+const seat = locations.find((l) => l.priority === 1) ?? locations[0];
+const schoolLocations = locations.filter((l) => !l.partner);
+const partnerLocations = locations.filter((l) => !!l.partner);
+const formatAddress = (l: Locations) =>
+	`${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
+const phones = (l: Locations) =>
+	l.telephones
+		.split(",")
+		.map((t) => t.trim())
+		.filter(Boolean);
+const mapSrc =
+	seat?.map ||
+	`https://maps.google.com/maps?q=${SCHOOL.geo.latitude},${SCHOOL.geo.longitude}&z=17&output=embed`;
+
+const contactPageSchema = {
+	"@context": "https://schema.org",
+	"@type": "ContactPage",
+	name: "Επικοινωνία",
+	url: `${SCHOOL.url}/epikoinonia`,
+	description:
+		"Στοιχεία επικοινωνίας της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής Μεταμόρφωσης: τηλέφωνα, e-mail, διεύθυνση, ωράριο και σπουδαστήρια.",
+	inLanguage: "el",
+	mainEntity: { "@id": SCHOOL_ID },
+};
+---
+
+<Layout
+	title="Επικοινωνία"
+	description="Τηλέφωνα, e-mail, διεύθυνση και ωράριο επικοινωνίας της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής Μεταμόρφωσης. Χάρτης, σπουδαστήρια και χρήσιμες πληροφορίες.">
+	<JsonLd
+		data={breadcrumbsSchema([
+			{ name: "Αρχική", url: "/" },
+			{ name: "Επικοινωνία", url: "/epikoinonia" },
+		])}
+	/>
+	<JsonLd data={contactPageSchema} />
+
+	<main
+		id="epikoinonia"
+		class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-14 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-28">
+		<!-- Εισαγωγή -->
+		<header
+			class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border-2 border-red-900 bg-red-950 shadow-xl shadow-red-900/30">
+			<img
+				src="/church_low.jpg"
+				alt="Ο Ι. Ναός Μεταμορφώσεως του Σωτήρος στη Μεταμόρφωση"
+				class="absolute inset-0 h-full w-full object-cover opacity-30 blur-[2px]"
+			/>
+			<div
+				class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
+				<h1
+					class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-sm after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
+					Επικοινωνία
+				</h1>
+				<p
+					class="rounded-full border border-amber-400/40 bg-black/30 px-4 py-1.5 text-base max-sm:text-sm font-semibold tracking-wide text-amber-300 backdrop-blur-[2px]">
+					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής — Ι.Ν. Μεταμορφώσεως του Σωτήρος
+				</p>
+				<p
+					class="max-w-[68ch] text-center text-lg max-sm:text-base leading-relaxed text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)]">
+					Είμαστε στη διάθεσή σας για κάθε ερώτηση σχετικά με τις εγγραφές, τα μαθήματα
+					και τις εκδηλώσεις της Σχολής. Καλέστε μας, στείλτε e-mail ή επισκεφθείτε τη
+					γραμματεία στην έδρα της Σχολής.
+				</p>
+			</div>
+		</header>
+
+		<!-- Στοιχεία τμημάτων -->
+		<section class="flex flex-col items-center gap-y-8">
+			<h2
+				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Στοιχεία τμημάτων
+			</h2>
+			<div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1400px]">
+				{
+					departments.map((dept) => (
+						<article class="group flex flex-col gap-y-5 rounded-xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-7 shadow-xl shadow-red-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-950/50 max-sm:px-5">
+							<div class="flex flex-row items-center gap-x-5">
+								<span class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60 transition-transform duration-300 group-hover:scale-110 max-sm:size-12">
+									<i class={dept.icon + " text-2xl max-sm:text-xl"} />
+								</span>
+								<h3 class="text-2xl max-sm:text-xl font-bold font-anaktoria leading-tight text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
+									{dept.title}
+								</h3>
+							</div>
+							<p class="text-lg max-sm:text-base leading-relaxed text-red-100/90">
+								{dept.description}
+							</p>
+							<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
+								{dept.phones.map((phone) => (
+									<li class="flex flex-row items-center gap-x-3">
+										<i class="fa-solid fa-phone text-amber-400" />
+										<a
+											href={`tel:${phone}`}
+											class="text-red-50 underline decoration-amber-400/70 decoration-1 underline-offset-4 transition-colors hover:text-amber-300">
+											{phone}
+										</a>
+										<button
+											type="button"
+											data-copy={phone}
+											aria-label={`Αντιγραφή τηλεφώνου ${phone}`}
+											class="copy ml-auto grid size-8 place-items-center rounded-full bg-red-950/60 text-base text-red-50 transition-colors duration-300 hover:bg-gray-600">
+											<i class="fa-regular fa-clipboard" />
+										</button>
+									</li>
+								))}
+								<li class="flex flex-row items-center gap-x-3">
+									<i class="fa-solid fa-envelope text-amber-400" />
+									<a
+										href={`mailto:${dept.email}`}
+										class="text-red-50 underline decoration-amber-400/70 decoration-1 underline-offset-4 transition-colors hover:text-amber-300">
+										{dept.email}
+									</a>
+									<button
+										type="button"
+										data-copy={dept.email}
+										aria-label={`Αντιγραφή διεύθυνσης e-mail ${dept.email}`}
+										class="copy ml-auto grid size-8 place-items-center rounded-full bg-red-950/60 text-base text-red-50 transition-colors duration-300 hover:bg-gray-600">
+										<i class="fa-regular fa-clipboard" />
+									</button>
+								</li>
+							</ul>
+						</article>
+					))
+				}
+			</div>
+		</section>
+
+		<!-- Έδρα, ωράριο, διοίκηση -->
+		<section class="flex flex-col items-center gap-y-8">
+			<h2
+				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Έδρα, ωράριο & διοίκηση
+			</h2>
+			<div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px]">
+				<article
+					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
+					<div class="flex flex-row items-center gap-x-3">
+						<i class="fa-solid fa-map-location-dot text-3xl text-red-900"></i>
+						<h3 class="text-2xl font-bold font-anaktoria text-red-900">Έδρα Σχολής</h3>
+					</div>
+					<p class="text-xl max-sm:text-base font-semibold text-red-950">
+						{seat?.name ?? SCHOOL.name}
+					</p>
+					<p class="text-lg max-sm:text-base leading-relaxed">
+						<i class="fa-solid fa-location-dot pr-2 text-red-900/70"></i>
+						{
+							seat
+								? formatAddress(seat)
+								: `${SCHOOL.address.streetAddress}, ${SCHOOL.address.postalCode} – ${SCHOOL.address.addressLocality}`
+						}
+					</p>
+					<p class="text-lg max-sm:text-base">
+						<i class="fa-solid fa-user pr-2 text-red-900/70"></i>
+						{
+							seat && seat.manager.length > 0
+								? seat.manager
+								: "Πρωτοπρ. Σωτήριος Αλεβιζάκης"
+						}
+					</p>
+					<p class="text-lg max-sm:text-base">
+						<i class="fa-solid fa-envelope pr-2 text-red-900/70"></i>
+						<a
+							href={`mailto:${seat?.email || SCHOOL.email}`}
+							class="underline decoration-1 underline-offset-4 transition-colors hover:text-red-900"
+							>{seat?.email || SCHOOL.email}</a
+						>
+					</p>
+				</article>
+				<article
+					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
+					<div class="flex flex-row items-center gap-x-3">
+						<i class="fa-solid fa-clock text-3xl text-red-900"></i>
+						<h3 class="text-2xl font-bold font-anaktoria text-red-900">
+							Ωράριο επικοινωνίας
+						</h3>
+					</div>
+					<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
+						{
+							hoursRanges.map((h) => (
+								<li class="flex flex-col gap-y-1 rounded-md bg-red-900/[0.06] px-4 py-2">
+									<span class="text-red-950/80">{h.days}</span>
+									<span class="font-semibold text-red-900">{h.range}</span>
+								</li>
+							))
+						}
+					</ul>
+					<p class="text-lg max-sm:text-sm leading-relaxed text-red-950/85">
+						Για τυχόν διαφοροποίηση του ωραρίου κατά τις μεγάλες εορτές, επικοινωνήστε
+						μαζί μας πριν από την επίσκεψή σας.
+					</p>
+				</article>
+				<article
+					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
+					<div class="flex flex-row items-center gap-x-3">
+						<i class="fa-solid fa-user-tie text-3xl text-red-900"></i>
+						<h3 class="text-2xl font-bold font-anaktoria text-red-900">
+							Διοίκηση Σχολής
+						</h3>
+					</div>
+					<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
+						<li class="flex flex-row gap-x-2">
+							<span class="font-semibold text-red-950">Διευθυντής:</span>
+							<span>Πρωτοπρ. Χρίστος Κυριακόπουλος</span>
+						</li>
+						<li class="flex flex-row gap-x-2">
+							<span class="font-semibold text-red-950"
+								>Πρόεδρος Διοικούσας Επιτροπής:</span
+							>
+							<span>Πρωτοπρ. Σωτήριος Αλεβιζάκης</span>
+						</li>
+					</ul>
+					<a
+						href="/sxoli/dioikitiko-symvoulio"
+						class="mt-auto inline-flex w-max items-center gap-2 rounded-full border-2 border-red-900 px-4 py-1.5 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
+						<i class="fa-solid fa-angles-right text-sm"></i>
+						Στοιχεία διοίκησης
+					</a>
+				</article>
+			</div>
+		</section>
+
+		<!-- Χάρτης -->
+		<section class="flex flex-col items-center gap-y-8">
+			<h2
+				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Πώς θα μας βρείτε
+			</h2>
+			<div class="w-full grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 max-w-[1400px]">
+				<div
+					class="flex flex-col gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400">
+					<h3 class="text-3xl font-bold font-anaktoria text-red-900">
+						{seat?.name ?? "Ι. Ναός Μεταμορφώσεως του Σωτήρος"}
+					</h3>
+					<p class="text-lg max-sm:text-base leading-relaxed">
+						Η έδρα της Σχολής βρίσκεται στον Ι. Ναό Μεταμορφώσεως του Σωτήρος, στη
+						Μεταμόρφωση Αττικής, στη συμβολή των οδών Χλόης & Οδυσσέως.
+					</p>
+					<div class="mt-auto flex flex-row flex-wrap gap-3 pt-2">
+						<a
+							target="_blank"
+							href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8"
+							class="inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-5 py-2 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
+							<i class="fa-solid fa-diamond-turn-right"></i>
+							Οδηγίες στους Χάρτες Google
+						</a>
+						<a
+							href="/spoudastiria"
+							class="inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-5 py-2 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
+							<i class="fa-solid fa-location-dot"></i>
+							Όλα τα σπουδαστήρια
+						</a>
+					</div>
+				</div>
+				<div
+					class="h-[420px] overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400 max-sm:h-[300px]">
+					<GMap mapEmbedSrc={mapSrc} />
+				</div>
+			</div>
+		</section>
+
+		<!-- Σπουδαστήρια & παραρτήματα -->
+		<section class="flex flex-col items-center gap-y-8">
+			<h2
+				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Σπουδαστήρια & συνεργαζόμενες σχολές
+			</h2>
+			<p
+				class="max-w-[80ch] text-center text-lg max-sm:text-base leading-relaxed text-red-950/80">
+				Τα μαθήματα δεν διεξάγονται μόνο στην έδρα: η Σχολή διαθέτει σπουδαστήρια και
+				συνεργάζεται με σχολές σε πολλές περιοχές της Αττικής. Επικοινωνήστε με το
+				πλησιέστερο σε εσάς σημείο.
+			</p>
+			{
+				schoolLocations.length > 0 && (
+					<div class="w-full flex flex-col gap-y-4 max-w-[1400px]">
+						<h3 class="text-2xl max-sm:text-lg font-bold font-anaktoria text-red-900">
+							Σπουδαστήρια της Σχολής
+						</h3>
+						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+							{schoolLocations.map((l) => (
+								<article class="flex flex-col gap-y-3 rounded-xl border-2 border-red-900 bg-white p-5 shadow-md shadow-gray-400 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+									<h4 class="text-lg max-sm:text-base font-bold leading-snug text-red-950">
+										{l.name}
+									</h4>
+									<p class="text-base max-sm:text-sm leading-relaxed">
+										<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
+										{formatAddress(l)}
+									</p>
+									<p class="text-base max-sm:text-sm">
+										<i class="fa-solid fa-user pr-2 text-red-900/70" />
+										{l.manager}
+									</p>
+									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-base max-sm:text-sm">
+										{phones(l).map((phone) => (
+											<a
+												href={`tel:${phone}`}
+												class="font-semibold text-red-900">
+												<i class="fa-solid fa-phone pr-1.5" />
+												<span class="underline decoration-1 underline-offset-4">
+													{phone}
+												</span>
+											</a>
+										))}
+									</div>
+									{l.email && (
+										<p class="text-base max-sm:text-sm">
+											<i class="fa-solid fa-envelope pr-2 text-red-900/70" />
+											<a
+												href={`mailto:${l.email}`}
+												class="underline decoration-1 underline-offset-4 hover:text-red-900">
+												{l.email}
+											</a>
+										</p>
+									)}
+									<a
+										href={`/spoudastiria#${encodeURIComponent(l.name)}`}
+										class="mt-auto inline-flex w-max items-center gap-2 pt-1 font-semibold text-red-900 transition-colors hover:text-red-700">
+										Λεπτομέρειες
+										<i class="fa-solid fa-arrow-right text-sm" />
+									</a>
+								</article>
+							))}
+						</div>
+					</div>
+				)
+			}
+			{
+				partnerLocations.length > 0 && (
+					<div class="w-full flex flex-col gap-y-4 max-w-[1400px]">
+						<h3 class="text-2xl max-sm:text-lg font-bold font-anaktoria text-red-900">
+							Συνεργαζόμενες σχολές
+						</h3>
+						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+							{partnerLocations.map((l) => (
+								<article class="flex flex-col gap-y-3 rounded-xl border-2 border-red-900/60 bg-red-900/[0.04] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+									<h4 class="text-lg max-sm:text-base font-bold leading-snug text-red-950">
+										{l.name}
+									</h4>
+									<p class="text-base max-sm:text-sm leading-relaxed">
+										<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
+										{formatAddress(l)}
+									</p>
+									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-base max-sm:text-sm">
+										{phones(l).map((phone) => (
+											<a
+												href={`tel:${phone}`}
+												class="font-semibold text-red-900">
+												<i class="fa-solid fa-phone pr-1.5" />
+												<span class="underline decoration-1 underline-offset-4">
+													{phone}
+												</span>
+											</a>
+										))}
+									</div>
+									{l.email && (
+										<p class="text-base max-sm:text-sm">
+											<i class="fa-solid fa-envelope pr-2 text-red-900/70" />
+											<a
+												href={`mailto:${l.email}`}
+												class="underline decoration-1 underline-offset-4 hover:text-red-900">
+												{l.email}
+											</a>
+										</p>
+									)}
+									<a
+										href={`/spoudastiria#${encodeURIComponent(l.name)}`}
+										class="mt-auto inline-flex w-max items-center gap-2 pt-1 font-semibold text-red-900 transition-colors hover:text-red-700">
+										Λεπτομέρειες
+										<i class="fa-solid fa-arrow-right text-sm" />
+									</a>
+								</article>
+							))}
+						</div>
+					</div>
+				)
+			}
+		</section>
+
+		<!-- Κοινωνικά δίκτυα -->
+		<section class="flex flex-col items-center gap-y-6">
+			<h2
+				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Ακολουθήστε μας
+			</h2>
+			<div class="flex flex-row flex-wrap justify-center gap-4">
+				{
+					socials.map((s) => (
+						<a
+							target="_blank"
+							href={s.url}
+							class="group/link inline-flex items-center gap-3 rounded-full border-2 border-red-900 bg-white px-6 py-2.5 text-lg max-sm:text-base font-semibold text-red-900 shadow-md shadow-gray-400 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-900 hover:text-red-50 hover:shadow-lg">
+							<i
+								class={
+									s.icon +
+									" text-xl transition-colors duration-300 group-hover/link:text-amber-400"
+								}
+							/>
+							{s.name}
+						</a>
+					))
+				}
+			</div>
+		</section>
+
+		<!-- Συχνές ερωτήσεις -->
+		<section class="flex flex-col items-center gap-y-8">
+			<h2
+				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Συχνές ερωτήσεις
+			</h2>
+			<div class="w-full flex flex-col gap-y-4 max-w-[900px]">
+				{
+					faqs.map((f, i) => (
+						<div class="faq-item">
+							<button
+								type="button"
+								id={`faq-toggle-${i}`}
+								aria-controls={`faq-answer-${i}`}
+								aria-expanded="false"
+								class="faq-toggle flex w-full cursor-pointer items-center gap-x-4 px-6 py-4 text-left text-lg max-sm:text-base font-semibold text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500">
+								<i
+									class="fa-chevron fa-solid fa-chevron-right text-red-900"
+									aria-hidden="true"
+								/>
+								{f.q}
+							</button>
+							<div
+								id={`faq-answer-${i}`}
+								role="region"
+								aria-labelledby={`faq-toggle-${i}`}
+								class="faq-answer">
+								<div>
+									<div class="flex flex-col gap-y-3 px-6 pb-5 pl-[3.15rem] max-sm:pl-6">
+										<p class="text-lg max-sm:text-base leading-relaxed text-red-950/85">
+											{f.a}
+										</p>
+										<a
+											href={f.link.url}
+											class="inline-flex w-max items-center gap-2 text-base max-sm:text-sm font-semibold text-red-900 underline decoration-1 underline-offset-4 transition-colors hover:text-red-700">
+											{f.link.name}
+											<i class="fa-solid fa-arrow-right text-xs" />
+										</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</section>
+
+		<!-- Τελικό κάλεσμα -->
+		<section
+			class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-10 shadow-xl shadow-red-900/30 max-sm:px-4">
+			<h2
+				class="text-center text-[2.25vw] max-sm:text-2xl font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
+				Έχετε απορίες; Είμαστε εδώ!
+			</h2>
+			<p
+				class="max-w-[60ch] text-center text-lg max-sm:text-base leading-relaxed text-red-100/90">
+				Επικοινωνήστε μαζί μας στο τηλέφωνο ή μέσω e-mail και θα χαρούμε να σας κατευθύνουμε
+				στο κατάλληλο τμήμα της Σχολής.
+			</p>
+			<div class="flex flex-row flex-wrap justify-center gap-4 pt-1">
+				<a
+					href="tel:6983380631"
+					class="inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
+					<i class="fa-solid fa-phone text-amber-400"></i>
+					698 338 0631
+				</a>
+				<a
+					href="mailto:byzscholemousikhs@gmail.com"
+					class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
+					<i
+						class="fa-solid fa-envelope text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
+					></i>
+					Στείλτε e-mail
+				</a>
+				<a
+					href="/eggrafes"
+					class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
+					<i
+						class="fa-solid fa-pen-to-square text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
+					></i>
+					Εγγραφές
+				</a>
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<style is:inline>
+	/* FAQ: smooth expand/collapse. The answer height animates via grid-template-rows
+	   (0fr → 1fr), the item box follows with color/shadow transitions and the
+	   chevron rotates — all in both directions. */
+	#epikoinonia .faq-item {
+		border: 2px solid rgb(127 29 29 / 0.6);
+		border-radius: 0.75rem;
+		background-color: rgb(127 29 29 / 0.04);
+		transition:
+			border-color 0.3s ease,
+			background-color 0.3s ease,
+			box-shadow 0.35s ease;
+	}
+	#epikoinonia .faq-item.is-open {
+		border-color: rgb(127 29 29);
+		background-color: #ffffff;
+		box-shadow:
+			0 4px 6px -1px rgb(0 0 0 / 0.1),
+			0 2px 4px -2px rgb(0 0 0 / 0.1);
+	}
+	#epikoinonia .faq-item .faq-chevron {
+		transition: transform 0.3s ease;
+	}
+	#epikoinonia .faq-item.is-open .faq-chevron {
+		transform: rotate(90deg);
+	}
+	#epikoinonia .faq-answer {
+		display: grid;
+		grid-template-rows: 0fr;
+		opacity: 0;
+		transition:
+			grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 0.35s ease;
+	}
+	#epikoinonia .faq-item.is-open .faq-answer {
+		grid-template-rows: 1fr;
+		opacity: 1;
+	}
+	#epikoinonia .faq-answer > div {
+		overflow: hidden;
+		min-height: 0;
+	}
+	/* The answer text follows the height expansion with a slight lift + delay. */
+	#epikoinonia .faq-answer > div > div > * {
+		opacity: 0;
+		transform: translateY(8px);
+		transition:
+			opacity 0.3s ease,
+			transform 0.3s ease;
+	}
+	#epikoinonia .faq-item.is-open .faq-answer > div > div > * {
+		opacity: 1;
+		transform: translateY(0);
+		transition-delay: 0.15s;
+	}
+	#epikoinonia .copy:is(.clicked) {
+		background-color: rgb(22, 163, 74);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		#epikoinonia .faq-item,
+		#epikoinonia .faq-item .faq-chevron,
+		#epikoinonia .faq-answer,
+		#epikoinonia .faq-answer > div > div > * {
+			transition: none !important;
+		}
+	}
+</style>
+
+<script>
+	import { AnimTimeline, onElementMount } from "@utilities/dom";
+
+	onElementMount("#epikoinonia", () => {
+		document.querySelectorAll<HTMLButtonElement>("#epikoinonia .copy").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const text = btn.dataset.copy;
+				if (!text) return;
+				const icon = btn.querySelector("i") as HTMLElement;
+				const atl = new AnimTimeline();
+				atl.step(() => {
+					navigator.clipboard.writeText(text);
+					btn.classList.add("clicked");
+					icon.classList.remove("fa-regular", "fa-clipboard");
+					icon.classList.add("fa-solid", "fa-clipboard-check");
+				})
+					.step({
+						time: 1000,
+						anim: () => {
+							btn.classList.remove("clicked");
+							icon.classList.add("fa-regular", "fa-clipboard");
+							icon.classList.remove("fa-solid", "fa-clipboard-check");
+						},
+					})
+					.start();
+			});
+		});
+
+		document.querySelectorAll<HTMLButtonElement>("#epikoinonia .faq-toggle").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const item = btn.closest(".faq-item") as HTMLElement;
+				const isOpen = item.classList.toggle("is-open");
+				btn.setAttribute("aria-expanded", String(isOpen));
+			});
+		});
+	});
+</script>

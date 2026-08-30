@@ -1,8 +1,6 @@
 ---
 import Navbar from "@components/Navbar.astro";
 import Links from "@components/headers/Links.astro";
-import Contact from "@components/contact/Contact.astro";
-import ContactPhone from "@components/contact/ContactPhone.astro";
 export interface Props {
 	title: string;
 	imageUrl?: string;
@@ -170,7 +168,5 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 			class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4vw] max-sm:pt-[6rem] max-3xs:pt-[5rem]">
 			<slot />
 		</div>
-		<Contact />
-		<ContactPhone />
 	</body>
 </html>
