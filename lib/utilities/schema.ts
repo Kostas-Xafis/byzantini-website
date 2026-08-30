@@ -6,7 +6,7 @@ export const SCHOOL = {
 	name: "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής",
 	fullName: "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως του Σωτήρος",
 	url: "https://musicschool-metamorfosi.gr",
-	telephone: ["+30 6983380631", "+30 6975848638", "+30 6948751656"],
+	telephone: ["+30 6983380631", "+30 6975843887"],
 	email: "music@inmm.gr",
 	address: {
 		streetAddress: "Χλόης & Οδυσσέως",

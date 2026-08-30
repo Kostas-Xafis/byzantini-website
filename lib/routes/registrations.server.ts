@@ -9,6 +9,37 @@ import { RegistrationsRoutes } from "./registrations.client";
 // Include this in all .server.ts files
 const serverRoutes = deepCopy(RegistrationsRoutes); // Copy the routes object to split it into client and server routes
 
+// class_type ids: 0 = Βυζαντινή Μουσική, 1 = Παραδοσιακή Μουσική, 2 = Ευρωπαϊκή Μουσική.
+const CLASS_TYPE_BYZANTINE = 0;
+const CLASS_TYPE_TRADITIONAL = 1;
+const CLASS_TYPE_EUROPEAN = 2;
+
+// "Επιτυχής εγγραφή" email variants, one static HTML template per class level
+// (built from email/render/emails/SuccessfulRegistration.tsx). The email is
+// broken down at the 2nd (Βυζαντινή Μουσική) and 3rd (Παραδοσιακή & Ευρωπαϊκή)
+// bullet groups so each student only receives the instructions that apply to
+// their department / year.
+const successfulRegistrationTemplates = {
+	default: "epitixis_eggrafi.html",
+	byzantineE: "epitixis_eggrafi_byzantine_e.html",
+	byzantineBDiploma: "epitixis_eggrafi_byzantine_b_diploma.html",
+	traditionalBAnotera: "epitixis_eggrafi_traditional_b_anotera.html",
+	traditionalBDiploma: "epitixis_eggrafi_traditional_b_diploma.html",
+} as const;
+
+function successfulRegistrationTemplate(classId: number, classYear: string): string {
+	if (classId === CLASS_TYPE_BYZANTINE) {
+		if (classYear === "Ε' Ετος") return successfulRegistrationTemplates.byzantineE;
+		if (classYear === "Β' Ετος Διπλώματος") return successfulRegistrationTemplates.byzantineBDiploma;
+	}
+	if (classId === CLASS_TYPE_TRADITIONAL || classId === CLASS_TYPE_EUROPEAN) {
+		if (classYear === "Β' Ανωτέρα") return successfulRegistrationTemplates.traditionalBAnotera;
+	}
+	if (classId === CLASS_TYPE_TRADITIONAL && classYear === "Β' Διπλώματος")
+		return successfulRegistrationTemplates.traditionalBDiploma;
+	return successfulRegistrationTemplates.default;
+}
+
 serverRoutes.get.func = ({ slug }) => {
 	return execTryCatch(() => {
 		const { year } = slug;
@@ -90,7 +121,7 @@ serverRoutes.post.func = ({ ctx }) => {
 					authToken,
 					to: mail_subscription[0].email,
 					subject: "Επιτυχής εγγραφή",
-					htmlTemplateName: "epitixis_eggrafi.html",
+					htmlTemplateName: successfulRegistrationTemplate(body.class_id, body.class_year),
 					templateData: { token: mail_subscription[0].unsubscribe_token }
 				})
 			});

@@ -23,7 +23,7 @@ const departments = [
 		icon: "fa-solid fa-music",
 		description:
 			"Παραδοσιακά όργανα και τραγούδι, ορχήστρα, καθώς και πιάνο, φλάουτο, σολφέζ και θεωρία.",
-		phones: ["6975848638", "6948751656"],
+		phones: ["6975843887"],
 		email: "parschole@gmail.com",
 	},
 ] as const;
@@ -126,6 +126,7 @@ const contactPageSchema = {
 		])}
 	/>
 	<JsonLd data={contactPageSchema} />
+
 	<main
 		id="epikoinonia"
 		class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-14 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-28">
@@ -135,7 +136,7 @@ const contactPageSchema = {
 			<img
 				src="/church_low.jpg"
 				alt="Ο Ι. Ναός Μεταμορφώσεως του Σωτήρος στη Μεταμόρφωση"
-				class="absolute inset-0 h-full w-full object-cover opacity-30"
+				class="absolute inset-0 h-full w-full object-cover opacity-30 blur-[2px]"
 			/>
 			<div
 				class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
@@ -162,15 +163,6 @@ const contactPageSchema = {
 				class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 				Στοιχεία τμημάτων
 			</h2>
-			<div
-				class="flex w-[min(40ch,90%)] items-center gap-3 text-sm text-amber-600/80"
-				aria-hidden="true">
-				<span class="h-px flex-1 bg-gradient-to-r from-transparent to-red-900/60"></span>
-				<i class="fa-solid fa-diamond text-[0.65em]"></i>
-				<i class="fa-solid fa-cross text-[1.15em]"></i>
-				<i class="fa-solid fa-diamond text-[0.65em]"></i>
-				<span class="h-px flex-1 bg-gradient-to-l from-transparent to-red-900/60"></span>
-			</div>
 			<div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1400px]">
 				{
 					departments.map((dept) => (
@@ -236,10 +228,10 @@ const contactPageSchema = {
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
-						<i class="fa-solid fa-map-location-dot text-2xl text-red-900"></i>
-						<h3 class="text-xl font-bold font-anaktoria text-red-900">Έδρα Σχολής</h3>
+						<i class="fa-solid fa-map-location-dot text-3xl text-red-900"></i>
+						<h3 class="text-2xl font-bold font-anaktoria text-red-900">Έδρα Σχολής</h3>
 					</div>
-					<p class="text-lg max-sm:text-base font-semibold text-red-950">
+					<p class="text-xl max-sm:text-base font-semibold text-red-950">
 						{seat?.name ?? SCHOOL.name}
 					</p>
 					<p class="text-lg max-sm:text-base leading-relaxed">
@@ -270,8 +262,8 @@ const contactPageSchema = {
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
-						<i class="fa-solid fa-clock text-2xl text-red-900"></i>
-						<h3 class="text-xl font-bold font-anaktoria text-red-900">
+						<i class="fa-solid fa-clock text-3xl text-red-900"></i>
+						<h3 class="text-2xl font-bold font-anaktoria text-red-900">
 							Ωράριο επικοινωνίας
 						</h3>
 					</div>
@@ -285,7 +277,7 @@ const contactPageSchema = {
 							))
 						}
 					</ul>
-					<p class="text-base max-sm:text-sm leading-relaxed text-red-950/70">
+					<p class="text-lg max-sm:text-sm leading-relaxed text-red-950/85">
 						Για τυχόν διαφοροποίηση του ωραρίου κατά τις μεγάλες εορτές, επικοινωνήστε
 						μαζί μας πριν από την επίσκεψή σας.
 					</p>
@@ -293,8 +285,8 @@ const contactPageSchema = {
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
-						<i class="fa-solid fa-user-tie text-2xl text-red-900"></i>
-						<h3 class="text-xl font-bold font-anaktoria text-red-900">
+						<i class="fa-solid fa-user-tie text-3xl text-red-900"></i>
+						<h3 class="text-2xl font-bold font-anaktoria text-red-900">
 							Διοίκηση Σχολής
 						</h3>
 					</div>
@@ -329,7 +321,7 @@ const contactPageSchema = {
 			<div class="w-full grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 max-w-[1400px]">
 				<div
 					class="flex flex-col gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400">
-					<h3 class="text-xl font-bold font-anaktoria text-red-900">
+					<h3 class="text-3xl font-bold font-anaktoria text-red-900">
 						{seat?.name ?? "Ι. Ναός Μεταμορφώσεως του Σωτήρος"}
 					</h3>
 					<p class="text-lg max-sm:text-base leading-relaxed">
@@ -374,7 +366,7 @@ const contactPageSchema = {
 			{
 				schoolLocations.length > 0 && (
 					<div class="w-full flex flex-col gap-y-4 max-w-[1400px]">
-						<h3 class="text-xl max-sm:text-lg font-bold font-anaktoria text-red-900">
+						<h3 class="text-2xl max-sm:text-lg font-bold font-anaktoria text-red-900">
 							Σπουδαστήρια της Σχολής
 						</h3>
 						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -395,9 +387,11 @@ const contactPageSchema = {
 										{phones(l).map((phone) => (
 											<a
 												href={`tel:${phone}`}
-												class="font-semibold text-red-900 underline decoration-1 underline-offset-4 hover:text-red-700">
+												class="font-semibold text-red-900">
 												<i class="fa-solid fa-phone pr-1.5" />
-												{phone}
+												<span class="underline decoration-1 underline-offset-4">
+													{phone}
+												</span>
 											</a>
 										))}
 									</div>
@@ -426,7 +420,7 @@ const contactPageSchema = {
 			{
 				partnerLocations.length > 0 && (
 					<div class="w-full flex flex-col gap-y-4 max-w-[1400px]">
-						<h3 class="text-xl max-sm:text-lg font-bold font-anaktoria text-red-900">
+						<h3 class="text-2xl max-sm:text-lg font-bold font-anaktoria text-red-900">
 							Συνεργαζόμενες σχολές
 						</h3>
 						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -443,9 +437,11 @@ const contactPageSchema = {
 										{phones(l).map((phone) => (
 											<a
 												href={`tel:${phone}`}
-												class="font-semibold text-red-900 underline decoration-1 underline-offset-4 hover:text-red-700">
+												class="font-semibold text-red-900">
 												<i class="fa-solid fa-phone pr-1.5" />
-												{phone}
+												<span class="underline decoration-1 underline-offset-4">
+													{phone}
+												</span>
 											</a>
 										))}
 									</div>
