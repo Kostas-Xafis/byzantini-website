@@ -97,10 +97,26 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 			src: url("/fonts/ANAKTORIA.OTF");
 		}
 	</style>
-	<link href="/fa/css/fontawesome.min.css" rel="stylesheet" />
-	<link href="/fa/css/solid.min.css" rel="stylesheet" />
-	<link href="/fa/css/regular.min.css" rel="stylesheet" />
-	{hasBrandIcons && <link href="/fa/css/brands.min.css" rel="stylesheet" />}
+	{/*
+	 * Font Awesome is loaded into the `components` cascade layer (below
+	 * `utilities`): FA sets `display: var(--fa-display, inline-block)` on
+	 * `.fa-solid` with the same specificity as Tailwind's `.hidden`, and in
+	 * Tailwind 4 unlayered CSS would always win over the layered utilities —
+	 * making every FA icon ignore `hidden`/`group-*:flex`.
+	 * (v3 parity: FA's <link> preceded the Astro CSS, so utilities won by
+	 * source order; the layer order statement must precede the @imports.)
+	 */}
+	<style is:inline>
+		@layer properties, theme, base, components, utilities;
+		@import url("/fa/css/fontawesome.min.css") layer(components);
+		@import url("/fa/css/solid.min.css") layer(components);
+		@import url("/fa/css/regular.min.css") layer(components);
+	</style>
+	{hasBrandIcons && (
+		<style is:inline>
+			@import url("/fa/css/brands.min.css") layer(components);
+		</style>
+	)}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />
