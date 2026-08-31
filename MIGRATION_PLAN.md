@@ -201,6 +201,10 @@ flip the domain yourself; Pages + Turso stay as rollback anchors.
 7. After 2 weeks clean: archive Pages project (remove git integration/hooks), stop Turso, rotate any no-longer-needed secrets, remove R2/Pages-specific preview bindings.
 
 ### Phase 8 — Aux services port (post-cutover, separate mini-plan)
+**📋 BLUEPRINT — `docs/PHASE8_PLAN.md`.** Inventory done: PDF (pdf-lib/fontkit —
+pure JS → in-process worker route), image compression (sharp — native →
+Cloudflare Images `IMAGES` binding), email (React-email + MailerSend — pure JS →
+in-process sender). Sequencing + decommission list in the doc.
 1. Inventory: what `services/pdfWorker`, `services/imageCompression`, `email/` actually do (deps, runtime).
 2. PDF: likely Cloudflare Containers or a browser-rendering-based approach (research at that phase).
 3. Image compression: Workers-native image library (e.g., `@napi-rs/image`-class libs — verify workerd compat at that phase) or `cloudflare:images`/Image Resizing where applicable.
@@ -208,6 +212,12 @@ flip the domain yourself; Pages + Turso stay as rollback anchors.
 5. Cut over `VITE_PDF_SERVICE_URL`, `VITE_IMG_COMPRESSION_SERVICE_URL`, `AUTOMATED_EMAILS_*` to the new endpoints; decommission Docker.
 
 ### Phase 9 — Cleanup, docs, commit hygiene
+**✅ DONE (part 1) — commit `9034ae1`.** Old paired route system removed
+(15 groups, constructors, index.server, requestValidation, types/routes, types/path);
+`utils.server` pruned of dead helpers; `sqliteGenerateBackup` moved into the new
+layer; AGENTS.md + copilot mirror rewritten for APIServer/Zod; 9/9 API suites green.
+Remaining: final polish (README/QUICKSTART refresh, `.github/copilot-instructions`
+parity done), optional `@astrojs/check` pre-existing-error fixes (owner decision).
 - Remove dead deps (`@libsql/client`, `@aws-sdk/client-s3` after Phase 5, `@astrojs/tailwind`, old TS pin notes), prune `vite` ignore list, `wrangler.toml`.
 - Update `AGENTS.md` (+ `.github/copilot-instructions.md` mirror): stack versions, `bun run cf` command table, D1 rules (D1 batch vs sessions, no interactive tx), env rules (`cloudflare:workers` + `.dev.vars`), deploy section.
 - Update `README`/`QUICKSTART`; note `.gitignore` deltas (`dbSnapshots`, `getData` if retired, `bun.lockb` removal, `worker-*.d.ts`).
