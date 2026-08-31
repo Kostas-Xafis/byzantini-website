@@ -8,7 +8,6 @@ import { PaymentsServerRoutes } from "./payments.server";
 import { PayoffsServerRoutes } from "./payoffs.server";
 import { QueryLogsServerRoutes } from "./queryLogs.server";
 import { RegistrationsServerRoutes } from "./registrations.server";
-import { ReplicationServerRoutes } from "./replication.server";
 import { SysUsersServerRoutes } from "./sysusers.server";
 import { TeachersServerRoutes } from "./teachers.server";
 import { WholesalersServerRoutes } from "./wholesalers.server";
@@ -35,7 +34,6 @@ const raw_routes = [
 	QueryLogsServerRoutes,
 	RegistrationsServerRoutes,
 	AnnouncementsServerRoutes,
-	ReplicationServerRoutes,
 	SchemaServerRoutes,
 	SettingsBackupServerRoutes,
 ];

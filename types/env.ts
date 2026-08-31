@@ -18,11 +18,6 @@ export type EnvTypes = {
 	GOOGLE_MAPS_KEY?: string;
 	GOOGLE_CLIENT_ID?: string;
 	GOOGLE_CLIENT_SECRET?: string;
-	S3_ENDPOINT?: string;
-	S3_ACCESS_KEY_ID?: string;
-	S3_SECRET_ACCESS_KEY?: string;
-	S3_DEV_BUCKET_NAME?: string;
-	S3_BUCKET_NAME?: string;
 	PROJECT_ABSOLUTE_PATH?: string;
 	AUTOMATED_EMAILS_SERVICE_URL?: string;
 	AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN?: string;

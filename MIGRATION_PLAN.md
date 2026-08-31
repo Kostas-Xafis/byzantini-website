@@ -158,11 +158,20 @@ the built worker / deploy) in Phase 6.
 7. Checkpoint: full `bun run check` green; admin panel flows manually verified.
 
 ### Phase 5 — Bucket / R2 cleanup
+**✅ DONE — on `Workers`.** Dev store = `scripts/bucketServer.ts` (Phase 1); prod = R2
+binding (Phase 1). Remaining cleanup done: `@aws-sdk/client-s3` removed, `S3_*` env vars +
+types pruned, fs-based `replication` routes retired (incompatible with the Workers runtime —
+not ported to the new API).
 1. `lib/bucket/index.ts`: drop AWS SDK + S3 dev endpoint (`S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_DEV_BUCKET_NAME`, `DEV_BUCKET_LOCATION`, `S3_BUCKET_NAME`); use `env.S3_BUCKET` directly (R2 API; adapt `get` body stream ↔ ArrayBuffer); verify `src/pages/[...slug].ts` proxy + admin image uploads.
 2. Dev: wrangler/miniflare local R2 (no Docker S3 server). Remove `@aws-sdk/client-s3` dep.
 3. Checkpoint: upload/list/get/delete round-trip in dev + tests.
 
 ### Phase 6 — Preview + production deploy wiring (manual deploys)
+**PREPARED — on `Workers`** (needs your `wrangler login` to finish resource creation):
+`scripts/cf.ts` command wrapper (`bun run cf`), `wrangler.jsonc` env.production/preview
+scaffolds, `docs/PHASE6_DEPLOY.md` runbook. Deploy path verified with
+`wrangler deploy --config dist/server/wrangler.json --dry-run` (~253 kB gzip; bindings land
+once real D1/R2 ids are pinned — noted caveat about generated config dropping `env.*`).
 1. Create preview resources: `wrangler d1 create byzantini-db-preview`, preview R2 bucket (or reuse `bucket-dev`), preview worker env config.
 2. Deploy command (confirm exact form from Astro docs at implementation time — the v14 adapter emits `dist/server/wrangler.json`; likely `wrangler deploy --config dist/server/wrangler.json` or equivalent); wrap in `bun run cf deploy` / `deploy:preview`.
 3. `bun run cf deploy:preview` → smoke-test on the preview hostname (`byzantini-website.preview.workers.dev`).

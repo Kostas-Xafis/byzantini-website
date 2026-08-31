@@ -36,10 +36,15 @@
 
 	"env": {
 		"production": {
-			// Production-specific vars (use `wrangler secret put` for secrets)
+			// Production vars go here (non-secret only; secrets: `wrangler secret put`).
+			// Pin resources below once they exist (see docs/PHASE6_DEPLOY.md):
+			//   "d1_databases": [{ "binding": "DB", "database_name": "byzantini-db", "database_id": "<id>" }],
+			//   "r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket", "bucket_id": "<id>" }]
 		},
 		"preview": {
-			// Preview environment overrides (own D1/R2 resources)
+			// Preview environment: own D1 + R2 resources (create in Phase 6).
+			//   "d1_databases": [{ "binding": "DB", "database_name": "byzantini-db-preview", "database_id": "<id>" }],
+			//   "r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket-dev", "bucket_id": "<id>" }]
 		}
 	}
 }
