@@ -27,34 +27,40 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100dvh] overflow-hidden">
 		<slot />
 		<style is:inline>
-			html {
-				font-family: system-ui, sans-serif;
-				height: 100vh;
+			/* @layer base: see Layout.astro — keeps `text-*` utilities above these element defaults. */
+			@layer properties, theme, base, components, utilities;
+			@layer base {
+				html {
+					font-family: system-ui, sans-serif;
+					height: 100vh;
+				}
+				p,
+				a,
+				button,
+				h1,
+				h2,
+				h3 {
+					color: #282828;
+				}
+				body {
+					background: radial-gradient(ellipse at top, rgb(153 27 27 / 0.45), white);
+					background-repeat: no-repeat;
+				}
 			}
-			p,
-			a,
-			button,
-			h1,
-			h2,
-			h3 {
-				color: #282828;
-			}
-			body {
-				background: radial-gradient(ellipse at top, rgb(153 27 27 / 0.45), white);
-				background-repeat: no-repeat;
-			}
-			html.dark p,
-			html.dark a,
-			html.dark button,
-			html.dark h1,
-			html.dark h2,
-			html.dark h3,
-			html.dark span {
-				color: #f6f6f6;
-			}
-			html.dark body {
-				background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.5) -50%, rgb(12 12 12));
-				background-repeat: no-repeat;
+			@layer utilities {
+				html.dark p,
+				html.dark a,
+				html.dark button,
+				html.dark h1,
+				html.dark h2,
+				html.dark h3,
+				html.dark span {
+					color: #f6f6f6;
+				}
+				html.dark body {
+					background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.5) -50%, rgb(12 12 12));
+					background-repeat: no-repeat;
+				}
 			}
 			input:-webkit-autofill,
 			input:-webkit-autofill:hover,

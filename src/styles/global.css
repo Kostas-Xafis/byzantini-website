@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
-/* Class-based dark mode — the app toggles `.dark` on <html> (see AdminLayout / TotalsTable). */
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+ * Class-based dark mode — the app toggles `.dark` on <html> (see AdminLayout / TotalsTable).
+ * :is (not :where) to keep the v3 specificity (`.dark .dark\:*` = 0-2-0) so that
+ * `dark:*` utilities still beat the layouts' `html.dark p/a/button {color}` rules.
+ */
+@custom-variant dark (&:is(.dark, .dark *));
 
 /* Theme tokens migrated from tailwind.config.cjs (Tailwind 3 → 4). */
 @theme {
