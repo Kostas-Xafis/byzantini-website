@@ -430,7 +430,9 @@ export function RegistrationForm() {
 		let teacher_store = store[API.Teachers.get]?.slice();
 		const teachers = teacher_store && deepCopy(teacher_store);
 		const teacher_classes = store[API.Teachers.getClasses];
-		if (!teachers || !teacher_classes) return [];
+		// The store may hold a failed-fetch error (or undefined) instead of an
+		// array — never let `teacher_classes.find` throw on a UI page.
+		if (!teachers || !Array.isArray(teacher_classes)) return [];
 		const id = btns.findIndex((btn) => btn[1] === formSelected());
 		teachers.sort((a, b) => {
 			if (a.fullname < b.fullname) return -1;

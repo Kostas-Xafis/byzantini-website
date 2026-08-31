@@ -9,7 +9,7 @@ import { z } from "astro/zod";
 export type Insert = { insertId: number };
 
 const looseBoolean = (message = "Μη έγκυρο loose boolean") =>
-	z.union([z.boolean(), z.literal(0), z.literal(1)], { message }).transform((v) => v === true);
+	z.union([z.boolean(), z.literal(0), z.literal(1)], { message }).transform((v) => v === true || v === 1);
 const positiveInt = (message = "Μη έγκυρος θετικός ακέραιος") => z.number().int().min(0, message);
 
 export const z_Books = z.object({
@@ -279,7 +279,7 @@ export const z_TeacherClassesResponse = z.object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
 	class_id: positiveInt("Μη έγκυρο class_id"),
 	priority: z.number().int().min(1, "Μη έγκυρη προτεραιότητα"),
-	registration_number: z.string().optional(),
+	registration_number: z.string("Μη έγκυρος αριθμός έγκρισης").nullable().transform((v) => v ?? undefined).optional(),
 });
 
 
