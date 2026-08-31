@@ -72,6 +72,14 @@ Mirrors to copy: `wrangler.jsonc` (jsonc + assets + D1/KV bindings + envs), `mig
 ## 3. Phases
 
 ### Phase 1 — Dependency baseline (Astro 7 stack)
+**✅ DONE — commit `b2bbd4f` on `Workers`.** Deviations (documented in `docs/MIGRATION_SPEC.md`):
+TS 7 deferred (`@astrojs/check` peers ^5||^6); `wrangler.toml→jsonc` pulled forward (the v14
+build validates the wrangler config); dev bucket replaced with `scripts/bucketServer.ts`
+(AWS SDK can't load in the workerd dev runtime); `services/imageCompression/.env` port fixed
+to 4323; test client sends `Origin` (Astro 6+ CSRF). Test matrix: 7/9 API files green
+(books, instruments, locations, payments, registrations, sysusers, teachers);
+announcements #3/#4 and payoffs/wholesalers failures verified pre-existing
+(old-stack comparison: identical or worse).
 Steps:
 1. Bump in `package.json`: `astro@7.x`, `@astrojs/cloudflare@14.x`, `@astrojs/solid-js@7.x`, `@astrojs/sitemap` latest, `wrangler` latest 4.x, `typescript@7.0.2`, `@astrojs/check` latest.
 2. Tailwind: remove `@astrojs/tailwind`, `tailwindcss@3` + `tailwind.config.cjs`; add `tailwindcss@4`, `@tailwindcss/vite`; rewrite global CSS to `@import "tailwindcss"` + `@theme` tokens (copy theme values from `tailwind.config.cjs`; check `@tailwindcss/container-queries` v4 plugin).
