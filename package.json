@@ -27,7 +27,10 @@
 		"docker:img": "sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/ && sudo docker run --network host -d imgcomp",
 		"docker:build": "sudo docker build -f ./services/pdfWorker/local.Dockerfile -t pdfworker ./services/pdfWorker/ && sudo docker build -f ./services/imageCompression/local.Dockerfile -t imgcomp ./services/imageCompression/",
 		"docker:run": "sudo docker run --network host -d pdfworker && sudo docker run --network host -d imgcomp",
-		"docker:logs": "sudo docker logs -f $(sudo docker ps -q --filter ancestor=pdfworker) && sudo docker logs -f $(sudo docker ps -q --filter ancestor=imgcomp)"
+		"docker:logs": "sudo docker logs -f $(sudo docker ps -q --filter ancestor=pdfworker) && sudo docker logs -f $(sudo docker ps -q --filter ancestor=imgcomp)",
+		"replicate:all": "bun scripts/replicate.ts",
+		"replicate:db": "bun scripts/replicate.ts --db",
+		"replicate:bucket": "bun scripts/replicate.ts --bucket"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^14.2.5",
