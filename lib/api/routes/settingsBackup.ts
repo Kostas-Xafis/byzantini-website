@@ -1,6 +1,5 @@
 import type { APIContext } from "astro";
 import { z } from "astro/zod";
-import { Buffer } from "node:buffer";
 import { Bucket } from "@lib/bucket";
 import { sqliteGenerateBackup } from "./schema";
 import { APIServer, handlerResult } from "./APIServer";
@@ -13,6 +12,16 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  * Route keys (getDatabase, getFiles, getFile) match the old client file exactly
  * so components (SettingsPage) keep working.
  */
+
+/** browser-safe base64 (node:buffer cannot be imported from the shared registry). */
+const bytesToBase64 = (bytes: Uint8Array) => {
+	let binary = "";
+	const chunk = 0x8000;
+	for (let i = 0; i < bytes.length; i += chunk) {
+		binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+	}
+	return btoa(binary);
+};
 
 const getFileReq = z.object({ key: z.string().min(1, "Invalid bucket key") });
 
@@ -90,7 +99,7 @@ export const settingsBackupRoutes = {
 					throw Error(`Bucket file not found: ${rawKey}`);
 				}
 
-				const dataBase64 = Buffer.from(bytes).toString("base64");
+				const dataBase64 = bytesToBase64(bytes);
 				return { key, dataBase64 };
 			}, "Σφάλμα κατά την λήψη αρχείου bucket"),
 	),

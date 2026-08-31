@@ -3,14 +3,24 @@ import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import type { APIContext } from "astro";
-import { createHash } from "node:crypto";
+
+/**
+ * sha256 hex digest via Web Crypto. `node:crypto` cannot be imported from the
+ * shared route registry because Vite externalizes it in the browser (the admin
+ * island imports `@routes/index.client` → every route group). Web Crypto gives
+ * byte-identical output and is available in browsers, workerd and Node ≥ 16.
+ */
+async function sha256Hex(input: string): Promise<string> {
+	const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+	return Array.from(new Uint8Array(digest))
+		.map((b) => b.toString(16).padStart(2, "0"))
+		.join("");
+}
 
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || R.hex();
-	const hmac = createHash("sha256");
-	hmac.update(key + Env.env.SECRET);
-	hmac.update(salt);
-	return hmac.digest("hex").toString() + ":" + salt;
+	// Matches the old `createHash("sha256")` → update(key + SECRET) → update(salt) chain.
+	return (await sha256Hex(key + Env.env.SECRET + salt)) + ":" + salt;
 }
 
 // This class is used to authenticate a user by his session id

@@ -5,7 +5,6 @@ import type { SitemapItem } from "@_types/global";
 import { Bucket } from "@lib/bucket";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
-import { Buffer } from "node:buffer";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements } from "@lib/api/schemas";
 import { APIServer, handlerResult } from "./APIServer";
@@ -38,7 +37,8 @@ async function getSitemapXml({ request }: SitemapCtx) {
 	// Self-initialize: with an empty (dev/local) bucket the file may be missing;
 	// in production the file always exists, so this path stays untouched.
 	if (!sitemap) return { urlset: {} };
-	return new XMLParser(xmlopts).parse(Buffer.from("byteLength" in sitemap ? sitemap : await sitemap.arrayBuffer()));
+	const bytes = ("byteLength" in sitemap ? sitemap : await sitemap.arrayBuffer()) as ArrayBuffer;
+	return new XMLParser(xmlopts).parse(new TextDecoder().decode(bytes));
 }
 
 function jsonToXml(json: any) {
