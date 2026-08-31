@@ -19,10 +19,14 @@ flows via `bun run cf deploy` once the cutover (Phase 7) is scheduled.
    top-level config; pin ids under `env.preview`/`env.production` if needed).
 5. Rebuild + regenerate types: `bun run build && bun run types`.
 
+> **Deployed worker names** (adapter-suffixed): production = `byzantini-website-production`,
+> preview = `byzantini-website-preview`. All secret/vars and tail commands must target
+> those names — the non-suffixed `byzantini-website` name has no worker.
+
 ## Secrets & vars
 
-For EACH environment (`wrangler secret put` applies to the deployed worker; use
-`wrangler secret put --env preview` independently):
+For EACH environment (`wrangler secret bulk` / `secret put` against the deployed
+worker name; preview independently):
 
 - `SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTOMATED_EMAILS_SERVICE_URL`,
   `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` (in preview use the dev/test service URLs).
@@ -33,8 +37,8 @@ For EACH environment (`wrangler secret put` applies to the deployed worker; use
 
 ```bash
 bun run cf deploy            # build + wrangler deploy --config dist/server/wrangler.json
-bun run cf deploy:preview    # preview (env overrides land when ids are pinned — see caveat)
-bun run cf tail              # live logs
+bun run cf deploy:preview    # build + self-generate preview config + deploy
+bun run cf tail --name byzantini-website-production   # live logs
 ```
 
 > **Caveat**: the adapter-generated `dist/server/wrangler.json` currently carries bindings only

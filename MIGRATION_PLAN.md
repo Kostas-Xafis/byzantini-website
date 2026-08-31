@@ -186,9 +186,12 @@ Turso exported (10,514 rows incl. query_logs — `scripts/exportTurso.ts`, escap
 2,988 email_subscriptions, 7 sys_users, 103 payments, 5,531 query_logs).
 Production worker deployed (`byzantini-website-production.koxafis.workers.dev`) —
 every page, API, asset + file proxy 200 on the edge. Pages project + Turso still
-live (rollback anchors). **Open:** set the production `SECRET` to the value the
-admin password hashes were created with (Pages dashboard value — cannot be read
-from the repo), then switch the custom domain.
+live (rollback anchors). Found & fixed the login
+mismatch: the adapter suffixed the worker name (`byzantini-website-production`), so the
+secrets had been bulk-set on the *un*-suffixed name — re-set on the real name → login
+verified `true` on the production worker. **Remaining: the custom-domain switch
+(`musicschool-metamorfosi.gr`) is YOUR action** — you'll verify the preview 100% and
+flip the domain yourself; Pages + Turso stay as rollback anchors.
 1. Freeze window: pick a low-traffic slot (before the mid-September 'Αγιασμός/registrations rush).
 2. Create prod D1 (`wrangler d1 create byzantini-db`), `bun run cf d1:migrate:deploy` (schema).
 3. Import data: `wrangler d1 execute byzantini-db --remote --file <fresh-turso-export.sql>` (split if it exceeds D1 statement/file limits).
