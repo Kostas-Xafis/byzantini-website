@@ -16,6 +16,8 @@
  *           exposes in dev). Downloads run 8 at a time (REPLICATE_CONCURRENCY)
  *           and are resumable: files already present with the exact size are
  *           skipped, stale local files are pruned (mirror semantics).
+ *           Afterwards the whole bucket is snapshotted to `bucket/YY-MM-DD/`
+ *           (the old `replication.server.ts` archival convention).
  *
  * Usage:
  *   bun scripts/replicate.ts                     # both
@@ -28,7 +30,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { homedir } from "node:os";
 
@@ -169,6 +171,15 @@ async function replicateBucket() {
 
 	if (failed) process.exitCode = 1;
 	console.log("✔ Bucket replicated");
+
+	// Archival snapshot (old `replication.server.ts` convention): a dated copy
+	// under bucket/YY-MM-DD/ so each run leaves a point-in-time backup.
+	const date = new Date();
+	const stamp = `${String(date.getFullYear()).slice(-2)}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+	const archive = join(ROOT, "bucket", stamp);
+	await rm(archive, { force: true, recursive: true });
+	await cp(join(ROOT, "bucket/latest"), archive, { recursive: true, force: true });
+	console.log(`  archived → bucket/${stamp}/`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
