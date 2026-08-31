@@ -6,8 +6,8 @@
 
 ## Runtime + app shape
 - Use Bun everywhere (`bun run ...`, `bun test ...`), not npm/yarn.
-- Main web app: Astro 5 + Solid + Tailwind on Cloudflare Pages/Workers
-  (`astro.config.mjs`, `wrangler.toml`).
+- Main web app: Astro 7 + Solid + Tailwind 4 on Cloudflare Workers
+  (`astro.config.mjs`, `wrangler.jsonc`); dev port is 4321.
 - API entrypoint is the catch-all route `src/pages/api/[...slug].ts`
   (maps slug + HTTP method to route metadata).
 
@@ -34,33 +34,41 @@
 
 ## Database + transactions
 - Access DB through `executeQuery(...)` / `executeTransaction(...)`
-  (`lib/utils.server.ts`) and `createDbConnection(...)` (`lib/db.ts`).
-- SQL supports `???` placeholder expansion (`questionMarks` +
-  `sqlPreprocessor` in `lib/db.ts`).
-- For multi-step writes, use transaction callback style (see
-  `lib/routes/registrations.server.ts`).
+  (`lib/utils.server.ts`) and `getDb`/`dbExec` (`lib/db.ts`); the D1 binding
+  comes from `cloudflare:workers` env.
+- SQL supports `???` placeholder expansion (`questionMarks` in `lib/db.ts`).
+- **D1 has no interactive transactions** — `executeTransaction` runs
+  statements immediately (no rollback); refactor rollback-sensitive flows to
+  `db.batch(...)` — see `docs/MIGRATION_SPEC.md`.
+- Schema changes go through `migrations/` (`wrangler d1 migrations apply
+  DB --local`), never ad-hoc DDL.
 - Query logging is built-in (`query_logs` writes from `lib/db.ts`); avoid
   bypassing wrappers.
 
 ## Env, storage, and external services
-- Read env through `Env.env` / `Env.setEnv(ctx)` (`lib/env/env.ts`), not
-  ad-hoc globals.
-- `loadEnvVars.ts` loads `.dev.vars.<env>`; production client exposure is
-  restricted to `VITE_`/`PUBLIC_`.
+- Server-side env comes from `cloudflare:workers` (`lib/env/runtime.ts`
+  bridge + `Env.env`); local secrets live in `.dev.vars`.
+- Client `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
+  (gitignored).
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): production uses
-  Cloudflare R2 binding `S3_BUCKET`; development uses S3-compatible SDK.
+  Cloudflare R2 binding `S3_BUCKET`; development uses the local HTTP store
+  (`bun run bucket:serve`, `scripts/bucketServer.ts`).
 - PDF generation is delegated to `services/pdfWorker`; client integration
   lives in `lib/pdf.client.ts` and sends `Authorization: Bearer <session_id>`.
 
 ## Workflows and conventions
-- Core commands: `bun run dev`, `bun run build`, `bun run preview`,
-  `bun run test`, `bun run db:query --q "..."`, `bun run db:replicate`,
-  `bun run typecheck`, `bun run check`.
+- Core commands: `bun run dev` (starts `bucket:serve` too), `bun run build`,
+  `bun run types`, `bun run test`, `bun run db:query -- "..."`,
+  `bun run db:reset`, `bun run typecheck`, `bun run check`.
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
-  from `tests/.env.test`, 10s per-test timeout.
+  from `tests/.env.test`, 10s per-test timeout; they need the dev server, the
+  docker services (pdf/img) and `bucket:serve`.
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,
   `@hooks/*`, `@env/*`, etc.).
 - Extend existing route groups/utilities instead of introducing a new
   transport or API plumbing layer.
+
+> Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md`
+> and `MIGRATION_PLAN.md` for the plan and do-not-re-research facts.

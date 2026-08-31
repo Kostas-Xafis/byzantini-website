@@ -12,22 +12,32 @@ Claude Code, Zed, Windsurf, Gemini, GitHub Copilot, ...) working on
 
 A full-stack music school platform (website + admin panel, Greek language UI)
 for the Byzantine music school of Metamorfosi. Astro + Solid frontend on
-Cloudflare Pages/Workers, with a typed internal API, libSQL/Turso database, R2
-storage and two local worker services (PDF, image compression).
+Cloudflare Workers (static assets), with a typed internal API, Cloudflare D1
+database, R2 storage and two local worker services (PDF, image compression).
+
+> Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md` and
+> `MIGRATION_PLAN.md` for the plan and the do-not-re-research facts.
 
 ## Stack (do not change without a good reason)
 
 - Runtime & package manager: **Bun** — never use `npm`/`yarn`/`pnpm`.
-- Frontend: Astro 5.18 + SolidJS + Tailwind 3; site port is 3000.
+- Frontend: Astro 7.2.9 + SolidJS + Tailwind 4; dev port is 4321.
 - API: single catch-all route `src/pages/api/[...slug].ts` with typed, paired
   route contracts.
 - Validation: Valibot (`lib/middleware/requestValidation.ts`).
-- Database: libSQL/Turso in production; local SQLite snapshot in dev.
-- Storage: Cloudflare R2 (`S3_BUCKET` binding) in production; S3-compatible
-  endpoint in development (`lib/bucket/index.ts`).
-- Deploy: `@astrojs/cloudflare` adapter → `dist/_worker.js/index.js`;
-  config in `wrangler.toml` (note: `.toml`, not `.jsonc`).
-- TS config: `tsconfig.json` extends `astro/tsconfigs/strict`, no emit.
+- Database: Cloudflare D1 (binding `DB`, `cloudflare:workers` env) — see
+  `lib/db.ts`; schema in `migrations/` (`wrangler d1 migrations apply`).
+- Storage: Cloudflare R2 (`S3_BUCKET` binding) in production; dev goes through
+  `bun run bucket:serve` (local HTTP store on `bucket/latest`, see
+  `lib/bucket/index.ts` + `scripts/bucketServer.ts`).
+- Deploy: `@astrojs/cloudflare` adapter → `dist/server/entry.mjs` + `dist/client/`;
+  config in `wrangler.jsonc`; manual deploys via `wrangler deploy`
+  (deploy plumbing lands in Phase 6; CI/Pages integration is retired).
+- Env: server-side via `cloudflare:workers` env (`.dev.vars` local secrets +
+  `vars` in `wrangler.jsonc`); client-side via Vite-native `.env`
+  (gitignored, `VITE_`/`PUBLIC_` only).
+- TS config: `tsconfig.json` extends `astro/tsconfigs/strict`, no emit;
+  runtime types from generated `worker-configuration.d.ts` (`bun run types`).
 
 ## Command reference (use Bun)
 
@@ -35,35 +45,36 @@ Core loop:
 
 | Task | Command | Notes |
 | --- | --- | --- |
-| Install | `bun install` | real lockfile is `bun.lock`; an EMPTY `bun.lockb` is committed only so Cloudflare Pages' package-manager detection picks Bun (it doesn't recognize `bun.lock`) — see `.gitignore` comment |
-| Dev server | `bun run dev` | Astro dev, port 3000 |
-| Dev server (CF env) | `bun run start` | sets `CLOUDFLARE_ENV=development` |
-| Build | `bun run build` | production build (`CLOUDFLARE_ENV=production`) |
-| Preview | `bun run preview` | `wrangler pages dev dist` |
-| Build + preview | `bun run build-preview` | |
+| Install | `bun install` | real lockfile is `bun.lock` |
+| Dev server | `bun run dev` | Astro dev, port **4321**; also starts `bun run bucket:serve` |
+| Dev server (alt) | `bun run start` | alias for `dev` |
+| Build | `bun run build` | production build |
+| Types | `bun run types` | regenerate `worker-configuration.d.ts` after `wrangler.jsonc` changes |
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
-| Astro check | `bun run astro-check` | `astro check` (slower, more rules) |
+| Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | full suite; env from tests/.env.test, 10s per test timeout |
+| Tests | `bun run test` | full suite; needs dev server + docker services + `bucket:serve`; env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
-Database tooling:
+Database tooling (wrangler D1 commands — local dev database is the miniflare
+SQLite at `.wrangler/state/v3/d1`):
 
 | Task | Command | Notes |
 | --- | --- | --- |
-| Query dev DB | `bun run db:query --q "SELECT 1"` | script already carries `--dev --q` |
-| Query prod DB | `bun run db:query:prod --q "..."` | reads `.dev.vars` — careful |
+| Query dev DB | `bun run db:query -- "SELECT 1"` | `wrangler d1 execute DB --local` |
+| Query remote DB | `bun run db:query:prod -- "..."` | requires the remote database (Phase 6) |
 | Recent query logs | `bun run db:logs` | |
-| Refresh snapshots | `bun run db:replicate` | pulls the latest prod backup, then resets `latest.db` |
-| Reset dev DB | `bun run db:reset` | local-only: rebuild `latest.db` from `dbSnapshots/dev-snapshot.sql` |
+| Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
+| Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql` |
+| Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 
-Worker services (local Docker only — `sudo docker`, not needed for most work):
+Worker services (local Docker only — needed for the API tests; images: `pdfworker`, `imgcomp`):
 `bun run docker:build` / `docker:pdf` / `docker:img` / `docker:run` / `docker:logs`.
 
-Deploy (requires Cloudflare credentials — do NOT run casually, do not run in tests):
-`bun run deploy:test` (builds and deploys `dist` to Pages branch `local-test`),
-`bun run logs:test`.
+Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
+`bun run build` then `wrangler deploy --config dist/server/wrangler.json`
+(precise deploy command confirmed in Phase 6; old `deploy:test`/`logs:test` are gone).
 
 ## API architecture (project-critical, preserve the pattern)
 
@@ -91,31 +102,36 @@ Deploy (requires Cloudflare credentials — do NOT run casually, do not run in t
 
 - Use the wrappers in `lib/utils.server.ts`: `executeQuery(...)`,
   `executeTransaction(...)`, `execTryCatch(...)` — do not create ad-hoc DB
-  calls. They handle connection, `???` placeholder expansion and `query_logs`
-  logging.
+  calls. They handle the D1 binding, `???` placeholder expansion and
+  `query_logs` logging. Low-level access is `dbExec`/`getDb` in `lib/db.ts`.
 - Multiple-value SQL uses `???` placeholders (expanded by
-  `questionMarks`/`sqlPreprocessor` in `lib/db.ts`).
+  `questionMarks` in `lib/db.ts`).
 - Multi-step writes use the transaction callback pattern — see
   `lib/routes/registrations.server.ts` for the canonical example.
-- Dev vs prod connection is driven by `CONNECTOR` (`sqlite-dev` vs
-  `sqlite-prod`) and the matching env vars.
+- **D1 has no interactive transactions**: `executeTransaction` executes
+  statements immediately (no rollback). Rollback-sensitive flows must be
+  refactored to `db.batch(...)` or made idempotent — see `docs/MIGRATION_SPEC.md`.
 - Prefer SQL parameterization; never interpolate user input into SQL strings.
+- Schema changes go through `migrations/NNNN_*.sql` +
+  `wrangler d1 migrations apply DB --local` (never ad-hoc DDL in route code).
 
 ## Env, storage and external services
 
-- Read env through `Env.env` / `Env.setEnv(ctx)` (`lib/env/env.ts`), never via
-  ad-hoc globals.
-- `loadEnvVars.ts` loads `.dev.vars.<environment>`; only `VITE_`/`PUBLIC_`
-  variables reach client code in production builds.
-- Storage goes through `Bucket` (`lib/bucket/index.ts`) — R2 in production,
-  S3-compatible in dev. Never access the binding directly in route code.
+- Server-side env comes from the `cloudflare:workers` env module
+  (`lib/env/runtime.ts` bridge, `Env.env` for the merged view) — never ad-hoc
+  globals; local secrets live in `.dev.vars`.
+- Client-visible `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
+  (gitignored; `.env` for dev, `.env.production` for builds).
+- Storage goes through `Bucket` (`lib/bucket/index.ts`) — R2 binding in
+  production, local HTTP store (`bun run bucket:serve`) in dev. Never access
+  the binding directly in route code.
 - PDF generation is delegated to `services/pdfWorker` via `lib/pdf.client.ts`
   (`Authorization: Bearer <session_id>`); image compression goes to
   `services/imageCompression` via `VITE_IMG_COMPRESSION_SERVICE_URL`.
 
 ## Secrets policy (hard rules)
 
-- `.dev.vars`, `.dev.vars.development`, `tests/.env.test`,
+- `.dev.vars`, `.env`, `.env.production`, `tests/.env.test`,
   `email/credentials.json` and any `**/.env*` are gitignored and must NEVER
   be: committed, copied into source files, or have their values printed into
   diffs/logs/chats.
@@ -184,8 +200,8 @@ Deploy (requires Cloudflare credentials — do NOT run casually, do not run in t
 - DO: run `bun run typecheck` before declaring a change done; run targeted
   tests for API changes.
 - DO: keep diffs minimal and focused; don't reformat unrelated files.
-- DON'T: run `deploy:test`, `logs:test` or any Docker command as part of
-  routine work or to "verify" a change.
+- DON'T: run any `wrangler deploy`/`d1 ... --remote` or Docker command as part
+  of routine work or to "verify" a change (deploys require real credentials).
 - DON'T: use `npm`/`npx`/`yarn`; use `bun`/`bunx`.
 - DON'T: restart or rewrite parts of the architecture that work (database
   layer, route assembly, bucket abstraction) without an explicit request.

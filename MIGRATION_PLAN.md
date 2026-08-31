@@ -89,6 +89,12 @@ Steps:
 6. Checkpoint: `bun run typecheck`, `bun run astro-check`, `bun run build` compiles; visual smoke of a page.
 
 ### Phase 2 — Worker foundation (wrangler.jsonc + static assets + runtime)
+**✅ DONE — commit `9cbe710`.** Env consolidated: `VITE_*` → Vite-native `.env`
+(+ `.env.production`), server vars/secrets → wrangler `.dev.vars`;
+`loadEnvVars` retired; `wrangler types --include-runtime=false` →
+`worker-configuration.d.ts` (ambient runtime globals clash with Astro's
+`APIContext`, so only explicit `@cloudflare/workers-types` type imports remain);
+Pages-era scripts removed.
 1. New `wrangler.jsonc` (model: Isokratis):
    - `name: byzantini-website`, `main` from adapter output, `compatibility_date` ~today, `compatibility_flags: ["nodejs_compat"]` (verify whether the old `global_fetch_strictly_public` / `disable_nodejs_process_v2` flags are still needed — likely not on a modern date).
    - `assets: { directory: "./dist", binding: "ASSETS" }` (confirm exact `not_found_handling` for the SPA-ish admin routes — Isokratis uses `single-page-application`; Byzantini has real 404s, verify behavior).
@@ -105,6 +111,15 @@ Steps:
 5. Checkpoint: `bun run dev` boots with local D1 binding visible; `bun run typecheck` green.
 
 ### Phase 3 — D1 database layer (core change)
+**✅ DONE (core) — commit `9cbe710`.** `migrations/0001_initial_schema.sql`
+(21 tables from the dev snapshot; data imported locally — 14 announcements,
+1314 registrations). `lib/db.ts` targets the D1 binding (`getDb`/`dbExec`,
+`???` expansion + `ExecReturn` shape preserved); `executeTransaction` executes
+immediately — **no rollback** (D1 has no interactive transactions). Schema
+backup route ported to D1; fs-based `revert`/`migrate` routes retired; `getData/`
+tooling retired; `db:*` scripts → wrangler d1 equivalents. **Open (Phase 4/6):**
+audit & convert transaction flows (registrations, payments, payoffs, sysusers,
+announcements) to `batch()`; remote D1 creation + id pinning.
 1. Generate `migrations/0001_*.sql` from the Phase-0 prod export (schema only): strip `PRAGMA journal_mode=WAL`, keep all 21 tables (`announcements`, `books`, `class_type`, `email_subscriptions`, `instruments`, `locations`, `payments`, `query_logs`, `school_payoffs`, `sys_users`, `teacher_classes`, `teacher_instruments`, `teacher_locations`, `teachers`, `total_payments`, `total_registrations`, `total_school_payoffs`, `wholesalers`, `sys_user_register_links`, `announcement_images`, `registrations`). Validate D1 SQLite compatibility of each construct (AUTOINCREMENT, UNIQUE, defaults — all standard; verify during implementation).
 2. Rewrite `lib/db.ts` → D1:
    - Remove `@libsql/client`, TURSO vars, `CONNECTOR`, file: URLs, dev-vs-prod connection switching, `WrappedConnection`/`TxConn`.
