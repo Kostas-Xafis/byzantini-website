@@ -146,12 +146,8 @@ export default function BooksTable() {
 				quantity: form.number("quantity"),
 				sold: form.number("sold"),
 			};
-			if (data.wholesale_price > data.price)
-				return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική");
-			if (data.quantity < data.sold)
-				return alert(
-					"Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων"
-				);
+			if (data.wholesale_price > data.price) return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική");
+			if (data.quantity < data.sold) return alert("Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων");
 			const res = await apiHook(API.Books.post, {
 				RequestObject: data,
 			});
@@ -192,10 +188,7 @@ export default function BooksTable() {
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση βιβλίου: " + (book.title || "")));
 		};
 		return {
-			inputs: new InputFields(BooksInputs(wholesalers))
-				.fill(book)
-				.pick(["quantity"])
-				.getInputs(),
+			inputs: new InputFields(BooksInputs(wholesalers)).fill(book).pick(["quantity"]).getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Ενημέρωση Ποσότητας",
@@ -295,9 +288,7 @@ export default function BooksTable() {
 	});
 
 	return (
-		<Show
-			when={store[API.Books.get] && store[API.Wholesalers.get]}
-			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show when={store[API.Books.get] && store[API.Wholesalers.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}
 				data={shapedData}

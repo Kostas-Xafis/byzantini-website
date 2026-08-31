@@ -12,20 +12,9 @@ export interface Props {
 const { title, content, okButton = "Εντάξει", cancelButton } = Astro.props;
 ---
 
-<div
-	id="popup"
-	class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]">
-	<div
-		class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600">
-		{
-			typeof title === "string" ? (
-				<h2 class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">
-					{title}
-				</h2>
-			) : (
-				title
-			)
-		}
+<div id="popup" class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]">
+	<div class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600">
+		{typeof title === "string" ? <h2 class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">{title}</h2> : title}
 		{typeof content === "string" ? <p class="text-2xl font-didact ">{content}</p> : content}
 		{
 			cancelButton ? (
@@ -66,18 +55,18 @@ const { title, content, okButton = "Εντάξει", cancelButton } = Astro.prop
 	popup?.addEventListener("show", () => {
 		const atl = new AnimTimeline();
 		atl.step(() => (popup.style.display = "grid"))
-		.step(() => popup.classList.remove("hide"))
-		.start();
+			.step(() => popup.classList.remove("hide"))
+			.start();
 	});
 
 	popup?.addEventListener("hide", () => {
 		const atl = new AnimTimeline();
 		atl.step(() => popup.classList.add("hide"))
-		.step({
-			time: 300,
-			anim: () => popup.style.display = "none"
-		})
-		.start();
+			.step({
+				time: 300,
+				anim: () => (popup.style.display = "none"),
+			})
+			.start();
 	});
 </script>
 <style>

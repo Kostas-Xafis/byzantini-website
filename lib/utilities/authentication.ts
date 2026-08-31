@@ -19,7 +19,7 @@ class AuthCache {
 	private cache = new Map<string, number>();
 	private timeout = 1000 * 60 * 60 * 12;
 
-	constructor() { }
+	constructor() {}
 
 	invalidate(key: string) {
 		if (this.cache.has(key)) {

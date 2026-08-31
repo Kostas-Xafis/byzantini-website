@@ -18,7 +18,7 @@ const getById: EndpointRoute<"/payments/id", number[], Payments[]> = {
 	validation: undefined,
 };
 
-const getTotal: EndpointRoute<"/payments/total", any, { total: number; }> = {
+const getTotal: EndpointRoute<"/payments/total", any, { total: number }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payments/total",
@@ -66,5 +66,5 @@ export const PaymentsRoutes = {
 	post,
 	updatePayment,
 	complete,
-	delete: del
+	delete: del,
 };

@@ -3,19 +3,21 @@ import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { questionMarks } from "@lib/utils.server";
 import { createClient, type Client, type ResultSet, type Transaction as libsqlTransaction } from "@libsql/client";
-export type ExecReturn<T> = { insertId: '0', rows: T[]; };
-export type Exec = <T = undefined>(query: string, args?: QueryArguments, _?: any) => Promise<T extends undefined ? { insertId: string; } : ExecReturn<T>>;
+export type ExecReturn<T> = { insertId: "0"; rows: T[] };
+export type Exec = <T = undefined>(query: string, args?: QueryArguments, _?: any) => Promise<T extends undefined ? { insertId: string } : ExecReturn<T>>;
 
 export type QueryArguments = Record<string, any> | any[];
 
 export type Transaction = {
-	execute: Exec,
-	executeQuery: <T = undefined>(query: string, args?: QueryArguments, log?: boolean) => Promise<T extends undefined ? Insert : T[]>,
-	queryHistory: [{
-		id: string;
-		query: string;
-		args: QueryArguments;
-	}];
+	execute: Exec;
+	executeQuery: <T = undefined>(query: string, args?: QueryArguments, log?: boolean) => Promise<T extends undefined ? Insert : T[]>;
+	queryHistory: [
+		{
+			id: string;
+			query: string;
+			args: QueryArguments;
+		},
+	];
 };
 
 type TxConn = {
@@ -24,7 +26,7 @@ type TxConn = {
 };
 
 export type WrappedConnection = {
-	execute: Exec,
+	execute: Exec;
 	transaction: (func: (tx: Transaction) => any) => Promise<any>;
 	close: () => void;
 	isClosed: () => boolean;
@@ -32,17 +34,17 @@ export type WrappedConnection = {
 
 export type DBType = "sqlite-prod" | "sqlite-dev" | null;
 export type SimpleConnection = Client;
-type ConnectionType<ShouldWrap extends boolean> =
-	ShouldWrap extends true ? WrappedConnection : SimpleConnection;
+type ConnectionType<ShouldWrap extends boolean> = ShouldWrap extends true ? WrappedConnection : SimpleConnection;
 
 export function createSimpleDbConnection(type?: DBType): SimpleConnection {
 	const {
 		// Local snaphot env variables for development
 		DEV_DB_ABSOLUTE_LOCATION,
 		// Turso env variables for production
-		TURSO_DB_URL, TURSO_DB_TOKEN,
+		TURSO_DB_URL,
+		TURSO_DB_TOKEN,
 		// Connector type
-		CONNECTOR
+		CONNECTOR,
 	} = Env.env;
 
 	// ! SQLITE does not support LIMIT in UPDATE queries
@@ -81,14 +83,14 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 			 * @throws {LibsqlError}
 			 */
 			return async function <T = undefined>(query: string, argsObj: QueryArguments = [], _?: any) {
-				let res = await clientHandler.execute(sqlPreprocessor(query, argsObj)) as ResultSet;
+				let res = (await clientHandler.execute(sqlPreprocessor(query, argsObj))) as ResultSet;
 				let resObj = {} as any;
 				if (res.lastInsertRowid && !Number.isNaN(res.lastInsertRowid)) resObj.insertId = "" + res.lastInsertRowid;
 				else {
 					resObj.insertId = "0";
 					resObj.rows = res.rows;
 				}
-				return resObj as T extends undefined ? { insertId: string; } : ExecReturn<T>;
+				return resObj as T extends undefined ? { insertId: string } : ExecReturn<T>;
 			};
 		};
 
@@ -109,9 +111,10 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 				txconn.tx = {
 					execute: execute(txconn.conn),
 					queryHistory: [] as any,
-					executeQuery: null as any
+					executeQuery: null as any,
 				};
-				let res, hasError = false;
+				let res,
+					hasError = false;
 				try {
 					res = await func(txconn.tx);
 					await txconn.conn.commit();
@@ -135,11 +138,11 @@ export function createDbConnection<T extends boolean = false>(type?: DBType, wra
 			},
 			isClosed(): boolean {
 				return client.closed;
-			}
+			},
 		} as WrappedConnection as any;
 	}
 	return client as any;
-};
+}
 
 const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][number], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
@@ -148,13 +151,12 @@ const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][numb
 	try {
 		createDbConnection().execute({
 			sql: "INSERT INTO query_logs (id, query, args, error, date) VALUES (?, ?, ?, ?, ?)",
-			args: [id, query, argStr, err ? 1 : 0, Date.now()]
+			args: [id, query, argStr, err ? 1 : 0, Date.now()],
 		});
 	} catch (error) {
 		console.log("Query logger error:" + error);
 	}
 };
-
 
 const sqlPreprocessor = (query: string, args: QueryArguments) => {
 	const argsArr = Array.isArray(args) ? args : objectToArrayFromQuery(args, query);

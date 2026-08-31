@@ -10,66 +10,56 @@ const sysUsersSimple = pick(v_SysUsers, ["id", "email"]);
 function sysUsersTest() {
 	const sysUser = {
 		email: R.email(),
-		password: R.string(8, "a-Z-9")
+		password: R.string(8, "a-Z-9"),
 	} as SysUsers;
 	let newSysUserLink: string | null;
 	let newSysUserId: number | null;
 
-	test("--sysusers-- #1",
-		async () => {
-			const res = await useTestAPI("SysUsers.createRegisterLink", {
-				RequestObject: { email: sysUser.email }
-			});
+	test("--sysusers-- #1", async () => {
+		const res = await useTestAPI("SysUsers.createRegisterLink", {
+			RequestObject: { email: sysUser.email },
+		});
 
-			const json = await getJson<APIResponse["SysUsers.createRegisterLink"]>(res);
-			expectBody(json, object({ link: string() }));
+		const json = await getJson<APIResponse["SysUsers.createRegisterLink"]>(res);
+		expectBody(json, object({ link: string() }));
 
-			newSysUserLink = json.data.link;
-		}
-	);
-	test("--sysusers-- #2",
-		async () => {
-			const res = await useTestAPI("SysUsers.validateRegisterLink", {
-				UrlArgs: { link: newSysUserLink as string }
-			});
+		newSysUserLink = json.data.link;
+	});
+	test("--sysusers-- #2", async () => {
+		const res = await useTestAPI("SysUsers.validateRegisterLink", {
+			UrlArgs: { link: newSysUserLink as string },
+		});
 
-			const json = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(res);
-			expectBody(json, object({ isValid: literal(true) }));
-		}
-	);
-	test("--sysusers-- #3",
-		async () => {
-			const res = await useTestAPI("SysUsers.registerSysUser", {
-				RequestObject: sysUser,
-				UrlArgs: { link: newSysUserLink as string }
-			});
+		const json = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(res);
+		expectBody(json, object({ isValid: literal(true) }));
+	});
+	test("--sysusers-- #3", async () => {
+		const res = await useTestAPI("SysUsers.registerSysUser", {
+			RequestObject: sysUser,
+			UrlArgs: { link: newSysUserLink as string },
+		});
 
-			const json = await getJson<APIResponse["SysUsers.registerSysUser"]>(res);
-			expectBody(json, object({ session_id: string(), id: number() }));
+		const json = await getJson<APIResponse["SysUsers.registerSysUser"]>(res);
+		expectBody(json, object({ session_id: string(), id: number() }));
 
-			newSysUserId = json.data.id;
-		}
-	);
-	test("--sysusers-- #4",
-		async () => {
-			const res = await useTestAPI("SysUsers.getById", {
-				RequestObject: [newSysUserId as number]
-			});
+		newSysUserId = json.data.id;
+	});
+	test("--sysusers-- #4", async () => {
+		const res = await useTestAPI("SysUsers.getById", {
+			RequestObject: [newSysUserId as number],
+		});
 
-			const json = await getJson<APIResponse["SysUsers.getById"]>(res);
-			expectBody(json, sysUsersSimple);
-		}
-	);
-	test("--sysusers-- #5",
-		async () => {
-			const res = await useTestAPI("SysUsers.delete", {
-				RequestObject: [newSysUserId as number]
-			});
+		const json = await getJson<APIResponse["SysUsers.getById"]>(res);
+		expectBody(json, sysUsersSimple);
+	});
+	test("--sysusers-- #5", async () => {
+		const res = await useTestAPI("SysUsers.delete", {
+			RequestObject: [newSysUserId as number],
+		});
 
-			const json = await getJson<APIResponse["SysUsers.delete"]>(res);
-			expectBody(json, "User/s deleted successfully");
-		}
-	);
+		const json = await getJson<APIResponse["SysUsers.delete"]>(res);
+		expectBody(json, "User/s deleted successfully");
+	});
 }
 
 sysUsersTest();

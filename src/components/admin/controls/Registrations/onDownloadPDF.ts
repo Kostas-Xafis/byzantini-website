@@ -5,10 +5,7 @@ import { createMemo } from "solid-js";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon } from "../../table/TableControlTypes";
 
-export const onDownloadPDF = function (
-	store: Partial<APIResponse>,
-	selectedItems: number[],
-) {
+export const onDownloadPDF = function (store: Partial<APIResponse>, selectedItems: number[]) {
 	return createMemo(() => {
 		const excelModal = {
 			type: ActionEnum.DOWNLOAD_EXCEL,
@@ -17,8 +14,7 @@ export const onDownloadPDF = function (
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (!teachers || !registrations || !instruments || selectedItems.length <= 0)
-			return excelModal;
+		if (!teachers || !registrations || !instruments || selectedItems.length <= 0) return excelModal;
 		const submit = async function () {
 			let items = (
 				selectedItems
@@ -26,19 +22,14 @@ export const onDownloadPDF = function (
 						const student = registrations.find((r) => r.id === id);
 						if (!student) return;
 						const teacher = teachers.find((t) => t.id === student.teacher_id);
-						const instrument =
-							(student.class_id &&
-								(instruments.find(
-									(i) => i.id === student.instrument_id
-								) as Instruments)) ||
-							null;
+						const instrument = (student.class_id && (instruments.find((i) => i.id === student.instrument_id) as Instruments)) || null;
 						return { student, teacher, instrument };
 					})
 					.filter((x) => !!x) as {
-						student: Registrations;
-						teacher?: Teachers;
-						instrument: Instruments | null;
-					}[]
+					student: Registrations;
+					teacher?: Teachers;
+					instrument: Instruments | null;
+				}[]
 			).sort((a, b) => (Number(a?.student.am) < Number(b?.student.am) ? -1 : 1));
 			const xlsx = await loadXLSX();
 			const wb = xlsx.utils.book_new();
@@ -72,8 +63,8 @@ export const onDownloadPDF = function (
 							s.student.email,
 							s.student.telephone + "-" + s.student.cellphone,
 						];
-					})
-				)
+					}),
+				),
 			);
 			const wsSchoolYearBook = xlsx.utils.aoa_to_sheet(
 				[
@@ -103,28 +94,15 @@ export const onDownloadPDF = function (
 							item.teacher?.fullname || "-",
 							item.instrument?.name || "",
 						];
-					})
-				)
+					}),
+				),
 			);
-			items = items.sort((a, b) =>
-				(a?.teacher?.fullname || "") < (b?.teacher?.fullname || "") ? -1 : 1
-			);
+			items = items.sort((a, b) => ((a?.teacher?.fullname || "") < (b?.teacher?.fullname || "") ? -1 : 1));
 
 			const byzStudents = items.filter((i) => i.student.class_id === 0);
 			const parStudents = items.filter((i) => i.student.class_id === 1);
 			const wsStudentsBookForMinistry = xlsx.utils.aoa_to_sheet([
-				[
-					"Αριθμός Μητρώου",
-					"Επώνυμο",
-					"Όνομα",
-					"Όνομα Πατρός",
-					"ΑΜΚΑ",
-					"Έτος Γέννησης",
-					"Διεύθυνση",
-					"Έτος Φόιτησης",
-					"Διδάσκων Καθηγητής",
-					"Όργανο",
-				],
+				["Αριθμός Μητρώου", "Επώνυμο", "Όνομα", "Όνομα Πατρός", "ΑΜΚΑ", "Έτος Γέννησης", "Διεύθυνση", "Έτος Φόιτησης", "Διδάσκων Καθηγητής", "Όργανο"],
 				...byzStudents.map((s) => {
 					return [
 						s.student.am,
@@ -157,18 +135,7 @@ export const onDownloadPDF = function (
 			]);
 			//@ts-ignore
 			const wsStudentsBookPayments = xlsx.utils.aoa_to_sheet<string | number>([
-				[
-					"Αριθμός Μητρώου",
-					"Επώνυμο",
-					"Όνομα",
-					"Όνομα Πατρός",
-					"ΑΜΚΑ",
-					"Διδάσκων Καθηγητής",
-					"Email",
-					"Τηλέφωνα",
-					"Ποσό Πληρωμής",
-					"Σύνολο Πληρωμής",
-				],
+				["Αριθμός Μητρώου", "Επώνυμο", "Όνομα", "Όνομα Πατρός", "ΑΜΚΑ", "Διδάσκων Καθηγητής", "Email", "Τηλέφωνα", "Ποσό Πληρωμής", "Σύνολο Πληρωμής"],
 				...items.map((s) => {
 					// @ts-ignore
 					return [
@@ -220,8 +187,8 @@ export const onDownloadPDF = function (
 								item.student.email,
 								item.student.telephone + "-" + item.student.cellphone,
 							];
-						})
-					)
+						}),
+					),
 				);
 			});
 			xlsx.utils.book_append_sheet(wb, wsStudentsBook, "Γενικό Μητρώο");

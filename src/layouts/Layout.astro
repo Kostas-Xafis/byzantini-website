@@ -17,13 +17,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 <!doctype html>
 <html lang="el">
 	<head>
-		<Links
-			title={title}
-			imageURL={logoUrl}
-			description={description}
-			canonical={canonical}
-			noindex={noindex}
-		/>
+		<Links title={title} imageURL={logoUrl} description={description} canonical={canonical} noindex={noindex} />
 		<style is:inline>
 			html {
 				font-family: system-ui, sans-serif;
@@ -143,8 +137,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 		<style is:inline>
 			.spinner {
 				background:
-					radial-gradient(farthest-side, rgb(127, 29, 29) 94%, #0000) top/8px 8px
-						no-repeat,
+					radial-gradient(farthest-side, rgb(127, 29, 29) 94%, #0000) top/8px 8px no-repeat,
 					conic-gradient(#0000 30%, rgb(127, 29, 29));
 				-webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
 				animation: spin 1s infinite linear;
@@ -158,8 +151,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 	</head>
 	<body class="box-border relative h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:overflow-auto">
 		<Navbar />
-		<div
-			class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4vw] max-sm:pt-[6rem] max-3xs:pt-[5rem]">
+		<div class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4vw] max-sm:pt-[6rem] max-3xs:pt-[5rem]">
 			<slot />
 		</div>
 	</body>

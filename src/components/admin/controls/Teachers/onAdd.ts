@@ -8,23 +8,9 @@ import { InputFields } from "../../../input/Input.solid";
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";
 import type { Action } from "../../table/TableControls.solid";
-import {
-	PREFIX,
-	TeachersInputs,
-	class_types,
-	cvPreview,
-	fileUpload,
-	picturePreview,
-	type APIHook,
-	type TeacherJoins,
-	type TeachersMetadata,
-} from "./helpers";
+import { PREFIX, TeachersInputs, class_types, cvPreview, fileUpload, picturePreview, type APIHook, type TeacherJoins, type TeachersMetadata } from "./helpers";
 
-export const onAdd = function (
-	hydrate: HydrateByIdReturnType,
-	store: Partial<APIResponse>,
-	apiHook: APIHook
-) {
+export const onAdd = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const addModal = {
 			type: ActionEnum.ADD,
@@ -59,18 +45,11 @@ export const onAdd = function (
 			const res = await apiHook(API.Teachers.post, { RequestObject: data });
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(
-				PREFIX + addModal.type + "picture"
-			);
-			const cvHandler = FileHandler.getHandler<TeachersMetadata>(
-				PREFIX + addModal.type + "cv"
-			);
+			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + addModal.type + "picture");
+			const cvHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + addModal.type + "cv");
 			pictureHandler.setMetadata({ teacher_id: id, type: "picture" });
 			cvHandler.setMetadata({ teacher_id: id, type: "cv" });
-			await Promise.all([
-				fileUpload(pictureHandler, apiHook),
-				fileUpload(cvHandler, apiHook),
-			]);
+			await Promise.all([fileUpload(pictureHandler, apiHook), fileUpload(cvHandler, apiHook)]);
 
 			hydrate({ action: ActionEnum.ADD, id });
 			pushAlert(createAlert("success", "Επιτυχής εισαγωγή καθηγητή"));

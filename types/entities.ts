@@ -1,21 +1,6 @@
-import {
-	boolean,
-	email,
-	integer,
-	length,
-	literal,
-	minLength,
-	minValue,
-	nullable,
-	number,
-	object,
-	omit,
-	optional,
-	string,
-	union,
-} from "valibot";
+import { boolean, email, integer, length, literal, minLength, minValue, nullable, number, object, omit, optional, string, union } from "valibot";
 
-export type Insert = { insertId: number; };
+export type Insert = { insertId: number };
 
 const looseBoolean = (error?: string) => union([boolean(), literal(0), literal(1)], error || "Μη έγκυρο loose boolean");
 const positiveInt = (error?: string) => number(error || "Μη έγκυρος θετικός ακέραιος", [integer(), minValue(0)]);
@@ -27,7 +12,7 @@ export const v_Books = object({
 	wholesale_price: positiveInt("Μη έγκυρη τιμή χονδρικής"),
 	price: positiveInt("Μη έγκυρη τιμή"),
 	quantity: positiveInt("Μη έγκυρη ποσότητα"),
-	sold: positiveInt("Μη έγκυρο πλήθος πωλήσεων")
+	sold: positiveInt("Μη έγκυρο πλήθος πωλήσεων"),
 });
 export interface Books {
 	id: number;
@@ -37,7 +22,7 @@ export interface Books {
 	price: number;
 	quantity: number;
 	sold: number;
-};
+}
 
 export const v_Payments = object({
 	id: positiveInt("Μη έγκυρο id"),
@@ -46,7 +31,7 @@ export const v_Payments = object({
 	amount: positiveInt("Μη έγκυρο ποσό"),
 	book_amount: number("Μη έγκυρο πλήθος βιβλίων", [integer(), minValue(1)]),
 	date: positiveInt("Μη έγκυρη ημερομηνία"),
-	payment_date: optional(positiveInt("Μη έγκυρη ημερομηνία πληρωμής"))
+	payment_date: optional(positiveInt("Μη έγκυρη ημερομηνία πληρωμής")),
 });
 export interface Payments {
 	id: number;
@@ -56,27 +41,27 @@ export interface Payments {
 	book_amount: number;
 	date: number;
 	payment_date?: number | undefined;
-};
+}
 
 export const v_Payoffs = object({
 	id: positiveInt("Μη έγκυρο id"),
 	wholesaler_id: positiveInt("Μη έγκυρο wholesaler_id"),
-	amount: positiveInt("Μη έγκυρο ποσό")
+	amount: positiveInt("Μη έγκυρο ποσό"),
 });
 export interface Payoffs {
 	id: number;
 	wholesaler_id: number;
 	amount: number;
-};
+}
 
 export const v_Wholesalers = object({
 	id: positiveInt("Μη έγκυρο id"),
-	name: string("Μη έγκυρο όνομα", [minLength(1)])
+	name: string("Μη έγκυρο όνομα", [minLength(1)]),
 });
 export interface Wholesalers {
 	id: number;
 	name: string;
-};
+}
 
 export const v_SysUsers = object({
 	id: positiveInt("Μη έγκυρο id"),
@@ -91,7 +76,7 @@ export interface SysUsers {
 	password: string;
 	session_id: string;
 	session_exp_date: number;
-};
+}
 
 export const v_SysUserRegisterLink = object({
 	link: string("Μη έγκυρος σύνδεσμος", [minLength(1)]),
@@ -100,15 +85,13 @@ export const v_SysUserRegisterLink = object({
 export interface SysUserRegisterLink {
 	link: string;
 	exp_date: number;
-};
+}
 
 export const v_LoginCredentials = object({
 	email: string("Μη έγκυρο email", [email()]),
-	password: string("Μη έγκυρος κωδικός", [minLength(1)])
+	password: string("Μη έγκυρος κωδικός", [minLength(1)]),
 });
-export interface LoginCredentials {
-
-};
+export interface LoginCredentials {}
 
 export const v_Teachers = object({
 	id: positiveInt("Μη έγκυρο id"),
@@ -137,19 +120,19 @@ export interface Teachers {
 	visible: boolean;
 	online: boolean;
 	amka: string;
-};
+}
 
 export const v_SimpleTeacher = omit(v_Teachers, ["picture", "cv"]);
 export type SimpleTeacher = Omit<Teachers, "picture" | "cv">;
 
 export const v_TeacherLocations = object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
-	location_id: positiveInt("Μη έγκυρο location_id")
+	location_id: positiveInt("Μη έγκυρο location_id"),
 });
 export interface TeacherLocations {
 	teacher_id: number;
 	location_id: number;
-};
+}
 
 export const v_TeacherClasses = object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
@@ -162,16 +145,16 @@ export interface TeacherClasses {
 	class_id: number;
 	priority: number;
 	registration_number?: string | undefined;
-};
+}
 
 export const v_ClassType = object({
 	id: positiveInt("Μη έγκυρο id"),
-	name: string("Μη έγκυρο όνομα", [minLength(1)])
+	name: string("Μη έγκυρο όνομα", [minLength(1)]),
 });
 export interface ClassType {
 	id: number;
 	name: string;
-};
+}
 
 export const v_Locations = object({
 	id: positiveInt("Μη έγκυρο id"),
@@ -204,29 +187,29 @@ export interface Locations {
 	link?: string | undefined;
 	youtube?: string | undefined;
 	partner: boolean;
-};
+}
 
 export const v_Instruments = object({
 	id: positiveInt("Μη έγκυρο id"),
 	name: string("Μη έγκυρο όνομα", [minLength(1)]),
 	type: union([literal("par"), literal("eur")], "Μη έγκυρος τύπος"),
-	isInstrument: looseBoolean("Μη έγκυρο μουσικό όργανο")
+	isInstrument: looseBoolean("Μη έγκυρο μουσικό όργανο"),
 });
 export interface Instruments {
 	id: number;
 	name: string;
 	type: "par" | "eur";
 	isInstrument: boolean;
-};
+}
 
 export const v_TeacherInstruments = object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
-	instrument_id: positiveInt("Μη έγκυρο instrument_id")
+	instrument_id: positiveInt("Μη έγκυρο instrument_id"),
 });
 export interface TeacherInstruments {
 	teacher_id: number;
 	instrument_id: number;
-};
+}
 
 export const v_Registrations = object({
 	id: positiveInt("Μη έγκυρο id"),
@@ -253,7 +236,7 @@ export const v_Registrations = object({
 	total_payment: optional(positiveInt("Μη έγκυρο συνολικό ποσό πληρωμής")),
 	payment_date: optional(nullable(positiveInt("Μη έγκυρη ημερομηνία πληρωμής"))),
 	registration_url: optional(string("Μη έγκυρο registration_url")),
-	pass: looseBoolean("Μη έγκυρο προαγωγή")
+	pass: looseBoolean("Μη έγκυρο προαγωγή"),
 });
 export interface Registrations {
 	id: number;
@@ -281,7 +264,7 @@ export interface Registrations {
 	payment_date?: number | null;
 	registration_url?: string | undefined;
 	pass: boolean;
-};
+}
 
 // export const v_StudentRecord = object({
 // 	id: positiveInt("Μη έγκυρο id"),
@@ -338,7 +321,7 @@ export interface EmailSubscriptions {
 	email: string;
 	unsubscribe_token: string;
 	unrelated: boolean;
-};
+}
 
 export const v_Announcements = object({
 	id: positiveInt("Μη έγκυρο id"),
@@ -346,7 +329,7 @@ export const v_Announcements = object({
 	content: string("Μη έγκυρο περιεχόμενο"),
 	date: number("Μη έγκυρη ημερομηνία", [integer()]),
 	views: positiveInt("Μη έγκυρες προβολές"),
-	links: string("Μη έγκυροι σύνδεσμοι")
+	links: string("Μη έγκυροι σύνδεσμοι"),
 });
 export interface Announcements {
 	id: number;
@@ -355,21 +338,21 @@ export interface Announcements {
 	date: number;
 	views: number;
 	links: string;
-};
+}
 
 //! Later on rename the priority column to id
 export const v_AnnouncementImages = object({
 	id: positiveInt("Μη έγκυρο id"),
 	announcement_id: positiveInt("Μη έγκυρο announcement_id"),
 	name: string("Μη έγκυρο όνομα"),
-	is_main: looseBoolean("Μη έγκυρη κύρια εικόνα")
+	is_main: looseBoolean("Μη έγκυρη κύρια εικόνα"),
 });
 export interface AnnouncementImages {
 	id: number;
 	announcement_id: number;
 	name: string;
 	is_main: boolean;
-};
+}
 
 // Dev mode only
 export const v_QueryLogs = object({
@@ -386,4 +369,4 @@ export interface QueryLogs {
 	args: string;
 	date: number;
 	error: boolean;
-};
+}

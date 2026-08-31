@@ -4,9 +4,20 @@ type RandomArrayType<T> = {
 	[key in keyof Omit<RandomType, "array" | "prototype">]: RandomType[key] extends (...args: infer A) => any ? (...args: A) => T[] : never;
 };
 
-const arrFunctions: (keyof typeof Random)[] = ["string", "hex", "link", "email", "date", "standardRandomDate", "boolean", "item", "float", "int", "uniqueArray"];
+const arrFunctions: (keyof typeof Random)[] = [
+	"string",
+	"hex",
+	"link",
+	"email",
+	"date",
+	"standardRandomDate",
+	"boolean",
+	"item",
+	"float",
+	"int",
+	"uniqueArray",
+];
 export class Random {
-
 	private static throwIfInvalidSize(size: number) {
 		if (size < 1) throw new Error("Size must be a positive integer");
 	}
@@ -21,13 +32,13 @@ export class Random {
 		"a-9": "abcdefghijklmnopqrstuvwxyz0123456789",
 		"A-9": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
 		"a-Z-9": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-		"ascii": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
-		"hex": "0123456789abcdef",
-		"HEX": "0123456789ABCDEF",
-		"oct": "01234567",
-		"decimal": "0123456789",
-		"binary": "01",
-		"base64": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+		ascii: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+		hex: "0123456789abcdef",
+		HEX: "0123456789ABCDEF",
+		oct: "01234567",
+		decimal: "0123456789",
+		binary: "01",
+		base64: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
 	};
 
 	static string(size = 16, set: Charset = "a-Z-9"): string {
@@ -45,7 +56,7 @@ export class Random {
 			str += strLookup[Math.floor(Math.random() * luSize)];
 		}
 		return str;
-	};
+	}
 
 	static hex(size = 16) {
 		Random.throwIfInvalidSize(size);
@@ -101,14 +112,11 @@ export class Random {
 
 	private static multiDimArray<T>(dimensionsSize: number | number[], cb: () => T): any {
 		let dims = Array.isArray(dimensionsSize) ? dimensionsSize : [dimensionsSize];
-		return new Array(dims[0]).fill(null).map(dims.length === 1
-			? cb
-			: () => Random.multiDimArray(dims.slice(1), cb));
+		return new Array(dims[0]).fill(null).map(dims.length === 1 ? cb : () => Random.multiDimArray(dims.slice(1), cb));
 	}
 
 	static array<T>(...dimensionsSize: number[]): RandomArrayType<T> {
-		for (let size of dimensionsSize)
-			Random.throwIfInvalidSize(size);
+		for (let size of dimensionsSize) Random.throwIfInvalidSize(size);
 
 		let objRef = {} as any;
 		for (let f of arrFunctions) {

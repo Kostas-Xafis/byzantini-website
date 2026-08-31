@@ -22,22 +22,23 @@ import { BaseRoutes } from "./index.client";
 import { EndpointsConstructor } from "./constructors.client";
 import { SettingsBackupServerRoutes } from "./settingsBackup.server";
 
-const raw_routes =
-	[BooksServerRoutes,
-		PaymentsServerRoutes,
-		PayoffsServerRoutes,
-		WholesalersServerRoutes,
-		AuthenticationServerRoutes,
-		TeachersServerRoutes,
-		LocationsServerRoutes,
-		InstrumentsServerRoutes,
-		SysUsersServerRoutes,
-		QueryLogsServerRoutes,
-		RegistrationsServerRoutes,
-		AnnouncementsServerRoutes,
-		ReplicationServerRoutes,
-		SchemaServerRoutes,
-		SettingsBackupServerRoutes];
+const raw_routes = [
+	BooksServerRoutes,
+	PaymentsServerRoutes,
+	PayoffsServerRoutes,
+	WholesalersServerRoutes,
+	AuthenticationServerRoutes,
+	TeachersServerRoutes,
+	LocationsServerRoutes,
+	InstrumentsServerRoutes,
+	SysUsersServerRoutes,
+	QueryLogsServerRoutes,
+	RegistrationsServerRoutes,
+	AnnouncementsServerRoutes,
+	ReplicationServerRoutes,
+	SchemaServerRoutes,
+	SettingsBackupServerRoutes,
+];
 
 export const APIRaw = {
 	...EndpointsConstructor(BaseRoutes.Books, BooksServerRoutes, true),
@@ -53,30 +54,31 @@ export const APIRaw = {
 	...EndpointsConstructor(BaseRoutes.Registrations, RegistrationsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Announcements, AnnouncementsServerRoutes, true),
 	...EndpointsConstructor(BaseRoutes.Schema, SchemaServerRoutes, true),
-	...EndpointsConstructor(BaseRoutes.SettingsBackup, SettingsBackupServerRoutes, true)
+	...EndpointsConstructor(BaseRoutes.SettingsBackup, SettingsBackupServerRoutes, true),
 };
 
 function getAllRoutes() {
-	const allRoutes = raw_routes.map(routes => Object.values(routes)).flat() as (RemovePartial<AnyEndpoint, "func">)[];
+	const allRoutes = raw_routes.map((routes) => Object.values(routes)).flat() as RemovePartial<AnyEndpoint, "func">[];
 
-	allRoutes.forEach(route => {
+	allRoutes.forEach((route) => {
 		route.middleware = [];
-		if (route.authentication) route.middleware.push(async (req) => {
-			let isAuthenticated = await authentication(req);
-			if (!isAuthenticated) return new Response("Unauthorized", { status: 401 });
-		});
+		if (route.authentication)
+			route.middleware.push(async (req) => {
+				let isAuthenticated = await authentication(req);
+				if (!isAuthenticated) return new Response("Unauthorized", { status: 401 });
+			});
 		if (route.validation) {
 			route.middleware.push(requestValidation(route.validation, route.multipart || false));
 		}
 	});
 
 	return {
-		GET: allRoutes.filter(route => route.method === "GET"),
-		POST: allRoutes.filter(route => route.method === "POST"),
-		PUT: allRoutes.filter(route => route.method === "PUT"),
-		DELETE: allRoutes.filter(route => route.method === "DELETE")
+		GET: allRoutes.filter((route) => route.method === "GET"),
+		POST: allRoutes.filter((route) => route.method === "POST"),
+		PUT: allRoutes.filter((route) => route.method === "PUT"),
+		DELETE: allRoutes.filter((route) => route.method === "DELETE"),
 	};
-};
+}
 
 const routes = getAllRoutes();
 
@@ -88,8 +90,7 @@ export const matchRoute = (urlSlug: string[], method: HTTPMethods) => {
 		// If the route and url slug have different lengths, they can't match
 		if (routePath.length !== urlSlug.length) continue;
 
-		routeCheckLoop:
-		for (let i = 0; i < routePath.length; i++) {
+		routeCheckLoop: for (let i = 0; i < routePath.length; i++) {
 			const routePart = routePath[i];
 			if (routePart === urlSlug[i]) continue;
 

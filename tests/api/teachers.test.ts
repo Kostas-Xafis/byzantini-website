@@ -37,139 +37,125 @@ function teachersTest() {
 		priorities: [1, 2],
 		registrations_number: ["10", "20"],
 		teacherLocations: R.uniqueArray(R.int(1, 5), () => R.int(3, 15)),
-		teacherInstruments: [1, 2]
+		teacherInstruments: [1, 2],
 	};
 	let newTeacherId: number | null;
 
-	test("--teachers-- #1",
-		async () => {
-			const res = await useTestAPI("Teachers.post", {
-				RequestObject: teacher,
-			});
+	test("--teachers-- #1", async () => {
+		const res = await useTestAPI("Teachers.post", {
+			RequestObject: teacher,
+		});
 
-			const json = await getJson<APIResponse["Teachers.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		const json = await getJson<APIResponse["Teachers.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			newTeacherId = json.data.insertId;
+		newTeacherId = json.data.insertId;
+	});
+	test("--teachers-- #2", async () => {
+		const pdfBlob = Bun.file("./notAssets/pdf_templates/byz_template.pdf");
+		const expectedBuffer = await pdfBlob.arrayBuffer();
+		const res = await useTestAPI("Teachers.fileUpload", {
+			UrlArgs: { id: newTeacherId as number },
+			RequestObject: pdfBlob,
+		});
+
+		const json = await getJson<APIResponse["Teachers.fileUpload"]>(res);
+		expectBody(json, "Pdf uploaded successfully");
+
+		const teacherRes = await useTestAPI("Teachers.getById", {
+			RequestObject: [newTeacherId as number],
+		});
+		const teacherJson = await getJson<APIResponse["Teachers.getById"]>(teacherRes);
+		expectBody(teacherJson, v_Teachers);
+
+		if (teacherJson.type !== "data" || teacherJson.data.cv == null) {
+			throw new Error("Teacher CV was not saved after upload");
 		}
-	);
-	test("--teachers-- #2",
-		async () => {
-			const pdfBlob = Bun.file("./notAssets/pdf_templates/byz_template.pdf");
-			const expectedBuffer = await pdfBlob.arrayBuffer();
-			const res = await useTestAPI("Teachers.fileUpload", {
-				UrlArgs: { id: newTeacherId as number },
-				RequestObject: pdfBlob,
-			});
 
-			const json = await getJson<APIResponse["Teachers.fileUpload"]>(res);
-			expectBody(json, "Pdf uploaded successfully");
+		const uploadedFile = await Bucket.getDev(`kathigites/cv/${teacherJson.data.cv}`);
+		if (uploadedFile == null) {
+			throw new Error("Uploaded teacher CV file was not found in bucket");
+		}
 
-			const teacherRes = await useTestAPI("Teachers.getById", {
-				RequestObject: [newTeacherId as number]
-			});
-			const teacherJson = await getJson<APIResponse["Teachers.getById"]>(teacherRes);
-			expectBody(teacherJson, v_Teachers);
+		if (!areBuffersEqual(expectedBuffer, uploadedFile)) {
+			throw new Error("Uploaded teacher CV content does not match the source file");
+		}
+	});
+	test("--teachers-- #3", async () => {
+		const res = await useTestAPI("Teachers.fileRename", {
+			UrlArgs: { id: newTeacherId as number },
+		});
 
-			if (teacherJson.type !== "data" || teacherJson.data.cv == null) {
-				throw new Error("Teacher CV was not saved after upload");
+		const json = await getJson<APIResponse["Teachers.fileRename"]>(res);
+		expectBody(json, "Files renamed successfully");
+	});
+	test("--teachers-- #4", async () => {
+		const beforeDeleteRes = await useTestAPI("Teachers.getById", {
+			RequestObject: [newTeacherId as number],
+		});
+		const beforeDeleteJson = await getJson<APIResponse["Teachers.getById"]>(beforeDeleteRes);
+		expectBody(beforeDeleteJson, v_Teachers);
+		if (beforeDeleteJson.type !== "data" || beforeDeleteJson.data.cv == null) {
+			throw new Error("Expected teacher CV to exist before deletion");
+		}
+		const deletedCvFilename = beforeDeleteJson.data.cv;
+
+		const res = await useTestAPI("Teachers.fileDelete", {
+			RequestObject: { id: newTeacherId as number, type: "cv" },
+		});
+
+		const json = await getJson<APIResponse["Teachers.fileDelete"]>(res);
+		expectBody(json, "Pdf deleted successfully");
+
+		const afterDeleteRes = await useTestAPI("Teachers.getById", {
+			RequestObject: [newTeacherId as number],
+		});
+		const afterDeleteJson = await getJson<APIResponse["Teachers.getById"]>(afterDeleteRes);
+		expectBody(afterDeleteJson, v_Teachers);
+		if (afterDeleteJson.type !== "data" || afterDeleteJson.data.cv != null) {
+			throw new Error("Teacher CV was not cleared after deletion");
+		}
+
+		try {
+			const deletedFile = await Bucket.getDev(`kathigites/cv/${deletedCvFilename}`);
+			if (deletedFile != null) {
+				throw new Error("Teacher CV file still exists in bucket after deletion");
 			}
-
-			const uploadedFile = await Bucket.getDev(`kathigites/cv/${teacherJson.data.cv}`);
-			if (uploadedFile == null) {
-				throw new Error("Uploaded teacher CV file was not found in bucket");
-			}
-
-			if (!areBuffersEqual(expectedBuffer, uploadedFile)) {
-				throw new Error("Uploaded teacher CV content does not match the source file");
-			}
+		} catch (err) {
+			if (!isMissingObjectError(err)) throw err;
 		}
-	);
-	test("--teachers-- #3",
-		async () => {
-			const res = await useTestAPI("Teachers.fileRename", {
-				UrlArgs: { id: newTeacherId as number },
-			});
+	});
+	test("--teachers-- #5", async () => {
+		const res = await useTestAPI("Teachers.getById", {
+			RequestObject: [newTeacherId as number],
+		});
 
-			const json = await getJson<APIResponse["Teachers.fileRename"]>(res);
-			expectBody(json, "Files renamed successfully");
-		}
-	);
-	test("--teachers-- #4",
-		async () => {
-			const beforeDeleteRes = await useTestAPI("Teachers.getById", {
-				RequestObject: [newTeacherId as number]
-			});
-			const beforeDeleteJson = await getJson<APIResponse["Teachers.getById"]>(beforeDeleteRes);
-			expectBody(beforeDeleteJson, v_Teachers);
-			if (beforeDeleteJson.type !== "data" || beforeDeleteJson.data.cv == null) {
-				throw new Error("Expected teacher CV to exist before deletion");
-			}
-			const deletedCvFilename = beforeDeleteJson.data.cv;
+		const json = await getJson<APIResponse["Teachers.getById"]>(res);
+		expectBody(json, v_Teachers);
+	});
+	test("--teachers-- #6", async () => {
+		const updatedTeacher = {
+			...teacher,
+			id: newTeacherId as number,
+			email: R.email(),
+			telephone: R.string(10, "0-9"),
+			visible: R.boolean(),
+		};
+		const res = await useTestAPI("Teachers.update", {
+			RequestObject: updatedTeacher,
+		});
 
-			const res = await useTestAPI("Teachers.fileDelete", {
-				RequestObject: { id: newTeacherId as number, type: "cv" }
-			});
+		const json = await getJson<APIResponse["Teachers.update"]>(res);
+		expectBody(json, "Teacher added successfully");
+	});
+	test("--teachers-- #7", async () => {
+		const res = await useTestAPI("Teachers.delete", {
+			RequestObject: [newTeacherId as number],
+		});
 
-			const json = await getJson<APIResponse["Teachers.fileDelete"]>(res);
-			expectBody(json, "Pdf deleted successfully");
-
-			const afterDeleteRes = await useTestAPI("Teachers.getById", {
-				RequestObject: [newTeacherId as number]
-			});
-			const afterDeleteJson = await getJson<APIResponse["Teachers.getById"]>(afterDeleteRes);
-			expectBody(afterDeleteJson, v_Teachers);
-			if (afterDeleteJson.type !== "data" || afterDeleteJson.data.cv != null) {
-				throw new Error("Teacher CV was not cleared after deletion");
-			}
-
-			try {
-				const deletedFile = await Bucket.getDev(`kathigites/cv/${deletedCvFilename}`);
-				if (deletedFile != null) {
-					throw new Error("Teacher CV file still exists in bucket after deletion");
-				}
-			} catch (err) {
-				if (!isMissingObjectError(err)) throw err;
-			}
-		}
-	);
-	test("--teachers-- #5",
-		async () => {
-			const res = await useTestAPI("Teachers.getById", {
-				RequestObject: [newTeacherId as number]
-			});
-
-			const json = await getJson<APIResponse["Teachers.getById"]>(res);
-			expectBody(json, v_Teachers);
-		}
-	);
-	test("--teachers-- #6",
-		async () => {
-			const updatedTeacher = {
-				...teacher,
-				id: newTeacherId as number,
-				email: R.email(),
-				telephone: R.string(10, "0-9"),
-				visible: R.boolean(),
-			};
-			const res = await useTestAPI("Teachers.update", {
-				RequestObject: updatedTeacher,
-			});
-
-			const json = await getJson<APIResponse["Teachers.update"]>(res);
-			expectBody(json, "Teacher added successfully");
-		}
-	);
-	test("--teachers-- #7",
-		async () => {
-			const res = await useTestAPI("Teachers.delete", {
-				RequestObject: [newTeacherId as number]
-			});
-
-			const json = await getJson<APIResponse["Teachers.delete"]>(res);
-			expectBody(json, "Teacher/s deleted successfully");
-		}
-	);
+		const json = await getJson<APIResponse["Teachers.delete"]>(res);
+		expectBody(json, "Teacher/s deleted successfully");
+	});
 }
 
 function teachersClassesTest() {
@@ -181,7 +167,7 @@ function teachersClassesTest() {
 	});
 	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getClassesById", {
-			RequestObject: [1]
+			RequestObject: [1],
 		});
 
 		const json = await getJson<APIResponse["Teachers.getClassesById"]>(res);
@@ -198,7 +184,7 @@ function teachersLocationsTest() {
 	});
 	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getLocationsById", {
-			RequestObject: [1]
+			RequestObject: [1],
 		});
 
 		const json = await getJson<APIResponse["Teachers.getLocationsById"]>(res);
@@ -215,7 +201,7 @@ function teachersInstrumentsTest() {
 	});
 	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getInstrumentsById", {
-			RequestObject: [1]
+			RequestObject: [1],
 		});
 
 		const json = await getJson<APIResponse["Teachers.getInstrumentsById"]>(res);
@@ -248,7 +234,7 @@ test("--teachers--", async () => {
 
 test("--teachers--", async () => {
 	const res = await useTestAPI("Teachers.getByPriorityClasses", {
-		UrlArgs: { class_type: "byz" }
+		UrlArgs: { class_type: "byz" },
 	});
 
 	const json = await getJson<APIResponse["Teachers.getByPriorityClasses"]>(res);

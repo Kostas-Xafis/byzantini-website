@@ -1,8 +1,4 @@
-import type {
-	Teachers as FullTeachers,
-	TeacherClasses,
-	SimpleTeacher as Teachers,
-} from "@_types/entities";
+import type { Teachers as FullTeachers, TeacherClasses, SimpleTeacher as Teachers } from "@_types/entities";
 import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
 import { useHydrateById } from "@hooks/useHydrateById.solid";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
@@ -12,14 +8,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { type SearchColumn, type SearchSetter } from "./SearchTable.solid";
-import {
-	onAddInstrumentMemo,
-	onAddMemo,
-	onDeleteInstrumentMemo,
-	onDeleteMemo,
-	onDownloadExcelMemo,
-	onModifyMemo,
-} from "./controls/Teachers/all";
+import { onAddInstrumentMemo, onAddMemo, onDeleteInstrumentMemo, onDeleteMemo, onDownloadExcelMemo, onModifyMemo } from "./controls/Teachers/all";
 import { INSTRUMENTS_PREFIX, PREFIX, type TeacherJoins } from "./controls/Teachers/helpers";
 import { toggleCheckboxes } from "./table/Row.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
@@ -96,9 +85,7 @@ const columnNames: ColumnType<TeachersTableType> = {
 
 export default function TeachersTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>(
-		{}
-	);
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>({});
 	const [store, setStore] = createStore<APIStore>({});
 	const apiHook = useAPI(setStore);
 
@@ -171,7 +158,7 @@ export default function TeachersTable() {
 					teachersInstruments
 						.map((x) => x)
 						.filter((t) => searchedInstruments.includes(t.instrument_id))
-						.map((t) => teachers.find((x) => x.id === t.teacher_id))
+						.map((t) => teachers.find((x) => x.id === t.teacher_id)),
 				),
 			] as FullTeachers[];
 		} else {

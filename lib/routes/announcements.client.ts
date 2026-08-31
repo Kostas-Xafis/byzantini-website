@@ -1,10 +1,4 @@
-import {
-	v_AnnouncementImages,
-	v_Announcements,
-	type AnnouncementImages,
-	type Announcements,
-	type Insert,
-} from "@_types/entities";
+import { v_AnnouncementImages, v_Announcements, type AnnouncementImages, type Announcements, type Insert } from "@_types/entities";
 import type { EndpointRoute } from "@_types/routes";
 import { blob, merge, number, object, omit, optional, string } from "valibot";
 
@@ -16,7 +10,7 @@ const get: EndpointRoute<"/announcements", any, Announcements[]> = {
 	validation: undefined,
 };
 // I will need to paginate it. That will come later though.
-export type PageAnnouncement = Announcements & { main_image: string, total_images: number; };
+export type PageAnnouncement = Announcements & { main_image: string; total_images: number };
 const getForPage: EndpointRoute<"/announcements/page", any, PageAnnouncement[]> = {
 	authentication: false,
 	method: "GET",
@@ -41,7 +35,7 @@ const getImagesById: EndpointRoute<"/announcements/images/[id:number]", any, Ann
 	validation: undefined,
 };
 
-const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Announcements & { images: AnnouncementImages[]; }> = {
+const getByTitle: EndpointRoute<"/announcements/title/[title:string]", any, Announcements & { images: AnnouncementImages[] }> = {
 	authentication: false,
 	method: "POST",
 	path: "/announcements/title/[title:string]",
@@ -83,13 +77,12 @@ const getImages: EndpointRoute<"/announcements/images", any, AnnouncementImages[
 	validation: undefined,
 };
 
-const postImageReq = merge([v_AnnouncementImages, object({ id: optional(number("Invalid number type")), fileData: blob(), thumbData: optional(blob()), fileType: string() })]);
+const postImageReq = merge([
+	v_AnnouncementImages,
+	object({ id: optional(number("Invalid number type")), fileData: blob(), thumbData: optional(blob()), fileType: string() }),
+]);
 // Put image data in database
-const postImage: EndpointRoute<
-	"/announcements/images",
-	typeof postImageReq,
-	Insert
-> = {
+const postImage: EndpointRoute<"/announcements/images", typeof postImageReq, Insert> = {
 	authentication: true,
 	method: "POST",
 	path: "/announcements/images",
@@ -127,5 +120,5 @@ export const AnnouncementsRoutes = {
 	postImage,
 	delete: del,
 	imagesDelete,
-	imagesDeleteByName
+	imagesDeleteByName,
 };

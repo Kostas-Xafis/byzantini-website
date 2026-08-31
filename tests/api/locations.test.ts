@@ -5,7 +5,6 @@ import { expect, test } from "bun:test";
 import { array, number, object } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
-
 function locationsTest() {
 	const location = {
 		name: "Sample Location",
@@ -22,64 +21,54 @@ function locationsTest() {
 		partner: R.boolean(),
 	} as Locations;
 	let newLocationId: number | null = null;
-	test("--locations-- #1",
-		async () => {
-			const res = await useTestAPI("Locations.post", {
-				RequestObject: location,
-			});
+	test("--locations-- #1", async () => {
+		const res = await useTestAPI("Locations.post", {
+			RequestObject: location,
+		});
 
-			const json = await getJson<APIResponse["Locations.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
-			newLocationId = json.data.insertId;
-		}
-	);
-	test("--locations-- #2",
-		async () => {
-			const imgBlob = Bun.file("./public/logo.png");
-			const res = await useTestAPI("Locations.fileUpload", {
-				UrlArgs: { id: newLocationId as number },
-				RequestObject: imgBlob,
-			});
+		const json = await getJson<APIResponse["Locations.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
+		newLocationId = json.data.insertId;
+	});
+	test("--locations-- #2", async () => {
+		const imgBlob = Bun.file("./public/logo.png");
+		const res = await useTestAPI("Locations.fileUpload", {
+			UrlArgs: { id: newLocationId as number },
+			RequestObject: imgBlob,
+		});
 
-			const text = await getJson<APIResponse["Locations.fileUpload"]>(res);
-			expectBody(text, "Image uploaded successfully");
-		}
-	);
-	test("--locations-- #3",
-		async () => {
-			const res = await useTestAPI("Locations.getById", {
-				RequestObject: [newLocationId as number]
-			});
+		const text = await getJson<APIResponse["Locations.fileUpload"]>(res);
+		expectBody(text, "Image uploaded successfully");
+	});
+	test("--locations-- #3", async () => {
+		const res = await useTestAPI("Locations.getById", {
+			RequestObject: [newLocationId as number],
+		});
 
-			const json = await getJson<APIResponse["Locations.getById"]>(res);
-			expectBody(json, v_Locations);
-		}
-	);
-	test("--locations-- #4",
-		async () => {
-			const updatedLocation = {
-				...location,
-				id: newLocationId as number,
-				name: "Updated Location"
-			};
-			const res = await useTestAPI("Locations.update", {
-				RequestObject: updatedLocation,
-			});
+		const json = await getJson<APIResponse["Locations.getById"]>(res);
+		expectBody(json, v_Locations);
+	});
+	test("--locations-- #4", async () => {
+		const updatedLocation = {
+			...location,
+			id: newLocationId as number,
+			name: "Updated Location",
+		};
+		const res = await useTestAPI("Locations.update", {
+			RequestObject: updatedLocation,
+		});
 
-			const text = await getJson<APIResponse["Locations.update"]>(res);
-			expectBody(text, "Location updated successfully");
-		}
-	);
-	test("--locations-- #5",
-		async () => {
-			const res = await useTestAPI("Locations.delete", {
-				RequestObject: [newLocationId as number]
-			});
+		const text = await getJson<APIResponse["Locations.update"]>(res);
+		expectBody(text, "Location updated successfully");
+	});
+	test("--locations-- #5", async () => {
+		const res = await useTestAPI("Locations.delete", {
+			RequestObject: [newLocationId as number],
+		});
 
-			const text = await getJson<APIResponse["Locations.delete"]>(res);
-			expectBody(text, "Locations deleted successfully");
-		}
-	);
+		const text = await getJson<APIResponse["Locations.delete"]>(res);
+		expectBody(text, "Locations deleted successfully");
+	});
 }
 
 locationsTest();

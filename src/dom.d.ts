@@ -9,10 +9,10 @@ declare global {
 	// Better alternative that covers all elements and not just Document
 	interface GlobalEventHandlersEventMap {
 		hydrate: CustomEvent<undefined>;
-		open_carousel: CustomEvent<{ index: number; }>;
+		open_carousel: CustomEvent<{ index: number }>;
 		close_carousel: CustomEvent<undefined>;
 		modify_selections: CustomEvent<TypeEffect>;
-		modal_close: CustomEvent<{ prefix: string; }>;
+		modal_close: CustomEvent<{ prefix: string }>;
 		push_alert: CustomEvent<Alert>;
 		update_alert: CustomEvent<Alert>;
 		enable_input: CustomEvent<boolean>;
@@ -28,4 +28,4 @@ declare global {
 	// }
 }
 
-export { };
+export {};

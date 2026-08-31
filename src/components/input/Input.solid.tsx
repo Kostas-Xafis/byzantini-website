@@ -213,9 +213,7 @@ export default function Input(props: InputProps) {
 			case "multifile":
 				return " col-span-full max-w-full !h-[400px] max-h-[400px]";
 			case "file":
-				return ` ${
-					isExt ? "col-span-full" : ""
-				} w-[50%] justify-self-center !h-[300px] max-h-[300px]`;
+				return ` ${isExt ? "col-span-full" : ""} w-[50%] justify-self-center !h-[300px] max-h-[300px]`;
 			default:
 				return "";
 		}
@@ -231,15 +229,7 @@ export default function Input(props: InputProps) {
 				(isShown() ? "" : " hidden")
 			}>
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
-			<Show
-				when={
-					type !== "date" &&
-					type !== "file" &&
-					type !== "multiselect" &&
-					type !== "multifile" &&
-					type !== "select" &&
-					type !== "textarea"
-				}>
+			<Show when={type !== "date" && type !== "file" && type !== "multiselect" && type !== "multifile" && type !== "select" && type !== "textarea"}>
 				<i
 					class={
 						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
@@ -254,13 +244,9 @@ export default function Input(props: InputProps) {
 					readOnly={disabled || false}
 					min={minmax?.[0] || ""}
 					max={minmax?.[1] || ""}
-					onfocus={(e: FocusEvent) =>
-						required && (e.currentTarget as HTMLElement).removeAttribute("required")
-					}
+					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onblur={(e: FocusEvent) =>
-						required &&
-						(e.currentTarget as HTMLInputElement).value === "" &&
-						(e.currentTarget as HTMLElement).setAttribute("required", "")
+						required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
 					onchange={onchange}
 				/>
@@ -278,32 +264,16 @@ export default function Input(props: InputProps) {
 				<select
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none z-10"
 					name={name}
-					onblur={(e: FocusEvent) =>
-						required && (e.currentTarget as HTMLElement).removeAttribute("required")
-					}
-					onfocus={(e: FocusEvent) =>
-						required && (e.currentTarget as HTMLElement).setAttribute("required", "")
-					}
+					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
+					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
 					onchange={onchange}
 					disabled={disabled || false}>
 					<option value="undefined"></option>
 					<Index each={selectList}>
 						{(selectItem, index) => (
 							<option
-								selected={
-									valueLiteral
-										? selectItem() === value
-										: valueList
-											? valueList[index] === value
-											: index === value
-								}
-								value={
-									valueLiteral
-										? selectItem()
-										: valueList
-											? valueList[index]
-											: index
-								}>
+								selected={valueLiteral ? selectItem() === value : valueList ? valueList[index] === value : index === value}
+								value={valueLiteral ? selectItem() : valueList ? valueList[index] : index}>
 								{selectItem()}
 							</option>
 						)}
@@ -328,27 +298,18 @@ export default function Input(props: InputProps) {
 									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 									onClick={(e: MouseEvent) => {
 										if (multiselectOnce) {
-											const buttons = document.querySelectorAll(
-												`button[data-specifier=${name}][data-selected='true']`,
-											);
+											const buttons = document.querySelectorAll(`button[data-specifier=${name}][data-selected='true']`);
 											buttons.forEach((button) => {
 												button.setAttribute("data-selected", "false");
 											});
 										}
 										const button = e.currentTarget as HTMLButtonElement;
-										button.setAttribute(
-											"data-selected",
-											button.getAttribute("data-selected") === "true"
-												? "false"
-												: "true",
-										);
+										button.setAttribute("data-selected", button.getAttribute("data-selected") === "true" ? "false" : "true");
 									}}
 									type="button">
 									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
 									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
-									<p
-										class="p-2 font-didact text-start"
-										style={{ "grid-column": "2 / 3" }}>
+									<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
 										{selectItem().label}
 									</p>
 								</button>
@@ -380,29 +341,19 @@ export default function Input(props: InputProps) {
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
-					onfocus={(e: FocusEvent) =>
-						required && (e.currentTarget as HTMLElement).removeAttribute("required")
-					}
+					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onblur={(e: FocusEvent) =>
-						required &&
-						(e.currentTarget as HTMLInputElement).value === "" &&
-						(e.currentTarget as HTMLElement).setAttribute("required", "")
+						required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
 				/>
 			</Show>
 			<p
 				class={
 					"absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-t-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10" +
-					(required
-						? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400"
-						: "")
+					(required ? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400" : "")
 				}>
 				{label}
-				{required ? (
-					<i class="absolute bg-transparent left-[0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
-				) : (
-					<></>
-				)}
+				{required ? <i class="absolute bg-transparent left-[0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : <></>}
 			</p>
 			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
 			{tooltip ? <Tooltip {...tooltip} /> : <></>}

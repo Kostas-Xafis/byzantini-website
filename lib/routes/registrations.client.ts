@@ -26,7 +26,7 @@ const getByReregistrationUrl: EndpointRoute<"/registrations/reregistration/[url:
 	validation: undefined,
 };
 
-const getTotal: EndpointRoute<"/registrations/total", any, { total: number; }> = {
+const getTotal: EndpointRoute<"/registrations/total", any, { total: number }> = {
 	authentication: true,
 	method: "GET",
 	path: "/registrations/total",
@@ -50,12 +50,7 @@ const getYears: EndpointRoute<"/registrations/years", any, string[]> = {
 	validation: undefined,
 };
 
-const postReq = omit(v_Registrations, [
-	"id",
-	"payment_date",
-	"payment_amount",
-	"total_payment",
-]);
+const postReq = omit(v_Registrations, ["id", "payment_date", "payment_amount", "total_payment"]);
 const post: EndpointRoute<"/registrations", typeof postReq, Insert> = {
 	authentication: false,
 	method: "POST",
@@ -81,7 +76,7 @@ const del: EndpointRoute<"/registrations", number[]> = {
 };
 
 const v_Email = object({ email: string() });
-const emailSubscribe: EndpointRoute<"/registrations/email-subscribe", typeof v_Email, { subscribed: boolean; }> = {
+const emailSubscribe: EndpointRoute<"/registrations/email-subscribe", typeof v_Email, { subscribed: boolean }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe",
@@ -90,11 +85,7 @@ const emailSubscribe: EndpointRoute<"/registrations/email-subscribe", typeof v_E
 };
 
 const v_EmailToken = object({ token: string() });
-const emailUnsubscribe: EndpointRoute<
-	"/registrations/email-unsubscribe",
-	typeof v_EmailToken,
-	{ isValid: boolean; }
-> = {
+const emailUnsubscribe: EndpointRoute<"/registrations/email-unsubscribe", typeof v_EmailToken, { isValid: boolean }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-unsubscribe",
@@ -102,11 +93,7 @@ const emailUnsubscribe: EndpointRoute<
 	validation: () => v_EmailToken,
 };
 
-const getSubscriptionToken: EndpointRoute<
-	"/registrations/email-subscribe/token",
-	typeof v_Email,
-	{ token: string | null; }
-> = {
+const getSubscriptionToken: EndpointRoute<"/registrations/email-subscribe/token", typeof v_Email, { token: string | null }> = {
 	authentication: false,
 	method: "POST",
 	path: "/registrations/email-subscribe/token",

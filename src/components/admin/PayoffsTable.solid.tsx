@@ -110,10 +110,7 @@ export default function PayoffsTable() {
 		};
 
 		return {
-			inputs: new InputFields(SchoolPayoffsInputs(wholesalers))
-				.pick(["amount"])
-				.fill(payoff)
-				.getInputs(),
+			inputs: new InputFields(SchoolPayoffsInputs(wholesalers)).pick(["amount"]).fill(payoff).getInputs(),
 			onSubmit: submit,
 			submitText: "Ενημέρωση",
 			headerText: "Επεξεργασία Οφειλής",
@@ -154,9 +151,7 @@ export default function PayoffsTable() {
 	});
 
 	return (
-		<Show
-			when={store[API.Wholesalers.get] && store[API.Payoffs.get]}
-			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show when={store[API.Wholesalers.get] && store[API.Payoffs.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}
 				data={shapedData}

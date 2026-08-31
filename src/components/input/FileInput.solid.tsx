@@ -16,17 +16,7 @@ export type FileInputProps = {
 };
 
 export default function FileInput(props: FileInputProps) {
-	const {
-		name,
-		prefix,
-		value,
-		required,
-		iconClasses,
-		disabled,
-		fileExtension,
-		metadata,
-		filePreview,
-	} = props;
+	const { name, prefix, value, required, iconClasses, disabled, fileExtension, metadata, filePreview } = props;
 	const [input, setInput] = createSignal<HTMLInputElement>();
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: true,
@@ -75,30 +65,18 @@ export default function FileInput(props: FileInputProps) {
 						(fname().length ? " show" : "")
 					}>
 					{filePreview && file() && (
-						<div class="absolute flex -z-10 inset-0 w-[95%] h-[95%] place-self-center rounded-md overflow-hidden">
-							{filePreview(file() as any)}
-						</div>
+						<div class="absolute flex -z-10 inset-0 w-[95%] h-[95%] place-self-center rounded-md overflow-hidden">{filePreview(file() as any)}</div>
 					)}
 					<div class="flex flex-col h-max pb-2 items-center w-full bg-[rgb(255,255,255,0.55)] dark:bg-[rgb(26,26,26,0.7)] text-red-950 dark:text-red-50 backdrop-blur-[3px]">
-						<p>
-							{((fname() || "").length > 20
-								? fname().slice(0, 12) + " ... " + fname().slice(-7)
-								: fname()) || ""}
-						</p>
-						<CloseButton
-							onClick={() => onFileRemove()}
-							classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
+						<p>{((fname() || "").length > 20 ? fname().slice(0, 12) + " ... " + fname().slice(-7) : fname()) || ""}</p>
+						<CloseButton onClick={() => onFileRemove()} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
 					</div>
 				</div>
 				<div
 					data-name={name}
 					onclick={onFileClick}
 					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-[90%] my-3 py-3 justify-self-center self-center flex flex-col justify-center items-center font-didact border-dashed border-2 border-gray-600 dark:border-gray-400 rounded-md cursor-pointer hover:bg-gray-600 dark:hover:bg-gray-700 z-10">
-					<i
-						class={
-							"text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-							(iconClasses || "")
-						}></i>
+					<i class={"text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " + (iconClasses || "")}></i>
 					<p class="text-xl text-gray-400  group-hover/file:text-gray-50">Drag&Drop</p>
 				</div>
 				<input

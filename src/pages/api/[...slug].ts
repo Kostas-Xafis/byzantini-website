@@ -30,7 +30,7 @@ const generateResponse = (ctx: APIContext, route: Route, urlSlug: string[]) => {
 const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) => {
 	//@ts-ignore
 	Env.setEnv(ctx);
-	for (const middleware of (route.middleware ?? [])) {
+	for (const middleware of route.middleware ?? []) {
 		const response = await middleware(ctx);
 		if (response) return response;
 	}

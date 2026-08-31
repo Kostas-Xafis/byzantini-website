@@ -19,9 +19,7 @@ const hasBrandIcons = !Astro.url.pathname.includes("login");
 // `<title>` uses titleTemplate (suffix added only on non-home pages); OG/Twitter
 // reuse the same composed title for consistency.
 const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
-const pageDescription =
-	description ||
-	"Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως";
+const pageDescription = description || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως";
 // Canonical is the clean URL: no query strings (?regid=…) and no fragments.
 const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_URL).href;
 
@@ -104,17 +102,10 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 	{hasBrandIcons && <link href="/fa/css/brands.min.css" rel="stylesheet" />}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap"
-		rel="stylesheet"
-	/>
+	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />
 	{
 		isProduction() && (
-			<script
-				defer
-				src="https://static.cloudflareinsights.com/beacon.min.js"
-				data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}'
-			/>
+			<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}' />
 		)
 	}
 </>

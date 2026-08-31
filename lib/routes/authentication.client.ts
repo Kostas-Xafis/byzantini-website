@@ -1,7 +1,7 @@
 import { v_LoginCredentials } from "@_types/entities";
-import type { EndpointRoute, } from "@_types/routes";
+import type { EndpointRoute } from "@_types/routes";
 
-const authenticateSession: EndpointRoute<"/auth/session", any, { isValid: boolean; }> = {
+const authenticateSession: EndpointRoute<"/auth/session", any, { isValid: boolean }> = {
 	authentication: true,
 	method: "POST",
 	path: "/auth/session",
@@ -11,14 +11,14 @@ const authenticateSession: EndpointRoute<"/auth/session", any, { isValid: boolea
 
 type UserLoginRes =
 	| {
-		isValid: true;
-		session_id: string;
-		email: string;
-		avatar_url: string | null;
-	}
+			isValid: true;
+			session_id: string;
+			email: string;
+			avatar_url: string | null;
+	  }
 	| {
-		isValid: false;
-	};
+			isValid: false;
+	  };
 
 const userLogin: EndpointRoute<"/auth/login", typeof v_LoginCredentials, UserLoginRes> = {
 	authentication: false,
@@ -28,7 +28,7 @@ const userLogin: EndpointRoute<"/auth/login", typeof v_LoginCredentials, UserLog
 	validation: () => v_LoginCredentials,
 };
 
-const userLogout: EndpointRoute<"/auth/logout", { sid: string; }, string> = {
+const userLogout: EndpointRoute<"/auth/logout", { sid: string }, string> = {
 	authentication: true,
 	method: "POST",
 	path: "/auth/logout",
@@ -36,7 +36,7 @@ const userLogout: EndpointRoute<"/auth/logout", { sid: string; }, string> = {
 	validation: undefined,
 };
 
-const getGoogleOAuthState: EndpointRoute<"/auth/google", any, { OAuthUrl: string; }> = {
+const getGoogleOAuthState: EndpointRoute<"/auth/google", any, { OAuthUrl: string }> = {
 	authentication: false,
 	method: "GET",
 	path: "/auth/google",
@@ -44,7 +44,7 @@ const getGoogleOAuthState: EndpointRoute<"/auth/google", any, { OAuthUrl: string
 	validation: undefined,
 };
 
-const getGoogleOAuthStateForSignup: EndpointRoute<"/auth/google/signup/[link:string]", any, { OAuthUrl: string; }> = {
+const getGoogleOAuthStateForSignup: EndpointRoute<"/auth/google/signup/[link:string]", any, { OAuthUrl: string }> = {
 	authentication: false,
 	method: "GET",
 	path: "/auth/google/signup/[link:string]",
@@ -54,15 +54,15 @@ const getGoogleOAuthStateForSignup: EndpointRoute<"/auth/google/signup/[link:str
 
 type OAuthCallbackRes =
 	| {
-		isValid: true;
-		session_id: string;
-		email: string;
-		avatar_url: string | null;
-	}
+			isValid: true;
+			session_id: string;
+			email: string;
+			avatar_url: string | null;
+	  }
 	| {
-		isValid: false;
-		error: string;
-	};
+			isValid: false;
+			error: string;
+	  };
 
 const oauthCallback: EndpointRoute<"/auth/google/callback", any, OAuthCallbackRes> = {
 	authentication: false,
@@ -71,7 +71,6 @@ const oauthCallback: EndpointRoute<"/auth/google/callback", any, OAuthCallbackRe
 	hasUrlParams: false,
 	validation: undefined,
 };
-
 
 export const AuthenticationRoutes = {
 	authenticateSession,

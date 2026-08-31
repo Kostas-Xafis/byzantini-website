@@ -22,64 +22,54 @@ function wholesalersTest() {
 		wholesale_price: bookPrice,
 		price: R.int(bookPrice, 200),
 		quantity: booksQuantity,
-		sold: R.int(0, booksQuantity)
+		sold: R.int(0, booksQuantity),
 	};
 	let newBookId: number | null;
 
-	test("--wholesalers-- #1",
-		async () => {
-			const res = await useTestAPI("Wholesalers.post", {
-				RequestObject: wholesaler,
-			});
+	test("--wholesalers-- #1", async () => {
+		const res = await useTestAPI("Wholesalers.post", {
+			RequestObject: wholesaler,
+		});
 
-			const json = await getJson<APIResponse["Wholesalers.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		const json = await getJson<APIResponse["Wholesalers.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			newWholesalerId = json.data.insertId;
-		}
-	);
-	test("--wholesalers-- #2",
-		async () => {
-			const res = await useTestAPI("Wholesalers.getById", {
-				RequestObject: [newWholesalerId as number]
-			});
+		newWholesalerId = json.data.insertId;
+	});
+	test("--wholesalers-- #2", async () => {
+		const res = await useTestAPI("Wholesalers.getById", {
+			RequestObject: [newWholesalerId as number],
+		});
 
-			const json = await getJson<APIResponse["Wholesalers.getById"]>(res);
-			expectBody(json, v_Wholesalers);
-		}
-	);
-	test("--wholesalers-- #3",
-		async () => {
-			const res = await useTestAPI("Books.post", {
-				RequestObject: book,
-			});
+		const json = await getJson<APIResponse["Wholesalers.getById"]>(res);
+		expectBody(json, v_Wholesalers);
+	});
+	test("--wholesalers-- #3", async () => {
+		const res = await useTestAPI("Books.post", {
+			RequestObject: book,
+		});
 
-			const json = await getJson<APIResponse["Books.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		const json = await getJson<APIResponse["Books.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			newBookId = json.data.insertId;
-		}
-	);
-	test("--wholesalers-- #4",
-		async () => {
-			const res = await useTestAPI("Books.getById", {
-				RequestObject: [newBookId as number]
-			});
+		newBookId = json.data.insertId;
+	});
+	test("--wholesalers-- #4", async () => {
+		const res = await useTestAPI("Books.getById", {
+			RequestObject: [newBookId as number],
+		});
 
-			const json = await getJson<APIResponse["Books.getById"]>(res);
-			expectBody(json, v_Books);
-		}
-	);
-	test("--wholesalers-- #5",
-		async () => {
-			const res = await useTestAPI("Wholesalers.delete", {
-				RequestObject: [newWholesalerId as number]
-			});
+		const json = await getJson<APIResponse["Books.getById"]>(res);
+		expectBody(json, v_Books);
+	});
+	test("--wholesalers-- #5", async () => {
+		const res = await useTestAPI("Wholesalers.delete", {
+			RequestObject: [newWholesalerId as number],
+		});
 
-			const json = await getJson<APIResponse["Wholesalers.delete"]>(res);
-			expectBody(json, "Deleted wholesalers successfully");
-		}
-	);
+		const json = await getJson<APIResponse["Wholesalers.delete"]>(res);
+		expectBody(json, "Deleted wholesalers successfully");
+	});
 }
 
 wholesalersTest();

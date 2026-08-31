@@ -39,9 +39,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 		}
 		setPagination((prev) => {
 			const page = prev.page + pageTurn;
-			document.dispatchEvent(
-				customEvent("onTablePageChange", { page, pageSize, dataSize: pagination.dataSize }),
-			);
+			document.dispatchEvent(customEvent("onTablePageChange", { page, pageSize, dataSize: pagination.dataSize }));
 			return { ...prev, page };
 		});
 		document.dispatchEvent(new CustomEvent("hydrate"));

@@ -31,14 +31,7 @@ export const getCompareFn = (value: string) => {
 };
 
 // Since findLast is used to find the last occurence of the operator, the order of the array is important
-export const CompareList = [
-	Compare.Eq,
-	Compare.Ne,
-	Compare.Gt,
-	Compare.Lt,
-	Compare.Gte,
-	Compare.Lte,
-];
+export const CompareList = [Compare.Eq, Compare.Ne, Compare.Gt, Compare.Lt, Compare.Gte, Compare.Lte];
 
 export type SearchColumn = {
 	columnName: string;
@@ -97,9 +90,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 
 	return (
 		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2 max-sm:px-8 max-sm:justify-center max-sm:w-min border-[2px] border-red-900 dark:border-red-800 px-4 py-2 gap-x-3 items-center rounded-[4px]">
-			<div
-				class="group relative w-max flex flex-row gap-x-2 !font-didact"
-				onClick={(e) => columnSelect(e)}>
+			<div class="group relative w-max flex flex-row gap-x-2 !font-didact" onClick={(e) => columnSelect(e)}>
 				<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200 drop-shadow-md self-center"></i>
 				<p class="py-1 px-3 w-full bg-red-300 dark:bg-red-900 text-red-900 dark:text-red-50 font-bold text-sm cursor-pointer rounded-md shadow-md dark:shadow-gray-700">
 					{column().name} :

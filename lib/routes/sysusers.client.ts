@@ -35,12 +35,16 @@ const del: EndpointRoute<"/sys", number[]> = {
 	validation: undefined,
 };
 
-const registerSysUser: EndpointRoute<"/sys/register/[link:string]", typeof v_LoginCredentials, {
-	session_id: string;
-	id: number;
-	email: string;
-	avatar_url: string | null;
-}> = {
+const registerSysUser: EndpointRoute<
+	"/sys/register/[link:string]",
+	typeof v_LoginCredentials,
+	{
+		session_id: string;
+		id: number;
+		email: string;
+		avatar_url: string | null;
+	}
+> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/[link:string]",
@@ -52,7 +56,7 @@ const v_SysUserInviteEmail = object({
 	email: string("Μη έγκυρο email", [email()]),
 });
 
-const createRegisterLink: EndpointRoute<"/sys/register", typeof v_SysUserInviteEmail, { link: string; }> = {
+const createRegisterLink: EndpointRoute<"/sys/register", typeof v_SysUserInviteEmail, { link: string }> = {
 	authentication: true,
 	method: "POST",
 	path: "/sys/register",
@@ -60,14 +64,13 @@ const createRegisterLink: EndpointRoute<"/sys/register", typeof v_SysUserInviteE
 	validation: () => v_SysUserInviteEmail,
 };
 
-const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", any, { isValid: boolean; }> = {
+const validateRegisterLink: EndpointRoute<"/sys/register/validate/[link:string]", any, { isValid: boolean }> = {
 	authentication: false,
 	method: "POST",
 	path: "/sys/register/validate/[link:string]",
 	hasUrlParams: true,
 	validation: undefined,
 };
-
 
 export const SysUsersRoutes = {
 	get,
@@ -76,5 +79,5 @@ export const SysUsersRoutes = {
 	delete: del,
 	registerSysUser,
 	createRegisterLink,
-	validateRegisterLink
+	validateRegisterLink,
 };

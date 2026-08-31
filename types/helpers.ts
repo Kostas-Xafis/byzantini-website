@@ -55,36 +55,23 @@
 // 	[P in Replaced]: Value
 // };
 
-export type ConcatStrings<
-	A extends string,
-	B extends string,
-	Separator extends string = "",
-> = `${A}${Separator}${B}`;
+export type ConcatStrings<A extends string, B extends string, Separator extends string = ""> = `${A}${Separator}${B}`;
 // Note: the classic `0 extends 1 & T ? true : false` form mis-evaluates when T is a
 // generic type parameter instantiated with `any` under TypeScript 6; this
 // function-variance form is instantiation-safe.
-export type IsAny<T> =
-	(<G>() => G extends T ? 1 : 2) extends <G>() => G extends any ? 1 : 2 ? true : false;
+export type IsAny<T> = (<G>() => G extends T ? 1 : 2) extends <G>() => G extends any ? 1 : 2 ? true : false;
 
 export type PartialBy<Obj, OKey> = OKey extends keyof Obj
 	? Omit<Obj, OKey> & {
 			[Key in OKey]?: Obj[Key];
 		}
 	: Obj;
-export type RemovePartial<T extends Record<string, any>, KeyUnion extends keyof T> = Omit<
-	T,
-	KeyUnion
-> & {
+export type RemovePartial<T extends Record<string, any>, KeyUnion extends keyof T> = Omit<T, KeyUnion> & {
 	[K in KeyUnion]-?: Exclude<T[K], undefined>;
 };
 export type IsNull<T> = TypeGuard<T> extends true ? false : true;
 
-export type ReplaceName<
-	T extends Record<any, any>,
-	Replaced extends keyof T,
-	Replacement extends string | number | symbol,
-	Value = any,
-> = Omit<T, Replaced> & {
+export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Replacement extends string | number | symbol, Value = any> = Omit<T, Replaced> & {
 	[K in Replacement]: Value;
 };
 export type ObjectValuesToUnion<T extends Record<any, any>> = T[keyof T];
@@ -93,9 +80,7 @@ type ObjectKeysToUnion<T extends Record<any, any>> = keyof T;
 
 export type NestedObjectKeysToUnion<T extends Record<string, any>, Prefix extends string = ""> = {
 	[K in keyof T]: T[K] extends Record<string, any>
-		?
-				| `${Prefix}${Extract<K, string | number>}`
-				| NestedObjectKeysToUnion<T[K], `${Prefix}${Extract<K, string | number>}.`>
+		? `${Prefix}${Extract<K, string | number>}` | NestedObjectKeysToUnion<T[K], `${Prefix}${Extract<K, string | number>}.`>
 		: `${Prefix}${Extract<K, string | number>}`;
 }[keyof T];
 

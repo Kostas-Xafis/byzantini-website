@@ -9,10 +9,7 @@ export type Action = {
 	inputs: InputFields<Record<string, InputProps>> | Record<string, InputProps>;
 	onSubmit:
 		| ((formData: ExtendedFormData<any>, form?: HTMLFormElement) => Promise<void>)
-		| ((
-				formData: ExtendedFormData<any>,
-				form?: HTMLFormElement,
-		  ) => AsyncGenerator<undefined, void, unknown>);
+		| ((formData: ExtendedFormData<any>, form?: HTMLFormElement) => AsyncGenerator<undefined, void, unknown>);
 	submitText: string;
 	headerText: string;
 	icon: ActionIcon;
@@ -42,15 +39,8 @@ export function TableControl(props: Props) {
 		<Show
 			when={tableAction.action && "inputs" in tableAction.action && tableAction.action.inputs}
 			fallback={
-				<button
-					class={
-						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 dark:text-neutral-400 blur-[1px]"
-					}>
-					<i
-						class={
-							"text-lg max-sm:text-base " +
-							(tableAction.action.icon || ActionIcon.ADD)
-						}></i>
+				<button class={"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 dark:text-neutral-400 blur-[1px]"}>
+					<i class={"text-lg max-sm:text-base " + (tableAction.action.icon || ActionIcon.ADD)}></i>
 				</button>
 			}>
 			<>
@@ -84,9 +74,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 
 export function TopTableGroup(props: { children: Element | JSX.Element }) {
 	return (
-		<div
-			style={{ "grid-area": "top_tools" }}
-			class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
+		<div style={{ "grid-area": "top_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
 			{props.children}
 		</div>
 	);
@@ -94,9 +82,7 @@ export function TopTableGroup(props: { children: Element | JSX.Element }) {
 
 export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 	return (
-		<div
-			style={{ "grid-area": "bottom_tools" }}
-			class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1000]">
+		<div style={{ "grid-area": "bottom_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1000]">
 			{props.children}
 		</div>
 	);

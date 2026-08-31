@@ -7,17 +7,16 @@ export class CLI {
 	private command = "";
 	constructor(command?: string | string[]) {
 		if (!CLI.profile) {
-			silentImport<typeof import('os')>('os').then(os => CLI.profile = (os.platform() === 'win32' ? 'pwsh' : 'bash'));
+			silentImport<typeof import("os")>("os").then((os) => (CLI.profile = os.platform() === "win32" ? "pwsh" : "bash"));
 		}
 		command && this.setCommand(command);
 	}
-	async exec<T>(options: { signal?: AbortSignal; } = {}): Promise<T> {
+	async exec<T>(options: { signal?: AbortSignal } = {}): Promise<T> {
 		// Powershell is no longer supported
-		const { exec: safe_exec } = (await silentImport<typeof import("child_process")>("child_process"));
+		const { exec: safe_exec } = await silentImport<typeof import("child_process")>("child_process");
 
-		const initialCommand = CLI.profile === "pwsh" ?
-			`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "${this.command}"`
-			: `bash -c "${this.command}"`;
+		const initialCommand =
+			CLI.profile === "pwsh" ? `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "${this.command}"` : `bash -c "${this.command}"`;
 		return new Promise((resolve, reject) => {
 			safe_exec(initialCommand, options, (error, stdout, stderr) => {
 				if (error) {
@@ -45,7 +44,7 @@ export class CLI {
 
 type FlagRule = "--" | "-" | string;
 //@ts-ignore
-export const argReader = <T extends Record<string, any>>(args: string[], flagRule: FlagRule = '--'): RemoveFlag<T, "--"> => {
+export const argReader = <T extends Record<string, any>>(args: string[], flagRule: FlagRule = "--"): RemoveFlag<T, "--"> => {
 	let argObj = {} as Record<string, any>;
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];

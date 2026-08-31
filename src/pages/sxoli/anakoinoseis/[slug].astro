@@ -39,13 +39,10 @@ const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
 const mainImg = announcement.images.find((img) => img.is_main) as AnnouncementImages;
-announcement.images = announcement.images.filter(
-	(img) => !img.is_main && !img.name.startsWith("thumb_"),
-);
+announcement.images = announcement.images.filter((img) => !img.is_main && !img.name.startsWith("thumb_"));
 if (!mainImg) return Astro.rewrite("/404");
 
-const formatDate = (d: number) =>
-	new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
 const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
 
 // Dev/replication snapshots store newlines as the two characters "\n";
@@ -113,10 +110,7 @@ const videoSchemas = links
 	}));
 ---
 
-<Layout
-	title={announcement.title}
-	description={announcementDescription}
-	imageUrl={imgThumbSrc + mainImg.name}>
+<Layout title={announcement.title} description={announcementDescription} imageUrl={imgThumbSrc + mainImg.name}>
 	<JsonLd data={articleSchema} />
 	<JsonLd data={breadcrumbs} />
 	{videoSchemas.map((video) => <JsonLd data={video} key={video.embedUrl} />)}
@@ -149,15 +143,13 @@ const videoSchemas = links
 		</h1>
 
 		<div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-			<span
-				class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
+			<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
 				<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
 				<time datetime={new Date(announcement.date).toISOString()}>
 					{formatDate(announcement.date)}
 				</time>
 			</span>
-			<span
-				class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
+			<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
 				<i class="fa-solid fa-eye" aria-hidden="true"></i>
 				{announcement.views}
 				{announcement.views > 1 ? "προβολές" : "προβολή"}
@@ -174,12 +166,10 @@ const videoSchemas = links
 		</div>
 
 		<div class="imgLoader group/img relative w-full max-w-[780px]">
-			<div
-				class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-sm bg-red-50/40 backdrop-blur-[2px]">
+			<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-sm bg-red-50/40 backdrop-blur-[2px]">
 				<Spinner />
 			</div>
-			<div
-				class="group-[:is(.loaded)]/img:block w-full overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600">
+			<div class="group-[:is(.loaded)]/img:block w-full overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600">
 				<img
 					id="posterImg"
 					fetchpriority="high"
@@ -237,11 +227,7 @@ const videoSchemas = links
 										<button
 											type="button"
 											class="videoPoster absolute inset-0 w-full h-full cursor-pointer"
-											data-embed-src={
-												link +
-												(link.includes("?") ? "&" : "?") +
-												"autoplay=1"
-											}
+											data-embed-src={link + (link.includes("?") ? "&" : "?") + "autoplay=1"}
 											aria-label="Αναπαραγωγή βίντεο">
 											<img
 												src={`https://i.ytimg.com/vi/${ytId}/maxresdefault.jpg`}
@@ -252,10 +238,7 @@ const videoSchemas = links
 											/>
 											<span class="absolute inset-0 grid place-items-center bg-black/20 transition-colors duration-300 hover:bg-black/10">
 												<span class="grid place-items-center w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full bg-red-900 text-red-50 text-2xl max-sm:text-xl shadow-lg transition-transform duration-300 group-hover/video:scale-110">
-													<i
-														class="fa-solid fa-play"
-														aria-hidden="true"
-													/>
+													<i class="fa-solid fa-play" aria-hidden="true" />
 												</span>
 											</span>
 										</button>
@@ -302,9 +285,7 @@ const videoSchemas = links
 					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Φωτογραφίες</h2>
 					<div class="flex w-full flex-wrap items-center justify-center gap-6">
 						{announcement.images.map((image, i) => (
-							<div
-								class="imgLoader group/img relative w-[400px] max-w-[85vw] h-[320px]"
-								data-imgIndex={i}>
+							<div class="imgLoader group/img relative w-[400px] max-w-[85vw] h-[320px]" data-imgIndex={i}>
 								<div class="hidden group-[:is(.loading)]/img:block absolute inset-0">
 									<Spinner />
 								</div>
@@ -329,8 +310,7 @@ const videoSchemas = links
 
 	<div
 		id="imageCarouselContainer"
-		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" +
-			" hidden"}>
+		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" + " hidden"}>
 		<div
 			class="relative grid grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
 			<div class="absolute top-2 right-3 flex flex-row justify-end">
@@ -338,24 +318,17 @@ const videoSchemas = links
 					<i class="fa-solid fa-xmark text-white hover:text-red-100"></i>
 				</button>
 			</div>
-			<div
-				id="imageCarousel"
-				data-index="0"
-				class="max-h-[calc(95dvh_-_24px)] grid grid-rows-[calc(95dvh_-_79px),76px] justify-items-center gap-y-2">
+			<div id="imageCarousel" data-index="0" class="max-h-[calc(95dvh_-_24px)] grid grid-rows-[calc(95dvh_-_79px),76px] justify-items-center gap-y-2">
 				<div class="imgLoader group/img flex flex-col items-center">
-					<div
-						class="relative max-w-[90dvw] max-h-[calc(95dvh_-_79px)] flex items-center rounded-lg overflow-hidden">
-						<div
-							class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
+					<div class="relative max-w-[90dvw] max-h-[calc(95dvh_-_79px)] flex items-center rounded-lg overflow-hidden">
+						<div class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
 							<Spinner />
 						</div>
 						<img
 							id="mainCarouselImg"
 							alt={announcement.title}
 							class="object-cover h-[clamp(0px,100vh,calc(95dvh_-_79px))] hover:shadow-lg !shadow-red-950"
-							data-src={announcement.images[0]
-								? imgSrc + announcement.images[0].name
-								: ""}
+							data-src={announcement.images[0] ? imgSrc + announcement.images[0].name : ""}
 						/>
 					</div>
 				</div>
@@ -443,8 +416,7 @@ const videoSchemas = links
 						}
 						// src set but still loading: the listeners above settle it
 					} else {
-						(frame as HTMLIFrameElement).src = (frame as HTMLIFrameElement).dataset
-							.src as string;
+						(frame as HTMLIFrameElement).src = (frame as HTMLIFrameElement).dataset.src as string;
 					}
 				});
 			};
@@ -482,10 +454,7 @@ const videoSchemas = links
 			loaders.forEach((loader) => obsv.observe(loader));
 			setTimeout(() => {
 				loaders.forEach((loader) => {
-					if (
-						!loader.classList.contains("loaded") &&
-						!loader.classList.contains("loading")
-					) {
+					if (!loader.classList.contains("loaded") && !loader.classList.contains("loading")) {
 						obsv.unobserve(loader);
 						enqueue(loader);
 					}
@@ -503,9 +472,7 @@ const videoSchemas = links
 							const img = container.querySelector("img") as HTMLImageElement | null;
 							if (img?.src) window.open(img.src.replace("thumb_", ""), "_blank");
 						} else {
-							document.dispatchEvent(
-								new CustomEvent("open_carousel", { detail: { index } }),
-							);
+							document.dispatchEvent(new CustomEvent("open_carousel", { detail: { index } }));
 						}
 					});
 				});
@@ -514,10 +481,7 @@ const videoSchemas = links
 			section.querySelectorAll("[data-video-id] img").forEach((img) => {
 				const id = (img.closest("[data-video-id]") as HTMLElement).dataset.videoId;
 				// Some videos have no HD thumbnail; fall back to 640x480 and then 480x360.
-				const fallbacks = [
-					`https://i.ytimg.com/vi/${id}/sddefault.jpg`,
-					`https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
-				];
+				const fallbacks = [`https://i.ytimg.com/vi/${id}/sddefault.jpg`, `https://i.ytimg.com/vi/${id}/hqdefault.jpg`];
 				let fallbackIdx = 0;
 				img.addEventListener("error", () => {
 					if (fallbackIdx < fallbacks.length) img.src = fallbacks[fallbackIdx++];
@@ -538,16 +502,12 @@ const videoSchemas = links
 
 		// ------- Image carousel (desktop only) -------
 		function setupCarousel() {
-			const imgSrcArr = (
-				[...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]
-			).map((img) =>
+			const imgSrcArr = ([...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]).map((img) =>
 				(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
 			) as string[];
 			if (!imgSrcArr.length) return;
 
-			const announcementId = (
-				document.querySelector("section[data-announcement-id]") as HTMLElement
-			).dataset.announcementId as string;
+			const announcementId = (document.querySelector("section[data-announcement-id]") as HTMLElement).dataset.announcementId as string;
 			const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
 			const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
 
@@ -584,8 +544,7 @@ const videoSchemas = links
 				}
 			}
 			function carouselShift(direction: "left" | "right") {
-				currIndex =
-					(currIndex + (direction === "left" ? -1 : 1) + totalLength) % totalLength;
+				currIndex = (currIndex + (direction === "left" ? -1 : 1) + totalLength) % totalLength;
 				transitionToNextImage(currIndex);
 				updateThumbs();
 			}
@@ -605,16 +564,13 @@ const videoSchemas = links
 			});
 			thumbCarouselImgs.forEach((thumb, i) => {
 				thumb.addEventListener("click", () => {
-					const index =
-						totalLength <= 5 ? i : (currIndex + i - 2 + totalLength) % totalLength;
+					const index = totalLength <= 5 ? i : (currIndex + i - 2 + totalLength) % totalLength;
 					carouselGoto(index);
 					carousel.dataset.index = currIndex.toString();
 				});
 			});
 
-			const carouselContainer = document.querySelector(
-				"#imageCarouselContainer",
-			) as HTMLElement;
+			const carouselContainer = document.querySelector("#imageCarouselContainer") as HTMLElement;
 			document.addEventListener("open_carousel", (e) => {
 				carouselGoto(Number((e as CustomEvent).detail.index ?? 0));
 				carousel.dataset.index = currIndex.toString();
@@ -654,10 +610,7 @@ const videoSchemas = links
 			const update = () => {
 				// The announcement section is its own scroll container (overflow-auto),
 				// but fall back to the document scroller in case the layout ever changes.
-				const scroller: Element =
-					section.scrollHeight > section.clientHeight + 1
-						? section
-						: (document.scrollingElement ?? document.documentElement);
+				const scroller: Element = section.scrollHeight > section.clientHeight + 1 ? section : (document.scrollingElement ?? document.documentElement);
 				const max = scroller.scrollHeight - scroller.clientHeight;
 				const progress = max > 0 ? Math.min(1, Math.max(0, scroller.scrollTop / max)) : 0;
 				fill.style.transform = `scaleX(${progress})`;

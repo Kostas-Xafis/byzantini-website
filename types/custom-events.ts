@@ -4,10 +4,10 @@ import type { Page } from "@components/admin/table/Pagination.solid";
 
 export type CustomEvents = {
 	hydrate: CustomEvent<undefined>;
-	open_carousel: CustomEvent<{ index: number; }>;
+	open_carousel: CustomEvent<{ index: number }>;
 	close_carousel: CustomEvent<undefined>;
 	modify_selections: CustomEvent<TypeEffect>;
-	modal_close: CustomEvent<{ prefix: string; }>;
+	modal_close: CustomEvent<{ prefix: string }>;
 	push_alert: CustomEvent<Alert>;
 	update_alert: CustomEvent<Alert>;
 	enable_input: CustomEvent<boolean>;

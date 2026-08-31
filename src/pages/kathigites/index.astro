@@ -8,23 +8,16 @@ import { teacherTitleByGender } from "@utilities/text";
 
 export const prerender = false;
 
-const [
-	byz_teachers_res,
-	par_teachers_res,
-	eur_teachers_res,
-	teacher_locations_res,
-	locations_res,
-	teacher_instruments_res,
-	instruments_res,
-] = await Promise.all([
-	useAPI(API.Teachers.getByPriorityClasses, { UrlArgs: { class_type: "byz" } }, Astro),
-	useAPI(API.Teachers.getByPriorityClasses, { UrlArgs: { class_type: "par" } }, Astro),
-	useAPI(API.Teachers.getByPriorityClasses, { UrlArgs: { class_type: "eur" } }, Astro),
-	useAPI(API.Teachers.getLocations, undefined, Astro),
-	useAPI(API.Locations.get, undefined, Astro),
-	useAPI(API.Teachers.getInstruments, undefined, Astro),
-	useAPI(API.Instruments.get, undefined, Astro),
-]);
+const [byz_teachers_res, par_teachers_res, eur_teachers_res, teacher_locations_res, locations_res, teacher_instruments_res, instruments_res] =
+	await Promise.all([
+		useAPI(API.Teachers.getByPriorityClasses, { UrlArgs: { class_type: "byz" } }, Astro),
+		useAPI(API.Teachers.getByPriorityClasses, { UrlArgs: { class_type: "par" } }, Astro),
+		useAPI(API.Teachers.getByPriorityClasses, { UrlArgs: { class_type: "eur" } }, Astro),
+		useAPI(API.Teachers.getLocations, undefined, Astro),
+		useAPI(API.Locations.get, undefined, Astro),
+		useAPI(API.Teachers.getInstruments, undefined, Astro),
+		useAPI(API.Instruments.get, undefined, Astro),
+	]);
 
 let byz_teachers = byz_teachers_res.data || [],
 	par_teachers = par_teachers_res.data || [],
@@ -97,9 +90,7 @@ const monogram = (fullname: string) => {
 
 // Structured data: one ItemList of Person entries (deduplicated by teacher id,
 // a teacher may teach in more than one department).
-const schemaTeachers = [
-	...new Map([...byz_teachers, ...par_teachers, ...eur_teachers].map((t) => [t.id, t])).values(),
-];
+const schemaTeachers = [...new Map([...byz_teachers, ...par_teachers, ...eur_teachers].map((t) => [t.id, t])).values()];
 const teachersSchema = {
 	"@context": "https://schema.org",
 	"@type": "ItemList",
@@ -143,37 +134,21 @@ const breadcrumbs = breadcrumbsSchema([
 			{
 				teachers.map(([teachersByType, type]) => {
 					return teachersByType.map((teacher) => {
-						const t_classes_str = teacher_classes
-							.filter((c) => c.teacher_id === teacher.id)
-							.map((c) => musicOnly[c.class_id][0]);
+						const t_classes_str = teacher_classes.filter((c) => c.teacher_id === teacher.id).map((c) => musicOnly[c.class_id][0]);
 						const t_locations = teacher_locations
 							.filter((l) => l.teacher_id === teacher.id)
-							.map(
-								(l) =>
-									locations.find((loc) => loc.id === l.location_id)?.name || "",
-							)
+							.map((l) => locations.find((loc) => loc.id === l.location_id)?.name || "")
 							.filter((name: string) => name !== "");
 						const t_instrument_list = teacher_instruments
 							.filter((i) => i.teacher_id === teacher.id)
-							?.map(
-								(i) =>
-									instruments.find(
-										(inst) => inst.id === i.instrument_id,
-									) as Instruments,
-							);
+							?.map((i) => instruments.find((inst) => inst.id === i.instrument_id) as Instruments);
 						const t_instruments = t_instrument_list.map((i) => i.name);
-						if (
-							t_classes_str.includes("Βυζαντινής") &&
-							t_classes_str.includes("Παραδοσιακής")
-						)
-							t_instruments?.push("Βυζαντινή Μουσική");
+						if (t_classes_str.includes("Βυζαντινής") && t_classes_str.includes("Παραδοσιακής")) t_instruments?.push("Βυζαντινή Μουσική");
 						t_instruments?.sort();
 						if (teacher.online) t_locations?.push(onlineLabel);
 						const showCls =
 							(type === MusicType.Byzantine ? " group-[:is(.byz)]/type:block" : "") +
-							(type === MusicType.Traditional
-								? " group-[:is(.par)]/type:block"
-								: "") +
+							(type === MusicType.Traditional ? " group-[:is(.par)]/type:block" : "") +
 							(type === MusicType.European ? " group-[:is(.eur)]/type:block" : "");
 						return (
 							<article
@@ -218,18 +193,10 @@ const breadcrumbs = breadcrumbsSchema([
 														<span
 															class={
 																"inline-flex items-center gap-1.5 rounded-full px-[0.55vw] py-[0.18vw] max-sm:px-2 max-sm:py-0.5 text-[0.88vw] max-sm:text-xs leading-snug font-medium [word-break:break-word] " +
-																(isOnline
-																	? "bg-white text-red-900 border border-red-900"
-																	: "bg-red-900 text-red-50")
+																(isOnline ? "bg-white text-red-900 border border-red-900" : "bg-red-900 text-red-50")
 															}>
 															<i
-																class={
-																	"fa-solid " +
-																	(isOnline
-																		? "fa-globe"
-																		: "fa-location-dot") +
-																	" text-[0.75em]"
-																}
+																class={"fa-solid " + (isOnline ? "fa-globe" : "fa-location-dot") + " text-[0.75em]"}
 																aria-hidden="true"
 															/>
 															{str}
@@ -240,21 +207,13 @@ const breadcrumbs = breadcrumbsSchema([
 										)}
 										<p class="text-[1vw] max-sm:text-sm text-neutral-700 [word-break:break-word]">
 											<>
-												<span class="font-semibold text-red-900 pr-1">
-													{teacherTitleByGender(
-														teacher.title,
-														teacher.gender,
-													)}
-													:
-												</span>
+												<span class="font-semibold text-red-900 pr-1">{teacherTitleByGender(teacher.title, teacher.gender)}:</span>
 												<span>{classesStr(t_classes_str)}</span>
 											</>
 										</p>
 										{t_instruments && t_instruments.length > 0 && (
 											<div class="flex flex-wrap items-center gap-[0.3vw] max-sm:gap-1">
-												<span class="text-[0.9vw] max-sm:text-xs font-semibold text-red-900 pr-0.5">
-													Διδάσκει:
-												</span>
+												<span class="text-[0.9vw] max-sm:text-xs font-semibold text-red-900 pr-0.5">Διδάσκει:</span>
 												{t_instruments.map((instr) => (
 													<span class="rounded-full border border-red-200 bg-red-50 px-[0.55vw] py-[0.16vw] max-sm:px-2 max-sm:py-0.5 text-[0.9vw] max-sm:text-xs leading-snug text-red-950 [word-break:break-word]">
 														{instr}
@@ -269,11 +228,7 @@ const breadcrumbs = breadcrumbsSchema([
 													rel="noopener"
 													href={cvSrc + teacher.cv}
 													class="inline-flex items-center gap-1.5 rounded-lg border-2 border-red-900 px-[0.65vw] py-[0.35vw] max-sm:px-2.5 max-sm:py-1 text-[1.05vw] max-sm:text-sm font-medium text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-													<i
-														class="fa-solid fa-file-lines"
-														aria-hidden="true"
-													/>{" "}
-													Βιογραφικό
+													<i class="fa-solid fa-file-lines" aria-hidden="true" /> Βιογραφικό
 												</a>
 											) : null}
 											{teacher.linktree ? (
@@ -283,17 +238,10 @@ const breadcrumbs = breadcrumbsSchema([
 													href={teacher.linktree}
 													class="inline-flex items-center gap-1.5 rounded-lg border-2 border-red-900 px-[0.65vw] py-[0.35vw] max-sm:px-2.5 max-sm:py-1 text-[1.05vw] max-sm:text-sm font-medium text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
 													<i
-														class={
-															"fa-" +
-															(teacher.linktree.includes("youtube")
-																? "brands fa-youtube"
-																: "solid fa-link")
-														}
+														class={"fa-" + (teacher.linktree.includes("youtube") ? "brands fa-youtube" : "solid fa-link")}
 														aria-hidden="true"
 													/>{" "}
-													{teacher.linktree.includes("youtube")
-														? "YouTube"
-														: "Πολυμέσα"}
+													{teacher.linktree.includes("youtube") ? "YouTube" : "Πολυμέσα"}
 												</a>
 											) : null}
 										</div>
@@ -306,19 +254,12 @@ const breadcrumbs = breadcrumbsSchema([
 			}
 		</div>
 	</div>
-	<nav
-		id="btsContainer"
-		class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]"
-		aria-label="Κατηγορίες μαθημάτων">
+	<nav id="btsContainer" class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]" aria-label="Κατηγορίες μαθημάτων">
 		<div
 			class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 			{
 				music.map(([str, type], ind) => (
-					<div
-						id={type}
-						data-show={ind === 0}
-						data-type={type}
-						class="group/btn relative">
+					<div id={type} data-show={ind === 0} data-type={type} class="group/btn relative">
 						<button
 							class="rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-3 max-sm:py-1.5 text-[1.05vw] max-sm:text-xs font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white group-data-[show=true]/btn:bg-red-50 group-data-[show=true]/btn:text-red-900 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-md"
 							data-type={type}
@@ -403,9 +344,7 @@ const breadcrumbs = breadcrumbsSchema([
 			"Ευρωπαϊκή Μουσική": "eur",
 		} as Record<string, string>;
 		if (type in music) {
-			const btn = document.querySelector(
-				`#btsContainer #${music[type]} button`,
-			) as HTMLElement;
+			const btn = document.querySelector(`#btsContainer #${music[type]} button`) as HTMLElement;
 			setTimeout(() => {
 				btn.click();
 			}, 250);
@@ -428,23 +367,10 @@ const breadcrumbs = breadcrumbsSchema([
 				});
 			},
 			{
-				threshold: [
-					...new Array(10).fill(0).map((x, i) => i / 100),
-					0.2,
-					0.3,
-					0.4,
-					0.5,
-					0.6,
-					0.7,
-					0.8,
-					0.9,
-					1.0,
-				],
+				threshold: [...new Array(10).fill(0).map((x, i) => i / 100), 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
 			},
 		);
-		const teachersCard = document.querySelectorAll(
-			"#teachersContainer > div, #teachersContainer > article",
-		);
+		const teachersCard = document.querySelectorAll("#teachersContainer > div, #teachersContainer > article");
 		teachersCard.forEach((card) => {
 			obsv.observe(card);
 		});

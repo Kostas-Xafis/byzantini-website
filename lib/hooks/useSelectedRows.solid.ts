@@ -11,17 +11,16 @@ export const enum TypeEffectEnum {
 
 export type TypeEffect =
 	| {
-		type: TypeEffectEnum.ADD | TypeEffectEnum.REMOVE;
-		id: number;
-	}
+			type: TypeEffectEnum.ADD | TypeEffectEnum.REMOVE;
+			id: number;
+	  }
 	| {
-		type: TypeEffectEnum.ADD_MANY | TypeEffectEnum.REMOVE_MANY;
-		ids: number[];
-	}
+			type: TypeEffectEnum.ADD_MANY | TypeEffectEnum.REMOVE_MANY;
+			ids: number[];
+	  }
 	| {
-		type: TypeEffectEnum.REMOVE_ALL;
-	};
-
+			type: TypeEffectEnum.REMOVE_ALL;
+	  };
 
 export class SelectedRows {
 	private selectedItems: number[];

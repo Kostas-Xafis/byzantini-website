@@ -7,8 +7,7 @@
 			class="heading relative p-2 text-center flex-grow-2 place-self-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)] font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px]">
 			Άδοντες & Ψάλλοντες
 		</h1>
-		<div
-			class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-evenly max-sm:justify-center overflow-visible">
+		<div class="flex flex-row w-full max-sm:flex-col-reverse max-sm:pb-8 gap-x-8 max-sm:gap-y-8 justify-evenly max-sm:justify-center overflow-visible">
 			<div id="choirText" class="flex flex-col gap-y-2">
 				<div>
 					<h2
@@ -21,13 +20,10 @@
 					</h2>
 				</div>
 				<p class="text-2xl max-sm:text-lg w-[45ch] max-sm:w-full tracking-wide">
-					Η αγάπη για την βυζαντινή μουσική και η ανάγκη να παραμείνει ζωντανή η
-					ελληνορθόδοξη παράδοσή μας αποτέλεσαν το κίνητρο ίδρυσης της χορωδίας «Άδοντες
-					και Ψάλλοντες» από μια ομάδα νέων συναδέλφων ιεροψαλτών και μαθητών. Αποτελεί
-					την καρδιά της Σχολής μας και σκοπός της είναι η διάσωση και η διάδοση του
-					μουσικού πλούτου της πατρίδας μας. Μέλη της αποτελούν οι Καθηγητές και οι
-					μαθητές της Σχολής με εμπνευστή και καθοδηγητή τον ιδρυτή της Πρωτ. Σωτήριο
-					Αλεβιζάκη.
+					Η αγάπη για την βυζαντινή μουσική και η ανάγκη να παραμείνει ζωντανή η ελληνορθόδοξη παράδοσή μας αποτέλεσαν το κίνητρο ίδρυσης της χορωδίας
+					«Άδοντες και Ψάλλοντες» από μια ομάδα νέων συναδέλφων ιεροψαλτών και μαθητών. Αποτελεί την καρδιά της Σχολής μας και σκοπός της είναι η
+					διάσωση και η διάδοση του μουσικού πλούτου της πατρίδας μας. Μέλη της αποτελούν οι Καθηγητές και οι μαθητές της Σχολής με εμπνευστή και
+					καθοδηγητή τον ιδρυτή της Πρωτ. Σωτήριο Αλεβιζάκη.
 				</p>
 			</div>
 			<div
@@ -96,11 +92,7 @@
 				const head = document.querySelector("#choirHead") as HTMLElement;
 				if (!head) return;
 				if (entry.intersectionRatio >= 0.3) head.classList.add("emphasis");
-				else if (
-					window.matchMedia("(max-width: 640px)").matches &&
-					entry.intersectionRatio >= 0.2
-				)
-					head.classList.add("emphasis");
+				else if (window.matchMedia("(max-width: 640px)").matches && entry.intersectionRatio >= 0.2) head.classList.add("emphasis");
 				else head.classList.remove("emphasis");
 			},
 			{
@@ -119,31 +111,16 @@
 			(entries) => {
 				let { intersectionRatio, target } = entries[0];
 				if (document.body.clientHeight < target.clientHeight) {
-					const heightRatio =
-						Math.min(760, Math.max(540, document.body.clientHeight)) /
-						target.clientHeight;
+					const heightRatio = Math.min(760, Math.max(540, document.body.clientHeight)) / target.clientHeight;
 					intersectionRatio = mappedValue(intersectionRatio, 0, heightRatio * 0.85); // max out at 65% of the available height
-					carousel.style.setProperty(
-						"--tr-per",
-						`${mappedValue(intersectionRatio, 0, 1, 1.25, 1).toFixed(3)}`,
-					);
-					carousel.style.setProperty(
-						"--tr-per-op",
-						`${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`,
-					);
+					carousel.style.setProperty("--tr-per", `${mappedValue(intersectionRatio, 0, 1, 1.25, 1).toFixed(3)}`);
+					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`);
 				} else {
-					carousel.style.setProperty(
-						"--tr-per",
-						`${mappedValue(intersectionRatio, 0, 1, 1.4, 1).toFixed(3)}`,
-					);
-					carousel.style.setProperty(
-						"--tr-per-op",
-						`${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`,
-					);
+					carousel.style.setProperty("--tr-per", `${mappedValue(intersectionRatio, 0, 1, 1.4, 1).toFixed(3)}`);
+					carousel.style.setProperty("--tr-per-op", `${mappedValue(intersectionRatio, 0, 1).toFixed(3)}`);
 				}
 
-				if (intersectionRatio >= 0.6 && !choirText.classList.contains("show"))
-					choirText.classList.add("show");
+				if (intersectionRatio >= 0.6 && !choirText.classList.contains("show")) choirText.classList.add("show");
 				else if (intersectionRatio < 0.6 && choirText.classList.contains("show")) {
 					choirText.classList.remove("show");
 					choirText.classList.add("remove");
@@ -164,13 +141,7 @@
 		obsv2.observe(choir);
 		let index = 0;
 		let loadedImgs = 1; // 1 image is already loaded
-		const carouselImgs = [
-			"/choir/choir_1.jpg",
-			"/choir/choir_2.jpg",
-			"/choir/choir_3.jpg",
-			"/choir/choir_4.jpg",
-			"/choir/choir_5.jpg",
-		];
+		const carouselImgs = ["/choir/choir_1.jpg", "/choir/choir_2.jpg", "/choir/choir_3.jpg", "/choir/choir_4.jpg", "/choir/choir_5.jpg"];
 		const img = carousel.querySelector("img") as HTMLImageElement;
 		carouselUpdate.setFunction(() => {
 			let imgSrc = carouselImgs[++index % 5];
@@ -187,7 +158,7 @@
 				void carousel.clientWidth;
 				carousel.classList.add("open");
 				if (!isCarouselVisible) carouselUpdate.abort();
-				else carouselUpdate.reset({ catchAbort : true });
+				else carouselUpdate.reset({ catchAbort: true });
 			}, 600);
 		});
 		carouselUpdate.trigger().catch(() => {});

@@ -22,10 +22,7 @@ const PREFIX = "announcements";
 
 type AnnouncementTable = Omit<Announcements, "content" | "links"> & { link: string };
 
-const AnnouncementsInputs = (): Omit<
-	Record<keyof Announcements | "images" | "mainImage" | "links", InputProps>,
-	"views"
-> => {
+const AnnouncementsInputs = (): Omit<Record<keyof Announcements | "images" | "mainImage" | "links", InputProps>, "views"> => {
 	return {
 		id: {
 			name: "id",
@@ -102,9 +99,7 @@ function imagePreview(file: FileProxy<AnnouncementImageMetadata>) {
 	const id = Random.string(12, "hex");
 	(async function () {
 		await sleep(10);
-		const src = !file.isProxy()
-			? await file.toImageUrl()
-			: `/anakoinoseis/images/${file.getMetadata().announcement_id}/thumb_${file.getName()}`;
+		const src = !file.isProxy() ? await file.toImageUrl() : `/anakoinoseis/images/${file.getMetadata().announcement_id}/thumb_${file.getName()}`;
 		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
 	})();
 	return <img data-id={id} alt={file.getName()} class="object-cover w-full overflow-hidden" />;
@@ -170,17 +165,13 @@ export default function AnnouncementsTable() {
 					});
 				} catch (e) {
 					console.error(e);
-					pushAlert(
-						createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`),
-					);
+					pushAlert(createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`));
 				}
 			};
 		});
 		if (photos.length !== 0) {
 			const photosLength = photos.length;
-			const alert = pushAlert(
-				createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength),
-			);
+			const alert = pushAlert(createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength));
 			await asyncQueue(uploadQueue, {
 				maxJobs: 4,
 				verbose: true,
@@ -234,12 +225,8 @@ export default function AnnouncementsTable() {
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.ADD + "mainImage",
-			);
-			const imagesHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.ADD + "photos",
-			);
+			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.ADD + "mainImage");
+			const imagesHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.ADD + "photos");
 
 			mainImageHandler.setMetadata({ is_main: true, announcement_id: id, id: 0 });
 			imagesHandler.setMetadata({ is_main: false, announcement_id: id, id: 0 });
@@ -299,12 +286,8 @@ export default function AnnouncementsTable() {
 			const res = await apiHook(API.Announcements.update, { RequestObject: data });
 			if (!res.message) return;
 
-			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.MODIFY + "mainImage",
-			);
-			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(
-				PREFIX + ActionEnum.MODIFY + "photos",
-			);
+			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "mainImage");
+			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "photos");
 
 			await Promise.all([imagesDelete(mainImageHandler), imagesDelete(photosHandler)]);
 
@@ -313,9 +296,7 @@ export default function AnnouncementsTable() {
 			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};
 		const announcement = announcements.find((a) => a.id === selectedItems[0]) as Announcements;
-		const mainImage = images.find(
-			(i) => i.is_main && i.announcement_id === announcement.id,
-		) as AnnouncementImages;
+		const mainImage = images.find((i) => i.is_main && i.announcement_id === announcement.id) as AnnouncementImages;
 		return {
 			inputs: new InputFields(AnnouncementsInputs())
 				.fill((field, key) => {
@@ -335,10 +316,7 @@ export default function AnnouncementsTable() {
 					} else if (key === "images") {
 						field.value = images
 							.filter((i) => i.announcement_id === announcId && !i.is_main)
-							.map(({ name, id, announcement_id }) => [
-								name,
-								{ is_main: false, announcement_id, id },
-							]) as any;
+							.map(({ name, id, announcement_id }) => [name, { is_main: false, announcement_id, id }]) as any;
 						field.metadata = {
 							is_main: false,
 							announcement_id: announcId,
@@ -388,9 +366,7 @@ export default function AnnouncementsTable() {
 	});
 
 	return (
-		<Show
-			when={store[API.Announcements.get]}
-			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show when={store[API.Announcements.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}
 				data={shapedData}

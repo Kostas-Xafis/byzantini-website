@@ -10,14 +10,7 @@ import type { Page } from "./Pagination.solid";
 import Pagination from "./Pagination.solid";
 import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
 import type { EmptyAction } from "./TableControlTypes";
-import {
-	BottomTableGroup,
-	LeftTableGroup,
-	TableControl,
-	TableControlsGroup,
-	TopTableGroup,
-	type Action,
-} from "./TableControls.solid";
+import { BottomTableGroup, LeftTableGroup, TableControl, TableControlsGroup, TopTableGroup, type Action } from "./TableControls.solid";
 
 type GroupPositions = "top" | "left" | "bottom";
 type TableStructure = Array<{
@@ -84,10 +77,7 @@ const move = (e: MouseEvent) => {
 	(e.currentTarget as HTMLElement).scrollLeft = scrollLeft - walk;
 };
 
-const computeColumns = (
-	columnNames: Record<string, { type: CellValue; name: string; size?: number }>,
-	hasSelectBox: boolean,
-) => {
+const computeColumns = (columnNames: Record<string, { type: CellValue; name: string; size?: number }>, hasSelectBox: boolean) => {
 	let columnWidths = "grid-template-columns: " + (hasSelectBox ? "5ch " : "");
 	const columns = Object.values(columnNames).map(({ name, size }) => {
 		let len = (size || name.length) + 1;
@@ -150,10 +140,7 @@ export default function Table(props: Props) {
 			untrack(() => setTablePagination((prev) => ({ ...prev, dataSize: dataLength })));
 			return data.slice(0, pageSize);
 		}
-		let res = data.slice(
-			page * pageSize,
-			mappedValue((page + 1) * pageSize, 0, dataLength, 0, dataLength),
-		);
+		let res = data.slice(page * pageSize, mappedValue((page + 1) * pageSize, 0, dataLength, 0, dataLength));
 		// In case of table sorting with pagination, the payment status of each row must be updated
 		setTimeout(() => document.dispatchEvent(new CustomEvent("hydrate")), 0);
 		return res;
@@ -202,8 +189,7 @@ export default function Table(props: Props) {
 			class={
 				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
 				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-dark" +
-				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") ||
-					" grid-rows-[max-content,1fr]") +
+				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") || " grid-rows-[max-content,1fr]") +
 				(hasControlGroup("left") ? " pr-8" : "")
 			}
 			data-prefix={prefix}>
@@ -211,16 +197,9 @@ export default function Table(props: Props) {
 				const TableControlsGroups = controlGroups.map((group) => {
 					switch (group.type) {
 						case "pagination":
-							return (
-								<Pagination pageSize={group.pageSize} dataSize={group.dataSize} />
-							);
+							return <Pagination pageSize={group.pageSize} dataSize={group.dataSize} />;
 						case "search":
-							return (
-								<SearchTable
-									columns={group.columns}
-									setSearchQuery={group.setSearchQuery}
-								/>
-							);
+							return <SearchTable columns={group.columns} setSearchQuery={group.setSearchQuery} />;
 						case "custom":
 							return group.children;
 						case "simple":
@@ -255,32 +234,18 @@ export default function Table(props: Props) {
 				}}
 				class={
 					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-lg font-didact border-2 border-red-900 dark:border-red-800" +
-					(hasControlGroup("left")
-						? " max-w-[100%] max-sm:max-w-[97.5%]"
-						: " max-w-[90%] max-sm:max-w-[92.5%]")
+					(hasControlGroup("left") ? " max-w-[100%] max-sm:max-w-[97.5%]" : " max-w-[90%] max-sm:max-w-[92.5%]")
 				}
 				onMouseMove={move}
 				onMouseDown={startDragging}
 				onMouseUp={stopDragging}
 				onMouseLeave={stopDragging}
 				onClick={onClickRow}>
-				<Row
-					data={columns}
-					columnTypes={columnTypes}
-					header
-					sortOnClick={setSorted}
-					hasSelectBox={!!props.hasSelectBox}
-				/>
+				<Row data={columns} columnTypes={columnTypes} header sortOnClick={setSorted} hasSelectBox={!!props.hasSelectBox} />
 				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg dark:bg-dark">
 					<For each={readPageData()}>
 						{(item) => {
-							return (
-								<Row
-									data={item}
-									columnTypes={columnTypes}
-									hasSelectBox={!!props.hasSelectBox}
-								/>
-							);
+							return <Row data={item} columnTypes={columnTypes} hasSelectBox={!!props.hasSelectBox} />;
 						}}
 					</For>
 				</div>
@@ -300,19 +265,11 @@ export default function Table(props: Props) {
 
 	#table {
 		display:grid;
-		grid-template-columns: ${
-			hasControlGroup("left") ? "minmax(min-content, calc(4rem + 7ch)) auto" : "100%"
-		};
+		grid-template-columns: ${hasControlGroup("left") ? "minmax(min-content, calc(4rem + 7ch)) auto" : "100%"};
 		grid-template-areas:
 			"top_tools top_tools"
 			${hasControlGroup("left") ? '"left_tools table"' : '"table table"'}
-			${
-				hasControlGroup("left") && hasControlGroup("bottom")
-					? '"left_tools bottom_tools"'
-					: hasControlGroup("bottom")
-						? '"bottom_tools bottom_tools"'
-						: ""
-			};
+			${hasControlGroup("left") && hasControlGroup("bottom") ? '"left_tools bottom_tools"' : hasControlGroup("bottom") ? '"bottom_tools bottom_tools"' : ""};
 
 	}
 

@@ -6,7 +6,8 @@ export const SCHOOL = {
 	name: "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής",
 	fullName: "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως του Σωτήρος",
 	url: "https://musicschool-metamorfosi.gr",
-	telephone: ["+30 6983380631", "+30 6975843887"],
+	full_telephone: ["+30 6983380631", "+30 6975843887", "+30 6975848638"],
+	telephone: ["6983380631", "6975843887", "6975848638"],
 	email: "music@inmm.gr",
 	address: {
 		streetAddress: "Χλόης & Οδυσσέως",
@@ -19,11 +20,7 @@ export const SCHOOL = {
 		latitude: 38.0643227,
 		longitude: 23.7602996,
 	},
-	sameAs: [
-		"https://www.facebook.com/profile.php?id=100032307446762",
-		"https://www.youtube.com/@user-sx5os9rc1k",
-		"https://inmm.gr/",
-	],
+	sameAs: ["https://www.facebook.com/profile.php?id=100032307446762", "https://www.youtube.com/@user-sx5os9rc1k", "https://inmm.gr/"],
 } as const;
 
 // Unique identifier of the school entity, referenced by other schemas.
@@ -39,7 +36,7 @@ export const organizationSchema = () => {
 		url: SCHOOL.url,
 		logo: `${SCHOOL.url}/logo.png`,
 		image: `${SCHOOL.url}/og-image.jpg`,
-		telephone: [...SCHOOL.telephone],
+		telephone: [...SCHOOL.full_telephone],
 		email: SCHOOL.email,
 		address: { "@type": "PostalAddress", ...SCHOOL.address },
 		geo: { "@type": "GeoCoordinates", ...SCHOOL.geo },
@@ -47,29 +44,13 @@ export const organizationSchema = () => {
 		openingHoursSpecification: [
 			{
 				"@type": "OpeningHoursSpecification",
-				dayOfWeek: [
-					"Monday",
-					"Tuesday",
-					"Wednesday",
-					"Thursday",
-					"Friday",
-					"Saturday",
-					"Sunday",
-				],
+				dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 				opens: "09:00",
 				closes: "14:00",
 			},
 			{
 				"@type": "OpeningHoursSpecification",
-				dayOfWeek: [
-					"Monday",
-					"Tuesday",
-					"Wednesday",
-					"Thursday",
-					"Friday",
-					"Saturday",
-					"Sunday",
-				],
+				dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 				opens: "16:30",
 				closes: "21:00",
 			},

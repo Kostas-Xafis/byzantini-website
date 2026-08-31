@@ -232,9 +232,7 @@ export default function LocationsTable() {
 			});
 			if (!res.data) return;
 			const id = res.data.insertId;
-			const imageHandler = FileHandler.getHandler<LocationsMetadata>(
-				PREFIX + ActionEnum.ADD + "image",
-			);
+			const imageHandler = FileHandler.getHandler<LocationsMetadata>(PREFIX + ActionEnum.ADD + "image");
 			imageHandler.setMetadata({ location_id: id });
 			await fileUpload(imageHandler);
 
@@ -290,9 +288,7 @@ export default function LocationsTable() {
 				RequestObject: data,
 			});
 			if (!res.data && !res.message) return;
-			const imageHandler = FileHandler.getHandler<LocationsMetadata>(
-				PREFIX + ActionEnum.MODIFY + "image",
-			);
+			const imageHandler = FileHandler.getHandler<LocationsMetadata>(PREFIX + ActionEnum.MODIFY + "image");
 
 			await fileDelete(imageHandler);
 			await fileUpload(imageHandler);
@@ -338,9 +334,7 @@ export default function LocationsTable() {
 			if (data.length === 1) {
 				pushAlert(createAlert("success", `Το παράρτημα διαγράφηκε επιτυχώς!`));
 			} else {
-				pushAlert(
-					createAlert("success", `Διαγράφηκαν επιτυχώς ${data.length} παραρτήματα!`),
-				);
+				pushAlert(createAlert("success", `Διαγράφηκαν επιτυχώς ${data.length} παραρτήματα!`));
 			}
 		};
 		return {

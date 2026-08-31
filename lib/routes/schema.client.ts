@@ -27,5 +27,5 @@ const migrate: EndpointRoute<'/schema/migrate/[target:"local" | "production"]', 
 export const SchemaRoutes = {
 	get,
 	revertToPreviousSchema,
-	migrate
+	migrate,
 };

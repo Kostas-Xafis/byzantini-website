@@ -3,11 +3,9 @@ import { createEffect, createSignal, on, onMount, type JSX } from "solid-js";
 
 type StringOrElement = string | JSX.Element;
 
-export const PopupShow = () =>
-	document.getElementById("popup")?.dispatchEvent(new CustomEvent("show"));
+export const PopupShow = () => document.getElementById("popup")?.dispatchEvent(new CustomEvent("show"));
 
-export const PopupHide = () =>
-	document.getElementById("popup")?.dispatchEvent(new CustomEvent("hide"));
+export const PopupHide = () => document.getElementById("popup")?.dispatchEvent(new CustomEvent("hide"));
 
 export interface Props {
 	title: StringOrElement;
@@ -48,18 +46,9 @@ export default function Popup(props: Props) {
 	});
 
 	return (
-		<div
-			ref={popup}
-			id="popup"
-			class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]">
+		<div ref={popup} id="popup" class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]">
 			<div class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600">
-				{typeof title === "string" ? (
-					<h2 class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">
-						{title}
-					</h2>
-				) : (
-					title
-				)}
+				{typeof title === "string" ? <h2 class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">{title}</h2> : title}
 				{typeof content() === "string" ? (
 					<p class="text-2xl font-didact ">{content()}</p>
 				) : typeof Array.isArray(content()) ? (

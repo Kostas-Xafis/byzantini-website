@@ -11,27 +11,26 @@ export function isProduction() {
 }
 
 // This is a cheat to use whenever I know better than the type checker if an object has a property or not
-export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> { }
+export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> {}
 
 export const MIMETypeMap: Record<string, string> = {
-	"jpeg": "image/jpeg",
-	"png": "image/png",
-	"webp": "image/webp",
-	"gif": "image/gif",
-	"jfif": "image/jfif",
-	"jpg": "image/jpeg",
-	"svg": "image/svg+xml",
-	"pdf": "application/pdf",
-	"doc": "application/msword",
-	"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-	"xls": "application/vnd.ms-excel",
-	"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-	"ppt": "application/vnd.ms-powerpoint",
-	"pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-	"txt": "text/plain",
+	jpeg: "image/jpeg",
+	png: "image/png",
+	webp: "image/webp",
+	gif: "image/gif",
+	jfif: "image/jfif",
+	jpg: "image/jpeg",
+	svg: "image/svg+xml",
+	pdf: "application/pdf",
+	doc: "application/msword",
+	docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	xls: "application/vnd.ms-excel",
+	xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	ppt: "application/vnd.ms-powerpoint",
+	pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	txt: "text/plain",
 };
 export const ImageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
-
 
 /**
  * This function serves as a small optimization and should be called first to get the body of the request
@@ -44,7 +43,7 @@ export function getUsedBody<T>(ctx: Context<T>): (T extends AnyObjectSchema ? Ou
 	if (!ctx.request.bodyUsed) return undefined;
 	// @ts-ignore
 	return ctx.request.json();
-};
+}
 
 export function formDataToObject(formData: FormData): Record<string, any> {
 	const obj: Record<string, File | string | string[]> = {};
@@ -62,10 +61,12 @@ export function formDataToObject(formData: FormData): Record<string, any> {
 }
 
 export function unionStringToSet(str: string): Set<string | number> {
-	return new Set(str.split("|").map((s) => {
-		const num = Number(s);
-		return isNaN(num) ? s.replaceAll(/[ \"]/g, "") : num;
-	}));
+	return new Set(
+		str.split("|").map((s) => {
+			const num = Number(s);
+			return isNaN(num) ? s.replaceAll(/[ \"]/g, "") : num;
+		}),
+	);
 }
 
 export function unionHas(set: Set<any>, value: any): boolean {
@@ -83,19 +84,19 @@ export const questionMarks = (arg: number | QueryArguments) => {
 	return "?".repeat(length).split("").join(", ");
 };
 
-
 export const executeQuery = async <T = undefined>(query: string, args: QueryArguments = [], tx?: Transaction, log = false) => {
 	const conn = tx ?? createDbConnection(null, true);
 	query = query.trim().replaceAll("\n", "");
 	const res = await conn.execute<T>(query, args, { as: "object" });
-	if (tx && !query.startsWith("SELECT") || log) {
-		tx && tx.queryHistory.push({
-			id: R.link(20),
-			query,
-			args,
-		});
+	if ((tx && !query.startsWith("SELECT")) || log) {
+		tx &&
+			tx.queryHistory.push({
+				id: R.link(20),
+				query,
+				args,
+			});
 	}
-	return (res.insertId === "0" && 'rows' in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
+	return (res.insertId === "0" && "rows" in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
 };
 
 export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>, connector: DBType = null) => {
@@ -108,10 +109,7 @@ export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>, conn
 	}) as T;
 };
 
-export const execTryCatch = async <T>(
-	func: (t: Transaction) => Promise<T>,
-	errorMessage?: string
-): Promise<EndpointResponse<T> | EndpointResponseError> => {
+export const execTryCatch = async <T>(func: (t: Transaction) => Promise<T>, errorMessage?: string): Promise<EndpointResponse<T> | EndpointResponseError> => {
 	// This is a work around because if I return inside the try-catch blocks, the return type is not inferred correctly
 	let res: EndpointResponse<T> | EndpointResponseError;
 	const needsTransaction: boolean = func.length === 1;
@@ -144,7 +142,7 @@ export const ErrorWrapper = (error: any): EndpointResponseError => {
 
 export const MessageWrapper = (msg: string): EndpointResponse<string> => {
 	return {
-		res: { type: "message", message: msg }
+		res: { type: "message", message: msg },
 	};
 };
 

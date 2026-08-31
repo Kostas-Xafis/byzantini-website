@@ -52,9 +52,7 @@ const splitSqlStatements = (sql: string): string[] => {
 export const sqliteGenerateBackup = async () => {
 	const new_schema = ["PRAGMA journal_mode=WAL;"];
 	const conn = createDbConnection("sqlite-prod");
-	const { rows: tables } = await conn.execute(
-		"SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'",
-	);
+	const { rows: tables } = await conn.execute("SELECT * FROM sqlite_master WHERE type='table' AND sql!='' AND tbl_name!='sqlite_sequence'");
 	for (const table of tables) {
 		const tableName = table[2];
 		const createTableSql = table[4] + ";";
@@ -109,10 +107,7 @@ serverRoutes.migrate.func = ({ slug }) => {
 
 		const { target } = slug;
 		const dbType = target === "local" ? "sqlite-dev" : "sqlite-prod";
-		const sql = await fsp.readFile(
-			`${PROJECT_ABSOLUTE_PATH}/dbSnapshots/migrations/latest.sql`,
-			"utf-8",
-		);
+		const sql = await fsp.readFile(`${PROJECT_ABSOLUTE_PATH}/dbSnapshots/migrations/latest.sql`, "utf-8");
 		const statements = splitSqlStatements(sql);
 		if (statements.length === 0) {
 			throw Error("Migration file is empty");

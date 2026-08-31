@@ -4,7 +4,6 @@ import { deepCopy } from "@utilities/objects";
 import { ImageMIMEType, execTryCatch, executeQuery, getUsedBody } from "../utils.server";
 import { LocationsRoutes } from "./locations.client";
 
-
 const bucketPrefix = "spoudastiria/";
 
 // Include this in all .server.ts files
@@ -16,7 +15,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [id] = getUsedBody(ctx) || (await ctx.request.json());
 		const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
 		if (!location) throw Error("Location not found");
 		return location;
@@ -28,28 +27,29 @@ serverRoutes.getByPriority.func = ({ ctx: _ctx }) => {
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
 		const { insertId } = await T.executeQuery(
 			`INSERT INTO locations (name, address, areacode, municipality, manager, email, telephones, priority, map, link, youtube, partner) VALUES (???)`,
-			body
+			body,
 		);
 		return { insertId };
 	}, "Σφάλμα κατά την προσθήκη του σπουδαστηρίου");
 };
 
 serverRoutes.update.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		await T.executeQuery(`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`,
-			body
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		await T.executeQuery(
+			`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`,
+			body,
 		);
 		return "Location updated successfully";
 	}, "Σφάλμα κατά την ενημέρωση του σπουδαστηρίου");
 };
 
 serverRoutes.fileUpload.func = ({ ctx, slug }) => {
-	return execTryCatch(async T => {
+	return execTryCatch(async (T) => {
 		const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", slug);
 		if (!location) throw Error("Location not found");
 
@@ -68,7 +68,7 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.fileDelete.func = ({ ctx, slug }) => {
-	return execTryCatch(async T => {
+	return execTryCatch(async (T) => {
 		const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", slug);
 		if (!location) throw Error("Location not found");
 
@@ -79,12 +79,9 @@ serverRoutes.fileDelete.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		const files = await T.executeQuery<Pick<Locations, "image">>(
-			`SELECT image FROM locations WHERE id IN (???)`,
-			body
-		);
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		const files = await T.executeQuery<Pick<Locations, "image">>(`SELECT image FROM locations WHERE id IN (???)`, body);
 		for (const file of files) {
 			if (file.image) await Bucket.delete(ctx, file.image);
 		}

@@ -4,34 +4,19 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 export const prerender = true;
 ---
 
-<SigninLayout
-	title="Είσοδος Διαχειριστή"
-	description="Είσοδος στο σύστημα διαχείρισης της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής."
-	noindex>
+<SigninLayout title="Είσοδος Διαχειριστή" description="Είσοδος στο σύστημα διαχείρισης της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής." noindex>
 	<div
 		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 border border-transparent dark:border-gray-700">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
-				<img
-					class="h-[100px] absolute brightness-150 blur-[1px] opacity-40 top-[1px] left-[-2px]"
-					src="/logo.png"
-					alt="Λογότυπο Σχολής"
-				/>
+				<img class="h-[100px] absolute brightness-150 blur-[1px] opacity-40 top-[1px] left-[-2px]" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
 		</div>
-		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">
-			Είσοδος Διαχειρηστή
-		</h2>
+		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">Είσοδος Διαχειρηστή</h2>
 		<form id="loginForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
 			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
-			<Input
-				type="password"
-				name="password"
-				label="Κωδικός"
-				iconClasses="fa-solid fa-lock"
-				required
-			/>
+			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
 			<button
 				class="text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
 				type="submit">Είσοδος</button

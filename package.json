@@ -9,7 +9,7 @@
 		"check": "bun run typecheck && bun run test",
 		"format": "prettier --write src lib types getData tests",
 		"format:check": "prettier --check src lib types getData tests",
-		"loc": "find lib src getData scripts types tests -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.astro' -o -name '*.mjs' -o -name '*.css' \\) | xargs wc -l | tail -1",
+		"loc": "find lib src getData types tests services email -path '*/node_modules' -prune -o -path '*/.git' -prune -o -path '*/.tmp' -prune -o -path '*/.bun-cache' -prune -o -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.astro' -o -name '*.mjs' -o -name '*.css' \\) -print0 | xargs -0 wc -l | tail -1",
 		"db:query": "bun ./getData/query.ts --dev --q",
 		"db:query:prod": "bun ./getData/query.ts --prod --q",
 		"db:replicate": "bun --env-file='.dev.vars.development' ./getData/replicate.ts",

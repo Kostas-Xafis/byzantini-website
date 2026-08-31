@@ -23,7 +23,7 @@ export class AlertClass {
 	constructor(
 		type: Alert["type"],
 		message: (Record<any, any> | string | number)[],
-		{ expires, onDidUpdate }: { expires?: number; onDidUpdate?: Function } = {}
+		{ expires, onDidUpdate }: { expires?: number; onDidUpdate?: Function } = {},
 	) {
 		let msg = "";
 		message.forEach((m) => {
@@ -77,10 +77,7 @@ export class AlertClass {
 	}
 }
 
-export function createAlert(
-	type: Alert["type"],
-	...message: (Record<any, any> | string | number)[]
-): Alert {
+export function createAlert(type: Alert["type"], ...message: (Record<any, any> | string | number)[]): Alert {
 	let msg = "";
 	message.forEach((m) => {
 		if (m instanceof Error) {
@@ -131,9 +128,7 @@ export default function AlertStack() {
 				});
 				break;
 			case "remove":
-				const alertEl = document.querySelector(
-					`[data-alert-id="${alert.id}"]`
-				) as HTMLElement | null;
+				const alertEl = document.querySelector(`[data-alert-id="${alert.id}"]`) as HTMLElement | null;
 				if (!alertEl) return;
 				const atl = new AnimTimeline();
 				atl.step(() => {
@@ -194,12 +189,7 @@ export default function AlertStack() {
 	const removeAlertsIntervalId = setInterval(() => {
 		const d = Date.now();
 		alerts().forEach((alert) => {
-			if (
-				alert.status !== "remove" &&
-				(alert.type === "info" || alert.type === "success") &&
-				alert.expires &&
-				alert.expires < d
-			) {
+			if (alert.status !== "remove" && (alert.type === "info" || alert.type === "success") && alert.expires && alert.expires < d) {
 				handleRemoveAlert(alert);
 			}
 		});
@@ -221,11 +211,7 @@ export default function AlertStack() {
 							(alert.type === "warning" ? " bg-[#df8920]" : "") +
 							(alert.type === "success" ? " bg-[#0da51f]" : "") +
 							(alert.type === "info" ? " bg-[#0661e0]" : "") +
-							((arrayOperation() === "push" &&
-								(idx === alerts().length - 1
-									? " fadeInRightAnim"
-									: " slideInBottomAnim duration-50")) ||
-								"")
+							((arrayOperation() === "push" && (idx === alerts().length - 1 ? " fadeInRightAnim" : " slideInBottomAnim duration-50")) || "")
 						}
 						data-alert-id={alert.id}>
 						<p class="text-lg max-w-[35ch] min-w-0 text-white">{alert.message}</p>

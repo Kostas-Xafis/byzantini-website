@@ -152,20 +152,11 @@ export default function Row(props: Props) {
 				{hasSelectBox && (
 					<div
 						class={
-							"group/checkbox relative items-center justify-items-center" +
-							(header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
+							"group/checkbox relative items-center justify-items-center" + (header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
 						}>
 						<button>
-							<i
-								class={
-									"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" +
-									(header ? " text-2xl" : "")
-								}></i>
-							<i
-								class={
-									"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" +
-									(header ? " text-2xl" : "")
-								}></i>
+							<i class={"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
+							<i class={"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
 						</button>
 					</div>
 				)}
@@ -177,10 +168,7 @@ export default function Row(props: Props) {
 						} else {
 							if (type === "link") {
 								return (
-									<a
-										href={item as string}
-										target="_blank"
-										class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
+									<a href={item as string} target="_blank" class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
 										<i class="fa-solid fa-up-right-from-square text-red-900 dark:text-red-300"></i>
 									</a>
 								);
@@ -198,8 +186,7 @@ export default function Row(props: Props) {
 									</div>
 								);
 							}
-							if (type === "date" && item !== 0)
-								item = new Date(item as number).toLocaleDateString("el-GR");
+							if (type === "date" && item !== 0) item = new Date(item as number).toLocaleDateString("el-GR");
 							if (type === "boolean") item = !!item ? "Ναι" : "Όχι";
 						}
 						return (
@@ -214,9 +201,7 @@ export default function Row(props: Props) {
 								onClick={onClickSort}>
 								{header ? (
 									<>
-										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">
-											{item}
-										</span>
+										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">{item}</span>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
 									</>

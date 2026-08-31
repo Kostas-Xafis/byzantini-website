@@ -25,43 +25,44 @@ async function productionBucketReplication() {
 	const BUCKET_DATE = getCurrentFormattedDate();
 
 	// Wipe the dev bucket
-	await asyncQueue(devBucketList.map((file) => () => Bucket.deleteDev(file)), { maxJobs: 10 });
+	await asyncQueue(
+		devBucketList.map((file) => () => Bucket.deleteDev(file)),
+		{ maxJobs: 10 },
+	);
 	console.log("Dev bucket wiped");
 
 	const prodBucketList = await Bucket.listDev(S3_BUCKET_NAME);
 	let totalReplicatedFiles = 0;
 	// Replicate the prod bucket to the dev bucket
-	await asyncQueue(prodBucketList.map((fileName) => {
-		return async () => {
-			const fileType = fileName.split(".").at(-1);
-			if (!fileType) throw Error("File type not found");
+	await asyncQueue(
+		prodBucketList.map((fileName) => {
+			return async () => {
+				const fileType = fileName.split(".").at(-1);
+				if (!fileType) throw Error("File type not found");
 
-			const file = await Bucket.getDev(fileName, S3_BUCKET_NAME);
-			if (!file) throw Error("File not found");
+				const file = await Bucket.getDev(fileName, S3_BUCKET_NAME);
+				if (!file) throw Error("File not found");
 
-			await Bucket.putDev(file, fileName, MIMETypeMap[fileType] || "application/octet-stream");
-			await fs.mkdir(`${DEV_BUCKET_LOCATION}/${BUCKET_DATE}/${fileName.split("/").slice(0, -1).join("/")}`, { recursive: true });
-			await fs.writeFile(`${DEV_BUCKET_LOCATION}/${BUCKET_DATE}/${fileName}`, Buffer.from(file), { encoding: "utf-8" });
-			totalReplicatedFiles++;
-		};
-	}), {
-		maxJobs: 10,
-		verbose: true
-	});
+				await Bucket.putDev(file, fileName, MIMETypeMap[fileType] || "application/octet-stream");
+				await fs.mkdir(`${DEV_BUCKET_LOCATION}/${BUCKET_DATE}/${fileName.split("/").slice(0, -1).join("/")}`, { recursive: true });
+				await fs.writeFile(`${DEV_BUCKET_LOCATION}/${BUCKET_DATE}/${fileName}`, Buffer.from(file), { encoding: "utf-8" });
+				totalReplicatedFiles++;
+			};
+		}),
+		{
+			maxJobs: 10,
+			verbose: true,
+		},
+	);
 
 	// Copy the new local bucket to the latest folder
-	await CLI.executeCommands([
-		`rm -rf ${DEV_BUCKET_LOCATION}/latest`,
-		`cp -r ${DEV_BUCKET_LOCATION}/${BUCKET_DATE} ${DEV_BUCKET_LOCATION}/latest`
-	]);
-
+	await CLI.executeCommands([`rm -rf ${DEV_BUCKET_LOCATION}/latest`, `cp -r ${DEV_BUCKET_LOCATION}/${BUCKET_DATE} ${DEV_BUCKET_LOCATION}/latest`]);
 
 	if (totalReplicatedFiles !== prodBucketList.length) console.warn("Prod bucket replicated to dev bucket unsuccessfully");
 	else console.log("Prod bucket replicated to dev bucket successfully");
 }
 
-
-async function productionDatabaseReplication({ force = false, date }: { force?: boolean; date?: string; } = {}) {
+async function productionDatabaseReplication({ force = false, date }: { force?: boolean; date?: string } = {}) {
 	const { BACKUP_SNAPSHOT_LOCATION, DEV_SNAPSHOT_LOCATION, PROJECT_ABSOLUTE_PATH } = Env.env;
 	if (!BACKUP_SNAPSHOT_LOCATION || !DEV_SNAPSHOT_LOCATION || !PROJECT_ABSOLUTE_PATH) throw Error("Missing environment variables");
 	const SNAPSHOT_DATE = date || getCurrentFormattedDate();
@@ -78,25 +79,21 @@ async function productionDatabaseReplication({ force = false, date }: { force?: 
 			console.log("No backup found for today, generating a new one");
 		}
 	}
-	const sqliteBackup = fileBackup || await sqliteGenerateBackup();
+	const sqliteBackup = fileBackup || (await sqliteGenerateBackup());
 
 	// If the backup is already created, we don't need to create a new one
 	if (createNewSnapshot) {
 		// Store sqlite file locally
 		await fs.writeFile(`${BACKUP_SNAPSHOT_LOCATION}/snap-${SNAPSHOT_DATE}.sql`, sqliteBackup, {
-			encoding: "utf-8"
+			encoding: "utf-8",
 		});
 	}
 
 	await fs.writeFile(DEV_SNAPSHOT_LOCATION, sqliteBackup, {
-		encoding: "utf-8"
+		encoding: "utf-8",
 	});
 
-	await CLI.executeCommands([
-		`cd ${PROJECT_ABSOLUTE_PATH}/dbSnapshots`,
-		"rm -f latest*",
-		"sqlite3 latest.db < dev-snapshot.sql",
-	]);
+	await CLI.executeCommands([`cd ${PROJECT_ABSOLUTE_PATH}/dbSnapshots`, "rm -f latest*", "sqlite3 latest.db < dev-snapshot.sql"]);
 
 	console.log("Database replicated successfully");
 }
@@ -138,7 +135,6 @@ serverRoutes.replication.func = ({ ctx, slug }) => {
 	});
 };
 
-
-// To hit this route, use /api/replication/[service]	
+// To hit this route, use /api/replication/[service]
 
 export const ReplicationServerRoutes = serverRoutes;

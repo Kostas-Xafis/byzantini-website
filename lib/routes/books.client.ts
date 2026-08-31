@@ -49,5 +49,5 @@ export const BooksRoutes = {
 	getById,
 	post,
 	updateQuantity,
-	delete: del
+	delete: del,
 };

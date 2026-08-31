@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 import { array, number, object } from "valibot";
 import { Bucket } from "@bucket/index.ts";
 import { Random as R } from "@lib/random.ts";
@@ -18,7 +18,7 @@ function announcementsTest() {
 	};
 	const newTitle = announcement.title.replace("New", "Updated");
 
-	const imagePaths = fs.readdirSync(path.join(process.cwd(), "notAssets")).filter(f => f.endsWith(".jpg") || f.endsWith(".png"));
+	const imagePaths = fs.readdirSync(path.join(process.cwd(), "notAssets")).filter((f) => f.endsWith(".jpg") || f.endsWith(".png"));
 
 	const mainImage = R.item(imagePaths);
 	const images = R.uniqueItems(imagePaths, 4);
@@ -32,7 +32,7 @@ function announcementsTest() {
 				name: mainImage,
 				announcement_id: newAnnouncementId as number,
 				is_main: true,
-				fileType: MIMETypeMap[mainImage.split('.').pop() as string],
+				fileType: MIMETypeMap[mainImage.split(".").pop() as string],
 				fileData: data,
 				thumbData: data,
 			},
@@ -49,7 +49,7 @@ function announcementsTest() {
 					name: image,
 					announcement_id: newAnnouncementId as number,
 					is_main: false,
-					fileType: MIMETypeMap[image.split('.').pop() as string],
+					fileType: MIMETypeMap[image.split(".").pop() as string],
 					fileData: data,
 					thumbData: data,
 				},
@@ -61,102 +61,88 @@ function announcementsTest() {
 		}
 	};
 
-	test("--announcements-- #1",
-		async () => {
-			const res = await useTestAPI("Announcements.post", { RequestObject: announcement });
+	test("--announcements-- #1", async () => {
+		const res = await useTestAPI("Announcements.post", { RequestObject: announcement });
 
-			const json = await getJson<APIResponse["Announcements.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		const json = await getJson<APIResponse["Announcements.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			newAnnouncementId = json.data.insertId;
+		newAnnouncementId = json.data.insertId;
 
-			const sitemap = await Bucket.getDev("sitemap-announcements.xml");
-			expect(sitemap).not.toBeNull();
+		const sitemap = await Bucket.getDev("sitemap-announcements.xml");
+		expect(sitemap).not.toBeNull();
 
-			const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-			expect(sitemapStr).toContain(announcement.title.replaceAll(" ", "%20"));
-		}
-	);
-	test("--announcements-- #2",
-		async () => {
-			const res = await useTestAPI("Announcements.getById", {
-				RequestObject: [newAnnouncementId as number]
-			});
+		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
+		expect(sitemapStr).toContain(announcement.title.replaceAll(" ", "%20"));
+	});
+	test("--announcements-- #2", async () => {
+		const res = await useTestAPI("Announcements.getById", {
+			RequestObject: [newAnnouncementId as number],
+		});
 
-			const json = await getJson<APIResponse["Announcements.getById"]>(res);
-			expectBody(json, v_Announcements);
-		}
-	);
+		const json = await getJson<APIResponse["Announcements.getById"]>(res);
+		expectBody(json, v_Announcements);
+	});
 	test("--announcements-- #3", uploadImages, { timeout: 20000 });
-	test("--announcements-- #4",
-		async () => {
-			const res = await useTestAPI("Announcements.getImagesById", {
-				UrlArgs: { id: newAnnouncementId as number }
-			});
-			const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
-			expectBody(json, array(v_AnnouncementImages));
-			expect(json.data).toHaveLength(5);
-		}
-	);
-	test("--announcements-- #5",
-		async () => {
-			const res = await useTestAPI("Announcements.imagesDelete", {
-				UrlArgs: { announcement_id: newAnnouncementId as number },
-				RequestObject: R.uniqueItems(newImageIds, 2)
-			});
+	test("--announcements-- #4", async () => {
+		const res = await useTestAPI("Announcements.getImagesById", {
+			UrlArgs: { id: newAnnouncementId as number },
+		});
+		const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
+		expectBody(json, array(v_AnnouncementImages));
+		expect(json.data).toHaveLength(5);
+	});
+	test("--announcements-- #5", async () => {
+		const res = await useTestAPI("Announcements.imagesDelete", {
+			UrlArgs: { announcement_id: newAnnouncementId as number },
+			RequestObject: R.uniqueItems(newImageIds, 2),
+		});
 
-			const json = await getJson<APIResponse["Announcements.imagesDelete"]>(res);
-			expectBody(json, "Images deleted successfully");
-		}
-	);
-	test("--announcements-- #6",
-		async () => {
-			const res = await useTestAPI("Announcements.getImagesById", {
-				UrlArgs: { id: newAnnouncementId as number }
-			});
+		const json = await getJson<APIResponse["Announcements.imagesDelete"]>(res);
+		expectBody(json, "Images deleted successfully");
+	});
+	test("--announcements-- #6", async () => {
+		const res = await useTestAPI("Announcements.getImagesById", {
+			UrlArgs: { id: newAnnouncementId as number },
+		});
 
-			const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
-			expectBody(json, array(v_AnnouncementImages));
-			expect(json.data).toHaveLength(3);
-		}
-	);
-	test("--announcements-- #7",
-		async () => {
-			const res = await useTestAPI("Announcements.update", {
-				RequestObject: {
-					...announcement,
-					id: newAnnouncementId as number,
-					title: newTitle
-				}
-			});
+		const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
+		expectBody(json, array(v_AnnouncementImages));
+		expect(json.data).toHaveLength(3);
+	});
+	test("--announcements-- #7", async () => {
+		const res = await useTestAPI("Announcements.update", {
+			RequestObject: {
+				...announcement,
+				id: newAnnouncementId as number,
+				title: newTitle,
+			},
+		});
 
-			const json = await getJson<APIResponse["Announcements.update"]>(res);
-			expectBody(json, "Announcement updated successfully");
+		const json = await getJson<APIResponse["Announcements.update"]>(res);
+		expectBody(json, "Announcement updated successfully");
 
-			const sitemap = await Bucket.getDev("sitemap-announcements.xml");
-			expect(sitemap).not.toBeNull();
+		const sitemap = await Bucket.getDev("sitemap-announcements.xml");
+		expect(sitemap).not.toBeNull();
 
-			const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-			expect(sitemapStr).toContain(newTitle.replaceAll(" ", "%20"));
-			expect(sitemapStr).not.toContain(announcement.title.replaceAll(" ", "%20"));
-		}
-	);
-	test("--announcements-- #8",
-		async () => {
-			const res = await useTestAPI("Announcements.delete", {
-				RequestObject: [newAnnouncementId as number]
-			});
+		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
+		expect(sitemapStr).toContain(newTitle.replaceAll(" ", "%20"));
+		expect(sitemapStr).not.toContain(announcement.title.replaceAll(" ", "%20"));
+	});
+	test("--announcements-- #8", async () => {
+		const res = await useTestAPI("Announcements.delete", {
+			RequestObject: [newAnnouncementId as number],
+		});
 
-			const json = await getJson<APIResponse["Announcements.delete"]>(res);
-			expectBody(json, "Announcement/s deleted successfully");
+		const json = await getJson<APIResponse["Announcements.delete"]>(res);
+		expectBody(json, "Announcement/s deleted successfully");
 
-			const sitemap = await Bucket.getDev("sitemap-announcements.xml");
-			expect(sitemap).not.toBeNull();
+		const sitemap = await Bucket.getDev("sitemap-announcements.xml");
+		expect(sitemap).not.toBeNull();
 
-			const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-			expect(sitemapStr).not.toContain(newTitle.replaceAll(" ", "%20"));
-		}
-	);
+		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
+		expect(sitemapStr).not.toContain(newTitle.replaceAll(" ", "%20"));
+	});
 }
 
 announcementsTest();
@@ -167,4 +153,3 @@ test("--announcements--", async () => {
 	const json = await getJson<APIResponse["Announcements.get"]>(res);
 	expectBody(json, array(v_Announcements));
 });
-

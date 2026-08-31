@@ -13,38 +13,32 @@ function instrumentsTest() {
 	};
 	let newInstrumentId: number | null;
 
-	test("--instruments-- #1",
-		async () => {
-			const res = await useTestAPI("Instruments.post", {
-				RequestObject: instrument,
-			});
+	test("--instruments-- #1", async () => {
+		const res = await useTestAPI("Instruments.post", {
+			RequestObject: instrument,
+		});
 
-			const json = await getJson<APIResponse["Instruments.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		const json = await getJson<APIResponse["Instruments.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			newInstrumentId = json.data.insertId;
-		}
-	);
-	test("--instruments-- #2",
-		async () => {
-			const res = await useTestAPI("Instruments.getById", {
-				RequestObject: [newInstrumentId as number]
-			});
+		newInstrumentId = json.data.insertId;
+	});
+	test("--instruments-- #2", async () => {
+		const res = await useTestAPI("Instruments.getById", {
+			RequestObject: [newInstrumentId as number],
+		});
 
-			const json = await getJson<APIResponse["Instruments.getById"]>(res);
-			expectBody(json, v_Instruments);
-		}
-	);
-	test("--instruments-- #3",
-		async () => {
-			const res = await useTestAPI("Instruments.delete", {
-				RequestObject: [newInstrumentId as number]
-			});
+		const json = await getJson<APIResponse["Instruments.getById"]>(res);
+		expectBody(json, v_Instruments);
+	});
+	test("--instruments-- #3", async () => {
+		const res = await useTestAPI("Instruments.delete", {
+			RequestObject: [newInstrumentId as number],
+		});
 
-			const json = await getJson<APIResponse["Instruments.delete"]>(res);
-			expectBody(json, "Teacher/s deleted successfully");
-		}
-	);
+		const json = await getJson<APIResponse["Instruments.delete"]>(res);
+		expectBody(json, "Teacher/s deleted successfully");
+	});
 }
 
 instrumentsTest();

@@ -41,17 +41,14 @@ const isMainPage = Astro.url.pathname === "/";
 		<div
 			class={"relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[max-content_max-content] gap-x-4 font-anaktoria self-center z-10" +
 				" max-sm:w-full max-[400px]:grid-rows-[repeat(3,max-content)] max-sm:pl-1 max-sm:gap-x-2 max-3xs:gap-x-1"}>
-			<a
-				href="/"
-				class="logoImg sm:w-[3.75vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-3xs:w-[2.5rem] max-sm:self-center">
+			<a href="/" class="logoImg sm:w-[3.75vw] row-span-full aspect-square place-self-center max-sm:w-[3.5rem] max-3xs:w-[2.5rem] max-sm:self-center">
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
 			<div
 				class={"absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10" +
 					" max-sm:top-[2px] max-sm:translate-y-0 max-sm:left-[6px]"}>
-				<div
-					class="logoImg sm:w-[3.75vw] aspect-square max-sm:w-[3.5rem] max-3xs:w-[2.5rem]">
+				<div class="logoImg sm:w-[3.75vw] aspect-square max-sm:w-[3.5rem] max-3xs:w-[2.5rem]">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>
@@ -64,8 +61,7 @@ const isMainPage = Astro.url.pathname === "/";
 				Ι.Ν. Μεταμορφώσεως του Σωτήρος, ομωνύμου Δήμου
 			</p>
 		</div>
-		<div
-			class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-sm:hidden">
+		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-sm:hidden">
 			{
 				links.map((link) =>
 					link.expand ? (
@@ -85,9 +81,7 @@ const isMainPage = Astro.url.pathname === "/";
 							/>
 							<div class="expand absolute top-[100%] left-0 bg-red-900 opacity-0 overflow-hidden rounded-b-md shadow-md shadow-gray-600">
 								{link.expand.map((sublink) => (
-									<a
-										href={link.url + sublink.url}
-										class="relative grid py-4 transition-colors ease-in-out hover:bg-red-950">
+									<a href={link.url + sublink.url} class="relative grid py-4 transition-colors ease-in-out hover:bg-red-950">
 										<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 											{sublink.name}
 										</p>
@@ -116,18 +110,13 @@ const isMainPage = Astro.url.pathname === "/";
 				)
 			}
 		</div>
-		<div
-			id="burgerNav"
-			class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
+		<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
 			<p
 				class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_+_0.9375rem)]">
 				<i
 					class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
 				></i>
-				<span
-					class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
-					>Περιήγηση</span
-				>
+				<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">Περιήγηση</span>
 			</p>
 			<div
 				id="menu-dropdown"
@@ -135,17 +124,13 @@ const isMainPage = Astro.url.pathname === "/";
 				{
 					links.map((link) =>
 						link.expand ? (
-							<div
-								id="sxoli-burger-expand"
-								class="group relative grid py-4 grid-rows-[20%_80%]">
+							<div id="sxoli-burger-expand" class="group relative grid py-4 grid-rows-[20%_80%]">
 								<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 									{link.name}
 								</p>
 								<div class="burger-expand bg-red-950 overflow-hidden ">
 									{link.expand.map((sublink) => (
-										<a
-											href={link.url + sublink.url}
-											class="relative grid py-4 ">
+										<a href={link.url + sublink.url} class="relative grid py-4 ">
 											<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 												{sublink.name}
 											</p>
@@ -314,39 +299,35 @@ const isMainPage = Astro.url.pathname === "/";
 						.start();
 				});
 			});
-			document
-				.querySelector<HTMLElement>("#sxoli-burger-expand")
-				?.addEventListener("click", (e) => {
-					const expand = document.querySelector(
-						"#sxoli-burger-expand > .burger-expand",
-					) as HTMLElement;
-					const isOpen = expand.classList.contains("open");
-					if (isOpen && getParent(e.target as HTMLElement, ".burger-expand") != null) {
-						return;
-					}
-					const atl = new AnimTimeline();
-					if (!isOpen) {
-						atl.step(() => {
-							expand.style.display = "block";
-							expand.style.height = "calc(180px + 0.5rem)";
+			document.querySelector<HTMLElement>("#sxoli-burger-expand")?.addEventListener("click", (e) => {
+				const expand = document.querySelector("#sxoli-burger-expand > .burger-expand") as HTMLElement;
+				const isOpen = expand.classList.contains("open");
+				if (isOpen && getParent(e.target as HTMLElement, ".burger-expand") != null) {
+					return;
+				}
+				const atl = new AnimTimeline();
+				if (!isOpen) {
+					atl.step(() => {
+						expand.style.display = "block";
+						expand.style.height = "calc(180px + 0.5rem)";
+					})
+						.step(() => expand.classList.add("open"))
+						.start();
+				} else {
+					atl.step(() => {
+						expand.classList.remove("open");
+						void expand.offsetHeight;
+					})
+						.step({
+							time: 351,
+							anim: () => {
+								expand.style.display = "none";
+								expand.style.height = "0";
+							},
 						})
-							.step(() => expand.classList.add("open"))
-							.start();
-					} else {
-						atl.step(() => {
-							expand.classList.remove("open");
-							void expand.offsetHeight;
-						})
-							.step({
-								time: 351,
-								anim: () => {
-									expand.style.display = "none";
-									expand.style.height = "0";
-								},
-							})
-							.start();
-					}
-				});
+						.start();
+				}
+			});
 		});
 	if (iOS()) {
 		onElementMount(".navTitle", () => {

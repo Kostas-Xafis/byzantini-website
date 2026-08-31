@@ -20,7 +20,7 @@ const getById: EndpointRoute<"/payoffs/id", number[], Payoffs[]> = {
 	validation: undefined,
 };
 
-const getTotal: EndpointRoute<"/payoffs/total", any, { total: number; }> = {
+const getTotal: EndpointRoute<"/payoffs/total", any, { total: number }> = {
 	authentication: true,
 	method: "GET",
 	path: "/payoffs/total",

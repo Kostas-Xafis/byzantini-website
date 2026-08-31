@@ -24,7 +24,6 @@ const createS3Client = async () => {
 // Development functions can have access to any bucket by passing the bucket name as an argument
 // But it by default uses the dev bucket
 export class Bucket {
-
 	static getS3Bucket(ctx: APIContext): R2Bucket {
 		return ctx.locals.runtime.env.S3_BUCKET as any as R2Bucket;
 	}
@@ -33,9 +32,11 @@ export class Bucket {
 	static async listDev(bucketName?: string) {
 		const { ListObjectsCommand } = awsSdk;
 		const client = await createS3Client();
-		const cmdResult = await client.send(new ListObjectsCommand({
-			Bucket: bucketName || S3_DEV_BUCKET_NAME,
-		}));
+		const cmdResult = await client.send(
+			new ListObjectsCommand({
+				Bucket: bucketName || S3_DEV_BUCKET_NAME,
+			}),
+		);
 
 		const { Contents } = cmdResult;
 		if (!Contents) return [];
@@ -46,10 +47,12 @@ export class Bucket {
 	static async getDev(filename: string, bucketName?: string) {
 		const { GetObjectCommand } = awsSdk;
 		let client = await createS3Client();
-		let cmdResult = await client.send(new GetObjectCommand({
-			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
-			Key: filename,
-		}));
+		let cmdResult = await client.send(
+			new GetObjectCommand({
+				Bucket: bucketName || S3_DEV_BUCKET_NAME,
+				Key: filename,
+			}),
+		);
 		const { Body } = cmdResult;
 		if (!Body) return null;
 		return (await Body.transformToByteArray()).buffer as ArrayBuffer;
@@ -58,30 +61,32 @@ export class Bucket {
 	static async putDev(file: ArrayBuffer | string, filename: string, filetype: string, bucketName?: string) {
 		const { PutObjectCommand } = awsSdk;
 		let client = await createS3Client();
-		await client.send(new PutObjectCommand({
-			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
-			Key: filename,
-			Body: typeof file === "string" ? new TextEncoder().encode(file) : new Uint8Array(file),
-			ContentType: filetype,
-		}));
+		await client.send(
+			new PutObjectCommand({
+				Bucket: bucketName || S3_DEV_BUCKET_NAME,
+				Key: filename,
+				Body: typeof file === "string" ? new TextEncoder().encode(file) : new Uint8Array(file),
+				ContentType: filetype,
+			}),
+		);
 	}
 
 	static async deleteDev(filename: string, bucketName?: string) {
 		const { DeleteObjectCommand } = awsSdk;
 		let client = await createS3Client();
-		await client.send(new DeleteObjectCommand({
-			Bucket: bucketName || (S3_DEV_BUCKET_NAME),
-			Key: filename,
-		}));
+		await client.send(
+			new DeleteObjectCommand({
+				Bucket: bucketName || S3_DEV_BUCKET_NAME,
+				Key: filename,
+			}),
+		);
 	}
 
 	static async moveDev(srcFile: string, destFile: string, MIMEType: string, bucketName?: string) {
 		const file = await Bucket.getDev(srcFile, bucketName);
 		if (!file) return null;
 
-		return Promise.all([
-			Bucket.putDev(file, destFile, MIMEType, bucketName),
-			Bucket.deleteDev(srcFile, bucketName)]);
+		return Promise.all([Bucket.putDev(file, destFile, MIMEType, bucketName), Bucket.deleteDev(srcFile, bucketName)]);
 	}
 
 	// Production functions
@@ -96,19 +101,19 @@ export class Bucket {
 		if (!isProduction()) return Bucket.getDev(filename);
 		const S3 = Bucket.getS3Bucket(context);
 		return S3.get(filename);
-	};
+	}
 
 	static put(context: APIContext, file: ArrayBuffer | string, filename: string, filetype: string) {
 		if (!isProduction()) return Bucket.putDev(file, filename, filetype);
 		const S3 = Bucket.getS3Bucket(context);
-		return S3.put(filename, file, { httpMetadata: { "contentType": filetype } });
-	};
+		return S3.put(filename, file, { httpMetadata: { contentType: filetype } });
+	}
 
 	static delete(context: APIContext, filename: string) {
 		if (!isProduction()) return Bucket.deleteDev(filename);
 		const S3 = Bucket.getS3Bucket(context);
 		return S3.delete(filename);
-	};
+	}
 
 	static async move(context: APIContext, srcFile: string, destFile: string) {
 		const fileType = srcFile.split(".").at(-1);
@@ -121,9 +126,6 @@ export class Bucket {
 		const file = await S3.get(srcFile);
 		if (!file) return null;
 
-		return Promise.all([
-			S3.put(destFile, await file.arrayBuffer(), { httpMetadata: { "contentType": MIMEType } }),
-			S3.delete(srcFile),
-		]);
+		return Promise.all([S3.put(destFile, await file.arrayBuffer(), { httpMetadata: { contentType: MIMEType } }), S3.delete(srcFile)]);
 	}
 }

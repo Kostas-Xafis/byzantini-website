@@ -6,12 +6,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableContr
 import type { Action } from "../../table/TableControls.solid";
 import type { APIHook } from "./helpers";
 
-export const onDelete = function (
-	hydrate: HydrateByIdReturnType,
-	store: Partial<APIResponse>,
-	selectedItems: number[],
-	apiHook: APIHook
-) {
+export const onDelete = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const deleteModal = {
 			type: ActionEnum.DELETE,
@@ -41,5 +36,4 @@ export const onDelete = function (
 			...deleteModal,
 		};
 	});
-
 };

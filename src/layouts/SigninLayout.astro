@@ -17,13 +17,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 	<head>
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<Links
-			title={title}
-			imageURL={logoUrl}
-			description={description}
-			canonical={canonical}
-			noindex={noindex}
-		/>
+		<Links title={title} imageURL={logoUrl} description={description} canonical={canonical} noindex={noindex} />
 		<script>
 			import { applyDashboardTheme, resolveDashboardTheme } from "@utilities/theme";
 
@@ -59,11 +53,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 				color: #f6f6f6;
 			}
 			html.dark body {
-				background: radial-gradient(
-					ellipse at top,
-					rgb(127 29 29 / 0.5) -50%,
-					rgb(12 12 12)
-				);
+				background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.5) -50%, rgb(12 12 12));
 				background-repeat: no-repeat;
 			}
 			input:-webkit-autofill,

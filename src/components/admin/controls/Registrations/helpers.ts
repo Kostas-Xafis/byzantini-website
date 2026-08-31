@@ -6,11 +6,7 @@ export const PREFIX = "registrations";
 
 export type APIHook = ReturnType<typeof useAPI>;
 
-export const RegistrationsInputs = (
-	student: Registrations,
-	teachers: Teachers[],
-	instruments: Instruments[]
-): Record<keyof Registrations, InputProps> => {
+export const RegistrationsInputs = (student: Registrations, teachers: Teachers[], instruments: Instruments[]): Record<keyof Registrations, InputProps> => {
 	let sortTeachers = teachers
 		.map((t) => t)
 		.sort((a, b) => {

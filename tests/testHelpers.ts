@@ -13,15 +13,19 @@ let session_id = "";
 let collectingId = false;
 async function setSessionId() {
 	while (collectingId) {
-		await new Promise(r => setTimeout(r, 500));
+		await new Promise((r) => setTimeout(r, 500));
 	}
 	if (session_id !== "") return;
 	collectingId = true;
 	const { TEST_EMAIL, TEST_PASSWORD } = Env.env;
 	if (TEST_EMAIL == null || TEST_PASSWORD == null) throw new Error("TEST_MAIL and TEST_PASSWORD must be set in the environment");
-	const response = (await useTestAPI("Authentication.userLogin", {
-		RequestObject: { email: TEST_EMAIL, password: TEST_PASSWORD },
-	}, false));
+	const response = await useTestAPI(
+		"Authentication.userLogin",
+		{
+			RequestObject: { email: TEST_EMAIL, password: TEST_PASSWORD },
+		},
+		false,
+	);
 
 	const res = await getJson<APIResponse["Authentication.userLogin"]>(response);
 	expect(res.type).toBe("data");
@@ -43,7 +47,7 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 		let fetcher: any = undefined;
 		if (req === undefined) {
 			const url = VITE_URL + "/api" + Route.path;
-			return fetcher = fetch(url, { method: Route.method, headers: { "Cookie": `session_id=${session_id}` } });
+			return (fetcher = fetch(url, { method: Route.method, headers: { Cookie: `session_id=${session_id}` } }));
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
@@ -55,9 +59,9 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 			}
 			const { RequestObject, UrlArgs } = req;
 			const IsBlob = RequestObject instanceof Blob;
-			const body = ((IsBlob || Route.multipart) ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
+			const body = (IsBlob || Route.multipart ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
 			const headers = {
-				"Cookie": `session_id=${session_id}`
+				Cookie: `session_id=${session_id}`,
 			};
 			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,
@@ -75,13 +79,11 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 export function expectBody(body: DefaultEndpointResponse["res"], expected: string | BaseSchema<any, any>, isError = false) {
 	if (isError) {
 		expect(body.type).toBe("error");
-		if (body.type === "error")
-			expect(body.error).toBe(expected);
+		if (body.type === "error") expect(body.error).toBe(expected);
 		return;
 	} else if (typeof expected === "string") {
 		expect(body.type).toBe("message");
-		if (body.type === "message")
-			expect(body.message).toBe(expected);
+		if (body.type === "message") expect(body.message).toBe(expected);
 	} else {
 		expect(body.type).toBe("data");
 		if (body.type === "data") {

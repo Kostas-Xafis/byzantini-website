@@ -29,8 +29,7 @@ const locationsWithTeachers: LocationWithTeachers[] = _locations.map((l) => ({
 	teacherCount: teacher_places.filter((tl) => tl.location_id === l.id).length,
 }));
 // Μικρή ένδειξη πλήθους καθηγητών, π.χ. «Διδάσκουν 12 καθηγητές».
-const teachersLabel = (n: number) =>
-	n === 1 ? "Διδάσκει 1 καθηγητής" : `Διδάσκουν ${n} καθηγητές`;
+const teachersLabel = (n: number) => (n === 1 ? "Διδάσκει 1 καθηγητής" : `Διδάσκουν ${n} καθηγητές`);
 
 const imgSrc = "/spoudastiria/";
 const schoolLocations = _locations.filter((l) => !l.partner);
@@ -50,8 +49,7 @@ const groups = [
 	},
 ] as const;
 
-const formatAddress = (l: Locations) =>
-	`${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
+const formatAddress = (l: Locations) => `${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
 const phones = (l: Locations) =>
 	l.telephones
 		.split(",")
@@ -60,8 +58,7 @@ const phones = (l: Locations) =>
 const hasValidMap = (l: Locations) => l.map?.startsWith("http") && l.map.length > 50;
 // Ετικέτα του σημείου διεξαγωγής: η έδρα εμφανίζεται ως «Έδρα Σχολής»,
 // ενώ τα υπόλοιπα διακρίνονται σε σπουδαστήρια και συνεργαζόμενες σχολές.
-const badgeLabel = (l: Locations) =>
-	l.priority === 1 ? "Έδρα Σχολής" : l.partner ? "Συνεργαζόμενη Σχολή" : "Σπουδαστήριο Σχολής";
+const badgeLabel = (l: Locations) => (l.priority === 1 ? "Έδρα Σχολής" : l.partner ? "Συνεργαζόμενη Σχολή" : "Σπουδαστήριο Σχολής");
 const directionsHref = (l: Locations) =>
 	`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
 		`${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} ` : ""}${l.municipality.trim()}`,
@@ -105,9 +102,7 @@ const placesSchema = {
 	<JsonLd data={placesSchema} />
 
 	<div id="spoudastiriaPage" class="group/page w-full h-full font-didact">
-		<main
-			id="spoudastiriaMain"
-			class="w-full h-full overflow-y-auto flex flex-col gap-y-8 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-28">
+		<main id="spoudastiriaMain" class="w-full h-full overflow-y-auto flex flex-col gap-y-8 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-28">
 			<!-- Εισαγωγή -->
 			<header
 				class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border-2 border-red-900 bg-red-950 shadow-xl shadow-red-900/30">
@@ -116,8 +111,7 @@ const placesSchema = {
 					alt="Ο Ι. Ναός Μεταμορφώσεως του Σωτήρος στη Μεταμόρφωση"
 					class="absolute inset-0 h-full w-full object-cover opacity-30 blur-[2px]"
 				/>
-				<div
-					class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
+				<div class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
 					<h1
 						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-sm after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
 						Σπουδαστήρια
@@ -126,20 +120,15 @@ const placesSchema = {
 						class="rounded-full border border-amber-400/40 bg-black/30 px-4 py-1.5 text-base max-sm:text-sm font-semibold tracking-wide text-amber-300 backdrop-blur-[2px]">
 						Σχολή Βυζαντινής & Παραδοσιακής Μουσικής — Ι.Ν. Μεταμορφώσεως του Σωτήρος
 					</p>
-					<p
-						class="max-w-[68ch] text-center text-lg max-sm:text-base leading-relaxed text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)]">
-						Τα μαθήματα διεξάγονται στην έδρα της Σχολής, σε σπουδαστήρια και σε
-						συνεργαζόμενες σχολές σε πολλές περιοχές της Αττικής. Επιλέξτε το σημείο που
-						σας ενδιαφέρει για διεύθυνση, τηλέφωνα και χάρτη.
+					<p class="max-w-[68ch] text-center text-lg max-sm:text-base leading-relaxed text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)]">
+						Τα μαθήματα διεξάγονται στην έδρα της Σχολής, σε σπουδαστήρια και σε συνεργαζόμενες σχολές σε πολλές περιοχές της Αττικής. Επιλέξτε το
+						σημείο που σας ενδιαφέρει για διεύθυνση, τηλέφωνα και χάρτη.
 					</p>
 				</div>
 			</header>
 
 			<!-- Κατηγορίες -->
-			<nav
-				id="spoudastiriaTabs"
-				class="sticky top-2 z-40 flex justify-center"
-				aria-label="Κατηγορίες σπουδαστηρίων">
+			<nav id="spoudastiriaTabs" class="sticky top-2 z-40 flex justify-center" aria-label="Κατηγορίες σπουδαστηρίων">
 				<div
 					class="flex flex-wrap justify-center gap-1.5 rounded-full bg-red-900/95 backdrop-blur-md px-2 py-2 shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)] max-sm:rounded-2xl">
 					{
@@ -150,10 +139,7 @@ const placesSchema = {
 								data-show={ind === 0}
 								aria-pressed={ind === 0 ? "true" : "false"}
 								class="group/btn relative flex items-center gap-2 rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-4 max-sm:py-2 text-[1.05vw] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white group-data-[show=true]/btn:bg-amber-400 group-data-[show=true]/btn:text-red-950 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-md">
-								<i
-									class={g.icon + " text-[0.9em] max-sm:hidden"}
-									aria-hidden="true"
-								/>
+								<i class={g.icon + " text-[0.9em] max-sm:hidden"} aria-hidden="true" />
 								{g.label}
 							</button>
 						))
@@ -162,9 +148,7 @@ const placesSchema = {
 			</nav>
 
 			<!-- Λίστα σπουδαστηρίων -->
-			<section
-				id="spoudastiriaGrid"
-				class="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 content-start max-w-[1400px] self-center">
+			<section id="spoudastiriaGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 content-start max-w-[1400px] self-center">
 				{
 					locationsWithTeachers.map((l) => (
 						<article
@@ -189,18 +173,14 @@ const placesSchema = {
 										"absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" +
 										(l.image ? "" : " grid place-items-center")
 									}>
-									{!l.image && (
-										<i class="fa-solid fa-church text-5xl text-red-50/60" />
-									)}
+									{!l.image && <i class="fa-solid fa-church text-5xl text-red-50/60" />}
 								</div>
 								<span class="absolute left-3 top-3 rounded-full border border-amber-400/50 bg-red-950/80 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm">
 									{badgeLabel(l)}
 								</span>
 							</div>
 							<div class="flex flex-1 flex-col gap-y-3 p-5 max-sm:p-4">
-								<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">
-									{l.name}
-								</h3>
+								<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">{l.name}</h3>
 								<p class="text-base max-sm:text-sm leading-relaxed">
 									<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
 									{formatAddress(l)}
@@ -261,15 +241,12 @@ const placesSchema = {
 			<!-- Τελικό κάλεσμα -->
 			<section
 				class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-10 shadow-xl shadow-red-900/30 max-sm:px-4">
-				<h2
-					class="text-center text-[2.25vw] max-sm:text-2xl font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
+				<h2 class="text-center text-[2.25vw] max-sm:text-2xl font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
 					Αναζητάτε το πλησιέστερο σπουδαστήριο;
 				</h2>
-				<p
-					class="max-w-[60ch] text-center text-lg max-sm:text-base leading-relaxed text-red-100/90">
-					Η γραμματεία της Σχολής θα σας κατευθύνει στο πλησιέστερο σε εσάς σημείο
-					διεξαγωγής μαθημάτων και θα απαντήσει σε κάθε ερώτηση για το πρόγραμμα και τις
-					εγγραφές.
+				<p class="max-w-[60ch] text-center text-lg max-sm:text-base leading-relaxed text-red-100/90">
+					Η γραμματεία της Σχολής θα σας κατευθύνει στο πλησιέστερο σε εσάς σημείο διεξαγωγής μαθημάτων και θα απαντήσει σε κάθε ερώτηση για το
+					πρόγραμμα και τις εγγραφές.
 				</p>
 				<div class="flex flex-row flex-wrap justify-center gap-4 pt-1">
 					<a
@@ -289,14 +266,8 @@ const placesSchema = {
 		</main>
 
 		<!-- Αναδυόμενο παράθυρο λεπτομερειών -->
-		<div
-			id="locationModal"
-			class="hidden fixed inset-0 z-[1100] grid place-items-center p-4 max-sm:p-0"
-			role="presentation">
-			<div
-				id="locationModalBackdrop"
-				class="absolute inset-0 bg-black/60 backdrop-blur-[3px]">
-			</div>
+		<div id="locationModal" class="hidden fixed inset-0 z-[1100] grid place-items-center p-4 max-sm:p-0" role="presentation">
+			<div id="locationModalBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-[3px]"></div>
 			<div
 				role="dialog"
 				aria-modal="true"
@@ -305,20 +276,10 @@ const placesSchema = {
 				class="relative w-full max-w-3xl flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-2xl shadow-black/50 max-h-[92dvh]">
 				<div
 					class="relative shrink-0 aspect-[21/9] max-sm:aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
-					<img
-						id="locationModalImage"
-						class="absolute inset-0 h-full w-full object-cover"
-						alt=""
-					/>
-					<div
-						class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent">
-					</div>
+					<img id="locationModalImage" class="absolute inset-0 h-full w-full object-cover" alt="" />
+					<div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
 					<div class="absolute bottom-4 left-6 right-16 max-sm:left-4">
-						<p
-							id="locationModalBadge"
-							class="text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">
-							Σπουδαστήριο Σχολής
-						</p>
+						<p id="locationModalBadge" class="text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">Σπουδαστήριο Σχολής</p>
 						<h2
 							id="locationModalTitle"
 							class="mt-1 font-anaktoria font-bold text-2xl max-sm:text-xl leading-snug text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)] [word-break:break-word]">
@@ -334,47 +295,25 @@ const placesSchema = {
 					</button>
 				</div>
 				<div class="flex-1 overflow-y-auto">
-					<div
-						class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-6 max-sm:p-4 max-sm:gap-y-3">
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-6 max-sm:p-4 max-sm:gap-y-3">
 						<div class="flex flex-col gap-y-1">
-							<p
-								class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">
-								Διεύθυνση
-							</p>
-							<p
-								class="text-base max-sm:text-sm leading-relaxed"
-								id="locationModalAddress">
-							</p>
+							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Διεύθυνση</p>
+							<p class="text-base max-sm:text-sm leading-relaxed" id="locationModalAddress"></p>
 						</div>
 						<div class="flex flex-col gap-y-1">
-							<p
-								class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">
-								Υπεύθυνος
-							</p>
+							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Υπεύθυνος</p>
 							<p class="text-base max-sm:text-sm" id="locationModalManager"></p>
 						</div>
 						<div class="sm:col-span-2 flex flex-col gap-y-1">
-							<p
-								class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">
-								Καθηγητές
-							</p>
+							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Καθηγητές</p>
 							<p class="text-base max-sm:text-sm" id="locationModalTeachers"></p>
 						</div>
 						<div class="sm:col-span-2 flex flex-col gap-y-2">
-							<p
-								class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">
-								Επικοινωνία
-							</p>
-							<div
-								class="flex flex-row flex-wrap gap-x-3 gap-y-2"
-								id="locationModalPhones">
-							</div>
+							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Επικοινωνία</p>
+							<div class="flex flex-row flex-wrap gap-x-3 gap-y-2" id="locationModalPhones"></div>
 							<p class="text-base max-sm:text-sm" id="locationModalEmail"></p>
 						</div>
-						<div
-							class="sm:col-span-2 flex flex-row flex-wrap gap-2 pt-1"
-							id="locationModalActions">
-						</div>
+						<div class="sm:col-span-2 flex flex-row flex-wrap gap-2 pt-1" id="locationModalActions"></div>
 					</div>
 					<div
 						id="locationModalMapWrap"
@@ -386,12 +325,7 @@ const placesSchema = {
 		</div>
 	</div>
 
-	<script
-		is:inline
-		type="application/json"
-		id="spoudastiria-data"
-		set:html={JSON.stringify(locationsWithTeachers)}
-	/>
+	<script is:inline type="application/json" id="spoudastiria-data" set:html={JSON.stringify(locationsWithTeachers)} />
 	<style is:inline>
 		#spoudastiriaPage {
 			opacity: 0.0001;
@@ -456,20 +390,16 @@ const placesSchema = {
 
 	const imgSrc = "/spoudastiria/";
 
-	const DATA = JSON.parse(
-		document.querySelector<HTMLScriptElement>("#spoudastiria-data")?.textContent || "[]",
-	) as LocationRow[];
+	const DATA = JSON.parse(document.querySelector<HTMLScriptElement>("#spoudastiria-data")?.textContent || "[]") as LocationRow[];
 
-	const formatAddress = (l: LocationRow) =>
-		`${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
+	const formatAddress = (l: LocationRow) => `${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
 	const phones = (l: LocationRow) =>
 		l.telephones
 			.split(",")
 			.map((t) => t.trim())
 			.filter(Boolean);
 	const hasValidMap = (l: LocationRow) => l.map?.startsWith("http") && l.map.length > 50;
-	const teachersLabel = (n: number) =>
-		n === 1 ? "Διδάσκει 1 καθηγητής" : `Διδάσκουν ${n} καθηγητές`;
+	const teachersLabel = (n: number) => (n === 1 ? "Διδάσκει 1 καθηγητής" : `Διδάσκουν ${n} καθηγητές`);
 	const directionsHref = (l: LocationRow) =>
 		`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
 			`${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} ` : ""}${l.municipality.trim()}`,
@@ -484,38 +414,29 @@ const placesSchema = {
 		let lastTrigger: HTMLElement | null = null;
 
 		// Εναλλαγή κατηγορίας (Σπουδαστήρια / Συνεργαζόμενες)
-		document
-			.querySelectorAll<HTMLButtonElement>("#spoudastiriaTabs button[data-group]")
-			.forEach((btn) => {
-				btn.addEventListener("click", () => {
-					const shown = document.querySelector<HTMLElement>(
-						"#spoudastiriaTabs button[data-show]",
-					);
-					if (shown === btn) return;
-					const group = btn.getAttribute("data-group") as string;
-					const atl = new AnimTimeline();
-					atl.step(() => grid.classList.add("remove"))
-						.step({
-							time: 260,
-							anim: () => {
-								document
-									.querySelectorAll<HTMLElement>("article[data-group]")
-									.forEach((card) => {
-										card.classList.toggle(
-											"hidden",
-											card.getAttribute("data-group") !== group,
-										);
-									});
-								grid.classList.remove("remove");
-								shown?.removeAttribute("data-show");
-								shown?.setAttribute("aria-pressed", "false");
-								btn.setAttribute("data-show", "true");
-								btn.setAttribute("aria-pressed", "true");
-							},
-						})
-						.start();
-				});
+		document.querySelectorAll<HTMLButtonElement>("#spoudastiriaTabs button[data-group]").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const shown = document.querySelector<HTMLElement>("#spoudastiriaTabs button[data-show]");
+				if (shown === btn) return;
+				const group = btn.getAttribute("data-group") as string;
+				const atl = new AnimTimeline();
+				atl.step(() => grid.classList.add("remove"))
+					.step({
+						time: 260,
+						anim: () => {
+							document.querySelectorAll<HTMLElement>("article[data-group]").forEach((card) => {
+								card.classList.toggle("hidden", card.getAttribute("data-group") !== group);
+							});
+							grid.classList.remove("remove");
+							shown?.removeAttribute("data-show");
+							shown?.setAttribute("aria-pressed", "false");
+							btn.setAttribute("data-show", "true");
+							btn.setAttribute("aria-pressed", "true");
+						},
+					})
+					.start();
 			});
+		});
 
 		// Άνοιγμα λεπτομερειών
 		const openModal = (l: LocationRow, trigger?: HTMLElement) => {
@@ -540,12 +461,7 @@ const placesSchema = {
 				image.removeAttribute("alt");
 				image.classList.add("hidden");
 			}
-			badge.textContent =
-				l.priority === 1
-					? "Έδρα Σχολής"
-					: l.partner
-						? "Συνεργαζόμενη Σχολή"
-						: "Σπουδαστήριο Σχολής";
+			badge.textContent = l.priority === 1 ? "Έδρα Σχολής" : l.partner ? "Συνεργαζόμενη Σχολή" : "Σπουδαστήριο Σχολής";
 			title.textContent = l.name;
 			address.textContent = formatAddress(l);
 			manager.textContent = l.manager;
@@ -632,10 +548,8 @@ const placesSchema = {
 				mapWrap.appendChild(iframe);
 			} else {
 				const p = document.createElement("p");
-				p.className =
-					"grid h-full w-full place-items-center p-6 text-center text-red-950/70";
-				p.textContent =
-					"Ο χάρτης δεν είναι διαθέσιμος — χρησιμοποιήστε τον σύνδεσμο «Οδηγίες».";
+				p.className = "grid h-full w-full place-items-center p-6 text-center text-red-950/70";
+				p.textContent = "Ο χάρτης δεν είναι διαθέσιμος — χρησιμοποιήστε τον σύνδεσμο «Οδηγίες».";
 				mapWrap.appendChild(p);
 			}
 
@@ -659,16 +573,12 @@ const placesSchema = {
 			lastTrigger?.focus();
 		};
 
-		document
-			.querySelectorAll<HTMLButtonElement>("button[data-open-location]")
-			.forEach((btn) => {
-				btn.addEventListener("click", () => {
-					const l = DATA.find(
-						(x) => x.id === Number(btn.getAttribute("data-open-location")),
-					);
-					if (l) openModal(l, btn);
-				});
+		document.querySelectorAll<HTMLButtonElement>("button[data-open-location]").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const l = DATA.find((x) => x.id === Number(btn.getAttribute("data-open-location")));
+				if (l) openModal(l, btn);
 			});
+		});
 
 		modalClose.addEventListener("click", closeModal);
 		document.querySelector("#locationModalBackdrop")?.addEventListener("click", closeModal);
@@ -678,9 +588,7 @@ const placesSchema = {
 		// Απλό focus trap εντός του παραθύρου
 		panel.addEventListener("keydown", (e) => {
 			if (e.key !== "Tab") return;
-			const focusables = panel.querySelectorAll<HTMLElement>(
-				'a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])',
-			);
+			const focusables = panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])');
 			if (!focusables.length) return;
 			const first = focusables[0];
 			const last = focusables[focusables.length - 1];
@@ -698,9 +606,7 @@ const placesSchema = {
 			const name = decodeURI(window.location.hash.replace("#", ""));
 			const l = DATA.find((x) => x.name === name);
 			if (l) {
-				const tab = document.querySelector<HTMLButtonElement>(
-					`#spoudastiriaTabs button[data-group="${l.partner ? "partner" : "school"}"]`,
-				);
+				const tab = document.querySelector<HTMLButtonElement>(`#spoudastiriaTabs button[data-group="${l.partner ? "partner" : "school"}"]`);
 				tab?.click();
 				setTimeout(() => openModal(l), 320);
 			}

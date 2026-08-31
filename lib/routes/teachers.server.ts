@@ -16,7 +16,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+		const body = getUsedBody(ctx) || (await ctx.request.json());
 		const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", body);
 		if (!teacher) throw Error("Teacher not found");
 		return teacher;
@@ -25,9 +25,12 @@ serverRoutes.getById.func = ({ ctx }) => {
 
 serverRoutes.getByPriorityClasses.func = ({ ctx: _ctx, slug }) => {
 	return execTryCatch(() => {
-		const class_id = ["byz", "par", "eur"].findIndex(v => v === slug.class_type);
+		const class_id = ["byz", "par", "eur"].findIndex((v) => v === slug.class_type);
 		if (class_id === -1) throw Error("Invalid class type");
-		return executeQuery<Teachers>("SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC", [class_id]);
+		return executeQuery<Teachers>(
+			"SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC",
+			[class_id],
+		);
 	}, "Σφάλμα κατά την ανάκτηση των δασκάλων");
 };
 
@@ -41,7 +44,7 @@ serverRoutes.getClasses.func = ({ ctx: _ctx }) => {
 };
 serverRoutes.getClassesById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = getUsedBody(ctx) || await ctx.request.json();
+		const id = getUsedBody(ctx) || (await ctx.request.json());
 		return await executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", id);
 	}, "Σφάλμα κατά την ανάκτηση των μαθημάτων του δασκάλου");
 };
@@ -52,7 +55,7 @@ serverRoutes.getLocations.func = ({ ctx: _ctx }) => {
 };
 serverRoutes.getLocationsById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = getUsedBody(ctx) || await ctx.request.json();
+		const id = getUsedBody(ctx) || (await ctx.request.json());
 		return await executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id = ?", id);
 	});
 };
@@ -63,19 +66,27 @@ serverRoutes.getInstruments.func = ({ ctx: _ctx }) => {
 };
 serverRoutes.getInstrumentsById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = getUsedBody(ctx) || await ctx.request.json();
+		const id = getUsedBody(ctx) || (await ctx.request.json());
 		return await executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id = ?", id);
 	});
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		const { insertId } = await T.executeQuery(`INSERT INTO teachers (fullname, amka, email, telephone, linktree, gender, title, visible, online) VALUES (???)`, body);
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		const { insertId } = await T.executeQuery(
+			`INSERT INTO teachers (fullname, amka, email, telephone, linktree, gender, title, visible, online) VALUES (???)`,
+			body,
+		);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			const registration_number = body.registrations_number.shift() || null;
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (???)`, [insertId, class_id, priority, registration_number]);
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (???)`, [
+				insertId,
+				class_id,
+				priority,
+				registration_number,
+			]);
 		}
 		for (const location_id of body.teacherLocations) {
 			await T.executeQuery(`INSERT INTO teacher_locations (teacher_id, location_id) VALUES (?, ?)`, [insertId, location_id]);
@@ -88,15 +99,23 @@ serverRoutes.post.func = ({ ctx }) => {
 };
 
 serverRoutes.update.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
-		await T.executeQuery(`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`, body);
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
+		await T.executeQuery(
+			`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`,
+			body,
+		);
 
 		await T.executeQuery("DELETE FROM teacher_classes WHERE teacher_id=?", [body.id]);
 		for (const class_id of body.teacherClasses) {
 			const priority = body.priorities.shift();
 			const registration_number = body.registrations_number.shift() || null;
-			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (???)`, [body.id, class_id, priority, registration_number]);
+			await T.executeQuery(`INSERT INTO teacher_classes (teacher_id, class_id, priority, registration_number) VALUES (???)`, [
+				body.id,
+				class_id,
+				priority,
+				registration_number,
+			]);
 		}
 
 		await T.executeQuery("DELETE FROM teacher_locations WHERE teacher_id=?", [body.id]);
@@ -142,13 +161,13 @@ serverRoutes.fileUpload.func = ({ ctx, slug }) => {
 };
 
 serverRoutes.fileRename.func = ({ ctx, slug }) => {
-	return execTryCatch(async T => {
+	return execTryCatch(async (T) => {
 		const { id } = slug;
 		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 		if (!teacher) throw Error("Teacher not found");
 
-		const oldNameCV = (teacher.cv) && teacher.cv.split(".")[0];
-		const oldNameImg = (teacher.picture) && teacher.picture.split(".")[0];
+		const oldNameCV = teacher.cv && teacher.cv.split(".")[0];
+		const oldNameImg = teacher.picture && teacher.picture.split(".")[0];
 		const newName = teacher.fullname;
 		if (teacher.cv && oldNameCV !== newName) {
 			const newFileName = newName + "." + teacher.cv.split(".").at(-1);
@@ -162,13 +181,12 @@ serverRoutes.fileRename.func = ({ ctx, slug }) => {
 			await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
 		}
 		return "Files renamed successfully";
-	},
-		"Σφάλμα κατά την μετονομασία των αρχείων");
+	}, "Σφάλμα κατά την μετονομασία των αρχείων");
 };
 
 serverRoutes.fileDelete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
 		const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
 		if (!teacher) throw Error("Teacher not found");
 		if (body.type === "cv") {
@@ -185,8 +203,8 @@ serverRoutes.fileDelete.func = ({ ctx }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
 
 		await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (???)`, body);
 		await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (???)`, body);

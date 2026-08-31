@@ -5,10 +5,7 @@ import { createMemo } from "solid-js";
 import { createAlert, pushAlert, updateAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon } from "../../table/TableControlTypes";
 
-export const onDownloadExcel = function (
-	store: Partial<APIResponse>,
-	selectedItems: number[],
-) {
+export const onDownloadExcel = function (store: Partial<APIResponse>, selectedItems: number[]) {
 	return createMemo(() => {
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
@@ -23,26 +20,17 @@ export const onDownloadExcel = function (
 			const items = selectedItems.map((id) => {
 				const student = registrations.find((r) => r.id === id) as Registrations;
 				const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
-				const instrument =
-					(student.class_id &&
-						(instruments.find((i) => i.id === student.instrument_id) as Instruments)) ||
-					null;
+				const instrument = (student.class_id && (instruments.find((i) => i.id === student.instrument_id) as Instruments)) || null;
 				return { student, teacher, instrument };
 			});
 			let pdfArr: PDF[] = [];
 			try {
 				for (const item of items) {
 					const pdf = new PDF();
-					pdf.setTemplateData(
-						item.student,
-						item.teacher?.fullname || "",
-						item.instrument?.name || ""
-					);
+					pdf.setTemplateData(item.student, item.teacher?.fullname || "", item.instrument?.name || "");
 					pdfArr.push(pdf);
 				}
-				const alert = pushAlert(
-					createAlert("success", "Λήψη των PDF: 0 από " + pdfArr.length)
-				);
+				const alert = pushAlert(createAlert("success", "Λήψη των PDF: 0 από " + pdfArr.length));
 				await PDF.downloadBulk(pdfArr, (pg) => {
 					alert.message = "Λήψη των PDF: " + pg + " από " + pdfArr.length;
 					updateAlert(alert);

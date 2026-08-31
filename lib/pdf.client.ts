@@ -11,11 +11,9 @@ import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 const PDFTypeWrap = <Type extends PDFRequest["type"]>(type: Type, data: PDFRequest<Type>["request"]) => {
 	return {
 		type,
-		request: data
+		request: data,
 	};
 };
-
-
 
 export class PDF {
 	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
@@ -23,7 +21,7 @@ export class PDF {
 	private student: Registrations = {} as Registrations;
 	private teachersName: string = "";
 	private instrument: string = "";
-	constructor() { };
+	constructor() {}
 
 	public setTemplateData(student: Registrations, teachersName: string, instrument?: string): PDF {
 		this.student = student;
@@ -41,7 +39,7 @@ export class PDF {
 
 	private static loadPrintJS() {
 		return loadScript("https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js", () => !!window["printJS"]);
-	};
+	}
 
 	public async print() {
 		await PDF.loadPrintJS();
@@ -52,15 +50,17 @@ export class PDF {
 				student: this.student,
 				teachersName: this.teachersName,
 				instrument: this.instrument,
-			}
-		});
-		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
-			method: "POST",
-			headers: {
-				"Authorization": `Bearer ${getCookie("session_id")}`
 			},
-			body: JSON.stringify(body)
-		})).blob();
+		});
+		const imgBlob = await (
+			await fetch(PDF.PDFWorkerURL, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${getCookie("session_id")}`,
+				},
+				body: JSON.stringify(body),
+			})
+		).blob();
 		const fileURL = URL.createObjectURL(imgBlob);
 		const printWindow = window.open(fileURL, "_blank");
 		printWindow?.print();
@@ -82,15 +82,17 @@ export class PDF {
 				student: pdf.student,
 				teachersName: pdf.teachersName,
 				instrument: pdf.instrument,
-			}))
+			})),
 		});
-		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
-			method: "POST",
-			headers: {
-				"Authorization": `Bearer ${getCookie("session_id")}`
-			},
-			body: JSON.stringify(body)
-		})).blob();
+		const imgBlob = await (
+			await fetch(PDF.PDFWorkerURL, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${getCookie("session_id")}`,
+				},
+				body: JSON.stringify(body),
+			})
+		).blob();
 		const fileURL = URL.createObjectURL(imgBlob);
 		const printWindow = window.open(fileURL, "_blank");
 		printWindow?.print();
@@ -106,15 +108,17 @@ export class PDF {
 				student: this.student,
 				teachersName: this.teachersName,
 				instrument: this.instrument,
-			}
-		});
-		const imgBlob = await (await fetch(PDF.PDFWorkerURL, {
-			method: "POST",
-			headers: {
-				"Authorization": `Bearer ${getCookie("session_id")}`
 			},
-			body: JSON.stringify(body)
-		})).blob();
+		});
+		const imgBlob = await (
+			await fetch(PDF.PDFWorkerURL, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${getCookie("session_id")}`,
+				},
+				body: JSON.stringify(body),
+			})
+		).blob();
 
 		let a = document.createElement("a");
 		a.href = URL.createObjectURL(imgBlob);
@@ -139,19 +143,18 @@ export class PDF {
 					student: pdf.student,
 					teachersName: pdf.teachersName,
 					instrument: pdf.instrument,
-				}
+				},
 			});
 			while (expoTime <= 8000) {
 				try {
 					let resp = await fetch(PDF.PDFWorkerURL, {
 						method: "POST",
 						headers: {
-							"Authorization": `Bearer ${getCookie("session_id")}`
+							Authorization: `Bearer ${getCookie("session_id")}`,
 						},
-						body: JSON.stringify(body)
+						body: JSON.stringify(body),
 					});
-					if (resp.status >= 400)
-						throw new Error("Server Error");
+					if (resp.status >= 400) throw new Error("Server Error");
 
 					const imgBlob = await resp.blob();
 					let fileName = pdf.getFileName();
@@ -188,9 +191,11 @@ export class PDF {
 	}
 
 	public static async convertFirstPageToImage(buffer: Uint8Array): Promise<string> {
-		const { getDocument, GlobalWorkerOptions } = await dynamicImport<typeof import("pdfjs-dist")>("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs", "pdfjsLib");
-		if (!GlobalWorkerOptions.workerSrc)
-			GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs';
+		const { getDocument, GlobalWorkerOptions } = await dynamicImport<typeof import("pdfjs-dist")>(
+			"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs",
+			"pdfjsLib",
+		);
+		if (!GlobalWorkerOptions.workerSrc) GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs";
 
 		// Load the PDF document
 		const pdf = await getDocument({ data: buffer }).promise;
@@ -200,8 +205,8 @@ export class PDF {
 
 		// Set up a canvas with page dimensions
 		const viewport = page.getViewport({ scale: 1 });
-		const canvas = document.createElement('canvas');
-		const context = canvas.getContext('2d')!;
+		const canvas = document.createElement("canvas");
+		const context = canvas.getContext("2d")!;
 		canvas.width = viewport.width;
 		canvas.height = viewport.height;
 
@@ -212,9 +217,8 @@ export class PDF {
 		}).promise;
 
 		// Convert the canvas to a data URL
-		return canvas.toDataURL('image/png');
+		return canvas.toDataURL("image/png");
 	}
-
 }
 
 export const loadXLSX = async () => {

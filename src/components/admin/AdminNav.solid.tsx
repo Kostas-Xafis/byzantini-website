@@ -25,12 +25,7 @@ export default function AdminNav(props: RouterProps) {
 		avatar_url?: string | null;
 	};
 
-	const firstPage =
-		links.find(
-			(link) =>
-				link.url === window.location.pathname ||
-				link.url + "/" === window.location.pathname,
-		)?.name ?? "Αρχική";
+	const firstPage = links.find((link) => link.url === window.location.pathname || link.url + "/" === window.location.pathname)?.name ?? "Αρχική";
 	const [currentPage, setCurrentPage] = createSignal(firstPage);
 	const [userEmail, setUserEmail] = createSignal("");
 	const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null);
@@ -71,47 +66,27 @@ export default function AdminNav(props: RouterProps) {
 					</a>
 					{/* <!-- 50% width - 40px (50% of img) - 2px offset --> */}
 					<div class="w-[70px] max-sm:w-[50px] aspect-square absolute top-[2px] blur-xl opacity-40 z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px] pointer-events-none">
-						<img
-							src="/logo.png"
-							alt=""
-							aria-hidden="true"
-							class="h-full w-full object-contain brightness-0"
-						/>
+						<img src="/logo.png" alt="" aria-hidden="true" class="h-full w-full object-contain brightness-0" />
 					</div>
 					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
 						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
-							{avatarUrl() ? (
-								<img
-									src={avatarUrl()!}
-									alt="Avatar"
-									class="h-full w-full object-cover"
-								/>
-							) : (
-								<i class="fa-solid fa-user"></i>
-							)}
+							{avatarUrl() ? <img src={avatarUrl()!} alt="Avatar" class="h-full w-full object-cover" /> : <i class="fa-solid fa-user"></i>}
 						</div>
-						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">
-							{userEmail()}
-						</p>
+						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{userEmail()}</p>
 					</div>
 				</div>
-				<div
-					class={`h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start py-1 content-evenly max-sm:hidden`}>
+				<div class={`h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start py-1 content-evenly max-sm:hidden`}>
 					{links.map((link) => (
 						<A
 							class="group relative py-2 grid grid-rows-[minmax(min-content, 70px)] place-content-center transition-colors duration-150 ease-[cubic-bezier(0,.8,.43,.64)]  hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
 							href={link.url}
 							rel="prefetch-intent"
 							onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>
-							<p class="group font-bold font-anaktoria text-1.5xl text-red-50 text-center">
-								{link.name}
-							</p>
+							<p class="group font-bold font-anaktoria text-1.5xl text-red-50 text-center">{link.name}</p>
 						</A>
 					))}
 				</div>
-				<div
-					id="burgerNav"
-					class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
+				<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
 					<p class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_-_7px)]">
 						{/* 7px = 1/2 of 14px = 0.875rem */}
 						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
@@ -123,10 +98,7 @@ export default function AdminNav(props: RouterProps) {
 						{links.map((link) => (
 							<A
 								class="relative grid py-4 bg-red-900 dark:bg-red-950 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
-								onClick={
-									(link.force && (() => forceURLChange(link.url))) ||
-									(() => setCurrentPage(link.name))
-								}
+								onClick={(link.force && (() => forceURLChange(link.url))) || (() => setCurrentPage(link.name))}
 								href={link.url}>
 								<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 									{link.name}

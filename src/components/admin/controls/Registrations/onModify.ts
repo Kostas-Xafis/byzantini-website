@@ -7,17 +7,9 @@ import { InputFields, type Props as InputProps } from "../../../input/Input.soli
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";
 import type { Action } from "../../table/TableControls.solid";
-import {
-	RegistrationsInputs,
-	type APIHook,
-} from "./helpers";
+import { RegistrationsInputs, type APIHook } from "./helpers";
 
-export const onModify = function (
-	hydrate: HydrateByIdReturnType,
-	store: Partial<APIResponse>,
-	selectedItems: number[],
-	apiHook: APIHook
-) {
+export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const modifyModal = {
 			type: ActionEnum.MODIFY,
@@ -26,12 +18,9 @@ export const onModify = function (
 		const registrations = store[API.Registrations.get];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
-		if (!teachers || !registrations || !instruments || selectedItems.length !== 1)
-			return modifyModal;
+		if (!teachers || !registrations || !instruments || selectedItems.length !== 1) return modifyModal;
 
-		const registration = JSON.parse(
-			JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)
-		) as Registrations;
+		const registration = JSON.parse(JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)) as Registrations;
 		const submit = async function (form: ExtendedFormData<Registrations>) {
 			const class_id = form.number("class_id");
 			const data: Registrations = {
@@ -71,10 +60,7 @@ export const onModify = function (
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
 		};
 
-		const inputs = RegistrationsInputs(registration, teachers, instruments) as Record<
-			keyof Registrations,
-			InputProps
-		>;
+		const inputs = RegistrationsInputs(registration, teachers, instruments) as Record<keyof Registrations, InputProps>;
 		let inputFields = new InputFields(inputs).fill((field, key) => {
 			if (key === "instrument_id") {
 				field.value = instruments.find((i) => i.id === registration.instrument_id)?.id || 0;

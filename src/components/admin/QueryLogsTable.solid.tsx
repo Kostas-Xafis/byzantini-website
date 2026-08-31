@@ -29,13 +29,7 @@ const columnNames: ColumnType<QueryLogsTableRow> = {
 
 const queryLogsToTable = (queryLogs: QueryLogs[]): QueryLogsTableRow[] => {
 	return queryLogs.map((queryLog) => {
-		return [
-			queryLog.id,
-			queryLog.query,
-			queryLog.args,
-			queryLog.date,
-			queryLog.error,
-		] as unknown as QueryLogsTableRow;
+		return [queryLog.id, queryLog.query, queryLog.args, queryLog.date, queryLog.error] as unknown as QueryLogsTableRow;
 	});
 };
 
@@ -62,19 +56,13 @@ const QueryLogFilterInputs = (): Record<keyof QueryLogFilterFields, InputProps> 
 	},
 });
 
-const optionalDateToStartTimestamp = (
-	formData: ExtendedFormData<QueryLogFilterFields>,
-	key: keyof QueryLogFilterFields,
-) => {
+const optionalDateToStartTimestamp = (formData: ExtendedFormData<QueryLogFilterFields>, key: keyof QueryLogFilterFields) => {
 	const value = formData.string(key, "dd/mm/yyyy");
 	if (!value || value === "dd/mm/yyyy") return null;
 	return formData.date(key).getTime();
 };
 
-const optionalDateToEndTimestamp = (
-	formData: ExtendedFormData<QueryLogFilterFields>,
-	key: keyof QueryLogFilterFields,
-) => {
+const optionalDateToEndTimestamp = (formData: ExtendedFormData<QueryLogFilterFields>, key: keyof QueryLogFilterFields) => {
 	const timestamp = optionalDateToStartTimestamp(formData, key);
 	if (timestamp === null) return null;
 	const endDate = new Date(timestamp);
@@ -93,9 +81,7 @@ export default function QueryLogsTable() {
 	});
 
 	const activeData = createMemo(() => {
-		return activeView() === "filtered"
-			? store[API.QueryLogs.getByFilters]
-			: store[API.QueryLogs.get];
+		return activeView() === "filtered" ? store[API.QueryLogs.getByFilters] : store[API.QueryLogs.get];
 	});
 
 	const shapedData = createMemo(() => {
@@ -117,12 +103,7 @@ export default function QueryLogsTable() {
 		const startDate = optionalDateToStartTimestamp(formData, "startDate");
 		const endDate = optionalDateToEndTimestamp(formData, "endDate");
 		if (startDate !== null && endDate !== null && startDate >= endDate) {
-			pushAlert(
-				createAlert(
-					"error",
-					"Η ημερομηνία έναρξης πρέπει να είναι πριν από την ημερομηνία λήξης",
-				),
-			);
+			pushAlert(createAlert("error", "Η ημερομηνία έναρξης πρέπει να είναι πριν από την ημερομηνία λήξης"));
 			return;
 		}
 
@@ -136,12 +117,7 @@ export default function QueryLogsTable() {
 			});
 			setActiveView("filtered");
 		} catch (error) {
-			pushAlert(
-				createAlert(
-					"error",
-					error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση",
-				),
-			);
+			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση"));
 		}
 	};
 
@@ -152,12 +128,7 @@ export default function QueryLogsTable() {
 			await apiHook(API.QueryLogs.get);
 			setActiveView("default");
 		} catch (error) {
-			pushAlert(
-				createAlert(
-					"error",
-					error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση",
-				),
-			);
+			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση"));
 		}
 	};
 
@@ -168,9 +139,7 @@ export default function QueryLogsTable() {
 				data-prefix={FILTER_FORM_PREFIX}
 				class="grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-md border-[2px] border-red-900 px-4 py-3 dark:border-red-800 max-xl:grid-cols-2 max-sm:grid-cols-1"
 				onSubmit={applyFilters}>
-				<For each={Object.values(QueryLogFilterInputs())}>
-					{(inputProps) => <Input {...inputProps} prefix={FILTER_FORM_PREFIX} />}
-				</For>
+				<For each={Object.values(QueryLogFilterInputs())}>{(inputProps) => <Input {...inputProps} prefix={FILTER_FORM_PREFIX} />}</For>
 				<div class="flex flex-wrap gap-2 self-center max-sm:justify-center">
 					<button
 						type="submit"

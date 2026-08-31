@@ -29,16 +29,12 @@ const text = [
 	}
 	<style is:inline>
 		.lessonCard:nth-of-type(1)::after {
-			background:
-				linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)),
-				url("/byz3.jpg");
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/byz3.jpg");
 			background-size: cover;
 			background-position: center;
 		}
 		.lessonCard:nth-of-type(2)::after {
-			background:
-				linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)),
-				url("/par.jpg");
+			background: linear-gradient(to right, rgb(24, 24, 24, 0.15), rgb(24, 24, 24, 0.15)), url("/par.jpg");
 			background-size: cover;
 			background-position: center;
 		}
@@ -67,12 +63,8 @@ const text = [
 		const obsv = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
-				if (entry.intersectionRatio >= 0.4)
-					document.querySelector<HTMLElement>("#lessonsHead")?.classList.add("emphasis");
-				else
-					document
-						.querySelector<HTMLElement>("#lessonsHead")
-						?.classList.remove("emphasis");
+				if (entry.intersectionRatio >= 0.4) document.querySelector<HTMLElement>("#lessonsHead")?.classList.add("emphasis");
+				else document.querySelector<HTMLElement>("#lessonsHead")?.classList.remove("emphasis");
 			},
 			{
 				root: null,

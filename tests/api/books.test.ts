@@ -14,56 +14,48 @@ function booksTest() {
 		wholesale_price: bookPrice,
 		price: R.int(bookPrice, 200),
 		quantity: booksQuantity,
-		sold: R.int(0, booksQuantity)
+		sold: R.int(0, booksQuantity),
 	};
 	let newBookId: number | null;
 
-	test("--books-- #1",
-		async () => {
-			const res = await useTestAPI("Books.post", {
-				RequestObject: book,
-			});
+	test("--books-- #1", async () => {
+		const res = await useTestAPI("Books.post", {
+			RequestObject: book,
+		});
 
-			const json = await getJson<APIResponse["Books.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		const json = await getJson<APIResponse["Books.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			newBookId = json.data.insertId;
-		}
-	);
-	test("--books-- #2",
-		async () => {
-			const res = await useTestAPI("Books.getById", {
-				RequestObject: [newBookId as number]
-			});
+		newBookId = json.data.insertId;
+	});
+	test("--books-- #2", async () => {
+		const res = await useTestAPI("Books.getById", {
+			RequestObject: [newBookId as number],
+		});
 
-			const json = await getJson<APIResponse["Books.getById"]>(res);
-			expectBody(json, v_Books);
-		}
-	);
-	test("--books-- #3",
-		async () => {
-			const updatedBook = {
-				id: newBookId as number,
-				quantity: book.quantity + 10
-			};
-			const res = await useTestAPI("Books.updateQuantity", {
-				RequestObject: updatedBook,
-			});
+		const json = await getJson<APIResponse["Books.getById"]>(res);
+		expectBody(json, v_Books);
+	});
+	test("--books-- #3", async () => {
+		const updatedBook = {
+			id: newBookId as number,
+			quantity: book.quantity + 10,
+		};
+		const res = await useTestAPI("Books.updateQuantity", {
+			RequestObject: updatedBook,
+		});
 
-			const json = await getJson<APIResponse["Books.updateQuantity"]>(res);
-			expectBody(json, "Quantity updated successfully");
-		}
-	);
-	test("--books-- #4",
-		async () => {
-			const res = await useTestAPI("Books.delete", {
-				RequestObject: [newBookId as number]
-			});
+		const json = await getJson<APIResponse["Books.updateQuantity"]>(res);
+		expectBody(json, "Quantity updated successfully");
+	});
+	test("--books-- #4", async () => {
+		const res = await useTestAPI("Books.delete", {
+			RequestObject: [newBookId as number],
+		});
 
-			const json = await getJson<APIResponse["Books.delete"]>(res);
-			expectBody(json, "Book deleted successfully");
-		}
-	);
+		const json = await getJson<APIResponse["Books.delete"]>(res);
+		expectBody(json, "Book deleted successfully");
+	});
 }
 
 booksTest();

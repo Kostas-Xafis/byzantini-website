@@ -10,7 +10,7 @@ export type ContextType = [
 		remove: (i: number) => void;
 		removeAll: () => void;
 		removeMany: (i: number[]) => void;
-	}
+	},
 ];
 
 export const SelectedItemsContext = createContext<ContextType>();

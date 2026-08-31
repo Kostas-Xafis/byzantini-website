@@ -1,18 +1,6 @@
 ---
 export interface Props {
-	type:
-		| "checkbox"
-		| "date"
-		| "email"
-		| "hidden"
-		| "select"
-		| "number"
-		| "password"
-		| "radio"
-		| "tel"
-		| "text"
-		| "time"
-		| "url";
+	type: "checkbox" | "date" | "email" | "hidden" | "select" | "number" | "password" | "radio" | "tel" | "text" | "time" | "url";
 	name: string;
 	label: string;
 	placeholder?: string;
@@ -24,23 +12,10 @@ export interface Props {
 	minmax?: [number, number];
 }
 
-const {
-	type,
-	name,
-	label,
-	placeholder,
-	value,
-	required,
-	disabled,
-	iconClasses,
-	selectList,
-	minmax
-} = Astro.props;
+const { type, name, label, placeholder, value, required, disabled, iconClasses, selectList, minmax } = Astro.props;
 ---
 
-<label
-	for={name}
-	class={"relative h-min max-w-[30ch] max-sm:w-[27.5ch] grid text-xl rounded-md font-didact z-10 "}>
+<label for={name} class={"relative h-min max-w-[30ch] max-sm:w-[27.5ch] grid text-xl rounded-md font-didact z-10 "}>
 	{
 		type !== "select" ? (
 			<>
@@ -63,12 +38,7 @@ const {
 			</>
 		) : (
 			/*--------------------------------SELECT INPUT---------------------------------------- */ <>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " +
-						(iconClasses || "")
-					}
-				/>
+				<i class={"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
 				<select
 					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none"
 					name={name}
@@ -86,13 +56,7 @@ const {
 	<p
 		class="absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
 		{label}
-		{
-			required ? (
-				<i class="absolute bg-white dark:bg-dark left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" />
-			) : (
-				""
-			)
-		}
+		{required ? <i class="absolute bg-white dark:bg-dark left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : ""}
 	</p>
 	<div
 		class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-500 dark:border-gray-600 peer-[:not(:focus-within):invalid]:border-red-400 -z-10">
@@ -113,18 +77,16 @@ const {
 </label>
 
 <script>
-	document.querySelectorAll(".formInputs").forEach(inp => {
+	document.querySelectorAll(".formInputs").forEach((inp) => {
 		(inp as HTMLElement).addEventListener("focus", (e: FocusEvent) => {
 			(e.currentTarget as HTMLElement).removeAttribute("required");
 		});
 	});
-	document.querySelectorAll(".formInputs").forEach(inp => {
+	document.querySelectorAll(".formInputs").forEach((inp) => {
 		(inp as HTMLElement).addEventListener("blur", (e: FocusEvent) => {
 			(e.currentTarget as HTMLElement).setAttribute("required", "");
 		});
 	});
 
-	document
-		.querySelectorAll<HTMLInputElement>("input[type='date']")
-		.forEach(d => (d.valueAsDate = new Date()));
+	document.querySelectorAll<HTMLInputElement>("input[type='date']").forEach((d) => (d.valueAsDate = new Date()));
 </script>

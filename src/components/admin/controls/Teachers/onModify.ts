@@ -21,12 +21,7 @@ import {
 	type TeachersMetadata,
 } from "./helpers";
 
-export const onModify = function (
-	hydrate: HydrateByIdReturnType,
-	store: Partial<APIResponse>,
-	selectedItems: number[],
-	apiHook: APIHook
-) {
+export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const modifyModal = {
 			type: ActionEnum.MODIFY,
@@ -41,20 +36,9 @@ export const onModify = function (
 		const locationsList = store[API.Teachers.getLocations];
 		const instruments = store[API.Instruments.get];
 		const teacherInstruments = store[API.Teachers.getInstruments];
-		if (
-			!teacher ||
-			!classList ||
-			!locations ||
-			!locationsList ||
-			!instruments ||
-			!teacherInstruments
-		)
-			return modifyModal;
+		if (!teacher || !classList || !locations || !locationsList || !instruments || !teacherInstruments) return modifyModal;
 
-		const submit = async function (
-			fd: ExtendedFormData<Teachers & TeacherJoins>,
-			form?: HTMLFormElement
-		) {
+		const submit = async function (fd: ExtendedFormData<Teachers & TeacherJoins>, form?: HTMLFormElement) {
 			if (!form) return;
 			const classes = fd.multiSelect("teacherClasses", "number", { single: false });
 			const data: Teachers & TeacherJoins = {
@@ -71,14 +55,7 @@ export const onModify = function (
 				teacherClasses: classes,
 				teacherInstruments: classes
 					.map((c) => {
-						return fd.multiSelect(
-							(c === 1
-								? "teacherInstrumentsTraditional"
-								: c === 2
-									? "teacherInstrumentsEuropean"
-									: "") as any,
-							"number"
-						);
+						return fd.multiSelect((c === 1 ? "teacherInstrumentsTraditional" : c === 2 ? "teacherInstrumentsEuropean" : "") as any, "number");
 					})
 					.flat() as number[],
 				teacherLocations: fd.multiSelect("teacherLocations", "number", {
@@ -96,23 +73,13 @@ export const onModify = function (
 			const res = await apiHook(API.Teachers.update, { RequestObject: data });
 			if (!res.data && !res.message) return;
 
-			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(
-				PREFIX + modifyModal.type + "picture"
-			);
-			const cvHandler = FileHandler.getHandler<TeachersMetadata>(
-				PREFIX + modifyModal.type + "cv"
-			);
+			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + modifyModal.type + "picture");
+			const cvHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + modifyModal.type + "cv");
 			pictureHandler.setMetadata({ teacher_id: teacher.id, type: "picture" });
 			cvHandler.setMetadata({ teacher_id: teacher.id, type: "cv" });
 
-			await Promise.all([
-				fileDelete(pictureHandler, apiHook),
-				fileDelete(cvHandler, apiHook),
-			]);
-			await Promise.all([
-				fileUpload(pictureHandler, apiHook),
-				fileUpload(cvHandler, apiHook),
-			]);
+			await Promise.all([fileDelete(pictureHandler, apiHook), fileDelete(cvHandler, apiHook)]);
+			await Promise.all([fileUpload(pictureHandler, apiHook), fileUpload(cvHandler, apiHook)]);
 
 			if (teacher.fullname !== data.fullname) {
 				await apiHook(API.Teachers.fileRename, { UrlArgs: { id: teacher.id } });
@@ -126,17 +93,7 @@ export const onModify = function (
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση καθηγητή"));
 		};
 		return {
-			inputs: new InputFields(
-				TeachersInputs(
-					class_types,
-					locations,
-					instruments,
-					teacher,
-					classList,
-					locationsList,
-					teacherInstruments
-				)
-			)
+			inputs: new InputFields(TeachersInputs(class_types, locations, instruments, teacher, classList, locationsList, teacherInstruments))
 				.fill((field, key) => {
 					if (key === "picture") {
 						const metadata = { teacher_id: teacher.id, type: "picture" };

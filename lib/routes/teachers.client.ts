@@ -3,7 +3,6 @@ import { v_SimpleTeacher } from "@_types/entities";
 import type { EndpointRoute } from "@_types/routes";
 import { array, integer, merge, number, object, omit, string } from "valibot";
 
-
 const get: EndpointRoute<"/teachers", any, Teachers[]> = {
 	authentication: false,
 	method: "GET",
@@ -84,7 +83,7 @@ const teacherJoins = object({
 	teacherLocations: array(number([integer()])),
 	teacherInstruments: array(number([integer()])),
 	priorities: array(number([integer()])),
-	registrations_number: array(string())
+	registrations_number: array(string()),
 });
 
 const JoinedTeacher = merge([v_SimpleTeacher, teacherJoins]);
@@ -123,7 +122,7 @@ const fileRename: EndpointRoute<"/teachers/file/rename/[id:number]"> = {
 	validation: undefined,
 };
 
-const fileDelete: EndpointRoute<"/teachers/file", { id: number; type: "cv" | "picture"; }> = {
+const fileDelete: EndpointRoute<"/teachers/file", { id: number; type: "cv" | "picture" }> = {
 	authentication: true,
 	method: "PUT",
 	path: "/teachers/file",
@@ -155,5 +154,5 @@ export const TeachersRoutes = {
 	fileUpload,
 	fileRename,
 	fileDelete,
-	delete: del
+	delete: del,
 };

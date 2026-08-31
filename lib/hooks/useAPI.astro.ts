@@ -7,7 +7,7 @@ import { assertOwnProp } from "../utils.server";
 export { API };
 
 // Astro version
-export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], ctx?: APIContext) => {
+export const useAPI = async <T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], ctx?: APIContext) => {
 	// useAPI of astro can be called both in a server and client context
 	const origin = getOriginFromContext(ctx);
 	const Route = APIEndpoints[endpoint];
@@ -23,15 +23,13 @@ export const useAPI = async<T extends APIEndpointNames>(endpoint: T, req?: APIAr
 			}
 			const { RequestObject } = req;
 			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-			fetcher = fetch(`${origin}/api${convertToUrlFromArgs(Route.path, req.UrlArgs)}`,
-				{
-					method: Route.method,
-					headers: {
-						"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json"
-					},
-					body
-				}
-			);
+			fetcher = fetch(`${origin}/api${convertToUrlFromArgs(Route.path, req.UrlArgs)}`, {
+				method: Route.method,
+				headers: {
+					"Content-Type": (RequestObject instanceof Blob && RequestObject.type) || "application/json",
+				},
+				body,
+			});
 		}
 		const response = (await (await fetcher).json()) as DefaultEndpointResponse;
 		if (response.res.type === "error") {

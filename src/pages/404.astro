@@ -8,9 +8,7 @@ Astro.response.status = 404;
 // The path the visitor actually requested. When this page is reached through
 // Astro.rewrite (e.g. from the catch-all route), originPathname keeps the
 // original URL, while Astro.url.pathname points to "/404".
-const requestedPath = ["/404", "/404/", "/"].includes(Astro.originPathname)
-	? "/"
-	: Astro.originPathname;
+const requestedPath = ["/404", "/404/", "/"].includes(Astro.originPathname) ? "/" : Astro.originPathname;
 ---
 
 <SigninLayout title="404" noindex>
@@ -19,18 +17,12 @@ const requestedPath = ["/404", "/404/", "/"].includes(Astro.originPathname)
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
 				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
-				<img
-					class="h-[100px] absolute brightness-150 blur-[1px] opacity-40 top-[1px] left-[-2px]"
-					src="/logo.png"
-					alt="Λογότυπο Σχολής"
-				/>
+				<img class="h-[100px] absolute brightness-150 blur-[1px] opacity-40 top-[1px] left-[-2px]" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
 		</div>
 		<div class="text-center flex flex-col gap-y-8 items-center">
 			<h2 class="max-w-[min(44ch,76vw)] break-all text-3xl font-didact text-red-950 dark:text-red-50">{requestedPath}</h2>
-			<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">
-				Η σελίδα που ψάχνετε δεν υπάρχει
-			</h2>
+			<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Η σελίδα που ψάχνετε δεν υπάρχει</h2>
 			<a
 				href="/"
 				class="block text-xl text-center font-didact p-2 bg-red-900 text-white w-[20ch] shadow-md shadow-stone-700 rounded-md transition-colors duration-300 hover:bg-red-950 focus:bg-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"

@@ -113,9 +113,7 @@ export default function SysUsersTable() {
 		};
 	});
 	return (
-		<Show
-			when={store[API.SysUsers.get] !== undefined}
-			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show when={store[API.SysUsers.get] !== undefined} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}
 				data={shapedData}

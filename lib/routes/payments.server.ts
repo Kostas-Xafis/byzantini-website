@@ -11,7 +11,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
+		const ids = getUsedBody(ctx) || (await ctx.request.json());
 		const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 		if (!payments) throw Error("Payment not found");
 		return payments;
@@ -19,12 +19,12 @@ serverRoutes.getById.func = ({ ctx }) => {
 };
 
 serverRoutes.getTotal.func = ({ ctx: _ctx }) => {
-	return execTryCatch(async () => (await executeQuery<{ total: number; }>("SELECT amount AS total FROM total_payments"))[0]);
+	return execTryCatch(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_payments"))[0]);
 };
 
 serverRoutes.post.func = ({ ctx }) => {
 	return execTryCatch(async (T) => {
-		const { book_id, student_name, book_amount } = getUsedBody(ctx) || await ctx.request.json();
+		const { book_id, student_name, book_amount } = getUsedBody(ctx) || (await ctx.request.json());
 
 		const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
@@ -38,7 +38,7 @@ serverRoutes.post.func = ({ ctx }) => {
 			student_name,
 			book.price * book_amount,
 			book_amount,
-			Date.now()
+			Date.now(),
 		]);
 
 		await T.executeQuery("UPDATE books SET sold = sold + ? WHERE id = ?", [book_amount, book_id]);
@@ -50,7 +50,7 @@ serverRoutes.post.func = ({ ctx }) => {
 
 serverRoutes.updatePayment.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const { id, amount } = getUsedBody(ctx) || await ctx.request.json();
+		const { id, amount } = getUsedBody(ctx) || (await ctx.request.json());
 		//check if payment exists
 		const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
 		if (payment.length === 0) {
@@ -63,19 +63,22 @@ serverRoutes.updatePayment.func = ({ ctx }) => {
 
 serverRoutes.complete.func = ({ ctx }) => {
 	return execTryCatch(async (T) => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
+		const ids = getUsedBody(ctx) || (await ctx.request.json());
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
 		if (payments.length === 0) throw Error("Payment not found");
-		await T.executeQuery(`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`, [Date.now(), ...ids]);
+		await T.executeQuery(
+			`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`,
+			[Date.now(), ...ids],
+		);
 		await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids)}))`, [...ids]);
 		return "Completed payment successfully";
 	}, "Σφάλμα κατά την ολοκλήρωση της πληρωμής");
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const ids = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const ids = getUsedBody(ctx) || (await ctx.request.json());
 
 		//check if payment exists
 		const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);

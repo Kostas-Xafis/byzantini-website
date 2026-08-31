@@ -5,20 +5,7 @@ import { sleep } from "@utilities/sleep";
 
 const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 
-const months = [
-	"Ιαν",
-	"Φεβ",
-	"Μαρ",
-	"Απρ",
-	"Μαι",
-	"Ιουν",
-	"Ιουλ",
-	"Αυγ",
-	"Σεπ",
-	"Οκτ",
-	"Νοε",
-	"Δεκ",
-];
+const months = ["Ιαν", "Φεβ", "Μαρ", "Απρ", "Μαι", "Ιουν", "Ιουλ", "Αυγ", "Σεπ", "Οκτ", "Νοε", "Δεκ"];
 
 const monthsFull = [
 	"Ιανουάριος",
@@ -51,9 +38,7 @@ export default function DateInput(props: DateInputProps) {
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
-		const dateInput = document.querySelector(
-			`form[data-prefix='${props.prefix}'] input[name='${name}']`,
-		) as HTMLInputElement;
+		const dateInput = document.querySelector(`form[data-prefix='${props.prefix}'] input[name='${name}']`) as HTMLInputElement;
 		// initialize datepicker
 		if (!disabled) {
 			let finalDate = new Date(hasValue ? (value as number) : Date.now());
@@ -150,13 +135,9 @@ export default function DateInput(props: DateInputProps) {
 				readOnly={true}
 				value={(value && formatDateToMarineTime(value as number)) || "dd/mm/yyyy"}
 				name={name}
-				onfocus={(e: FocusEvent) =>
-					required && (e.currentTarget as HTMLElement).removeAttribute("required")
-				}
+				onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 				onblur={(e: FocusEvent) =>
-					required &&
-					(e.currentTarget as HTMLInputElement).value === "" &&
-					(e.currentTarget as HTMLElement).setAttribute("required", "")
+					required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 				}
 			/>
 		</>

@@ -66,36 +66,38 @@ export const APIEndpoints = {
 	...EndpointsConstructor(BaseRoutes.SettingsBackup, SettingsBackupRoutes),
 };
 
-export type APIEndpointNames = keyof (typeof APIEndpoints); // Union of all the keys in APIEndpoints
+export type APIEndpointNames = keyof typeof APIEndpoints; // Union of all the keys in APIEndpoints
 
-export interface APIArgs extends
-	APIArguments<BaseRoutes.Books, typeof BooksRoutes>,
-	APIArguments<BaseRoutes.Authentication, typeof AuthenticationRoutes>,
-	APIArguments<BaseRoutes.Payments, typeof PaymentsRoutes>,
-	APIArguments<BaseRoutes.Payoffs, typeof PayoffsRoutes>,
-	APIArguments<BaseRoutes.Wholesalers, typeof WholesalersRoutes>,
-	APIArguments<BaseRoutes.Teachers, typeof TeachersRoutes>,
-	APIArguments<BaseRoutes.Locations, typeof LocationsRoutes>,
-	APIArguments<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
-	APIArguments<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
-	APIArguments<BaseRoutes.QueryLogs, typeof QueryLogsRoutes>,
-	APIArguments<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
-	APIArguments<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
-	APIArguments<BaseRoutes.Schema, typeof SchemaRoutes>,
-	APIArguments<BaseRoutes.SettingsBackup, typeof SettingsBackupRoutes> { }
+export interface APIArgs
+	extends
+		APIArguments<BaseRoutes.Books, typeof BooksRoutes>,
+		APIArguments<BaseRoutes.Authentication, typeof AuthenticationRoutes>,
+		APIArguments<BaseRoutes.Payments, typeof PaymentsRoutes>,
+		APIArguments<BaseRoutes.Payoffs, typeof PayoffsRoutes>,
+		APIArguments<BaseRoutes.Wholesalers, typeof WholesalersRoutes>,
+		APIArguments<BaseRoutes.Teachers, typeof TeachersRoutes>,
+		APIArguments<BaseRoutes.Locations, typeof LocationsRoutes>,
+		APIArguments<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
+		APIArguments<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
+		APIArguments<BaseRoutes.QueryLogs, typeof QueryLogsRoutes>,
+		APIArguments<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
+		APIArguments<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
+		APIArguments<BaseRoutes.Schema, typeof SchemaRoutes>,
+		APIArguments<BaseRoutes.SettingsBackup, typeof SettingsBackupRoutes> {}
 
-export interface APIResponse extends
-	APIRes<BaseRoutes.Books, typeof BooksRoutes>,
-	APIRes<BaseRoutes.Authentication, typeof AuthenticationRoutes>,
-	APIRes<BaseRoutes.Payments, typeof PaymentsRoutes>,
-	APIRes<BaseRoutes.Payoffs, typeof PayoffsRoutes>,
-	APIRes<BaseRoutes.Wholesalers, typeof WholesalersRoutes>,
-	APIRes<BaseRoutes.Teachers, typeof TeachersRoutes>,
-	APIRes<BaseRoutes.Locations, typeof LocationsRoutes>,
-	APIRes<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
-	APIRes<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
-	APIRes<BaseRoutes.QueryLogs, typeof QueryLogsRoutes>,
-	APIRes<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
-	APIRes<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
-	APIRes<BaseRoutes.Schema, typeof SchemaRoutes>,
-	APIRes<BaseRoutes.SettingsBackup, typeof SettingsBackupRoutes> { }
+export interface APIResponse
+	extends
+		APIRes<BaseRoutes.Books, typeof BooksRoutes>,
+		APIRes<BaseRoutes.Authentication, typeof AuthenticationRoutes>,
+		APIRes<BaseRoutes.Payments, typeof PaymentsRoutes>,
+		APIRes<BaseRoutes.Payoffs, typeof PayoffsRoutes>,
+		APIRes<BaseRoutes.Wholesalers, typeof WholesalersRoutes>,
+		APIRes<BaseRoutes.Teachers, typeof TeachersRoutes>,
+		APIRes<BaseRoutes.Locations, typeof LocationsRoutes>,
+		APIRes<BaseRoutes.Instruments, typeof InstrumentsRoutes>,
+		APIRes<BaseRoutes.SysUsers, typeof SysUsersRoutes>,
+		APIRes<BaseRoutes.QueryLogs, typeof QueryLogsRoutes>,
+		APIRes<BaseRoutes.Registrations, typeof RegistrationsRoutes>,
+		APIRes<BaseRoutes.Announcements, typeof AnnouncementsRoutes>,
+		APIRes<BaseRoutes.Schema, typeof SchemaRoutes>,
+		APIRes<BaseRoutes.SettingsBackup, typeof SettingsBackupRoutes> {}

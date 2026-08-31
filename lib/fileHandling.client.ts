@@ -2,8 +2,8 @@ import type { AnyRecord } from "@_types/global";
 import { PDF } from "./pdf.client";
 
 type DragEvents = {
-	enterEvent?: (e: DragEvent) => void,
-	leaveEvent?: (e: DragEvent) => void,
+	enterEvent?: (e: DragEvent) => void;
+	leaveEvent?: (e: DragEvent) => void;
 	dropEvent?: (e: DragEvent) => void;
 };
 
@@ -22,16 +22,17 @@ type DragEvents = {
 // 		metadata: T;
 // 	};
 
-type Constructor<T extends Record<string, any>> = {
-	isSingleFile: false;
-	files?: FileProxy<T>[];
-	metadata?: T;
-} |
-{
-	isSingleFile: true;
-	file?: FileProxy<T>;
-	metadata?: T;
-};
+type Constructor<T extends Record<string, any>> =
+	| {
+			isSingleFile: false;
+			files?: FileProxy<T>[];
+			metadata?: T;
+	  }
+	| {
+			isSingleFile: true;
+			file?: FileProxy<T>;
+			metadata?: T;
+	  };
 
 export class FileProxy<T extends Record<string, any>> {
 	#isFileProxy: boolean;
@@ -40,8 +41,19 @@ export class FileProxy<T extends Record<string, any>> {
 	#markForDeletion: boolean;
 	#metadata: T;
 
-	constructor({ isProxy, name, file = null, markForDeletion = false, metadata = {} as any }:
-		{ isProxy: boolean, name: string, file?: File | null, markForDeletion?: boolean, metadata?: T; }) {
+	constructor({
+		isProxy,
+		name,
+		file = null,
+		markForDeletion = false,
+		metadata = {} as any,
+	}: {
+		isProxy: boolean;
+		name: string;
+		file?: File | null;
+		markForDeletion?: boolean;
+		metadata?: T;
+	}) {
 		this.#isFileProxy = isProxy;
 		this.#name = name;
 		this.#file = file;
@@ -59,7 +71,7 @@ export class FileProxy<T extends Record<string, any>> {
 		if (this.#isFileProxy) return null;
 		return this.#file;
 	}
-	setFileData(file: File | Blob | ArrayBuffer, { type }: { type?: string; } = {}) {
+	setFileData(file: File | Blob | ArrayBuffer, { type }: { type?: string } = {}) {
 		if (file instanceof Blob) {
 			this.#file = new File([file], this.#name, { type });
 		} else if (file instanceof ArrayBuffer) {
@@ -116,7 +128,6 @@ export class FileProxy<T extends Record<string, any>> {
 	}
 }
 
-
 // The file / multifile input is generating a filehandler class, that a component can consume to get the files or delete previously uploaded ones.
 export class FileHandler<Metadata extends Record<string, any>> {
 	private static AllFiles: Record<string, FileHandler<any>> = {};
@@ -128,7 +139,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	constructor(prefix: string, config: Constructor<Metadata> = { isSingleFile: false, files: [], metadata: {} as Metadata }) {
 		FileHandler.AllFiles[prefix] = this;
 
-		this.metadata = config.metadata || {} as Metadata;
+		this.metadata = config.metadata || ({} as Metadata);
 		this.isSingleFile = config.isSingleFile;
 		if (!config.isSingleFile && Array.isArray(config.files)) {
 			this.files = config.files.slice();
@@ -142,7 +153,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	addFiles(files: File[] | FileList, metadata?: Metadata) {
 		if (files.length == 0) return;
 		// console.log("Adding files: ", files, " with metadata: ", metadata);
-		const proxyFiles = Array.from(files).map(file => FileHandler.createFileProxy<Metadata>(file.name, { file, metadata: metadata || this.metadata }));
+		const proxyFiles = Array.from(files).map((file) => FileHandler.createFileProxy<Metadata>(file.name, { file, metadata: metadata || this.metadata }));
 		// console.log("Adding files: ", proxyFiles);
 		if (this.isSingleFile) {
 			this.files = [proxyFiles[0]];
@@ -151,9 +162,9 @@ export class FileHandler<Metadata extends Record<string, any>> {
 
 		const newFiles = [];
 		for (const file of proxyFiles) {
-			const fileExists = this.files.some(f => f.equalsByName(file));
+			const fileExists = this.files.some((f) => f.equalsByName(file));
 			if (fileExists) {
-				const oldFileIndex = this.files.findIndex(f => f.equalsByName(file));
+				const oldFileIndex = this.files.findIndex((f) => f.equalsByName(file));
 				let tempFile = this.files[oldFileIndex];
 				// Mark the file for deletion if it is uploaded to the server.
 				if (tempFile.isProxy()) this.markAsDeleteFileProxy(tempFile);
@@ -170,7 +181,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 
 		const file = this.files[index];
 		if (file.isProxy()) {
-			const index = this.initialFileProxies.findIndex(f => f.equalsByName(file));
+			const index = this.initialFileProxies.findIndex((f) => f.equalsByName(file));
 			if (force && index !== -1) this.initialFileProxies.splice(index, 1);
 			else this.markAsDeleteFileProxy(file);
 		}
@@ -179,8 +190,8 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	}
 	removeDeletedFiles() {
 		// Newly appended files are remove immidiately from the list
-		this.files = this.files.filter(f => !f.isProxy() || !f.isMarkedForDeletion());
-		this.initialFileProxies = this.initialFileProxies.filter(f => !f.isProxy() || !f.isMarkedForDeletion());
+		this.files = this.files.filter((f) => !f.isProxy() || !f.isMarkedForDeletion());
+		this.initialFileProxies = this.initialFileProxies.filter((f) => !f.isProxy() || !f.isMarkedForDeletion());
 	}
 	getFile(index: number) {
 		if (index < 0 || index >= this.files.length) return null;
@@ -203,7 +214,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	}
 	setMetadata(metadata: Metadata) {
 		this.metadata = metadata;
-		this.files.forEach(f => {
+		this.files.forEach((f) => {
 			f.setMetadata(metadata);
 		});
 	}
@@ -211,11 +222,9 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	markAsDeleteFileProxy(file: FileProxy<Metadata>) {
 		if (!file.isProxy()) return;
 
-		const initFile = this.initialFileProxies.find(f => f.equalsByName(file));
-		if (initFile && initFile.isProxy())
-			initFile.setMarkForDeletion(true);
+		const initFile = this.initialFileProxies.find((f) => f.equalsByName(file));
+		if (initFile && initFile.isProxy()) initFile.setMarkForDeletion(true);
 	}
-
 
 	mountDragAndDrop(element: HTMLElement, events: DragEvents) {
 		const { enterEvent, leaveEvent, dropEvent } = events;
@@ -226,26 +235,16 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		element.addEventListener("dragover", (e) => {
 			e.preventDefault();
 		});
-		leaveEvent && element.addEventListener("dragleave", (e) => {
-			e.preventDefault();
-			let div = e.currentTarget as HTMLDivElement;
-			// return if the mouse position is outside the element
-			const {
-				height: h,
-				width: w,
-				x: px,
-				y: py,
-			} = div.getBoundingClientRect();
-			const { x: mx, y: my } = e;
-			if (
-				mx >= px &&
-				mx <= px + w &&
-				my >= py &&
-				my <= py + h
-			)
-				return;
-			leaveEvent(e);
-		});
+		leaveEvent &&
+			element.addEventListener("dragleave", (e) => {
+				e.preventDefault();
+				let div = e.currentTarget as HTMLDivElement;
+				// return if the mouse position is outside the element
+				const { height: h, width: w, x: px, y: py } = div.getBoundingClientRect();
+				const { x: mx, y: my } = e;
+				if (mx >= px && mx <= px + w && my >= py && my <= py + h) return;
+				leaveEvent(e);
+			});
 		element.addEventListener("drop", (e) => {
 			e.preventDefault();
 			e.stopImmediatePropagation();
@@ -271,7 +270,10 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		if (FileHandler.AllFiles[prefix] == null) return [];
 		return FileHandler.AllFiles[prefix].getInitialFiles();
 	}
-	static createFileProxy<K extends Record<string, any>>(name?: string, { file = null, metadata = {} as K }: { isProxy?: boolean, file?: File | null; metadata?: K; } = {}) {
+	static createFileProxy<K extends Record<string, any>>(
+		name?: string,
+		{ file = null, metadata = {} as K }: { isProxy?: boolean; file?: File | null; metadata?: K } = {},
+	) {
 		if (typeof name !== "string" || (file && !("name" in file))) throw Error("Name not provided");
 		const isProxy = file === null;
 		const fileProxy = new FileProxy<K>({ isProxy, name, file, metadata });
@@ -311,22 +313,19 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		return new Promise((res) => {
 			const reader = new FileReader();
 			reader.onload = () => {
-				if (reader.result)
-					res(new Blob([reader.result], { type: file.type }));
+				if (reader.result) res(new Blob([reader.result], { type: file.type }));
 				else res(new Blob([]));
 			};
 			reader.readAsArrayBuffer(file);
 		});
 	}
 
-
 	static fileToBlob(file?: File | null): Promise<Blob> {
 		if (!file || !file.name) return Promise.resolve(new Blob([]));
 		return new Promise((res) => {
 			const reader = new FileReader();
 			reader.onload = () => {
-				if (reader.result)
-					res(new Blob([reader.result], { type: file.type }));
+				if (reader.result) res(new Blob([reader.result], { type: file.type }));
 				else res(new Blob([]));
 			};
 			reader.readAsArrayBuffer(file);

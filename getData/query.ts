@@ -174,7 +174,6 @@ const outputToExcel = (data: any[]) => {
 	XLSX.writeFile(wb, args.out || "output.xlsx");
 };
 
-
 const dbProcess = async function (isProduction: boolean) {
 	let conn: SimpleConnection = null as any;
 	let data;
@@ -202,19 +201,21 @@ const dbProcess = async function (isProduction: boolean) {
 };
 
 const printUsage = () => {
-	log("Usage: node query.js --dev|--prod --q <query>|--f <file> [--out <file>]\n"
-		, "  --dev:\tDevelopment environment\n"
-		, "  --prod:\tProduction environment\n"
-		, "  --q:\t\tQuery string\n"
-		, "  --f:\t\tFile path to query file\n"
-		, "  --out:\tOutput file path\n"
-		, "  --excel:\tOutput to excel file\n"
-		, "  --json, --j:\tPrint query output as JSON\n"
-		, "  --json-out, --jo:\tStore query output as JSON (adds .json if missing)\n"
-		, "  --t, --time:\t\tPrint execution time\n"
-		, "  --s, --silent:\tSilent mode\n"
-		, "  --skip:\tSkip errors\n"
-		, "  --h, --help:\tPrint this message\n");
+	log(
+		"Usage: node query.js --dev|--prod --q <query>|--f <file> [--out <file>]\n",
+		"  --dev:\tDevelopment environment\n",
+		"  --prod:\tProduction environment\n",
+		"  --q:\t\tQuery string\n",
+		"  --f:\t\tFile path to query file\n",
+		"  --out:\tOutput file path\n",
+		"  --excel:\tOutput to excel file\n",
+		"  --json, --j:\tPrint query output as JSON\n",
+		"  --json-out, --jo:\tStore query output as JSON (adds .json if missing)\n",
+		"  --t, --time:\t\tPrint execution time\n",
+		"  --s, --silent:\tSilent mode\n",
+		"  --skip:\tSkip errors\n",
+		"  --h, --help:\tPrint this message\n",
+	);
 };
 
 /**

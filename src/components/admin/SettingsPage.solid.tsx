@@ -19,9 +19,7 @@ type ZipEntry = {
 export default function SettingsPage() {
 	const [isDownloading, setIsDownloading] = createSignal(false);
 	const [isDarkMode, setIsDarkMode] = createSignal(false);
-	const [isMigratingTarget, setIsMigratingTarget] = createSignal<"local" | "production" | null>(
-		null,
-	);
+	const [isMigratingTarget, setIsMigratingTarget] = createSignal<"local" | "production" | null>(null);
 	const [migrationResult, setMigrationResult] = createSignal<string>("");
 	const isDevelopmentMode = import.meta.env.MODE === "development";
 	const apiHook = useAPI();
@@ -145,43 +143,30 @@ export default function SettingsPage() {
 		<div class="w-full min-h-screen p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
 			<div class="max-w-3xl grid gap-6">
 				<h1 class="font-anaktoria text-4xl">Ρυθμίσεις</h1>
-				<p class="text-sm sm:text-base dark:text-gray-300">
-					Διαχείριση εμφάνισης και αντιγράφων ασφαλείας του πίνακα διαχείρισης.
-				</p>
+				<p class="text-sm sm:text-base dark:text-gray-300">Διαχείριση εμφάνισης και αντιγράφων ασφαλείας του πίνακα διαχείρισης.</p>
 
 				<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
 					<div class="grid gap-1">
 						<h2 class="font-anaktoria text-2xl">Εμφάνιση</h2>
-						<p class="text-sm dark:text-gray-300">
-							Επιλέξτε πώς θα εμφανίζεται ο πίνακας διαχείρισης σε αυτή τη συσκευή.
-						</p>
+						<p class="text-sm dark:text-gray-300">Επιλέξτε πώς θα εμφανίζεται ο πίνακας διαχείρισης σε αυτή τη συσκευή.</p>
 					</div>
 					<div class="grid gap-2">
-						<p class="text-sm dark:text-gray-300">
-							Σκοτεινή λειτουργία: {isDarkMode() ? "Ενεργή" : "Ανενεργή"}
-						</p>
+						<p class="text-sm dark:text-gray-300">Σκοτεινή λειτουργία: {isDarkMode() ? "Ενεργή" : "Ανενεργή"}</p>
 						<button
 							type="button"
 							onClick={onThemeToggle}
 							class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
 							aria-label="Εναλλαγή σκοτεινής λειτουργίας πίνακα διαχείρισης">
-							{isDarkMode()
-								? "Απενεργοποίηση σκοτεινής λειτουργίας"
-								: "Ενεργοποίηση σκοτεινής λειτουργίας"}
+							{isDarkMode() ? "Απενεργοποίηση σκοτεινής λειτουργίας" : "Ενεργοποίηση σκοτεινής λειτουργίας"}
 						</button>
-						<p class="text-xs text-gray-600 dark:text-gray-300">
-							Η επιλογή αποθηκεύεται στον browser και ισχύει μόνο για αυτή τη συσκευή.
-						</p>
+						<p class="text-xs text-gray-600 dark:text-gray-300">Η επιλογή αποθηκεύεται στον browser και ισχύει μόνο για αυτή τη συσκευή.</p>
 					</div>
 				</section>
 
 				<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
 					<div class="grid gap-1">
 						<h2 class="font-anaktoria text-2xl">Ασφάλεια Δεδομένων</h2>
-						<p class="text-sm dark:text-gray-300">
-							Λήψη πλήρους αντιγράφου ασφαλείας βάσης δεδομένων και bucket σε αρχείο
-							.zip.
-						</p>
+						<p class="text-sm dark:text-gray-300">Λήψη πλήρους αντιγράφου ασφαλείας βάσης δεδομένων και bucket σε αρχείο .zip.</p>
 					</div>
 					<button
 						type="button"
@@ -196,10 +181,7 @@ export default function SettingsPage() {
 					<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
 						<div class="grid gap-1">
 							<h2 class="font-anaktoria text-2xl">Migrations (Development ONLY)</h2>
-							<p class="text-sm dark:text-gray-300">
-								Εκτέλεση του {"latest.sql"} migration είτε στη local είτε στην
-								production βάση.
-							</p>
+							<p class="text-sm dark:text-gray-300">Εκτέλεση του {"latest.sql"} migration είτε στη local είτε στην production βάση.</p>
 						</div>
 						<div class="flex flex-wrap gap-3">
 							<button
@@ -207,23 +189,17 @@ export default function SettingsPage() {
 								onClick={() => onMigrate("local")}
 								disabled={isMigratingTarget() !== null}
 								class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
-								{isMigratingTarget() === "local"
-									? "Εκτέλεση migration..."
-									: "Migration στη Local βάση"}
+								{isMigratingTarget() === "local" ? "Εκτέλεση migration..." : "Migration στη Local βάση"}
 							</button>
 							<button
 								type="button"
 								onClick={() => onMigrate("production")}
 								disabled={isMigratingTarget() !== null}
 								class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
-								{isMigratingTarget() === "production"
-									? "Εκτέλεση migration..."
-									: "Migration στην Production βάση"}
+								{isMigratingTarget() === "production" ? "Εκτέλεση migration..." : "Migration στην Production βάση"}
 							</button>
 						</div>
-						{migrationResult() && (
-							<p class="text-sm dark:text-gray-300">{migrationResult()}</p>
-						)}
+						{migrationResult() && <p class="text-sm dark:text-gray-300">{migrationResult()}</p>}
 					</section>
 				)}
 			</div>

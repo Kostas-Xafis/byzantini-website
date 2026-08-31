@@ -36,9 +36,7 @@ export const useModalOpen = (prefix?: string) => {
 };
 
 const submitWrapper = (
-	onSubmit:
-		| ((formData: FormData, form?: HTMLFormElement | undefined) => Promise<void>)
-		| AsyncGenerator<undefined, void, unknown>,
+	onSubmit: ((formData: FormData, form?: HTMLFormElement | undefined) => Promise<void>) | AsyncGenerator<undefined, void, unknown>,
 	setModalOpen: (set: boolean) => void,
 ) => {
 	return async function (form: HTMLFormElement, e: Event) {
@@ -53,9 +51,7 @@ const submitWrapper = (
 		} catch (error: any) {
 			console.error(error);
 			pushAlert(createAlert("error", "Error: ", error.message));
-			const form = document.querySelector(
-				".modal:is(:not(.hidden)) > div > form",
-			) as HTMLFormElement;
+			const form = document.querySelector(".modal:is(:not(.hidden)) > div > form") as HTMLFormElement;
 			void form.report;
 			form.classList.add("animate-shake");
 			setTimeout(() => form.classList.remove("animate-shake"), 500);
@@ -79,11 +75,7 @@ export default function Modal(props: Props) {
 		try {
 			setLoading(true);
 			if (isAsyncGeneratorFunction(onSubmit)) {
-				const genFunc = onSubmit(new ExtendedFormData(form), form) as AsyncGenerator<
-					undefined,
-					void,
-					void
-				>;
+				const genFunc = onSubmit(new ExtendedFormData(form), form) as AsyncGenerator<undefined, void, void>;
 				await submitWrapper(genFunc, openModal)(form, event);
 			} else {
 				// @ts-ignore
@@ -96,9 +88,7 @@ export default function Modal(props: Props) {
 
 	const onClose = () => {
 		setOpenState(MODAL_PREFIX, false);
-		document.dispatchEvent(
-			new CustomEvent("modal_close", { detail: { prefix: MODAL_PREFIX } }),
-		);
+		document.dispatchEvent(new CustomEvent("modal_close", { detail: { prefix: MODAL_PREFIX } }));
 	};
 
 	return (
@@ -108,30 +98,17 @@ export default function Modal(props: Props) {
 					"modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] dark:bg-[rgb(0_0_0_/_0.6)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)] backdrop-blur-sm"
 				}>
 				<div class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-white dark:bg-dark place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center text-red-950 dark:text-red-50">
-					<p class="text-4xl p-2 w-full text-center max-sm:text-3xl">
-						{actionStore.action.headerText}
-					</p>
-					<form
-						data-prefix={MODAL_PREFIX}
-						class="peer/form group/form grid grid-cols-3 auto-rows-max gap-10 py-4 overflow-y-auto max-sm:grid-cols-1">
+					<p class="text-4xl p-2 w-full text-center max-sm:text-3xl">{actionStore.action.headerText}</p>
+					<form data-prefix={MODAL_PREFIX} class="peer/form group/form grid grid-cols-3 auto-rows-max gap-10 py-4 overflow-y-auto max-sm:grid-cols-1">
 						<Show when={Object.entries(actionStore.action.inputs).length > 0}>
-							<For
-								each={Object.values(actionStore.action.inputs).filter(
-									(input) => !!input.name,
-								)}>
+							<For each={Object.values(actionStore.action.inputs).filter((input) => !!input.name)}>
 								{(inputProps) => {
-									return (
-										<Input
-											{...(inputProps as InputProps)}
-											prefix={MODAL_PREFIX}></Input>
-									);
+									return <Input {...(inputProps as InputProps)} prefix={MODAL_PREFIX}></Input>;
 								}}
 							</For>
 						</Show>
 					</form>
-					<Show
-						when={!loading()}
-						fallback={<Spinner classes="max-sm:h-[100svh]"></Spinner>}>
+					<Show when={!loading()} fallback={<Spinner classes="max-sm:h-[100svh]"></Spinner>}>
 						<button
 							class={
 								"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors bg-green-500 text-white hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-600 dark:peer-[:is(.animate-shake)]/form:bg-red-700" +
@@ -142,10 +119,7 @@ export default function Modal(props: Props) {
 							{actionStore.action.submitText}
 						</button>
 					</Show>
-					<CloseButton
-						classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl max-sm:w-8 max-sm:h-8 max-sm:text-lg"
-						onClick={onClose}
-					/>
+					<CloseButton classes="absolute top-4 right-4 w-[1.5rem] h-[1.5rem] text-xl max-sm:w-8 max-sm:h-8 max-sm:text-lg" onClick={onClose} />
 				</div>
 			</div>
 		</Show>

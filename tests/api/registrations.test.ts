@@ -50,133 +50,114 @@ function registrationsTest() {
 	} as Registrations;
 	let newRegId: number | null;
 	let newRegUrl: string | null;
-	test("--registrations-- #1",
-		async () => {
+	test("--registrations-- #1", async () => {
+		let res = await useTestAPI("Registrations.post", {
+			RequestObject: registration,
+		});
 
-			let res = await useTestAPI("Registrations.post", {
-				RequestObject: registration,
-			});
+		let json = await getJson<APIResponse["Registrations.post"]>(res);
+		expectBody(json, object({ insertId: number() }));
 
-			let json = await getJson<APIResponse["Registrations.post"]>(res);
-			expectBody(json, object({ insertId: number() }));
+		newRegId = json.data.insertId;
+	});
+	test("--registrations-- #2", async () => {
+		const res = await useTestAPI("Registrations.getById", {
+			UrlArgs: { id: newRegId as number },
+		});
 
-			newRegId = json.data.insertId;
-		}
-	);
-	test("--registrations-- #2",
-		async () => {
-			const res = await useTestAPI("Registrations.getById", {
-				UrlArgs: { id: newRegId as number }
-			});
+		const json = await getJson<APIResponse["Registrations.getById"]>(res);
+		expectBody(json, v_Registrations);
+		newRegUrl = json.data.registration_url || "";
+	});
+	test("--registrations-- #3", async () => {
+		const res = await useTestAPI("Registrations.getByReregistrationUrl", {
+			UrlArgs: { url: newRegUrl as string },
+		});
 
-			const json = await getJson<APIResponse["Registrations.getById"]>(res);
-			expectBody(json, v_Registrations);
-			newRegUrl = json.data.registration_url || "";
-		}
-	);
-	test("--registrations-- #3",
-		async () => {
-			const res = await useTestAPI("Registrations.getByReregistrationUrl", {
-				UrlArgs: { url: newRegUrl as string }
-			});
+		const json = await getJson<APIResponse["Registrations.getByReregistrationUrl"]>(res);
+		expectBody(json, v_Registrations);
+	});
+	test("--registrations-- #4", async () => {
+		const registration = {
+			id: 503,
+			am: "123",
+			amka: "12345678901",
+			last_name: "last_name",
+			first_name: "first_name",
+			fathers_name: "fathers_name",
+			telephone: "telephone",
+			cellphone: "cellphone",
+			email: "mail@mail.com",
+			birth_date: R.int(1000000000, 9999999999),
+			road: "road",
+			number: R.int(0, 100),
+			tk: R.int(10000, 99999),
+			region: "region",
+			registration_year: "2024-2025",
+			class_year: R.item(classes),
+			class_id: R.int(0, 2),
+			teacher_id: R.int(0, 50),
+			instrument_id: 1,
+			date: R.standardRandomDate().getTime(),
+			payment_amount: 0,
+			total_payment: 0,
+			payment_date: null,
+			pass: R.boolean(),
+		};
+		const res = await useTestAPI("Registrations.update", {
+			RequestObject: registration,
+		});
 
-			const json = await getJson<APIResponse["Registrations.getByReregistrationUrl"]>(res);
-			expectBody(json, v_Registrations);
-		}
-	);
-	test("--registrations-- #4",
-		async () => {
-			const registration = {
-				id: 503,
-				am: "123",
-				amka: "12345678901",
-				last_name: "last_name",
-				first_name: "first_name",
-				fathers_name: "fathers_name",
-				telephone: "telephone",
-				cellphone: "cellphone",
-				email: "mail@mail.com",
-				birth_date: R.int(1000000000, 9999999999),
-				road: "road",
-				number: R.int(0, 100),
-				tk: R.int(10000, 99999),
-				region: "region",
-				registration_year: "2024-2025",
-				class_year: R.item(classes),
-				class_id: R.int(0, 2),
-				teacher_id: R.int(0, 50),
-				instrument_id: 1,
-				date: R.standardRandomDate().getTime(),
-				payment_amount: 0,
-				total_payment: 0,
-				payment_date: null,
-				pass: R.boolean(),
-			};
-			const res = await useTestAPI("Registrations.update", {
-				RequestObject: registration
-			});
+		const json = await getJson<APIResponse["Registrations.update"]>(res);
+		expectBody(json, "Registration updated successfully");
+	});
+	test("--registrations-- #5", async () => {
+		const res = await useTestAPI("Registrations.delete", {
+			RequestObject: [newRegId as number],
+		});
 
-			const json = await getJson<APIResponse["Registrations.update"]>(res);
-			expectBody(json, "Registration updated successfully");
-		}
-	);
-	test("--registrations-- #5",
-		async () => {
-			const res = await useTestAPI("Registrations.delete", {
-				RequestObject: [newRegId as number]
-			});
-
-			const json = await getJson<APIResponse["Registrations.delete"]>(res);
-			expectBody(json, "Registration deleted successfully");
-		}
-	);
+		const json = await getJson<APIResponse["Registrations.delete"]>(res);
+		expectBody(json, "Registration deleted successfully");
+	});
 }
-
 
 function emailRegistrationsTest() {
 	let email = R.email();
 	let token = "";
-	test("--registrations-email-- #1",
-		async () => {
-			const res = await useTestAPI("Registrations.emailSubscribe", {
-				RequestObject: { email }
-			});
+	test("--registrations-email-- #1", async () => {
+		const res = await useTestAPI("Registrations.emailSubscribe", {
+			RequestObject: { email },
+		});
 
-			const json = await getJson<APIResponse["Registrations.emailSubscribe"]>(res);
-			expectBody(json, object({ subscribed: boolean() }));
-		}
-	);
-	test("--registrations-email-- #2",
-		async () => {
-			const res = await useTestAPI("Registrations.getSubscriptionToken", {
-				RequestObject: { email }
-			});
+		const json = await getJson<APIResponse["Registrations.emailSubscribe"]>(res);
+		expectBody(json, object({ subscribed: boolean() }));
+	});
+	test("--registrations-email-- #2", async () => {
+		const res = await useTestAPI("Registrations.getSubscriptionToken", {
+			RequestObject: { email },
+		});
 
-			const json = await getJson<APIResponse["Registrations.getSubscriptionToken"]>(res);
-			expectBody(json, object({ token: string() }));
-			token = json.data.token ?? "";
-		}
-	);
-	test("--registrations-email-- #3",
-		async () => {
-			const res = await useTestAPI("Registrations.emailUnsubscribe", {
-				RequestObject: { token }
-			});
+		const json = await getJson<APIResponse["Registrations.getSubscriptionToken"]>(res);
+		expectBody(json, object({ token: string() }));
+		token = json.data.token ?? "";
+	});
+	test("--registrations-email-- #3", async () => {
+		const res = await useTestAPI("Registrations.emailUnsubscribe", {
+			RequestObject: { token },
+		});
 
-			const json = await getJson<APIResponse["Registrations.emailUnsubscribe"]>(res);
-			expectBody(json, object({ isValid: boolean() }));
-		}
-	);
+		const json = await getJson<APIResponse["Registrations.emailUnsubscribe"]>(res);
+		expectBody(json, object({ isValid: boolean() }));
+	});
 }
 
 emailRegistrationsTest();
 registrationsTest();
 
-
 test("--registrations--", async () => {
 	try {
 		const res = await useTestAPI("Registrations.get", {
-			UrlArgs: { year: 2026 }
+			UrlArgs: { year: 2026 },
 		});
 
 		const json = await getJson<APIResponse["Registrations.get"]>(res);
@@ -185,7 +166,6 @@ test("--registrations--", async () => {
 		console.error({ err });
 	}
 });
-
 
 test("--registrations--", async () => {
 	const res = await useTestAPI("Registrations.getTotal");

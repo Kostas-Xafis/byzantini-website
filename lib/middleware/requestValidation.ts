@@ -5,9 +5,7 @@ import { formDataToObject, getUsedBody } from "../utils.server";
 
 export function requestValidation(validation: () => AnyObjectSchema, multipart: boolean) {
 	return async function (ctx: APIContext) {
-		const body = multipart
-			? formDataToObject(await ctx.request.formData())
-			: getUsedBody(ctx) || await ctx.request.json();
+		const body = multipart ? formDataToObject(await ctx.request.formData()) : getUsedBody(ctx) || (await ctx.request.json());
 		// validation is a function because it messes up the type of rendering because I am using the same variable for client and server rendering
 		try {
 			parse(validation(), body);

@@ -9,14 +9,12 @@ export const prerender = false;
 
 const announcements = (await useAPI(API.Announcements.getForPage, undefined, Astro)).data || [];
 
-const imgThumbSrc = (a: PageAnnouncement) =>
-	"/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;
+const imgThumbSrc = (a: PageAnnouncement) => "/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;
 // Announcement URLs must be safe in every path: stripped commas (cloudflare
 // rejects %2C before the app ever sees it). Kept in sync with the [slug]
 // page, the api lookup and the sitemap generator.
 const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
-const formatDate = (d: number) =>
-	new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
 const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
 
 // Safe, word-boundary excerpt. (The old slice(0, indexOf(" ")) trick broke when the content
@@ -39,9 +37,7 @@ const excerpt = (content: string, max = 220) => {
 			{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
 		])}
 	/>
-	<main
-		id="announcementsPage"
-		class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-10 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
+	<main id="announcementsPage" class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-10 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
 		<header class="flex flex-col items-center gap-y-6">
 			<h1
 				id="announcementsHead"
@@ -54,8 +50,7 @@ const excerpt = (content: string, max = 220) => {
 				<span>
 					{
 						announcements.length > 0
-							? announcements.length +
-								(announcements.length === 1 ? " ανακοίνωση" : " ανακοινώσεις")
+							? announcements.length + (announcements.length === 1 ? " ανακοίνωση" : " ανακοινώσεις")
 							: "Νέα και ενημερώσεις της Σχολής"
 					}
 				</span>
@@ -66,12 +61,8 @@ const excerpt = (content: string, max = 220) => {
 			announcements.length === 0 ? (
 				<div class="flex flex-col items-center gap-y-4 py-16 text-center">
 					<i class="fa-solid fa-bullhorn text-6xl text-red-900/40" aria-hidden="true" />
-					<p class="text-2xl max-sm:text-xl font-semibold text-gray-700">
-						Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.
-					</p>
-					<p class="text-lg max-sm:text-base text-gray-500">
-						Επισκεφθείτε τη σελίδα σύντομα για νεότερες ανακοινώσεις της Σχολής.
-					</p>
+					<p class="text-2xl max-sm:text-xl font-semibold text-gray-700">Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.</p>
+					<p class="text-lg max-sm:text-base text-gray-500">Επισκεφθείτε τη σελίδα σύντομα για νεότερες ανακοινώσεις της Σχολής.</p>
 				</div>
 			) : (
 				<div class="flex flex-col gap-y-8 max-sm:gap-y-6 w-full">
@@ -90,10 +81,7 @@ const excerpt = (content: string, max = 220) => {
 								<div
 									class="announcementPlaceholder w-full aspect-[16/9] max-sm:max-h-[300px] sm:aspect-auto sm:h-full grid place-items-center bg-red-900/[0.06]"
 									class:list={[a.main_image ? "hidden" : ""]}>
-									<i
-										class="fa-solid fa-bullhorn text-5xl sm:text-6xl text-red-900/50"
-										aria-hidden="true"
-									/>
+									<i class="fa-solid fa-bullhorn text-5xl sm:text-6xl text-red-900/50" aria-hidden="true" />
 								</div>
 								{a.main_image && (
 									<img
@@ -126,23 +114,15 @@ const excerpt = (content: string, max = 220) => {
 								<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
 									<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
 										<i class="fa-solid fa-calendar-days" aria-hidden="true" />
-										<time datetime={new Date(a.date).toISOString()}>
-											{formatDate(a.date)}
-										</time>
+										<time datetime={new Date(a.date).toISOString()}>{formatDate(a.date)}</time>
 									</span>
 									<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
 										<i class="fa-solid fa-eye" aria-hidden="true" />
 										{a.views} {a.views > 1 ? "προβολές" : "προβολή"}
 									</span>
 								</div>
-								<h2 class="font-anaktoria text-2xl sm:text-3xl font-bold text-red-900 leading-snug line-clamp-2">
-									{a.title}
-								</h2>
-								{a.content && (
-									<p class="text-lg max-sm:text-base text-gray-700 leading-relaxed line-clamp-3">
-										{excerpt(a.content)}
-									</p>
-								)}
+								<h2 class="font-anaktoria text-2xl sm:text-3xl font-bold text-red-900 leading-snug line-clamp-2">{a.title}</h2>
+								{a.content && <p class="text-lg max-sm:text-base text-gray-700 leading-relaxed line-clamp-3">{excerpt(a.content)}</p>}
 								<span class="mt-auto self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-base max-sm:text-sm text-red-900 transition-colors duration-300 group-hover/card:bg-red-900 group-hover/card:text-red-50">
 									Περισσότερα
 									<i
@@ -216,13 +196,11 @@ const excerpt = (content: string, max = 220) => {
 				img.classList.add("hidden");
 				media?.querySelector(".announcementPlaceholder")?.classList.remove("hidden");
 			};
-			([...page.querySelectorAll(".announcementMedia img")] as HTMLImageElement[]).forEach(
-				(img) => {
-					img.addEventListener("error", () => applyImgFallback(img), { once: true });
-					// The image may have already failed before this script attached its listener.
-					if (img.complete && img.naturalWidth === 0) applyImgFallback(img);
-				},
-			);
+			([...page.querySelectorAll(".announcementMedia img")] as HTMLImageElement[]).forEach((img) => {
+				img.addEventListener("error", () => applyImgFallback(img), { once: true });
+				// The image may have already failed before this script attached its listener.
+				if (img.complete && img.naturalWidth === 0) applyImgFallback(img);
+			});
 		});
 	</script>
 </Layout>

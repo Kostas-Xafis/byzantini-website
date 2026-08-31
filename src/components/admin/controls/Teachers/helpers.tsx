@@ -1,12 +1,4 @@
-import type {
-	ClassType,
-	Teachers as FullTeachers,
-	Instruments,
-	Locations,
-	TeacherClasses,
-	TeacherInstruments,
-	TeacherLocations,
-} from "@_types/entities";
+import type { ClassType, Teachers as FullTeachers, Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations } from "@_types/entities";
 import { useAPI } from "@hooks/useAPI.solid";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
 import { Random } from "@lib/random";
@@ -291,9 +283,7 @@ export function picturePreview(file: FileProxy<TeachersMetadata>) {
 
 	(async function () {
 		await sleep(10);
-		const src = !file.isProxy()
-			? await file.toImageUrl()
-			: `/kathigites/picture/${file.getName()}`;
+		const src = !file.isProxy() ? await file.toImageUrl() : `/kathigites/picture/${file.getName()}`;
 		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
 	})();
 

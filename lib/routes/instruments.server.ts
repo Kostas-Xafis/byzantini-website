@@ -12,7 +12,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const id = getUsedBody(ctx) || await ctx.request.json();
+		const id = getUsedBody(ctx) || (await ctx.request.json());
 		const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", id);
 		if (!instrument) throw Error("Instrument not found");
 		return instrument;
@@ -20,8 +20,8 @@ serverRoutes.getById.func = ({ ctx }) => {
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
 		const args = Object.values(body);
 		const id = await T.executeQuery(`INSERT INTO instruments (name, type, isInstrument) VALUES (?, ?, ?)`, args);
 		return id;
@@ -29,8 +29,8 @@ serverRoutes.post.func = ({ ctx }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const body = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const body = getUsedBody(ctx) || (await ctx.request.json());
 		await T.executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(body)})`, body);
 		return "Teacher/s deleted successfully";
 	}, "Σφάλμα κατά την διαγραφή του μουσικού οργάνου");

@@ -16,17 +16,7 @@ export type MultiFileInputProps = {
 };
 
 export default function MultiFileInput(props: MultiFileInputProps) {
-	const {
-		name,
-		value: initFiles = [],
-		prefix,
-		required,
-		iconClasses,
-		disabled,
-		fileExtension,
-		metadata,
-		filePreview,
-	} = props;
+	const { name, value: initFiles = [], prefix, required, iconClasses, disabled, fileExtension, metadata, filePreview } = props;
 
 	const [input, setInput] = createSignal<HTMLInputElement>();
 	const fileHandler = new FileHandler(prefix + name, {
@@ -34,9 +24,7 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 		files: initFiles.map(([name, metadata]) => FileHandler.createFileProxy(name, { metadata })),
 		metadata: metadata || {},
 	});
-	const [fileList, setFileList] = createSignal(
-		fileHandler.getFiles().map((f) => [f, f.getMetadata()]),
-	); // Need to be a signal to update the component
+	const [fileList, setFileList] = createSignal(fileHandler.getFiles().map((f) => [f, f.getMetadata()])); // Need to be a signal to update the component
 	const setFiles = () => {
 		setFileList(fileHandler.getFiles().map((f) => [f, f.getMetadata()]));
 	};
@@ -74,10 +62,7 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 	const onFileClick = (e: MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
-		if (
-			e.target === document.querySelector(`[data-name='${name}'] > .fileContainer`) ||
-			e.target === document.querySelector("#multifileDropZone")
-		)
+		if (e.target === document.querySelector(`[data-name='${name}'] > .fileContainer`) || e.target === document.querySelector("#multifileDropZone"))
 			input()?.click();
 	};
 	const onFileChange = async (_: Event) => {
@@ -125,18 +110,11 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 					id="multifileDropZone"
 					class={
 						"absolute inset-0 grid items-center" +
-						((fileList().length > 0 && " -z-10 blur-[2px]") ||
-							" hover:bg-gray-600 dark:hover:bg-gray-700 group/file")
+						((fileList().length > 0 && " -z-10 blur-[2px]") || " hover:bg-gray-600 dark:hover:bg-gray-700 group/file")
 					}>
 					<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
-						<i
-							class={
-								"text-5xl text-gray-400 group-hover/file:text-gray-50  " +
-								(iconClasses || "")
-							}></i>
-						<p class="text-2xl text-gray-400  group-hover/file:text-gray-50">
-							Drag&thinsp; & Drop
-						</p>
+						<i class={"text-5xl text-gray-400 group-hover/file:text-gray-50  " + (iconClasses || "")}></i>
+						<p class="text-2xl text-gray-400  group-hover/file:text-gray-50">Drag&thinsp; & Drop</p>
 					</div>
 				</div>
 				<div class="fileContainer flex flex-row flex-wrap w-full justify-evenly gap-2 gap-y-4 p-2 self-start">
@@ -158,15 +136,9 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 
 								<div class="flex flex-col h-max pb-2 items-center w-full rounded-b-[0.575rem] bg-[rgb(255,255,255,0.55)] dark:bg-[rgb(26,26,26,0.7)] text-red-950 dark:text-red-50 backdrop-blur-[3px]">
 									<p>
-										{(file.getName().length > 20
-											? file.getName().slice(0, 12) +
-												" ... " +
-												file.getName().slice(-7)
-											: file.getName()) || ""}
+										{(file.getName().length > 20 ? file.getName().slice(0, 12) + " ... " + file.getName().slice(-7) : file.getName()) || ""}
 									</p>
-									<CloseButton
-										onClick={() => onFileRemove(index())}
-										classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
+									<CloseButton onClick={() => onFileRemove(index())} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
 								</div>
 							</div>
 						)}

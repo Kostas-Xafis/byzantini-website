@@ -49,7 +49,7 @@ export default function SearchPage() {
 	createEffect(
 		on(year, (y) => {
 			apiHook(API.Registrations.get, { UrlArgs: { year: y } });
-		})
+		}),
 	);
 
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
@@ -94,15 +94,10 @@ export default function SearchPage() {
 				for (let i = 0; i < resultArray.length; i++) {
 					const { row, registration } = resultArray[i];
 					const payment_status = registration.total_payment - registration.payment_amount;
-					if (registration.payment_amount === 0 && registration.total_payment === 0)
-						continue;
+					if (registration.payment_amount === 0 && registration.total_payment === 0) continue;
 					if (payment_status <= 0) {
 						row.setAttribute("data-paid", "");
-					} else if (
-						payment_status > 0 ||
-						(registration.payment_amount > registration.total_payment &&
-							registration.total_payment === 0)
-					) {
+					} else if (payment_status > 0 || (registration.payment_amount > registration.total_payment && registration.total_payment === 0)) {
 						row.setAttribute("data-partially-paid", "");
 					}
 				}
@@ -124,11 +119,7 @@ export default function SearchPage() {
 	return (
 		<>
 			<Show
-				when={
-					store[API.Registrations.get] &&
-					store[API.Teachers.getByFullnames] &&
-					store[API.Instruments.get]
-				}
+				when={store[API.Registrations.get] && store[API.Teachers.getByFullnames] && store[API.Instruments.get]}
 				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table
 					prefix={PREFIX}

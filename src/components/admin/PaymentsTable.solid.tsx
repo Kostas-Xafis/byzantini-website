@@ -131,9 +131,7 @@ export default function PaymentsTable() {
 			pushAlert(createAlert("success", "Η αγορά προστέθηκε επιτυχώς!"));
 		};
 		return {
-			inputs: new InputFields(PaymentsInputs(books))
-				.pick(["book_id", "student_name", "book_amount", "date"])
-				.getInputs(),
+			inputs: new InputFields(PaymentsInputs(books)).pick(["book_id", "student_name", "book_amount", "date"]).getInputs(),
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Πληρωμής",
@@ -192,9 +190,7 @@ export default function PaymentsTable() {
 		const payments = store[API.Payments.get];
 		if (!payments || !books || selectedItems.length < 1) return completeModal;
 
-		const selectedPayments = selectedItems.map(
-			(id) => payments.find((p) => p.id === id) as Payments
-		);
+		const selectedPayments = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
 		if (selectedPayments.filter((p) => p.payment_date !== 0).length > 0) return completeModal;
 
 		const submit = async function () {
@@ -229,8 +225,7 @@ export default function PaymentsTable() {
 		}
 		const submit = async function () {
 			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
-			if (data.filter((p) => p.payment_date === 0).length)
-				return alert("Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!");
+			if (data.filter((p) => p.payment_date === 0).length) return alert("Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!");
 			const res = await apiHook(API.Payments.delete, {
 				RequestObject: data.map((p) => p.id),
 			});
@@ -251,9 +246,7 @@ export default function PaymentsTable() {
 	});
 
 	return (
-		<Show
-			when={store[API.Books.get] && store[API.Payments.get]}
-			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show when={store[API.Books.get] && store[API.Payments.get]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}
 				data={shapedData}

@@ -11,7 +11,7 @@ serverRoutes.get.func = ({ ctx: _ctx }) => {
 
 serverRoutes.getById.func = ({ ctx }) => {
 	return execTryCatch(async () => {
-		const [id] = getUsedBody(ctx) || await ctx.request.json();
+		const [id] = getUsedBody(ctx) || (await ctx.request.json());
 		const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", [id]);
 		if (!wholesaler) throw Error("Wholesaler not found");
 		return wholesaler;
@@ -19,8 +19,8 @@ serverRoutes.getById.func = ({ ctx }) => {
 };
 
 serverRoutes.post.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const args = Object.values(getUsedBody(ctx) || await ctx.request.json());
+	return execTryCatch(async (T) => {
+		const args = Object.values(getUsedBody(ctx) || (await ctx.request.json()));
 		const result = await T.executeQuery(`INSERT INTO wholesalers (name) VALUES (?)`, args);
 		await T.executeQuery("INSERT INTO school_payoffs (wholesaler_id, amount) VALUES (?, 0)", [result.insertId]);
 		return result;
@@ -28,8 +28,8 @@ serverRoutes.post.func = ({ ctx }) => {
 };
 
 serverRoutes.delete.func = ({ ctx }) => {
-	return execTryCatch(async T => {
-		const wholesaler_id = getUsedBody(ctx) || await ctx.request.json();
+	return execTryCatch(async (T) => {
+		const wholesaler_id = getUsedBody(ctx) || (await ctx.request.json());
 		const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;
 		if (!wholesaler) throw Error("Wholesaler not found");
 		await T.executeQuery(`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`, wholesaler_id);
@@ -38,12 +38,15 @@ serverRoutes.delete.func = ({ ctx }) => {
 
 		await T.executeQuery("DELETE FROM books WHERE wholesaler_id=?", wholesaler_id);
 		if (bookList.length) {
-			const bookIds = bookList.map(book => book.id);
-			const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE book_id IN (${questionMarks(bookList)}) AND payment_date = 0`, bookIds);
+			const bookIds = bookList.map((book) => book.id);
+			const payments = await T.executeQuery<Payments>(
+				`SELECT * FROM payments WHERE book_id IN (${questionMarks(bookList)}) AND payment_date = 0`,
+				bookIds,
+			);
 			if (payments.length > 0) {
 				let sum = 0;
 				for (const payment of payments) {
-					sum += (bookList.find(book => book.id === payment.book_id)?.price || 0) * payment.book_amount;
+					sum += (bookList.find((book) => book.id === payment.book_id)?.price || 0) * payment.book_amount;
 				}
 				await T.executeQuery(`UPDATE total_payments SET amount = amount - ?`, [sum]);
 				await T.executeQuery(`DELETE FROM payments WHERE book_id IN (${questionMarks(bookList)})`, bookIds);
