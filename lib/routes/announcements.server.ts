@@ -20,7 +20,9 @@ const xmlopts: X2jOptions = {
 
 async function getSitemapXml(ctx: APIContext) {
 	const sitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
-	if (!sitemap) throw Error("Sitemap not found");
+	// Self-initialize: with an empty (dev/local) bucket the file may be missing;
+	// in production the file always exists, so this path stays untouched.
+	if (!sitemap) return { urlset: {} };
 	return new XMLParser(xmlopts).parse(Buffer.from("byteLength" in sitemap ? sitemap : await sitemap.arrayBuffer()));
 }
 

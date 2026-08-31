@@ -47,7 +47,7 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 		let fetcher: any = undefined;
 		if (req === undefined) {
 			const url = VITE_URL + "/api" + Route.path;
-			return (fetcher = fetch(url, { method: Route.method, headers: { Cookie: `session_id=${session_id}` } }));
+			return (fetcher = fetch(url, { method: Route.method, headers: { Cookie: `session_id=${session_id}`, Origin: VITE_URL } }));
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
@@ -62,6 +62,9 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 			const body = (IsBlob || Route.multipart ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
 			const headers = {
 				Cookie: `session_id=${session_id}`,
+				// Astro ≥6 enforces CSRF origin checks on form posts — the test client
+				// must send an Origin header like a real browser would.
+				Origin: VITE_URL,
 			};
 			fetcher = fetch(VITE_URL + "/api" + convertToUrlFromArgs(Route.path, UrlArgs), {
 				method: Route.method,

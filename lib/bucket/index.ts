@@ -1,95 +1,65 @@
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { APIContext } from "astro";
-import { MIMETypeMap, isProduction, silentImport } from "../utils.server";
+import { MIMETypeMap, isProduction } from "../utils.server";
 import { Env } from "@env/env";
+import { runtimeEnv } from "@env/runtime";
 
-const awsSdk = await silentImport<typeof import("@aws-sdk/client-s3")>("@aws-sdk/client-s3");
-const env = Env.env;
-const { S3_DEV_BUCKET_NAME } = env;
+/**
+ * Storage access.
+ *
+ * - Production: the R2 binding `S3_BUCKET` via `cloudflare:workers` env
+ *   (@astrojs/cloudflare v14 no longer exposes `locals.runtime.env`).
+ * - Development: a local HTTP bucket server (`bun run bucket:serve`, default
+ *   `http://127.0.0.1:4567`, serving the `bucket/latest` folder) shared by the
+ *   workerd dev runtime AND the Bun test process, so writes and reads stay
+ *   consistent across both. This replaces the old S3-compatible endpoint +
+ *   AWS SDK (the SDK cannot be loaded inside the workerd dev runtime).
+ */
 
-const createS3Client = async () => {
-	if (!env.S3_ENDPOINT || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
-		throw new Error("Missing S3 configuration in environment variables.");
-	}
-	return new awsSdk.S3Client({
-		region: "auto",
-		endpoint: env.S3_ENDPOINT,
-		credentials: {
-			accessKeyId: env.S3_ACCESS_KEY_ID,
-			secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-		},
-	});
-};
+const devBucketUrl = () => Env.env.DEV_BUCKET_URL || "http://127.0.0.1:4567";
 
-// Development functions can have access to any bucket by passing the bucket name as an argument
-// But it by default uses the dev bucket
+const devUrl = (filename: string) =>
+	`${devBucketUrl()}/${filename.split("/").map(encodeURIComponent).join("/")}`;
+
+// Development functions — local HTTP store.
+// `bucketName` is kept for call-site compatibility (single store in dev).
 export class Bucket {
-	static getS3Bucket(ctx: APIContext): R2Bucket {
-		return ctx.locals.runtime.env.S3_BUCKET as any as R2Bucket;
+	static getS3Bucket(_ctx: APIContext): R2Bucket {
+		return runtimeEnv?.S3_BUCKET as any as R2Bucket;
 	}
 
-	// Development functions
-	static async listDev(bucketName?: string) {
-		const { ListObjectsCommand } = awsSdk;
-		const client = await createS3Client();
-		const cmdResult = await client.send(
-			new ListObjectsCommand({
-				Bucket: bucketName || S3_DEV_BUCKET_NAME,
-			}),
-		);
-
-		const { Contents } = cmdResult;
-		if (!Contents) return [];
-
-		return Contents.map(({ Key }) => Key).filter(Boolean) as string[];
+	static async listDev(_bucketName?: string) {
+		const res = await fetch(`${devBucketUrl()}/_list`);
+		return (await res.json()) as string[];
 	}
 
-	static async getDev(filename: string, bucketName?: string) {
-		const { GetObjectCommand } = awsSdk;
-		let client = await createS3Client();
-		let cmdResult = await client.send(
-			new GetObjectCommand({
-				Bucket: bucketName || S3_DEV_BUCKET_NAME,
-				Key: filename,
-			}),
-		);
-		const { Body } = cmdResult;
-		if (!Body) return null;
-		return (await Body.transformToByteArray()).buffer as ArrayBuffer;
+	static async getDev(filename: string, _bucketName?: string) {
+		const res = await fetch(devUrl(filename));
+		if (res.status === 404) return null;
+		if (!res.ok) throw new Error(`Dev bucket GET failed (${res.status}) for ${filename}`);
+		return res.arrayBuffer();
 	}
 
-	static async putDev(file: ArrayBuffer | string, filename: string, filetype: string, bucketName?: string) {
-		const { PutObjectCommand } = awsSdk;
-		let client = await createS3Client();
-		await client.send(
-			new PutObjectCommand({
-				Bucket: bucketName || S3_DEV_BUCKET_NAME,
-				Key: filename,
-				Body: typeof file === "string" ? new TextEncoder().encode(file) : new Uint8Array(file),
-				ContentType: filetype,
-			}),
-		);
+	static async putDev(file: ArrayBuffer | string, filename: string, filetype = "application/octet-stream", _bucketName?: string) {
+		await fetch(devUrl(filename), {
+			method: "PUT",
+			headers: { "content-type": filetype },
+			body: typeof file === "string" ? new TextEncoder().encode(file) : new Uint8Array(file),
+		});
 	}
 
-	static async deleteDev(filename: string, bucketName?: string) {
-		const { DeleteObjectCommand } = awsSdk;
-		let client = await createS3Client();
-		await client.send(
-			new DeleteObjectCommand({
-				Bucket: bucketName || S3_DEV_BUCKET_NAME,
-				Key: filename,
-			}),
-		);
+	static async deleteDev(filename: string, _bucketName?: string) {
+		await fetch(devUrl(filename), { method: "DELETE" });
 	}
 
-	static async moveDev(srcFile: string, destFile: string, MIMEType: string, bucketName?: string) {
-		const file = await Bucket.getDev(srcFile, bucketName);
+	static async moveDev(srcFile: string, destFile: string, MIMEType: string, _bucketName?: string) {
+		const file = await Bucket.getDev(srcFile);
 		if (!file) return null;
 
-		return Promise.all([Bucket.putDev(file, destFile, MIMEType, bucketName), Bucket.deleteDev(srcFile, bucketName)]);
+		return Promise.all([Bucket.putDev(file, destFile, MIMEType), Bucket.deleteDev(srcFile)]);
 	}
 
-	// Production functions
+	// API (dev/prod dispatch kept for stability)
 	static async list(context: APIContext) {
 		if (!isProduction()) return await Bucket.listDev();
 		const S3 = Bucket.getS3Bucket(context);

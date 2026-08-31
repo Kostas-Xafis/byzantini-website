@@ -16,6 +16,7 @@ export type EnvTypes = {
 	DEV_SNAPSHOT_LOCATION?: string;
 	DEV_DB_ABSOLUTE_LOCATION?: string;
 	DEV_BUCKET_LOCATION?: string;
+	DEV_BUCKET_URL?: string;
 	LATEST_MIGRATION_FILE?: string;
 	SECRET?: string;
 	GOOGLE_MAPS_KEY?: string;

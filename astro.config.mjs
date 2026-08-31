@@ -1,5 +1,5 @@
 import { defineConfig } from "astro/config";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 import solidJs from "@astrojs/solid-js";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
@@ -15,15 +15,14 @@ const unmappedRoutes = (page) =>
 	page.includes("oauth2callback") ||
 	page.includes("unsubscribe");
 const productionSite = "https://musicschool-metamorfosi.gr";
-const isMainBranch = process.env.CF_PAGES_BRANCH === "main";
-const site = (isMainBranch && productionSite) || process.env.CF_PAGES_URL || productionSite;
+// Pages-specific branch/URL logic removed — the Worker is the single deploy target now.
+const site = productionSite;
 
 // https://astro.build/config
 export default defineConfig({
 	site,
 	port: 3000,
 	integrations: [
-		tailwind(),
 		solidJs(),
 		sitemap({
 			filter: (page) => !unmappedRoutes(page),
@@ -32,18 +31,14 @@ export default defineConfig({
 			lastmod: new Date(),
 		}),
 	],
-	adapter: cloudflare({
-		platformProxy: {
-			enabled: true,
-			environment: cloudflareEnv,
-		},
-	}),
+	adapter: cloudflare(),
 	prefetch: {
 		prefetchAll: false,
 		defaultStrategy: "hover",
 	},
 	vite: {
 		envPrefix: "VITE_",
+		plugins: [tailwindcss()],
 		server: {
 			watch: {
 				ignored: [
@@ -55,7 +50,7 @@ export default defineConfig({
 					"**/notAssets/**",
 					"**/dist/**",
 					"**/.wrangler/**",
-					"**/wrangler.toml",
+					"**/wrangler.jsonc",
 					"**/dbSnapshots/**",
 					"**/pdfWorker/**",
 					"**/bucket/**",

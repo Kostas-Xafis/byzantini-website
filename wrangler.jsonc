@@ -1,0 +1,35 @@
+{
+	// Cloudflare Workers configuration for Byzantini-Website (Astro + @astrojs/cloudflare)
+	// Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+	"$schema": "./node_modules/wrangler/config-schema.json",
+
+	"name": "byzantini-website",
+	// The adapter generates the worker entrypoint + assets config at build time
+	// (dist/server/entry.mjs + dist/client). No `main` here — v14 pattern.
+	"compatibility_date": "2026-08-31",
+	"compatibility_flags": ["nodejs_compat"],
+
+	// Static assets served via Workers Static Assets (Astro SSR handles all routes;
+	// unmatched paths fall through to the worker, which renders the 404 page).
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"not_found_handling": "404-page"
+	},
+
+	// R2 bucket (production). Dev/preview use the local simulation or their own env.
+	"r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket" }],
+
+	"observability": {
+		"enabled": true
+	},
+
+	"env": {
+		"production": {
+			// Production-specific vars (use `wrangler secret put` for secrets)
+		},
+		"preview": {
+			// Preview environment overrides (own D1/R2 resources)
+		}
+	}
+}

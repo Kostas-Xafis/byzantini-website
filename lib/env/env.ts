@@ -1,5 +1,6 @@
 import type { EnvTypes, TestEnvTypes } from "@_types/env";
 import type { APIContext } from "astro";
+import { runtimeEnv } from "./runtime";
 
 const isPrimitive = (val: any) => {
 	// Check if the value is a primitive type (number, boolean, null, undefined)
@@ -27,7 +28,8 @@ export class Env {
 	static setEnv(ctx: APIContext) {
 		if (this.#initialized >= 3) return;
 		const ime = (import.meta.env && { ...import.meta.env }) || null;
-		const rnv = ctx?.locals.runtime.env || null;
+		// @astrojs/cloudflare v14: locals.runtime.env no longer exists — read runtime env via `cloudflare:workers`.
+		const rnv = ctx ? runtimeEnv || null : null;
 		if (ime || rnv) {
 			const env = { ...ime, ...rnv };
 			for (const key in env) {
