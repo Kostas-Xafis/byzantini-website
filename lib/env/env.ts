@@ -29,7 +29,8 @@ export class Env {
 		if (this.#initialized >= 3) return;
 		const ime = (import.meta.env && { ...import.meta.env }) || null;
 		// @astrojs/cloudflare v14: locals.runtime.env no longer exists — read runtime env via `cloudflare:workers`.
-		const rnv = ctx ? runtimeEnv || null : null;
+		// Merged on every path (not only with a ctx) — handlers + pages both read Env.env.
+		const rnv = runtimeEnv || null;
 		if (ime || rnv) {
 			const env = { ...ime, ...rnv };
 			for (const key in env) {

@@ -36,6 +36,32 @@ async function build(): Promise<number> {
 	return run("bun", ["run", "build"]);
 }
 
+/**
+ * Post-build: derive the preview deploy config from the adapter-generated
+ * dist/server/wrangler.json (the build wipes dist/server, so this must run
+ * AFTER the build — see why in docs/MIGRATION_SPEC.md).
+ */
+function generatePreviewDeployConfig(): boolean {
+	try {
+		const fs = require("node:fs");
+		const source = JSON.parse(fs.readFileSync(deployConfig, "utf8"));
+		source.name = "byzantini-website-preview";
+		for (const d1 of source.d1_databases ?? []) {
+			d1.database_id = "7f9a62e7-e72c-4f3b-8e81-4f81ffa86c5d";
+			d1.database_name = "byzantini-db-preview";
+		}
+		for (const r2 of source.r2_buckets ?? []) {
+			r2.bucket_name = "byzantini-bucket-dev";
+		}
+		source.preview_urls = false;
+		fs.writeFileSync("dist/server/wrangler.preview.generated.json", JSON.stringify(source, null, 2));
+		return true;
+	} catch (error) {
+		console.error("Could not generate the preview deploy config:", error);
+		return false;
+	}
+}
+
 async function buildThenWrangler(args: string[]): Promise<number> {
 	const buildExitCode = await build();
 	if (buildExitCode !== 0) return buildExitCode;
@@ -88,7 +114,7 @@ const commands: Command[] = [
 		name: "dev",
 		environment: "local",
 		description: "Build + run the built worker locally (wrangler dev)",
-		run: (args) => buildThenWrangler(["dev", "--config", deployConfig, ...args]),
+		run: (args) => buildThenWrangler(["dev", "--config", deployConfig, "--persist-to", ".wrangler/state", ...args]),
 	},
 	{
 		name: "deploy",
@@ -99,8 +125,14 @@ const commands: Command[] = [
 	{
 		name: "deploy:preview",
 		environment: "remote",
-		description: "Deploy to the preview environment (alias until preview resources are wired)",
-		run: (args) => buildThenWrangler(["deploy", "--config", deployConfig, ...args]),
+		description: "Build + generate the preview deploy config + deploy",
+		run: async (args) => {
+			const buildExitCode = await build();
+			if (buildExitCode !== 0) return buildExitCode;
+			const ok = generatePreviewDeployConfig();
+			if (!ok) return 1;
+			return run("wrangler", ["deploy", "--config", "dist/server/wrangler.preview.generated.json", ...args]);
+		},
 	},
 	{
 		name: "types",
@@ -135,7 +167,7 @@ const commands: Command[] = [
 		name: "d1:migrate:local",
 		environment: "local",
 		description: "Apply D1 migrations locally",
-		run: (args) => run("wrangler", ["d1", "migrations", "apply", database, "--local", ...args]),
+		run: (args) => run("wrangler", ["d1", "migrations", "apply", database, "--local", "--persist-to", ".wrangler/state", ...args]),
 	},
 	{
 		name: "d1:migrate:deploy",
@@ -191,7 +223,7 @@ async function wipeLocalDatabase(args: string[]): Promise<number> {
 		return 1;
 	}
 	console.log("Re-applying local migrations...");
-	return run("wrangler", ["d1", "migrations", "apply", database, "--local", ...args]);
+	return run("wrangler", ["d1", "migrations", "apply", database, "--local", "--persist-to", ".wrangler/state", ...args]);
 }
 
 async function runQuery(local: boolean, args: string[]): Promise<number> {
@@ -204,7 +236,7 @@ async function runQuery(local: boolean, args: string[]): Promise<number> {
 		return 1;
 	}
 	const extraArgs = args.slice(1);
-	const localArgs = local ? ["--local"] : [];
+	const localArgs = local ? ["--local", "--persist-to", ".wrangler/state"] : [];
 	return run("wrangler", ["d1", "execute", database, ...localArgs, "--command", sql, ...extraArgs]);
 }
 

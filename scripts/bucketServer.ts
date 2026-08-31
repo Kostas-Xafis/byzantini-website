@@ -32,6 +32,7 @@ const server = Bun.serve({
 	port,
 	async fetch(req) {
 		const url = new URL(req.url);
+		if (process.env.BUCKET_DEBUG) console.log("[bucket] ", req.method, url.pathname);
 		const key = decodeURIComponent(url.pathname.slice(1));
 
 		if (req.method === "GET" && (key === "" || key === "_list")) {

@@ -1,0 +1,32 @@
+{
+	// Preview worker config — used ONLY for deployment (`bun run cf deploy:preview`).
+	// The adapter-generated dist/server/wrangler.json is used for the main worker
+	// (it drops env.* sections, so the preview split lives here instead).
+	"$schema": "./node_modules/wrangler/config-schema.json",
+
+	"name": "byzantini-website-preview",
+	"main": "./dist/server/entry.mjs",
+	"compatibility_date": "2026-08-31",
+	"compatibility_flags": ["nodejs_compat"],
+
+	"assets": {
+		"directory": "./dist/client",
+		"binding": "ASSETS",
+		"not_found_handling": "404-page"
+	},
+
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "byzantini-db-preview",
+			"database_id": "7f9a62e7-e72c-4f3b-8e81-4f81ffa86c5d",
+			"migrations_dir": "migrations"
+		}
+	],
+
+	"r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket-dev" }],
+
+	"observability": {
+		"enabled": true
+	}
+}

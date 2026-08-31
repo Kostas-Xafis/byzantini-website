@@ -1,8 +1,13 @@
-# Phase 6 — Deploy runbook (manual deploys)
+# Phase 6 — Deploy (DONE)
 
-> State (2026-08): deploy path verified with `wrangler deploy --config dist/server/wrangler.json --dry-run`
-> (worker ~253 kB gzip). **Wrangler auth is required** — the token on this machine has expired:
-> run `wrangler login` (or set `CLOUDFLARE_API_TOKEN`) before any step below.
+**Status: preview environment live + fully verified on the edge.**
+`bun run cf deploy:preview` (build + generate + deploy) is the preview flow; prod
+flows via `bun run cf deploy` once the cutover (Phase 7) is scheduled.
+
+> History: deploy path verified with `wrangler deploy ... --dry-run` (~253 kB gzip);
+> resources created (D1 prod+preview, ids pinned); secrets bulk-set; the edge-only
+> SSR 404 was traced to CF error 1042 (worker self-fetch) and fixed with in-process
+> dispatch (`lib/hooks/useAPI.astro.ts`) — see `docs/MIGRATION_SPEC.md`.
 
 ## Resource provisioning (needs auth)
 

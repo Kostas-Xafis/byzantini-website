@@ -108,3 +108,31 @@ Use it for: `wrangler.jsonc` shape, `scripts/cf.ts` CLI wrapper, `migrations/` w
   4323/4322.
 - **v14 dev server binds 4321** (Astro's `port: 3000` is not honored by the vite-plugin dev
   server) — `tests/.env.test` VITE_URL=4321 already matches. Old Pages-era URLs/ports are gone.
+
+
+## Phase 6 verified facts (edge vs local — the 1042 story)
+
+- **Cloudflare error 1042**: a Worker that self-fetches its own origin gets
+  `error code: 1042` on the real edge (allowed locally in miniflare). The SSR
+  pages called `useAPI` server-side via `fetch(origin + "/api/...")` → all SSR
+  pages 404'd on the deployment while working locally. **Fix**: server-side
+  `useAPI` now dispatches **in-process** via `APIServer.handle` with a synthetic
+  request (cookies copied from the Astro context) — `lib/hooks/useAPI.astro.ts`.
+- `Env.setEnv` must merge the `cloudflare:workers` runtime env on EVERY path
+  (not only when `ctx` is passed) — without it `SECRET` was empty at runtime
+  (would have broken production logins too). Fixed in `lib/env/env.ts`.
+- **Wrangler persistence is config-relative**: commands with
+  `--config dist/server/wrangler.json` persist to `dist/server/.wrangler` unless
+  `--persist-to .wrangler/state` is passed. `scripts/cf.ts` passes it on every
+  local command so CLI migrations + `wrangler dev` share one store.
+- **The build wipes `dist/server/`** — deploy configs derived from the generated
+  `wrangler.json` must be created AFTER the build; `bun run cf deploy:preview`
+  now generates `dist/server/wrangler.preview.generated.json` post-build
+  (preview D1/R2 ids + `preview_urls: false`).
+- `wrangler.preview.jsonc` (committed) is the config for preview D1 tooling
+  (`wrangler d1 ... --config wrangler.preview.jsonc`).
+- Local D1 state rotated when the `database_id` was pinned — reseed after
+  pinning (`bunx wrangler d1 migrations apply ... --local` + import).
+- The test user's password hash in the snapshots was created under the OLD
+  dev SECRET — after switching to the current `.dev.vars` SECRET, rehash once
+  via `generateShaKey` (see PHASE6 — done for local + preview D1).
