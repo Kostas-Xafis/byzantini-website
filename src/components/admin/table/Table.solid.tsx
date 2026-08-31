@@ -298,12 +298,7 @@ export default function Table(props: Props) {
 		z-index: -10;
 	}
 	.row:hover {
-		--tw-shadow-color: #9ca3af;
-		--tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-		--tw-shadow-colored-top: 0 -2px 3px 0px var(--tw-shadow-color);
-    	--tw-shadow: var(--tw-shadow-colored);
-
-		box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow), var(--tw-shadow-colored-top);
+		box-shadow: 0 4px 6px -1px #9ca3af, 0 2px 4px -2px #9ca3af, 0 -2px 3px 0px #9ca3af;
 	}
 	.row:nth-child(odd)::before {
 		background-color: rgb(243,244,246);
@@ -327,7 +322,7 @@ export default function Table(props: Props) {
 		background-color: rgb(68, 30, 30);
 	}
 	.row:is(.selectedRow):hover {
-		--tw-shadow-color: #6b7280 !important;
+		box-shadow: 0 4px 6px -1px #6b7280, 0 2px 4px -2px #6b7280, 0 -2px 3px 0px #6b7280;
 	}
 	.cell {
 		position: relative;

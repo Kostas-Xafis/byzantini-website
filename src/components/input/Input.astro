@@ -26,7 +26,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 					}
 				/>
 				<input
-					class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-none z-10"
+					class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
 					type={type}
 					name={name}
 					placeholder={placeholder || ""}
@@ -40,7 +40,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 			/*--------------------------------SELECT INPUT---------------------------------------- */ <>
 				<i class={"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-130 " + (iconClasses || "")} />
 				<select
-					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none"
+					class="peer m-2 px-12 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden"
 					name={name}
 					required={required || false}
 					disabled={disabled || false}>

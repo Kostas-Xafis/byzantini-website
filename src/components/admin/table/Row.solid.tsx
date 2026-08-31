@@ -178,7 +178,7 @@ export default function Row(props: Props) {
 									<div class="cell flex items-center justify-center">
 										<button
 											type="button"
-											class="text-xl leading-none transition-transform duration-150 hover:scale-110 focus-visible:outline-none"
+											class="text-xl leading-none transition-transform duration-150 hover:scale-110 focus-visible:outline-hidden"
 											onClick={(e) => copyCellValue(e, String(item))}>
 											<i class="fa-regular fa-copy text-red-900 dark:text-red-300"></i>
 											<span class="sr-only">Αντιγραφή αναγνωριστικού</span>

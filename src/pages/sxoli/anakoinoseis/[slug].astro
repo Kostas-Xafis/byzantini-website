@@ -132,7 +132,7 @@ const videoSchemas = links
 		class="relative flex flex-col items-center gap-y-6 overflow-auto px-10 py-10 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
 		<a
 			href="/sxoli/anakoinoseis"
-			class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+			class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
 			<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
 			Οι Ανακοινώσεις
 		</a>
@@ -166,10 +166,10 @@ const videoSchemas = links
 		</div>
 
 		<div class="imgLoader group/img relative w-full max-w-[780px]">
-			<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-sm bg-red-50/40 backdrop-blur-[2px]">
+			<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-xs bg-red-50/40 backdrop-blur-[2px]">
 				<Spinner />
 			</div>
-			<div class="group-[:is(.loaded)]/img:block w-full overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600">
+			<div class="group-[:is(.loaded)]/img:block w-full overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600">
 				<img
 					id="posterImg"
 					fetchpriority="high"
@@ -222,7 +222,7 @@ const videoSchemas = links
 							if (ytId) {
 								return (
 									<div
-										class="videoWrap group/video relative w-full max-w-[720px] aspect-video overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600"
+										class="videoWrap group/video relative w-full max-w-[720px] aspect-video overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600"
 										data-video-id={ytId}>
 										<button
 											type="button"
@@ -257,10 +257,10 @@ const videoSchemas = links
 							}
 							return (
 								<div class="imgLoader group/img relative w-full max-w-[720px] aspect-video">
-									<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 rounded-sm">
+									<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 rounded-xs">
 										<Spinner />
 									</div>
-									<div class="hidden group-[:is(.loaded)]/img:block w-full h-full overflow-hidden rounded-sm border-2 border-red-900 shadow-md shadow-slate-600">
+									<div class="hidden group-[:is(.loaded)]/img:block w-full h-full overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600">
 										<iframe
 											data-src={link}
 											title="Βίντεο ανακοίνωσης"
@@ -291,7 +291,7 @@ const videoSchemas = links
 								</div>
 								<button
 									type="button"
-									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-sm border-2 border-red-900 transition-shadow hover:shadow-lg !shadow-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-xs border-2 border-red-900 transition-shadow hover:shadow-lg !shadow-slate-800 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
 									<img
 										data-src={imgThumbSrc + image.name}
 										alt={announcement.title}

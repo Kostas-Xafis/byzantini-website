@@ -41,7 +41,7 @@ const excerpt = (content: string, max = 220) => {
 		<header class="flex flex-col items-center gap-y-6">
 			<h1
 				id="announcementsHead"
-				class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-red-900 after:max-sm:rounded-sm after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
+				class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-red-900 after:max-sm:rounded-xs after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 				Ανακοινώσεις
 			</h1>
 			<p
@@ -75,7 +75,7 @@ const excerpt = (content: string, max = 220) => {
 								(i % 2 === 1 ? " sm:flex-row-reverse" : "") +
 								" overflow-hidden rounded-xl border-2 border-red-900 bg-white shadow-md shadow-gray-400" +
 								" transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-red-900/25" +
-								" focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2"
+								" focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2"
 							}>
 							<div class="announcementMedia relative overflow-hidden sm:w-[clamp(220px,32%,400px)] sm:shrink-0 sm:self-stretch">
 								<div

@@ -111,7 +111,7 @@ export function SearchTable<T extends Record<string, any>>(props: SearchTablePro
 			</div>
 			<input
 				id="search"
-				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-sm shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-none max-sm:self-center bg-white dark:bg-dark"
+				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-sm shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden max-sm:self-center bg-white dark:bg-dark"
 				type="text"
 				name="search"
 				autocomplete="off"

@@ -78,7 +78,7 @@ export default function Popup(props: Props) {
 				) : typeof okButton === "string" ? (
 					<button
 						onClick={() => popup?.dispatchEvent(new CustomEvent("hide"))}
-						class="px-8 py-2 text-2xl font-semibold rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-none focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
+						class="px-8 py-2 text-2xl font-semibold rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
 						{okButton}
 					</button>
 				) : (
