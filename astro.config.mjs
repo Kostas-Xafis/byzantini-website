@@ -3,11 +3,6 @@ import tailwindcss from "@tailwindcss/vite";
 import solidJs from "@astrojs/solid-js";
 import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
-import { loadEnvVars } from "./loadEnvVars.ts";
-
-const cloudflareEnv =
-	process.env.CLOUDFLARE_ENV ||
-	(process.env.NODE_ENV === "production" ? "production" : "development");
 
 const unmappedRoutes = (page) =>
 	page.includes("admin") ||
@@ -61,9 +56,6 @@ export default defineConfig({
 		build: {
 			cssMinify: true,
 			minify: true,
-		},
-		define: {
-			...loadEnvVars(cloudflareEnv),
 		},
 	},
 });

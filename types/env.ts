@@ -8,13 +8,9 @@ export type EnvTypes = {
 	CF_PAGES_BRANCH?: string;
 	CF_PAGES_URL?: string;
 
-	CONNECTOR?: string;
-	TURSO_DB_URL?: string;
-	TURSO_DB_TOKEN?: string;
 	SAFE_BACKUP_SNAPSHOT?: string;
 	BACKUP_SNAPSHOT_LOCATION?: string;
 	DEV_SNAPSHOT_LOCATION?: string;
-	DEV_DB_ABSOLUTE_LOCATION?: string;
 	DEV_BUCKET_LOCATION?: string;
 	DEV_BUCKET_URL?: string;
 	LATEST_MIGRATION_FILE?: string;

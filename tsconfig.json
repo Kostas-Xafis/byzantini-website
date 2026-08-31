@@ -10,7 +10,7 @@
 		"./services",
 		"./email",
 	],
-	"include": [".astro/types.d.ts", "lib", "getData", "src", "types"],
+	"include": [".astro/types.d.ts", "lib", "src", "types"],
 	"compilerOptions": {
 		"noErrorTruncation": true,
 		"strict": true,
@@ -25,7 +25,7 @@
 		"noEmit": true,
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
-		"types": ["@types/bun", "@cloudflare/workers-types"],
+		"types": ["@types/bun"],
 		"paths": {
 			"@bucket/*": ["./lib/bucket/*"],
 			"@env/*": ["./lib/env/*"],

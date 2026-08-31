@@ -1,7 +1,7 @@
 import type { Insert } from "@_types/entities";
 import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "@_types/routes";
 import { Env } from "@env/env";
-import { createDbConnection, type DBType, type QueryArguments, type Transaction } from "@lib/db";
+import { dbExec, logQuery, type QueryArguments, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
 import type { Output } from "valibot";
 
@@ -85,28 +85,50 @@ export const questionMarks = (arg: number | QueryArguments) => {
 };
 
 export const executeQuery = async <T = undefined>(query: string, args: QueryArguments = [], tx?: Transaction, log = false) => {
-	const conn = tx ?? createDbConnection(null, true);
 	query = query.trim().replaceAll("\n", "");
-	const res = await conn.execute<T>(query, args, { as: "object" });
-	if ((tx && !query.startsWith("SELECT")) || log) {
-		tx &&
-			tx.queryHistory.push({
-				id: R.link(20),
-				query,
-				args,
-			});
+	const res = await dbExec<T>(query, args);
+	if (tx && !query.startsWith("SELECT")) {
+		tx.queryHistory.push({
+			id: R.link(20),
+			query,
+			args,
+		});
 	}
-	return (res.insertId === "0" && "rows" in res ? res.rows : { insertId: Number(res.insertId) }) as T extends undefined ? Insert : T[];
+	if (log && !tx) {
+		await logQuery(query, args);
+	}
+	return ("rows" in (res as any) ? (res as any).rows : { insertId: Number((res as any).insertId) }) as T extends undefined ? Insert : T[];
 };
 
-export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>, connector: DBType = null) => {
-	const conn = createDbConnection(connector, true);
-	return conn.transaction((tx) => {
-		tx.executeQuery = <T>(query: string, args?: QueryArguments, log = false) => {
-			return executeQuery<T>(query, args, tx, log);
-		};
-		return func(tx) as Promise<T>;
-	}) as T;
+/**
+ * D1 note: there are NO interactive transactions — statements execute
+ * immediately (autocommit). Use this for flows where the statements are
+ * independently safe; switch rollback-sensitive flows to `db.batch()` (see
+ * docs/MIGRATION_SPEC.md, Phase 3/4 notes).
+ */
+export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>): Promise<T> => {
+	const tx = {
+		execute: <T2>(query: string, args: QueryArguments = []) => dbExec<T2>(query, args),
+		queryHistory: [] as any,
+		executeQuery: null as any,
+	} as Transaction;
+	tx.executeQuery = <T2 = undefined>(query: string, args?: QueryArguments, log = false) => {
+		return executeQuery<T2>(query, args, tx, log);
+	};
+	return (async () => {
+		let hasError = false;
+		try {
+			return await func(tx);
+		} catch (error) {
+			hasError = true;
+			throw error;
+		} finally {
+			for (const q of tx.queryHistory) {
+				if (q.query.startsWith("SELECT")) continue;
+				await logQuery(q.query, q.args, hasError);
+			}
+		}
+	})();
 };
 
 export const execTryCatch = async <T>(func: (t: Transaction) => Promise<T>, errorMessage?: string): Promise<EndpointResponse<T> | EndpointResponseError> => {

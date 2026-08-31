@@ -1,5 +1,11 @@
 import type { EndpointRoute } from "@_types/routes";
 
+/**
+ * NOTE (Phase 3): `revertToPreviousSchema` / `migrate` were retired — they were
+ * fs + connector based and do not exist under the Workers runtime.
+ * `wrangler d1 migrations` is the replacement.
+ */
+
 const get: EndpointRoute<'/schema/backup/[type:"mysql" | "sqlite"]', null, string> = {
 	authentication: true,
 	method: "GET",
@@ -8,24 +14,6 @@ const get: EndpointRoute<'/schema/backup/[type:"mysql" | "sqlite"]', null, strin
 	validation: undefined,
 };
 
-const revertToPreviousSchema: EndpointRoute<'/schema/revert/[type:"mysql" | "sqlite"]', null> = {
-	authentication: true,
-	method: "GET",
-	path: '/schema/revert/[type:"mysql" | "sqlite"]',
-	hasUrlParams: true,
-	validation: undefined,
-};
-
-const migrate: EndpointRoute<'/schema/migrate/[target:"local" | "production"]', null> = {
-	authentication: true,
-	method: "GET",
-	path: '/schema/migrate/[target:"local" | "production"]',
-	hasUrlParams: true,
-	validation: undefined,
-};
-
 export const SchemaRoutes = {
 	get,
-	revertToPreviousSchema,
-	migrate,
 };

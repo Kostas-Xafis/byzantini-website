@@ -20,6 +20,16 @@
 	// R2 bucket (production). Dev/preview use the local simulation or their own env.
 	"r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket" }],
 
+	// D1 database — local dev uses a local SQLite file; deploy with `wrangler d1 create`
+	// (database_id is pinned in Phase 6 when the remote database is created).
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "byzantini-db",
+			"migrations_dir": "migrations"
+		}
+	],
+
 	"observability": {
 		"enabled": true
 	},
