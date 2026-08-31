@@ -1,51 +1,13 @@
-import type { RemovePartial } from "@_types/helpers";
-import type { AnyEndpoint, HTTPMethods } from "@_types/routes";
-import { Env } from "@env/env";
-import { matchRoute } from "@routes/index.server";
-import type { APIContext } from "astro";
+import "@lib/api/routes/index";
+import { APIServer } from "@lib/api/routes/APIServer";
 
 export const prerender = false;
 
-type Route = RemovePartial<AnyEndpoint, "func">;
-
-const generateResponse = (ctx: APIContext, route: Route, urlSlug: string[]) => {
-	let { func, path } = route;
-	if (route.hasUrlParams === false) return func({ ctx, slug: {} });
-	const slugData = {} as any;
-	path.split("/")
-		.slice(1)
-		.forEach((part, i) => {
-			if (!part.startsWith("[")) return;
-			const [name, type] = part.slice(1, -1).split(":");
-			if (type === "number") {
-				slugData[name] = Number(urlSlug[i]);
-			} else {
-				const num = Number(urlSlug[i]);
-				slugData[name] = isNaN(num) ? urlSlug[i] : num;
-			}
-		});
-	return func({ ctx, slug: slugData });
-};
-
-const ResponseWrap = async (ctx: APIContext, route: Route, urlSlug: string[]) => {
-	//@ts-ignore
-	Env.setEnv(ctx);
-	for (const middleware of route.middleware ?? []) {
-		const response = await middleware(ctx);
-		if (response) return response;
-	}
-	const res = await generateResponse(ctx, route, urlSlug);
-	if ("error" in res) return new Response(JSON.stringify(res), { status: 500 });
-	return new Response(JSON.stringify(res), { status: 200 });
-};
-
-const RequestTemplate = function (ctx: APIContext) {
-	const slug = ctx.params.slug?.split("/") ?? [];
-	const route = matchRoute(slug, ctx.request.method.toUpperCase() as HTTPMethods);
-	if (!route) return ctx.redirect("/404");
-	return ResponseWrap(ctx, route, slug);
-};
-
-export async function ALL(context: APIContext) {
-	return await RequestTemplate(context);
+/**
+ * Single API entrypoint — Phase 4 (Isokratis-style dispatch).
+ * `APIServer.handle` matches method + path against the registered route
+ * instances, runs middleware, validates the body and calls the handler.
+ */
+export async function ALL({ request }: { request: Request }) {
+	return APIServer.handle(request, "/api");
 }

@@ -68,7 +68,7 @@ function teachersTest() {
 		const teacherJson = await getJson<APIResponse["Teachers.getById"]>(teacherRes);
 		expectBody(teacherJson, v_Teachers);
 
-		if (teacherJson.type !== "data" || teacherJson.data.cv == null) {
+		if (!teacherJson.data || teacherJson.data.cv == null) {
 			throw new Error("Teacher CV was not saved after upload");
 		}
 
@@ -95,7 +95,7 @@ function teachersTest() {
 		});
 		const beforeDeleteJson = await getJson<APIResponse["Teachers.getById"]>(beforeDeleteRes);
 		expectBody(beforeDeleteJson, v_Teachers);
-		if (beforeDeleteJson.type !== "data" || beforeDeleteJson.data.cv == null) {
+		if (!beforeDeleteJson.data || beforeDeleteJson.data.cv == null) {
 			throw new Error("Expected teacher CV to exist before deletion");
 		}
 		const deletedCvFilename = beforeDeleteJson.data.cv;
@@ -112,7 +112,7 @@ function teachersTest() {
 		});
 		const afterDeleteJson = await getJson<APIResponse["Teachers.getById"]>(afterDeleteRes);
 		expectBody(afterDeleteJson, v_Teachers);
-		if (afterDeleteJson.type !== "data" || afterDeleteJson.data.cv != null) {
+		if (!afterDeleteJson.data || afterDeleteJson.data.cv != null) {
 			throw new Error("Teacher CV was not cleared after deletion");
 		}
 

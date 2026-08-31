@@ -54,9 +54,8 @@ export const getSessionId = (ctx: APIContext) => {
 	return ctx.cookies.get("session_id")?.value;
 };
 
-export async function authentication(ctx: APIContext) {
-	const session_id = getSessionId(ctx);
-	if (!session_id) return false;
+/** Cookie-based session check (used by the new API middleware). */
+export const isSessionValid = async (session_id: string): Promise<boolean> => {
 	if (small_cache.has(session_id)) {
 		return true;
 	}
@@ -66,4 +65,10 @@ export async function authentication(ctx: APIContext) {
 	else small_cache.delete(session_id);
 
 	return isValid;
+};
+
+export async function authentication(ctx: APIContext) {
+	const session_id = getSessionId(ctx);
+	if (!session_id) return false;
+	return isSessionValid(session_id);
 }

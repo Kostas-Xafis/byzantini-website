@@ -1,11 +1,9 @@
-import type { DefaultEndpointResponse } from "@_types/routes";
-import { ActionEnum } from "@components/admin/table/TableControlTypes";
 import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
+import { ActionEnum } from "@components/admin/table/TableControlTypes";
 import { objToFormData } from "@utilities/forms";
 import { convertToUrlFromArgs, getOriginFromContext } from "@utilities/url";
 import { batch, createEffect, createSignal } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
-import { parse } from "valibot";
 import { assertOwnProp } from "../utils.server";
 
 export type APIStore = Partial<APIResponse>;
@@ -19,6 +17,10 @@ export type StoreMutation<T extends APIEndpointNames> = {
 	type: ActionEnum;
 };
 
+/**
+ * Solid version of useAPI — Phase 4 envelope: the server returns
+ * `{ data }` | `{ message }` | `{ error }` with proper status codes.
+ */
 export const useAPI =
 	(setStore?: SetStoreFunction<APIStore>) =>
 	async <T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], { Mutations }: { toFormData?: boolean; Mutations?: StoreMutation<T> } = {}) => {
@@ -32,8 +34,8 @@ export const useAPI =
 			} else {
 				assertOwnProp(req, "RequestObject");
 				assertOwnProp(req, "UrlArgs");
-				if ("validation" in Route && Route.validation) {
-					parse(Route.validation, req.RequestObject);
+				if (Route.validation) {
+					Route.validation.parse(req.RequestObject);
 					if (Route.multipart) {
 						req.RequestObject = objToFormData(req.RequestObject as any);
 					}
@@ -51,30 +53,31 @@ export const useAPI =
 					body,
 				});
 			}
-			const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;
-			if (response.type === "error") {
+			const response = (await (await fetcher).json()) as any;
+			if (response && typeof response === "object" && "error" in response) {
 				throw Error(response.error);
-			} else if (response.type === "message") {
+			}
+			if (response && typeof response === "object" && "message" in response) {
 				setStore && setStore(response.message as any);
 				return { message: response.message };
-			} else if (setStore && response.type === "data") {
+			}
+			const data = (response as any)?.data as APIResponse[T] | undefined;
+			if (setStore && data !== undefined) {
 				if (Mutations && Mutations.endpoint) {
 					// If a mutation is assigned then do an in place replacement of the data in the store.
 					if (Mutations.type === ActionEnum.ADD) {
 						setStore(Mutations.endpoint as APIEndpointNames, (prev: any) => {
-							let data = response.data;
 							if (!data) return prev;
 
 							const isArr = Array.isArray(data);
 							let prevData = (prev as any[]) || [];
-							let result = isArr ? [...prevData, ...(response.data as any[])] : [...prevData, response.data];
+							let result = isArr ? [...prevData, ...(data as any[])] : [...prevData, data as any];
 							if (Mutations.sort === "descending") result.unshift(result.pop());
 
 							return result;
 						});
 					} else {
-						setStore(Mutations.endpoint as APIEndpointNames, (prev) => {
-							let data = response.data;
+						setStore(Mutations.endpoint as APIEndpointNames, (prev: any) => {
 							if (!data) return prev;
 
 							let prevData = (prev as any[]) || [];
@@ -93,9 +96,9 @@ export const useAPI =
 						});
 					}
 					// Else do a full replacement of the data in the store.
-				} else setStore(endpoint, response.data as APIResponse[T]);
+				} else setStore(endpoint, data);
 			}
-			return { data: response.data as APIResponse[T] };
+			return { data };
 		} catch (err) {
 			setStore && setStore(endpoint, err as any);
 			throw err;

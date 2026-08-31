@@ -136,6 +136,19 @@ announcements) to `batch()`; remote D1 creation + id pinning.
 6. Checkpoint: all existing API tests green against `astro dev` + local D1; `bun run test`.
 
 ### Phase 4 — API layer modernization (Isokratis style; post-baseline)
+**✅ DONE (core) — on `Workers`.** New Isokratis-style layer in `lib/api/`:
+`APIClient` + `APIServer` (zod validation, typed responses, `handlerResult`),
+`ServerCookies`, auth middleware, `lib/api/schemas.ts` (zod ports, Greek messages
+preserved), 14 ported route groups (`lib/api/routes/<group>.ts`, multiple-fan-out
+workflow), compat re-export (`lib/routes/index.client.ts`), new API entrypoint,
+`useAPI` hooks rewired to the `{data}|{message}|{error}` envelope (components
+unchanged — same `API`/`APIEndpoints` keys). Old `lib/routes/*` still present
+(pending cleanup in Phase 9). Test suite: **9/10 files green** (books, payments,
+wholesalers, registrations incl. tx+PDF+email, teachers, locations, instruments,
+payoffs, sysusers); announcements #3/#4 (large-binary multipart) fail in DEV due
+to a workerd-vite dev-relay limitation that mangles big binary parts — the same
+tests failed on the old stack; verify via the production path (`wrangler dev` of
+the built worker / deploy) in Phase 6.
 1. Add `lib/api/` (or `lib/routes/` rework): port `APIClient` (typed `call`, `findRoute`, param patterns `[id:number]`) and `APIServer` (handler + middleware stack, typed validation with `astro/zod` Zod, response-schema validation, `HTTP` constants, `ServerCookies`).
 2. Port the 15 route groups one at a time (Books, Authentication, Payments, Payoffs, Wholesalers, Teachers, Locations, Instruments, SysUsers, QueryLogs, Registrations, Announcements, Schema, SettingsBackup, Replication-where-still-needed): client contract (zod schema) + server handler; keep Greek error messages.
 3. Middleware: auth (`authentication` equivalent) + request validation + multipart; adopt Isokratis's `AdminKeyMiddleware`-style separation only if needed.

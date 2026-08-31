@@ -45,7 +45,7 @@ export function useHydrateById(args: { setStore: SetStoreFunction<APIStore>; mut
 			const ids = hydrate.ids;
 			batch(() => {
 				mutations.forEach((mut) => {
-					setStore(mut.destEndpoint, (prev) => {
+					setStore(mut.destEndpoint, (prev: any) => {
 						if (!prev) return;
 						return (prev as any[]).filter((item) => !ids.includes(mut.foreignKey ? item[mut.foreignKey] : item.id));
 					});

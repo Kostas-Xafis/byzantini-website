@@ -1,12 +1,11 @@
-import type { DefaultEndpointResponse } from "@_types/routes";
 import { API, APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
 import { convertToUrlFromArgs, getOriginFromContext } from "@utilities/url";
 import type { APIContext } from "astro";
-import { parse } from "valibot";
+import type { z } from "astro/zod";
 import { assertOwnProp } from "../utils.server";
 export { API };
 
-// Astro version
+// Astro version — Phase 4 envelope: `{ data }` | `{ message }` | `{ error }` with proper status codes.
 export const useAPI = async <T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], ctx?: APIContext) => {
 	// useAPI of astro can be called both in a server and client context
 	const origin = getOriginFromContext(ctx);
@@ -18,8 +17,8 @@ export const useAPI = async <T extends APIEndpointNames>(endpoint: T, req?: APIA
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
-			if ("validation" in Route && Route.validation) {
-				parse(Route.validation, req.RequestObject);
+			if (Route.validation) {
+				(Route.validation as z.ZodTypeAny).parse(req.RequestObject);
 			}
 			const { RequestObject } = req;
 			const body = (RequestObject instanceof Blob ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
@@ -31,14 +30,14 @@ export const useAPI = async <T extends APIEndpointNames>(endpoint: T, req?: APIA
 				body,
 			});
 		}
-		const response = (await (await fetcher).json()) as DefaultEndpointResponse;
-		if (response.res.type === "error") {
-			throw new Error(response.res.error);
-		} else if (response.res.type === "message") {
-			return { message: response.res.message };
-		} else {
-			return { data: response.res.data as APIResponse[T] };
+		const response = (await (await fetcher).json()) as any;
+		if (response && typeof response === "object" && "error" in response) {
+			throw new Error(response.error);
 		}
+		if (response && typeof response === "object" && "message" in response) {
+			return { message: response.message };
+		}
+		return { data: (response as any)?.data as APIResponse[T] };
 	} catch (err) {
 		console.error(err);
 		throw err;
