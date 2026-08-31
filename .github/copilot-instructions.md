@@ -12,17 +12,16 @@
   (maps slug + HTTP method to route metadata).
 
 ## API architecture (project-critical)
-- Define endpoints in pairs under `lib/routes/`: `*.client.ts` (contract +
-  validation) and `*.server.ts` (implementation).
-- In `*.server.ts`, clone client routes via `deepCopy(...)` (from
-  `@utilities/objects`) and assign `route.func` handlers.
-- Central route assembly:
-  - `lib/routes/index.client.ts` builds `API`/`APIEndpoints`.
-  - `lib/routes/index.server.ts` builds `APIRaw`, injects middleware by flags,
-    and exports `matchRoute(...)`.
-- Use `useAPI` from `lib/hooks/useAPI.astro.ts` (Astro/server) or
-  `lib/hooks/useAPI.solid.ts` (Solid); endpoint keys look like
-  `Authentication.userLogin`.
+- Routes are `APIServer` instances in `lib/api/routes/<group>.ts` exporting a
+  `xxxRoutes` object (`new APIServer({method, path, schema?, responseSchema?,
+  multipart?, rawBlob?}, [authenticateMiddleware], handler)`); validation is
+  Zod (`astro/zod`, `lib/api/schemas.ts`).
+- `lib/api/routes/index.ts` imports all groups and builds `API`/`APIEndpoints`
+  + `APIArgs`/`APIResponse`; `lib/routes/index.client.ts` re-exports them.
+- Entry: `src/pages/api/[...slug].ts` → `APIServer.handle(request, "/api")`;
+  envelope `{ data } | { message } | { error }` with real HTTP statuses.
+- `useAPI` from `lib/hooks/useAPI.astro.ts` (server: in-process dispatch) or
+  `lib/hooks/useAPI.solid.ts` (browser); keys look like `Authentication.userLogin`.
 
 ## Middleware, validation, and responses
 - Prefer `execTryCatch(...)` + wrappers in `lib/utils.server.ts` for handler

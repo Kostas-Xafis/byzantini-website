@@ -22,9 +22,9 @@ database, R2 storage and two local worker services (PDF, image compression).
 
 - Runtime & package manager: **Bun** — never use `npm`/`yarn`/`pnpm`.
 - Frontend: Astro 7.2.9 + SolidJS + Tailwind 4; dev port is 4321.
-- API: single catch-all route `src/pages/api/[...slug].ts` with typed, paired
-  route contracts.
-- Validation: Valibot (`lib/middleware/requestValidation.ts`).
+- API: `src/pages/api/[...slug].ts` catch-all → `APIServer.handle` (Isokratis-style
+  route instances, see the API architecture section below).
+- Validation: Zod (`astro/zod`); schemas in `lib/api/schemas.ts`.
 - Database: Cloudflare D1 (binding `DB`, `cloudflare:workers` env) — see
   `lib/db.ts`; schema in `migrations/` (`wrangler d1 migrations apply`).
 - Storage: Cloudflare R2 (`S3_BUCKET` binding) in production; dev goes through
@@ -78,36 +78,37 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 
 ## API architecture (project-critical, preserve the pattern)
 
-- Endpoints are defined in **pairs** under `lib/routes/`:
-  - `*.client.ts`: endpoint path, HTTP method, Valibot validation contract, flags.
-  - `*.server.ts`: clones the client routes (`deepCopy` from
-    `@utilities/objects`) and assigns `route.func` implementations.
-- Central assembly:
-  - `lib/routes/index.client.ts` builds `API` and `APIEndpoints` (typed keys
-    like `Authentication.userLogin`).
-  - `lib/routes/index.server.ts` builds `APIRaw`, auto-attaches middleware from
-    route flags and exports `matchRoute(...)`.
-- `src/pages/api/[...slug].ts` is the single API entrypoint: matches slug +
-  HTTP method via `matchRoute`, sets env (`Env.setEnv(ctx)`), runs middleware,
-  runs the handler, wraps JSON responses.
-- Middleware is attached automatically from endpoint flags:
-  `authentication: true` → auth middleware; `validation: schema` →
-  `requestValidation(...)`; `multipart: true` → multipart parsing.
-- Client consumption: `useAPI("Group.endpoint", payload)` from
-  `lib/hooks/useAPI.astro.ts` (Astro/server) or `lib/hooks/useAPI.solid.ts`
-  (Solid components). Payload types are derived from the contracts — do not
-  bypass them.
+- Routes are **instances** of `APIServer` (Isokratis-style) in
+  `lib/api/routes/<group>.ts` — each exports a `xxxRoutes` object with the
+  route keys (`Books.get`, `Authentication.userLogin`, ...) the app uses.
+  Contracts live on the instance: `{ method, path, schema?, responseSchema?, multipart?, rawBlob? }`.
+- Central registry: `lib/api/routes/index.ts` imports every group (which
+  registers the routes) and builds the app-facing compat maps +
+  types: `API`, `APIEndpoints`, `APIEndpointNames`, `APIArgs`, `APIResponse`.
+  `lib/routes/index.client.ts` re-exports them (stable import path).
+- `src/pages/api/[...slug].ts` is the single API entrypoint:
+  `APIServer.handle(request, "/api")` — dispatch, Zod validation (JSON or
+  multipart-with-coercion), auth middleware, typed responses.
+- Middleware: `authenticateMiddleware` (session cookie, `lib/api/routes/middleware`) —
+  attach per route via the middleware array.
+- Server-side `useAPI` (`lib/hooks/useAPI.astro.ts`) dispatches **in-process**
+  (no self-fetch — see docs/MIGRATION_SPEC.md, error 1042); the Solid version
+  (`lib/hooks/useAPI.solid.ts`) fetches from the browser. Response envelope:
+  `{ data } | { message } | { error }` with proper HTTP statuses.
+- Validation uses **Zod** (`astro/zod`) — schemas in `lib/api/schemas.ts`.
+- Adding an endpoint: add to the group file (`new APIServer(...)`) — the maps
+  and types update automatically; add tests under `tests/api/`.
 
 ## Database access rules
 
 - Use the wrappers in `lib/utils.server.ts`: `executeQuery(...)`,
-  `executeTransaction(...)`, `execTryCatch(...)` — do not create ad-hoc DB
-  calls. They handle the D1 binding, `???` placeholder expansion and
-  `query_logs` logging. Low-level access is `dbExec`/`getDb` in `lib/db.ts`.
+  `executeTransaction(...)` — do not create ad-hoc DB calls. They handle the D1
+  binding, `???` placeholder expansion and `query_logs` logging. Low-level
+  access is `dbExec`/`getDb` in `lib/db.ts`.
 - Multiple-value SQL uses `???` placeholders (expanded by
   `questionMarks` in `lib/db.ts`).
 - Multi-step writes use the transaction callback pattern — see
-  `lib/routes/registrations.server.ts` for the canonical example.
+  `lib/api/routes/registrations.ts` for the canonical example.
 - **D1 has no interactive transactions**: `executeTransaction` executes
   statements immediately (no rollback). Rollback-sensitive flows must be
   refactored to `db.batch(...)` or made idempotent — see `docs/MIGRATION_SPEC.md`.
@@ -184,19 +185,18 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 
 ## Adding a new API endpoint (checklist)
 
-1. Add the contract in a `*.client.ts` route group (path, method, validation,
-   flags).
-2. Add the implementation in the matching `*.server.ts`: `deepCopy` the client
-   routes and set `route.func`.
-3. Make sure the route group is exported from `lib/routes/index.client.ts` and
-   `lib/routes/index.server.ts`.
-4. Call it from the app with `useAPI("Group.endpoint", payload)`.
-5. Add tests under `tests/api/` and run `bun run test`.
+1. Add the route to the group file in `lib/api/routes/<group>.ts`:
+   `new APIServer({ method, path, schema?, responseSchema?, multipart?, rawBlob? }, [authenticateMiddleware?], handler)`
+   (zod schema — reuse/extend `lib/api/schemas.ts`; Greek messages).
+2. Export it from the group's `xxxRoutes` object — the registry, `API`/`APIEndpoints`
+   maps and `APIArgs`/`APIResponse` types update automatically.
+3. Call it from the app with `useAPI("Group.endpoint", payload)`.
+4. Add tests under `tests/api/` and run `bun run test`.
 
 ## Do / Don't
 
 - DO: extend existing route groups and utilities instead of adding new
-  transport/API layers; reuse `execTryCatch` for handler error handling.
+  transport/API layers; use `handlerResult` for handler error handling.
 - DO: run `bun run typecheck` before declaring a change done; run targeted
   tests for API changes.
 - DO: keep diffs minimal and focused; don't reformat unrelated files.

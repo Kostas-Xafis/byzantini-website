@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import { z } from "astro/zod";
 import { Buffer } from "node:buffer";
 import { Bucket } from "@lib/bucket";
-import { sqliteGenerateBackup } from "@lib/routes/schema.server";
+import { sqliteGenerateBackup } from "./schema";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 

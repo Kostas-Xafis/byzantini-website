@@ -1,9 +1,7 @@
 import type { Insert } from "@_types/entities";
-import type { AnyObjectSchema, Context, EndpointResponse, EndpointResponseError } from "@_types/routes";
 import { Env } from "@env/env";
 import { dbExec, logQuery, type QueryArguments, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
-import type { Output } from "valibot";
 
 export function isProduction() {
 	const { MODE, PROD } = Env.env;
@@ -31,48 +29,6 @@ export const MIMETypeMap: Record<string, string> = {
 	txt: "text/plain",
 };
 export const ImageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
-
-/**
- * This function serves as a small optimization and should be called first to get the body of the request
- * to avoid unnecessary use of promises. Otherwise, if it returns undefined, use `await ctx.request.json()`.
- * @param ctx The context object from the route
- * @returns The body of the request if it has been used, otherwise undefined
- * @example const body = getUsedBody(ctx) || await ctx.request.json();
- */
-export function getUsedBody<T>(ctx: Context<T>): (T extends AnyObjectSchema ? Output<T> : T) | undefined {
-	if (!ctx.request.bodyUsed) return undefined;
-	// @ts-ignore
-	return ctx.request.json();
-}
-
-export function formDataToObject(formData: FormData): Record<string, any> {
-	const obj: Record<string, File | string | string[]> = {};
-	formData.forEach((value, key) => {
-		let val: any;
-		if (obj[key] === undefined) val = value;
-		else if (obj[key] === "number") val = Number(value);
-		else if (obj[key] === "boolean") val = value === "true";
-		else if (obj[key] === "null") val = null;
-		else if (obj[key] === "undefined") val = undefined;
-		else if (obj[key] === "object") val = JSON.parse(value as any);
-		obj[key] = val;
-	});
-	return obj;
-}
-
-export function unionStringToSet(str: string): Set<string | number> {
-	return new Set(
-		str.split("|").map((s) => {
-			const num = Number(s);
-			return isNaN(num) ? s.replaceAll(/[ \"]/g, "") : num;
-		}),
-	);
-}
-
-export function unionHas(set: Set<any>, value: any): boolean {
-	if (Number(value) && !isNaN(Number(value))) return set.has(Number(value));
-	return set.has(value);
-}
 
 //  ---------------------- DATABASE UTILS ----------------------  \\
 
@@ -131,46 +87,6 @@ export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>): Pro
 	})();
 };
 
-export const execTryCatch = async <T>(func: (t: Transaction) => Promise<T>, errorMessage?: string): Promise<EndpointResponse<T> | EndpointResponseError> => {
-	// This is a work around because if I return inside the try-catch blocks, the return type is not inferred correctly
-	let res: EndpointResponse<T> | EndpointResponseError;
-	const needsTransaction: boolean = func.length === 1;
-	try {
-		let response;
-
-		if (needsTransaction) {
-			response = await executeTransaction(func as (t: Transaction) => Promise<T>);
-		} else {
-			response = (await (func as () => Promise<T>)()) as T;
-		}
-
-		// @ts-ignore
-		if (typeof response === "string") res = MessageWrapper(response);
-		else res = DataWrapper(response);
-	} catch (error: any) {
-		console.log(error);
-		if (error instanceof Error) {
-			res = ErrorWrapper((errorMessage || "") + " " + error.message);
-		} else {
-			res = ErrorWrapper((errorMessage || "") + " " + error);
-		}
-	}
-	return res;
-};
-
-export const ErrorWrapper = (error: any): EndpointResponseError => {
-	return { res: { type: "error", error } };
-};
-
-export const MessageWrapper = (msg: string): EndpointResponse<string> => {
-	return {
-		res: { type: "message", message: msg },
-	};
-};
-
-export const DataWrapper = <T>(data: T) => {
-	return { res: { type: "data", data } } as EndpointResponse<T>;
-};
 
 // Use case: import a module for use only in development.
 // Any other use case will 99% probably crash the build process.
