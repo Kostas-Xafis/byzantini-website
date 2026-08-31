@@ -1,7 +1,7 @@
 ---
 const principalText = [
 	`Γεννήθηκε στὸ Περδικονέρι Ἀρκαδίας.
-Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ
+Ὑπηρετεῖ ὡς Ἐφημέριος στὸν Ἱερὸ
 Μητροπολιτικὸ Ναὸ Ἁγίου Δημητρίου
 Κηφισιᾶς.`,
 	`Τυγχάνει πτυχιοῦχος τῆς Θεολογικῆς Σχολῆς
@@ -17,8 +17,8 @@ const principalText = [
 Ἐπίτροπος τῆς Ἱερᾶς Μητροπόλεως.`,
 	`Ὁ π. Χρῖστος ἀπὸ νεαρὴ ἡλικία ἔδειξε τὴν κλίση του πρὸς τὴν μουσική.
 Πρῶτος διδάσκαλός του στὴν Βυζαντινὴ Μουσική, ὁ Δημήτριος
-Παναγιωτόπουλος - Κοῦρος, στὴ Ριζάρειο Σχολή, τῆς ὁποίας τυγχάνει
-ἀπόφοιτος. Ἀργότερα διηύρυνε καὶ ὁλοκλήρωσε τὴν μουσική του παιδεία,
+Παναγιωτόπουλος - Κοῦρος, στὴ Ριζάρειο Σχολή, τῆς ὁποίας τυγχάνει
+ἀπόφοιτος. Ἀργότερα διηύρυνε καὶ ὁλοκλήρωσε τὴν μουσική του παιδεία,
 στὸ Ὠδεῖο Ἀθηνῶν, στὸ Ἑλληνικὸ Ὠδεῖο, στό Ὠδεῖο Ἀχαρνῶν καί στό Ὠδεῖο
 Ἀργυρουπόλεως. Εἶναι πτυχιοῦχος καὶ διπλωματοῦχος μουσικοδιδάσκαλος
 τῆς Βυζαντινῆς Μουσικῆς. Στὸν Μητροπολιτικὸ Ἱερὸ Ναὸ Ἁγίου Δημητρίου
@@ -45,7 +45,7 @@ const principalText = [
 θεωρεῖται ἐκείνη, ἡ ὁποία πραγματοποιήθηκε μετὰ ἀπὸ ἔρευνά του γιὰ τὸν
 Θούριο τοῦ Ρήγα Βελεστινλῆ καὶ τὴν ὁποία ἐξέδωσε σὲ ψηφιακὸ δίσκο, ἡ
 «Ἐπιστημονικὴ Ἑταιρεία Μελέτης Φερρῶν - Βελεστίνου Ρήγα». Μάλιστα
-παρουσιάστηκε στόν Βόλο, μὲ τὴν εὐκαιρία τῆς συμπληρώσεως διακοσίων
+παρουσιάστηκε στόν Βόλο, μὲ τὴν εὐκαιρία τῆς συμπληρώσεως διακοσίων
 ἐτῶν, ἀπὸ τὸν μαρτυρικὸ θάνατο τοῦ πρωτομάρτυρα τῆς λευτεριᾶς. Ἐπίσης,
 ἔχει ἑρμηνεύσει τὸν πρωταγωνιστικὸ ρόλο στὸ θρησκευτικὸ ὁρατόριο –
 ραψωδία «Κοσμᾶς ὁ Αἰτωλός» σὲ μουσικὴ Σωκράτη Βενάρδου καί ποίηση
@@ -68,82 +68,85 @@ const imgSrc = "/kathigites/picture/";
 ---
 
 <>
-	<div class="relative flex flex-col">
+	<div class="relative w-full max-w-[1500px] mx-auto flex flex-col items-stretch">
+		<header
+			class="relative flex flex-col items-center gap-y-2 pt-2 pb-7 max-sm:pb-5 select-none">
+			<div class="flex items-center gap-4 max-sm:gap-2" aria-hidden="true">
+				<span class="h-px w-24 max-sm:w-10 bg-gradient-to-r from-transparent to-red-900/50"
+				></span>
+				<i class="fa-solid fa-diamond text-[0.55rem] text-red-900/60"></i>
+				<span class="h-px w-24 max-sm:w-10 bg-gradient-to-l from-transparent to-red-900/50"
+				></span>
+			</div>
+			<h1
+				class="text-[3.2vw] max-sm:text-[1.85rem] max-3xs:text-2xl leading-tight text-center font-anaktoria font-bold text-red-900 drop-shadow-[0_2px_2px_rgba(127,29,29,0.16)]">
+				Διοικητικό Συμβούλιο
+			</h1>
+			<p
+				class="text-lg max-sm:text-base text-center font-didact tracking-wide text-red-900/70">
+				Σχολῆς Βυζαντινῆς καὶ Παραδοσιακῆς Μουσικῆς
+			</p>
+			<div class="flex items-center gap-2 mt-1 text-red-900/40" aria-hidden="true">
+				<span class="h-px w-14 max-sm:w-8 bg-gradient-to-r from-transparent to-red-900/40"
+				></span>
+				<i class="fa-solid fa-diamond text-[0.45rem]"></i>
+				<span class="h-px w-14 max-sm:w-8 bg-gradient-to-l from-transparent to-red-900/40"
+				></span>
+			</div>
+		</header>
 		<section
 			id="selectContainer"
-			data-selected="xairetismos"
-			class="group/select relative z-10 self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center border-x-2 border-t-2 border-red-900 rounded-t-xl overflow-hidden bg-red-50 shadow-lg shadow-red-900/25">
-			<button
-				id="xairetismosBtn"
-				type="button"
-				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='xairetismos']/select:bg-gradient-to-b group-data-[selected='xairetismos']/select:from-red-900 group-data-[selected='xairetismos']/select:to-red-950 group-data-[selected='xairetismos']/select:text-white"
-				><span class="transition-transform duration-300 group-hover/btn:-translate-y-1"
-					>Χαιρετισμός Σεβ. Μητροπολίτου</span
-				></button
-			>
+			role="tablist"
+			aria-label="Περιεχόμενα σελίδας"
+			data-selected="org"
+			class="group/select relative z-10 self-center w-full font-bold font-anaktoria flex flex-row justify-evenly max-sm:flex-wrap max-sm:justify-center border-x-2 border-t-2 border-red-900 rounded-t-2xl overflow-hidden bg-[linear-gradient(180deg,#fef2f2_0%,#fde8e8_100%)] shadow-xl shadow-red-900/20">
+			<span
+				class="pointer-events-none absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-amber-500/70 to-transparent"
+				aria-hidden="true"></span>
 			<button
 				id="principalBtn"
 				type="button"
-				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='principal']/select:bg-gradient-to-b group-data-[selected='principal']/select:from-red-900 group-data-[selected='principal']/select:to-red-950 group-data-[selected='principal']/select:text-white"
-				><span class="transition-transform duration-300 group-hover/btn:-translate-y-1"
+				role="tab"
+				aria-selected="false"
+				aria-controls="principalContainer"
+				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 flex flex-row items-center justify-center gap-3 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='principal']/select:bg-gradient-to-b group-data-[selected='principal']/select:from-red-900 group-data-[selected='principal']/select:to-red-950 group-data-[selected='principal']/select:text-white">
+				<span
+					class="grid place-items-center w-11 h-11 max-sm:w-9 max-sm:h-9 shrink-0 rounded-full border border-red-900/15 bg-red-900/10 text-red-900 text-xl max-sm:text-base transition-all duration-300 group-hover/btn:scale-105 group-data-[selected='principal']/select:border-amber-200/40 group-data-[selected='principal']/select:bg-amber-400 group-data-[selected='principal']/select:text-red-950 group-data-[selected='principal']/select:shadow-[0_0_14px_rgba(251,191,36,0.55)]">
+					<i class="fa-solid fa-user-tie"></i>
+				</span>
+				<span class="transition-transform duration-300 group-hover/btn:-translate-y-1"
 					>Ο Διευθυντής</span
-				></button
-			>
+				>
+				<span
+					class="absolute bottom-0 left-[22%] right-[22%] h-[3px] rounded-t-full bg-gradient-to-r from-amber-400/0 via-amber-400 to-amber-400/0 opacity-0 transition-opacity duration-300 group-data-[selected='principal']/select:opacity-100"
+					aria-hidden="true"></span>
+			</button>
 			<button
 				id="orgBtn"
 				type="button"
-				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='org']/select:bg-gradient-to-b group-data-[selected='org']/select:from-red-900 group-data-[selected='org']/select:to-red-950 group-data-[selected='org']/select:text-white"
-				><span class="transition-transform duration-300 group-hover/btn:-translate-y-1"
+				role="tab"
+				aria-selected="true"
+				aria-controls="orgContainer"
+				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 flex flex-row items-center justify-center gap-3 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='org']/select:bg-gradient-to-b group-data-[selected='org']/select:from-red-900 group-data-[selected='org']/select:to-red-950 group-data-[selected='org']/select:text-white">
+				<span
+					class="grid place-items-center w-11 h-11 max-sm:w-9 max-sm:h-9 shrink-0 rounded-full border border-red-900/15 bg-red-900/10 text-red-900 text-xl max-sm:text-base transition-all duration-300 group-hover/btn:scale-105 group-data-[selected='org']/select:border-amber-200/40 group-data-[selected='org']/select:bg-amber-400 group-data-[selected='org']/select:text-red-950 group-data-[selected='org']/select:shadow-[0_0_14px_rgba(251,191,36,0.55)]">
+					<i class="fa-solid fa-users"></i>
+				</span>
+				<span class="transition-transform duration-300 group-hover/btn:-translate-y-1"
 					>Διοικητικό Συμβούλιο</span
-				></button
-			>
-		</section>
-		<section
-			id="xairetismosContainer"
-			class="contentContainer rounded-b-xl border-x-2 border-b-2 border-red-900 bg-white shadow-lg shadow-red-900/25">
-			<div
-				class="flex flex-col items-center justify-center gap-y-8 px-6 pt-10 pb-12 max-sm:px-3 max-sm:gap-y-6 max-sm:pt-6 max-sm:pb-8 bg-[radial-gradient(900px_380px_at_50%_-60px,rgb(127_29_29/0.07),transparent_70%)]">
-				<div class="flex flex-col items-center gap-y-3 font-bold">
-					<h2 class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900">
-						Χαιρετισμὸς Σεβασμιωτάτου Μητροπολίτου<span class="sm:hidden">
-							Κηφισίας, Ἀμαρουσίου, Ὠρωποῦ καὶ Μαραθῶνος κ. Κυρίλλου</span
-						>
-					</h2>
-					<h2
-						class="text-[3vw] max-sm:text-2xl text-center font-anaktoria text-red-900 max-sm:hidden">
-						Κηφισίας, Ἀμαρουσίου, Ὠρωποῦ καὶ Μαραθῶνος κ. Κυρίλλου
-					</h2>
-				</div>
-				<div
-					class="group/card w-full max-w-[1200px] flex flex-row max-sm:flex-col items-center max-sm:gap-y-6 overflow-hidden rounded-xl border border-amber-400/40 bg-gradient-to-br from-red-800 via-red-900 to-red-950 shadow-xl shadow-red-900/40 transition-all duration-300 hover:-translate-y-1 hover:border-amber-300 hover:shadow-2xl hover:shadow-red-950/60">
-					<div class="relative shrink-0">
-						<img
-							src="/mitropolitis.jpg"
-							alt="Φωτογραφία Σεβασμιωτάτου Μητροπολίτου"
-							width="300px"
-							class="w-[300px] max-sm:w-[200px] object-cover shadow-lg shadow-red-950/60 transition-transform duration-500 group-hover/card:scale-[1.04]"
-						/>
-					</div>
-					<p
-						class="flex-1 p-8 text-2xl leading-relaxed max-sm:p-4 max-sm:text-lg text-red-50 font-didact text-justify">
-						Ἡ Ψαλτική, καί ὡς τέχνη καί ὡς ἐπιστήμη, ἀνήκει στήν λατρευτική ζωή τῆς
-						Ἐκκλησίας μας καί λειτουργεῖ ὡς μέσο μυσταγωγικό καί ἀναγωγικό. Σημειώνουμε
-						περί αὐτοῦ τούς λόγους τοῦ Ὁσίου Πορφυρίου τοῦ Καυσοκαλυβίτου: «Κανένας
-						χριστιανός δέν πρέπει νά ὑπάρχει χωρίς νά ξέρει βυζαντινή μουσική. Πρέπει
-						ὅλοι νά μάθομε. Ἔχει ἄμεση σχέση μέ τήν ψυχή. Ἡ μουσική ἁγιάζει τόν άνθρωπο
-						ἀναίμακτα. Χωρίς κόπο, ἀγαλλόμενος, γίνεσαι ἅγιος». Ὁρμώμενοι ἐκ τῶν λόγων
-						τοῦ ἁγίου, συνειδητοποιοῦμε πόσο σημαντικό καί θεάρεστο ἔργο ἐπιτελεῖ ἡ
-						Σχολή Βυζαντινῆς καί Παραδοσιακῆς Μουσικῆς τοῦ Ἱεροῦ Ναοῦ Μεταμορφώσεως τοῦ
-						Σωτῆρος τοῦ Δήμου Μεταμόρφωσης, τῆς καθ’ ἡμᾶς Ἱεράς Μητροπόλεως, τό ὁποῖο
-						ἐπευλογοῦμε καί στηρίζομε.
-					</p>
-				</div>
-			</div>
+				>
+				<span
+					class="absolute bottom-0 left-[22%] right-[22%] h-[3px] rounded-t-full bg-gradient-to-r from-amber-400/0 via-amber-400 to-amber-400/0 opacity-0 transition-opacity duration-300 group-data-[selected='org']/select:opacity-100"
+					aria-hidden="true"></span>
+			</button>
 		</section>
 		<section
 			id="principalContainer"
-			class="contentContainer hidden group relative h-max rounded-b-xl border-x-2 border-b-2 border-red-900 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] shadow-lg shadow-red-900/25 text-white">
-			<div class="flex flex-row gap-x-6 max-sm:gap-x-0 max-sm:gap-y-5 max-sm:flex-col">
+			role="tabpanel"
+			aria-labelledby="principalBtn"
+			class="contentContainer hidden group relative h-max overflow-hidden rounded-b-2xl border-x-2 border-b-2 border-red-900 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] shadow-2xl shadow-red-900/30 text-white">
+			<div
+				class="relative z-10 flex flex-row gap-x-6 max-sm:gap-x-0 max-sm:gap-y-5 max-sm:flex-col">
 				<p
 					class="sm:hidden pt-4 text-2xl max-3xs:text-xl tracking-wide text-center font-anaktoria flex items-center justify-center gap-3 text-white drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
 					<i class="fa-solid fa-diamond text-[0.35em] text-amber-400"></i>
@@ -151,13 +154,19 @@ const imgSrc = "/kathigites/picture/";
 					<i class="fa-solid fa-diamond text-[0.35em] text-amber-400"></i>
 				</p>
 				<figure
-					class="flex shrink-0 flex-col items-center gap-y-3 px-6 py-8 max-sm:px-0 max-sm:pt-0 max-sm:pb-2 self-center sm:group-[:is(.unfold)]:sticky sm:top-[calc(4.2vw+1rem)] sm:group-[:is(.unfold)]:self-start">
-					<img
-						src={imgSrc + "Πρωτοπρ. Χρίστος Κυριακόπουλος.jpeg"}
-						alt="Φωτογραφία Διευθυντή"
-						width="350px"
-						class="w-[350px] max-w-full max-sm:w-[250px] object-cover rounded-xl shadow-lg shadow-red-950/60 ring-1 ring-amber-400/40 transition-shadow duration-300 hover:shadow-xl hover:ring-amber-300/70"
-					/>
+					class="group/fig flex shrink-0 flex-col items-center gap-y-3 px-6 py-8 max-sm:px-0 max-sm:pt-0 max-sm:pb-2 self-center sm:group-[:is(.unfold)]:sticky sm:top-[calc(4.2vw+1rem)] sm:group-[:is(.unfold)]:self-start">
+					<div
+						class="rounded-2xl p-[3px] bg-gradient-to-b from-amber-300/90 via-amber-500/50 to-amber-700/20 shadow-[0_12px_45px_-10px_rgba(0,0,0,0.75)] transition-shadow duration-500 group-hover/fig:shadow-[0_12px_55px_-8px_rgba(251,191,36,0.25)]">
+						<img
+							src={imgSrc + "Πρωτοπρ. Χρίστος Κυριακόπουλος.jpeg"}
+							alt="Φωτογραφία Διευθυντή"
+							width="350px"
+							class="w-[350px] max-w-full max-sm:w-[250px] object-cover rounded-[13px] transition-transform duration-500 group-hover/fig:scale-[1.03]"
+						/>
+						<span
+							class="pointer-events-none absolute inset-[3px] rounded-[13px] ring-1 ring-inset ring-amber-200/30"
+							aria-hidden="true"></span>
+					</div>
 				</figure>
 				<div
 					class="relative flex min-w-0 flex-1 flex-col gap-y-4 px-12 py-8 pb-10 max-sm:px-4">
@@ -225,69 +234,226 @@ const imgSrc = "/kathigites/picture/";
 		</section>
 		<section
 			id="orgContainer"
-			class="contentContainer hidden group relative h-max rounded-b-xl border-x-2 border-b-2 border-red-900 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] shadow-lg shadow-red-900/25 text-white p-8 max-sm:p-4">
-			<div class="flex flex-col items-center gap-5">
-				<h1
-					class="max-sm:text-2xl text-[2.25vw] tracking-wide text-center font-anaktoria text-white max-3xs:text-xl drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
-					Διοικοῦσα &thinsp;Ἐπιτροπὴ τῆς Σχολῆς Βυζαντινῆς καὶ Παραδοσιακῆς Μουσικῆς
-				</h1>
-				<ol class="flex w-full max-w-[100ch] flex-col gap-y-3 text-xl max-sm:text-lg">
-					<li
-						class="text-white rounded-md border-l-2 border-amber-400/60 bg-red-950/40 px-5 py-3 leading-relaxed transition-colors duration-300 hover:bg-red-950/60">
-						Πρόεδρος ὁ Αἰδεσ/τος Πρωτοπρεσβύτερος Σωτήριος Ἀλεβιζάκης,
-					</li>
-					<li
-						class="text-white rounded-md border-l-2 border-amber-400/60 bg-red-950/40 px-5 py-3 leading-relaxed transition-colors duration-300 hover:bg-red-950/60">
-						Γραμματέας ὁ κ. Βενέδικτος Γαρουφαλῆς, Λαμπαδάριος τοῦ Ἱ.Ν. Μετ/σεως Σωτῆρος
-						καί
-					</li>
-					<li
-						class="text-white rounded-md border-l-2 border-amber-400/60 bg-red-950/40 px-5 py-3 leading-relaxed transition-colors duration-300 hover:bg-red-950/60">
-						Ταμίας κ. Κωνσταντῖνος Μαυρογόνατος, Ἀντιπρόεδρος τοῦ Ἐκκλησιαστικοῦ
-						Συμβουλίου Ἱ.Ν. Μετ/σεως Σωτῆρος
-					</li>
-				</ol>
-				<div class="pt-6 flex flex-row flex-wrap gap-4 place-content-center">
-					<a
-						target="_blank"
-						href="/fek-byzantini.pdf"
-						class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/60 bg-red-950/40 px-5 py-2.5 text-xl max-sm:text-base font-didact font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-						><i
-							class="fa-solid fa-file-pdf text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
-						></i>ΦΕΚ Βυζαντινής Μουσικής</a
-					>
-					<a
-						target="_blank"
-						href="/fek-paradosiaki.pdf"
-						class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/60 bg-red-950/40 px-5 py-2.5 text-xl max-sm:text-base font-didact font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-						><i
-							class="fa-solid fa-file-pdf text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
-						></i>ΦΕΚ Παραδοσιακής Μουσικής</a
-					>
-					<a
-						target="_blank"
-						href="/praktiko_dioik_epitroph.pdf"
-						class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/60 bg-red-950/40 px-5 py-2.5 text-xl max-sm:text-base font-didact font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-						><i
-							class="fa-solid fa-file-pdf text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
-						></i>Ορισμός Διοικούσας Επιστροπής της Σχολής</a
-					>
-					<a
-						target="_blank"
-						href="/praktiko_peri_idrysews.pdf"
-						class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/60 bg-red-950/40 px-5 py-2.5 text-xl max-sm:text-base font-didact font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-						><i
-							class="fa-solid fa-file-pdf text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
-						></i>Ιδρύση της Σχολής Βυζαντινής Μουσικής</a
-					>
-					<a
-						target="_blank"
-						href="/egkrisis.pdf"
-						class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/60 bg-red-950/40 px-5 py-2.5 text-xl max-sm:text-base font-didact font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-						><i
-							class="fa-solid fa-file-pdf text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"
-						></i>Έγκριση ιδρύσεως και λειτουργίας της Σχολής</a
-					>
+			role="tabpanel"
+			aria-labelledby="orgBtn"
+			class="contentContainer group relative h-max overflow-hidden rounded-b-2xl border-x-2 border-b-2 border-red-900 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] shadow-2xl shadow-red-900/30 text-white">
+			<div
+				class="relative z-10 w-full mx-auto max-w-[1400px] flex flex-col items-center gap-6 px-8 py-10 max-sm:px-4 max-sm:py-7">
+				<div class="flex items-center gap-3 text-amber-400" aria-hidden="true">
+					<span
+						class="h-px w-16 max-sm:w-8 bg-gradient-to-r from-transparent to-amber-400/70"
+					></span>
+					<i class="fa-solid fa-diamond text-[0.55rem]"></i>
+					<span
+						class="h-px w-16 max-sm:w-8 bg-gradient-to-l from-transparent to-amber-400/70"
+					></span>
+				</div>
+				<div class="flex flex-col items-center gap-y-1.5">
+					<h2
+						class="text-[2.4vw] max-sm:text-3xl max-3xs:text-xl tracking-wide text-center font-anaktoria text-white drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
+						Διοικοῦσα &thinsp;Ἐπιτροπὴ
+					</h2>
+					<p class="text-lg max-sm:text-base text-amber-100/85 font-didact tracking-wide">
+						τῆς Σχολῆς Βυζαντινῆς καὶ Παραδοσιακῆς Μουσικῆς
+					</p>
+				</div>
+				<div class="grid w-full max-w-[1150px] grid-cols-1 md:grid-cols-3 gap-4 mt-1">
+					<div
+						class="group/member relative flex flex-col items-center gap-4 rounded-2xl border border-amber-400/25 bg-[linear-gradient(180deg,rgba(127,29,29,0.5),rgba(69,10,10,0.3))] p-6 pt-7 shadow-lg shadow-red-950/40 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300/60 hover:shadow-2xl hover:shadow-amber-900/30">
+						<span
+							class="absolute top-3 right-4 text-sm font-anaktoria text-amber-300/60"
+							aria-hidden="true">Α΄</span
+						>
+						<span
+							class="grid place-items-center w-16 h-16 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 text-2xl shadow-lg shadow-amber-900/40 ring-4 ring-amber-400/15 transition-transform duration-300 group-hover/member:scale-110">
+							<i class="fa-solid fa-user-tie"></i>
+						</span>
+						<div class="flex flex-col items-center gap-1 text-center">
+							<span
+								class="text-xs font-bold uppercase tracking-[0.28em] text-amber-300"
+								>Πρόεδρος</span
+							>
+							<h3 class="text-2xl max-sm:text-xl font-anaktoria text-white">
+								Αἰδεσ/τος Πρωτοπρεσβύτερος Σωτήριος Ἀλεβιζάκης
+							</h3>
+						</div>
+					</div>
+					<div
+						class="group/member relative flex flex-col items-center gap-4 rounded-2xl border border-amber-400/25 bg-[linear-gradient(180deg,rgba(127,29,29,0.5),rgba(69,10,10,0.3))] p-6 pt-7 shadow-lg shadow-red-950/40 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300/60 hover:shadow-2xl hover:shadow-amber-900/30">
+						<span
+							class="absolute top-3 right-4 text-sm font-anaktoria text-amber-300/60"
+							aria-hidden="true">Β΄</span
+						>
+						<span
+							class="grid place-items-center w-16 h-16 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 text-2xl shadow-lg shadow-amber-900/40 ring-4 ring-amber-400/15 transition-transform duration-300 group-hover/member:scale-110">
+							<i class="fa-solid fa-scroll"></i>
+						</span>
+						<div class="flex flex-col items-center gap-1 text-center">
+							<span
+								class="text-xs font-bold uppercase tracking-[0.28em] text-amber-300"
+								>Γραμματέας</span
+							>
+							<h3 class="text-2xl max-sm:text-xl font-anaktoria text-white">
+								Βενέδικτος Γαρουφαλῆς
+							</h3>
+							<p class="text-base leading-relaxed text-red-100/85">
+								Λαμπαδάριος τοῦ Ἱ.Ν. Μετ/σεως Σωτῆρος
+							</p>
+						</div>
+					</div>
+					<div
+						class="group/member relative flex flex-col items-center gap-4 rounded-2xl border border-amber-400/25 bg-[linear-gradient(180deg,rgba(127,29,29,0.5),rgba(69,10,10,0.3))] p-6 pt-7 shadow-lg shadow-red-950/40 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300/60 hover:shadow-2xl hover:shadow-amber-900/30">
+						<span
+							class="absolute top-3 right-4 text-sm font-anaktoria text-amber-300/60"
+							aria-hidden="true">Γ΄</span
+						>
+						<span
+							class="grid place-items-center w-16 h-16 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 text-2xl shadow-lg shadow-amber-900/40 ring-4 ring-amber-400/15 transition-transform duration-300 group-hover/member:scale-110">
+							<i class="fa-solid fa-coins"></i>
+						</span>
+						<div class="flex flex-col items-center gap-1 text-center">
+							<span
+								class="text-xs font-bold uppercase tracking-[0.28em] text-amber-300"
+								>Ταμίας</span
+							>
+							<h3 class="text-2xl max-sm:text-xl font-anaktoria text-white">
+								Κωνσταντῖνος Μαυρογόνατος
+							</h3>
+							<p class="text-base leading-relaxed text-red-100/85">
+								Ἀντιπρόεδρος τοῦ Ἐκκλησιαστικοῦ Συμβουλίου Ἱ.Ν. Μετ/σεως Σωτῆρος
+							</p>
+						</div>
+					</div>
+				</div>
+				<div class="flex w-full max-w-[1150px] flex-col items-center gap-5 mt-4">
+					<div class="flex items-center gap-3 text-amber-400" aria-hidden="true">
+						<span
+							class="h-px w-16 max-sm:w-8 bg-gradient-to-r from-transparent to-amber-400/70"
+						></span>
+						<i class="fa-solid fa-diamond text-[0.55rem]"></i>
+						<span
+							class="h-px w-16 max-sm:w-8 bg-gradient-to-l from-transparent to-amber-400/70"
+						></span>
+					</div>
+					<h2 class="text-3xl max-sm:text-2xl text-center font-anaktoria text-white">
+						Σχετικὰ ἔγγραφα
+					</h2>
+					<div class="grid w-full grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3.5">
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							href="/fek-byzantini.pdf"
+							class="group/doc flex items-center gap-4 rounded-xl border border-amber-400/25 bg-red-950/45 px-5 py-4 text-left shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300/70 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+							<span
+								class="grid place-items-center w-11 h-11 shrink-0 rounded-lg bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 shadow shadow-amber-900/30 transition-colors duration-300 group-hover/doc:from-red-950 group-hover/doc:to-red-900 group-hover/doc:text-amber-300">
+								<i class="fa-solid fa-file-pdf text-lg"></i>
+							</span>
+							<span
+								class="flex-1 text-lg font-bold text-red-50 transition-colors duration-300 group-hover/doc:text-red-950"
+								>ΦΕΚ Βυζαντινής Μουσικής</span
+							>
+							<span
+								class="rounded border border-amber-400/40 px-1.5 py-0.5 text-[0.6rem] font-black tracking-widest text-amber-300 transition-colors duration-300 group-hover/doc:border-red-900/30 group-hover/doc:text-red-950"
+								>PDF</span
+							>
+							<i
+								class="fa-solid fa-arrow-right text-amber-300/70 transition-all duration-300 group-hover/doc:-translate-x-0 group-hover/doc:text-red-950"
+							></i>
+						</a>
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							href="/fek-paradosiaki.pdf"
+							class="group/doc flex items-center gap-4 rounded-xl border border-amber-400/25 bg-red-950/45 px-5 py-4 text-left shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300/70 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+							<span
+								class="grid place-items-center w-11 h-11 shrink-0 rounded-lg bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 shadow shadow-amber-900/30 transition-colors duration-300 group-hover/doc:from-red-950 group-hover/doc:to-red-900 group-hover/doc:text-amber-300">
+								<i class="fa-solid fa-file-pdf text-lg"></i>
+							</span>
+							<span
+								class="flex-1 text-lg font-bold text-red-50 transition-colors duration-300 group-hover/doc:text-red-950"
+								>ΦΕΚ Παραδοσιακής Μουσικής</span
+							>
+							<span
+								class="rounded border border-amber-400/40 px-1.5 py-0.5 text-[0.6rem] font-black tracking-widest text-amber-300 transition-colors duration-300 group-hover/doc:border-red-900/30 group-hover/doc:text-red-950"
+								>PDF</span
+							>
+							<i
+								class="fa-solid fa-arrow-right text-amber-300/70 transition-all duration-300 group-hover/doc:-translate-x-0 group-hover/doc:text-red-950"
+							></i>
+						</a>
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							href="/praktiko_dioik_epitroph.pdf"
+							class="group/doc flex items-center gap-4 rounded-xl border border-amber-400/25 bg-red-950/45 px-5 py-4 text-left shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300/70 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+							<span
+								class="grid place-items-center w-11 h-11 shrink-0 rounded-lg bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 shadow shadow-amber-900/30 transition-colors duration-300 group-hover/doc:from-red-950 group-hover/doc:to-red-900 group-hover/doc:text-amber-300">
+								<i class="fa-solid fa-file-pdf text-lg"></i>
+							</span>
+							<span
+								class="flex-1 text-lg font-bold text-red-50 transition-colors duration-300 group-hover/doc:text-red-950"
+								>Ορισμός Διοικούσας Επιστροπής της Σχολής</span
+							>
+							<span
+								class="rounded border border-amber-400/40 px-1.5 py-0.5 text-[0.6rem] font-black tracking-widest text-amber-300 transition-colors duration-300 group-hover/doc:border-red-900/30 group-hover/doc:text-red-950"
+								>PDF</span
+							>
+							<i
+								class="fa-solid fa-arrow-right text-amber-300/70 transition-all duration-300 group-hover/doc:-translate-x-0 group-hover/doc:text-red-950"
+							></i>
+						</a>
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							href="/praktiko_peri_idrysews.pdf"
+							class="group/doc flex items-center gap-4 rounded-xl border border-amber-400/25 bg-red-950/45 px-5 py-4 text-left shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300/70 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+							<span
+								class="grid place-items-center w-11 h-11 shrink-0 rounded-lg bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 shadow shadow-amber-900/30 transition-colors duration-300 group-hover/doc:from-red-950 group-hover/doc:to-red-900 group-hover/doc:text-amber-300">
+								<i class="fa-solid fa-file-pdf text-lg"></i>
+							</span>
+							<span
+								class="flex-1 text-lg font-bold text-red-50 transition-colors duration-300 group-hover/doc:text-red-950"
+								>Ιδρύση της Σχολής Βυζαντινής Μουσικής</span
+							>
+							<span
+								class="rounded border border-amber-400/40 px-1.5 py-0.5 text-[0.6rem] font-black tracking-widest text-amber-300 transition-colors duration-300 group-hover/doc:border-red-900/30 group-hover/doc:text-red-950"
+								>PDF</span
+							>
+							<i
+								class="fa-solid fa-arrow-right text-amber-300/70 transition-all duration-300 group-hover/doc:-translate-x-0 group-hover/doc:text-red-950"
+							></i>
+						</a>
+						<a
+							target="_blank"
+							rel="noopener noreferrer"
+							href="/egkrisis.pdf"
+							class="group/doc flex items-center gap-4 rounded-xl border border-amber-400/25 bg-red-950/45 px-5 py-4 text-left shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300/70 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+							<span
+								class="grid place-items-center w-11 h-11 shrink-0 rounded-lg bg-gradient-to-b from-amber-300 to-amber-500 text-red-950 shadow shadow-amber-900/30 transition-colors duration-300 group-hover/doc:from-red-950 group-hover/doc:to-red-900 group-hover/doc:text-amber-300">
+								<i class="fa-solid fa-file-pdf text-lg"></i>
+							</span>
+							<span
+								class="flex-1 text-lg font-bold text-red-50 transition-colors duration-300 group-hover/doc:text-red-950"
+								>Έγκριση ιδρύσεως και λειτουργίας της Σχολής</span
+							>
+							<span
+								class="rounded border border-amber-400/40 px-1.5 py-0.5 text-[0.6rem] font-black tracking-widest text-amber-300 transition-colors duration-300 group-hover/doc:border-red-900/30 group-hover/doc:text-red-950"
+								>PDF</span
+							>
+							<i
+								class="fa-solid fa-arrow-right text-amber-300/70 transition-all duration-300 group-hover/doc:-translate-x-0 group-hover/doc:text-red-950"
+							></i>
+						</a>
+					</div>
+					<div class="flex items-center gap-2 pt-4 text-amber-400/50" aria-hidden="true">
+						<span
+							class="h-px w-14 max-sm:w-8 bg-gradient-to-r from-transparent to-amber-400/50"
+						></span>
+						<i class="fa-solid fa-diamond text-[0.45rem]"></i>
+						<span
+							class="h-px w-14 max-sm:w-8 bg-gradient-to-l from-transparent to-amber-400/50"
+						></span>
+					</div>
 				</div>
 			</div>
 		</section>
@@ -302,17 +468,18 @@ const imgSrc = "/kathigites/picture/";
 			animation: fadeIn 0.6s ease-in-out forwards;
 		}
 
-		#orgContainer ol li {
-			list-style: decimal;
-			list-style-position: inside;
-		}
-		#orgContainer ol li::marker {
-			color: rgb(252 211 77);
-			font-weight: 700;
-		}
-
-		#xairetismos-mitropolitou h2 {
-			text-shadow: -1px 2px 2px rgba(12 10 9 / 0.35);
+		.contentContainer::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			z-index: 0;
+			pointer-events: none;
+			background:
+				radial-gradient(140% 80% at 50% 0%, rgb(251 191 36 / 0.08), transparent 60%),
+				radial-gradient(rgb(255 209 102 / 0.04) 1px, transparent 1.4px);
+			background-size:
+				100% 100%,
+				26px 26px;
 		}
 
 		.readMore-bob {
@@ -407,7 +574,7 @@ const imgSrc = "/kathigites/picture/";
 			container.classList.remove("open");
 		}, 500);
 	});
-	const btns = ["xairetismos", "principal", "org"];
+	const btns = ["principal", "org"];
 	btns.forEach((btnName) => {
 		onElementMount(`#${btnName}Btn`, () => {
 			const selectContainer = document.querySelector("#selectContainer") as HTMLDivElement;
@@ -418,14 +585,18 @@ const imgSrc = "/kathigites/picture/";
 					".contentContainer:is(:not(.hidden))",
 				) as HTMLDivElement;
 				selectContainer.dataset.selected = btnName;
+				selectContainer
+					.querySelectorAll<HTMLButtonElement>("[role='tab']")
+					.forEach((tab) => tab.setAttribute("aria-selected", String(tab === btn)));
 				swapElementsWithFade(prevContainer, container);
 			});
 		});
 	});
-	if (btns.includes(window.location.hash)) {
+	const hash = window.location.hash.slice(1);
+	if (btns.includes(hash)) {
 		onElementMount("#sxoli", () => {
 			setTimeout(() => {
-				const btn = document.querySelector(`#${window.location.hash}Btn`) as HTMLDivElement;
+				const btn = document.querySelector(`#${hash}Btn`) as HTMLDivElement;
 				btn.click();
 			}, 200);
 		});

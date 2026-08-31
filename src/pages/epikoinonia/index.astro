@@ -91,15 +91,8 @@ try {
 }
 
 const seat = locations.find((l) => l.priority === 1) ?? locations[0];
-const schoolLocations = locations.filter((l) => !l.partner);
-const partnerLocations = locations.filter((l) => !!l.partner);
 const formatAddress = (l: Locations) =>
 	`${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
-const phones = (l: Locations) =>
-	l.telephones
-		.split(",")
-		.map((t) => t.trim())
-		.filter(Boolean);
 const mapSrc =
 	seat?.map ||
 	`https://maps.google.com/maps?q=${SCHOOL.geo.latitude},${SCHOOL.geo.longitude}&z=17&output=embed`;
@@ -336,12 +329,6 @@ const contactPageSchema = {
 							<i class="fa-solid fa-diamond-turn-right"></i>
 							Οδηγίες στους Χάρτες Google
 						</a>
-						<a
-							href="/spoudastiria"
-							class="inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-5 py-2 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
-							<i class="fa-solid fa-location-dot"></i>
-							Όλα τα σπουδαστήρια
-						</a>
 					</div>
 				</div>
 				<div
@@ -360,113 +347,31 @@ const contactPageSchema = {
 			<p
 				class="max-w-[80ch] text-center text-lg max-sm:text-base leading-relaxed text-red-950/80">
 				Τα μαθήματα δεν διεξάγονται μόνο στην έδρα: η Σχολή διαθέτει σπουδαστήρια και
-				συνεργάζεται με σχολές σε πολλές περιοχές της Αττικής. Επικοινωνήστε με το
-				πλησιέστερο σε εσάς σημείο.
+				συνεργάζεται με σχολές σε πολλές περιοχές της Αττικής. Δείτε αναλυτικά τις
+				διευθύνσεις, τα τηλέφωνα και τους χάρτες όλων των σημείων διεξαγωγής.
 			</p>
-			{
-				schoolLocations.length > 0 && (
-					<div class="w-full flex flex-col gap-y-4 max-w-[1400px]">
-						<h3 class="text-2xl max-sm:text-lg font-bold font-anaktoria text-red-900">
-							Σπουδαστήρια της Σχολής
-						</h3>
-						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-							{schoolLocations.map((l) => (
-								<article class="flex flex-col gap-y-3 rounded-xl border-2 border-red-900 bg-white p-5 shadow-md shadow-gray-400 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-									<h4 class="text-lg max-sm:text-base font-bold leading-snug text-red-950">
-										{l.name}
-									</h4>
-									<p class="text-base max-sm:text-sm leading-relaxed">
-										<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
-										{formatAddress(l)}
-									</p>
-									<p class="text-base max-sm:text-sm">
-										<i class="fa-solid fa-user pr-2 text-red-900/70" />
-										{l.manager}
-									</p>
-									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-base max-sm:text-sm">
-										{phones(l).map((phone) => (
-											<a
-												href={`tel:${phone}`}
-												class="font-semibold text-red-900">
-												<i class="fa-solid fa-phone pr-1.5" />
-												<span class="underline decoration-1 underline-offset-4">
-													{phone}
-												</span>
-											</a>
-										))}
-									</div>
-									{l.email && (
-										<p class="text-base max-sm:text-sm">
-											<i class="fa-solid fa-envelope pr-2 text-red-900/70" />
-											<a
-												href={`mailto:${l.email}`}
-												class="underline decoration-1 underline-offset-4 hover:text-red-900">
-												{l.email}
-											</a>
-										</p>
-									)}
-									<a
-										href={`/spoudastiria#${encodeURIComponent(l.name)}`}
-										class="mt-auto inline-flex w-max items-center gap-2 pt-1 font-semibold text-red-900 transition-colors hover:text-red-700">
-										Λεπτομέρειες
-										<i class="fa-solid fa-arrow-right text-sm" />
-									</a>
-								</article>
-							))}
-						</div>
-					</div>
-				)
-			}
-			{
-				partnerLocations.length > 0 && (
-					<div class="w-full flex flex-col gap-y-4 max-w-[1400px]">
-						<h3 class="text-2xl max-sm:text-lg font-bold font-anaktoria text-red-900">
-							Συνεργαζόμενες σχολές
-						</h3>
-						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-							{partnerLocations.map((l) => (
-								<article class="flex flex-col gap-y-3 rounded-xl border-2 border-red-900/60 bg-red-900/[0.04] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-									<h4 class="text-lg max-sm:text-base font-bold leading-snug text-red-950">
-										{l.name}
-									</h4>
-									<p class="text-base max-sm:text-sm leading-relaxed">
-										<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
-										{formatAddress(l)}
-									</p>
-									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-base max-sm:text-sm">
-										{phones(l).map((phone) => (
-											<a
-												href={`tel:${phone}`}
-												class="font-semibold text-red-900">
-												<i class="fa-solid fa-phone pr-1.5" />
-												<span class="underline decoration-1 underline-offset-4">
-													{phone}
-												</span>
-											</a>
-										))}
-									</div>
-									{l.email && (
-										<p class="text-base max-sm:text-sm">
-											<i class="fa-solid fa-envelope pr-2 text-red-900/70" />
-											<a
-												href={`mailto:${l.email}`}
-												class="underline decoration-1 underline-offset-4 hover:text-red-900">
-												{l.email}
-											</a>
-										</p>
-									)}
-									<a
-										href={`/spoudastiria#${encodeURIComponent(l.name)}`}
-										class="mt-auto inline-flex w-max items-center gap-2 pt-1 font-semibold text-red-900 transition-colors hover:text-red-700">
-										Λεπτομέρειες
-										<i class="fa-solid fa-arrow-right text-sm" />
-									</a>
-								</article>
-							))}
-						</div>
-					</div>
-				)
-			}
+			<div
+				class="w-full max-w-[900px] flex flex-col sm:flex-row items-center gap-x-6 gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
+				<span
+					class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60">
+					<i class="fa-solid fa-map-location-dot text-2xl"></i>
+				</span>
+				<div class="flex-1 text-center sm:text-left">
+					<h3 class="text-2xl max-sm:text-xl font-bold font-anaktoria text-red-900">
+						{locations.length} σημείο{locations.length === 1 ? "" : "α"} διεξαγωγής μαθημάτων
+					</h3>
+					<p class="text-lg max-sm:text-base leading-relaxed text-red-950/85">
+						Από την έδρα της Σχολής μέχρι τα σπουδαστήρια και τις συνεργαζόμενες σχολές
+						σε όλη την Αττική — επιλέξτε το πλησιέστερο σε εσάς.
+					</p>
+				</div>
+				<a
+					href="/spoudastiria"
+					class="shrink-0 inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-6 py-2.5 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
+					<i class="fa-solid fa-location-dot"></i>
+					Όλα τα σπουδαστήρια
+				</a>
+			</div>
 		</section>
 
 		<!-- Κοινωνικά δίκτυα -->

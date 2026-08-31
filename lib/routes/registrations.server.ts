@@ -20,23 +20,27 @@ const CLASS_TYPE_EUROPEAN = 2;
 // bullet groups so each student only receives the instructions that apply to
 // their department / year.
 const successfulRegistrationTemplates = {
-	default: "epitixis_eggrafi.html",
-	byzantineE: "epitixis_eggrafi_byzantine_e.html",
-	byzantineBDiploma: "epitixis_eggrafi_byzantine_b_diploma.html",
-	traditionalBAnotera: "epitixis_eggrafi_traditional_b_anotera.html",
-	traditionalBDiploma: "epitixis_eggrafi_traditional_b_diploma.html",
+	default: "epitixis/epitixis_eggrafi.html",
+	byzantineDefault: "epitixis/epitixis_eggrafi_byzantine.html",
+	byzantineE: "epitixis/epitixis_eggrafi_byzantine_e.html",
+	byzantineBDiploma: "epitixis/epitixis_eggrafi_byzantine_b_diploma.html",
+	traditionalDefault: "epitixis/epitixis_eggrafi_traditional.html",
+	traditionalBAnotera: "epitixis/epitixis_eggrafi_traditional_b_anotera.html",
+	traditionalBDiploma: "epitixis/epitixis_eggrafi_traditional_b_diploma.html",
 } as const;
 
 function successfulRegistrationTemplate(classId: number, classYear: string): string {
 	if (classId === CLASS_TYPE_BYZANTINE) {
 		if (classYear === "Ε' Ετος") return successfulRegistrationTemplates.byzantineE;
 		if (classYear === "Β' Ετος Διπλώματος") return successfulRegistrationTemplates.byzantineBDiploma;
+		return successfulRegistrationTemplates.byzantineDefault;
 	}
 	if (classId === CLASS_TYPE_TRADITIONAL || classId === CLASS_TYPE_EUROPEAN) {
 		if (classYear === "Β' Ανωτέρα") return successfulRegistrationTemplates.traditionalBAnotera;
+		if (classId === CLASS_TYPE_TRADITIONAL && classYear === "Β' Διπλώματος")
+			return successfulRegistrationTemplates.traditionalBDiploma;
+		return successfulRegistrationTemplates.traditionalDefault;
 	}
-	if (classId === CLASS_TYPE_TRADITIONAL && classYear === "Β' Διπλώματος")
-		return successfulRegistrationTemplates.traditionalBDiploma;
 	return successfulRegistrationTemplates.default;
 }
 
@@ -122,7 +126,12 @@ serverRoutes.post.func = ({ ctx }) => {
 					to: mail_subscription[0].email,
 					subject: "Επιτυχής εγγραφή",
 					htmlTemplateName: successfulRegistrationTemplate(body.class_id, body.class_year),
-					templateData: { token: mail_subscription[0].unsubscribe_token }
+					templateData: {
+						token: mail_subscription[0].unsubscribe_token,
+						class_year: body.class_year,
+						class_type: String(body.class_id),
+						registration_year: body.registration_year
+					}
 				})
 			});
 		}

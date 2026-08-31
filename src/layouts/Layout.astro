@@ -54,12 +54,6 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 			input::-webkit-inner-spin-button {
 				display: none;
 			}
-			select:is(#mobileLocationSelect) {
-				/* for Firefox */
-				-moz-appearance: none;
-				/* for Chrome */
-				-webkit-appearance: none;
-			}
 			.heading::after {
 				content: "";
 				position: absolute;
