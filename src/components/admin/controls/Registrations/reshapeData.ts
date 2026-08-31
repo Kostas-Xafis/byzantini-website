@@ -7,19 +7,42 @@ import { toggleCheckboxes } from "../../table/Row.solid";
 import type { ColumnType } from "../../table/Table.solid";
 import { getKeyIndex } from "@utilities/objects";
 
+// Row order MUST match the `columns` map below (positional, exactly one entry
+// per column). Values are picked by property name — never `Object.values(reg)`,
+// whose key order is not guaranteed: the API validates responses through
+// `z_RegistrationsResponse`, and zod rebuilds the object in the SCHEMA's key
+// order (e.g. amka at index 2), which shifts every column after index 1.
+const classNames = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"];
+
 const registrationsToTable = (registrations: Registrations[], teachers: Teachers[], instruments: Instruments[]) => {
 	return registrations.map((reg) => {
-		const columns = Object.values(reg) as any[];
-		columns[15] = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"][columns[15] as number];
-		columns[16] = teachers.find((t) => t.id === columns[16])?.fullname;
-		columns[17] = instruments.find((i) => i.id === columns[17])?.name;
-		if (columns[19] === 0 || !columns[19]) columns[19] = null;
-		if (columns[20] === 0 || !columns[20]) columns[20] = null;
-
-		columns[22] = reg.amka;
-		columns[23] = reg.pass;
-		columns[24] = location.origin + "/eggrafes/?regid=" + reg.registration_url;
-		return columns;
+		return [
+			reg.id,
+			reg.am,
+			reg.last_name,
+			reg.first_name,
+			reg.fathers_name,
+			reg.birth_date,
+			reg.road,
+			reg.number,
+			reg.tk,
+			reg.region,
+			reg.telephone,
+			reg.cellphone,
+			reg.email,
+			reg.registration_year,
+			reg.class_year,
+			classNames[reg.class_id],
+			teachers.find((t) => t.id === reg.teacher_id)?.fullname,
+			instruments.find((i) => i.id === reg.instrument_id)?.name,
+			reg.date,
+			reg.payment_amount || null,
+			reg.total_payment || null,
+			reg.payment_date,
+			reg.amka,
+			reg.pass,
+			location.origin + "/eggrafes/?regid=" + reg.registration_url,
+		];
 	});
 };
 
