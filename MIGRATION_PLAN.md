@@ -179,6 +179,16 @@ once real D1/R2 ids are pinned — noted caveat about generated config dropping 
 5. Custom domain: add `musicschool-metamorfosi.gr` to the production Worker (custom_domains) — do NOT cut over until Phase 7.
 
 ### Phase 7 — Data cutover (the only "downtime-ish" moment)
+**✅ DONE (data + worker) — on `Workers`; domain switch pending your go-ahead.**
+Turso exported (10,514 rows incl. query_logs — `scripts/exportTurso.ts`, escaping
+`''`-based), remote `byzantini-db` migrated (`0001_initial_schema.sql`) + imported +
+**verified row-for-row vs Turso** (23 announcements, 1,377 registrations, 66 teachers,
+2,988 email_subscriptions, 7 sys_users, 103 payments, 5,531 query_logs).
+Production worker deployed (`byzantini-website-production.koxafis.workers.dev`) —
+every page, API, asset + file proxy 200 on the edge. Pages project + Turso still
+live (rollback anchors). **Open:** set the production `SECRET` to the value the
+admin password hashes were created with (Pages dashboard value — cannot be read
+from the repo), then switch the custom domain.
 1. Freeze window: pick a low-traffic slot (before the mid-September 'Αγιασμός/registrations rush).
 2. Create prod D1 (`wrangler d1 create byzantini-db`), `bun run cf d1:migrate:deploy` (schema).
 3. Import data: `wrangler d1 execute byzantini-db --remote --file <fresh-turso-export.sql>` (split if it exceeds D1 statement/file limits).
