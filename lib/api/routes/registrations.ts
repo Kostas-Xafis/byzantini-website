@@ -13,7 +13,7 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  * Route keys mirror the old `RegistrationsRoutes` so the app components keep
  * working: get, getById, getByReregistrationUrl, getTotal, getTotalByYear,
  * getYears, post, update, delete, emailSubscribe, emailUnsubscribe,
- * getSubscriptionToken.
+ * emailUnsubscribeValidate, getSubscriptionToken.
  */
 
 // class_type ids: 0 = Βυζαντινή Μουσική, 1 = Παραδοσιακή Μουσική, 2 = Ευρωπαϊκή Μουσική.
@@ -70,13 +70,16 @@ export const registrationsRoutes = {
 				"Σφάλμα κατά την ανάκτηση των εγγραφών",
 			),
 	),
-	getById: new APIServer({ method: "POST", path: "/registrations/[id:number]", responseSchema: z_RegistrationsResponse }, [authenticateMiddleware], ({ params }) =>
-		handlerResult(async () => {
-			const id = Number(params.id);
-			const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", [id]);
-			if (!registration) throw Error("Registration not found");
-			return registration;
-		}),
+	getById: new APIServer(
+		{ method: "POST", path: "/registrations/[id:number]", responseSchema: z_RegistrationsResponse },
+		[authenticateMiddleware],
+		({ params }) =>
+			handlerResult(async () => {
+				const id = Number(params.id);
+				const [registration] = await executeQuery<Registrations>("SELECT * FROM registrations WHERE id = ?", [id]);
+				if (!registration) throw Error("Registration not found");
+				return registration;
+			}),
 	),
 	getByReregistrationUrl: new APIServer(
 		{ method: "GET", path: "/registrations/reregistration/[url:string]", responseSchema: z_RegistrationsResponse },
@@ -181,6 +184,15 @@ export const registrationsRoutes = {
 				await T.executeQuery("INSERT INTO email_subscriptions (email, unsubscribe_token) VALUES (?, ?)", [body.email, R.link(16)]);
 				return { subscribed: true };
 			}, "Σφάλμα κατά την εγγραφή στο newsletter"),
+	),
+	emailUnsubscribeValidate: new APIServer(
+		{ method: "POST", path: "/registrations/email-unsubscribe/validate", schema: z_EmailToken, responseSchema: z.object({ isValid: z.boolean() }) },
+		[],
+		({ body }) =>
+			handlerResult(async () => {
+				const [isSubscribed] = await executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE unsubscribe_token = ?", [body.token]);
+				return { isValid: Boolean(isSubscribed) };
+			}, "Σφάλμα κατά τον έλεγχο του token απεγγραφής"),
 	),
 	emailUnsubscribe: new APIServer(
 		{ method: "POST", path: "/registrations/email-unsubscribe", schema: z_EmailToken, responseSchema: z.object({ isValid: z.boolean() }) },

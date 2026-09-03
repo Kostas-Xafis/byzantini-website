@@ -52,3 +52,6 @@ dist/
 /services
 /contacts/*.vcf
 worker-*.d.ts
+
+
+/email

@@ -1,7 +1,7 @@
 import { v_Registrations, type Registrations } from "@_types/entities";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 import { array, boolean, number, object, string } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
@@ -142,12 +142,31 @@ function emailRegistrationsTest() {
 		token = json.data.token ?? "";
 	});
 	test("--registrations-email-- #3", async () => {
+		const res = await useTestAPI("Registrations.emailUnsubscribeValidate", {
+			RequestObject: { token },
+		});
+
+		const json = await getJson<APIResponse["Registrations.emailUnsubscribeValidate"]>(res);
+		expectBody(json, object({ isValid: boolean() }));
+		expect(json.data.isValid).toBe(true);
+	});
+	test("--registrations-email-- #4", async () => {
 		const res = await useTestAPI("Registrations.emailUnsubscribe", {
 			RequestObject: { token },
 		});
 
 		const json = await getJson<APIResponse["Registrations.emailUnsubscribe"]>(res);
 		expectBody(json, object({ isValid: boolean() }));
+		expect(json.data.isValid).toBe(true);
+	});
+	test("--registrations-email-- #5", async () => {
+		const res = await useTestAPI("Registrations.emailUnsubscribeValidate", {
+			RequestObject: { token },
+		});
+
+		const json = await getJson<APIResponse["Registrations.emailUnsubscribeValidate"]>(res);
+		expectBody(json, object({ isValid: boolean() }));
+		expect(json.data.isValid).toBe(false);
 	});
 }
 

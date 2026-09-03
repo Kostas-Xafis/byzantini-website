@@ -8,8 +8,21 @@ let restoredUrl = new URL(Astro.url.href.replace("/?token", "?token"));
 
 const token = restoredUrl.searchParams.get("token") || "";
 
-const res = await useAPI("Registrations.emailUnsubscribe", { RequestObject: { token } }, Astro);
-let success = res.data?.isValid || false;
+// State machine: "confirm" → 2-button verification, "success" → done (PRG),
+// "failure" → invalid token or failed unsubscription.
+type UnsubscribeState = "confirm" | "success" | "failure";
+let state: UnsubscribeState = "failure";
+
+if (restoredUrl.pathname.endsWith("/success")) {
+	state = "success";
+} else if (Astro.request.method === "POST") {
+	const res = await useAPI("Registrations.emailUnsubscribe", { RequestObject: { token } }, Astro);
+	if (res.data?.isValid) return Astro.redirect("/unsubscribe/success");
+	state = "failure";
+} else {
+	const res = await useAPI("Registrations.emailUnsubscribeValidate", { RequestObject: { token } }, Astro);
+	state = res.data?.isValid ? "confirm" : "failure";
+}
 ---
 
 <SigninLayout title="Απεγγραφή" noindex>
@@ -22,7 +35,28 @@ let success = res.data?.isValid || false;
 			</a>
 		</div>
 		{
-			success ? (
+			state === "confirm" ? (
+				<div class="text-center">
+					<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Απεγγραφή από το newsletter</h2>
+					<p class="pt-4 text-xl font-didact text-red-950 dark:text-red-50">
+						Είστε σίγουρος/η πως θέλετε να απεγγραφείτε από τα ενημερωτικά μας email;
+					</p>
+					<div class="pt-8 flex flex-wrap items-center justify-center gap-4">
+						<form method="POST" action="" class="m-0">
+							<button
+								type="submit"
+								class="px-6 py-3 text-xl font-medium text-white rounded-lg shadow-lg shadow-gray-400 dark:shadow-gray-700 transition-colors duration-300 bg-red-500 hover:bg-red-600 focus:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500 dark:focus:bg-red-500">
+								Ναι, απεγγραφείτε
+							</button>
+						</form>
+						<a
+							href="/"
+							class="px-6 py-3 text-xl font-medium text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md dark:shadow-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300">
+							Ακύρωση
+						</a>
+					</div>
+				</div>
+			) : state === "success" ? (
 				<div class="text-center">
 					<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Επιτυχής απεγγραφή</h2>
 					<p class="text-xl font-didact text-red-950 dark:text-red-50">Έχετε απεγγραφεί από την λίστα αλληλογραφίας της Σχολής.</p>
