@@ -20,7 +20,12 @@ export const SCHOOL = {
 		latitude: 38.0643227,
 		longitude: 23.7602996,
 	},
-	sameAs: ["https://www.facebook.com/profile.php?id=100032307446762", "https://www.youtube.com/@user-sx5os9rc1k", "https://inmm.gr/"],
+	sameAs: [
+		"https://www.facebook.com/profile.php?id=100032307446762",
+		"https://www.instagram.com/musicschool_metamorfosis/",
+		"https://www.youtube.com/@user-sx5os9rc1k",
+		"https://inmm.gr/",
+	],
 } as const;
 
 // Unique identifier of the school entity, referenced by other schemas.

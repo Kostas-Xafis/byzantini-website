@@ -40,6 +40,11 @@ const socials = [
 		url: "https://www.facebook.com/profile.php?id=100032307446762",
 	},
 	{
+		name: "Instagram",
+		icon: "fa-brands fa-instagram",
+		url: "https://www.instagram.com/musicschool_metamorfosis/",
+	},
+	{
 		name: "YouTube",
 		icon: "fa-brands fa-youtube",
 		url: "https://www.youtube.com/@user-sx5os9rc1k",
@@ -524,6 +529,14 @@ const contactPageSchema = {
 				const item = btn.closest(".faq-item") as HTMLElement;
 				const isOpen = item.classList.toggle("is-open");
 				btn.setAttribute("aria-expanded", String(isOpen));
+				// Accordion behavior: at most one question open at a time.
+				if (isOpen) {
+					document.querySelectorAll<HTMLElement>("#epikoinonia .faq-item.is-open").forEach((other) => {
+						if (other === item) return;
+						other.classList.remove("is-open");
+						other.querySelector<HTMLButtonElement>(".faq-toggle")?.setAttribute("aria-expanded", "false");
+					});
+				}
 			});
 		});
 	});
