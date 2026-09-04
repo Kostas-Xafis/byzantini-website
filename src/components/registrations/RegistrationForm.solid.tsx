@@ -531,7 +531,7 @@ export function RegistrationForm() {
 				alert("Ο ΑΜΚΑ αποτελείται μόνο από 11 ψηφία.");
 				throw Error("");
 			}
-			if (data.teacher_id === -1 && data.class_year !== "Α' Προκαταρκτική") {
+			if (data.teacher_id === -1 && data.class_year !== "Α' Προκαταρκτική" && data.class_year !== "Υπό Κατάταξη") {
 				alert("Παρακαλώ επιλέξτε καθηγητή");
 				throw Error("");
 			}
