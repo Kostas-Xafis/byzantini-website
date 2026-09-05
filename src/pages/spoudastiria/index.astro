@@ -48,6 +48,8 @@ const groups = [
 		locations: otherLocations,
 	},
 ] as const;
+// Ετικέτα πλήθους σημείων για την ένδειξη της τρέχουσας κατηγορίας.
+const groupCountLabel = (n: number) => (n === 1 ? "1 σημείο" : `${n} σημεία`);
 
 const formatAddress = (l: Locations) => `${l.address.trim()}, ${l.areacode > 0 ? `${l.areacode} – ` : ""}${l.municipality.trim()}`;
 const phones = (l: Locations) =>
@@ -113,7 +115,7 @@ const placesSchema = {
 				/>
 				<div class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
 					<h1
-						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
+						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[6vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
 						Σπουδαστήρια
 					</h1>
 					<p
@@ -138,7 +140,7 @@ const placesSchema = {
 								data-group={g.id}
 								data-show={ind === 0}
 								aria-pressed={ind === 0 ? "true" : "false"}
-								class="group/btn relative flex items-center gap-2 rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-4 max-sm:py-2 text-[1.05vw] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white group-data-[show=true]/btn:bg-amber-400 group-data-[show=true]/btn:text-red-950 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-md">
+								class="relative flex items-center gap-2 rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-4 max-sm:py-2 text-[1.05vw] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white data-[show=true]:bg-amber-400 data-[show=true]:text-red-950 data-[show=true]:font-semibold data-[show=true]:shadow-md">
 								<i class={g.icon + " text-[0.9em] max-sm:hidden"} aria-hidden="true" />
 								{g.label}
 							</button>
@@ -148,94 +150,108 @@ const placesSchema = {
 			</nav>
 
 			<!-- Λίστα σπουδαστηρίων -->
-			<section id="spoudastiriaGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 content-start max-w-[1400px] self-center">
-				{
-					locationsWithTeachers.map((l) => (
-						<article
-							data-name={l.name}
-							data-group={l.partner ? "partner" : "school"}
-							class:list={[
-								"location-card group/card relative flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-md shadow-gray-400/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-gray-500/50",
-								l.partner ? "hidden" : "",
-							]}>
-							<div class="relative shrink-0 aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
-								{l.image && (
-									<img
-										src={imgSrc + l.image}
-										alt={"Φωτογραφία " + l.name}
-										loading="lazy"
-										decoding="async"
-										class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-105"
-									/>
-								)}
-								<div
-									class={
-										"absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" +
-										(l.image ? "" : " grid place-items-center")
-									}>
-									{!l.image && <i class="fa-solid fa-church text-5xl text-red-50/60" />}
-								</div>
-								<span class="absolute left-3 top-3 rounded-full border border-amber-400/50 bg-red-950/80 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm">
-									{badgeLabel(l)}
-								</span>
-							</div>
-							<div class="flex flex-1 flex-col gap-y-3 p-5 max-sm:p-4">
-								<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">{l.name}</h3>
-								<p class="text-base max-sm:text-sm leading-relaxed">
-									<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
-									{formatAddress(l)}
-								</p>
-								<p class="text-base max-sm:text-sm">
-									<i class="fa-solid fa-user pr-2.5 text-red-900/70" />
-									{l.manager}
-								</p>
-								{l.teacherCount > 0 && (
-									<p class="text-base max-sm:text-sm">
-										<i class="fa-solid fa-chalkboard-user pr-2 text-red-900/70" />
-										{teachersLabel(l.teacherCount)}
-									</p>
-								)}
-								{phones(l).length > 0 && (
-									<div class="flex flex-wrap gap-2">
-										{phones(l).map((phone) => (
-											<a
-												href={`tel:${phone}`}
-												class="inline-flex items-center gap-1.5 rounded-full bg-red-900 px-3 py-1 text-sm max-sm:text-xs font-medium text-red-50 transition-colors duration-200 hover:bg-red-800">
-												<i class="fa-solid fa-phone text-[0.8em]" />
-												{phone}
-											</a>
-										))}
+			<section id="spoudastiriaSection" class="w-full max-w-[1400px] self-center flex flex-col gap-y-5" aria-label="Σημεία διεξαγωγής μαθημάτων">
+				<!-- Ένδειξη της τρέχουσας κατηγορίας -->
+				<header id="spoudastiriaGroupHeader" class="flex items-center gap-3 max-sm:gap-2.5 px-1" aria-live="polite">
+					<span
+						id="spoudastiriaGroupIcon"
+						class="grid size-12 max-sm:size-10 shrink-0 place-items-center rounded-2xl bg-red-900 text-amber-400 shadow-md shadow-red-900/30">
+						<i class="fa-solid fa-church text-lg" aria-hidden="true"></i>
+					</span>
+					<div class="flex flex-col gap-y-0.5">
+						<h2 id="spoudastiriaGroupTitle" class="font-anaktoria text-2xl max-sm:text-xl font-bold leading-tight text-red-900">
+							Σπουδαστήρια Σχολής
+						</h2>
+						<p id="spoudastiriaGroupCount" class="text-sm max-sm:text-xs text-red-900/70">{groupCountLabel(schoolLocations.length)}</p>
+					</div>
+				</header>
+				<div id="spoudastiriaGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 content-start">
+					{
+						locationsWithTeachers.map((l) => (
+							<article
+								data-name={l.name}
+								data-group={l.partner ? "partner" : "school"}
+								class:list={[
+									"location-card group/card relative flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-md shadow-gray-400/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-gray-500/50",
+									l.partner ? "hidden" : "",
+								]}>
+								<div class="relative shrink-0 aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
+									{l.image && (
+										<img
+											src={imgSrc + l.image}
+											alt={"Φωτογραφία " + l.name}
+											loading="lazy"
+											decoding="async"
+											class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-105"
+										/>
+									)}
+									<div
+										class={
+											"absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" +
+											(l.image ? "" : " grid place-items-center")
+										}>
+										{!l.image && <i class="fa-solid fa-church text-5xl text-red-50/60" />}
 									</div>
-								)}
-								{l.email && (
-									<a
-										href={`mailto:${l.email}`}
-										class="inline-flex w-max items-center gap-2 text-base max-sm:text-sm text-red-900 underline decoration-red-900/50 decoration-1 underline-offset-4 transition-colors hover:text-red-700">
-										<i class="fa-regular fa-envelope" />
-										{l.email}
-									</a>
-								)}
-								<div class="mt-auto flex flex-row flex-wrap gap-2 pt-2">
-									<button
-										type="button"
-										data-open-location={l.id}
-										class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-										<i class="fa-solid fa-map-location-dot" />
-										Χάρτης & λεπτομέρειες
-									</button>
-									<a
-										target="_blank"
-										rel="noopener"
-										href={directionsHref(l)}
-										class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-										<i class="fa-solid fa-diamond-turn-right" />
-										Οδηγίες
-									</a>
+									<span class="absolute left-3 top-3 rounded-full border border-amber-400/50 bg-red-950/80 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm">
+										{badgeLabel(l)}
+									</span>
 								</div>
-							</div>
-						</article>
-					))
-				}
+								<div class="flex flex-1 flex-col gap-y-3 p-5 max-sm:p-4">
+									<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">{l.name}</h3>
+									<p class="text-base max-sm:text-sm leading-relaxed">
+										<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
+										{formatAddress(l)}
+									</p>
+									<p class="text-base max-sm:text-sm">
+										<i class="fa-solid fa-user pr-2.5 text-red-900/70" />
+										{l.manager}
+									</p>
+									{l.teacherCount > 0 && (
+										<p class="text-base max-sm:text-sm">
+											<i class="fa-solid fa-chalkboard-user pr-2 text-red-900/70" />
+											{teachersLabel(l.teacherCount)}
+										</p>
+									)}
+									{phones(l).length > 0 && (
+										<div class="flex flex-wrap gap-2">
+											{phones(l).map((phone) => (
+												<a
+													href={`tel:${phone}`}
+													class="inline-flex items-center gap-1.5 rounded-full bg-red-900 px-3 py-1 text-sm max-sm:text-xs font-medium text-red-50 transition-colors duration-200 hover:bg-red-800">
+													<i class="fa-solid fa-phone text-[0.8em]" />
+													{phone}
+												</a>
+											))}
+										</div>
+									)}
+									{l.email && (
+										<a href={`mailto:${l.email}`} class="inline-flex w-max items-center gap-2 text-base max-sm:text-sm text-red-900">
+											<i class="fa-regular fa-envelope" />
+											<span class="underline decoration-red-900/50 decoration-1 underline-offset-4">{l.email}</span>
+										</a>
+									)}
+									<div class="mt-auto flex flex-row flex-wrap gap-2 pt-2">
+										<button
+											type="button"
+											data-open-location={l.id}
+											class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
+											<i class="fa-solid fa-map-location-dot" />
+											Χάρτης & λεπτομέρειες
+										</button>
+										<a
+											target="_blank"
+											rel="noopener"
+											href={directionsHref(l)}
+											class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
+											<i class="fa-solid fa-diamond-turn-right" />
+											Οδηγίες
+										</a>
+									</div>
+								</div>
+							</article>
+						))
+					}
+				</div>
 			</section>
 
 			<!-- Τελικό κάλεσμα -->
@@ -264,62 +280,61 @@ const placesSchema = {
 				</div>
 			</section>
 		</main>
+	</div>
 
-		<!-- Αναδυόμενο παράθυρο λεπτομερειών -->
-		<div id="locationModal" class="hidden fixed inset-0 z-[1100] grid place-items-center p-4 max-sm:p-0" role="presentation">
-			<div id="locationModalBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-[3px]"></div>
-			<div
-				role="dialog"
-				aria-modal="true"
-				aria-labelledby="locationModalTitle"
-				id="locationModalPanel"
-				class="relative w-full max-w-3xl flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-2xl shadow-black/50 max-h-[92dvh]">
-				<div
-					class="relative shrink-0 aspect-[21/9] max-sm:aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
-					<img id="locationModalImage" class="absolute inset-0 h-full w-full object-cover" alt="" />
-					<div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
-					<div class="absolute bottom-4 left-6 right-16 max-sm:left-4">
-						<p id="locationModalBadge" class="text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">Σπουδαστήριο Σχολής</p>
-						<h2
-							id="locationModalTitle"
-							class="mt-1 font-anaktoria font-bold text-2xl max-sm:text-xl leading-snug text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)] [word-break:break-word]">
-							Όνομα
-						</h2>
-					</div>
-					<button
-						type="button"
-						id="locationModalClose"
-						aria-label="Κλείσιμο λεπτομερειών"
-						class="absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/40 text-red-50 backdrop-blur-sm transition-colors duration-200 hover:bg-red-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">
-						<i class="fa-solid fa-xmark text-xl"></i>
-					</button>
+	<!-- Αναδυόμενο παράθυρο λεπτομερειών -->
+	<div id="locationModal" class="hidden fixed inset-0 z-[1100] grid place-items-center p-4 max-sm:p-0" role="presentation">
+		<div id="locationModalBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-[3px]"></div>
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="locationModalTitle"
+			id="locationModalPanel"
+			class="relative w-full max-w-3xl flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-2xl shadow-black/50 max-h-[92dvh]">
+			<div class="relative shrink-0 aspect-[21/9] max-sm:aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
+				<img id="locationModalImage" class="absolute inset-0 h-full w-full object-cover" alt="" />
+				<div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
+				<div class="absolute bottom-4 left-6 right-16 max-sm:left-4">
+					<p id="locationModalBadge" class="text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">Σπουδαστήριο Σχολής</p>
+					<h2
+						id="locationModalTitle"
+						class="mt-1 font-anaktoria font-bold text-2xl max-sm:text-xl leading-snug text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)] [word-break:break-word]">
+						Όνομα
+					</h2>
 				</div>
-				<div class="flex-1 overflow-y-auto">
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-6 max-sm:p-4 max-sm:gap-y-3">
-						<div class="flex flex-col gap-y-1">
-							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Διεύθυνση</p>
-							<p class="text-base max-sm:text-sm leading-relaxed" id="locationModalAddress"></p>
-						</div>
-						<div class="flex flex-col gap-y-1">
-							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Υπεύθυνος</p>
-							<p class="text-base max-sm:text-sm" id="locationModalManager"></p>
-						</div>
-						<div class="sm:col-span-2 flex flex-col gap-y-1">
-							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Καθηγητές</p>
-							<p class="text-base max-sm:text-sm" id="locationModalTeachers"></p>
-						</div>
-						<div class="sm:col-span-2 flex flex-col gap-y-2">
-							<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Επικοινωνία</p>
-							<div class="flex flex-row flex-wrap gap-x-3 gap-y-2" id="locationModalPhones"></div>
-							<p class="text-base max-sm:text-sm" id="locationModalEmail"></p>
-						</div>
-						<div class="sm:col-span-2 flex flex-row flex-wrap gap-2 pt-1" id="locationModalActions"></div>
+				<button
+					type="button"
+					id="locationModalClose"
+					aria-label="Κλείσιμο λεπτομερειών"
+					class="absolute border-red-800 border-2 right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/40 text-red-50 backdrop-blur-sm transition-colors duration-200 hover:bg-red-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">
+					<i class="fa-solid fa-xmark text-xl"></i>
+				</button>
+			</div>
+			<div class="flex-1 overflow-y-auto">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-6 max-sm:p-4 max-sm:gap-y-3">
+					<div class="flex flex-col gap-y-1">
+						<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Διεύθυνση</p>
+						<p class="text-base max-sm:text-sm leading-relaxed" id="locationModalAddress"></p>
 					</div>
-					<div
-						id="locationModalMapWrap"
-						class="mx-6 mb-6 max-sm:mx-4 max-sm:mb-4 h-[300px] max-sm:h-[260px] overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400">
-						<!-- ο χάρτης δημιουργείται δυναμικά κατά το άνοιγμα -->
+					<div class="flex flex-col gap-y-1">
+						<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Υπεύθυνος</p>
+						<p class="text-base max-sm:text-sm" id="locationModalManager"></p>
 					</div>
+					<div class="sm:col-span-2 flex flex-col gap-y-1">
+						<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Καθηγητές</p>
+						<p class="text-base max-sm:text-sm" id="locationModalTeachers"></p>
+					</div>
+					<div class="sm:col-span-2 flex flex-col gap-y-2">
+						<p class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Επικοινωνία</p>
+						<div class="flex flex-row flex-wrap gap-x-3 gap-y-2" id="locationModalPhones"></div>
+						<p class="text-base max-sm:text-sm" id="locationModalEmail"></p>
+					</div>
+					<div class="sm:col-span-2 flex flex-row flex-wrap gap-2 pt-1" id="locationModalActions"></div>
+				</div>
+				<div
+					id="locationModalMapWrap"
+					class="mx-6 mb-6 max-sm:mx-4 max-sm:mb-4 h-[300px] max-sm:h-[260px] overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400">
+					<!-- ο χάρτης δημιουργείται δυναμικά κατά το άνοιγμα -->
 				</div>
 			</div>
 		</div>
@@ -371,7 +386,7 @@ const placesSchema = {
 <script>
 	import { AnimTimeline, onElementMount } from "@utilities/dom";
 
-	type LocationRow = {
+	type LocationRow = Location & {
 		id: number;
 		name: string;
 		address: string;
@@ -413,6 +428,23 @@ const placesSchema = {
 		const modalClose = document.querySelector("#locationModalClose") as HTMLButtonElement;
 		let lastTrigger: HTMLElement | null = null;
 
+		// Meta-πληροφορίες κατηγοριών για την ένδειξη της τρέχουσας ομάδας.
+		const GROUP_META: Record<string, { title: string; icon: string }> = {
+			school: { title: "Σπουδαστήρια Σχολής", icon: "fa-solid fa-church" },
+			partner: { title: "Συνεργαζόμενες Σχολές", icon: "fa-solid fa-handshake" },
+		};
+		const setGroupHeader = (group: string) => {
+			const meta = GROUP_META[group];
+			if (!meta) return;
+			const title = document.querySelector("#spoudastiriaGroupTitle");
+			const count = document.querySelector("#spoudastiriaGroupCount");
+			const icon = document.querySelector("#spoudastiriaGroupIcon i");
+			const n = DATA.filter((l) => (group === "partner" ? !!l.partner : !l.partner)).length;
+			if (title) title.textContent = meta.title;
+			if (count) count.textContent = n === 1 ? "1 σημείο" : `${n} σημεία`;
+			if (icon) icon.className = meta.icon;
+		};
+
 		// Εναλλαγή κατηγορίας (Σπουδαστήρια / Συνεργαζόμενες)
 		document.querySelectorAll<HTMLButtonElement>("#spoudastiriaTabs button[data-group]").forEach((btn) => {
 			btn.addEventListener("click", () => {
@@ -432,6 +464,7 @@ const placesSchema = {
 							shown?.setAttribute("aria-pressed", "false");
 							btn.setAttribute("data-show", "true");
 							btn.setAttribute("aria-pressed", "true");
+							setGroupHeader(group);
 						},
 					})
 					.start();
@@ -492,12 +525,14 @@ const placesSchema = {
 			if (l.email) {
 				const a = document.createElement("a");
 				a.href = `mailto:${l.email}`;
-				a.className =
-					"inline-flex items-center gap-2 text-base max-sm:text-sm text-red-900 underline decoration-red-900/50 decoration-1 underline-offset-4 transition-colors hover:text-red-700";
+				a.className = "inline-flex items-center gap-2 text-base max-sm:text-sm text-red-900";
 				const i = document.createElement("i");
 				i.className = "fa-regular fa-envelope";
 				a.appendChild(i);
-				a.appendChild(document.createTextNode(l.email));
+				const span = document.createElement("span");
+				span.innerText = l.email;
+				span.className = "underline decoration-red-900/50 decoration-1 underline-offset-4";
+				a.appendChild(span);
 				emailEl.appendChild(a);
 			}
 

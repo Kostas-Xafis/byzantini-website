@@ -3,6 +3,12 @@ import JsonLd from "@components/seo/JsonLd.astro";
 import Landing from "@components/mainpage/Landing.astro";
 import Lessons from "@components/mainpage/Lessons.astro";
 import Welcoming from "@components/mainpage/Welcoming.astro";
+import Testimonials from "@components/mainpage/Testimonials.astro";
+import Stats from "@components/mainpage/Stats.astro";
+import WhyUs from "@components/mainpage/WhyUs.astro";
+import Events from "@components/mainpage/Events.astro";
+import AnnouncementsPreview from "@components/mainpage/AnnouncementsPreview.astro";
+import ClosingCTA from "@components/mainpage/ClosingCTA.astro";
 import MainPageLayout from "@layouts/MainPageLayout.astro";
 import { organizationSchema } from "@utilities/schema";
 export const prerender = true;
@@ -15,5 +21,11 @@ export const prerender = true;
 		<Landing />
 		<Welcoming />
 		<Lessons />
+		<Stats />
+		<Testimonials />
+		<WhyUs />
+		<Events />
+		<AnnouncementsPreview />
+		<ClosingCTA />
 	</div>
 </MainPageLayout>
