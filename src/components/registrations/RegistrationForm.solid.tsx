@@ -413,7 +413,7 @@ export function RegistrationForm() {
 				if (!res.data) return;
 				res.data.registration_year = genericInputs.registration_year.value as any;
 				res.data.class_year = "";
-				res.data.teacher_id = 0;
+				res.data.teacher_id = null as any;
 				setRegistrationData(res.data);
 				setFormSelected(music[res.data.class_id] as MusicType);
 			} catch (err) {}
