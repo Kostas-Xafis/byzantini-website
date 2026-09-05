@@ -1,0 +1,111 @@
+---
+// Στατιστικά στοιχεία της Σχολής — ενημερώστε τις τιμές όταν αλλάξουν τα πραγματικά
+// δεδομένα (οι αριθμοί προέρχονται από τα τρέχοντα στοιχεία του ιστότοπου:
+// 3 τμήματα, 43 ενεργοί καθηγητές, 2 ΦΕΚ κρατικής αναγνώρισης, 1 χορωδία).
+// Οι μαθητές 2025-26: COUNT(DISTINCT amka) από τον πίνακα registrations
+// για registration_year = '2025-2026' (528 εγγραφές → 440 μοναδικοί μαθητές).
+const stats = [
+	{
+		icon: "fa-users",
+		value: 440,
+		label: "Μαθητές 2025-26",
+		sub: "Σύνολο των μαθητών του περασμένου σχολικού έτους",
+	},
+	{
+		icon: "fa-chalkboard-user",
+		value: 43,
+		label: "Διδάσκοντες",
+		sub: "Ιεροψάλτες και δάσκαλοι με πείρα",
+	},
+	{
+		icon: "fa-music",
+		value: 3,
+		label: "Τμήματα Μουσικής",
+		sub: "Βυζαντινή, Παραδοσιακή και Ευρωπαϊκή",
+	},
+	{
+		icon: "fa-certificate",
+		value: 2,
+		label: "ΦΕΚ Αναγνώρισης",
+		sub: "Πτυχία & Διπλώματα αναγνωρισμένα από το Κράτος",
+	},
+	{
+		icon: "fa-church",
+		value: 1,
+		label: "Χορωδία",
+		sub: "«Άδοντες & Ψάλλοντες» — η καρδιά της Σχολής",
+	},
+];
+---
+
+<section id="statistika" class="relative w-full grid gap-y-16 bg-red-900 px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10 max-sm:gap-y-5">
+	<h2
+		id="statistikaHead"
+		class="heading relative p-2 w-max place-self-center text-center text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-0 after:w-full max-sm:after:h-[1px] max-sm:after:-bottom-1 after:bg-red-50">
+		Η Σχολή σε αριθμούς
+	</h2>
+	<div class="grid grid-cols-5 max-sm:grid-cols-2 gap-[1.25vw] max-sm:gap-x-4 max-sm:gap-y-8">
+		{
+			stats.map((s, i) => (
+				<article class={"flex flex-col items-center gap-y-2 text-center" + (i === stats.length - 1 ? " max-sm:col-span-2" : "")}>
+					<i class={`fa-solid ${s.icon} text-[1.6vw] max-sm:text-2xl text-red-200/90`} aria-hidden="true" />
+					<p class="statNumber font-anaktoria font-bold text-[3vw] max-sm:text-4xl leading-none text-red-50" data-target={s.value}>
+						{s.value}
+					</p>
+					<p class="font-anaktoria font-bold text-[1.05vw] max-sm:text-base text-red-100">{s.label}</p>
+					<p class="font-didact text-[0.9vw] max-sm:text-xs text-red-200/80 max-w-[20ch] max-sm:max-w-[26ch]">{s.sub}</p>
+				</article>
+			))
+		}
+	</div>
+	<style is:inline>
+		#statistika h2 {
+			text-shadow: -1px 2px 2px rgba(12 10 9 / 0.35);
+		}
+	</style>
+</section>
+<script>
+	import { onElementMount } from "@utilities/dom";
+
+	onElementMount("#statistika", (section) => {
+		const head = document.querySelector("#statistikaHead");
+		const headingObsv = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].intersectionRatio >= 0.3) head?.classList.add("emphasis");
+				else head?.classList.remove("emphasis");
+			},
+			{ rootMargin: "0px", threshold: [0.2, 0.3, 0.5] },
+		);
+		headingObsv.observe(section);
+
+		const numbers = section.querySelectorAll<HTMLElement>(".statNumber");
+		// Σεβασμός στο prefers-reduced-motion: εμφάνιση της τελικής τιμής χωρίς animation.
+		// (Με JS οι αριθμοί ξεκινούν από 0, ενώ χωρίς JS εμφανίζεται η πραγματική τιμή.)
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+		numbers.forEach((n) => (n.textContent = "0"));
+
+		const numberObsv = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting) return;
+					const el = entry.target as HTMLElement;
+					numberObsv.unobserve(el);
+					const target = Number(el.dataset.target);
+					if (Number.isNaN(target)) return;
+					const start = performance.now();
+					const duration = 1500;
+					const tick = (now: number) => {
+						const p = Math.min(1, (now - start) / duration);
+						// easeOutCubic — ξεκινά γρήγορα και «κάθεται» ομαλά στην τελική τιμή.
+						const eased = 1 - Math.pow(1 - p, 3);
+						el.textContent = String(Math.round(target * eased));
+						if (p < 1) requestAnimationFrame(tick);
+					};
+					requestAnimationFrame(tick);
+				});
+			},
+			{ rootMargin: "0px", threshold: 0.4 },
+		);
+		numbers.forEach((n) => numberObsv.observe(n));
+	});
+</script>

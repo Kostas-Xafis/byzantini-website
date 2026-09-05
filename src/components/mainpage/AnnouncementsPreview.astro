@@ -1,0 +1,165 @@
+---
+// Προεπισκόπηση των 3 πιο πρόσφατων ανακοινώσεων στο homepage.
+// Η σελίδα είναι prerendered, οπότε τα δεδομένα φορτώνονται client-side
+// από το υπάρχον GET /api/announcements/page (ίδιο endpoint με τη σελίδα ανακοινώσεων).
+---
+
+<section id="anakoinoseis-preview" class="relative w-full grid gap-y-8 px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10">
+	<header class="flex flex-col items-center gap-y-3">
+		<h2
+			id="anakoinoseisPreviewHead"
+			class="heading relative p-2 text-center text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%_-_10ch)] after:w-[20ch] after:bg-red-900">
+			Νεότερες Ανακοινώσεις
+		</h2>
+		<p class="font-didact text-[1vw] max-sm:text-sm max-w-[60ch] text-center text-gray-600">
+			Εξετάσεις, εκδηλώσεις, αγιασμοί και νέα της σχολικής κοινότητας.
+		</p>
+	</header>
+	<div id="anakoinoseisPreviewList" class="grid grid-cols-3 max-sm:grid-cols-1 gap-[1.5vw] max-sm:gap-5 w-full">
+		<p class="col-span-full place-self-center font-didact text-[1vw] max-sm:text-sm text-gray-500">Φόρτωση των πιο πρόσφατων ανακοινώσεων…</p>
+	</div>
+	<div class="flex justify-center">
+		<a
+			href="/sxoli/anakoinoseis"
+			class="group inline-flex items-center gap-x-2 rounded-xl border-2 border-red-900 px-[1.25vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.1vw] max-sm:text-base text-red-900 transition-colors hover:bg-red-900 hover:text-red-50">
+			Όλες οι ανακοινώσεις
+			<i class="fa-solid fa-arrow-right text-[0.8vw] max-sm:text-xs transition-transform group-hover:translate-x-1" aria-hidden="true"></i>
+		</a>
+	</div>
+</section>
+
+<script>
+	import { onElementMount } from "@utilities/dom";
+
+	type PageAnnouncement = {
+		id: number;
+		title: string;
+		date: number;
+		content: string;
+		views: number;
+		main_image: string | null;
+		total_images: number;
+	};
+
+	const maxAnnouncements = 3;
+	const list = () => document.querySelector<HTMLElement>("#anakoinoseisPreviewList");
+	const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
+	const imgSrc = (a: PageAnnouncement) => `/anakoinoseis/images/${a.id}/thumb_${a.main_image}`;
+
+	const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+	const isRecent = (d: number) => Date.now() - d < 30 * 24 * 60 * 60 * 1000;
+
+	// Ασφαλές, λέξη-όριο περίληψη (ίδια λογική με τη σελίδα ανακοινώσεων).
+	const excerpt = (content: string, max = 160) => {
+		const clean = content.replace(/\s+/g, " ").trim();
+		if (clean.length <= max) return clean;
+		const cut = clean.slice(0, max);
+		const lastSpace = cut.lastIndexOf(" ");
+		return cut.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…";
+	};
+
+	const showMessage = (text: string) => {
+		const el = list();
+		if (!el) return;
+		el.replaceChildren();
+		const p = document.createElement("p");
+		p.className = "col-span-full place-self-center font-didact text-[1.1vw] max-sm:text-base text-gray-500";
+		p.textContent = text;
+		el.append(p);
+	};
+
+	const buildCard = (a: PageAnnouncement) => {
+		const card = document.createElement("a");
+		card.href = detailHref(a);
+		card.setAttribute("aria-label", "Διαβάστε την ανακοίνωση: " + a.title);
+		card.className =
+			"group/card relative flex flex-col overflow-hidden rounded-xl border-2 border-red-900 bg-white shadow-md shadow-gray-400" +
+			" transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-red-900/25";
+
+		// Εικόνα (ή placeholder) με ταινία «Νέο» / πλήθος φωτογραφιών.
+		const media = document.createElement("div");
+		media.className = "relative w-full aspect-[16/9] overflow-hidden bg-red-900/[0.06]";
+		if (a.main_image) {
+			const img = document.createElement("img");
+			img.src = imgSrc(a);
+			img.alt = "Φωτογραφία: " + a.title;
+			img.loading = "lazy";
+			img.decoding = "async";
+			img.width = 640;
+			img.height = 360;
+			img.className = "w-full h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]";
+			img.addEventListener("error", () => {
+				media.replaceChildren();
+				const icon = document.createElement("i");
+				icon.className = "fa-solid fa-newspaper text-6xl text-red-900/40";
+				icon.setAttribute("aria-hidden", "true");
+				media.classList.add("grid", "place-items-center");
+				media.append(icon);
+			});
+			media.append(img);
+		} else {
+			media.classList.add("grid", "place-items-center");
+			const icon = document.createElement("i");
+			icon.className = "fa-solid fa-newspaper text-6xl text-red-900/40";
+			icon.setAttribute("aria-hidden", "true");
+			media.append(icon);
+		}
+		if (isRecent(a.date)) {
+			const badge = document.createElement("span");
+			badge.className = "absolute top-2 left-2 rounded-md bg-amber-400/95 px-2 py-0.5 text-sm font-bold text-amber-950 shadow-sm";
+			badge.textContent = "Νέο";
+			media.append(badge);
+		}
+		card.append(media);
+
+		// Σώμα κάρτας: ημερομηνία, τίτλος, περίληψη.
+		const body = document.createElement("div");
+		body.className = "flex flex-col gap-y-2 p-4";
+		const time = document.createElement("time");
+		time.dateTime = new Date(a.date).toISOString();
+		time.className = "inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2 py-0.5 w-max text-sm text-red-50";
+		time.textContent = formatDate(a.date);
+		const title = document.createElement("h3");
+		title.className = "font-anaktoria text-2xl font-bold text-red-900 leading-snug line-clamp-2";
+		title.textContent = a.title;
+		const content = document.createElement("p");
+		content.className = "font-didact text-lg text-gray-700 leading-relaxed line-clamp-3";
+		content.textContent = excerpt(a.content);
+		body.append(time, title, content);
+		card.append(body);
+		return card;
+	};
+
+	onElementMount("#anakoinoseis-preview", () => {
+		// Επικεφαλίδα σε emphasized state όταν η ενότητα φαίνεται.
+		const head = document.querySelector("#anakoinoseisPreviewHead");
+		const section = document.querySelector("#anakoinoseis-preview") as HTMLElement;
+		const obsv = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].intersectionRatio >= 0.3) head?.classList.add("emphasis");
+				else head?.classList.remove("emphasis");
+			},
+			{ rootMargin: "0px", threshold: [0.2, 0.3, 0.5] },
+		);
+		obsv.observe(section);
+
+		// Φόρτωση δεδομένων από το υπάρχον API των ανακοινώσεων.
+		const load = async () => {
+			try {
+				const response = await fetch("/api/announcements/page");
+				const json: { data?: PageAnnouncement[] } = await response.json();
+				const announcements = (json.data || []).slice(0, maxAnnouncements);
+				const el = list();
+				if (!el) return;
+				if (announcements.length === 0) {
+					showMessage("Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή — δείτε σύντομα ξανά για νέα της Σχολής.");
+					return;
+				}
+				el.replaceChildren(...announcements.map(buildCard));
+			} catch {
+				showMessage("Δεν ήταν δυνατή η φόρτωση των ανακοινώσεων αυτή τη στιγμή.");
+			}
+		};
+		load();
+	});
+</script>

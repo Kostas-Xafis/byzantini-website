@@ -96,22 +96,6 @@ const imgSrc = "/kathigites/picture/";
 				class="pointer-events-none absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-amber-500/70 to-transparent"
 				aria-hidden="true"></span>
 			<button
-				id="principalBtn"
-				type="button"
-				role="tab"
-				aria-selected="false"
-				aria-controls="principalContainer"
-				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 flex flex-row items-center justify-center gap-3 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='principal']/select:bg-gradient-to-b group-data-[selected='principal']/select:from-red-900 group-data-[selected='principal']/select:to-red-950 group-data-[selected='principal']/select:text-white">
-				<span
-					class="grid place-items-center w-11 h-11 max-sm:w-9 max-sm:h-9 shrink-0 rounded-full border border-red-900/15 bg-red-900/10 text-red-900 text-xl max-sm:text-base transition-all duration-300 group-hover/btn:scale-105 group-data-[selected='principal']/select:border-amber-200/40 group-data-[selected='principal']/select:bg-amber-400 group-data-[selected='principal']/select:text-red-950 group-data-[selected='principal']/select:shadow-[0_0_14px_rgba(251,191,36,0.55)]">
-					<i class="fa-solid fa-user-tie"></i>
-				</span>
-				<span class="transition-transform duration-300 group-hover/btn:-translate-y-1">Ο Διευθυντής</span>
-				<span
-					class="absolute bottom-0 left-[22%] right-[22%] h-[3px] rounded-t-full bg-gradient-to-r from-amber-400/0 via-amber-400 to-amber-400/0 opacity-0 transition-opacity duration-300 group-data-[selected='principal']/select:opacity-100"
-					aria-hidden="true"></span>
-			</button>
-			<button
 				id="orgBtn"
 				type="button"
 				role="tab"
@@ -125,6 +109,22 @@ const imgSrc = "/kathigites/picture/";
 				<span class="transition-transform duration-300 group-hover/btn:-translate-y-1">Διοικητικό Συμβούλιο</span>
 				<span
 					class="absolute bottom-0 left-[22%] right-[22%] h-[3px] rounded-t-full bg-gradient-to-r from-amber-400/0 via-amber-400 to-amber-400/0 opacity-0 transition-opacity duration-300 group-data-[selected='org']/select:opacity-100"
+					aria-hidden="true"></span>
+			</button>
+			<button
+				id="principalBtn"
+				type="button"
+				role="tab"
+				aria-selected="false"
+				aria-controls="principalContainer"
+				class="group/btn relative flex-1 max-sm:basis-full w-full p-4 flex flex-row items-center justify-center gap-3 text-3xl tracking-wide leading-snug text-red-900 transition-colors duration-300 ease-out 2xl:text-4xl max-sm:text-lg hover:bg-red-100 hover:text-red-950 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 group-data-[selected='principal']/select:bg-gradient-to-b group-data-[selected='principal']/select:from-red-900 group-data-[selected='principal']/select:to-red-950 group-data-[selected='principal']/select:text-white">
+				<span
+					class="grid place-items-center w-11 h-11 max-sm:w-9 max-sm:h-9 shrink-0 rounded-full border border-red-900/15 bg-red-900/10 text-red-900 text-xl max-sm:text-base transition-all duration-300 group-hover/btn:scale-105 group-data-[selected='principal']/select:border-amber-200/40 group-data-[selected='principal']/select:bg-amber-400 group-data-[selected='principal']/select:text-red-950 group-data-[selected='principal']/select:shadow-[0_0_14px_rgba(251,191,36,0.55)]">
+					<i class="fa-solid fa-user-tie"></i>
+				</span>
+				<span class="transition-transform duration-300 group-hover/btn:-translate-y-1">Ο Διευθυντής</span>
+				<span
+					class="absolute bottom-0 left-[22%] right-[22%] h-[3px] rounded-t-full bg-gradient-to-r from-amber-400/0 via-amber-400 to-amber-400/0 opacity-0 transition-opacity duration-300 group-data-[selected='principal']/select:opacity-100"
 					aria-hidden="true"></span>
 			</button>
 		</section>
@@ -161,10 +161,10 @@ const imgSrc = "/kathigites/picture/";
 						<i class="fa-solid fa-diamond text-[0.35em] text-amber-400"></i>
 					</p>
 					<p
-						class="text-2xl leading-relaxed max-sm:text-xl text-white first-letter:float-left first-letter:mr-2 first-letter:font-anaktoria first-letter:text-[2.7em] first-letter:leading-[0.8] first-letter:text-amber-300">
+						class="text-2xl text-justify leading-relaxed max-sm:text-xl text-white first-letter:float-left first-letter:mr-2 first-letter:mb-4 first-letter:font-anaktoria first-letter:text-[2.7em] first-letter:text-amber-300">
 						{principalText[0]}
 					</p>
-					<p class="text-2xl leading-relaxed max-sm:text-xl text-white max-sm:group-[:is(:not(.unfold))]:pb-20">
+					<p class="text-2xl text-justify leading-relaxed max-sm:text-xl text-white max-sm:group-[:is(:not(.unfold))]:pb-20">
 						{principalText[1]}
 					</p>
 					<button

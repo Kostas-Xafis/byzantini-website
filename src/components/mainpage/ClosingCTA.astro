@@ -1,0 +1,30 @@
+---
+// Τελικό κλήση προς εγγραφή — συγκεντρώνει το κάλεσμα του hero σε ένα band στο τέλος της σελίδας.
+// Οι ημερομηνίες εγγραφών ακολουθούν το hero (Landing.astro).
+---
+
+<section id="eggrafes-cta" class="relative grid w-full place-items-center gap-y-5 bg-red-900 px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10">
+	<h2 class="max-w-[24ch] text-center text-[2.25vw] max-sm:text-xl leading-[2.25vw] font-bold font-anaktoria text-red-50">
+		Ξεκινήστε τη μουσική σας πορεία μαζί μας
+	</h2>
+	<p class="font-didact text-[1vw] max-sm:text-sm text-red-100/90 text-center max-w-[64ch]">
+		Εγγραφές για το σχολικό έτος 2026-27 από 1/9 έως 30/10 — Βυζαντινή, Παραδοσιακή και Ευρωπαϊκή Μουσική, για κάθε ηλικία.
+	</p>
+	<div class="flex flex-wrap justify-center gap-x-4 gap-y-3">
+		<a
+			href="/eggrafes"
+			class="rounded-xl bg-red-50 px-[1.5vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.2vw] max-sm:text-base text-red-900 shadow-md transition-transform hover:scale-[1.03]">
+			Εγγραφές
+		</a>
+		<a
+			href="/epikoinonia"
+			class="rounded-xl border-2 border-red-50 px-[1.5vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.2vw] max-sm:text-base text-red-50 transition-colors hover:bg-red-50 hover:text-red-900">
+			Επικοινωνία
+		</a>
+	</div>
+	<style is:inline>
+		#eggrafes-cta h2 {
+			text-shadow: -1px 2px 2px rgba(12 10 9 / 0.35);
+		}
+	</style>
+</section>

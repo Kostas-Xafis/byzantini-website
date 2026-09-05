@@ -22,7 +22,7 @@ export async function GET(ctx: APIContext) {
 	const origin = (ctx.site ?? new URL(ctx.request.url)).origin;
 	const lastmod = new Date().toISOString();
 	const urls = PUBLIC_PAGES.map(
-		(page) => `  <url><loc>${origin}${page}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`,
+		(page) => `  <url><loc>${origin}${page}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>1</priority></url>`,
 	).join("\n");
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
 	return new Response(xml, {

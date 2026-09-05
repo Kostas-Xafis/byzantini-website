@@ -1,0 +1,107 @@
+---
+// Ενότητα «Εκδηλώσεις & Χορωδία» — εικόνες από το bucket (λέγονται μέσω του
+// catch-all [...]slug.ts). Αντικαταστήστε με νεότερες φωτογραφίες όταν υπάρχουν.
+const events = [
+	{ text: "Συναυλίες και εκδηλώσεις", icon: "fa-solid fa-microphone-lines" },
+	{ text: "Αγιασμοί έναρξης μαθημάτων", icon: "fa-solid fa-dove" },
+	{ text: "Κάλαντα Χριστουγέννων και Πρωτοχρονιάς", icon: "fa-solid fa-star" },
+	{ text: "Σεμινάρια και μουσικά εργαστήρια", icon: "fa-solid fa-guitar" },
+];
+---
+
+<section
+	id="events-choir"
+	class="relative w-full grid grid-cols-2 max-sm:grid-cols-1 gap-[2.5vw] max-sm:gap-8 items-center px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10">
+	<div
+		class="grid grid-cols-[1.5fr_1fr_1fr] grid-rows-2 aspect-[1.9] gap-[0.75vw] max-sm:aspect-auto max-sm:grid-cols-2 max-sm:grid-rows-[auto_auto_auto] max-sm:gap-3">
+		<img
+			src="/choir/choir_2.jpg"
+			alt="Συναυλία της χορωδίας «Άδοντες & Ψάλλοντες» στα σκαλιά του Ι.Ν. Μεταμορφώσεως"
+			width="1200"
+			height="800"
+			loading="lazy"
+			decoding="async"
+			class="row-span-2 max-sm:row-span-1 max-sm:col-span-2 max-sm:aspect-[16/9] max-sm:h-auto h-full w-full rounded-xl border-2 border-red-900 object-cover shadow-md shadow-red-900/20 transition-transform duration-500 hover:scale-[1.02]"
+		/>
+		<img
+			src="/emails/files/Ανακοίνωση Έναρξης Μαθηματων 2026.jpg"
+			alt="Ανακοίνωση έναρξης μαθημάτων 2026"
+			width="800"
+			height="460"
+			loading="lazy"
+			decoding="async"
+			class="h-full w-full max-sm:aspect-[4/3] max-sm:h-auto rounded-xl border-2 border-red-900 object-cover object-top shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
+		/>
+		<img
+			src="/choir/choir_3.jpg"
+			alt="Αναμνηστική φωτογραφία της χορωδίας μπροστά στο εικονοστάσι του ναού"
+			width="1536"
+			height="1152"
+			loading="lazy"
+			decoding="async"
+			class="h-full w-full max-sm:aspect-[4/3] max-sm:h-auto rounded-xl border-2 border-red-900 object-cover shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
+		/>
+		<img
+			src="/poster.jpg"
+			alt="Αφίσα με τα διδασκόμενα τμήματα της Σχολής"
+			width="800"
+			height="1130"
+			loading="lazy"
+			decoding="async"
+			class="h-full w-full max-sm:aspect-[4/3] max-sm:h-auto rounded-xl border-2 border-red-900 object-cover object-top shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
+		/>
+		<img
+			src="/choir/choir_4.jpg"
+			alt="Παράσταση της χορωδίας «Άδοντες & Ψάλλοντες» στην αυλή του ναού"
+			width="2048"
+			height="1152"
+			loading="lazy"
+			decoding="async"
+			class="h-full w-full max-sm:aspect-[4/3] max-sm:h-auto rounded-xl border-2 border-red-900 object-cover shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
+		/>
+	</div>
+	<div class="flex flex-col gap-y-5 max-sm:gap-y-4">
+		<h2
+			id="eventsHead"
+			class="heading relative p-2 w-max text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-0 after:w-full after:bg-red-900">
+			Εκδηλώσεις & Χορωδία
+		</h2>
+		<p class="font-didact text-[1vw] max-sm:text-sm leading-relaxed text-gray-700 max-w-[58ch]">
+			Η χορωδία «Άδοντες & Ψάλλοντες» είναι η καρδιά της Σχολής: καθηγητές και μαθητές ψάλλουν μαζί στους αγιασμούς, τις ακολουθίες και τις συναυλίες,
+			διατηρώντας ζωντανή την ελληνορθόδοξη μουσική μας παράδοση.
+		</p>
+		<ul class="flex flex-col gap-y-2.5 max-sm:gap-y-2">
+			{
+				events.map((e) => (
+					<li class="flex items-center gap-x-2.5 font-didact text-[0.95vw] max-sm:text-sm text-gray-700">
+						<i class={`${e.icon} w-5 text-center text-red-900 max-sm:text-sm`} aria-hidden="true" />
+						<span>{e.text}</span>
+					</li>
+				))
+			}
+		</ul>
+		<div class="flex flex-wrap gap-x-4 gap-y-3 pt-1">
+			<a
+				href="/sxoli/xorodia"
+				class="inline-flex items-center gap-x-2 rounded-xl bg-red-900 px-[1.25vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.1vw] max-sm:text-base text-red-50 shadow-md shadow-red-900/30 transition-colors hover:bg-red-950">
+				Γνωρίστε τη χορωδία
+				<i class="fa-solid fa-chevron-right text-[0.8vw] max-sm:text-xs" aria-hidden="true"></i>
+			</a>
+		</div>
+	</div>
+</section>
+<script>
+	import { onElementMount } from "@utilities/dom";
+
+	onElementMount("#events-choir", (section) => {
+		const head = document.querySelector("#eventsHead");
+		const obsv = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].intersectionRatio >= 0.3) head?.classList.add("emphasis");
+				else head?.classList.remove("emphasis");
+			},
+			{ rootMargin: "0px", threshold: [0.2, 0.3, 0.5] },
+		);
+		obsv.observe(section);
+	});
+</script>
