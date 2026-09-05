@@ -1,6 +1,7 @@
 import { customEvent } from "@_types/custom-events";
 import type { Instruments, Registrations } from "@_types/entities";
 import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
+import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
 import { Random as R } from "@lib/random";
 import { AnimTimeline } from "@utilities/dom";
 import { ExtendedFormData } from "@utilities/forms";
@@ -150,45 +151,6 @@ const genericInputs: Record<
 		blurDisabled: false,
 		value: "2026-2027",
 	},
-};
-
-const enum MusicType {
-	Byzantine = "byz",
-	Traditional = "par",
-	European = "eur",
-	None = "",
-}
-const MusicTypeArr: MusicType[] = [MusicType.Byzantine, MusicType.Traditional, MusicType.European, MusicType.None];
-
-const classYearsByMusicType = {
-	[MusicType.None]: [""],
-	[MusicType.Byzantine]: ["Υπό Κατάταξη", "Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
-	[MusicType.Traditional]: [
-		"Υπό Κατάταξη",
-		"Α' Προκαταρκτική",
-		"Α' Κατωτέρα",
-		"Β' Κατωτέρα",
-		"Α' Μέση",
-		"Β' Μέση",
-		"Γ' Μέση",
-		"Α' Ανωτέρα",
-		"Β' Ανωτέρα",
-		"Α' Διπλώματος",
-		"Β' Διπλώματος",
-	],
-	[MusicType.European]: [
-		"Υπό Κατάταξη",
-		"Α' Προκαταρκτική",
-		"Α' Κατωτέρα",
-		"Β' Κατωτέρα",
-		"Α' Μέση",
-		"Β' Μέση",
-		"Γ' Μέση",
-		"Α' Ανωτέρα",
-		"Β' Ανωτέρα",
-		"Α' Διπλώματος",
-		"Β' Διπλώματος",
-	],
 };
 
 const inputsByMusicType = (musicType: MusicType, store: APIStore, regData: Registrations): InputProps[] => {
