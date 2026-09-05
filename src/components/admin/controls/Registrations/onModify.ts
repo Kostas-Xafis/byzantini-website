@@ -23,6 +23,10 @@ export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial
 		const registration = JSON.parse(JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)) as Registrations;
 		const submit = async function (form: ExtendedFormData<Registrations>) {
 			const class_id = form.number("class_id");
+			const class_year = form.string("class_year");
+			if (class_year === "undefined" || class_year === "") {
+				throw new Error("Παρακαλώ επιλέξτε έτος φοίτησης");
+			}
 			const data: Registrations = {
 				id: registration.id,
 				am: form.string("am"),
@@ -39,7 +43,7 @@ export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial
 				tk: form.number("tk"),
 				region: form.string("region"),
 				registration_year: form.string("registration_year"),
-				class_year: form.string("class_year"),
+				class_year,
 				class_id,
 				teacher_id: form.number("teacher_id", 0),
 				instrument_id: (class_id && form.number("instrument_id")) || 0,

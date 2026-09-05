@@ -1,4 +1,5 @@
 import type { Instruments, Registrations, Teachers } from "@_types/entities";
+import { classYearsForClassId } from "@lib/classYears";
 import { useAPI } from "@lib/hooks/useAPI.solid";
 import { type Props as InputProps } from "../../../input/Input.solid";
 
@@ -14,6 +15,11 @@ export const RegistrationsInputs = (student: Registrations, teachers: Teachers[]
 			if (a.fullname > b.fullname) return 1;
 			return 0;
 		});
+	const classYearList = [...classYearsForClassId(student.class_id)];
+	// Keep legacy/custom values selectable so they are not lost on update
+	if (student.class_year && !classYearList.includes(student.class_year)) {
+		classYearList.push(student.class_year);
+	}
 	return {
 		id: {
 			name: "id",
@@ -112,6 +118,24 @@ export const RegistrationsInputs = (student: Registrations, teachers: Teachers[]
 			type: "select",
 			selectList: ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
 			iconClasses: "fa-solid fa-graduation-cap",
+			// Keep the class year options in sync with the selected music type
+			onchange: (e) => {
+				const classIdSelect = e.currentTarget as HTMLSelectElement;
+				const classYearSelect = document.querySelector<HTMLSelectElement>("[name='class_year']");
+				if (!classYearSelect) return;
+				const currentValue = classYearSelect.value;
+				classYearSelect.replaceChildren();
+				const placeholder = document.createElement("option");
+				placeholder.value = "undefined";
+				classYearSelect.appendChild(placeholder);
+				for (const year of classYearsForClassId(Number(classIdSelect.value))) {
+					const option = document.createElement("option");
+					option.value = year;
+					option.textContent = year;
+					option.selected = year === currentValue;
+					classYearSelect.appendChild(option);
+				}
+			},
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -132,7 +156,10 @@ export const RegistrationsInputs = (student: Registrations, teachers: Teachers[]
 		class_year: {
 			label: "Τάξη",
 			name: "class_year",
-			type: "text",
+			type: "select",
+			selectList: classYearList,
+			valueLiteral: true,
+			value: student.class_year,
 			iconClasses: "fa-solid fa-graduation-cap",
 		},
 		date: {
