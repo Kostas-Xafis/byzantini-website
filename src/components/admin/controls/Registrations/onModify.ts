@@ -1,5 +1,5 @@
 import type { Registrations } from "@_types/entities";
-import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import type { CacheMutationsReturnType } from "@hooks/useCacheMutations.solid";
 import { API, type APIResponse } from "@routes/index.client";
 import { type ExtendedFormData } from "@utilities/forms";
 import { createMemo } from "solid-js";
@@ -9,7 +9,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableContr
 import type { Action } from "../../table/TableControls.solid";
 import { RegistrationsInputs, type APIHook } from "./helpers";
 
-export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
+export const onModify = function (hydrate: CacheMutationsReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const modifyModal = {
 			type: ActionEnum.MODIFY,

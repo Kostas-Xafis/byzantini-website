@@ -1,7 +1,9 @@
 import { For, Show, createEffect, createSignal, on, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import type { Registrations } from "@_types/entities";
 import Spinner from "../other/Spinner.solid";
@@ -33,9 +35,9 @@ export default function RegistrationsTable() {
 
 	const [year, setYear] = createSignal<number | null>(null);
 	const [years, setYears] = createSignal<string[]>([]);
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setRegistrationHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setRegistrationHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -45,18 +47,26 @@ export default function RegistrationsTable() {
 		],
 	});
 
-	useHydrate(() => {
-		apiHook(API.Registrations.getYears);
-		apiHook(API.Teachers.getByFullnames);
-		apiHook(API.Instruments.get);
-	});
+	createAPIResource(API.Registrations.getYears, undefined, { cache: setStore });
+	createAPIResource(API.Teachers.getByFullnames, undefined, { cache: setStore });
+	createAPIResource(API.Instruments.get, undefined, { cache: setStore });
 
 	createEffect(
 		on(year, (y) => {
 			if (y === null) return;
 			setSearchQuery({}); // Reset search on year change
-			apiHook(API.Registrations.get, { UrlArgs: { year: y } });
 		}),
+	);
+
+	// Year-driven registrations fetch: waits while no year is selected and
+	// refetches whenever the year changes (replaces the legacy on(year) fetch effect).
+	createAPIResource(
+		API.Registrations.get,
+		() => {
+			const y = year();
+			return y === null ? undefined : { UrlArgs: { year: y } };
+		},
+		{ cache: setStore },
 	);
 
 	// Automatically select the latest available school year once known,

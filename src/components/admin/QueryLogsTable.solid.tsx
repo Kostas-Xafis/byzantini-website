@@ -1,5 +1,7 @@
 import type { QueryLogs } from "@_types/entities";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
+import { apiCall } from "@hooks/apiCall";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { API } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -71,14 +73,13 @@ const optionalDateToEndTimestamp = (formData: ExtendedFormData<QueryLogFilterFie
 };
 
 export default function QueryLogsTable() {
-	const [store, setStore] = createStore<APIStore>({});
+	const [store, setStore] = createStore<APIResourceStore>({});
 	const [activeView, setActiveView] = createSignal<"default" | "filtered">("default");
 	const [filterFormKey, setFilterFormKey] = createSignal("querylogs-filter-form");
-	const apiHook = useAPI(setStore);
 
-	useHydrate(() => {
-		apiHook(API.QueryLogs.get);
-	});
+	// Initial hydration: fetches once, then writes the result into the shared
+	// cache under `API.QueryLogs.get`; `store[...]` reads stay per-key reactive.
+	createAPIResource(API.QueryLogs.get, undefined, { cache: setStore });
 
 	const activeData = createMemo(() => {
 		return activeView() === "filtered" ? store[API.QueryLogs.getByFilters] : store[API.QueryLogs.get];
@@ -108,13 +109,14 @@ export default function QueryLogsTable() {
 		}
 
 		try {
-			await apiHook(API.QueryLogs.getByFilters, {
+			const res = await apiCall(API.QueryLogs.getByFilters, {
 				RequestObject: {
 					startDate,
 					endDate,
 					limit,
 				},
 			});
+			if ("data" in res) setStore(API.QueryLogs.getByFilters, res.data);
 			setActiveView("filtered");
 		} catch (error) {
 			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση"));
@@ -125,7 +127,8 @@ export default function QueryLogsTable() {
 		setFilterFormKey(`${Date.now()}`);
 
 		try {
-			await apiHook(API.QueryLogs.get);
+			const res = await apiCall(API.QueryLogs.get);
+			if ("data" in res) setStore(API.QueryLogs.get, res.data);
 			setActiveView("default");
 		} catch (error) {
 			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση"));

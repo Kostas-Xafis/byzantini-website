@@ -1,5 +1,5 @@
 import type { SimpleTeacher as Teachers } from "@_types/entities";
-import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import type { CacheMutationsReturnType } from "@hooks/useCacheMutations.solid";
 import { FileHandler } from "@lib/fileHandling.client";
 import { API, type APIResponse } from "@routes/index.client";
 import { type ExtendedFormData } from "@utilities/forms";
@@ -10,7 +10,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableContr
 import type { Action } from "../../table/TableControls.solid";
 import { PREFIX, TeachersInputs, class_types, cvPreview, fileUpload, picturePreview, type APIHook, type TeacherJoins, type TeachersMetadata } from "./helpers";
 
-export const onAdd = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, apiHook: APIHook) {
+export const onAdd = function (hydrate: CacheMutationsReturnType, store: Partial<APIResponse>, apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const addModal = {
 			type: ActionEnum.ADD,
@@ -43,7 +43,7 @@ export const onAdd = function (hydrate: HydrateByIdReturnType, store: Partial<AP
 				registrations_number: fd.getByName("ae-", "string", { single: false }),
 			};
 			const res = await apiHook(API.Teachers.post, { RequestObject: data });
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			const id = res.data.insertId;
 			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + addModal.type + "picture");
 			const cvHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + addModal.type + "cv");

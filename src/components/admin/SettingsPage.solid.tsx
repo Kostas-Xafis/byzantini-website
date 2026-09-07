@@ -1,7 +1,8 @@
-import { createSignal, onMount } from "solid-js";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
-import { API, useAPI } from "@hooks/useAPI.solid";
 import { isDashboardDarkMode, toggleDashboardTheme } from "@utilities/theme";
+import { createSignal, onMount } from "solid-js";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 
@@ -20,7 +21,7 @@ export default function SettingsPage() {
 	const [isDownloading, setIsDownloading] = createSignal(false);
 	const [isDarkMode, setIsDarkMode] = createSignal(false);
 	const isDevelopmentMode = import.meta.env.MODE === "development";
-	const apiHook = useAPI();
+	const apiHook = useAPIClient();
 
 	onMount(() => {
 		setIsDarkMode(isDashboardDarkMode());
@@ -40,13 +41,13 @@ export default function SettingsPage() {
 		setIsDownloading(true);
 		try {
 			const dbSnapshotRes = await apiHook(API.SettingsBackup.getDatabase);
-			if (!dbSnapshotRes.data) {
+			if (!("data" in dbSnapshotRes) || !dbSnapshotRes.data) {
 				throw new Error("Αδυναμία λήψης αντιγράφου βάσης δεδομένων");
 			}
 			const dbSnapshot = dbSnapshotRes.data.sql;
 
 			const filesRes = await apiHook(API.SettingsBackup.getFiles);
-			if (!filesRes.data) {
+			if (!("data" in filesRes) || !filesRes.data) {
 				throw new Error("Αδυναμία λήψης λίστας αρχείων bucket");
 			}
 			const bucketFiles = filesRes.data.files || [];
@@ -57,7 +58,7 @@ export default function SettingsPage() {
 						const fileRes = await apiHook(API.SettingsBackup.getFile, {
 							RequestObject: { key: fileName },
 						});
-						if (!fileRes.data) {
+						if (!("data" in fileRes) || !fileRes.data) {
 							throw new Error("Missing file payload");
 						}
 						const fileBlob = base64ToBlob(fileRes.data.dataBase64);
@@ -116,7 +117,6 @@ export default function SettingsPage() {
 		setIsDarkMode(nextTheme === "dark");
 	};
 
-
 	return (
 		<div class="w-full min-h-screen p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
 			<div class="max-w-3xl grid gap-6">
@@ -159,7 +159,9 @@ export default function SettingsPage() {
 					<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
 						<div class="grid gap-1">
 							<h2 class="font-anaktoria text-2xl">Migrations (Development ONLY)</h2>
-							<p class="text-sm dark:text-gray-300">Οι migrations εκτελούνται μέσω του CLI: <code>bunx wrangler d1 migrations apply DB</code></p>
+							<p class="text-sm dark:text-gray-300">
+								Οι migrations εκτελούνται μέσω του CLI: <code>bunx wrangler d1 migrations apply DB</code>
+							</p>
 						</div>
 					</section>
 				)}

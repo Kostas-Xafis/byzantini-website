@@ -1,6 +1,8 @@
 import type { Locations } from "@_types/entities";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
 import { Random } from "@lib/random";
@@ -173,9 +175,9 @@ function stripSrcFromIFrame(str: string) {
 type LocationsMetadata = { location_id: number };
 export default function LocationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setLocationHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setLocationHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -184,9 +186,7 @@ export default function LocationsTable() {
 			},
 		],
 	});
-	useHydrate(() => {
-		apiHook(API.Locations.get);
-	});
+	createAPIResource(API.Locations.get, undefined, { cache: setStore });
 	const fileUpload = async (fileHandler: FileHandler<LocationsMetadata>) => {
 		const newFile = fileHandler.getNewFiles().at(0);
 		if (!newFile) return;
@@ -230,7 +230,7 @@ export default function LocationsTable() {
 			const res = await apiHook(API.Locations.post, {
 				RequestObject: data,
 			});
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			const id = res.data.insertId;
 			const imageHandler = FileHandler.getHandler<LocationsMetadata>(PREFIX + ActionEnum.ADD + "image");
 			imageHandler.setMetadata({ location_id: id });
@@ -287,7 +287,7 @@ export default function LocationsTable() {
 			const res = await apiHook(API.Locations.update, {
 				RequestObject: data,
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			const imageHandler = FileHandler.getHandler<LocationsMetadata>(PREFIX + ActionEnum.MODIFY + "image");
 
 			await fileDelete(imageHandler);
@@ -329,7 +329,7 @@ export default function LocationsTable() {
 			const res = await apiHook(API.Locations.delete, {
 				RequestObject: data,
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setLocationHydrate({ action: ActionEnum.DELETE, ids: data });
 			if (data.length === 1) {
 				pushAlert(createAlert("success", `Το παράρτημα διαγράφηκε επιτυχώς!`));

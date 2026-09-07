@@ -1,4 +1,5 @@
-import { API, useAPI, useHydrate, type APIStore } from "@lib/hooks/useAPI.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { API } from "@routes/index.client";
 import { loadScript } from "@utilities/scripts";
 import { Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -24,8 +25,7 @@ const currentAcademicYear = getAcademicYearStart();
 const years = new Array<number>(Math.max(currentAcademicYear - firstYear + 1, 1)).fill(1).map((_, i) => firstYear + i);
 
 export default function TotalsTable() {
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
+	const [store, setStore] = createStore<APIResourceStore>({});
 	let growthCanvas: HTMLCanvasElement | undefined;
 	let growthChartInstance: { destroy: () => void } | null = null;
 	const [isDarkMode, setIsDarkMode] = createSignal(false);
@@ -40,10 +40,9 @@ export default function TotalsTable() {
 		themeObserver.observe(root, { attributes: true, attributeFilter: ["class"] });
 	});
 
-	useHydrate(() => {
-		apiHook(API.Registrations.getTotalByYear);
-		apiHook(API.Registrations.get, { UrlArgs: { year: getAcademicYearStart() } });
-	});
+	const initialRegistrationsArgs = { UrlArgs: { year: getAcademicYearStart() } };
+	createAPIResource(API.Registrations.getTotalByYear, undefined, { cache: setStore });
+	createAPIResource(API.Registrations.get, () => initialRegistrationsArgs, { cache: setStore });
 
 	const growthChart = createMemo(() => {
 		const totals = store[API.Registrations.getTotalByYear];

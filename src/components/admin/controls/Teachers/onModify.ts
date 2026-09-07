@@ -1,5 +1,5 @@
 import type { SimpleTeacher as Teachers } from "@_types/entities";
-import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import type { CacheMutationsReturnType } from "@hooks/useCacheMutations.solid";
 import { FileHandler } from "@lib/fileHandling.client";
 import { API, type APIResponse } from "@routes/index.client";
 import { type ExtendedFormData } from "@utilities/forms";
@@ -21,7 +21,7 @@ import {
 	type TeachersMetadata,
 } from "./helpers";
 
-export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
+export const onModify = function (hydrate: CacheMutationsReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const modifyModal = {
 			type: ActionEnum.MODIFY,
@@ -71,7 +71,7 @@ export const onModify = function (hydrate: HydrateByIdReturnType, store: Partial
 				}),
 			};
 			const res = await apiHook(API.Teachers.update, { RequestObject: data });
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 
 			const pictureHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + modifyModal.type + "picture");
 			const cvHandler = FileHandler.getHandler<TeachersMetadata>(PREFIX + modifyModal.type + "cv");

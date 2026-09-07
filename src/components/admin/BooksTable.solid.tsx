@@ -1,7 +1,9 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import type { ExtendedFormData } from "@utilities/forms";
 import type { Books, Wholesalers } from "@_types/entities";
@@ -96,9 +98,9 @@ const columnNames: ColumnType<BooksTable> = {
 
 export default function BooksTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setBookHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setBookHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -107,7 +109,7 @@ export default function BooksTable() {
 			},
 		],
 	});
-	const setWholesalerHydrate = useHydrateById({
+	const setWholesalerHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -117,10 +119,8 @@ export default function BooksTable() {
 		],
 	});
 
-	useHydrate(() => {
-		apiHook(API.Books.get);
-		apiHook(API.Wholesalers.get);
-	});
+	createAPIResource(API.Books.get, undefined, { cache: setStore });
+	createAPIResource(API.Wholesalers.get, undefined, { cache: setStore });
 
 	let shapedData = createMemo(() => {
 		const books = store[API.Books.get];
@@ -151,7 +151,7 @@ export default function BooksTable() {
 			const res = await apiHook(API.Books.post, {
 				RequestObject: data,
 			});
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			setBookHydrate({
 				action: ActionEnum.ADD,
 				id: res.data.insertId,
@@ -183,7 +183,7 @@ export default function BooksTable() {
 			const res = await apiHook(API.Books.updateQuantity, {
 				RequestObject: data,
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setBookHydrate({ action: ActionEnum.MODIFY, id: book.id, isMultiple: false });
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση βιβλίου: " + (book.title || "")));
 		};
@@ -207,7 +207,7 @@ export default function BooksTable() {
 		const submit = async function () {
 			const data = selectedItems.map((id) => books.find((b) => b.id === id)?.id || -1);
 			const res = await apiHook(API.Books.delete, { RequestObject: data });
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setBookHydrate({
 				action: ActionEnum.DELETE,
 				ids: selectedItems.slice(),
@@ -230,7 +230,7 @@ export default function BooksTable() {
 		const submit = async function (formData: ExtendedFormData<{ wholesaler_name: string }>) {
 			const name = formData.string("wholesaler_name");
 			const res = await apiHook(API.Wholesalers.post, { RequestObject: { name } });
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			setWholesalerHydrate({
 				action: ActionEnum.ADD,
 				id: res.data.insertId,
@@ -260,7 +260,7 @@ export default function BooksTable() {
 			const res = await apiHook(API.Wholesalers.delete, {
 				RequestObject: data,
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setWholesalerHydrate({
 				action: ActionEnum.DELETE,
 				ids: data,

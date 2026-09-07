@@ -12,6 +12,7 @@ const PUBLIC_PAGES = [
 	"/eggrafes/",
 	"/kathigites/",
 	"/spoudastiria/",
+	"/epikoinonia/",
 	"/subscriptions/",
 	"/sxoli/anakoinoseis/",
 	"/sxoli/dioikitiko-symvoulio/",

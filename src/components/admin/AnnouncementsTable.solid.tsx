@@ -1,8 +1,10 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { Random } from "@lib/random";
 import { asyncQueue } from "@utilities/AsyncQueue";
@@ -108,9 +110,9 @@ function imagePreview(file: FileProxy<AnnouncementImageMetadata>) {
 type AnnouncementImageMetadata = { is_main: boolean; announcement_id: number; id: number };
 export default function AnnouncementsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setAnnouncementHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setAnnouncementHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -124,10 +126,8 @@ export default function AnnouncementsTable() {
 			},
 		],
 	});
-	useHydrate(() => {
-		apiHook(API.Announcements.get);
-		apiHook(API.Announcements.getImages);
-	});
+	createAPIResource(API.Announcements.get, undefined, { cache: setStore });
+	createAPIResource(API.Announcements.getImages, undefined, { cache: setStore });
 
 	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>) {
 		const kb40 = 1024 * 40;
@@ -223,7 +223,7 @@ export default function AnnouncementsTable() {
 			const res = await apiHook(API.Announcements.post, {
 				RequestObject: data,
 			});
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			const id = res.data.insertId;
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.ADD + "mainImage");
 			const imagesHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.ADD + "photos");
@@ -284,7 +284,7 @@ export default function AnnouncementsTable() {
 					.join("|"),
 			};
 			const res = await apiHook(API.Announcements.update, { RequestObject: data });
-			if (!res.message) return;
+			if (!("message" in res) || !res.message) return;
 
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "mainImage");
 			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "photos");
@@ -348,7 +348,7 @@ export default function AnnouncementsTable() {
 			const res = await apiHook(API.Announcements.delete, {
 				RequestObject: data,
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setAnnouncementHydrate({ action: ActionEnum.DELETE, ids: data });
 			if (data.length === 1) {
 				pushAlert(createAlert("success", "Η ανακοίνωση διαγράφηκε επιτυχώς"));
