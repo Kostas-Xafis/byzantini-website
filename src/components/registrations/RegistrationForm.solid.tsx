@@ -6,7 +6,7 @@ import { Random as R } from "@lib/random";
 import { AnimTimeline } from "@utilities/dom";
 import { ExtendedFormData } from "@utilities/forms";
 import { sleep } from "@utilities/sleep";
-import { For, Show, createEffect, createSignal, on, onMount } from "solid-js";
+import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Input, { type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
