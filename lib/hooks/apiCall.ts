@@ -1,8 +1,6 @@
-import type { DefaultEndpointResponse } from "@_types/routes";
 import { APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
 import { objToFormData } from "@utilities/forms";
 import { convertToUrlFromArgs, getOriginFromContext } from "@utilities/url";
-import { parse } from "valibot";
 
 /**
  * Type-level assertion that `req` carries the `RequestObject`/`UrlArgs` properties.
@@ -29,12 +27,17 @@ export type APICallResult<T> = { data: T } | { message: string };
  * on the client (Solid components, plain event handlers, scripts).
  *
  * Behavior:
- * - Re-validates the payload client-side against the endpoint's Valibot contract.
  * - Converts the payload to `FormData` for `multipart` endpoints.
- * - Resolves `{ data }` or `{ message }` according to the route contract.
+ * - Resolves `{ data }` or `{ message }` according to the server envelope
+ *   (`{ data } | { message } | { error }`, see `APIServer.handle`).
  * - Throws on network errors and on server `error` responses; errors are the
  *   caller's responsibility (e.g. `createAPIResource` surfaces them via
  *   `resource.error`).
+ *
+ * NOTE: request validation is intentionally server-side only. The Zod contracts
+ * live on the `APIServer` instances (`route.schema`) and the client registry
+ * (`APIEndpoints`) only carries metadata + opaque schema references — there is
+ * no client-side validator to run here.
  *
  * @param endpoint A typed endpoint key (e.g. `API.Teachers.get`).
  * @param req      Optional `{ RequestObject?, UrlArgs? }` payload; omit for plain GETs.
@@ -49,7 +52,6 @@ export const apiCall = async <T extends APIEndpointNames>(endpoint: T, req?: API
 		fetcher = fetch(`${origin}/api${Route.path}`, { method: Route.method });
 	} else {
 		assertRequestArgs(req);
-		if (Route.validation) parse(Route.validation, req.RequestObject);
 
 		// Work on a local copy so the caller's request object is never mutated.
 		let RequestObject = req.RequestObject;
@@ -70,12 +72,12 @@ export const apiCall = async <T extends APIEndpointNames>(endpoint: T, req?: API
 		});
 	}
 
-	const { res: response } = (await (await fetcher).json()) as DefaultEndpointResponse;
-	if (response.type === "error") {
-		throw new Error(response.error);
+	const response = (await (await fetcher).json()) as { data?: APIResponse[T]; message?: string; error?: unknown };
+	if (response && typeof response === "object" && "error" in response) {
+		throw new Error(typeof response.error === "string" ? response.error : JSON.stringify(response.error));
 	}
-	if (response.type === "message") {
-		return { message: response.message };
+	if (response && typeof response === "object" && "message" in response) {
+		return { message: response.message as string };
 	}
-	return { data: response.data as APIResponse[T] };
+	return { data: (response as { data: APIResponse[T] }).data };
 };
