@@ -1,24 +1,53 @@
-import { A, type RouterProps } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { A, useLocation, type RouterProps } from "@solidjs/router";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
-const links = [
-	{ name: "Αρχική", url: "/admin", force: false },
-	{ name: "Εγγραφές", url: "/admin/registrations", force: false },
-	{ name: "Βιβλία", url: "/admin/books", force: false },
-	{ name: "Οφειλές Μαθητών", url: "/admin/payments", force: false },
-	{ name: "Οφειλές Σχολής", url: "/admin/payoffs", force: false },
-	{ name: "Καθηγητές", url: "/admin/teachers", force: false },
-	{ name: "Παραρτήματα", url: "/admin/locations", force: false },
-	{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false },
-	{ name: "Διαχειριστές", url: "/admin/sysusers", force: false },
-	{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false },
-	{ name: "Ρυθμίσεις", url: "/admin/settings", force: false },
-	{ name: "Έξοδος", url: "/admin/logout", force: true },
+type NavLink = { name: string; url: string; force: boolean; icon: string };
+type NavSection = { title: string | null; links: NavLink[] };
+
+const sections: NavSection[] = [
+	{
+		title: null,
+		links: [{ name: "Αρχική", url: "/admin", force: false, icon: "fa-solid fa-house" }],
+	},
+	{
+		title: "Σχολή",
+		links: [
+			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "fa-solid fa-clipboard-list" },
+			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "fa-solid fa-chalkboard-user" },
+			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "fa-solid fa-location-dot" },
+			{ name: "Βιβλία", url: "/admin/books", force: false, icon: "fa-solid fa-book" },
+			{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false, icon: "fa-solid fa-bullhorn" },
+		],
+	},
+	{
+		title: "Οικονομικά",
+		links: [
+			{ name: "Οφειλές Μαθητών", url: "/admin/payments", force: false, icon: "fa-solid fa-hand-holding-dollar" },
+			{ name: "Οφειλές Σχολής", url: "/admin/payoffs", force: false, icon: "fa-solid fa-file-invoice-dollar" },
+		],
+	},
+	{
+		title: "Σύστημα",
+		links: [
+			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "fa-solid fa-users-gear" },
+			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database" },
+			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "fa-solid fa-gear" },
+			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "fa-solid fa-right-from-bracket" },
+		],
+	},
 ];
 
 // force pathname change
 const forceURLChange = (pathname: string) => (window.location.pathname = pathname);
 const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
+
+const linkBaseClasses =
+	"group relative flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 ease-[cubic-bezier(0,.8,.43,.64)] hover:bg-red-950/60 dark:hover:bg-red-800/60";
+const linkActiveClasses = " bg-red-950 dark:bg-red-900 text-white shadow-[inset_4px_0_0_0_rgba(254,202,202,0.9)]";
+
+const mobileLinkBaseClasses =
+	"relative grid py-4 bg-red-900 dark:bg-red-950 opacity-0 transition-colors transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100 hover:bg-red-950/60 dark:hover:bg-red-800/60";
+const mobileLinkActiveClasses = " bg-red-950 dark:bg-red-900! shadow-[inset_4px_0_0_0_rgba(254,202,202,0.9)]";
 
 export default function AdminNav(props: RouterProps) {
 	type StoredSysUser = {
@@ -26,20 +55,49 @@ export default function AdminNav(props: RouterProps) {
 		avatar_url?: string | null;
 	};
 
-	const firstPage = links.find((link) => link.url === window.location.pathname || link.url + "/" === window.location.pathname)?.name ?? "Αρχική";
-	const [currentPage, setCurrentPage] = createSignal(firstPage);
+	const location = useLocation();
 	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
-	const [userEmail, setUserEmail] = createSignal(user.email);
-	const [avatarUrl, setAvatarUrl] = createSignal<string>(user.avatar_url || "");
+	const [userEmail] = createSignal(user.email);
+	const [avatarUrl] = createSignal<string>(user.avatar_url || "");
+	const isOwner = () => userEmail() === SYSUSER_OWNER_EMAIL;
 
-	if (userEmail() !== SYSUSER_OWNER_EMAIL) {
-		// Remove the query logging page for non sys admins
-		delete links[9];
-	}
+	const isActive = (url: string) => location.pathname === url || location.pathname === url + "/";
+
+	// Client-side only: hide the query-logging page for non-owners.
+	// (Server-side authorization is enforced separately by the API.)
+	const visibleSections = createMemo(() =>
+		sections
+			.map((section) => ({
+				...section,
+				links: section.links.filter((link) => link.url !== "/admin/query-logs" || isOwner()),
+			}))
+			.filter((section) => section.links.length > 0),
+	);
+	const flatLinks = createMemo(() => visibleSections().flatMap((section) => section.links));
+
+	const [currentPage, setCurrentPage] = createSignal("Αρχική");
+	const [menuOpen, setMenuOpen] = createSignal(false);
+	createEffect(() => {
+		const found = flatLinks().find((link) => isActive(link.url));
+		if (found) setCurrentPage(found.name);
+	});
+
+	// The open/close toggle lives in AdminLayout's vanilla script; mirror its
+	// `.open` class into `aria-expanded` for screen readers.
+	onMount(() => {
+		const burger = document.querySelector("#burgerNav");
+		if (!burger) return;
+		const sync = () => setMenuOpen(burger.classList.contains("open"));
+		const observer = new MutationObserver(sync);
+		observer.observe(burger, { attributes: true, attributeFilter: ["class"] });
+		sync();
+		onCleanup(() => observer.disconnect());
+	});
 
 	return (
 		<>
 			<nav
+				aria-label="Πλοήγηση διαχείρισης"
 				class={
 					"pt-4 grid grid-rows-[auto_1fr] bg-red-900 dark:bg-red-950 overflow-y-auto overflow-x-hidden max-sm:py-1 max-sm:gap-y-2 max-sm:flex max-sm:z-50 flex-col max-sm:overflow-visible max-sm:sticky max-sm:top-0" +
 					" max-sm:flex-row max-sm:p-1"
@@ -69,115 +127,153 @@ export default function AdminNav(props: RouterProps) {
 						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{userEmail()}</p>
 					</div>
 				</div>
-				<div class={`h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start py-1 content-evenly max-sm:hidden`}>
-					{links.map((link) => (
-						<A
-							class="group relative py-2 grid grid-rows-[minmax(min-content, 70px)] place-content-center transition-colors duration-150 ease-[cubic-bezier(0,.8,.43,.64)]  hover:bg-red-950 drop-shadow-[-3px_1px_2px_rgba(0,0,0,0.35)]"
-							href={link.url}
-							rel="prefetch-intent"
-							onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>
-							<p class="group font-bold font-anaktoria text-1.5xl text-red-50 text-center">{link.name}</p>
-						</A>
-					))}
+				<div class="h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start pt-4 content-start max-sm:hidden">
+					<For each={visibleSections()}>
+						{(section) => (
+							<>
+								<Show when={section.title}>
+									<p class="px-4 pt-2 pb-2 text-[12px] font-bold uppercase tracking-[0.14em] bg-red-950 dark:bg-red-900 text-red-100 dark:text-red-200/70 ">
+										{section.title}
+									</p>
+								</Show>
+								<For each={section.links}>
+									{(link) => (
+										<A
+											href={link.url}
+											rel="prefetch-intent"
+											aria-current={isActive(link.url) ? "page" : undefined}
+											class={linkBaseClasses + (isActive(link.url) ? linkActiveClasses : "")}
+											onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>
+											<i class={`${link.icon} w-5 text-center text-base text-red-200/90`} aria-hidden="true"></i>
+											<p class="font-bold font-anaktoria text-lg text-red-50">{link.name}</p>
+										</A>
+									)}
+								</For>
+							</>
+						)}
+					</For>
 				</div>
 				<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
-					<p class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_-_7px)]">
+					<button
+						type="button"
+						aria-expanded={menuOpen()}
+						aria-controls="burgerNavMenu"
+						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_-_7px)]">
 						{/* 7px = 1/2 of 14px = 0.875rem */}
 						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
 						<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
 							{currentPage()}
 						</span>
-					</p>
-					<div class="hidden fixed top-[3.5rem] left-0 right-0 h-max flex-col w-full z-[5000]">
-						{links.map((link) => (
-							<A
-								class="relative grid py-4 bg-red-900 dark:bg-red-950 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100"
-								onClick={(link.force && (() => forceURLChange(link.url))) || (() => setCurrentPage(link.name))}
-								href={link.url}>
-								<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
-									{link.name}
-								</p>
-							</A>
-						))}
+					</button>
+					<div
+						id="burgerNavMenu"
+						class="hidden fixed top-[3.5rem] left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 overflow-y-auto flex-col w-full z-[5000]">
+						<For each={visibleSections()}>
+							{(section) => (
+								<div class="bg-red-900 dark:bg-red-950">
+									<Show when={section.title}>
+										<p class="px-4 pt-3 pb-3 text-[12px] font-bold uppercase tracking-[0.14em] bg-red-950 dark:bg-red-900 text-red-100 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100">
+											{section.title}
+										</p>
+									</Show>
+									<For each={section.links}>
+										{(link) => (
+											<A
+												class={mobileLinkBaseClasses + (isActive(link.url) ? mobileLinkActiveClasses : "")}
+												aria-current={isActive(link.url) ? "page" : undefined}
+												onClick={(link.force && (() => forceURLChange(link.url))) || (() => setCurrentPage(link.name))}
+												href={link.url}>
+												<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
+													<i class={`${link.icon} mr-2 text-base text-red-200/90`} aria-hidden="true"></i>
+													{link.name}
+												</p>
+											</A>
+										)}
+									</For>
+								</div>
+							)}
+						</For>
 					</div>
 				</div>
 				<style>
-					{`/* Subpixel gaps for no reason at all.... */
-			#burgerNav a:nth-child(11) {
+					{`/* Staggered slide-down for the mobile menu. Selectors are
+			count-independent: :nth-of-type counts only <a> siblings, ignoring
+			section headings, so hiding a link never breaks the sequence. */
+			#burgerNavMenu a:nth-of-type(11) {
 				transition-duration: 0.475s;
 				transform: translateY(-10px);
 			}
-			#burgerNav a:nth-child(10) {
+			#burgerNavMenu a:nth-of-type(10) {
 				transition-duration: 0.5s;
 				transform: translateY(-9px);
 			}
-			#burgerNav a:nth-child(9) {
+			#burgerNavMenu a:nth-of-type(9) {
 				transition-duration: 0.525s;
 				transform: translateY(-8px);
 			}
-			#burgerNav a:nth-child(8) {
+			#burgerNavMenu a:nth-of-type(8) {
 				transition-duration: 0.55s;
 				transform: translateY(-7px);
 			}
-			#burgerNav a:nth-child(7) {
+			#burgerNavMenu a:nth-of-type(7) {
 				transition-duration: 0.575s;
 				transform: translateY(-6px);
 			}
-			#burgerNav a:nth-child(6) {
+			#burgerNavMenu a:nth-of-type(6) {
 				transition-duration: 0.6s;
 				transform: translateY(-5px);
 			}
-			#burgerNav a:nth-child(5) {
+			#burgerNavMenu a:nth-of-type(5) {
 				transition-duration: 0.625s;
 				transform: translateY(-4px);
 			}
-			#burgerNav a:nth-child(4) {
+			#burgerNavMenu a:nth-of-type(4) {
 				transition-duration: 0.65s;
 				transform: translateY(-3px);
 			}
-			#burgerNav a:nth-child(3) {
+			#burgerNavMenu a:nth-of-type(3) {
 				transition-duration: 0.675s;
 				transform: translateY(-2px);
 			}
-			#burgerNav a:nth-child(2) {
+			#burgerNavMenu a:nth-of-type(2) {
 				transition-duration: 0.7s;
 				transform: translateY(-1px);
 			}
-			#burgerNav a:nth-child(1) {
+			#burgerNavMenu a:nth-of-type(1) {
 				transition-duration: 0.725s;
 				transform: translateY(0px);
 			}
-			#burgerNav:is(.open) a:nth-child(1) {
+			#burgerNav:is(.open) a:nth-of-type(1) {
 				transition-duration: 0.6s;
 			}
-			#burgerNav:is(.open) a:nth-child(2) {
+			#burgerNav:is(.open) a:nth-of-type(2) {
 				transition-duration: 0.625s;
 			}
-			#burgerNav:is(.open) a:nth-child(3) {
+			#burgerNav:is(.open) a:nth-of-type(3) {
 				transition-duration: 0.65s;
 			}
-			#burgerNav:is(.open) a:nth-child(4) {
+			#burgerNav:is(.open) a:nth-of-type(4) {
 				transition-duration: 0.675s;
 			}
-			#burgerNav:is(.open) a:nth-child(11) {
+			#burgerNav:is(.open) a:nth-of-type(11) {
 				transition-duration: 0.85s;
 			}
-			#burgerNav:is(.open) a:nth-child(5) {
+			#burgerNav:is(.open) a:nth-of-type(5) {
 				transition-duration: 0.7s;
 			}
-			#burgerNav:is(.open) a:nth-child(6) {
+			#burgerNav:is(.open) a:nth-of-type(6) {
 				transition-duration: 0.725s;
 			}
-			#burgerNav:is(.open) a:nth-child(7) {
+			#burgerNav:is(.open) a:nth-of-type(7) {
 				transition-duration: 0.75s;
 			}
-			#burgerNav:is(.open) a:nth-child(8) {
+			#burgerNav:is(.open) a:nth-of-type(8) {
 				transition-duration: 0.775s;
 			}
-			#burgerNav:is(.open) a:nth-child(9) {
+			#burgerNav:is(.open) a:nth-of-type(9) {
 				transition-duration: 0.8s;
 			}
-			#burgerNav:is(.open) a:nth-child(10) {
+			#burgerNav:is(.open) a:nth-of-type(10) {
 				transition-duration: 0.825s;
 			}`}
 				</style>
