@@ -1,5 +1,5 @@
 import { A, type RouterProps } from "@solidjs/router";
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 
 const links = [
 	{ name: "Αρχική", url: "/admin", force: false },
@@ -18,6 +18,7 @@ const links = [
 
 // force pathname change
 const forceURLChange = (pathname: string) => (window.location.pathname = pathname);
+const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
 
 export default function AdminNav(props: RouterProps) {
 	type StoredSysUser = {
@@ -27,21 +28,14 @@ export default function AdminNav(props: RouterProps) {
 
 	const firstPage = links.find((link) => link.url === window.location.pathname || link.url + "/" === window.location.pathname)?.name ?? "Αρχική";
 	const [currentPage, setCurrentPage] = createSignal(firstPage);
-	const [userEmail, setUserEmail] = createSignal("");
-	const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null);
+	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
+	const [userEmail, setUserEmail] = createSignal(user.email);
+	const [avatarUrl, setAvatarUrl] = createSignal<string>(user.avatar_url || "");
 
-	onMount(() => {
-		const raw = localStorage.getItem("sys_user");
-		if (!raw) return;
-		try {
-			const user = JSON.parse(raw) as StoredSysUser;
-			setUserEmail(user.email || "");
-			setAvatarUrl(user.avatar_url || null);
-		} catch {
-			setUserEmail("");
-			setAvatarUrl(null);
-		}
-	});
+	if (userEmail() === SYSUSER_OWNER_EMAIL) {
+		// Remove the query logging page
+		delete links[9];
+	}
 
 	return (
 		<>
