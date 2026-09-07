@@ -1,5 +1,5 @@
 import type { ClassType, Teachers as FullTeachers, Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations } from "@_types/entities";
-import { useAPI } from "@hooks/useAPI.solid";
+import type { APIClient } from "@hooks/useAPIClient.solid";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
 import { Random } from "@lib/random";
 import { API } from "@routes/index.client";
@@ -16,7 +16,7 @@ export type TeacherJoins = {
 	registrations_number: string[];
 };
 
-export type APIHook = ReturnType<typeof useAPI>;
+export type APIHook = APIClient;
 
 type ExtraInputs =
 	| "teacherClasses"

@@ -1,6 +1,7 @@
 import { createSignal, onMount } from "solid-js";
 import { asyncQueue } from "@utilities/AsyncQueue";
-import { API, useAPI } from "@hooks/useAPI.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { API } from "@routes/index.client";
 import { isDashboardDarkMode, toggleDashboardTheme } from "@utilities/theme";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
@@ -22,7 +23,7 @@ export default function SettingsPage() {
 	const [isMigratingTarget, setIsMigratingTarget] = createSignal<"local" | "production" | null>(null);
 	const [migrationResult, setMigrationResult] = createSignal<string>("");
 	const isDevelopmentMode = import.meta.env.MODE === "development";
-	const apiHook = useAPI();
+	const apiHook = useAPIClient();
 
 	onMount(() => {
 		setIsDarkMode(isDashboardDarkMode());
@@ -42,13 +43,13 @@ export default function SettingsPage() {
 		setIsDownloading(true);
 		try {
 			const dbSnapshotRes = await apiHook(API.SettingsBackup.getDatabase);
-			if (!dbSnapshotRes.data) {
+			if (!("data" in dbSnapshotRes) || !dbSnapshotRes.data) {
 				throw new Error("Αδυναμία λήψης αντιγράφου βάσης δεδομένων");
 			}
 			const dbSnapshot = dbSnapshotRes.data.sql;
 
 			const filesRes = await apiHook(API.SettingsBackup.getFiles);
-			if (!filesRes.data) {
+			if (!("data" in filesRes) || !filesRes.data) {
 				throw new Error("Αδυναμία λήψης λίστας αρχείων bucket");
 			}
 			const bucketFiles = filesRes.data.files || [];
@@ -59,7 +60,7 @@ export default function SettingsPage() {
 						const fileRes = await apiHook(API.SettingsBackup.getFile, {
 							RequestObject: { key: fileName },
 						});
-						if (!fileRes.data) {
+						if (!("data" in fileRes) || !fileRes.data) {
 							throw new Error("Missing file payload");
 						}
 						const fileBlob = base64ToBlob(fileRes.data.dataBase64);
@@ -126,11 +127,11 @@ export default function SettingsPage() {
 			const res = await apiHook(API.Schema.migrate, {
 				UrlArgs: { target },
 			});
-			if (res.message) {
+			if ("message" in res && res.message) {
 				setMigrationResult(res.message);
 				return;
 			}
-			throw new Error((res as any).error || "Αποτυχία migration");
+			throw new Error("Αποτυχία migration");
 		} catch (error) {
 			console.error(error);
 			setMigrationResult("Αποτυχία migration");

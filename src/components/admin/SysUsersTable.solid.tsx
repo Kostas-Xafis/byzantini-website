@@ -1,6 +1,8 @@
 import type { SysUsers as FullSysUser } from "@_types/entities";
-import { API, useAPI, useHydrate, type APIStore } from "@lib/hooks/useAPI.solid";
-import { useHydrateById } from "@lib/hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@lib/hooks/useSelectedRows.solid";
 import type { ExtendedFormData } from "@utilities/forms";
 import { Show, createMemo } from "solid-js";
@@ -25,9 +27,9 @@ const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
 
 export default function SysUsersTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setSysUserHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setSysUserHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -36,10 +38,8 @@ export default function SysUsersTable() {
 			},
 		],
 	});
-	useHydrate(() => {
-		apiHook(API.SysUsers.get);
-		apiHook(API.SysUsers.getBySid);
-	});
+	createAPIResource(API.SysUsers.get, undefined, { cache: setStore });
+	createAPIResource(API.SysUsers.getBySid, undefined, { cache: setStore });
 
 	const columnNames: ColumnType<SysUsers> = {
 		id: { type: "number", name: "Id", size: 4 },
@@ -59,7 +59,7 @@ export default function SysUsersTable() {
 			const res = await apiHook(API.SysUsers.createRegisterLink, {
 				RequestObject: { email: inviteEmail },
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			pushAlert(createAlert("success", "Το email πρόσκλησης στάλθηκε επιτυχώς!"));
 		};
 		return {
@@ -96,7 +96,7 @@ export default function SysUsersTable() {
 		const submit = async function () {
 			const ids = selectedItems.map((i) => (sysusers.find((p) => p.id === i) as SysUsers).id);
 			const res = await apiHook(API.SysUsers.delete, { RequestObject: ids });
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setSysUserHydrate({ action: ActionEnum.DELETE, ids });
 			if (ids.length === 1) {
 				pushAlert(createAlert("success", "Ο διαχειριστής διαγράφηκε επιτυχώς!"));

@@ -1,5 +1,5 @@
 import type { Instruments } from "@_types/entities";
-import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import type { CacheMutationsReturnType } from "@hooks/useCacheMutations.solid";
 import { API } from "@routes/index.client";
 import { createMemo } from "solid-js";
 import { type Props as InputProps } from "../../../input/Input.solid";
@@ -8,7 +8,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableContr
 import type { Action } from "../../table/TableControls.solid";
 import type { APIHook } from "./helpers";
 
-export const onAddInstrument = function (hydrate: HydrateByIdReturnType, apiHook: APIHook) {
+export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const submit = async function (fd: FormData) {
 			const data: Omit<Instruments, "id"> = {
@@ -23,7 +23,7 @@ export const onAddInstrument = function (hydrate: HydrateByIdReturnType, apiHook
 				),
 			};
 			const res = await apiHook(API.Instruments.post, { RequestObject: data });
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			hydrate({
 				action: ActionEnum.ADD,
 				id: res.data.insertId,

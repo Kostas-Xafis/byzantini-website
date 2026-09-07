@@ -1,7 +1,9 @@
-import { Show, createEffect, createSignal, on, onMount, untrack } from "solid-js";
+import { Show, createEffect, createSignal, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { onElementMount } from "@utilities/dom";
 import type { Registrations } from "@_types/entities";
@@ -27,9 +29,9 @@ export default function SearchPage() {
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 
 	const [year, setYear] = createSignal(new Date().getFullYear());
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setRegistrationHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setRegistrationHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -39,18 +41,17 @@ export default function SearchPage() {
 		],
 	});
 
-	useHydrate(() => {
-		apiHook(API.Registrations.get, { UrlArgs: { year: year() } });
-		apiHook(API.Registrations.get);
-		apiHook(API.Teachers.getByFullnames);
-		apiHook(API.Instruments.get);
-	});
-
-	createEffect(
-		on(year, (y) => {
-			apiHook(API.Registrations.get, { UrlArgs: { year: y } });
-		}),
+	// Hydration + year-driven refetch (replaces useHydrate and the on(year) fetch effect).
+	createAPIResource(
+		API.Registrations.get,
+		() => {
+			const y = year();
+			return { UrlArgs: { year: y } };
+		},
+		{ cache: setStore },
 	);
+	createAPIResource(API.Teachers.getByFullnames, undefined, { cache: setStore });
+	createAPIResource(API.Instruments.get, undefined, { cache: setStore });
 
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
 

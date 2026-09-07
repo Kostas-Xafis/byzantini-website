@@ -1,6 +1,8 @@
 import type { Teachers as FullTeachers, TeacherClasses, SimpleTeacher as Teachers } from "@_types/entities";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { looseStringIncludes } from "@utilities/string";
 import { teacherTitleByGender } from "@utilities/text";
@@ -86,10 +88,10 @@ const columnNames: ColumnType<TeachersTableType> = {
 export default function TeachersTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>({});
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
 
-	const setTeacherHydrate = useHydrateById({
+	const setTeacherHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -113,7 +115,7 @@ export default function TeachersTable() {
 			},
 		],
 	});
-	const setActionPressedInstruments = useHydrateById({
+	const setActionPressedInstruments = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -123,16 +125,12 @@ export default function TeachersTable() {
 		],
 	});
 
-	useHydrate(() => {
-		apiHook(API.Teachers.get);
-		apiHook(API.Teachers.getClasses);
-
-		apiHook(API.Locations.get);
-		apiHook(API.Teachers.getLocations);
-
-		apiHook(API.Instruments.get);
-		apiHook(API.Teachers.getInstruments);
-	});
+	createAPIResource(API.Teachers.get, undefined, { cache: setStore });
+	createAPIResource(API.Teachers.getClasses, undefined, { cache: setStore });
+	createAPIResource(API.Locations.get, undefined, { cache: setStore });
+	createAPIResource(API.Teachers.getLocations, undefined, { cache: setStore });
+	createAPIResource(API.Instruments.get, undefined, { cache: setStore });
+	createAPIResource(API.Teachers.getInstruments, undefined, { cache: setStore });
 
 	const shapedData = createMemo(() => {
 		const classList = store[API.Teachers.getClasses];

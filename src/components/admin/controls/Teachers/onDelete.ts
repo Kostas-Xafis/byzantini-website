@@ -1,5 +1,5 @@
 import type { SimpleTeacher as Teachers } from "@_types/entities";
-import type { HydrateByIdReturnType } from "@hooks/useHydrateById.solid";
+import type { CacheMutationsReturnType } from "@hooks/useCacheMutations.solid";
 import { API, type APIResponse } from "@routes/index.client";
 import { createMemo } from "solid-js";
 import { createAlert, pushAlert } from "../../Alert.solid";
@@ -7,7 +7,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableContr
 import type { Action } from "../../table/TableControls.solid";
 import { type APIHook } from "./helpers";
 
-export const onDelete = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
+export const onDelete = function (hydrate: CacheMutationsReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const deleteModal = {
 			type: ActionEnum.DELETE,
@@ -18,7 +18,7 @@ export const onDelete = function (hydrate: HydrateByIdReturnType, store: Partial
 		const submit = async function () {
 			const ids = selectedItems.map((i) => (teachers.find((p) => p.id === i) as Teachers).id);
 			const res = await apiHook(API.Teachers.delete, { RequestObject: ids });
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			hydrate({ action: ActionEnum.DELETE, ids: ids });
 			if (ids.length === 1) {
 				pushAlert(createAlert("success", "Επιτυχής διαγραφή καθηγητή"));

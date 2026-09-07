@@ -1,11 +1,11 @@
 import type { Instruments, Registrations, Teachers } from "@_types/entities";
 import { classYearsForClassId } from "@lib/classYears";
-import { useAPI } from "@lib/hooks/useAPI.solid";
+import type { APIClient } from "@hooks/useAPIClient.solid";
 import { type Props as InputProps } from "../../../input/Input.solid";
 
 export const PREFIX = "registrations";
 
-export type APIHook = ReturnType<typeof useAPI>;
+export type APIHook = APIClient;
 
 export const RegistrationsInputs = (student: Registrations, teachers: Teachers[], instruments: Instruments[]): Record<keyof Registrations, InputProps> => {
 	let sortTeachers = teachers

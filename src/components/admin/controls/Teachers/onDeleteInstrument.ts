@@ -1,4 +1,4 @@
-import type { HydrateByIdReturnType } from "@lib/hooks/useHydrateById.solid";
+import type { CacheMutationsReturnType } from "@hooks/useCacheMutations.solid";
 import { API, type APIResponse } from "@lib/routes/index.client";
 import { createMemo } from "solid-js";
 import { type Props as InputProps } from "../../../input/Input.solid";
@@ -7,7 +7,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableContr
 import type { Action } from "../../table/TableControls.solid";
 import type { APIHook } from "./helpers";
 
-export const onDeleteInstrument = function (hydrate: HydrateByIdReturnType, store: Partial<APIResponse>, apiHook: APIHook) {
+export const onDeleteInstrument = function (hydrate: CacheMutationsReturnType, store: Partial<APIResponse>, apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
 		const instruments = store[API.Instruments.get];
 		if (!instruments) return { type: ActionEnum.DELETE, icon: ActionIcon.DELETE_BOX };
@@ -18,7 +18,7 @@ export const onDeleteInstrument = function (hydrate: HydrateByIdReturnType, stor
 			if (!instrument) return;
 
 			const res = await apiHook(API.Instruments.delete, { RequestObject: [instrument.id] });
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			hydrate({
 				action: ActionEnum.DELETE,
 				ids: [instrument.id],

@@ -1,7 +1,9 @@
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
-import { useHydrateById } from "@hooks/useHydrateById.solid";
+import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useCacheMutations } from "@hooks/useCacheMutations.solid";
+import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import type { ExtendedFormData } from "@utilities/forms";
 import type { Payoffs, Wholesalers } from "@_types/entities";
@@ -53,9 +55,9 @@ const payoffsToTable = (payoffs: Payoffs[], wholesalers: Wholesalers[]): SchoolP
 
 export default function PayoffsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [store, setStore] = createStore<APIStore>({});
-	const apiHook = useAPI(setStore);
-	const setPayoffHydrate = useHydrateById({
+	const [store, setStore] = createStore<APIResourceStore>({});
+	const apiHook = useAPIClient(setStore);
+	const setPayoffHydrate = useCacheMutations({
 		setStore,
 		mutations: [
 			{
@@ -64,10 +66,8 @@ export default function PayoffsTable() {
 			},
 		],
 	});
-	useHydrate(() => {
-		apiHook(API.Payoffs.get);
-		apiHook(API.Wholesalers.get);
-	});
+	createAPIResource(API.Payoffs.get, undefined, { cache: setStore });
+	createAPIResource(API.Wholesalers.get, undefined, { cache: setStore });
 
 	const columnNames: ColumnType<SchoolPayoffsTable> = {
 		id: { type: "number", name: "Id", size: 4 },
@@ -100,7 +100,7 @@ export default function PayoffsTable() {
 			const res = await apiHook(API.Payoffs.updateAmount, {
 				RequestObject: data,
 			});
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setPayoffHydrate({
 				action: ActionEnum.MODIFY,
 				id: payoff.id,
@@ -129,7 +129,7 @@ export default function PayoffsTable() {
 		const submit = async function () {
 			const data = selectedItems.map((i) => (payoffs.find((p) => p.id === i) as Payoffs).id);
 			const res = await apiHook(API.Payoffs.complete, { RequestObject: data });
-			if (!res.data && !res.message) return;
+			if (!("data" in res ? res.data : res.message)) return;
 			setPayoffHydrate({
 				action: ActionEnum.CHECK,
 				isMultiple: true,
