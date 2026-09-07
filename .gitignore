@@ -53,5 +53,8 @@ dist/
 /contacts/*.vcf
 worker-*.d.ts
 
+# Google κριτικές — συλλογή (περιέχει προσωπικά δεδομένα τρίτων)
+/google-reviews
+
 
 /email

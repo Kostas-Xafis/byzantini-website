@@ -1,54 +1,50 @@
 ---
 // Στατιστικά στοιχεία της Σχολής — ενημερώστε τις τιμές όταν αλλάξουν τα πραγματικά
 // δεδομένα (οι αριθμοί προέρχονται από τα τρέχοντα στοιχεία του ιστότοπου:
-// 3 τμήματα, 43 ενεργοί καθηγητές, 2 ΦΕΚ κρατικής αναγνώρισης, 1 χορωδία).
+// 3 τμήματα, 43 ενεργοί καθηγητές, 2 ΦΕΚ κρατικής αναγνώρισης, 11 σπουδαστήρια).
 // Οι μαθητές 2025-26: COUNT(DISTINCT amka) από τον πίνακα registrations
 // για registration_year = '2025-2026' (528 εγγραφές → 440 μοναδικοί μαθητές).
+// Τα σπουδαστήρια: πίνακας locations με partner = 0 (11 χώροι μαθημάτων,
+// χωρίς τις 4 συνεργαζόμενες σχολές).
 const stats = [
 	{
-		icon: "fa-users",
 		value: 440,
 		label: "Μαθητές 2025-26",
 		sub: "Σύνολο των μαθητών του περασμένου σχολικού έτους",
 	},
 	{
-		icon: "fa-chalkboard-user",
 		value: 43,
 		label: "Διδάσκοντες",
 		sub: "Ιεροψάλτες και δάσκαλοι με πείρα",
 	},
 	{
-		icon: "fa-music",
+		value: 11,
+		label: "Σπουδαστήρια",
+		sub: "Χώροι μαθημάτων σε όλη τη Μητρόπολη",
+	},
+	{
 		value: 3,
 		label: "Τμήματα Μουσικής",
 		sub: "Βυζαντινή, Παραδοσιακή και Ευρωπαϊκή",
 	},
 	{
-		icon: "fa-certificate",
 		value: 2,
 		label: "ΦΕΚ Αναγνώρισης",
 		sub: "Πτυχία & Διπλώματα αναγνωρισμένα από το Κράτος",
 	},
-	{
-		icon: "fa-church",
-		value: 1,
-		label: "Χορωδία",
-		sub: "«Άδοντες & Ψάλλοντες» — η καρδιά της Σχολής",
-	},
 ];
 ---
 
-<section id="statistika" class="relative w-full grid gap-y-16 bg-red-900 px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10 max-sm:gap-y-5">
+<section id="statistika" class="relative w-full grid gap-y-16 bg-red-950 px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10 max-sm:gap-y-5">
 	<h2
 		id="statistikaHead"
-		class="heading relative p-2 w-max place-self-center text-center text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-0 after:w-full max-sm:after:h-[1px] max-sm:after:-bottom-1 after:bg-red-50">
+		class="heading relative p-2 w-max place-self-center text-center text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-0 after:w-full max-sm:after:h-px max-sm:after:-bottom-1 after:bg-red-50">
 		Η Σχολή σε αριθμούς
 	</h2>
 	<div class="grid grid-cols-5 max-sm:grid-cols-2 gap-[1.25vw] max-sm:gap-x-4 max-sm:gap-y-8">
 		{
 			stats.map((s, i) => (
 				<article class={"flex flex-col items-center gap-y-2 text-center" + (i === stats.length - 1 ? " max-sm:col-span-2" : "")}>
-					<i class={`fa-solid ${s.icon} text-[1.6vw] max-sm:text-2xl text-red-200/90`} aria-hidden="true" />
 					<p class="statNumber font-anaktoria font-bold text-[3vw] max-sm:text-4xl leading-none text-red-50" data-target={s.value}>
 						{s.value}
 					</p>

@@ -23,16 +23,16 @@ const lessons = [
 	class="h-max w-full grid grid-rows-[max-content_max-content_1fr] grid-cols-3 gap-x-[3vw] gap-y-[2vw] p-[3vw] py-[3vh] pb-[12vh] max-sm:flex max-sm:flex-col max-sm:gap-y-6 max-sm:py-12">
 	<h2
 		id="lessonsHead"
-		class="heading relative p-2 text-center w-[9ch] place-self-center text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%_-_4ch)] after:w-[8ch] after:bg-red-900">
+		class="heading relative p-2 text-center w-[9ch] place-self-center text-[2.5vw] max-sm:text-2xl leading-[2.5vw] font-bold font-anaktoria text-red-900 col-span-full overflow-hidden after:left-[calc(50%-4ch)] after:w-[8ch] after:bg-red-900">
 		Τμήματα
 	</h2>
-	<p class="col-span-full -mt-[0.5vw] max-sm:mt-0 place-self-center font-didact text-[1vw] max-sm:text-sm max-w-[72ch] text-center text-gray-600">
+	<p class="col-span-full mt-[-0.5vw] max-sm:mt-0 place-self-center font-didact text-[1vw] max-sm:text-sm max-w-[72ch] text-center text-gray-600">
 		Από την ψαλτική τέχνη και τα παραδοσιακά όργανα έως την ευρωπαϊκή μουσική και την προετοιμασία για μουσικά σχολεία.
 	</p>
 	{
 		lessons.map((l) => (
 			<div class="lessonCard group/lesson relative h-full rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2vw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
-				<h3 class="absolute inset-0 text-center text-[2vw] max-sm:text-lg font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%_-_1vw)] max-sm:translate-y-[calc(50%_-_0.65rem)] group-[:is(.show)]/lesson:translate-y-3 group-hover/lesson:translate-y-3">
+				<h3 class="absolute inset-0 text-center text-[2vw] max-sm:text-lg font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%-1vw)] max-sm:translate-y-[calc(50%-0.65rem)] group-[:is(.show)]/lesson:translate-y-3 group-hover/lesson:translate-y-3">
 					<i
 						class={`fa-solid ${l.icon} pr-2.5 text-[1.35vw] max-sm:text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover/lesson:scale-125`}
 						aria-hidden="true"

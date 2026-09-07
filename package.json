@@ -30,7 +30,8 @@
 		"docker:logs": "sudo docker logs -f $(sudo docker ps -q --filter ancestor=pdfworker) && sudo docker logs -f $(sudo docker ps -q --filter ancestor=imgcomp)",
 		"replicate:all": "bun scripts/replicate.ts",
 		"replicate:db": "bun scripts/replicate.ts --db",
-		"replicate:bucket": "bun scripts/replicate.ts --bucket"
+		"replicate:bucket": "bun scripts/replicate.ts --bucket",
+		"google:reviews": "bun scripts/googleReviews.ts"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^14.2.5",
