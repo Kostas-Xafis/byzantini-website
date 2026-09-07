@@ -32,8 +32,8 @@ export default function AdminNav(props: RouterProps) {
 	const [userEmail, setUserEmail] = createSignal(user.email);
 	const [avatarUrl, setAvatarUrl] = createSignal<string>(user.avatar_url || "");
 
-	if (userEmail() === SYSUSER_OWNER_EMAIL) {
-		// Remove the query logging page
+	if (userEmail() !== SYSUSER_OWNER_EMAIL) {
+		// Remove the query logging page for non sys admins
 		delete links[9];
 	}
 

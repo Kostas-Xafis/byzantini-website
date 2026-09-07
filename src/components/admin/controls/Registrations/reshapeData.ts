@@ -5,14 +5,43 @@ import type { Instruments, Registrations, Teachers } from "@_types/entities";
 import { CompareList, getCompareFn, type SearchColumn, type SearchSetter } from "../../SearchTable.solid";
 import { toggleCheckboxes } from "../../table/Row.solid";
 import type { ColumnType } from "../../table/Table.solid";
-import { getKeyIndex } from "@utilities/objects";
 
-// Row order MUST match the `columns` map below (positional, exactly one entry
-// per column). Values are picked by property name — never `Object.values(reg)`,
-// whose key order is not guaranteed: the API validates responses through
-// `z_RegistrationsResponse`, and zod rebuilds the object in the SCHEMA's key
-// order (e.g. amka at index 2), which shifts every column after index 1.
+// Positional index of each `columns` key in the table row array. Row order in
+// `registrationsToTable` MUST match the `columns` map below (exactly one entry
+// per column, in order). The search filter indexes into those rows, so it must
+// use this same order — never `Object.keys(registration)`, whose order follows
+// the zod response schema (id, am, amka, first_name, ...) and not the table.
+const columnOrder = [
+	"id",
+	"am",
+	"last_name",
+	"first_name",
+	"fathers_name",
+	"birth_date",
+	"road",
+	"number",
+	"tk",
+	"region",
+	"telephone",
+	"cellphone",
+	"email",
+	"registration_year",
+	"class_year",
+	"class_id",
+	"teacher_id",
+	"instrument_id",
+	"date",
+	"payment_amount",
+	"total_payment",
+	"payment_date",
+	"amka",
+	"pass",
+	"registration_url",
+] as const;
+
 const classNames = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"];
+
+const columnIndexOf = (columnName: string) => (columnOrder as readonly string[]).indexOf(columnName);
 
 const registrationsToTable = (registrations: Registrations[], teachers: Teachers[], instruments: Instruments[]) => {
 	return registrations.map((reg) => {
@@ -103,7 +132,12 @@ export const reshapeData = function (store: Partial<APIResponse>, searchQuery: P
 				return registrationsToTable(registrations, teachers, instruments);
 			}
 			let searchRows = registrationsToTable(registrations, teachers, instruments);
-			const columnIndex = getKeyIndex(columnName, registrations[0]);
+			const columnIndex = columnIndexOf(columnName as string);
+			if (columnIndex < 0) {
+				toggleCheckboxes(false);
+				setDataLength(searchRows.length);
+				return searchRows;
+			}
 			if (type === "number") {
 				// @ts-ignore value is misstyped....
 				const EqCheck = CompareList.findLast((col) => value.startsWith(col));
