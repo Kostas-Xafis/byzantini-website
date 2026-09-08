@@ -1,9 +1,10 @@
-import { z } from "astro/zod";
 import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
-import { Random as R } from "@lib/random";
-import { createSessionId, generateShaKey } from "@utilities/authentication";
-import { executeQuery, questionMarks } from "@lib/utils.server";
+import { isOwnerEmail } from "@env/ownerEmail";
 import { z_LoginCredentials, z_SysUsers } from "@lib/api/schemas";
+import { Random as R } from "@lib/random";
+import { executeQuery, questionMarks } from "@lib/utils.server";
+import { createSessionId, generateShaKey } from "@utilities/authentication";
+import { z } from "astro/zod";
 import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE } from "./cookies";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -21,8 +22,6 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  * raw body). The Greek texts/messages are preserved byte-for-byte.
  */
 
-const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
-
 const z_IdArray = z.array(z.number().int().min(0, "Μη έγκυρο id"));
 
 /** Invite-email contract for `createRegisterLink` (was `v_SysUserInviteEmail`). */
@@ -38,14 +37,8 @@ const z_RegisterSysUserResponse = z.object({
 });
 
 export const sysusersRoutes = {
-	get: new APIServer(
-		{ method: "GET", path: "/sys", responseSchema: z.array(z_SysUsers.pick({ id: true, email: true })) },
-		[authenticateMiddleware],
-		() =>
-			handlerResult(
-				() => executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users"),
-				"Σφάλμα κατά την ανάκτηση των χρηστών",
-			),
+	get: new APIServer({ method: "GET", path: "/sys", responseSchema: z.array(z_SysUsers.pick({ id: true, email: true })) }, [authenticateMiddleware], () =>
+		handlerResult(() => executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users"), "Σφάλμα κατά την ανάκτηση των χρηστών"),
 	),
 	getById: new APIServer(
 		{ method: "POST", path: "/sys/id", schema: z_IdArray, responseSchema: z_SysUsers.pick({ id: true, email: true }) },
@@ -69,31 +62,28 @@ export const sysusersRoutes = {
 				return user;
 			}),
 	),
-	delete: new APIServer(
-		{ method: "DELETE", path: "/sys", schema: z_IdArray },
-		[authenticateMiddleware],
-		({ body, cookies }) =>
-			handlerResult(async (T) => {
-				const session_id = cookies.get(COOKIE.sessionId);
-				const [self] = await T.executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
-				if (!self) throw new Error("User not found");
+	delete: new APIServer({ method: "DELETE", path: "/sys", schema: z_IdArray }, [authenticateMiddleware], ({ body, cookies }) =>
+		handlerResult(async (T) => {
+			const session_id = cookies.get(COOKIE.sessionId);
+			const [self] = await T.executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
+			if (!self) throw new Error("User not found");
 
-				let ids = [...new Set((body as number[]).map(Number).filter((id) => Number.isInteger(id) && id > 0))];
+			let ids = [...new Set((body as number[]).map(Number).filter((id) => Number.isInteger(id) && id > 0))];
 
-				if (ids.includes(self.id)) {
-					ids = ids.filter((userId) => userId !== self.id);
-					await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [self.id]);
-					if (ids.length === 0) return "Deleted self successfully";
-				}
+			if (ids.includes(self.id)) {
+				ids = ids.filter((userId) => userId !== self.id);
+				await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [self.id]);
+				if (ids.length === 0) return "Deleted self successfully";
+			}
 
-				if (self.email !== SYSUSER_OWNER_EMAIL) {
-					throw new Error("Δεν έχετε δικαίωμα διαγραφής άλλων διαχειριστών");
-				}
+			if (!isOwnerEmail(self.email)) {
+				throw new Error("Δεν έχετε δικαίωμα διαγραφής άλλων διαχειριστών");
+			}
 
-				if (ids.length === 1) await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [ids[0]]);
-				else await T.executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(ids)})`, ids);
-				return "User/s deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή των διαχειριστών"),
+			if (ids.length === 1) await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [ids[0]]);
+			else await T.executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(ids)})`, ids);
+			return "User/s deleted successfully";
+		}, "Σφάλμα κατά την διαγραφή των διαχειριστών"),
 	),
 	registerSysUser: new APIServer(
 		{ method: "POST", path: "/sys/register/[link:string]", schema: z_LoginCredentials, responseSchema: z_RegisterSysUserResponse },

@@ -49,6 +49,10 @@
   bridge + `Env.env`); local secrets live in `.dev.vars`.
 - Client `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
   (gitignored).
+- Owner (super-admin) email belongs in `@env/ownerEmail` (`OWNER_EMAIL`,
+  `isOwnerEmail(...)`), backed by `VITE_OWNER_EMAIL` (inlined into client AND
+  server bundles; hardcoded fallback in the module). Owner-only UI (global
+  search, query-logs link, user deletion) must go through this module.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): production uses
   Cloudflare R2 binding `S3_BUCKET`; development uses the local HTTP store
   (`bun run bucket:serve`, `scripts/bucketServer.ts`).

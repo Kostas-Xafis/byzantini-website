@@ -1,5 +1,6 @@
 import { A, useLocation, type RouterProps } from "@solidjs/router";
 import { sleep } from "@utilities/sleep";
+import { isOwnerEmail } from "@env/ownerEmail";
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 
 type NavLink = { name: string; url: string; force: boolean; icon: string };
@@ -40,7 +41,6 @@ const sections: NavSection[] = [
 
 // force pathname change
 const forceURLChange = (pathname: string) => (window.location.pathname = pathname);
-const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
 
 const linkBaseClasses =
 	"group relative flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 ease-[cubic-bezier(0,.8,.43,.64)] hover:bg-red-950/60 dark:hover:bg-red-800/60";
@@ -75,7 +75,7 @@ export default function AdminNav(props: RouterProps) {
 		avatar_url?: string | null;
 	};
 	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
-	const isOwner = () => user.email === SYSUSER_OWNER_EMAIL;
+	const isOwner = () => isOwnerEmail(user.email);
 
 	const location = useLocation();
 
