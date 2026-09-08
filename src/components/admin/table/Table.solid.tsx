@@ -3,12 +3,12 @@ import { TypeEffectEnum, selectedRowsEvent } from "@hooks/useSelectedRows.solid"
 import { getParent } from "@utilities/dom";
 import { mappedValue } from "@utilities/objects";
 import type { Accessor } from "solid-js";
-import { For, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
+import { For, createEffect, createMemo, createSignal, on, onCleanup, onMount, untrack } from "solid-js";
 import { createStore, unwrap, type SetStoreFunction } from "solid-js/store";
-import { SearchTable, type SearchColumn } from "../SearchTable.solid";
+import { SearchTable, type SearchColumn, type SearchSetter } from "../SearchTable.solid";
 import type { Page } from "./Pagination.solid";
 import Pagination from "./Pagination.solid";
-import Row, { toggleCheckbox, toggleCheckboxes, type CellValue } from "./Row.solid";
+import Row, { toggleCheckbox, toggleCheckboxes, type CellValue, type RowHighlightState } from "./Row.solid";
 import type { EmptyAction } from "./TableControlTypes";
 import { BottomTableGroup, LeftTableGroup, TableControl, TableControlsGroup, TopTableGroup, type Action } from "./TableControls.solid";
 
@@ -30,7 +30,14 @@ type TableStructure = Array<{
 		| {
 				type: "search";
 				columns: SearchColumn[];
+				searchQuery: SearchSetter;
 				setSearchQuery: SetStoreFunction<any>;
+				resultsCount?: Accessor<number>;
+				totalCount?: Accessor<number>;
+				/** Maps a search column name to the row indexes it highlights ("all" for every column). */
+				searchToIndex?: (columnName: string) => number[] | "all" | undefined;
+				/** Called when the user commits a query ("" when cleared) — used to sync the URL. */
+				onQueryChange?: (query: string, columnName: string) => void;
 		  }
 		| {
 				type: "custom";
@@ -104,6 +111,20 @@ export default function Table(props: Props) {
 	};
 
 	const columnTypes = Object.values(columnNames).map(({ type }) => type);
+
+	// Highlight state derived from the active search: marks the matched
+	// substring in text/number cells of the searched column(s).
+	type SearchGroup = Extract<TableStructure[number]["controlGroups"][number], { type: "search" }>;
+	const searchHighlight = createMemo((): RowHighlightState | undefined => {
+		const group = props.structure?.flatMap((section) => section.controlGroups).find((g): g is SearchGroup => g.type === "search");
+		if (!group) return undefined;
+		const { columnName, value, type } = group.searchQuery;
+		if (!columnName || !value || !type) return undefined;
+		const query = String(value).trim();
+		if (!query) return undefined;
+		return { query, indices: group.searchToIndex?.(columnName) ?? "all" };
+	});
+
 	const readRowData = () => {
 		const [direction, col_ind] = sorted();
 		if (direction === SortDirection.NONE || col_ind < 0) {
@@ -145,6 +166,15 @@ export default function Table(props: Props) {
 		setTimeout(() => document.dispatchEvent(new CustomEvent("hydrate")), 0);
 		return res;
 	});
+
+	// Reset to the first page whenever the underlying data changes (search,
+	// school-year switch, refetch) — otherwise a stale page can point past the
+	// filtered result set and show an empty table.
+	createEffect(
+		on(data, () => {
+			untrack(() => setTablePagination((prev) => ({ ...prev, page: 0, dataSize: data().length })));
+		}),
+	);
 
 	const { columnWidths, columns } = computeColumns(columnNames, !!props.hasSelectBox);
 	const onClickRow = (e: MouseEvent) => {
@@ -188,7 +218,7 @@ export default function Table(props: Props) {
 			id="table"
 			class={
 				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
-				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-dark" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-[#19070a]" +
 				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") || " grid-rows-[max-content,1fr]") +
 				(hasControlGroup("left") ? " pr-8" : "")
 			}
@@ -199,7 +229,16 @@ export default function Table(props: Props) {
 						case "pagination":
 							return <Pagination pageSize={group.pageSize} dataSize={group.dataSize} />;
 						case "search":
-							return <SearchTable columns={group.columns} setSearchQuery={group.setSearchQuery} />;
+							return (
+								<SearchTable
+									searchQuery={group.searchQuery}
+									columns={group.columns}
+									setSearchQuery={group.setSearchQuery}
+									resultsCount={group.resultsCount}
+									totalCount={group.totalCount}
+									onQueryChange={group.onQueryChange}
+								/>
+							);
 						case "custom":
 							return group.children;
 						case "simple":
@@ -245,7 +284,7 @@ export default function Table(props: Props) {
 				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg dark:bg-dark">
 					<For each={readPageData()}>
 						{(item) => {
-							return <Row data={item} columnTypes={columnTypes} hasSelectBox={!!props.hasSelectBox} />;
+							return <Row data={item} columnTypes={columnTypes} hasSelectBox={!!props.hasSelectBox} highlight={searchHighlight()} />;
 						}}
 					</For>
 				</div>

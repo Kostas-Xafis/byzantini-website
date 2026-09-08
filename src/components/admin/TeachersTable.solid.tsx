@@ -6,10 +6,12 @@ import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { looseStringIncludes } from "@utilities/string";
 import { teacherTitleByGender } from "@utilities/text";
-import { Show, createMemo } from "solid-js";
+import { Show, createMemo, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
+import { useSearchParams } from "@solidjs/router";
 import Spinner from "../other/Spinner.solid";
 import { type SearchColumn, type SearchSetter } from "./SearchTable.solid";
+import { ALL_COLUMNS } from "./table/searchMatch";
 import { onAddInstrumentMemo, onAddMemo, onDeleteInstrumentMemo, onDeleteMemo, onDownloadExcelMemo, onModifyMemo } from "./controls/Teachers/all";
 import { INSTRUMENTS_PREFIX, PREFIX, type TeacherJoins } from "./controls/Teachers/helpers";
 import { toggleCheckboxes } from "./table/Row.solid";
@@ -55,6 +57,31 @@ const searchColumns: SearchColumn[] = [
 	{ columnName: "teacherInstruments", name: "Όργανο", type: "string" },
 ];
 
+/** Combined haystack (visible fields + instrument names) for all-columns mode. */
+const teacherHaystack = (
+	t: FullTeachers,
+	teachersInstruments: { teacher_id: number; instrument_id: number }[] | undefined,
+	instruments: { id: number; name: string }[] | undefined,
+) => {
+	const parts: string[] = [
+		t.fullname,
+		t.gender === "M" ? "άρρεν" : "θήλυ",
+		t.title !== undefined ? teacherTitleByGender(t.title, t.gender) : "",
+		t.email ?? "",
+		t.telephone ?? "",
+		t.amka ?? "",
+		t.linktree ?? "",
+	];
+	if (teachersInstruments && instruments) {
+		for (const ti of teachersInstruments) {
+			if (ti.teacher_id !== t.id) continue;
+			const inst = instruments.find((i) => i.id === ti.instrument_id);
+			if (inst) parts.push(inst.name);
+		}
+	}
+	return parts.filter(Boolean).join(" ");
+};
+
 const columnNames: ColumnType<TeachersTableType> = {
 	id: { type: "number", name: "Id" },
 	fullname: { type: "string", name: "Ονοματεπώνυμο", size: 14 },
@@ -87,7 +114,7 @@ const columnNames: ColumnType<TeachersTableType> = {
 
 export default function TeachersTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [searchQuery, setSearchQuery] = createStore<SearchSetter<FullTeachers & TeacherJoins>>({});
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
 	const [store, setStore] = createStore<APIResourceStore>({});
 	const apiHook = useAPIClient(setStore);
 
@@ -132,47 +159,72 @@ export default function TeachersTable() {
 	createAPIResource(API.Instruments.get, undefined, { cache: setStore });
 	createAPIResource(API.Teachers.getInstruments, undefined, { cache: setStore });
 
+	const [params, setParams] = useSearchParams();
+	// Deep-link support: /admin/teachers?search=<query>&col=<field>.
+	// The URL is read ONCE on mount (link pasting only, no live state tracking);
+	// afterwards the search bar writes the URL but the URL never drives the UI.
+	// (col is validated; absent/invalid → all-columns mode.)
+	const SEARCHABLE_FIELDS = ["fullname", "email", "teacherInstruments"];
+	onMount(() => {
+		const search = params.search;
+		if (search === undefined) return;
+		const col = typeof params.col === "string" ? params.col : undefined;
+		const columnName = col !== undefined && SEARCHABLE_FIELDS.includes(col) ? col : ALL_COLUMNS;
+		setSearchQuery({ columnName, value: String(search), type: "string" });
+	});
+	// Mirror the user's query + column into the URL (?search=...&col=...) so
+	// filtered views are shareable/reloadable (see setSearchParams semantics).
+	const onQueryChange = (query: string, columnName: string) => {
+		const q = query.trim();
+		const col = q && columnName !== ALL_COLUMNS ? columnName : undefined;
+		if (q === (params.search ?? "") && col === (params.col ?? undefined)) return;
+		setParams({ search: q || undefined, col });
+	};
+
 	const shapedData = createMemo(() => {
 		const classList = store[API.Teachers.getClasses];
 		const teachers = store[API.Teachers.get];
 		if (!classList || !teachers) return [];
-		const { columnName, value } = searchQuery;
-		if (!columnName || !value) {
+		const { columnName, value, type } = searchQuery;
+		if (!columnName || !value || !type) {
+			toggleCheckboxes(false);
+			return teachersToTable(teachers, classList);
+		}
+		const query = String(value).trim();
+		if (!query) {
 			toggleCheckboxes(false);
 			return teachersToTable(teachers, classList);
 		}
 		let searchRows: FullTeachers[];
-		if (columnName === "teacherInstruments") {
+		if (columnName === ALL_COLUMNS) {
+			const teachersInstruments = store[API.Teachers.getInstruments];
+			const instruments = store[API.Instruments.get];
+			searchRows = teachers.filter((t) => looseStringIncludes(teacherHaystack(t, teachersInstruments, instruments), query));
+		} else if (columnName === "teacherInstruments") {
 			const teachersInstruments = store[API.Teachers.getInstruments];
 			const instruments = store[API.Instruments.get];
 			if (!teachersInstruments || !instruments) return teachersToTable(teachers, classList);
-			const searchedInstruments = instruments
-				.map((x) => x)
-				?.filter((i) => looseStringIncludes(i.name, value as string))
-				.map((i) => i.id);
+			const searchedInstruments = instruments.filter((i) => looseStringIncludes(i.name, query)).map((i) => i.id);
 			// inside a set because there might be multiple instruments per teacher and we don't want duplicates
 			searchRows = [
 				...new Set(
-					teachersInstruments
-						.map((x) => x)
-						.filter((t) => searchedInstruments.includes(t.instrument_id))
-						.map((t) => teachers.find((x) => x.id === t.teacher_id)),
+					teachersInstruments.filter((t) => searchedInstruments.includes(t.instrument_id)).map((t) => teachers.find((x) => x.id === t.teacher_id)),
 				),
 			] as FullTeachers[];
 		} else {
-			searchRows = teachers
-				.map((x) => x)
-				.filter((r) => {
-					const col = r[columnName as keyof Teachers];
-					if (typeof col === "string") {
-						return looseStringIncludes(col, value as string);
-					}
-					return false;
-				});
+			searchRows = teachers.filter((r) => {
+				const col = r[columnName as keyof Teachers];
+				if (typeof col === "string") {
+					return looseStringIncludes(col, query);
+				}
+				return false;
+			});
 		}
 		toggleCheckboxes(false);
 		return teachersToTable(searchRows, classList);
 	});
+	const resultsCount = () => shapedData().length;
+	const totalCount = () => store[API.Teachers.get]?.length ?? 0;
 	const onAdd = onAddMemo(setTeacherHydrate, store, apiHook);
 	const onModify = onModifyMemo(setTeacherHydrate, store, selectedItems, apiHook);
 	const onDelete = onDeleteMemo(setTeacherHydrate, store, selectedItems, apiHook);
@@ -217,7 +269,24 @@ export default function TeachersTable() {
 							{
 								type: "search",
 								columns: searchColumns,
+								searchQuery,
 								setSearchQuery,
+								resultsCount,
+								totalCount,
+								onQueryChange,
+								// Row layout: 0 id, 1 fullname, 2 picture, 3 cv, 4 email, 5 telephone,
+								// 6 amka, 7 linktree, 8-10 priorities, 11 gender, 12 title, 13 visible, 14 online
+								searchToIndex: (columnName) => {
+									if (columnName === ALL_COLUMNS) return "all";
+									switch (columnName) {
+										case "fullname":
+											return [1];
+										case "email":
+											return [4];
+										default:
+											return undefined; // teacherInstruments has no direct row cell
+									}
+								},
 							},
 						],
 					},

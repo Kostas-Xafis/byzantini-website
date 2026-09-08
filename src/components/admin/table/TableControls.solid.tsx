@@ -66,7 +66,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-xl bg-transparent text-red-950 dark:text-red-50">
+			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 bg-white dark:shadow-gray-700 dark:bg-dark rounded-xl bg-transparent text-red-950 dark:text-red-50">
 			{props.children}
 		</div>
 	);

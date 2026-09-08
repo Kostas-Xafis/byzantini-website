@@ -2,9 +2,17 @@ import { TypeEffectEnum, selectedRowsEvent } from "@hooks/useSelectedRows.solid"
 import { getParent } from "@utilities/dom";
 import { createAlert, pushAlert } from "../Alert.solid";
 import { For, type Setter } from "solid-js";
+import { findHighlightRanges } from "./searchMatch";
 import { SortDirection } from "./Table.solid";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean" | "copy";
+
+export type RowHighlightState = {
+	/** Active search query (already trimmed). */
+	query: string;
+	/** Row indexes whose cells may be highlighted, or "all" (all-columns mode). */
+	indices: number[] | "all";
+};
 
 interface Props {
 	data: (number | string | undefined | null)[]; // data[0] must always be the id of the item
@@ -12,6 +20,7 @@ interface Props {
 	hasSelectBox?: boolean;
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
+	highlight?: RowHighlightState;
 }
 
 export function toggleCheckbox(id: number, force?: boolean) {
@@ -189,6 +198,28 @@ export default function Row(props: Props) {
 							if (type === "date" && item !== 0) item = new Date(item as number).toLocaleDateString("el-GR");
 							if (type === "boolean") item = !!item ? "Ναι" : "Όχι";
 						}
+						// Lightly highlight the matched substring — text/number cells only,
+						// and only for the searched column (or every column in all-mode).
+						let highlightedParts: { text: string; highlight: boolean }[] | undefined;
+						if (
+							!header &&
+							(type === "string" || type === "number") &&
+							props.highlight &&
+							(props.highlight.indices === "all" || props.highlight.indices.includes(colIndex()))
+						) {
+							const text = String(item);
+							const ranges = findHighlightRanges(text, props.highlight.query);
+							if (ranges.length) {
+								highlightedParts = [];
+								let cursor = 0;
+								for (const [start, end] of ranges) {
+									if (start > cursor) highlightedParts.push({ text: text.slice(cursor, start), highlight: false });
+									highlightedParts.push({ text: text.slice(start, end), highlight: true });
+									cursor = end;
+								}
+								if (cursor < text.length) highlightedParts.push({ text: text.slice(cursor), highlight: false });
+							}
+						}
 						return (
 							<p
 								class={
@@ -204,6 +235,16 @@ export default function Row(props: Props) {
 										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">{item}</span>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
 										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
+									</>
+								) : highlightedParts ? (
+									<>
+										{highlightedParts.map((part) =>
+											part.highlight ? (
+												<mark class="rounded-[2px] bg-yellow-300/80 px-[1px] dark:bg-yellow-500/80">{part.text}</mark>
+											) : (
+												part.text
+											),
+										)}
 									</>
 								) : (
 									item

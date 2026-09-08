@@ -14,6 +14,7 @@ import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
+import { useTableSearch } from "./table/useTableSearch.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
 
@@ -205,11 +206,15 @@ export default function LocationsTable() {
 		});
 	};
 
-	let shapedData = createMemo(() => {
+	const baseRows = createMemo(() => {
 		const locations = store[API.Locations.get];
 		if (!locations) return [];
-		return locations ? locationsToTable(locations) : [];
+		return locationsToTable(locations);
 	});
+	const { shapedData, searchQuery, setSearchQuery, searchColumns, resultsCount, totalCount, searchToIndex, onQueryChange } = useTableSearch(
+		baseRows,
+		Object.values(columnNames).map(({ name, type }) => ({ name, type })),
+	);
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const submit = async function (fd: ExtendedFormData<Locations>) {
 			const data: Omit<Locations, "id" | "image"> = {
@@ -356,7 +361,19 @@ export default function LocationsTable() {
 					{
 						position: "top",
 						prefix: PREFIX,
-						controlGroups: [{ controls: [onAdd, onModify, onDelete] }],
+						controlGroups: [
+							{ controls: [onAdd, onModify, onDelete] },
+							{
+								type: "search",
+								columns: searchColumns,
+								searchQuery,
+								setSearchQuery,
+								resultsCount,
+								totalCount,
+								searchToIndex,
+								onQueryChange,
+							},
+						],
 					},
 				]}
 			/>

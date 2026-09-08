@@ -12,6 +12,7 @@ import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
+import { useTableSearch } from "./table/useTableSearch.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
 
@@ -106,12 +107,16 @@ export default function PaymentsTable() {
 	createAPIResource(API.Payments.get, undefined, { cache: setStore });
 	createAPIResource(API.Books.get, undefined, { cache: setStore });
 
-	let shapedData = createMemo(() => {
+	const baseRows = createMemo(() => {
 		const books = store[API.Books.get];
 		const payments = store[API.Payments.get];
 		if (!books || !payments) return [];
 		return books && payments ? paymentsToTable(payments, books) : [];
 	});
+	const { shapedData, searchQuery, setSearchQuery, searchColumns, resultsCount, totalCount, searchToIndex, onQueryChange } = useTableSearch(
+		baseRows,
+		Object.values(columnNames).map(({ name, type }) => ({ name, type })),
+	);
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const books = store[API.Books.get] || [];
 		const submit = async function (form: ExtendedFormData<Payments>) {
@@ -255,7 +260,19 @@ export default function PaymentsTable() {
 					{
 						position: "top",
 						prefix: PREFIX,
-						controlGroups: [{ controls: [onAdd, onModify, onDelete, onComplete] }],
+						controlGroups: [
+							{ controls: [onAdd, onModify, onDelete, onComplete] },
+							{
+								type: "search",
+								columns: searchColumns,
+								searchQuery,
+								setSearchQuery,
+								resultsCount,
+								totalCount,
+								searchToIndex,
+								onQueryChange,
+							},
+						],
 					},
 				]}
 			/>

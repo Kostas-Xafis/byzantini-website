@@ -1,5 +1,6 @@
-import { For, Show, createEffect, createSignal, on, onMount, untrack } from "solid-js";
+import { For, Show, createEffect, createSignal, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
+import { useSearchParams } from "@solidjs/router";
 import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
@@ -8,10 +9,12 @@ import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import type { Registrations } from "@_types/entities";
 import Spinner from "../other/Spinner.solid";
 import { type SearchSetter } from "./SearchTable.solid";
+import { ALL_COLUMNS } from "./table/searchMatch";
 import Table from "./table/Table.solid";
 
 import { onElementMount } from "@utilities/dom";
 import {
+	columnIndexOf,
 	columns,
 	onDeleteMemo,
 	onDownloadExcelMemo,
@@ -31,9 +34,29 @@ const schoolYearLabel = (registrationYear: string) => {
 
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
-	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
+	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
 
-	const [year, setYear] = createSignal<number | null>(null);
+	// Deep-link support: /admin/registrations?year=2024&search=<query>&col=<key>.
+	// URL params are read ONCE on mount (link pasting only, no live state
+	// tracking); afterwards the search bar/year picker write the URL but the
+	// URL never drives the UI.
+	const [params, setParams] = useSearchParams();
+	const [year, setYear] = createSignal<number | null>(params.year ? Number(params.year) : null);
+	onMount(() => {
+		const search = params.search;
+		if (search === undefined) return;
+		const col = typeof params.col === "string" ? params.col : undefined;
+		const columnName = col !== undefined && columnIndexOf(col) >= 0 ? col : ALL_COLUMNS;
+		setSearchQuery({ columnName, value: String(search), type: "string" });
+	});
+	// Mirror the user's query + column into the URL (?search=...&col=...) so
+	// filtered views are shareable/reloadable (see setSearchParams semantics).
+	const onQueryChange = (query: string, columnName: string) => {
+		const q = query.trim();
+		const col = q && columnName !== ALL_COLUMNS ? columnName : undefined;
+		if (q === (params.search ?? "") && col === (params.col ?? undefined)) return;
+		setParams({ search: q || undefined, col });
+	};
 	const [years, setYears] = createSignal<string[]>([]);
 	const [store, setStore] = createStore<APIResourceStore>({});
 	const apiHook = useAPIClient(setStore);
@@ -50,13 +73,6 @@ export default function RegistrationsTable() {
 	createAPIResource(API.Registrations.getYears, undefined, { cache: setStore });
 	createAPIResource(API.Teachers.getByFullnames, undefined, { cache: setStore });
 	createAPIResource(API.Instruments.get, undefined, { cache: setStore });
-
-	createEffect(
-		on(year, (y) => {
-			if (y === null) return;
-			setSearchQuery({}); // Reset search on year change
-		}),
-	);
 
 	// Year-driven registrations fetch: waits while no year is selected and
 	// refetches whenever the year changes (replaces the legacy on(year) fetch effect).
@@ -167,7 +183,17 @@ export default function RegistrationsTable() {
 							controlGroups: [
 								{ controls: [onModify, onDelete] },
 								{ controls: [onDownloadPDF, onDownloadExcel, onPrint] },
-								{ type: "search", columns: searchColumns, setSearchQuery },
+								{
+									type: "search",
+									columns: searchColumns,
+									searchQuery,
+									setSearchQuery,
+									resultsCount: dataLength,
+									totalCount: () => store[API.Registrations.get]?.length ?? 0,
+									searchToIndex: (columnName) =>
+										columnName === ALL_COLUMNS ? "all" : columnIndexOf(columnName) >= 0 ? [columnIndexOf(columnName)] : undefined,
+									onQueryChange,
+								},
 							],
 						},
 						{
@@ -186,6 +212,9 @@ export default function RegistrationsTable() {
 													const value = e.currentTarget.value;
 													if (value === "") return;
 													setYear(Number(value));
+													setSearchQuery({}); // Year change resets the search
+													// and clears both URL query params so links stay accurate.
+													setParams({ year: Number(value), search: undefined, col: undefined });
 												}}>
 												<Show when={year() === null}>
 													<option value="" selected></option>

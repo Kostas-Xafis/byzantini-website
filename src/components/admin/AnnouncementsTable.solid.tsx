@@ -1,24 +1,25 @@
-import { Show, createMemo } from "solid-js";
-import { createStore } from "solid-js/store";
-import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
+import type { AnnouncementImages, Announcements } from "@_types/entities";
 import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
-import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
 import { Random } from "@lib/random";
+import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { ExtendedFormData } from "@utilities/forms";
 import { deepCopy } from "@utilities/objects";
 import { sleep } from "@utilities/sleep";
 import { isSafeURLPath } from "@utilities/url";
-import type { AnnouncementImages, Announcements } from "@_types/entities";
+import { Show, createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
+import { useTableSearch } from "./table/useTableSearch.solid";
 
 const PREFIX = "announcements";
 
@@ -89,7 +90,7 @@ const announcementsToTable = (announcements: Announcements[]): AnnouncementTable
 
 const columnNames: ColumnType<AnnouncementTable> = {
 	id: { type: "number", name: "Id" },
-	title: { type: "string", name: "Τίτλος", size: 24 },
+	title: { type: "string", name: "Τίτλος", size: 48 },
 	date: { type: "date", name: "Ημερομηνία", size: 12 },
 	link: { type: "link", name: "Σελίδα" },
 	views: { type: "number", name: "Προβολές" },
@@ -198,11 +199,15 @@ export default function AnnouncementsTable() {
 		});
 	}
 
-	let shapedData = createMemo(() => {
+	const baseRows = createMemo(() => {
 		const announcements = store[API.Announcements.get];
 		if (!announcements) return [];
 		return announcementsToTable(announcements);
 	});
+	const { shapedData, searchQuery, setSearchQuery, searchColumns, resultsCount, totalCount, searchToIndex, onQueryChange } = useTableSearch(
+		baseRows,
+		Object.values(columnNames).map(({ name, type }) => ({ name, type })),
+	);
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const metadata = { is_main: true };
 		const submit = async function (f: ExtendedFormData<Announcements>) {
@@ -378,6 +383,16 @@ export default function AnnouncementsTable() {
 						controlGroups: [
 							{
 								controls: [onAdd, onModify, onDelete],
+							},
+							{
+								type: "search",
+								columns: searchColumns,
+								searchQuery,
+								setSearchQuery,
+								resultsCount,
+								totalCount,
+								searchToIndex,
+								onQueryChange,
 							},
 						],
 					},

@@ -12,6 +12,7 @@ import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
+import { useTableSearch } from "./table/useTableSearch.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
 
@@ -122,12 +123,16 @@ export default function BooksTable() {
 	createAPIResource(API.Books.get, undefined, { cache: setStore });
 	createAPIResource(API.Wholesalers.get, undefined, { cache: setStore });
 
-	let shapedData = createMemo(() => {
+	const baseRows = createMemo(() => {
 		const books = store[API.Books.get];
 		const wholesalers = store[API.Wholesalers.get];
 		if (!books || !wholesalers) return [];
-		return books && wholesalers ? booksToTable(books, wholesalers) : [];
+		return booksToTable(books, wholesalers);
 	});
+	const { shapedData, searchQuery, setSearchQuery, searchColumns, resultsCount, totalCount, searchToIndex, onQueryChange } = useTableSearch(
+		baseRows,
+		Object.values(columnNames).map(({ name, type }) => ({ name, type })),
+	);
 	const onAdd = createMemo((): Action | EmptyAction => {
 		const addModal = {
 			type: ActionEnum.ADD,
@@ -302,6 +307,16 @@ export default function BooksTable() {
 							{
 								controls: [onAddWholesaler, onDeleteWholesaler],
 								prefix: "wholesalers",
+							},
+							{
+								type: "search",
+								columns: searchColumns,
+								searchQuery,
+								setSearchQuery,
+								resultsCount,
+								totalCount,
+								searchToIndex,
+								onQueryChange,
 							},
 						],
 					},

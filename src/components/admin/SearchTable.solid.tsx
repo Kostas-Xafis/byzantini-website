@@ -1,126 +1,159 @@
-import { UpdateHandler } from "@utilities/UpdateHandler";
-import { batch, createSignal, Index } from "solid-js";
+import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
+import type { Accessor } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
+import { ALL_COLUMNS } from "./table/searchMatch";
 import type { CellValue } from "./table/Row.solid";
-
-export const enum Compare {
-	Eq = "=",
-	Ne = "!=",
-	Gt = ">",
-	Lt = "<",
-	Gte = ">=",
-	Lte = "<=",
-}
-
-export const getCompareFn = (value: string) => {
-	const EqCheck = CompareList.findLast((c) => value.startsWith(c));
-	switch (EqCheck) {
-		case Compare.Gte:
-			return (nCol: number, nVal: number) => nCol >= nVal;
-		case Compare.Lte:
-			return (nCol: number, nVal: number) => nCol <= nVal;
-		case Compare.Gt:
-			return (nCol: number, nVal: number) => nCol > nVal;
-		case Compare.Lt:
-			return (nCol: number, nVal: number) => nCol < nVal;
-		case Compare.Eq:
-			return (nCol: number, nVal: number) => nCol === nVal;
-		// default:
-		// 	return (nCol: number, nVal: number) => nCol === nVal;
-	}
-};
-
-// Since findLast is used to find the last occurence of the operator, the order of the array is important
-export const CompareList = [Compare.Eq, Compare.Ne, Compare.Gt, Compare.Lt, Compare.Gte, Compare.Lte];
 
 export type SearchColumn = {
 	columnName: string;
 	name: string;
 	type: CellValue;
 };
-export type SearchSetter<T extends Record<string, any>> = Partial<{
-	columnName: keyof T;
+export type SearchSetter = Partial<{
+	columnName: string | typeof ALL_COLUMNS;
 	value: string;
 	type: CellValue;
 }>;
-type SearchTableProps<T extends Record<string, any>> = {
-	setSearchQuery: SetStoreFunction<SearchSetter<T>>; // returns the ids of the searched result rows
+
+type SearchTableProps = {
+	/** Reactive store holding the active query (read here to stay in sync). */
+	searchQuery: SearchSetter;
+	/** Store setter for the active query. */
+	setSearchQuery: SetStoreFunction<SearchSetter>;
 	columns: SearchColumn[];
+	/** Number of rows matching the active query (shown next to the input). */
+	resultsCount?: Accessor<number>;
+	/** Total rows without a query (shown next to the results count). */
+	totalCount?: Accessor<number>;
+	/** Called when the user commits a query (typing debounce, enter, column change) or clears it with ("", ""). */
+	onQueryChange?: (query: string, columnName: string) => void;
 };
 
-export function SearchTable<T extends Record<string, any>>(props: SearchTableProps<T>) {
-	let first = props.columns[0]; // default search column
-	const [column, setColumn] = createSignal<SearchColumn>(first, {
-		equals: false,
+export function SearchTable(props: SearchTableProps) {
+	const allColumns = createMemo<SearchColumn[]>(() => [{ columnName: ALL_COLUMNS, name: "Όλα τα πεδία", type: "string" }, ...props.columns]);
+	const [column, setColumn] = createSignal<SearchColumn>(allColumns()[0], { equals: false });
+	const [value, setValue] = createSignal<string>("");
+
+	// The store is the single source of truth: keep the input AND the selected
+	// column in sync with programmatic changes (deep links, year-change resets, …).
+	// `lastApplied`/`lastAppliedColumn` let our own writes pass through without
+	// touching the caret or resetting the picker.
+	let lastApplied = "";
+	let lastAppliedColumn = "";
+	createEffect(() => {
+		const current = props.searchQuery.value ?? "";
+		if (current !== lastApplied) {
+			setValue(current);
+			lastApplied = current;
+		}
+	});
+	createEffect(() => {
+		const current = props.searchQuery.columnName ?? "";
+		if (current === lastAppliedColumn) return;
+		const next = allColumns().find((c) => c.columnName === current);
+		if (next) {
+			setColumn(next);
+			lastAppliedColumn = current;
+		}
 	});
 
-	const columnSelect = (e: MouseEvent) => {
-		const target = e.target as HTMLElement;
-		const columnName = target.dataset.colname;
-		const name = target.dataset.name;
-		const type = target.dataset.type as SearchColumn["type"];
-		if (!columnName || !name || !type) return;
-		setColumn({ columnName, name, type });
-	};
+	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+	onCleanup(() => clearTimeout(debounceTimer));
 
-	let debounce = new UpdateHandler({
-		timer: 250,
-	});
-	const searchHandler = (e: Event) => {
-		const target = e.target as HTMLInputElement;
-		debounce.reset({
-			func: () => {
-				const c = column();
-				batch(() => {
-					props.setSearchQuery("columnName", c.columnName);
-					props.setSearchQuery("value", target.value);
-					props.setSearchQuery("type", c.type);
-				});
-			},
-		});
-	};
-
-	const clearSearch = () => {
-		(document.getElementById("search") as HTMLInputElement).value = "";
+	const apply = (v: string, c = column()) => {
+		lastApplied = v;
+		lastAppliedColumn = c.columnName;
 		batch(() => {
-			props.setSearchQuery("columnName", "");
-			props.setSearchQuery("value", "=");
+			props.setSearchQuery({ columnName: c.columnName, value: v, type: c.type });
 		});
+		props.onQueryChange?.(v.trim(), c.columnName);
 	};
+
+	const clear = () => {
+		clearTimeout(debounceTimer);
+		lastApplied = "";
+		lastAppliedColumn = "";
+		setValue("");
+		batch(() => {
+			props.setSearchQuery({ columnName: undefined, value: undefined, type: undefined });
+		});
+		props.onQueryChange?.("", "");
+	};
+
+	const placeholder = createMemo(() => {
+		switch (column().type) {
+			case "number":
+				return "π.χ. 1500, >500 ή =100";
+			case "date":
+				return "π.χ. 05/02/2024, 02/2024 ή 2024";
+			default:
+				return "Αναζήτηση…";
+		}
+	});
+
+	const hasActiveQuery = () => !!props.searchQuery.value;
 
 	return (
-		<div class="relative flex flex-row flex-wrap max-sm:gap-y-2 max-sm:px-8 max-sm:justify-center max-sm:w-min border-[2px] border-red-900 dark:border-red-800 px-4 py-2 gap-x-3 items-center rounded-[4px]">
-			<div class="group relative w-max flex flex-row gap-x-2 !font-didact" onClick={(e) => columnSelect(e)}>
-				<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200 drop-shadow-md self-center"></i>
-				<p class="py-1 px-3 w-full bg-red-300 dark:bg-red-900 text-red-900 dark:text-red-50 font-bold text-sm cursor-pointer rounded-md shadow-md dark:shadow-gray-700">
-					{column().name} :
-				</p>
-				<div class="hidden absolute group-hover:flex flex-col bottom-0 left-0 translate-y-full w-max h-[max-content] font-bold text-base z-[1000] shadow-lg shadow-slate-500 dark:shadow-black rounded-md overflow-hidden ">
-					<Index each={props.columns}>
-						{(c) => (
-							<p
-								class="py-1 px-3 bg-red-50 dark:bg-dark hover:bg-red-200 dark:hover:bg-red-900/70 text-red-900 dark:text-red-50 cursor-pointer"
-								data-colname={c().columnName}
-								data-name={c().name}
-								data-type={c().type}>
-								{c().name}
-							</p>
-						)}
-					</Index>
-				</div>
-			</div>
+		<div class="flex flex-wrap items-center gap-x-2 max-sm:gap-y-2 rounded-lg border-2 border-red-900 bg-white/50 px-3 py-1.5 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark/50 dark:shadow-gray-700">
+			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md dark:text-red-200" aria-hidden="true"></i>
+			<select
+				aria-label="Στήλη αναζήτησης"
+				class="max-w-[14rem] cursor-pointer rounded-md bg-red-300 px-2 py-1 text-sm font-bold text-red-900 shadow-md focus-visible:outline-hidden dark:bg-red-900 dark:text-red-50 dark:shadow-gray-700"
+				onChange={(e) => {
+					const colName = e.currentTarget.value;
+					const next = allColumns().find((c) => c.columnName === colName);
+					if (!next) return;
+					setColumn(next);
+					clearTimeout(debounceTimer);
+					apply(value(), next);
+				}}>
+				<For each={allColumns()}>
+					{(c) => (
+						<option value={c.columnName} selected={c.columnName === column().columnName}>
+							{c.name}
+						</option>
+					)}
+				</For>
+			</select>
 			<input
-				id="search"
-				class="px-4 py-1 max-sm:px-2 font-didact shadow-md text-lg max-sm:text-sm shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden max-sm:self-center bg-white dark:bg-dark"
+				class="w-48 max-sm:w-40 rounded-md bg-white px-3 py-1.5 font-didact text-base text-red-950 shadow-md shadow-gray-300 focus:shadow-lg focus-visible:outline-hidden dark:bg-dark dark:text-red-50 dark:shadow-gray-700"
 				type="text"
 				name="search"
 				autocomplete="off"
-				onKeyDown={(e) => searchHandler(e)}
-				onChange={(e) => searchHandler(e)}
+				spellcheck="false"
+				placeholder={placeholder()}
+				aria-label="Αναζήτηση"
+				value={value()}
+				onInput={(e) => {
+					const v = e.currentTarget.value;
+					setValue(v);
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(() => apply(v), 250);
+				}}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") {
+						clearTimeout(debounceTimer);
+						apply(value());
+					} else if (e.key === "Escape") {
+						clear();
+					}
+				}}
 			/>
-			<i
-				class="absolute fa-solid fa-xmark text-red-900 dark:text-red-200 drop-shadow-md right-4 max-sm:right-2 max-sm:top-2 sm:translate-x-[-25%] hover:bg-red-200 dark:hover:bg-red-900/70 rounded-full p-2 text-lg max-sm:base leading-[0.9rem]  cursor-pointer text-center"
-				onClick={(e) => clearSearch()}></i>
+			<Show when={hasActiveQuery() || value()}>
+				<span class="whitespace-nowrap font-didact text-sm text-red-950 dark:text-red-100" aria-live="polite">
+					{props.resultsCount?.() ?? 0}
+					{props.totalCount ? <span class="opacity-70"> / {props.totalCount()}</span> : null}
+				</span>
+			</Show>
+			<Show when={value()}>
+				<button
+					type="button"
+					aria-label="Καθαρισμός αναζήτησης"
+					class="grid h-6 w-6 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/70"
+					onClick={clear}>
+					<i class="fa-solid fa-xmark text-sm leading-none" aria-hidden="true"></i>
+				</button>
+			</Show>
 		</div>
 	);
 }

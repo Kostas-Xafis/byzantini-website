@@ -1,8 +1,8 @@
 import { createMemo, createSignal } from "solid-js";
 import { API, type APIResponse } from "@lib/routes/index.client";
-import { looseStringIncludes } from "@utilities/string";
 import type { Instruments, Registrations, Teachers } from "@_types/entities";
-import { CompareList, getCompareFn, type SearchColumn, type SearchSetter } from "../../SearchTable.solid";
+import { ALL_COLUMNS, cellMatches, rowMatchesAny } from "../../table/searchMatch";
+import type { SearchColumn, SearchSetter } from "../../SearchTable.solid";
 import { toggleCheckboxes } from "../../table/Row.solid";
 import type { ColumnType } from "../../table/Table.solid";
 
@@ -41,7 +41,8 @@ const columnOrder = [
 
 const classNames = ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"];
 
-const columnIndexOf = (columnName: string) => (columnOrder as readonly string[]).indexOf(columnName);
+/** Row index of a column (by its data key, e.g. "teacher_id"); -1 when unknown. */
+export const columnIndexOf = (columnName: string) => (columnOrder as readonly string[]).indexOf(columnName);
 
 const registrationsToTable = (registrations: Registrations[], teachers: Teachers[], instruments: Instruments[]) => {
 	return registrations.map((reg) => {
@@ -106,7 +107,7 @@ export const columns: ColumnType<Registrations> = {
 export const searchColumns: SearchColumn[] = [
 	{ columnName: "last_name", name: "Επώνυμο", type: "string" },
 	{ columnName: "first_name", name: "Όνομα", type: "string" },
-	{ columnName: "am", name: "ΑΜ", type: "number" },
+	{ columnName: "am", name: "ΑΜ", type: "string" },
 	{ columnName: "amka", name: "ΑΜΚΑ", type: "string" },
 	{ columnName: "teacher_id", name: "Καθηγητής", type: "string" },
 	{ columnName: "telephone", name: "Τηλέφωνο", type: "string" },
@@ -114,9 +115,15 @@ export const searchColumns: SearchColumn[] = [
 	{ columnName: "email", name: "Email", type: "string" },
 	{ columnName: "date", name: "Ημερομηνία Εγγραφής", type: "date" },
 	{ columnName: "class_year", name: "Έτος Φοίτησης", type: "string" },
+	{ columnName: "class_id", name: "Τάξη", type: "string" },
+	{ columnName: "instrument_id", name: "Όργανο", type: "string" },
 ];
 
-export const reshapeData = function (store: Partial<APIResponse>, searchQuery: Partial<SearchSetter<Registrations>>) {
+// Column types in row order (matches `columns` / `columnOrder` above) so the
+// shared matchers know how to interpret each cell.
+const searchColumnTypes = Object.values(columns).map(({ type }) => type);
+
+export const reshapeData = function (store: Partial<APIResponse>, searchQuery: SearchSetter) {
 	const [dataLength, setDataLength] = createSignal(0);
 
 	return [
@@ -125,68 +132,21 @@ export const reshapeData = function (store: Partial<APIResponse>, searchQuery: P
 			const teachers = store[API.Teachers.getByFullnames];
 			const instruments = store[API.Instruments.get];
 			if (!registrations || !teachers || !instruments) return [];
-			let { columnName, value, type } = searchQuery;
+			const { columnName, value, type } = searchQuery;
 			if (!columnName || !value || !type) {
 				toggleCheckboxes(false);
 				setDataLength(registrations.length);
 				return registrationsToTable(registrations, teachers, instruments);
 			}
 			let searchRows = registrationsToTable(registrations, teachers, instruments);
+			const query = String(value).trim();
 			const columnIndex = columnIndexOf(columnName as string);
-			if (columnIndex < 0) {
-				toggleCheckboxes(false);
-				setDataLength(searchRows.length);
-				return searchRows;
-			}
-			if (type === "number") {
-				// @ts-ignore value is misstyped....
-				const EqCheck = CompareList.findLast((col) => value.startsWith(col));
-				const nVal = Number(value.slice((EqCheck || "").length));
-				const fn = EqCheck && getCompareFn(value);
-				searchRows = searchRows.filter((row) => {
-					//Converting to number because the column might be a stringified number
-					//@ts-ignore
-					const nCol = Number(row[columnIndex]);
-					if (fn) return fn(nCol, nVal);
-					let sCol = "" + nCol;
-					let sVal = "" + nVal;
-					return sCol.includes(sVal) || sVal === sCol;
-				});
-			} else if (type === "string") {
-				searchRows = searchRows.filter((r) => {
-					//@ts-ignore
-					const col = r[columnIndex] as string;
-					if (!col) {
-						// In case where there is not a value for the column
-						return false;
-					}
-					return looseStringIncludes(col, value as string);
-				});
-			} else if (type === "date") {
-				// @ts-ignore
-				const EqCheck = CompareList.findLast((c) => value.startsWith(c));
-				const fn = EqCheck && getCompareFn(value);
-				value = value.replace(EqCheck || "", "");
-				if (EqCheck === "=") {
-					return searchRows.filter((r) => {
-						//@ts-ignore
-						const nCol = r[columnIndex] as number;
-						const sCol = new Date(nCol).toLocaleDateString("el-GR");
-						return value === sCol;
-					});
+			if (query) {
+				if (columnName === ALL_COLUMNS) {
+					searchRows = searchRows.filter((row) => rowMatchesAny(row, searchColumnTypes, query));
+				} else if (columnIndex >= 0) {
+					searchRows = searchRows.filter((row) => cellMatches(row[columnIndex], searchColumnTypes[columnIndex], query));
 				}
-
-				let [day, month = 1, year = 1970] = value.split("/").map((x) => Number(x));
-				const dVal = new Date(year, month - 1, day);
-				const nVal = dVal.getTime();
-				const sVal = dVal.toLocaleDateString("el-GR");
-				searchRows = searchRows.filter((r) => {
-					//@ts-ignore
-					const nCol = r[columnIndex] as number;
-					if (fn) return fn(nCol, nVal - 1);
-					let sCol = new Date(nCol).toLocaleDateString("el-GR");
-					return sCol.includes(sVal);
-				});
 			}
 			toggleCheckboxes(false);
 			setDataLength(searchRows.length);
