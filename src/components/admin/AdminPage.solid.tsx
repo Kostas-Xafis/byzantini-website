@@ -12,7 +12,7 @@ export default function AdminPage(props: RouterProps) {
 	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as { email?: string | null };
 
 	return (
-		<div id="AdminPage" class="box-border p-0 grid max-sm:flex flex-col max-sm:h-max dark:bg-[#19070a]">
+		<div id="AdminPage" class="box-border p-0 grid max-sm:flex flex-col max-sm:h-dvh dark:bg-[#19070a]!">
 			<AdminNav {...props} />
 			<AlertStack />
 			<Show when={isOwnerEmail(user.email)}>

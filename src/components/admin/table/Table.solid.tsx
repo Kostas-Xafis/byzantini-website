@@ -218,7 +218,7 @@ export default function Table(props: Props) {
 			id="table"
 			class={
 				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
-				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4 dark:bg-[#19070a]" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4" +
 				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") || " grid-rows-[max-content,1fr]") +
 				(hasControlGroup("left") ? " pr-8" : "")
 			}

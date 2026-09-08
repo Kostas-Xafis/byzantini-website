@@ -1,8 +1,8 @@
-import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
 import type { Accessor } from "solid-js";
+import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
-import { ALL_COLUMNS } from "./table/searchMatch";
 import type { CellValue } from "./table/Row.solid";
+import { ALL_COLUMNS } from "./table/searchMatch";
 
 export type SearchColumn = {
 	columnName: string;
@@ -94,11 +94,11 @@ export function SearchTable(props: SearchTableProps) {
 	const hasActiveQuery = () => !!props.searchQuery.value;
 
 	return (
-		<div class="flex flex-wrap items-center gap-x-2 max-sm:gap-y-2 rounded-lg border-2 border-red-900 bg-white/50 px-3 py-1.5 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark/50 dark:shadow-gray-700">
+		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-lg border-2 border-red-900 bg-white/50 px-3 max-sm:mx-4 py-1.5 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark dark:shadow-gray-700">
 			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md dark:text-red-200" aria-hidden="true"></i>
 			<select
 				aria-label="Στήλη αναζήτησης"
-				class="max-w-[14rem] cursor-pointer rounded-md bg-red-300 px-2 py-1 text-sm font-bold text-red-900 shadow-md focus-visible:outline-hidden dark:bg-red-900 dark:text-red-50 dark:shadow-gray-700"
+				class="max-w-[14rem] cursor-pointer rounded-md bg-red-300 px-2 py-1 text-sm font-bold text-red-900 shadow-md focus-visible:outline-hidden dark:bg-red-900 dark:text-red-50 dark:shadow-gray-800"
 				onChange={(e) => {
 					const colName = e.currentTarget.value;
 					const next = allColumns().find((c) => c.columnName === colName);
