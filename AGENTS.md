@@ -123,6 +123,12 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
   globals; local secrets live in `.dev.vars`.
 - Client-visible `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
   (gitignored; `.env` for dev, `.env.production` for builds).
+- Owner (super-admin) email: use `@env/ownerEmail` (`OWNER_EMAIL`,
+  `isOwnerEmail(...)`) — backed by `VITE_OWNER_EMAIL` (same var inlines into
+  client AND server bundles; hardcoded fallback in the module) and set in
+  `.env`/`.env.production`. Never hardcode the owner email in features;
+  owner-only UI (global search, query-logs link, user deletion) goes through
+  this module.
 - Storage goes through `Bucket` (`lib/bucket/index.ts`) — R2 binding in
   production, local HTTP store (`bun run bucket:serve`) in dev. Never access
   the binding directly in route code.

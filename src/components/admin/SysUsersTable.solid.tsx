@@ -4,6 +4,7 @@ import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { API } from "@routes/index.client";
 import { SelectedRows } from "@lib/hooks/useSelectedRows.solid";
+import { isOwnerEmail } from "@env/ownerEmail";
 import type { ExtendedFormData } from "@utilities/forms";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -15,7 +16,6 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTy
 import { type Action } from "./table/TableControls.solid";
 
 const PREFIX = "sysusers";
-const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
 
 type SysUsers = Pick<FullSysUser, "id" | "email">;
 
@@ -89,7 +89,7 @@ export default function SysUsersTable() {
 		const self = store[API.SysUsers.getBySid];
 		if (!sysusers || selectedItems.length < 1 || !self) return deleteModal;
 
-		const canDeleteOthers = self.email === SYSUSER_OWNER_EMAIL;
+		const canDeleteOthers = isOwnerEmail(self.email);
 		const hasOthersSelected = selectedItems.some((id) => id !== self.id);
 		if (!canDeleteOthers && hasOthersSelected) return deleteModal;
 

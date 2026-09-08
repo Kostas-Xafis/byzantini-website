@@ -75,7 +75,7 @@ export default function PayoffsTable() {
 		amount: { type: "number", name: "Οφειλή" },
 	};
 
-	let shapedData = createMemo(() => {
+	const shapedData = createMemo(() => {
 		const wholesalers = store[API.Wholesalers.get];
 		const payements = store[API.Payoffs.get];
 		if (!wholesalers || !payements) return [];
