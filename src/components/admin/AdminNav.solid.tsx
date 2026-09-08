@@ -1,5 +1,6 @@
 import { A, useLocation, type RouterProps } from "@solidjs/router";
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { sleep } from "@utilities/sleep";
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 
 type NavLink = { name: string; url: string; force: boolean; icon: string };
 type NavSection = { title: string | null; links: NavLink[] };
@@ -43,23 +44,40 @@ const SYSUSER_OWNER_EMAIL = "koxafis@gmail.com";
 
 const linkBaseClasses =
 	"group relative flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 ease-[cubic-bezier(0,.8,.43,.64)] hover:bg-red-950/60 dark:hover:bg-red-800/60";
-const linkActiveClasses = " bg-red-950 dark:bg-red-900 text-white shadow-[inset_4px_0_0_0_rgba(254,202,202,0.9)]";
+// NOTE: the left detail bar is NOT painted here anymore — a single sliding
+// indicator (see `indicatorTop/Height` below) draws it, so the bar can animate
+// between pages instead of just blinking on/off.
+const linkActiveClasses = " bg-red-950 dark:bg-red-900 text-white";
 
 const mobileLinkBaseClasses =
-	"relative grid py-4 bg-red-900 dark:bg-red-950 opacity-0 transition-colors transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100 hover:bg-red-950/60 dark:hover:bg-red-800/60";
+	"relative grid py-4 bg-red-900 dark:bg-red-950 opacity-0 transition-[background-color,opacity,transform] ease-in-out group-has-checked/nav:opacity-100 hover:bg-red-950/60 dark:hover:bg-red-800/60";
 const mobileLinkActiveClasses = " bg-red-950 dark:bg-red-900! shadow-[inset_4px_0_0_0_rgba(254,202,202,0.9)]";
+
+const measureIndicator = (list: HTMLDivElement | undefined) => {
+	if (!list) return null;
+	const active = list.querySelector<HTMLElement>('a[aria-current="page"]');
+	if (!active) return null;
+	const listRect = list.getBoundingClientRect();
+	const activeRect = active.getBoundingClientRect();
+	return {
+		// `activeRect.top - listRect.top` is in the same coordinate space the
+		// absolutely-positioned bar uses (the list is its containing block),
+		// so it lands exactly on the active link — unlike offsetTop, which is
+		// measured against each element's own offsetParent.
+		top: activeRect.top - listRect.top,
+		height: activeRect.height,
+	};
+};
 
 export default function AdminNav(props: RouterProps) {
 	type StoredSysUser = {
 		email?: string | null;
 		avatar_url?: string | null;
 	};
+	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
+	const isOwner = () => user.email === SYSUSER_OWNER_EMAIL;
 
 	const location = useLocation();
-	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
-	const [userEmail] = createSignal(user.email);
-	const [avatarUrl] = createSignal<string>(user.avatar_url || "");
-	const isOwner = () => userEmail() === SYSUSER_OWNER_EMAIL;
 
 	const isActive = (url: string) => location.pathname === url || location.pathname === url + "/";
 
@@ -76,22 +94,29 @@ export default function AdminNav(props: RouterProps) {
 	const flatLinks = createMemo(() => visibleSections().flatMap((section) => section.links));
 
 	const [currentPage, setCurrentPage] = createSignal("Αρχική");
-	const [menuOpen, setMenuOpen] = createSignal(false);
+
+	let desktopListEl: HTMLDivElement | undefined;
+	let indicator: HTMLSpanElement | undefined;
+
+	let burgerNavToggle: HTMLInputElement | undefined;
+	createEffect(() => {
+		console.log(burgerNavToggle?.checked);
+	});
+	// onMount(() => {
+	// 	if (burgerNavToggle) {
+	// 	}
+	// });
+
 	createEffect(() => {
 		const found = flatLinks().find((link) => isActive(link.url));
-		if (found) setCurrentPage(found.name);
-	});
-
-	// The open/close toggle lives in AdminLayout's vanilla script; mirror its
-	// `.open` class into `aria-expanded` for screen readers.
-	onMount(() => {
-		const burger = document.querySelector("#burgerNav");
-		if (!burger) return;
-		const sync = () => setMenuOpen(burger.classList.contains("open"));
-		const observer = new MutationObserver(sync);
-		observer.observe(burger, { attributes: true, attributeFilter: ["class"] });
-		sync();
-		onCleanup(() => observer.disconnect());
+		if (found) {
+			const geometry = measureIndicator(desktopListEl);
+			if (indicator) {
+				indicator.style.top = `${geometry?.top}px`;
+				indicator.style.height = `${geometry?.height}px`;
+			}
+			setCurrentPage(found.name);
+		}
 	});
 
 	return (
@@ -122,12 +147,18 @@ export default function AdminNav(props: RouterProps) {
 					</div>
 					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
 						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
-							{avatarUrl() ? <img src={avatarUrl()!} alt="Avatar" class="h-full w-full object-cover" /> : <i class="fa-solid fa-user"></i>}
+							{user.avatar_url ? <img src={user.avatar_url} alt="Avatar" class="h-full w-full object-cover" /> : <i class="fa-solid fa-user"></i>}
 						</div>
-						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{userEmail()}</p>
+						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{user.email}</p>
 					</div>
 				</div>
-				<div class="h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start pt-4 content-start max-sm:hidden">
+				<div ref={desktopListEl} class="relative h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start pt-4 content-start max-sm:hidden">
+					<span
+						ref={indicator}
+						data-nav-indicator
+						aria-hidden="true"
+						class="pointer-events-none absolute left-0 z-10 w-1 rounded-r-full bg-red-200/90 transition-[top,height] duration-250 ease-in-out"
+					/>
 					<For each={visibleSections()}>
 						{(section) => (
 							<>
@@ -154,25 +185,27 @@ export default function AdminNav(props: RouterProps) {
 					</For>
 				</div>
 				<div id="burgerNav" class="group/nav relative sm:hidden w-full flex flex-col justify-center py-1">
+					<div class="peer overflow-hidden opacity-0 absolute inset-0 flex justify-center z-10">
+						<input type="checkbox" ref={burgerNavToggle} id="burgerNavToggle" class="scale-[30]" />
+					</div>
 					<button
 						type="button"
-						aria-expanded={menuOpen()}
 						aria-controls="burgerNavMenu"
-						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-[:is(.open)]/nav:translate-x-[calc(50%_-_7px)]">
+						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-has-checked/nav:translate-x-[calc(50%_-_7px)]">
 						{/* 7px = 1/2 of 14px = 0.875rem */}
 						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
-						<span class="opacity-100 transition-opacity group-[:is(.open)]/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
+						<span class="opacity-100 transition-opacity group-has-checked/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
 							{currentPage()}
 						</span>
 					</button>
 					<div
 						id="burgerNavMenu"
-						class="hidden fixed top-[3.5rem] left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 overflow-y-auto flex-col w-full z-[5000]">
+						class="flex invisible opacity-0 pointer-events-none transition-[opacity,visibility] duration-300 group-has-checked/nav:visible group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto fixed top-[3.5rem] left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 gap-0.5 overflow-y-auto flex-col w-full z-[5000]">
 						<For each={visibleSections()}>
 							{(section) => (
-								<div class="bg-red-900 dark:bg-red-950">
+								<div>
 									<Show when={section.title}>
-										<p class="px-4 pt-3 pb-3 text-[12px] font-bold uppercase tracking-[0.14em] bg-red-950 dark:bg-red-900 text-red-100 opacity-0 transition-opacity ease-in-out group-[:is(.open)]/nav:opacity-100">
+										<p class="px-4 pt-3 pb-3 text-[12px] font-bold uppercase tracking-[0.14em] bg-red-950 dark:bg-red-900 text-red-100 opacity-0 transition-opacity ease-in-out group-has-checked/nav:opacity-100">
 											{section.title}
 										</p>
 									</Show>
@@ -181,7 +214,13 @@ export default function AdminNav(props: RouterProps) {
 											<A
 												class={mobileLinkBaseClasses + (isActive(link.url) ? mobileLinkActiveClasses : "")}
 												aria-current={isActive(link.url) ? "page" : undefined}
-												onClick={(link.force && (() => forceURLChange(link.url))) || (() => setCurrentPage(link.name))}
+												onClick={
+													(link.force && (() => forceURLChange(link.url))) ||
+													(() => {
+														sleep(300).then(() => burgerNavToggle && (burgerNavToggle.checked = false));
+														setCurrentPage(link.name);
+													})
+												}
 												href={link.url}>
 												<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
 													<i class={`${link.icon} mr-2 text-base text-red-200/90`} aria-hidden="true"></i>
@@ -243,38 +282,43 @@ export default function AdminNav(props: RouterProps) {
 				transition-duration: 0.725s;
 				transform: translateY(0px);
 			}
-			#burgerNav:is(.open) a:nth-of-type(1) {
+			#burgerNav:has(:checked) a:nth-of-type(1) {
 				transition-duration: 0.6s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(2) {
+			#burgerNav:has(:checked) a:nth-of-type(2) {
 				transition-duration: 0.625s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(3) {
+			#burgerNav:has(:checked) a:nth-of-type(3) {
 				transition-duration: 0.65s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(4) {
+			#burgerNav:has(:checked) a:nth-of-type(4) {
 				transition-duration: 0.675s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(11) {
+			#burgerNav:has(:checked) a:nth-of-type(11) {
 				transition-duration: 0.85s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(5) {
+			#burgerNav:has(:checked) a:nth-of-type(5) {
 				transition-duration: 0.7s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(6) {
+			#burgerNav:has(:checked) a:nth-of-type(6) {
 				transition-duration: 0.725s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(7) {
+			#burgerNav:has(:checked) a:nth-of-type(7) {
 				transition-duration: 0.75s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(8) {
+			#burgerNav:has(:checked) a:nth-of-type(8) {
 				transition-duration: 0.775s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(9) {
+			#burgerNav:has(:checked) a:nth-of-type(9) {
 				transition-duration: 0.8s;
 			}
-			#burgerNav:is(.open) a:nth-of-type(10) {
+			#burgerNav:has(:checked) a:nth-of-type(10) {
 				transition-duration: 0.825s;
+			}
+			/* Reset the per-link offsets when open so the staggered
+			translateY slide-down actually transitions. */
+			#burgerNav:has(:checked) #burgerNavMenu a {
+				transform: translateY(0);
 			}`}
 				</style>
 			</nav>
