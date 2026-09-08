@@ -3,6 +3,7 @@ import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import type { SitemapItem } from "@_types/global";
 import { Bucket } from "@lib/bucket";
+import { compressImageForThumb } from "@lib/images";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { executeQuery, questionMarks } from "@lib/utils.server";
@@ -263,15 +264,17 @@ export const announcementsRoutes = {
 		[authenticateMiddleware],
 		({ body, request }) =>
 			handlerResult(async () => {
-				const { announcement_id, fileData, thumbData, fileType, name: fileName } = body;
+				const { announcement_id, fileData, fileType, name: fileName } = body;
 
 				const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
 				const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;
-				await Bucket.put(asAPIContext(request), await fileData.arrayBuffer(), bucketFileName, fileType);
-				if (thumbData) {
-					const thumbFileName = bucketPrefix + `${announcement_id}/thumb_` + fileName;
-					await Bucket.put(asAPIContext(request), await thumbData.arrayBuffer(), thumbFileName, fileType);
-				}
+				const fileBytes = await fileData.arrayBuffer();
+				await Bucket.put(asAPIContext(request), fileBytes, bucketFileName, fileType);
+				// Thumbnail is generated in-process via the Cloudflare Images binding
+				// (retired the external dockerized image-compression service).
+				const thumb = await compressImageForThumb(fileBytes, fileType);
+				const thumbFileName = bucketPrefix + `${announcement_id}/thumb_` + fileName;
+				await Bucket.put(asAPIContext(request), thumb.bytes, thumbFileName, thumb.contentType);
 				return { insertId };
 			}, "Σφάλμα κατά την προσθήκη της εικόνας"),
 	),

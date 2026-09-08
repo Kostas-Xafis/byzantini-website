@@ -13,7 +13,6 @@ declare global {
 	// @types/bun's ImportMetaEnv index signature types them as `string | undefined`.
 	interface ImportMetaEnv {
 		readonly VITE_PDF_SERVICE_URL: string;
-		readonly VITE_IMG_COMPRESSION_SERVICE_URL: string;
 	}
 }
 export {};

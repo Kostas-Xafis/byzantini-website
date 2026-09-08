@@ -5,8 +5,6 @@ export type EnvTypes = {
 	SSR: boolean;
 	BASE_URL: string;
 	SITE?: string;
-	CF_PAGES_BRANCH?: string;
-	CF_PAGES_URL?: string;
 
 	DEV_BUCKET_LOCATION?: string;
 	DEV_BUCKET_URL?: string;
@@ -17,7 +15,6 @@ export type EnvTypes = {
 	AUTOMATED_EMAILS_SERVICE_URL?: string;
 	AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN?: string;
 	VITE_PDF_SERVICE_URL?: string;
-	VITE_IMG_COMPRESSION_SERVICE_URL?: string;
 	TEST_EMAIL?: string;
 	TEST_PASSWORD?: string;
 };

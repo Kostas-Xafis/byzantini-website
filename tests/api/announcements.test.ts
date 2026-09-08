@@ -34,7 +34,6 @@ function announcementsTest() {
 				is_main: true,
 				fileType: MIMETypeMap[mainImage.split(".").pop() as string],
 				fileData: data,
-				thumbData: data,
 			},
 		});
 
@@ -51,7 +50,6 @@ function announcementsTest() {
 					is_main: false,
 					fileType: MIMETypeMap[image.split(".").pop() as string],
 					fileData: data,
-					thumbData: data,
 				},
 			});
 

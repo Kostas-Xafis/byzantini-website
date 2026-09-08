@@ -80,11 +80,14 @@ Use it for: `wrangler.jsonc` shape, `scripts/cf.ts` CLI wrapper, `migrations/` w
   Not upgrade regressions; don't "fix" them in this migration unless asked.
 - `tsc --noEmit` is fully green (`bun run typecheck`).
 - Adapter v14 auto-adds `SESSION` KV + IMAGES bindings (Astro sessions/images). We don't use
-  Astro sessions — revisit in Phase 2 (may disable/ignore).
+  Astro sessions — revisit in Phase 2 (may disable/ignore). The IMAGES binding is now used
+  deliberately for announcement thumbnails (Phase 8) and is declared explicitly in
+  `wrangler.jsonc` (top level + `production`/`preview`).
 - Pre-existing test failure on BOTH stacks: `tests/api/announcements.test.ts` `#3`
-  (uploadImages) — on the old stack it times out; on the new stack it fails fast. It needs
-  the local Docker image-compression service (`services/imageCompression`, port 4323) up;
-  the test suite generally needs both Docker services running (PDF 4322, images 4323).
+  (uploadImages) — on the old stack it times out; on the new stack it fails fast. It used to
+  need the local Docker image-compression service (`services/imageCompression`, port 4323);
+  since the Phase 8 image migration the thumbnail is generated in-process via the IMAGES
+  binding (simulated locally by miniflare), so only the PDF Docker service remains.
 
 ## Phase 1 verified facts (added while executing)
 
@@ -103,9 +106,9 @@ Use it for: `wrangler.jsonc` shape, `scripts/cf.ts` CLI wrapper, `migrations/` w
   `bucket/latest` folder; auto-started by `bun run dev`) — reachable from both the dev runtime
   and Bun tests, so they share one store. `lib/bucket/index.ts` dev functions now call it;
   prod uses the R2 binding.
-- **Local service ports**: `services/imageCompression/.env` `PORT` must be **4323** (it was
-  4321, which now collides with the dev server). PDF stays 4322. App env already references
-  4323/4322.
+- **Local service ports**: PDF stays 4322. The image-compression service is retired
+  (Phase 8) — thumbnails now come from the `IMAGES` binding (`lib/images.ts`), which
+  miniflare simulates locally, so no port/Docker service is needed for images.
 - **v14 dev server binds 4321** (Astro's `port: 3000` is not honored by the vite-plugin dev
   server) — `tests/.env.test` VITE_URL=4321 already matches. Old Pages-era URLs/ports are gone.
 

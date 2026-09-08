@@ -66,9 +66,21 @@ export const z_Teachers = z.object({
 	fullname: z.string().min(1, "Μη έγκυρο ονοματεπώνυμο"),
 	picture: z.string("Μη έγκυρη εικόνα").nullable(),
 	cv: z.string("Μη έγκυρο βιογραφικό").nullable(),
-	email: z.union([z.email("Μη έγκυρο email"), z.literal("")]).nullable().transform((v) => v ?? undefined).optional(),
-	telephone: z.string("Μη έγκυρο τηλέφωνο").nullable().transform((v) => v ?? undefined).optional(),
-	linktree: z.string("Μη έγκυρο linktree").nullable().transform((v) => v ?? undefined).optional(),
+	email: z
+		.union([z.email("Μη έγκυρο email"), z.literal("")])
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
+	telephone: z
+		.string("Μη έγκυρο τηλέφωνο")
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
+	linktree: z
+		.string("Μη έγκυρο linktree")
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
 	gender: z.union([z.literal("M"), z.literal("F")], { message: "Μη έγκυρο φύλο" }),
 	title: z.union([z.literal(0), z.literal(1), z.literal(2)], { message: "Μη έγκυρος τίτλος δασκάλου" }), // 0: Καθηγητής, 1: Δάσκαλος, 2: Επιμελητής
 	visible: looseBoolean("Μη έγκυρη ορατότητα"),
@@ -185,14 +197,13 @@ export const z_BlobUpload = z.custom<Blob>((v) => typeof (v as any)?.arrayBuffer
 	error: "Μη έγκυρο αρχείο",
 });
 
-/** File/blob fields used by multipart image uploads. */
+/** File/blob fields used by multipart image uploads.*/
 export const z_AnnouncementImageUpload = z.object({
 	name: z.string("Μη έγκυρο όνομα"),
 	announcement_id: positiveInt("Μη έγκυρο announcement_id"),
 	is_main: looseBoolean("Μη έγκυρη κύρια εικόνα"),
 	id: positiveInt("Μη έγκυρο id").optional(),
 	fileData: z_BlobUpload,
-	thumbData: z_BlobUpload.optional(),
 	fileType: z.string("Μη έγκυρος τύπος αρχείου"),
 });
 
@@ -205,24 +216,24 @@ export const z_FileUpload = z.object({
 
 /** Re-export entity interfaces for convenience (same shapes as before). */
 export type {
+	AnnouncementImages,
+	Announcements,
 	Books,
+	ClassType,
+	EmailSubscriptions,
+	Instruments,
+	Locations,
 	Payments,
 	Payoffs,
-	Wholesalers,
-	SysUsers,
-	SysUserRegisterLink,
-	Teachers,
-	TeacherLocations,
-	TeacherClasses,
-	ClassType,
-	Locations,
-	Instruments,
-	TeacherInstruments,
-	Registrations,
-	EmailSubscriptions,
-	Announcements,
-	AnnouncementImages,
 	QueryLogs,
+	Registrations,
+	SysUserRegisterLink,
+	SysUsers,
+	TeacherClasses,
+	TeacherInstruments,
+	TeacherLocations,
+	Teachers,
+	Wholesalers,
 } from "@_types/entities";
 
 /**
@@ -236,14 +247,33 @@ export const z_LocationsResponse = z.object({
 	address: z.string("Μη έγκυρη διεύθυνση"),
 	areacode: positiveInt("Μη έγκυρος ταχυδρομικός κώδικας"),
 	municipality: z.string("Μη έγκυρος δήμος"),
-	email: z.string().nullable().transform((v) => v ?? undefined).optional(),
-	manager: z.string().nullable().transform((v) => v ?? ""),
+	email: z
+		.string()
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
+	manager: z
+		.string()
+		.nullable()
+		.transform((v) => v ?? ""),
 	telephones: z.string("Μη έγκυρα τηλέφωνα"),
 	priority: z.number().int().min(1, "Μη έγκυρη προτεραιότητα"),
-	image: z.string().nullable().transform((v) => v ?? undefined).optional(),
+	image: z
+		.string()
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
 	map: z.string("Μη έγκυρος σύνδεσμος Google maps"),
-	link: z.string().nullable().transform((v) => v ?? undefined).optional(),
-	youtube: z.string().nullable().transform((v) => v ?? undefined).optional(),
+	link: z
+		.string()
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
+	youtube: z
+		.string()
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
 	partner: looseBoolean(),
 });
 
@@ -279,7 +309,9 @@ export const z_TeacherClassesResponse = z.object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
 	class_id: positiveInt("Μη έγκυρο class_id"),
 	priority: z.number().int().min(1, "Μη έγκυρη προτεραιότητα"),
-	registration_number: z.string("Μη έγκυρος αριθμός έγκρισης").nullable().transform((v) => v ?? undefined).optional(),
+	registration_number: z
+		.string("Μη έγκυρος αριθμός έγκρισης")
+		.nullable()
+		.transform((v) => v ?? undefined)
+		.optional(),
 });
-
-

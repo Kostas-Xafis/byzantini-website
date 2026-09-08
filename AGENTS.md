@@ -13,7 +13,8 @@ Claude Code, Zed, Windsurf, Gemini, GitHub Copilot, ...) working on
 A full-stack music school platform (website + admin panel, Greek language UI)
 for the Byzantine music school of Metamorfosi. Astro + Solid frontend on
 Cloudflare Workers (static assets), with a typed internal API, Cloudflare D1
-database, R2 storage and two local worker services (PDF, image compression).
+database, R2 storage, the Cloudflare Images binding (announcement thumbnails,
+`lib/images.ts`) and one local worker service (PDF).
 
 > Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md` and
 > `MIGRATION_PLAN.md` for the plan and the do-not-re-research facts.
@@ -53,7 +54,7 @@ Core loop:
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | full suite; needs dev server + docker services + `bucket:serve`; env from tests/.env.test, 10s per test timeout |
+| Tests | `bun run test` | full suite; needs dev server + `pdfworker` docker service + `bucket:serve`; env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -69,8 +70,8 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 
-Worker services (local Docker only — needed for the API tests; images: `pdfworker`, `imgcomp`):
-`bun run docker:build` / `docker:pdf` / `docker:img` / `docker:run` / `docker:logs`.
+Worker services (local Docker only — needed for the API tests; image: `pdfworker`):
+`bun run docker:build` / `docker:pdf` / `docker:run` / `docker:logs`.
 
 Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
 `bun run build` then `wrangler deploy --config dist/server/wrangler.json`
@@ -133,8 +134,11 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
   production, local HTTP store (`bun run bucket:serve`) in dev. Never access
   the binding directly in route code.
 - PDF generation is delegated to `services/pdfWorker` via `lib/pdf.client.ts`
-  (`Authorization: Bearer <session_id>`); image compression goes to
-  `services/imageCompression` via `VITE_IMG_COMPRESSION_SERVICE_URL`.
+  (`Authorization: Bearer <session_id>`).
+- Image thumbnails (announcements) are generated in-process on the Cloudflare
+  Images binding (`IMAGES` in `wrangler.jsonc`) via `lib/images.ts`
+  (`compressImageForThumb`) — the old `services/imageCompression`
+  Docker/Cloud Run service is deleted and must not be referenced.
 
 ## Secrets policy (hard rules)
 

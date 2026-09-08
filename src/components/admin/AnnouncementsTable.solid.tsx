@@ -131,8 +131,6 @@ export default function AnnouncementsTable() {
 	createAPIResource(API.Announcements.getImages, undefined, { cache: setStore });
 
 	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>) {
-		const kb40 = 1024 * 40;
-
 		const photos = fileHandler.getNewFiles();
 		if (photos.length === 0) return;
 		const uploadQueue = photos.map((fileProxy) => {
@@ -144,16 +142,6 @@ export default function AnnouncementsTable() {
 				const name = fileProxy.getName();
 				const { type: fileType } = file;
 				try {
-					let thumbFile: File | Blob = file;
-					if (file.size > kb40) {
-						thumbFile = await (
-							await fetch(import.meta.env.VITE_IMG_COMPRESSION_SERVICE_URL, {
-								method: "POST",
-								body: await file.arrayBuffer(),
-							})
-						).blob();
-					}
-					if (!thumbFile) throw new Error("Could not create thumbnail");
 					await apiHook(API.Announcements.postImage, {
 						RequestObject: {
 							announcement_id: metadata.announcement_id,
@@ -161,7 +149,6 @@ export default function AnnouncementsTable() {
 							is_main: metadata.is_main,
 							fileType,
 							fileData: file,
-							thumbData: thumbFile,
 						},
 					});
 				} catch (e) {

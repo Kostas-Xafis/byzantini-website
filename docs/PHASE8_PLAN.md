@@ -18,21 +18,27 @@
   - **(b) Separate worker + service binding** (`byzantini-pdf`, `services` in
     wrangler config) — cleaner isolation, two deploys.
 
-## 2. Image compression (`services/imageCompression`, ~128 LOC)
+## 2. Image compression (`services/imageCompression`, ~128 LOC) — ✅ DONE
 
 - **Deps**: `sharp` — **native, cannot run in workerd**.
-- **What it does**: accepts images, resizes/compresses (thumbnails + main
-  images for announcements/teachers/locations); the app calls it with
-  `VITE_IMG_COMPRESSION_SERVICE_URL` for both bytes.
-- **Port options**:
-  - **Cloudflare Images** (`IMAGES` binding — the adapter already auto-wires it):
-    transform API (`imageResizing`/`images` binding) for resize+compress — the
-    modern path, no worker code, per-image credits apply.
-  - Or a wasm-based pipeline (`@img/sharp`-wasm builds) if offline transforms
-    are required — verify workerd compat at execution.
-- **Design**: replace the two call sites (`announcements.postImage`
-  thumbnails, upload handlers) with binding transforms; drop
+- **What it did**: accepted images, resized/compressed (thumbnails + main
+  images for announcements); the app called it with
   `VITE_IMG_COMPRESSION_SERVICE_URL`.
+- **Executed design**: Cloudflare Images binding.
+  - `wrangler.jsonc` declares `"images": { "binding": "IMAGES" }` at top level
+    AND under `env.production` / `env.preview` (the binding is not inherited by
+    named environments; the adapter would otherwise auto-add it anyway).
+  - `lib/images.ts` exposes `compressImageForThumb()` — same `sqrt(size / 40KB) / 2`
+    shrink heuristic as the sharp service, output format follows input format,
+    `fit: "scale-down"` (avoids the old accidental upscaling just above 40 KB).
+  - `Announcements.postImage` generates `thumb_*` in-process (still
+    `authenticateMiddleware`-protected, unlike the old external service's
+    referer/self-fetch auth); the client no longer sends `thumbData`.
+  - `VITE_IMG_COMPRESSION_SERVICE_URL` dropped from env files/types; Docker
+    `imgcomp` scripts removed; `services/imageCompression` (untracked, own
+    `.git`) deleted — decommission the Cloud Run instance after cutover.
+  - Dev: miniflare simulates the binding locally (workerd images worker), so
+    `astro dev` and the API tests exercise the real transform path.
 
 ## 3. Email service (`email/`, React templates + MailerSend)
 
@@ -55,6 +61,6 @@
 1. PDF (cheapest — pure JS): in-process route + fonts via ASSETS; verify
    `registrations` PDF tests + admin download.
 2. Email: move templates in-process; keep MailerSend; E2E registration email.
-3. Images: switch uploads to the `IMAGES` binding; visual-verify thumbnails.
+3. ~~Images: switch uploads to the `IMAGES` binding; visual-verify thumbnails.~~ ✅ DONE (see §2).
 4. Decommission: `services/` (+ docker scripts), `.env` service vars,
    `AUTOMATED_EMAILS_*` → worker secrets (already there).

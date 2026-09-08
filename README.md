@@ -33,15 +33,11 @@ lib/
   db.ts                  DB connection + query preprocessing + logging
   utils.server.ts        Wrappers (executeQuery, execTryCatch, etc.)
   bucket/                Storage abstraction (R2/S3-compatible)
+  images.ts              Cloudflare Images binding helpers (thumbnails)
 services/
   pdfWorker/             PDF rendering worker service
-  imageCompression/      Image compression worker service
-getData/
-  query.ts               DB query CLI
-  replicate.ts           Snapshot replication helper
 dbSnapshots/
-  migrations/            SQL migrations
-  sqlite/                SQLite-related files
+  dev-snapshot.sql       Local dev DB seed (used by `bun run db:reset`)
 tests/
   api/                   API tests
   testHelpers.ts         Test API helper
@@ -82,9 +78,8 @@ Use helpers from `lib/utils.server.ts`:
 - `executeTransaction(...)` for explicit transactions
 - `execTryCatch(...)` for consistent endpoint result wrapping
 
-DB connector behavior in `lib/db.ts`:
-- Production: Turso/libSQL (`TURSO_DB_URL`, `TURSO_DB_TOKEN`)
-- Development: local SQLite file (`DEV_DB_ABSOLUTE_LOCATION`)
+DB access in `lib/db.ts` uses the Cloudflare D1 binding (`DB`):
+- Production: remote D1 (`byzantini-db`); development: local miniflare SQLite (`.wrangler/state/v3/d1`)
 - Supports `???` placeholder expansion for variable-length SQL args
 - Writes query logs into `query_logs`
 
@@ -98,34 +93,22 @@ Endpoint keys are strongly typed and follow the format:
 ## Prerequisites
 
 - Bun installed
-- Cloudflare account (for deployment/R2 bindings)
+- Cloudflare account (for deployment, D1/R2/Images bindings)
 - Access to required environment variables
-- Local SQLite snapshot (for development connector mode)
 
 ## Environment Variables 🔐
 
 Environment files:
-- `.dev.vars.development` for local development
-- `.dev.vars` for production-like local operations and CLI utilities
+- `.dev.vars` for the local dev runtime (bindings, vars, secrets)
+- `.env` / `.env.production` for Vite (client-visible `VITE_*`/`PUBLIC_*` only)
 
-Important variables (from `types/envVars.ts`):
+Important variables (from `types/env.ts`):
 
 ```env
-CONNECTOR=sqlite-dev              # sqlite-dev or sqlite-prod
-TURSO_DB_URL=
-TURSO_DB_TOKEN=
-DEV_DB_ABSOLUTE_LOCATION=
 SECRET=
 GOOGLE_MAPS_KEY=
 
-S3_ENDPOINT=
-S3_ACCESS_KEY_ID=
-S3_SECRET_ACCESS_KEY=
-S3_BUCKET_NAME=
-S3_DEV_BUCKET_NAME=
-
 VITE_PDF_SERVICE_URL=
-VITE_IMG_COMPRESSION_SERVICE_URL=
 
 AUTOMATED_EMAILS_SERVICE_URL=
 AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=
@@ -176,36 +159,35 @@ bun run build-preview
 
 ### App and deployment
 
-- `bun run dev`: Start Astro dev server
-- `bun run start`: Start with `CLOUDFLARE_ENV=development`
-- `bun run build`: Build for production
-- `bun run bun-build`: Build via `bunx --bun astro build`
-- `bun run preview`: Preview using Wrangler Pages (`dist`)
-- `bun run build-preview`: Build then preview
-- `bun run deploy:test`: Build and deploy to Cloudflare Pages preview branch `local-test`
-- `bun run logs:test`: Tail logs for preview deployment branch `local-test`
+- `bun run dev`: Start Astro dev server (port 4321) + local bucket server
+- `bun run start`: Alias for `dev`
+- `bun run build`: Production build (`CLOUDFLARE_ENV=production astro build`)
+- Deploy (manual): `bun run build`, then `wrangler deploy --config dist/server/wrangler.json`
+- `bun run types`: Regenerate `worker-configuration.d.ts` from `wrangler.jsonc`
+- `bun run typecheck` / `astro-check` / `check`: Static gates
 
 ### Tests
 
-- `bun run test`: Run the full API test suite (env from `tests/.env.test`, 10s per-test timeout); tests now run fully every time (no hash-skip cache).
+- `bun run test`: Full API test suite (env from `tests/.env.test`; needs dev server + `pdfworker` docker + `bucket:serve`)
 
-### Database tooling
+### Database tooling (wrangler D1)
 
-- `bun run query --dev --q "SELECT ..."`: Query development DB
-- `bun run query --prod --q "SELECT ..."`: Query production DB
-- `bun run db:query --dev --q "..."`: Shortcut for query script
-- `bun run db:query:prod --q "..."`: Production query shortcut
-- `bun run db:logs`: Query recent `query_logs`
-- `bun run db:replicate`: Generate/refresh SQLite snapshot artifacts (pulls the latest prod backup, then resets `latest.db`)
-- `bun run db:reset`: Rebuild the local dev DB (`latest.db`) from `dbSnapshots/dev-snapshot.sql`
+- `bun run db:query -- "SELECT ..."`: Query the local dev D1
+- `bun run db:query:prod -- "..."`: Query the remote production D1
+- `bun run db:logs`: Recent `query_logs` rows
+- `bun run db:replicate`: Export remote D1 to `dbSnapshots/` (wrangler d1 export)
+- `bun run db:reset`: Wipe local D1 and rebuild from `dbSnapshots/dev-snapshot.sql`
 
-### Worker services (local Docker)
+### Data replication (dev mirrors prod)
+
+- `bun run replicate:all` / `replicate:db` / `replicate:bucket`: pull remote D1 + R2 into the local dev stores (`scripts/replicate.ts`)
+
+### Worker services (local Docker — PDF only)
 
 - `bun run docker:pdf`: Build/run PDF worker image
-- `bun run docker:img`: Build/run image compression worker image
-- `bun run docker:build`: Build both worker images
-- `bun run docker:run`: Run both worker containers
-- `bun run docker:logs`: Tail logs for both containers
+- `bun run docker:build`: Build the PDF worker image
+- `bun run docker:run`: Run the PDF worker container
+- `bun run docker:logs`: Tail PDF worker logs
 
 ## Testing Notes ✅
 
@@ -214,23 +196,17 @@ bun run build-preview
 
 ## Data and Snapshot Workflow
 
-`getData/query.ts` supports:
-- Single query execution (`--q`)
-- SQL file execution (`--f`)
-- JSON output (`--json`, `--json-out`)
-- Excel output (`--excel`)
-- Timed/silent execution (`--time`, `--silent`)
+`scripts/replicate.ts` (also `bun run replicate:*`) mirrors production into dev:
+- DB: `wrangler d1 export` (remote) → `dbSnapshots/dev-snapshot.sql` → replays into the local D1 store
+- Bucket: downloads the production R2 objects into `bucket/latest/` (resumable, mirror semantics), then snapshots to `bucket/YY-MM-DD/`
 
-`getData/replicate.ts` supports:
-- Exporting production SQLite schema/data
-- Writing dated snapshots (`snap-YY-MM-DD.sql`)
-- Refreshing local `dbSnapshots/latest.db`
+`bun run db:reset` rebuilds the local dev D1 from `dbSnapshots/dev-snapshot.sql`.
 
 ## Storage and File Handling
 
-`lib/bucket/index.ts` exposes `Bucket` abstraction:
-- Production: Cloudflare R2 via `S3_BUCKET` binding
-- Development: S3-compatible API client (endpoint + keys from env)
+`lib/bucket/index.ts` exposes the `Bucket` abstraction:
+- Production: Cloudflare R2 via the `S3_BUCKET` binding
+- Development: local HTTP store (`bun run bucket:serve` → `bucket/latest/`)
 
 Common operations:
 - `Bucket.list(...)`
@@ -248,10 +224,12 @@ Common operations:
 - Uses `Authorization: Bearer <session_id>`
 - Supports single and bulk PDF generation/printing/download
 
-### Image compression worker
+### Image compression
 
-- Local service under `services/imageCompression`
-- Used through `VITE_IMG_COMPRESSION_SERVICE_URL`
+- Native Cloudflare Images binding (`IMAGES`, declared in `wrangler.jsonc`)
+- Helpers in `lib/images.ts` (`compressImageForThumb`)
+- `Announcements.postImage` generates `thumb_*` variants in-process — the
+  deleted `services/imageCompression` Docker/Cloud Run service is no longer called
 
 ## Deployment ☁️
 
@@ -287,8 +265,8 @@ Typical release path:
 - Route not found: verify path/method in contract and endpoint registration in route indexes.
 - Validation failures: confirm request shape matches Valibot schema.
 - Unauthorized responses: confirm session cookie/token and `authentication` flag behavior.
-- DB connection errors: verify `CONNECTOR` and corresponding DB env vars.
-- Missing bucket access: verify R2 binding in Cloudflare and S3-compatible creds for local mode.
+- DB connection errors: verify the D1 binding (`DB` in `wrangler.jsonc`) and local dev state (`.wrangler/state/v3/d1`).
+- Missing bucket access: verify the R2 binding in Cloudflare; in dev, ensure `bun run bucket:serve` is running.
 
 ## AI-Assisted Development 🤖
 
