@@ -1,6 +1,6 @@
+import { isOwnerEmail } from "@env/ownerEmail";
 import { A, useLocation, type RouterProps } from "@solidjs/router";
 import { sleep } from "@utilities/sleep";
-import { isOwnerEmail } from "@env/ownerEmail";
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 
 type NavLink = { name: string; url: string; force: boolean; icon: string };
@@ -81,8 +81,6 @@ export default function AdminNav(props: RouterProps) {
 
 	const isActive = (url: string) => location.pathname === url || location.pathname === url + "/";
 
-	// Client-side only: hide the query-logging page for non-owners.
-	// (Server-side authorization is enforced separately by the API.)
 	const visibleSections = createMemo(() =>
 		sections
 			.map((section) => ({
@@ -99,13 +97,6 @@ export default function AdminNav(props: RouterProps) {
 	let indicator: HTMLSpanElement | undefined;
 
 	let burgerNavToggle: HTMLInputElement | undefined;
-	createEffect(() => {
-		console.log(burgerNavToggle?.checked);
-	});
-	// onMount(() => {
-	// 	if (burgerNavToggle) {
-	// 	}
-	// });
 
 	createEffect(() => {
 		const found = flatLinks().find((link) => isActive(link.url));

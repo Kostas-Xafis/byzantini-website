@@ -72,7 +72,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 				}
 				.glass {
 					background: rgb(127 29 29 / 0.45);
-					backdrop-filter: blur(4px);
+					backdrop-filter: blur(5px);
 					border: 1px solid rgb(153 27 27 / 0.3);
 				}
 
@@ -161,7 +161,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 	</head>
 	<body class="box-border relative h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:overflow-auto">
 		<Navbar />
-		<div class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4vw] max-sm:pt-[6rem] max-3xs:pt-[5rem]">
+		<div class="relative w-full h-[100dvh] supports-[height:1svh]:h-[100svh] grid grid-rows-[100%] pt-[4vw] max-sm:pt-[4.25rem]">
 			<slot />
 		</div>
 	</body>

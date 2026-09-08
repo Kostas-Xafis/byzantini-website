@@ -6,9 +6,7 @@ import { writeFileSync } from "node:fs";
 const vars = parseEnvFile(await Bun.file(".dev.vars").text());
 const client = createClient({ url: vars.TURSO_DB_URL, authToken: vars.TURSO_DB_TOKEN });
 
-const tables = await client.execute(
-	'SELECT name FROM sqlite_master WHERE type="table" AND sql IS NOT NULL AND name != "sqlite_sequence" ORDER BY name',
-);
+const tables = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND sql IS NOT NULL AND name != "sqlite_sequence" ORDER BY name');
 
 const inserts: string[] = [];
 let total = 0;
@@ -29,9 +27,7 @@ for (const row of tables.rows) {
 				return "'" + String(v).replaceAll("'", "''") + "'";
 			})
 			.join(", ");
-		inserts.push(
-			`INSERT INTO ${tableName} (${columns.map((c) => JSON.stringify(String(c))).join(", ")}) VALUES (${values});`,
-		);
+		inserts.push(`INSERT INTO ${tableName} (${columns.map((c) => JSON.stringify(String(c))).join(", ")}) VALUES (${values});`);
 		total += 1;
 	}
 	console.log(`exported ${tableName}: ${rows.length}`);

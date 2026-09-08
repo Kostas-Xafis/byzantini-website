@@ -255,34 +255,23 @@ const heading: Record<MusicType, string> = {
 };
 
 function fadeInForm(type: MusicType) {
+	if (type === MusicType.None) return;
+
 	const atl = new AnimTimeline();
-	if (type === MusicType.None) {
-		const regContainer = document.querySelector("#registrationContainer") as HTMLElement;
-		atl.step(() => regContainer.classList.add("remove"))
-			.step({
-				time: 500,
-				anim: () => {
-					regContainer.classList.remove("remove");
-					void regContainer.offsetWidth;
-				},
-			})
-			.start();
-	} else {
-		const form = document.querySelector("#registrationForm") as HTMLElement;
-		atl.step(() => form.classList.add("remove"))
-			.step({
-				time: 500,
-				anim: () => {
-					form.classList.remove("remove");
-					void form.offsetWidth;
-				},
-			})
-			.start();
-	}
+	let el = document.querySelector("#registrationForm") as HTMLElement;
+
+	atl.step(() => el?.classList.add("remove"))
+		.step({
+			time: 500,
+			anim: () => {
+				el?.classList.remove("remove");
+				void el?.offsetWidth;
+			},
+		})
+		.start();
 }
 
 function musicTypeFromURL(): MusicType {
-	console.log("[musicTypeFromURL] This function has run");
 	const music = ["byz", "par", "eur"] as MusicType[];
 	if (window.location.hash) {
 		const hash = window.location.hash.replace("#", "");
@@ -342,7 +331,6 @@ export function RegistrationForm() {
 	});
 
 	const onMusicTypeChange = (type: MusicType) => {
-		console.log("[onMusicTypeChange] triggered");
 		setMusicType(type);
 		setRegistrationData((prev) => {
 			return { ...prev, instrument_id: -1, teacher_id: -1 };
