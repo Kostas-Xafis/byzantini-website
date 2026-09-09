@@ -1,6 +1,6 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument } from "pdf-lib";
-import { EndpointResponse, PDFRegstration, PDFRequest, TemplateCoords } from "./types";
+import type { EndpointResponse, PDFRegstration, PDFRequest, TemplateCoords } from "./types";
 
 export interface Env {
 	ASSETS: Fetcher;

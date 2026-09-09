@@ -7,6 +7,7 @@
 		"dev": "bunx --bun wrangler dev",
 		"deploy": "bunx --bun wrangler deploy",
 		"types": "bunx --bun wrangler types",
+		"typecheck": "bunx --bun tsc --noEmit",
 		"tail": "bunx --bun wrangler tail"
 	},
 	"dependencies": {
@@ -14,6 +15,8 @@
 		"pdf-lib": "^1.17.1"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20260702.1",
+		"typescript": "^6.0.3",
 		"wrangler": "^4.127.1"
 	}
 }
