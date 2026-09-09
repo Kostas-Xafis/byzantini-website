@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Byzantini-Website — Codebase Map</title>
+<style>
+	:root {
+		--bg: #0b1220;
+		--panel: #101a30;
+		--panel2: #16233f;
+		--line: #24365c;
+		--text: #dbe6f7;
+		--muted: #8fa3c8;
+		--accent: #5eead4;
+		--accent2: #93c5fd;
+		--amber: #fcd34d;
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif; }
+	header { padding: 18px 22px 12px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #0e1830, var(--bg)); }
+	header h1 { margin: 0; font-size: 19px; letter-spacing: .3px; }
+	header h1 .dot { color: var(--accent); }
+	header p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+	nav { display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+	nav button {
+		white-space: nowrap; background: transparent; color: var(--muted); border: 1px solid transparent;
+		padding: 5px 11px; border-radius: 999px; cursor: pointer; font-size: 12.5px;
+	}
+	nav button:hover { color: var(--text); border-color: var(--line); }
+	nav button.active { background: #1d3a5f; color: #fff; border-color: #2d5588; }
+	main { padding: 20px 24px 60px; max-width: 1240px; margin: 0 auto; }
+	section.tab { display: none; }
+	section.tab.active { display: block; }
+	h2 { font-size: 17px; margin: 6px 0 2px; }
+	.caption { color: var(--muted); margin: 2px 0 14px; max-width: 900px; }
+	.mount { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; overflow-x: auto; }
+	.mount svg { max-width: 100%; height: auto; }
+	.toolbar { display: flex; gap: 8px; margin: 4px 0 8px; }
+	.toolbar button {
+		background: var(--panel2); color: var(--muted); border: 1px solid var(--line); border-radius: 6px;
+		padding: 3px 10px; cursor: pointer; font-size: 12px;
+	}
+	.toolbar button:hover { color: var(--text); border-color: var(--accent2); }
+	pre.src { background: #0a0f1c; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; color: #b9d0f0; font: 12px/1.5 "Cascadia Code", Consolas, monospace; white-space: pre; display: none; max-height: 60vh; }
+	pre.src.open { display: block; }
+	table { border-collapse: collapse; font-size: 12.8px; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 8px 0 16px; }
+	th { background: var(--panel2); color: #cfe0f8; text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); font-weight: 600; }
+	td { padding: 5px 9px; border-bottom: 1px solid #1a2745; vertical-align: top; color: var(--text); }
+	tr:last-child td { border-bottom: none; }
+	code.inl { background: #1a2b4f; border-radius: 4px; padding: 0 5px; font-size: 12px; color: #a9d8ff; }
+	ul.facts { max-width: 950px; }
+	.k { color: var(--amber); font-weight: 600; }
+	.note { border-left: 3px solid var(--amber); background: #1c2408; padding: 8px 12px; border-radius: 0 6px 6px 0; color: #f5e9c4; margin: 10px 0; max-width: 950px; }
+	.tree { font-family: "Cascadia Code", Consolas, monospace; font-size: 12.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; color: #c4d6f2; white-space: pre; }
+	.pill { display: inline-block; background: #1d3a5f; color: #bfe0ff; border-radius: 999px; padding: 0 8px; font-size: 11px; margin-right: 6px; }
+	footer { color: var(--muted); font-size: 12px; text-align: center; padding: 18px; border-top: 1px solid var(--line); }
+	.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+	@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+	<h1>Byzantini-Website — <span class="dot">codebase &amp; services map</span></h1>
+	<p>Greek Byzantine-music school platform · Astro + SolidJS on Cloudflare Workers · branch <b>Workers</b> · generated from a live repo survey</p>
+</header>
+<nav id="tabs"></nav>
+<main id="panes"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+"use strict";
+/* ------------------------------------------------------------------ *
+ *  TAB DATA
+ *  Each item: { id, title, body: HTML string OR { diagram: mermaid, caption } }
+ * ------------------------------------------------------------------ */
+const TABS = [];
+function tab(id, title) { TABS.push({ id, title, body: "" }); return TABS[TABS.length - 1]; }
+
+/* ============================ OVERVIEW ============================ */
+{
+	const t = tab("overview", "Overview");
+	t.body = `
+	<h2>What this is</h2>
+	<p class="caption" style="font-size:13.5px">
+	A full-stack <b>music-school platform</b> (public website + admin panel, Greek UI) for the Byzantine
+	music school of Metamorfosi. The frontend is <b>Astro 7 + SolidJS islands + Tailwind 4</b>, deployed as a
+	<code class="inl">@astrojs/cloudflare</code> Worker (<b>byzantini-website</b>). It has its own typed HTTP API
+	(Isokratis-style <code class="inl">APIServer</code> route instances behind one catch-all route), a <b>Cloudflare D1</b>
+	database, <b>R2</b> storage behind a <code class="inl">Bucket</code> abstraction, the <b>Cloudflare Images</b> binding for
+	announcement thumbnails, and two separate Cloudflare Workers as aux services: a <b>PDF generator</b>
+	(<code class="inl">byzantini-website-pdf-gen</code>) and the <b>email stack</b>
+	(<code class="inl">byzantini-website-emails</code>), which replaced retired Docker/Cloud Run services.
+	</p>
+	<div class="two-col">
+	<div>
+	<h2>Stack at a glance</h2>
+	<table>
+	<tr><th>Layer</th><th>Technology</th><th>Notes</th></tr>
+	<tr><td>Runtime</td><td>Bun 1.4</td><td>never npm/yarn/pnpm</td></tr>
+	<tr><td>Framework</td><td>Astro 7.2.9</td><td>SSR + static assets; sitemap, prefetch</td></tr>
+	<tr><td>Interactivity</td><td>SolidJS 1.9</td><td><code class="inl">.solid.tsx</code> islands</td></tr>
+	<tr><td>Styling</td><td>Tailwind 4</td><td>Vite plugin</td></tr>
+	<tr><td>Validation</td><td>Zod (astro/zod)</td><td>schemas in <code class="inl">lib/api/schemas.ts</code></td></tr>
+	<tr><td>DB</td><td>Cloudflare D1</td><td>binding <code class="inl">DB</code>, SQLite, migrations/</td></tr>
+	<tr><td>Files</td><td>R2 <code class="inl">S3_BUCKET</code></td><td>byzantini-bucket (dev: local HTTP store)</td></tr>
+	<tr><td>Images</td><td>CF Images <code class="inl">IMAGES</code></td><td>in-process thumbnails via lib/images.ts</td></tr>
+	<tr><td>Aux workers</td><td>PDF + email workers</td><td>services/pdfWorker · services/emailWorker</td></tr>
+	<tr><td>Mail</td><td>MailerSend REST</td><td>transactional (registration, invites)</td></tr>
+	</table>
+	</div>
+	<div>
+	<h2>Scale</h2>
+	<table>
+	<tr><th>Area</th><th>Tracked files</th></tr>
+	<tr><td>src/ (pages, components, layouts)</td><td>100</td></tr>
+	<tr><td>lib/ (api, db, bucket, env, hooks, utils)</td><td>59</td></tr>
+	<tr><td>types/ + tests/ + scripts/</td><td>22</td></tr>
+	<tr><td>public/ assets</td><td>32</td></tr>
+	<tr><td>Main codebase LOC (ts/tsx/astro/css)</td><td>≈ 24 600</td></tr>
+	</table>
+	<p class="caption">Use the tabs above to explore: each diagram can be expanded to its raw Mermaid source
+	(render it on <a href="https://mermaid.live" style="color:var(--accent2)">mermaid.live</a>, GitHub, or an IDE).</p>
+	</div>
+	</div>`;
+}
+
+/* ======================= SYSTEM CONTEXT ======================= */
+{
+	const t = tab("context", "System context");
+	t.body = {
+		caption: `Production topology: who talks to whom. Red dashed = retired (Docker / Cloud Run) ancestors that must not be referenced.`,
+		diagram: `flowchart LR
+  V(["visitor / parent"]) -->|HTTPS| CF[Cloudflare edge]
+  A(["admin / teacher"]) -->|HTTPS| CF
+  CF --> W{{byzantini-website<br/>Astro SSR Worker}}
+  W --> DB[(D1 byzantini-db)]
+  W --> R2[(R2 byzantini-bucket)]
+  W --> IMG([CF Images binding])
+  W -- HTTPS, Bearer session --> PDF{{byzantini-website-pdf-gen}}
+  W -- HTTPS, SERVICE_AUTH_TOKEN --> EM{{byzantini-website-emails}}
+  EM --> MS[MailerSend REST]
+  EM --> B2[(R2 byzantini-bucket<br/>html_templates)]
+  PDF --> ASSETS2[/bundled templates<br/>+ font/]
+  V -->|static assets| S3STATIC[(Workers static assets<br/>from dist/)]
+  W -.->|legacy: Docker / Cloud Run| RET1[retired services<br/>imageCompression, pdfGen, email]
+  EM -.->|reads recipients| DBP[(D1 via campaign CLI<br/>wrangler d1 execute)]`
+	};
+}
+
+/* ====================== CODEBASE LAYOUT ====================== */
+{
+	const t = tab("layout", "Codebase layout");
+	t.body = {
+		caption: `Tracked repo layout, condensed (git ls-files). Generated dirs (dist/, .wrangler/, .astro/, bucket/ content, dbSnapshots/) are gitignored on purpose.`,
+		diagram: `flowchart TD
+  subgraph ROOT["Repo root (branch: Workers)"]
+    P[package.json<br/>scripts + deps]:::cfg
+    W[["wrangler.jsonc<br/>DB / S3_BUCKET / IMAGES / ASSETS<br/>env: production, preview"]]:::cfg
+    ACF[astro.config.mjs<br/>cloudflare adapter + sitemap]:::cfg
+    TS[tsconfig.json<br/>@-aliases, astro strict]:::cfg
+  end
+  SRC[["src/  (100 files)"]] --> SRC1[pages: site + admin +<br/>api catch-all + sitemaps]:::fe
+  SRC --> SRC2[components: admin tables,<br/>mainpage, forms, islands]:::fe
+  SRC --> SRC3[layouts: Layout, AdminLayout,<br/>MainPageLayout, SigninLayout]:::fe
+  LIB[["lib/  (59 files)"]] --> L1[api/routes: APIServer groups<br/>+ registry + middleware]:::api
+  LIB --> L2[api/schemas.ts + APIServer.ts]:::api
+  LIB --> L3[hooks: useAPI astro + solid]:::api
+  LIB --> L4[db.ts, utils.server.ts, bucket/,<br/>images.ts, pdf.client.ts, env/]:::be
+  MIGRATIONS[migrations/0001_initial_schema.sql]:::be
+  SVC[["services/  pdfWorker + emailWorker<br/>(own package.json + wrangler.jsonc)"]]:::svc
+  EMAIL[["email/  (dev source of email stack)<br/>render, templates, campaign CLI"]]:::svc
+  T[["tests/  tests/api/*.test.ts"]]:::cfg
+  SCR[scripts/ bucketServer, cf, replicate,<br/>googleReviews, exportTurso]:::cfg
+  TYPES[types/ entities, env, helpers,<br/>global, custom-events]:::cfg
+  DOC[docs/ MIGRATION_SPEC, PHASE4_SPEC,<br/>PHASE6_DEPLOY, PHASE8_PLAN]:::cfg
+
+  classDef cfg fill:#1c2f52,stroke:#3d5f9e,color:#dce9fb
+  classDef fe fill:#123f33,stroke:#2f7a63,color:#d9f4ec
+  classDef api fill:#40310f,stroke:#8a6a1f,color:#f8eccd
+  classDef be fill:#3a1538,stroke:#7d3578,color:#f9e2f6
+  classDef svc fill:#122640,stroke:#2d5d96,color:#d8ebff`
+	};
+}
+
+/* ===================== FRONTEND: PUBLIC PAGES ===================== */
+{
+	const t = tab("frontend", "Frontend pages");
+	t.body = {
+		caption: `Every route under src/pages/. Only TWO Solid islands exist in the whole site (eggrafes RegistrationForm, admin AdminRouter) — every other interactive page uses vanilla <script> tags against the API. The root GET catch-all doubles as the R2 file CDN.`,
+		diagram: `flowchart TB
+  subgraph PUB["Public marketing pages (Astro SSR, Greek UI)"]
+    HOME["/ index<br/>prerendered; announcements<br/>preview fetched client-side"]:::ssr
+    SX1["/sxoli/anakoinoseis<br/>news list (DB)"]:::ssr
+    SX2["/sxoli/anakoinoseis/[slug]<br/>detail, views++, YouTube"]:::ssr
+    SX3["/sxoli/xorodia choir"]:::ssr
+    SX4["/sxoli/dioikitiko-symvoulio board"]:::ssr
+    KAT["/kathigites teachers<br/>byz/par/eur tabs"]:::ssr
+    SPO["/spoudastiria venues"]:::ssr
+    EPI["/epikoinonia contact, FAQ, map"]:::ssr
+    HOME --- SX1 --- SX2
+    SX1 --- SX3 --- SX4
+    KAT --- SPO --- EPI
+  end
+  subgraph FORM["Forms & auth pages (SSR + vanilla script)"]
+    EGR["/eggrafes<br/>RegistrationForm SOLID ISLAND"]:::isl
+    LOG["/login admin sign-in"]:::ssr
+    LGO["/admin/logout"]:::ssr
+    SIG["/admin/signup/[link] invite"]:::ssr
+    SUB["/subscriptions newsletter"]:::ssr
+    UNS["/unsubscribe/[...slug]"]:::ssr
+    OAU["/oauth2callback Google"]:::ssr
+    EGR --- LOG --- LGO --- SIG --- SUB --- UNS --- OAU
+  end
+  subgraph ADMIN["Admin SPA"]
+    ASH["/admin/[...slug]<br/>AdminRouter SOLID ISLAND<br/>(client:only)"]:::isl
+  end
+  subgraph MECH["Mechanics (no UI)"]
+    APIP["/api/[...slug] single API entry"]:::api
+    BKT["[...slug] GET<br/>R2 bucket file CDN<br/>(rewrite /404 on miss)"]:::api
+    SM0["/sitemap-0.xml + index"]:::api
+    SMA["/sitemap-announcements.xml<br/>from D1"]:::api
+    E404["/404"]:::api
+  end
+  MECH --> PUB & FORM & ADMIN
+  PUB -->|in-process useAPI| APIP
+  FORM -->|browser fetch| APIP
+  ASH -->|fetch + client guard| APIP
+  classDef ssr fill:#123f33,stroke:#2f7a63,color:#d9f4ec
+  classDef isl fill:#40310f,stroke:#8a6a1f,color:#f8eccd
+  classDef api fill:#3a1538,stroke:#7d3578,color:#f9e2f6`
+	};
+}
+
+/* ==================== FRONTEND: ADMIN SPA ROUTES ==================== */
+{
+	const t = tab("adminspa", "Admin SPA");
+	t.body = {
+		caption: `The whole admin panel is one Solid island (@solidjs/router) mounted by admin/[...slug].astro inside AdminLayout (whose inline script guards /login via Authentication.authenticateSession). Owner-only extras (global search, query logs, user deletion) are gated through @env/ownerEmail.`,
+		diagram: `flowchart LR
+  SH["admin/[...slug].astro<br/>client:only solid-js"]:::isl
+  R["AdminRouter.solid.tsx<br/>@solidjs/router"]:::isl
+  CH["AdminPage chrome:<br/>AdminNav + AlertStack<br/>+ GlobalSearch (owner)"]:::isl
+  SH --> R --> CH
+  R --> D1["/admin TotalsTable<br/>yearly totals"]:::t
+  R --> D2["/admin/registrations<br/>RegistrationsTable<br/>+ PDF / print / XLSX"]:::t
+  R --> D3["/admin/teachers TeachersTable"]:::t
+  R --> D4["/admin/locations LocationsTable"]:::t
+  R --> D5["/admin/books BooksTable"]:::t
+  R --> D6["/admin/announcements<br/>AnnouncementsTable"]:::t
+  R --> D7["/admin/payments PaymentsTable"]:::t
+  R --> D8["/admin/payoffs PayoffsTable"]:::t
+  R --> D9["/admin/sysusers SysUsersTable"]:::t
+  R --> D10["/admin/query-logs QueryLogsTable"]:::t
+  R --> D11["/admin/settings SettingsPage<br/>theme + DB/bucket backup"]:::t
+  classDef isl fill:#40310f,stroke:#8a6a1f,color:#f8eccd
+  classDef t fill:#122640,stroke:#2d5d96,color:#d8ebff`
+	};
+}
+
+/* ===================== REQUEST LIFECYCLE ===================== */
+{
+	const t = tab("lifecycle", "Request lifecycle");
+	t.body = {
+		caption: `How a browser action reaches D1 / R2 / aux workers — one API catch-all, in-process dispatch server-side, real fetch client-side.`,
+		diagram: `sequenceDiagram
+  autonumber
+  actor B as Browser (Solid island)
+  participant A as Astro page (SSR)
+  participant API as src/pages/api/[...slug].ts
+  participant R as APIServer registry (lib/api/routes)
+  participant M as authenticateMiddleware
+  participant H as Route handler
+  participant DB as D1 (via lib/utils.server)
+  participant S as R2 / Images / PDF / Email
+
+  Note over A,R: Server-side useAPI dispatches IN-PROCESS (no self-fetch, error 1042 fix)
+  B->>A: page request
+  A->>R: useAPI("Group.key", payload) in-process
+  R->>M: authenticate (session cookie)
+  M-->>R: session_id
+  R->>H: handler(payload, session)
+  H->>DB: executeQuery / executeTransaction
+  DB-->>H: rows
+  H-->>R: handlerResult data
+  R-->>A: { data | message | error }
+  A-->>B: HTML / JSON
+
+  Note over B,R: Browser islands fetch the same endpoints over HTTP
+  B->>API: fetch POST /api/Group.key
+  API->>R: APIServer.handle(request, "/api")
+  R-->>API: typed envelope + status
+  API-->>B: JSON
+
+  Note over H,S: Side-effects: R2 uploads, Images thumbnails,<br/>PDF worker call, email worker call
+  H-->>S: Bucket / lib/images / lib/pdf.client / emails
+  S-->>H: ok`
+	};
+}
+
+/* ====================== API SURFACE (overview) ====================== */
+{
+	const t = tab("apisurface", "API surface");
+	t.body = {
+		caption: `Dispatch pipeline + all 14 route groups (93 route instances). N = public (no auth middleware), Y = authenticated (session cookie). Endpoint-level detail on the “Endpoints table” tab.`,
+		diagram: `flowchart TB
+  ENTRY["src/pages/api/[...slug].ts<br/>ALL -> APIServer.handle(request, '/api')"]:::entry
+  REG(("routes/index.ts<br/>routeGroups registry +<br/>API / APIEndpoints / APIArgs types")):::reg
+  MID["authenticateMiddleware<br/>cookie session_id -> isSessionValid<br/>AuthCache 12h TTL"]:::mid
+  TX["handlerResult: 1-arity fn wrapped<br/>in executeTransaction<br/>(D1 autocommit, no rollback)"]:::mid
+  ENV["envelope: {data} | {message} | {error}<br/>+ responseSchema re-validation"]:::mid
+  ENTRY --> REG
+  REG --> MID
+  MID --> TX
+  TX --> ENV
+  REG --> G1 & G2 & G3 & G4 & G5 & G6 & G7
+  REG --> G8 & G9 & G10 & G11 & G12 & G13 & G14
+  G1["books · 5<br/>Y"]:::adm
+  G2["announcements · 12<br/>N 3 · Y 9"]:::mix
+  G3["authentication · 6<br/>login / oauth public"]:::mix
+  G4["instruments · 4<br/>N 1"]:::mix
+  G5["locations · 8<br/>N 2"]:::mix
+  G6["payments · 7<br/>Y"]:::adm
+  G7["payoffs · 5<br/>Y"]:::adm
+  G8["wholesalers · 4<br/>Y"]:::adm
+  G9["teachers · 16<br/>N 6"]:::mix
+  G10["sysusers · 7<br/>register links public"]:::mix
+  G11["queryLogs · 2<br/>Y"]:::adm
+  G12["registrations · 13<br/>self-service + admin"]:::mix
+  G13["schema · 1 backup<br/>Y"]:::adm
+  G14["settingsBackup · 3<br/>Y"]:::adm
+  H1["lib/hooks/useAPI.astro.ts<br/>in-process (no self-fetch)"]:::cli
+  H2["lib/hooks/useAPI.solid.ts<br/>browser fetch + cache store"]:::cli
+  H3["lib/hooks/apiCall.ts<br/>plain typed client"]:::cli
+  H1 --> ENTRY
+  H2 --> ENTRY
+  H3 --> ENTRY
+  classDef entry fill:#3a1538,stroke:#7d3578,color:#f9e2f6
+  classDef reg fill:#1c2f52,stroke:#3d5f9e,color:#dce9fb
+  classDef mid fill:#40310f,stroke:#8a6a1f,color:#f8eccd
+  classDef adm fill:#46202a,stroke:#8f3a4e,color:#fbe1e6
+  classDef mix fill:#2b2f4a,stroke:#5a6291,color:#e2e5fb
+  classDef cli fill:#123f33,stroke:#2f7a63,color:#d9f4ec`
+	};
+}
+
+/* =================== API ENDPOINTS (full table) =================== */
+{
+	const t = tab("apitable", "Endpoints table");
+	const mk = (rows) => `<table><tr><th>Key</th><th>Method</th><th>Path</th><th>Auth</th><th>What it does</th></tr>` +
+		rows.map(r => `<tr><td><code class="inl">${r[0]}</code></td><td>${r[1]}</td><td><code class="inl">${r[2]}</code></td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("") + `</table>`;
+	const A = (g, rows) => `<h3 style="margin-top:18px">${g}</h3>` + mk(rows);
+	t.body = `
+	<h2>All 93 API endpoints</h2>
+	<p class="caption">Groups = files in <code class="inl">lib/api/routes/</code>. <b>Auth Y</b> = <code class="inl">authenticateMiddleware</code> attached (any valid session; there is no role model — owner-only gate exists solely on <code class="inl">SysUsers.delete</code>). Public endpoints marked N. Paths are relative to the <code class="inl">/api</code> prefix.</p>
+	${A("Books · books.ts (5)", [
+		["Books.get", "GET", "/books", "Y", "List all books"],
+		["Books.getById", "POST", "/books/id", "Y", "Fetch by id (body is an unvalidated number[])"],
+		["Books.post", "POST", "/books", "Y", "Create; bumps school_payoffs + total_school_payoffs by wholesale × quantity"],
+		["Books.updateQuantity", "PUT", "/books/updateQuantity", "Y", "Add stock only (rejects reductions); payoff bump"],
+		["Books.delete", "DELETE", "/books", "Y", "Delete ids; cascades pending payments, adjusts totals"],
+	])}
+	${A("Announcements · announcements.ts (12)", [
+		["Announcements.get", "GET", "/announcements", "N", "List (no image payloads)"],
+		["Announcements.getImages", "GET", "/announcements/images", "Y", "All images"],
+		["Announcements.getForPage", "GET", "/announcements/page", "N", "Public page list w/ main_image + total_images, date desc"],
+		["Announcements.getById", "POST", "/announcements/id", "N", "Fetch by id (no request schema)"],
+		["Announcements.getImagesById", "GET", "/announcements/images/[id]", "Y", "Images of one announcement"],
+		["Announcements.getByTitle", "POST", "/announcements/title/[title]", "N", "Public view; increments views, matches comma-stripped titles"],
+		["Announcements.post", "POST", "/announcements", "Y", "Create: auto-links URLs, youtu.be→embed, sitemap insert"],
+		["Announcements.update", "PUT", "/announcements", "Y", "Edit + sitemap rewrite"],
+		["Announcements.delete", "DELETE", "/announcements", "Y", "Delete rows + images + sitemap, async bucket purge"],
+		["Announcements.postImage", "POST", "/announcements/images", "Y", "multipart upload: row + R2 put + in-process thumb (lib/images.ts)"],
+		["Announcements.imagesDelete", "DELETE", "/announcements/images/id/[id]", "Y", "Delete image row/file by id"],
+		["Announcements.imagesDeleteByName", "DELETE", "/announcements/images/name/[id]", "Y", "Delete by image names (comment: old route had no impl)"],
+	])}
+	${A("Authentication · authentication.ts (6)", [
+		["Authentication.authenticateSession", "POST", "/auth/session", "Y", "Session guard used by AdminLayout"],
+		["Authentication.userLogin", "POST", "/auth/login", "N", "sha256 password check, creates 7-day session, sets cookie"],
+		["Authentication.userLogout", "POST", "/auth/logout", "Y", "Nulls session columns by sid, deletes cookie"],
+		["Authentication.getGoogleOAuthState", "GET", "/auth/google", "N", "Google OAuth (arctic, PKCE) state"],
+		["Authentication.getGoogleOAuthStateForSignup", "GET", "/auth/google/signup/[link]", "N", "OAuth for invite-link signup"],
+		["Authentication.oauthCallback", "GET", "/auth/google/callback", "N", "OAuth callback; may auto-create user for valid signup link"],
+	])}
+	${A("Instruments · instruments.ts (4)", [
+		["Instruments.get", "GET", "/instruments", "N", "List instruments"],
+		["Instruments.post", "POST", "/instruments", "Y", "Create"],
+		["Instruments.getById", "POST", "/instruments/id", "N", "Fetch by id"],
+		["Instruments.delete", "DELETE", "/instruments", "Y", "Delete"],
+	])}
+	${A("Locations · locations.ts (8)", [
+		["Locations.get", "GET", "/locations", "N", "List all (spoudastiria)"],
+		["Locations.getById", "POST", "/locations/id", "Y", "Fetch by id (no schema)"],
+		["Locations.getByPriority", "GET", "/locations/priority", "N", "Ordered public list for pages"],
+		["Locations.post", "POST", "/locations", "Y", "Create"],
+		["Locations.update", "PUT", "/locations", "Y", "Edit"],
+		["Locations.fileUpload", "PUT", "/locations/file/[id]", "Y", "rawBlob image → bucket spoudastiria/"],
+		["Locations.fileDelete", "DELETE", "/locations/file/[id]", "Y", "Delete image file"],
+		["Locations.delete", "DELETE", "/locations", "Y", "Delete (no schema)"],
+	])}
+	${A("Payments · payments.ts (7)", [
+		["Payments.get", "GET", "/payments", "Y", "List book payments"],
+		["Payments.getById", "POST", "/payments/id", "Y", "Fetch by id"],
+		["Payments.getTotal", "GET", "/payments/total", "Y", "Read total_payments counter (no UI caller)"],
+		["Payments.post", "POST", "/payments", "Y", "Record sale; stock/sold checks, book.sold++, total++"],
+		["Payments.updatePayment", "PUT", "/payments", "Y", "Amount only"],
+		["Payments.complete", "POST", "/payments/complete", "Y", "Mark paid: payment_date=now, amount=price×book_amount, total--"],
+		["Payments.delete", "DELETE", "/payments", "Y", "Only fully-paid rows"],
+	])}
+	${A("Payoffs · payoffs.ts (5)", [
+		["Payoffs.get", "GET", "/payoffs", "Y", "school_payoffs with amount > 0"],
+		["Payoffs.getById", "POST", "/payoffs/id", "Y", "Fetch by id"],
+		["Payoffs.getTotal", "GET", "/payoffs/total", "Y", "Read counter (no UI caller)"],
+		["Payoffs.updateAmount", "PUT", "/payoffs", "Y", "Amount can only decrease; total--"],
+		["Payoffs.complete", "DELETE", "/payoffs", "Y", "Zero rows; total--"],
+	])}
+	${A("Wholesalers · wholesalers.ts (4)", [
+		["Wholesalers.get", "GET", "/wholesalers", "Y", "List"],
+		["Wholesalers.getById", "POST", "/wholesalers/id", "Y", "Fetch by id (no schema)"],
+		["Wholesalers.post", "POST", "/wholesalers", "Y", "Create + school_payoffs row (0)"],
+		["Wholesalers.delete", "DELETE", "/wholesalers", "Y", "Delete (no schema; cascades books + payments cleanup)"],
+	])}
+	${A("Teachers · teachers.ts (16)", [
+		["Teachers.get", "GET", "/teachers", "N", "Public list"],
+		["Teachers.getByPriorityClasses", "GET", "/teachers/priority/[class_type]", "N", "Visible teachers for byz|par|eur pages"],
+		["Teachers.getByFullnames", "GET", "/teachers/fullnames", "N", "Name list (registration form)"],
+		["Teachers.getClasses", "GET", "/teachers/teacherClasses", "N", "Class joins (form select)"],
+		["Teachers.getLocations", "GET", "/teachers/locations", "N", "Location joins (form select)"],
+		["Teachers.getInstruments", "GET", "/teachers/instruments", "N", "Instrument joins (form select)"],
+		["Teachers.getById", "POST", "/teachers/id", "Y", "Full row (cache-hydration source)"],
+		["Teachers.getClassesById", "POST", "/teachers/teacherClassesById", "Y", "Classes of one teacher"],
+		["Teachers.getLocationsById", "POST", "/teachers/locationsById", "Y", "Locations of one teacher"],
+		["Teachers.getInstrumentsById", "POST", "/teachers/instrumentsById", "Y", "Instruments of one teacher"],
+		["Teachers.post", "POST", "/teachers", "Y", "Create + join rows (priority/registration_number arrays)"],
+		["Teachers.update", "PUT", "/teachers", "Y", "Full re-insert of joins"],
+		["Teachers.fileUpload", "PUT", "/teachers/file/[id]", "Y", "rawBlob: CV pdf or picture → bucket kathigites/"],
+		["Teachers.fileRename", "PUT", "/teachers/file/rename/[id]", "Y", "Bucket move on fullname change (no schema)"],
+		["Teachers.fileDelete", "PUT", "/teachers/file", "Y", "Delete cv|picture file"],
+		["Teachers.delete", "DELETE", "/teachers", "Y", "Delete + joins + bucket files"],
+	])}
+	${A("SysUsers · sysusers.ts (7)", [
+		["SysUsers.get", "GET", "/sys", "Y", "List (id + email only)"],
+		["SysUsers.getById", "POST", "/sys/id", "Y", "Fetch by id"],
+		["SysUsers.getBySid", "GET", "/sys/sid", "Y", "Self by session cookie"],
+		["SysUsers.delete", "DELETE", "/sys", "Y", "Self-delete allowed; owner email required to delete others"],
+		["SysUsers.createRegisterLink", "POST", "/sys/register", "Y", "Emails 24h invite (email worker)"],
+		["SysUsers.registerSysUser", "POST", "/sys/register/[link]", "N", "Self-service account from invite"],
+		["SysUsers.validateRegisterLink", "POST", "/sys/register/validate/[link]", "N", "Invite validity check"],
+	])}
+	${A("QueryLogs · queryLogs.ts (2)", [
+		["QueryLogs.get", "GET", "/query-logs", "Y", "Last 100 logged queries (owner-only UI)"],
+		["QueryLogs.getByFilters", "POST", "/query-logs/filter", "Y", "Filtered logs"],
+	])}
+	${A("Registrations · registrations.ts (13)", [
+		["Registrations.get", "GET", "/registrations/[year]", "Y", "Rows of school year (registration_year LIKE year-year+1)"],
+		["Registrations.getById", "POST", "/registrations/[id]", "Y", "Fetch by id"],
+		["Registrations.getTotal", "GET", "/registrations/total", "Y", "Counter read (no UI caller)"],
+		["Registrations.getTotalByYear", "GET", "/registrations/totalByYear", "Y", "Per-year counts (hardcoded from 2023)"],
+		["Registrations.getYears", "GET", "/registrations/years", "Y", "Distinct years"],
+		["Registrations.update", "PUT", "/registrations", "Y", "Edit row"],
+		["Registrations.delete", "DELETE", "/registrations", "Y", "Delete row"],
+		["Registrations.getByReregistrationUrl", "GET", "/registrations/reregistration/[url]", "N", "Prefill for public re-registration"],
+		["Registrations.post", "POST", "/registrations", "N", "PUBLIC insert: counters + email_subscriptions upsert + (prod only) success email via email worker"],
+		["Registrations.emailSubscribe", "POST", "/registrations/email-subscribe", "N", "Subscribe to newsletter"],
+		["Registrations.emailUnsubscribeValidate", "POST", "/registrations/email-unsubscribe/validate", "N", "Check token"],
+		["Registrations.emailUnsubscribe", "POST", "/registrations/email-unsubscribe", "N", "Unsubscribe"],
+		["Registrations.getSubscriptionToken", "POST", "/registrations/email-subscribe/token", "N", "Token fetch (tests only)"],
+	])}
+	${A("Schema · schema.ts (1)", [
+		["Schema.get", "GET", "/schema/backup/[mysql|sqlite]", "Y", "sqlite: dump whole D1 as INSERTs (admin backup); mysql always throws"],
+	])}
+	${A("SettingsBackup · settingsBackup.ts (3)", [
+		["SettingsBackup.getDatabase", "GET", "/settings/backup/database", "Y", "Full DB backup {sql}"],
+		["SettingsBackup.getFiles", "GET", "/settings/backup/files", "Y", "Bucket file list"],
+		["SettingsBackup.getFile", "POST", "/settings/backup/file", "Y", "Fetch bucket file → base64"],
+	])}
+	<div class="note"><b>Survey observations:</b> no role model beyond the session cookie (any admin can dump the DB via SettingsBackup); session expiry column is written but never checked; likely-dead endpoints (no callers outside tests/lib): Schema.get, Announcements.imagesDeleteByName, Registrations.getTotal, Payments.getTotal, Payoffs.getTotal, Registrations.getSubscriptionToken; several getById/delete routes have <i>no</i> request schema (unvalidated JSON bodies); unknown API routes 302-redirect to /404 (HTML) which in-process callers must handle; <code class="inl">Registrations.post</code> is public + side-effectful (spam surface, no rate limit seen).</div>`;
+}
+
+/* ======================== DATA MODEL (ER) ======================== */
+{
+	const t = tab("datamodel", "Data model");
+	t.body = {
+		caption: `D1 schema — single migration 0001_initial_schema.sql, 21 tables, no FKs/indices beyond PKs (joins are convention-based on id columns). Details per table on the “DB tables” tab.`,
+		diagram: `erDiagram
+  REGISTRATIONS {
+    int id PK
+    varchar am
+    varchar email
+    int class_id
+    int teacher_id
+    int instrument_id
+    varchar registration_url
+    int pass
+  }
+  TEACHERS {
+    int id PK
+    string fullname
+    varchar amka
+    int online
+  }
+  CLASS_TYPE {
+    int id PK
+    string name
+  }
+  TEACHER_CLASSES {
+    int teacher_id PK
+    int class_id PK
+    int priority
+    varchar registration_number
+  }
+  INSTRUMENTS {
+    int id PK
+    string name
+    string type
+    int isInstrument
+  }
+  TEACHER_INSTRUMENTS {
+    int teacher_id PK
+    int instrument_id PK
+  }
+  LOCATIONS {
+    int id PK
+    string name
+    string municipality
+    int priority
+    int partner
+  }
+  TEACHER_LOCATIONS {
+    int teacher_id PK
+    int location_id PK
+  }
+  BOOKS {
+    int id PK
+    string title
+    int wholesaler_id
+    int wholesale_price
+    int price
+    int quantity
+    int sold
+  }
+  WHOLESALERS {
+    int id PK
+    string name
+  }
+  SCHOOL_PAYOFFS {
+    int id PK
+    int wholesaler_id
+    int amount
+  }
+  PAYMENTS {
+    int id PK
+    string student_name
+    int book_id
+    int amount
+    int book_amount
+  }
+  ANNOUNCEMENTS {
+    int id PK
+    string title
+    string content
+    int views
+  }
+  ANNOUNCEMENT_IMAGES {
+    int id PK
+    int announcement_id
+    string name
+    int is_main
+  }
+  SYS_USERS {
+    int id PK
+    string email
+    string password
+    string session_id
+    int session_exp_date
+  }
+  SYS_USER_REGISTER_LINKS {
+    string link
+    int exp_date
+  }
+  EMAIL_SUBSCRIPTIONS {
+    string email PK
+    string unsubscribe_token
+    int unrelated
+  }
+  TOTAL_PAYMENTS {
+    int amount
+  }
+  TOTAL_REGISTRATIONS {
+    int amount
+    int year
+  }
+  TOTAL_SCHOOL_PAYOFFS {
+    int amount
+  }
+  QUERY_LOGS {
+    string id PK
+    string query
+    string args
+    int date
+    int error
+  }
+  TEACHERS ||--o{ TEACHER_CLASSES : teaches
+  CLASS_TYPE ||--o{ TEACHER_CLASSES : grouped
+  TEACHERS ||--o{ TEACHER_LOCATIONS : in
+  LOCATIONS ||--o{ TEACHER_LOCATIONS : hosts
+  TEACHERS ||--o{ TEACHER_INSTRUMENTS : plays
+  INSTRUMENTS ||--o{ TEACHER_INSTRUMENTS : used
+  REGISTRATIONS }o--|| TEACHERS : teacher_id
+  REGISTRATIONS }o--o| CLASS_TYPE : class_id
+  REGISTRATIONS }o--o| INSTRUMENTS : instrument_id
+  WHOLESALERS ||--o{ BOOKS : supplies
+  BOOKS ||--o{ PAYMENTS : sold-as
+  WHOLESALERS ||--o{ SCHOOL_PAYOFFS : paid-out
+  ANNOUNCEMENTS ||--o{ ANNOUNCEMENT_IMAGES : has`
+	};
+}
+
+/* ==================== TABLES INVENTORY (html) ==================== */
+{
+	const t = tab("dbtables", "DB tables");
+	const mk = (rows) => `<table><tr><th>Table</th><th>Purpose</th><th>Notable columns / notes</th></tr>` +
+		rows.map(r => `<tr><td><code class="inl">${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("") + `</table>`;
+	t.body = `
+	<h2>21 tables · single migration <code class="inl">0001_initial_schema.sql</code></h2>
+	<p class="caption">No FK constraints or indices beyond primary keys — referential integrity is enforced in route handlers.</p>
+	${mk([
+		["registrations", "Student registrations (core admin flow)", "am, amka, names, birth_date, class_id, teacher_id, instrument_id, pass, registration_url for self-service re-registration"],
+		["teachers", "Teachers / professors of the school", "fullname, picture, cv (bucket refs), amka, visible, online"],
+		["teacher_classes", "Teacher → class join", "composite PK, priority, registration_number (Αριθμός Έγκρισης)"],
+		["teacher_instruments", "Teacher → instrument join", "composite PK"],
+		["teacher_locations", "Teacher → location join", "composite PK"],
+		["class_type", "Music-type classes (byz / par / eur)", "name"],
+		["instruments", "Byzantine instruments catalog", "name, type, isInstrument"],
+		["locations", "Study rooms / spoudastiria (partner flag)", "address, municipality, manager, image, map, link, youtube, partner, priority"],
+		["announcements", "News (ανακοινώσεις) incl. rich content", "title, content, date, views, links (auto-linked, youtu.be→embed)"],
+		["announcement_images", "Announcement image gallery", "announcement_id, name, is_main; thumbnails via Cloudflare Images"],
+		["books", "Book-trade inventory", "title, wholesaler_id, wholesale_price, price, quantity, sold"],
+		["wholesalers", "Book suppliers", "name"],
+		["school_payoffs", "Accumulated payouts per wholesaler", "wholesaler_id, amount (only decreases via Payoffs)"],
+		["payments", "Book purchases by students", "student_name, book_id, amount, book_amount, date, payment_date (paid/unpaid)"],
+		["total_payments", "Single-row counter", "amount — hand-maintained by book/payment handlers"],
+		["total_registrations", "Per-year counter", "amount, year"],
+		["total_school_payoffs", "Single-row counter", "amount"],
+		["sys_users", "Admin accounts + live session", "email, password (sha256), session_id, session_exp_date (written, never checked)"],
+		["sys_user_register_links", "Admin invite links", "link, exp_date (24h)"],
+		["email_subscriptions", "Newsletter subscriptions", "email PK, unsubscribe_token, unrelated flag"],
+		["query_logs", "Audit of every DB call", "id, query, args (JSON), date, error — best-effort logger"],
+	])}
+	<div class="note">Counter tables (total_*) are accumulators maintained manually inside each write handler — the mapper flagged drift risk (e.g. Books.delete vs Payments.complete both adjust totals). Dev DB is rebuilt from <code class="inl">dbSnapshots/dev-snapshot.sql</code> (<code class="inl">bun run db:reset</code>).</div>`;
+}
+
+/* ====================== SERVICE: PDF WORKER ====================== */
+{
+	const t = tab("pdf", "PDF worker");
+	t.body = {
+		caption: `byzantini-website-pdf-gen (services/pdfWorker, own git repo). Fills the three blank registration templates (byz/par/eur) with student data at hardcoded coordinates, embeds the DidactGothic font. Only admin-initiated, only registration forms — no certificates, no public PDF flows.`,
+		diagram: `sequenceDiagram
+  autonumber
+  actor Admin as Admin panel (RegistrationsTable)
+  participant P as lib/pdf.client.ts
+  participant W as byzantini-website-pdf-gen<br/>POST / (only type: registration)
+  participant SITE as byzantini-website
+  Admin->>P: onPrint / onDownloadPDF selected rows
+  P->>W: POST {type, request:{isMultiple, data:[...]}}<br/>Authorization: Bearer session_id
+  Note over W: prod auth: Referer allowlist<br/>+ session validation
+  W->>SITE: POST /api/auth/session (cookie session_id)
+  SITE-->>W: {data:{isValid}}
+  W->>W: pick template by class_id (byz|par|eur)<br/>from bundled ASSETS + fill fields at coords<br/>(Greek school-year auto-computed)
+  W-->>P: application/pdf bytes
+  P-->>Admin: single: download/print<br/>bulk: client-zip -> Εγγραφές.zip (6 concurrent)
+  Note over W: IS_DEV=true (.dev.vars only) skips auth<br/>VITE_PDF_SERVICE_URL: dev :8787 / prod workers.dev`
+	};
+}
+
+/* ===================== SERVICE: EMAIL WORKER ===================== */
+{
+	const t = tab("email", "Email worker");
+	t.body = {
+		caption: `byzantini-website-emails (services/emailWorker, own git repo). Two POST endpoints; site talks over plain HTTP with a shared authToken — no service bindings anywhere in the system.`,
+		diagram: `flowchart LR
+  subgraph SITE["byzantini-website triggers"]
+    REG["Registrations.post<br/>public form (prod only)"]:::cli
+    INV["SysUsers.createRegisterLink<br/>admin invite"]:::cli
+  end
+  subgraph EW["byzantini-website-emails"]
+    TX["POST /<br/>transactional send"]:::svc
+    PUB["POST /html-templates<br/>publish built templates"]:::svc
+  end
+  R2T[(R2 byzantini-bucket<br/>html_templates/*.html)]:::be
+  MS[MailerSend REST<br/>no-reply@musicschool-metamorfosi.gr]:::ext
+  CLI["campaign CLI<br/>bun run campaign (node side)"]:::cli
+  TX -->|"fetch <SITE_URL>/html_templates/name<br/>+ {{ placeholders }} substitution"| R2T
+  TX -->|"Bearer MAILERSEND_API_KEY"| MS
+  REG -->|"{authToken,to,subject,htmlTemplateName,<br/>templateData}"| TX
+  INV --> TX
+  TX -.->|DRY_RUN=true| LOG["logs [dry-run] instead"]:::dev
+  PUB -->|authToken + files| R2T
+  CLI -->|templates:build --prod| PUB
+  CLI -->|reads recipients via wrangler d1 execute --remote| D1[(D1 byzantini-db)]:::be
+  SITE -->|GET /html_templates/name (file proxy)| R2T
+  classDef svc fill:#122640,stroke:#2d5d96,color:#d8ebff
+  classDef cli fill:#123f33,stroke:#2f7a63,color:#d9f4ec
+  classDef be fill:#3a1538,stroke:#7d3578,color:#f9e2f6
+  classDef ext fill:#46202a,stroke:#8f3a4e,color:#fbe1e6
+  classDef dev fill:#40310f,stroke:#8a6a1f,color:#f8eccd`
+	};
+}
+
+/* ================== EMAIL: CAMPAIGNS + TEMPLATES ================== */
+{
+	const t = tab("campaigns", "Campaigns & templates");
+	const mk = (rows) => `<table><tr><th>Name</th><th>Audience</th><th>Template</th></tr>` +
+		rows.map(r => `<tr><td><code class="inl">${r[0]}</code></td><td>${r[1]}</td><td><code class="inl">${r[2]}</code></td></tr>`).join("") + `</table>`;
+	t.body = `
+	<h2>Email campaign CLI + template pipeline</h2>
+	<p class="caption">Templates are React Email components rendered to static HTML with <code class="inl">{{ key }}</code> placeholders, then published into the shared R2 bucket. Campaigns read recipients straight from D1 via spawned <code class="inl">wrangler d1 execute --remote</code> (default DB: preview; <code class="inl">--send</code> forces prod).</p>
+	${mk([
+		["renew-2026 (+ -fix resend)", "2025-26 students not yet registered for 2026-27", "2026/upenthimisi_eggrafis.html + poster"],
+		["return-2026", "email_subscriptions minus recent students/teachers/admins", "2026/epistrofi_mathiton.html (+ .txt)"],
+		["google-review-2026", "recent students 2024-27 (one per email)", "2026/google_review.html (+ .txt), no attachment"],
+		["teachers-eggrafes-2026", "visible teachers with email (gender greeting)", "2026/upenthimisi_eggrafis_kathigites.html (+ .txt)"],
+	])}
+	<p class="caption">Runner: dedupe + blacklist, pace ~800–1000 ms, daily cap 900, resume state in <code class="inl">campaign-state/</code>, dry-run previews in <code class="inl">out/</code>, optional <code class="inl">--testmail</code> with a Greek test banner. Template pipeline: <code class="inl">bun run templates:build --prod|--dev</code> renders the React Email registry → <code class="inl">POST /html-templates</code> → emailWorker → R2 <code class="inl">html_templates/</code> → served by the site file proxy at <code class="inl">/html_templates/&lt;name&gt;</code>. The transactional worker + prod CLI fetch templates from that URL per send.</p>
+	<p class="caption">Root <code class="inl">email/</code> is the stale pre-move duplicate of this whole stack (older revisions, Docker artifacts, gitignored); emailWorker’s own README says it can be deleted once verified.</p>`;
+}
+
+/* ======================= ENV & SECRETS (names) ======================= */
+{
+	const t = tab("env", "Env & secrets");
+	const mk = (rows) => `<table><tr><th>Key (name only)</th><th>Where</th><th>Purpose</th></tr>` +
+		rows.map(r => `<tr><td><code class="inl">${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("") + `</table>`;
+	t.body = `
+	<h2>Environment &amp; secret map (names only — values never printed)</h2>
+	${mk([
+		["DB / S3_BUCKET / IMAGES / ASSETS", "wrangler.jsonc bindings", "D1, R2, Cloudflare Images, static assets — env-specific (production vs preview)"],
+		["AUTOMATED_EMAILS_SERVICE_URL", ".dev.vars (server env)", "Email worker URL used by Registrations.post + SysUsers invite"],
+		["AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN", ".dev.vars (server env)", "Shared token — must match emailWorker’s SERVICE_AUTH_TOKEN"],
+		["VITE_PDF_SERVICE_URL", ".dev.vars + .env + .env.production", "PDF worker URL; also set client-side (VITE_ is inlined by Vite)"],
+		["OWNER_EMAIL / VITE_OWNER_EMAIL", ".env / .env.production", "Owner (super-admin) email; ownerEmail.ts with hardcoded fallback"],
+		["VITE_URL", ".env", "Site origin used by tests / oauth"],
+		["GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET", ".dev.vars", "Google OAuth login (arctic PKCE)"],
+		["GOOGLE_MAPS_KEY", ".dev.vars", "googleReviews.ts Places-API collector"],
+		["SECRET", ".dev.vars", "Session/auth secret (legacy naming)"],
+		["TURSO_DB_URL / TURSO_DB_TOKEN", ".dev.vars", "Legacy Turso DB (exportTurso.ts cutover leftover)"],
+		["CONTACT_INFO, *_SNAPSHOT_LOCATION, DEV_BUCKET_LOCATION, LATEST_MIGRATION_FILE, FORCE_TEST, PROJECT_ABSOLUTE_PATH", ".dev.vars", "Local tooling: snapshots, bucket store location, build helpers"],
+		["MAILERSEND_API_KEY", "emailWorker .dev.vars / secret", "Transactional + campaign sending (MailerSend)"],
+		["SERVICE_AUTH_TOKEN", "emailWorker .dev.vars / secret", "Worker-side half of AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN"],
+		["DRY_RUN", "emailWorker .dev.vars", "true → log instead of sending"],
+		["IS_DEV", "pdfWorker .dev.vars", "true → skip referer + session auth"],
+		["SITE_URL", "services wrangler.jsonc vars", "Back-callback target for session checks / template fetches"],
+		["TEST_EMAIL / TEST_PASSWORD / VITE_URL", "tests/.env.test", "Admin login used by the API test suite"],
+	])}
+	<div class="note"><b>Rules:</b> server env via the <code class="inl">cloudflare:workers</code> module (runtime.ts bridge → Env.env); client vars only via Vite <code class="inl">VITE_</code>-prefixed files. Gitignored everywhere — never commit or paste values.</div>`;
+}
+
+/* ======================= DEV ENVIRONMENT ======================= */
+{
+	const t = tab("dev", "Dev environment");
+	t.body = {
+		caption: `Everything needed locally: Astro dev (also boots the local bucket store), the two aux workers via wrangler dev, env via .dev.vars / Vite .env.`,
+		diagram: `flowchart LR
+  subgraph DEV["One terminal: bun run dev"]
+    ASTRO["astro dev :4321<br/>SSR + islands"]:::dev
+    BS["bucket:serve :4567<br/>(local HTTP file store)"]:::dev
+  end
+  PDFD["wrangler dev pdfWorker :8787<br/>IS_DEV=true skips auth"]:::aux
+  EMAILD["wrangler dev emailWorker :8788<br/>DRY_RUN=true logs sends"]:::aux
+  D1L["D1 local SQLite<br/>.wrangler/state/v3/d1"]:::dev
+  ASTRO -->|Bucket dev client| BS
+  ASTRO -->|S3_BUCKET replaced| D1L
+  ASTRO -->|VITE_PDF_SERVICE_URL<br/>http://127.0.0.1:8787| PDFD
+  ASTRO -->|emails endpoint| EMAILD
+  classDef dev fill:#123f33,stroke:#2f7a63,color:#d9f4ec
+  classDef aux fill:#40310f,stroke:#8a6a1f,color:#f8eccd`
+	};
+}
+
+/* ==================== ENVIRONMENTS + DEPLOY ==================== */
+{
+	const t = tab("deploy", "Environments & deploy");
+	t.body = {
+		caption: `Manual deploy flow. wrangler.jsonc names three environments; bindings differ per env. CI/Pages integration was retired.`,
+		diagram: `flowchart LR
+  DEV1["local dev<br/>DB local sqlite · bucket:serve"]:::env
+  PV["preview env<br/>DB byzantini-db-preview<br/>R2 byzantini-bucket-dev"]:::env
+  PR["production env<br/>DB byzantini-db<br/>R2 byzantini-bucket"]:::env
+  BUILD["bun run build<br/>CLOUDFLARE_ENV=production<br/>astro build"]:::step
+  OUT["dist/server/entry.mjs<br/>+ dist/client assets<br/>+ generated wrangler.json"]:::step
+  DEP["wrangler deploy<br/>--config dist/server/wrangler.json"]:::step
+  W1{{"byzantini-website<br/>Worker + static assets"}}:::env
+  BUILD --> OUT --> DEP --> W1
+  W1 --> PR
+  W1 -.->|wrangler deploy --env preview| PV
+  classDef env fill:#122640,stroke:#2d5d96,color:#d8ebff
+  classDef step fill:#3a1538,stroke:#7d3578,color:#f9e2f6`
+	};
+}
+
+/* ======================= EVOLUTION ======================= */
+{
+	const t = tab("evolution", "Evolution");
+	t.body = {
+		caption: `Recent history on the Workers branch (git log, newest first) — shows the ongoing migration onto Cloudflare-native services.`,
+		diagram: `gitGraph
+  commit id: "admin nav refactor"
+  commit id: "PDF worker documented as CF service"
+  commit id: "thumbnails -> CF Images binding"
+  commit id: "unified admin table search"
+  commit id: "global search palette"
+  commit id: "owner email module"
+  commit id: "typed API client hooks"
+  commit id: "google reviews collector"
+  commit id: "reactive music-type state"`
+	};
+}
+
+/* ================================================================== *
+ *  RENDERER
+ * ================================================================== */
+const order = TABS.map(t => t.id);
+const panes = document.getElementById("panes");
+const navEl = document.getElementById("tabs");
+
+for (const t of TABS) {
+	const btn = document.createElement("button");
+	btn.textContent = t.title;
+	btn.dataset.tab = t.id;
+	navEl.appendChild(btn);
+	const sec = document.createElement("section");
+	sec.className = "tab";
+	sec.dataset.pane = t.id;
+	if (typeof t.body === "string") {
+		sec.innerHTML = t.body;
+	} else {
+		const h = document.createElement("h2");
+		h.textContent = t.title;
+		sec.appendChild(h);
+		const cap = document.createElement("p");
+		cap.className = "caption";
+		cap.innerHTML = t.body.caption || "";
+		sec.appendChild(cap);
+		const bar = document.createElement("div");
+		bar.className = "toolbar";
+		const view = document.createElement("button");
+		view.textContent = "Toggle mermaid source";
+		const copy = document.createElement("button");
+		copy.textContent = "Copy mermaid source";
+		bar.appendChild(view); bar.appendChild(copy);
+		sec.appendChild(bar);
+		const mount = document.createElement("div");
+		mount.className = "mount";
+		mount.dataset.mount = t.id;
+		mount.innerHTML = '<div class="caption" style="margin:0">rendering…</div>';
+		sec.appendChild(mount);
+		const pre = document.createElement("pre");
+		pre.className = "src";
+		pre.textContent = t.body.diagram;
+		sec.appendChild(pre);
+		view.addEventListener("click", () => pre.classList.toggle("open"));
+		copy.addEventListener("click", () => {
+			navigator.clipboard && navigator.clipboard.writeText(t.body.diagram);
+			copy.textContent = "Copied ✓";
+			setTimeout(() => (copy.textContent = "Copy mermaid source"), 1200);
+		});
+		sec.dataset.ready = "0";
+	}
+	panes.appendChild(sec);
+}
+
+let mermaidReady = false;
+const mermaidScript = document.querySelector('script[src*="mermaid"]');
+function bootMermaid() {
+	mermaidReady = true;
+	mermaid.initialize({
+		startOnLoad: false,
+		theme: "dark",
+		themeVariables: { darkMode: true, background: "#101a30", primaryColor: "#16233f", primaryTextColor: "#dbe6f7", primaryBorderColor: "#2d5588", lineColor: "#5b7bb0", secondaryColor: "#123f33", tertiaryColor: "#40310f", fontFamily: "Segoe UI, system-ui" },
+		flowchart: { curve: "basis", htmlLabels: true },
+		securityLevel: "loose",
+	});
+}
+if (window.mermaid) bootMermaid();
+else mermaidScript.addEventListener("load", bootMermaid);
+
+let active = null;
+async function activate(id) {
+	if (active === id) return;
+	active = id;
+	navEl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+	panes.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.dataset.pane === id));
+	const sec = panes.querySelector(`section[data-pane="${id}"]`);
+	if (!sec || sec.dataset.ready === "1") return;
+	const t = TABS.find(x => x.id === id);
+	if (typeof t.body === "string" || typeof t.body.diagram !== "string") return;
+	sec.dataset.ready = "1";
+	const mount = sec.querySelector(".mount");
+	if (mermaidReady) {
+		try {
+			const { svg } = await mermaid.render("mmd-" + id, t.body.diagram);
+			mount.innerHTML = svg;
+		} catch (e) {
+			mount.innerHTML = `<div class="note">Mermaid failed to render this diagram: ${String(e)}</div>`;
+		}
+	} else {
+		mount.innerHTML = `<div class="note">Mermaid CDN not reachable — see “Toggle mermaid source” below for the raw diagram.</div>`;
+	}
+}
+navEl.querySelectorAll("button").forEach(b => b.addEventListener("click", () => activate(b.dataset.tab)));
+activate(order[0]);
+</script>
+<footer>Rendered client-side with Mermaid 11 · regenerate after repo changes · path: docs/architecture/visualize.html</footer>
+</body>
+</html>
