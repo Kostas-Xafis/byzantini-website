@@ -14,7 +14,8 @@ A full-stack music school platform (website + admin panel, Greek language UI)
 for the Byzantine music school of Metamorfosi. Astro + Solid frontend on
 Cloudflare Workers (static assets), with a typed internal API, Cloudflare D1
 database, R2 storage, the Cloudflare Images binding (announcement thumbnails,
-`lib/images.ts`) and one local worker service (PDF).
+`lib/images.ts`) and the PDF worker `byzantini-website-pdf-gen` (separate
+Cloudflare Worker, `services/pdfWorker`).
 
 > Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md` and
 > `MIGRATION_PLAN.md` for the plan and the do-not-re-research facts.
@@ -54,7 +55,7 @@ Core loop:
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | full suite; needs dev server + `pdfworker` docker service + `bucket:serve`; env from tests/.env.test, 10s per test timeout |
+| Tests | `bun run test` | full suite; needs dev server + `bucket:serve`; env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -70,8 +71,12 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 
-Worker services (local Docker only — needed for the API tests; image: `pdfworker`):
-`bun run docker:build` / `docker:pdf` / `docker:run` / `docker:logs`.
+PDF worker (`byzantini-website-pdf-gen`, Cloudflare Worker — replaces the retired
+Docker/Cloud Run service): `cd services/pdfWorker`; `bunx --bun wrangler dev --config wrangler.jsonc`
+(port 8787, `.dev.vars` `IS_DEV=true` skips auth) /
+`bunx --bun wrangler deploy --config wrangler.jsonc` (the `--config` flag is
+required — wrangler otherwise walks up and hits the website repo's
+`.wrangler/deploy/config.json`).
 
 Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
 `bun run build` then `wrangler deploy --config dist/server/wrangler.json`
@@ -133,8 +138,11 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 - Storage goes through `Bucket` (`lib/bucket/index.ts`) — R2 binding in
   production, local HTTP store (`bun run bucket:serve`) in dev. Never access
   the binding directly in route code.
-- PDF generation is delegated to `services/pdfWorker` via `lib/pdf.client.ts`
-  (`Authorization: Bearer <session_id>`).
+- PDF generation is delegated to the Cloudflare Worker `byzantini-website-pdf-gen`
+  (`services/pdfWorker`; templates+font bundled in its assets) via
+  `lib/pdf.client.ts` (`Authorization: Bearer <session_id>`); the endpoint URL
+  is `VITE_PDF_SERVICE_URL` (`.env` / `.env.production`). The old
+  Docker/Cloud Run service is retired and must not be referenced.
 - Image thumbnails (announcements) are generated in-process on the Cloudflare
   Images binding (`IMAGES` in `wrangler.jsonc`) via `lib/images.ts`
   (`compressImageForThumb`) — the old `services/imageCompression`
@@ -210,7 +218,7 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 - DO: run `bun run typecheck` before declaring a change done; run targeted
   tests for API changes.
 - DO: keep diffs minimal and focused; don't reformat unrelated files.
-- DON'T: run any `wrangler deploy`/`d1 ... --remote` or Docker command as part
+- DON'T: run any `wrangler deploy`/`d1 ... --remote` command as part
   of routine work or to "verify" a change (deploys require real credentials).
 - DON'T: use `npm`/`npx`/`yarn`; use `bun`/`bunx`.
 - DON'T: restart or rewrite parts of the architecture that work (database

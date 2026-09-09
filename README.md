@@ -35,7 +35,7 @@ lib/
   bucket/                Storage abstraction (R2/S3-compatible)
   images.ts              Cloudflare Images binding helpers (thumbnails)
 services/
-  pdfWorker/             PDF rendering worker service
+  pdfWorker/             Cloudflare Worker `byzantini-website-pdf-gen` (PDF rendering)
 dbSnapshots/
   dev-snapshot.sql       Local dev DB seed (used by `bun run db:reset`)
 tests/
@@ -108,7 +108,7 @@ Important variables (from `types/env.ts`):
 SECRET=
 GOOGLE_MAPS_KEY=
 
-VITE_PDF_SERVICE_URL=
+VITE_PDF_SERVICE_URL=        # PDF worker (dev: http://127.0.0.1:8787 via `wrangler dev`; prod: https://byzantini-website-pdf-gen.koxafis.workers.dev)
 
 AUTOMATED_EMAILS_SERVICE_URL=
 AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=
@@ -219,10 +219,15 @@ Common operations:
 
 ### PDF worker
 
+- Cloudflare Worker **`byzantini-website-pdf-gen`** (`services/pdfWorker`,
+  `pdf-lib` + `@pdf-lib/fontkit`; templates + Greek font bundled as assets)
 - Client integration in `lib/pdf.client.ts`
-- Sends requests to `VITE_PDF_SERVICE_URL`
-- Uses `Authorization: Bearer <session_id>`
+- Sends requests to `VITE_PDF_SERVICE_URL` (dev: `wrangler dev` on 8787;
+  prod: the deployed worker URL)
+- Uses `Authorization: Bearer <session_id>` (validated against the site's
+  `/api/auth/session`; referer allowlist in prod)
 - Supports single and bulk PDF generation/printing/download
+- Deploy: `cd services/pdfWorker && bunx --bun wrangler deploy`
 
 ### Image compression
 

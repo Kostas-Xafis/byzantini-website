@@ -4,7 +4,7 @@
 > platform so everything is one deployable unit. **Not started** — cutover
 > (Phase 7 domain switch) comes first; this is the blueprint.
 
-## 1. PDF worker (`services/pdfWorker`, ~358 LOC)
+## 1. PDF worker (`services/pdfWorker`, ~358 LOC) — ✅ DONE
 
 - **Deps**: `pdf-lib` + `@pdf-lib/fontkit` — **both pure JS → workerd-compatible**.
 - **What it does**: `Bun.serve` HTTP service; registers fonts (TTF), renders the
@@ -17,6 +17,25 @@
     Cost: +~600 kB gzip bundle — verify against Workers size limits.
   - **(b) Separate worker + service binding** (`byzantini-pdf`, `services` in
     wrangler config) — cleaner isolation, two deploys.
+- **Executed design (user choice: keep the direct browser → worker call)**:
+  - `services/pdfWorker` converted from the Bun/Docker service into the
+    Cloudflare Worker **`byzantini-website-pdf-gen`** (`wrangler.jsonc` +
+    `src/index.ts`; Dockerfiles, `.env` and the root `docker:*` scripts
+    removed). Same `POST /` contract and response codes; same referer
+    allowlist + bearer-session validation against `<SITE_URL>/api/auth/session`
+    (parses both the old `{res:{data}}` and new `{data}` envelopes);
+    `.dev.vars` `IS_DEV=true` skips auth locally.
+  - Registration templates (`notAssets/pdf_templates/*.pdf`) + the
+    DidactGothic font are **bundled static assets** (`assets/`, served via the
+    `ASSETS` binding) — the worker no longer fetches templates from the site.
+  - `VITE_PDF_SERVICE_URL` now points at the worker
+    (`https://byzantini-website-pdf-gen.koxafis.workers.dev`; dev:
+    `http://127.0.0.1:8787` via `wrangler dev`). `lib/pdf.client.ts` is
+    unchanged (it already POSTs JSON + bearer and reads a PDF blob).
+  - Local dev: `cd services/pdfWorker && bunx --bun wrangler dev`.
+  - Decommission: Cloud Run instance `byz-pdfworker-*` + Docker image after
+    the website is rebuilt/redeployed with the new URL.
+
 
 ## 2. Image compression (`services/imageCompression`, ~128 LOC) — ✅ DONE
 

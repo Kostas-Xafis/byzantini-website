@@ -56,16 +56,19 @@
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): production uses
   Cloudflare R2 binding `S3_BUCKET`; development uses the local HTTP store
   (`bun run bucket:serve`, `scripts/bucketServer.ts`).
-- PDF generation is delegated to `services/pdfWorker`; client integration
-  lives in `lib/pdf.client.ts` and sends `Authorization: Bearer <session_id>`.
+- PDF generation is delegated to the Cloudflare Worker
+  `byzantini-website-pdf-gen` (`services/pdfWorker`, templates+font bundled);
+  client integration lives in `lib/pdf.client.ts` and sends
+  `Authorization: Bearer <session_id>`. Endpoint URL: `VITE_PDF_SERVICE_URL`
+  (`.env` / `.env.production`).
 
 ## Workflows and conventions
 - Core commands: `bun run dev` (starts `bucket:serve` too), `bun run build`,
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
   `bun run db:reset`, `bun run typecheck`, `bun run check`.
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
-  from `tests/.env.test`, 10s per-test timeout; they need the dev server, the
-  docker services (pdf/img) and `bucket:serve`.
+  from `tests/.env.test`, 10s per-test timeout; they need the dev server and
+  `bucket:serve`.
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,
