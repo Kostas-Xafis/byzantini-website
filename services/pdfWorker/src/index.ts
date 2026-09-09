@@ -1,71 +1,29 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument } from "pdf-lib";
-import type { EndpointResponse, PDFRegstration, PDFRequest, TemplateCoords } from "./types";
+import type { PDFRegstration, PDFRequest, TemplateCoords } from "./types";
 
 export interface Env {
 	ASSETS: Fetcher;
-	/** Website base URL used for bearer-session validation (POST /api/auth/session). */
-	SITE_URL?: string;
-	/** Set to "true" locally (.dev.vars) to skip referer/session checks (old IS_DEV). */
-	IS_DEV?: string;
-}
-
-const corsHeaders = {
-	"Access-Control-Allow-Origin": "*",
-	"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-	"Access-Control-Allow-Headers": "*",
-};
-
-/**
- * Referer allowlist (production only). The bearer-session check below is the
- * real gate; the referer check is kept for parity with the old service.
- */
-const ALLOWED_HOSTS = new Set([
-	"musicschool-metamorfosi.gr",
-	"byzantini-website.pages.dev",
-	"byzantini-website-production.koxafis.workers.dev",
-	"byzantini-website.preview.workers.dev",
-]);
-
-function handleOptions(request: Request) {
-	if (
-		request.headers.get("Origin") !== null &&
-		request.headers.get("Access-Control-Request-Method") !== null &&
-		request.headers.get("Access-Control-Request-Headers") !== null
-	) {
-		// Handle CORS pre-flight request
-		return new Response(null, { headers: corsHeaders });
-	} else {
-		// Handle standard OPTIONS request
-		return new Response(null, { headers: { Allow: "GET, HEAD, POST, OPTIONS" } });
-	}
+	/**
+	 * Shared secret for calls made through the website's PDF_SERVICE service
+	 * binding (`Authorization: Bearer <token>`). Set via `wrangler secret put`
+	 * in production and in `.dev.vars` locally — it must match the site's
+	 * `PDF_SERVICE_AUTH_TOKEN`.
+	 */
+	SERVICE_AUTH_TOKEN?: string;
 }
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
-		if (request.method === "OPTIONS") return handleOptions(request);
 		if (request.method !== "POST")
 			return new Response("Invalid request. This service accepts only POST requests", { status: 400 });
 
-		if (env.IS_DEV !== "true") {
-			const referer = request.headers.get("referer") || "";
-			let hostname = "";
-			try {
-				hostname = new URL(referer).hostname;
-			} catch {
-				hostname = "";
-			}
-			if (!hostname || !ALLOWED_HOSTS.has(hostname))
-				return new Response("Invalid request from: " + (referer || "<no referer>"), {
-					status: 401,
-					headers: corsHeaders,
-				});
-
-			if (!env.SITE_URL) return new Response("Internall service error", { status: 500 });
-			const isAuthenticated = await authenticateUser(request, env);
-			if (isAuthenticated !== true)
-				return new Response("Invalid credentials: " + isAuthenticated, { status: 401, headers: corsHeaders });
-		}
+		// Internal-only endpoint: reached through the website's PDF_SERVICE
+		// service binding (the browser never calls this worker directly any
+		// more). The site authenticates the call with the shared bearer token —
+		// no referer allowlist, no session back-call to the website.
+		const authError = await authenticateRequest(request, env);
+		if (authError !== true) return new Response("Invalid credentials: " + authError, { status: 401 });
 
 		const body = (await request.json().catch(() => null)) as PDFRequest | null;
 		if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
@@ -96,15 +54,13 @@ async function handleRegistrationPDFRequest(env: Env, body: PDFRequest): Promise
 			}),
 		);
 		const mergedBlob = await new PDF(env).mergePDFs(pdfs);
-		return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
+		return new Response(mergedBlob, { headers: { "Content-Type": "application/pdf" } });
 	} else {
 		const pdf = new PDF(env);
 		await pdf.fillTemplate(req.data);
 		return new Response(await pdf.getBlob(), {
 			headers: {
-				...corsHeaders,
 				"Content-Type": "application/pdf",
-				"Access-Control-Allow-Origin": "*",
 			},
 		});
 	}
@@ -269,28 +225,27 @@ const TemplateCoords: TemplateCoords = {
 };
 Object.values(TemplateCoords).forEach((v) => (v.y = H(v.y)));
 
-const authenticateUser = async (req: Request, env: Env) => {
+/**
+ * Validates the internal bearer token (constant-time compare against
+ * `SERVICE_AUTH_TOKEN`, same pattern as the emails worker). Returns `true` on
+ * success or an error description otherwise.
+ */
+const authenticateRequest = async (req: Request, env: Env): Promise<true | string> => {
+	if (!env.SERVICE_AUTH_TOKEN) return "Service auth token not configured";
+
 	const authHeader = req.headers.get("Authorization");
 	if (!authHeader || !authHeader.startsWith("Bearer ")) return "No Authorization header provided";
 
 	const token = authHeader.split("Bearer ")[1].trim();
 	if (!token) return "No token provided";
 
-	try {
-		const res = await fetch(env.SITE_URL! + "/api/auth/session", {
-			method: "POST",
-			headers: {
-				Cookie: `session_id=${token}`,
-			},
-		});
-		const data = (await res.json()) as
-			| (EndpointResponse<{ isValid: boolean }> & { data?: { isValid: boolean } })
-			| { data?: { isValid: boolean } };
-		// New API envelope: { data: { isValid } }; old service envelope: { res: { data: { isValid } } }
-		const isValid =
-			("data" in data && data.data?.isValid) || ("res" in data && data.res?.data?.isValid) || false;
-		return isValid;
-	} catch (e) {
-		return "Could not connect to the authentication server";
-	}
+	const enc = new TextEncoder();
+	const [provided, expected] = await Promise.all([
+		crypto.subtle.digest("SHA-256", enc.encode(token)),
+		crypto.subtle.digest("SHA-256", enc.encode(env.SERVICE_AUTH_TOKEN)),
+	]);
+	const a = new Uint8Array(provided);
+	const b = new Uint8Array(expected);
+	if (a.length !== b.length) return "Invalid token";
+	return a.every((v, i) => v === b[i]) ? true : "Invalid token";
 };

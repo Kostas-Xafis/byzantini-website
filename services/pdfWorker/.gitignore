@@ -1,5 +1,5 @@
 /node_modules
-*.env
+*.env*
 .dev.vars*
 worker-configuration.d.ts
 .wrangler

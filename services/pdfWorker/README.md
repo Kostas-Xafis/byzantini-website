@@ -9,55 +9,68 @@ port). Supports single PDFs and merged multi-registration PDFs.
 - Runtime: Cloudflare Workers (`pdf-lib` + `@pdf-lib/fontkit` — pure JS)
 - Deployed name: **`byzantini-website-pdf-gen`**
 - Templates + font are bundled static assets (no dependency on the site)
+- **Reached only through the website's `PDF_SERVICE` service binding** — the
+  browser admin panel no longer calls this worker's URL directly. The site's
+  `POST /api/pdf` route (session-cookie authenticated) proxies here, sending
+  `Authorization: Bearer <token>` with the shared secret.
 
 ## Environment
 
-Wrangler `vars` (see `wrangler.jsonc`) + `.dev.vars` locally:
+`.dev.vars` locally; `wrangler secret put` in production:
 
 | Var | Purpose |
 | --- | --- |
-| `SITE_URL` | Website base URL used to validate bearer sessions (POST `<SITE_URL>/api/auth/session`) |
-| `IS_DEV` | `"true"` locally skips referer/session checks; **must stay unset in production** |
+| `SERVICE_AUTH_TOKEN` | Shared secret — must match the website's `PDF_SERVICE_AUTH_TOKEN`; sent as `Authorization: Bearer` on every call |
+
+> The website's `bun run worker-secrets` (rotation) keeps this value in sync:
+> it writes the same token into `.dev.vars`, `.env.production` (mirror) and the
+> deployed Cloudflare secret automatically.
+
+No `vars` remain in `wrangler.jsonc`: `SITE_URL`, `IS_DEV`, the referer
+allowlist and the session back-call (`POST /api/auth/session`) are all gone —
+that auth existed only for the retired direct-browser flow.
 
 ## Local Run
 
 ```bash
-bunx --bun wrangler dev --config wrangler.jsonc   # http://127.0.0.1:8787
+bunx wrangler dev --config wrangler.jsonc   # http://127.0.0.1:8787
 ```
+
+The website's local dev (Astro) resolves its `PDF_SERVICE` binding to this
+`wrangler dev` session automatically (cross-command service bindings) — no URL
+to configure anywhere.
 
 ## Deploy
 
 ```bash
-bunx --bun wrangler deploy --config wrangler.jsonc   # creates/updates byzantini-website-pdf-gen
+bunx wrangler secret put SERVICE_AUTH_TOKEN --config wrangler.jsonc   # first time
+bunx wrangler deploy --config wrangler.jsonc   # creates/updates byzantini-website-pdf-gen
 ```
 
 > `--config wrangler.jsonc` is required: this worker lives inside the website
 > repo, and wrangler otherwise walks up and picks up
 > `../../.wrangler/deploy/config.json` ("config base path" error).
 >
-> First deploy creates the Worker; the website is rebuilt with
-> `VITE_PDF_SERVICE_URL=https://byzantini-website-pdf-gen.koxafis.workers.dev`
-> (root `.env.production`) and redeployed to pick up the new service.
+> Deploy this worker (and the emails worker) **before** the website when
+> rolling out the service bindings — the site's binding needs the target
+> worker to exist on the account.
 
 ## API
 
 ### Endpoint
 
-- `POST /` (JSON body)
-
-### Supported Request Types
-
-- `registration`
+- `POST /` (JSON body) — same contract as before:
+  `{ type: "registration", request: { isMultiple, data } }`; responds with the
+  PDF bytes (`application/pdf`) or a plain-text error with a 4xx/5xx status.
 
 ### Authorization and Access Rules
 
-- `IS_DEV=true` (local only): referer + session checks skipped.
-- Otherwise: referer hostname must be one of the allowlisted hosts
-  (`musicschool-metamorfosi.gr`, `byzantini-website-production.koxafis.workers.dev`,
-  `byzantini-website.preview.workers.dev`, legacy Pages host), and the
-  `Authorization: Bearer <session_id>` token must validate against
-  `SITE_URL/api/auth/session` (cookie `session_id=<token>`).
-- CORS: enabled (`*`) — the browser admin panel calls this Worker cross-origin.
+- **Every** request must carry `Authorization: Bearer <SERVICE_AUTH_TOKEN>`
+  (constant-time compare). The site adds it when proxying through the
+  `PDF_SERVICE` binding; the actual user gate is the site's
+  `authenticateMiddleware` (session cookie) on `POST /api/pdf`.
+- No CORS, no referer allowlist, no `IS_DEV` skip, no session back-call to the
+  website.
 
 ## Request Schema (registration)
 
@@ -118,12 +131,15 @@ Bundled assets:
 
 - `200`: PDF bytes (`Content-Type: application/pdf`)
 - `400`: malformed body or unsupported request type
-- `401`: referer/auth validation failed
+- `401`: missing/invalid bearer token
 
 ## Local smoke test
 
+Use the token value from your `.dev.vars` (never print secrets into logs):
+
 ```bash
 curl -s -X POST "http://127.0.0.1:8787" \
+  -H "Authorization: Bearer <SERVICE_AUTH_TOKEN from .dev.vars>" \
   -H "Content-Type: application/json" \
   -d '{"type":"registration","request":{"isMultiple":false,"data":{"url":"/pdf_templates/byz_template.pdf","student":{"id":1,"am":"123","amka":"","first_name":"John","last_name":"Doe","fathers_name":"Father","birth_date":946684800000,"telephone":"2100000000","cellphone":"6900000000","email":"john@example.com","road":"Street","number":1,"tk":11111,"region":"Athens","registration_year":"2025-2026","class_year":"A","class_id":0,"teacher_id":1,"instrument_id":1,"date":1735689600000,"payment_amount":0,"total_payment":0,"pass":true},"teachersName":"Teacher Name","instrument":"Piano"}}}' \
   -o /tmp/registration.pdf && file /tmp/registration.pdf
@@ -131,6 +147,6 @@ curl -s -X POST "http://127.0.0.1:8787" \
 
 ## Integration
 
-The main app's admin panel calls this Worker from the browser via
-`lib/pdf.client.ts`; the endpoint URL comes from `VITE_PDF_SERVICE_URL`
-(root `.env` / `.env.production`).
+The main app's admin panel calls the site API (`POST /api/pdf` via
+`lib/pdf.client.ts`), which proxies through the `PDF_SERVICE` service binding.
+No `VITE_PDF_SERVICE_URL` any more.

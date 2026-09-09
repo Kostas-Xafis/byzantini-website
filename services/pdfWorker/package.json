@@ -4,11 +4,11 @@
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "bunx --bun wrangler dev --config wrangler.jsonc",
-		"deploy": "bunx --bun wrangler deploy --config wrangler.jsonc",
-		"types": "bunx --bun wrangler types --config wrangler.jsonc",
+		"dev": "bunx wrangler dev --config wrangler.jsonc",
+		"deploy": "bunx wrangler deploy --config wrangler.jsonc",
+		"types": "bunx wrangler types --config wrangler.jsonc",
 		"typecheck": "bunx --bun tsc --noEmit",
-		"tail": "bunx --bun wrangler tail --config wrangler.jsonc"
+		"tail": "bunx wrangler tail --config wrangler.jsonc"
 	},
 	"dependencies": {
 		"@pdf-lib/fontkit": "^1.1.1",

@@ -1,6 +1,8 @@
 {
 	// Cloudflare Worker for PDF generation (replaces the dockerized/Cloud Run
 	// Bun service — Phase 8 PDF port). Deployed as `byzantini-website-pdf-gen`.
+	// Reached ONLY through the website's PDF_SERVICE service binding — it has no
+	// public consumers any more (the browser admin panel calls the site API).
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "byzantini-website-pdf-gen",
 	"main": "src/index.ts",
@@ -14,14 +16,9 @@
 		"binding": "ASSETS"
 	},
 
-	// Where the worker validates bearer session tokens (POST <SITE_URL>/api/auth/session).
-	// The website's prod worker hostname; point at musicschool-metamorfosi.gr once the
-	// domain switch (Phase 7) is done. IS_DEV comes from .dev.vars locally (skip auth)
-	// and must remain unset in production.
-	"vars": {
-		"SITE_URL": "https://byzantini-website-production.koxafis.workers.dev"
-	},
-
+	// Auth is the SERVICE_AUTH_TOKEN secret (`wrangler secret put
+	// SERVICE_AUTH_TOKEN`), shared with the site's PDF_SERVICE_AUTH_TOKEN;
+	// local dev uses the same value in `.dev.vars`. No vars here.
 	"observability": {
 		"enabled": true
 	}
