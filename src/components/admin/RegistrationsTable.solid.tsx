@@ -1,12 +1,11 @@
-import { For, Show, createEffect, createSignal, onMount, untrack } from "solid-js";
-import { createStore } from "solid-js/store";
-import { useSearchParams } from "@solidjs/router";
 import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
-import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
-import type { Registrations } from "@_types/entities";
+import { API } from "@routes/index.client";
+import { useSearchParams } from "@solidjs/router";
+import { For, Show, createEffect, createSignal, onMount, untrack } from "solid-js";
+import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { type SearchSetter } from "./SearchTable.solid";
 import { ALL_COLUMNS } from "./table/searchMatch";
@@ -182,7 +181,7 @@ export default function RegistrationsTable() {
 							prefix: PREFIX,
 							controlGroups: [
 								{ controls: [onModify, onDelete] },
-								{ controls: [onDownloadPDF, onDownloadExcel, onPrint] },
+								{ controls: [onDownloadExcel, onDownloadPDF, onPrint] },
 								{
 									type: "search",
 									columns: searchColumns,
