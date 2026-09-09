@@ -1,14 +1,10 @@
-import { defineConfig } from "astro/config";
-import tailwindcss from "@tailwindcss/vite";
-import solidJs from "@astrojs/solid-js";
-import sitemap from "@astrojs/sitemap";
 import cloudflare from "@astrojs/cloudflare";
+import sitemap from "@astrojs/sitemap";
+import solidJs from "@astrojs/solid-js";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "astro/config";
 
-const unmappedRoutes = (page) =>
-	page.includes("admin") ||
-	page.includes("login") ||
-	page.includes("oauth2callback") ||
-	page.includes("unsubscribe");
+const unmappedRoutes = (page) => page.includes("admin") || page.includes("login") || page.includes("oauth2callback") || page.includes("unsubscribe");
 const productionSite = "https://musicschool-metamorfosi.gr";
 // Pages-specific branch/URL logic removed — the Worker is the single deploy target now.
 const site = productionSite;
@@ -46,8 +42,8 @@ export default defineConfig({
 					"**/dist/**",
 					"**/.wrangler/**",
 					"**/wrangler.jsonc",
-					"**/dbSnapshots/**",
-					"**/pdfWorker/**",
+					"**/services/**",
+					"**/emailWorker/**",
 					"**/bucket/**",
 					"**/tests/**",
 				],

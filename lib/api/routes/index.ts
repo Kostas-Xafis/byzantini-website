@@ -6,6 +6,7 @@ import { instrumentsRoutes } from "./instruments";
 import { locationsRoutes } from "./locations";
 import { paymentsRoutes } from "./payments";
 import { payoffsRoutes } from "./payoffs";
+import { pdfRoutes } from "./pdf";
 import { queryLogsRoutes } from "./queryLogs";
 import { registrationsRoutes } from "./registrations";
 import { schemaRoutes } from "./schema";
@@ -37,6 +38,7 @@ export const routeGroups = {
 	SysUsers: sysusersRoutes,
 	QueryLogs: queryLogsRoutes,
 	Registrations: registrationsRoutes,
+	PDF: pdfRoutes,
 	Announcements: announcementsRoutes,
 	Schema: schemaRoutes,
 	SettingsBackup: settingsBackupRoutes,
@@ -104,13 +106,7 @@ type ResponseOf<N extends string> = NonNullable<InstanceOf<N>["responseSchema"]>
 
 export type APIArgs = {
 	[N in EndpointName]: ([SchemaOf<N>] extends [never] ? {} : { RequestObject: z.infer<SchemaOf<N>> }) &
-		(InstanceOf<N>["path"] extends infer P
-			? P extends string
-				? IsUrlParamPath<P> extends true
-					? { UrlArgs: RouteParams<P> }
-					: {}
-				: {}
-			: {});
+		(InstanceOf<N>["path"] extends infer P ? (P extends string ? (IsUrlParamPath<P> extends true ? { UrlArgs: RouteParams<P> } : {}) : {}) : {});
 };
 
 export type APIResponse = {

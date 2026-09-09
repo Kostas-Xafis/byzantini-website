@@ -1,7 +1,6 @@
 import type { Registrations } from "@_types/entities";
 import type { PDFRequest } from "../services/pdfWorker/src/types";
 import { asyncQueue } from "@utilities/AsyncQueue";
-import { getCookie } from "@utilities/cookies";
 import { dynamicImport, loadScript } from "@utilities/scripts";
 import { sleep } from "@utilities/sleep";
 import { looseStringEquals } from "@utilities/string";
@@ -17,7 +16,12 @@ const PDFTypeWrap = <Type extends PDFRequest["type"]>(type: Type, data: PDFReque
 
 export class PDF {
 	private static TemplateFileName = ["/pdf_templates/byz_template.pdf", "/pdf_templates/par_template.pdf", "/pdf_templates/eur_template.pdf"];
-	private static PDFWorkerURL = import.meta.env.VITE_PDF_SERVICE_URL;
+	/**
+	 * Same-origin API proxy to the PDF worker (service binding). The session
+	 * cookie travels automatically — no Authorization header needed, and the
+	 * worker is no longer reachable straight from the browser.
+	 */
+	private static PDFEndpoint = "/api/pdf";
 	private student: Registrations = {} as Registrations;
 	private teachersName: string = "";
 	private instrument: string = "";
@@ -53,10 +57,10 @@ export class PDF {
 			},
 		});
 		const imgBlob = await (
-			await fetch(PDF.PDFWorkerURL, {
+			await fetch(PDF.PDFEndpoint, {
 				method: "POST",
 				headers: {
-					Authorization: `Bearer ${getCookie("session_id")}`,
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(body),
 			})
@@ -85,10 +89,10 @@ export class PDF {
 			})),
 		});
 		const imgBlob = await (
-			await fetch(PDF.PDFWorkerURL, {
+			await fetch(PDF.PDFEndpoint, {
 				method: "POST",
 				headers: {
-					Authorization: `Bearer ${getCookie("session_id")}`,
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(body),
 			})
@@ -111,10 +115,10 @@ export class PDF {
 			},
 		});
 		const imgBlob = await (
-			await fetch(PDF.PDFWorkerURL, {
+			await fetch(PDF.PDFEndpoint, {
 				method: "POST",
 				headers: {
-					Authorization: `Bearer ${getCookie("session_id")}`,
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(body),
 			})
@@ -147,10 +151,10 @@ export class PDF {
 			});
 			while (expoTime <= 8000) {
 				try {
-					let resp = await fetch(PDF.PDFWorkerURL, {
+					let resp = await fetch(PDF.PDFEndpoint, {
 						method: "POST",
 						headers: {
-							Authorization: `Bearer ${getCookie("session_id")}`,
+							"Content-Type": "application/json",
 						},
 						body: JSON.stringify(body),
 					});

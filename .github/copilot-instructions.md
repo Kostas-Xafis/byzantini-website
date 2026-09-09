@@ -56,19 +56,41 @@
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): production uses
   Cloudflare R2 binding `S3_BUCKET`; development uses the local HTTP store
   (`bun run bucket:serve`, `scripts/bucketServer.ts`).
+- **Worker↔worker calls use service bindings, never HTTP URLs.** The site's
+  `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`) and
+  `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
+  named environment; handlers reach them as `Fetcher`s via the handler `env`
+  (see `lib/api/routes/emailService.ts` and `lib/api/routes/pdf.ts`). Local
+  `astro dev` resolves them to the workers' own `wrangler dev` sessions
+  (cross-command service bindings).
 - PDF generation is delegated to the Cloudflare Worker
   `byzantini-website-pdf-gen` (`services/pdfWorker`, templates+font bundled);
-  client integration lives in `lib/pdf.client.ts` and sends
-  `Authorization: Bearer <session_id>`. Endpoint URL: `VITE_PDF_SERVICE_URL`
-  (`.env` / `.env.production`).
+  `lib/pdf.client.ts` posts to the site's `Pdf.generate` route
+  (`POST /api/pdf`, session-cookie auth), which proxies through the
+  `PDF_SERVICE` binding with `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>`
+  (must match the worker's `SERVICE_AUTH_TOKEN` secret). The browser never
+  calls the worker URL; no `VITE_PDF_SERVICE_URL`.
+- Transactional emails go to the Cloudflare Worker `byzantini-website-emails`
+  (`services/emailWorker` — the whole `email/` stack moved there; MailerSend
+  REST API; secrets `MAILERSEND_API_KEY` + `SERVICE_AUTH_TOKEN`); the site
+  calls it through the `EMAIL_SERVICE` binding with
+  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body, and the worker reads its
+  per-send templates from its own `BUCKET` R2 binding (`html_templates/<name>`,
+  no `SITE_URL` HTTP fetch). The campaign CLI (`bun run campaign`) reads
+  recipients from Cloudflare D1 via spawned `wrangler d1 execute --remote`
+  (`src/db.ts` — uses the existing `wrangler login`, no API token/server).
+- Aux workers: run wrangler from inside the `services/*` folder with
+  `--config wrangler.jsonc` and WITHOUT `--bun` (the Bun runtime wedges
+  wrangler dev; `--config` avoids the repo's `.wrangler/deploy` conflict).
 
 ## Workflows and conventions
 - Core commands: `bun run dev` (starts `bucket:serve` too), `bun run build`,
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
   `bun run db:reset`, `bun run typecheck`, `bun run check`.
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
-  from `tests/.env.test`, 10s per-test timeout; they need the dev server and
-  `bucket:serve`.
+  from `tests/.env.test`, 10s per-test timeout; they need the dev server,
+  `bucket:serve`, and (for the sysusers suite, which sends the invite email)
+  the emails worker running locally on 8788.
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,

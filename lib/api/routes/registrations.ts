@@ -4,6 +4,7 @@ import { executeQuery, isProduction } from "@lib/utils.server";
 import { Random as R } from "@lib/random";
 import { z_Registrations, z_RegistrationsResponse } from "@lib/api/schemas";
 import { APIServer, handlerResult } from "./APIServer";
+import { sendAutomatedEmail } from "./emailService";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -132,25 +133,17 @@ export const registrationsRoutes = {
 			}
 			if (isProduction()) {
 				// Send automated email to the student for the successful registration
-				const { AUTOMATED_EMAILS_SERVICE_URL: service_url, AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken } = env ?? {};
-				if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
-				await fetch(service_url, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
+				// (via the EMAIL_SERVICE service binding; token checked worker-side).
+				await sendAutomatedEmail(env, {
+					to: mail_subscription[0].email,
+					subject: "Επιτυχής εγγραφή",
+					htmlTemplateName: successfulRegistrationTemplate(body.class_id, body.class_year),
+					templateData: {
+						token: mail_subscription[0].unsubscribe_token,
+						class_year: body.class_year,
+						class_type: (body.class_id === 0 ? "Βυζαντινής" : body.class_id === 1 ? "Παραδοσιακής" : "Ευρωπαϊκής") + " Μουσικής",
+						registration_year: body.registration_year,
 					},
-					body: JSON.stringify({
-						authToken,
-						to: mail_subscription[0].email,
-						subject: "Επιτυχής εγγραφή",
-						htmlTemplateName: successfulRegistrationTemplate(body.class_id, body.class_year),
-						templateData: {
-							token: mail_subscription[0].unsubscribe_token,
-							class_year: body.class_year,
-							class_type: (body.class_id === 0 ? "Βυζαντινής" : body.class_id === 1 ? "Παραδοσιακής" : "Ευρωπαϊκής") + " Μουσικής",
-							registration_year: body.registration_year,
-						},
-					}),
 				});
 			}
 

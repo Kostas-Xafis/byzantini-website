@@ -38,6 +38,21 @@
 		}
 	],
 
+	// Worker-to-worker service bindings — replace the old HTTP calls:
+	// - EMAIL_SERVICE → byzantini-website-emails (transactional sends;
+	//   still authenticated with the shared AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN).
+	// - PDF_SERVICE → byzantini-website-pdf-gen (registration-form PDFs;
+	//   authenticated with Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>).
+	// NOT inherited by named environments, so redeclared under `env` below.
+	// Local dev: each binding resolves to the same worker running in its own
+	// `wrangler dev` session (cross-command service bindings); when a target
+	// worker is not running locally the call fails fast (same as today without
+	// the local worker on 8787/8788).
+	"services": [
+		{ "binding": "EMAIL_SERVICE", "service": "byzantini-website-emails" },
+		{ "binding": "PDF_SERVICE", "service": "byzantini-website-pdf-gen" }
+	],
+
 	"observability": {
 		"enabled": true
 	},
@@ -48,14 +63,22 @@
 				{ "binding": "DB", "database_name": "byzantini-db", "database_id": "20e4783b-f1b4-4362-ba76-7694c91cacce", "migrations_dir": "migrations" }
 			],
 			"r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket" }],
-			"images": { "binding": "IMAGES" }
+			"images": { "binding": "IMAGES" },
+			"services": [
+				{ "binding": "EMAIL_SERVICE", "service": "byzantini-website-emails" },
+				{ "binding": "PDF_SERVICE", "service": "byzantini-website-pdf-gen" }
+			]
 		},
 		"preview": {
 			"d1_databases": [
 				{ "binding": "DB", "database_name": "byzantini-db-preview", "database_id": "7f9a62e7-e72c-4f3b-8e81-4f81ffa86c5d", "migrations_dir": "migrations" }
 			],
 			"r2_buckets": [{ "binding": "S3_BUCKET", "bucket_name": "byzantini-bucket-dev" }],
-			"images": { "binding": "IMAGES" }
+			"images": { "binding": "IMAGES" },
+			"services": [
+				{ "binding": "EMAIL_SERVICE", "service": "byzantini-website-emails" },
+				{ "binding": "PDF_SERVICE", "service": "byzantini-website-pdf-gen" }
+			]
 		}
 	}
 }

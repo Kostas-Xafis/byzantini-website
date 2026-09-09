@@ -36,6 +36,7 @@ lib/
   images.ts              Cloudflare Images binding helpers (thumbnails)
 services/
   pdfWorker/             Cloudflare Worker `byzantini-website-pdf-gen` (PDF rendering)
+  emailWorker/           Cloudflare Worker `byzantini-website-emails` (transactional emails)
 dbSnapshots/
   dev-snapshot.sql       Local dev DB seed (used by `bun run db:reset`)
 tests/
@@ -108,10 +109,9 @@ Important variables (from `types/env.ts`):
 SECRET=
 GOOGLE_MAPS_KEY=
 
-VITE_PDF_SERVICE_URL=        # PDF worker (dev: http://127.0.0.1:8787 via `wrangler dev`; prod: https://byzantini-website-pdf-gen.koxafis.workers.dev)
+PDF_SERVICE_AUTH_TOKEN=        # shared with the pdfWorker's SERVICE_AUTH_TOKEN (Authorization: Bearer on binding calls)
 
-AUTOMATED_EMAILS_SERVICE_URL=
-AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=
+AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=   # shared with the emailWorker's SERVICE_AUTH_TOKEN (sent in the send body)
 
 SAFE_BACKUP_SNAPSHOT=
 BACKUP_SNAPSHOT_LOCATION=
@@ -127,6 +127,9 @@ VITE_URL=
 Notes:
 - In production builds, only variables prefixed with `VITE_` or `PUBLIC_` are exposed to client code.
 - Runtime env is accessed through `Env.env` / `Env.setEnv(ctx)`.
+- The retired service URLs (`VITE_PDF_SERVICE_URL`, `AUTOMATED_EMAILS_SERVICE_URL`)
+  are gone — the workers are reached through the `PDF_SERVICE` / `EMAIL_SERVICE`
+  service bindings declared in `wrangler.jsonc`.
 
 ## Install
 
@@ -168,7 +171,10 @@ bun run build-preview
 
 ### Tests
 
-- `bun run test`: Full API test suite (env from `tests/.env.test`; needs dev server + `pdfworker` docker + `bucket:serve`)
+- `bun run test`: Full API test suite (env from `tests/.env.test`; needs dev
+  server + `bucket:serve`; the sysusers suite also needs the emails worker
+  running locally — `wrangler dev` on 8788 — because `createRegisterLink`
+  sends the invite email)
 
 ### Database tooling (wrangler D1)
 
@@ -182,12 +188,14 @@ bun run build-preview
 
 - `bun run replicate:all` / `replicate:db` / `replicate:bucket`: pull remote D1 + R2 into the local dev stores (`scripts/replicate.ts`)
 
-### Worker services (local Docker — PDF only)
+### Aux workers (local)
 
-- `bun run docker:pdf`: Build/run PDF worker image
-- `bun run docker:build`: Build the PDF worker image
-- `bun run docker:run`: Run the PDF worker container
-- `bun run docker:logs`: Tail PDF worker logs
+Each `services/*` worker runs in its own terminal with its own config — from
+inside the folder: `bunx wrangler dev --config wrangler.jsonc` (pdfWorker
+:8787, emailWorker :8788). Astro dev resolves the site's `EMAIL_SERVICE` /
+`PDF_SERVICE` service bindings to those sessions automatically
+(cross-command service bindings); start them whenever you exercise PDF
+printing/downloads or admin invites/registration emails.
 
 ## Testing Notes ✅
 
@@ -221,13 +229,32 @@ Common operations:
 
 - Cloudflare Worker **`byzantini-website-pdf-gen`** (`services/pdfWorker`,
   `pdf-lib` + `@pdf-lib/fontkit`; templates + Greek font bundled as assets)
-- Client integration in `lib/pdf.client.ts`
-- Sends requests to `VITE_PDF_SERVICE_URL` (dev: `wrangler dev` on 8787;
-  prod: the deployed worker URL)
-- Uses `Authorization: Bearer <session_id>` (validated against the site's
-  `/api/auth/session`; referer allowlist in prod)
+- Client integration in `lib/pdf.client.ts` — posts to the site's own
+  `POST /api/pdf` route (`Pdf.generate`, session-cookie authenticated), which
+  proxies through the **`PDF_SERVICE` service binding**; the worker requires
+  `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>` (matches the worker's
+  `SERVICE_AUTH_TOKEN` secret). No browser→worker URL, no session back-call.
 - Supports single and bulk PDF generation/printing/download
-- Deploy: `cd services/pdfWorker && bunx --bun wrangler deploy`
+- Deploy: `cd services/pdfWorker && bunx wrangler deploy --config wrangler.jsonc`
+
+### Email worker
+
+- Cloudflare Worker **`byzantini-website-emails`** (`services/emailWorker`,
+  MailerSend REST API — the `mailersend` npm package can't run on workerd)
+- Same `POST /` contract as the retired mail server: `{ authToken, to,
+  subject, htmlTemplateName, templateData }`; templates are read from the
+  worker's own `BUCKET` R2 binding (`html_templates/<name>`) — the same keys
+  its `POST /html-templates` publish writes
+- Called by the site (server-side) through the **`EMAIL_SERVICE`** service
+  binding (still sending `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body);
+  worker secrets: `MAILERSEND_API_KEY`, `SERVICE_AUTH_TOKEN`
+- The whole former `email/` stack lives here: campaign CLI (`bun run campaign`,
+  recipients from **Cloudflare D1** via `wrangler d1 execute` — uses the
+  wrangler login, no API token: `byzantini-db` / `byzantini-db-preview`),
+  React-email `render/`, html/text templates
+- Template publishing goes through the worker's R2 binding
+  (`POST /html-templates`; `templates:build --prod`) — no AWS SDK/S3 keys
+- Deploy: `cd services/emailWorker && bunx wrangler deploy --config wrangler.jsonc`
 
 ### Image compression
 

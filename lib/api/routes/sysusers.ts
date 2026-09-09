@@ -7,6 +7,7 @@ import { createSessionId, generateShaKey } from "@utilities/authentication";
 import { z } from "astro/zod";
 import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE } from "./cookies";
+import { sendAutomatedEmail } from "./emailService";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -119,21 +120,12 @@ export const sysusersRoutes = {
 				const exp_date = Date.now() + 1000 * 60 * 60 * 24;
 				await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date) VALUES (?, ?)", [link, exp_date]);
 
-				const { AUTOMATED_EMAILS_SERVICE_URL: service_url, AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN: authToken } = env ?? {};
-				if (!service_url || !authToken) throw Error("Unauthorized access to the email service");
 				const signupLink = `${new URL(request.url).origin}/admin/signup/${link}`;
-				await fetch(service_url, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						authToken,
-						to: email,
-						subject: "Πρόσκληση διαχειριστή",
-						htmlTemplateName: "sysuser_register_link.html",
-						templateData: { token: signupLink },
-					}),
+				await sendAutomatedEmail(env, {
+					to: email,
+					subject: "Πρόσκληση διαχειριστή",
+					htmlTemplateName: "sysuser_register_link.html",
+					templateData: { token: signupLink },
 				});
 
 				return { link };

@@ -12,9 +12,8 @@ export type EnvTypes = {
 	GOOGLE_MAPS_KEY?: string;
 	GOOGLE_CLIENT_ID?: string;
 	GOOGLE_CLIENT_SECRET?: string;
-	AUTOMATED_EMAILS_SERVICE_URL?: string;
 	AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN?: string;
-	VITE_PDF_SERVICE_URL?: string;
+	PDF_SERVICE_AUTH_TOKEN?: string;
 	TEST_EMAIL?: string;
 	TEST_PASSWORD?: string;
 };

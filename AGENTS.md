@@ -14,8 +14,9 @@ A full-stack music school platform (website + admin panel, Greek language UI)
 for the Byzantine music school of Metamorfosi. Astro + Solid frontend on
 Cloudflare Workers (static assets), with a typed internal API, Cloudflare D1
 database, R2 storage, the Cloudflare Images binding (announcement thumbnails,
-`lib/images.ts`) and the PDF worker `byzantini-website-pdf-gen` (separate
-Cloudflare Worker, `services/pdfWorker`).
+`lib/images.ts`) and two aux Cloudflare Workers reached through **service
+bindings**: `byzantini-website-emails` (`services/emailWorker`) and
+`byzantini-website-pdf-gen` (`services/pdfWorker`).
 
 > Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md` and
 > `MIGRATION_PLAN.md` for the plan and the do-not-re-research facts.
@@ -55,7 +56,7 @@ Core loop:
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | full suite; needs dev server + `bucket:serve`; env from tests/.env.test, 10s per test timeout |
+| Tests | `bun run test` | full suite; needs dev server + `bucket:serve` (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -71,12 +72,17 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 
-PDF worker (`byzantini-website-pdf-gen`, Cloudflare Worker — replaces the retired
-Docker/Cloud Run service): `cd services/pdfWorker`; `bunx --bun wrangler dev --config wrangler.jsonc`
-(port 8787, `.dev.vars` `IS_DEV=true` skips auth) /
-`bunx --bun wrangler deploy --config wrangler.jsonc` (the `--config` flag is
-required — wrangler otherwise walks up and hits the website repo's
-`.wrangler/deploy/config.json`).
+Aux services (separate Cloudflare Workers in `services/`; each has its own
+`package.json`/`wrangler.jsonc` — run wrangler from inside the folder with
+`--config wrangler.jsonc` and **without** the `--bun` flag — the Bun runtime
+wedges wrangler dev). **Both are reached via service bindings** declared in the
+site's `wrangler.jsonc` (`EMAIL_SERVICE`, `PDF_SERVICE` — top level AND under
+`env.production`/`env.preview`, since bindings are not inherited by named
+environments); local `astro dev` resolves them to the `wrangler dev` sessions
+automatically (cross-command service bindings — start a worker when you
+exercise its feature). No service URLs anywhere:
+- **PDF** `byzantini-website-pdf-gen` (`services/pdfWorker`): `bunx wrangler dev --config wrangler.jsonc` (port 8787) / `bunx wrangler deploy --config wrangler.jsonc`. Templates+font bundled in `assets/`; the browser never calls it — `lib/pdf.client.ts` posts to the site's `Pdf.generate` route (`POST /api/pdf`, session-cookie auth), which proxies through the `PDF_SERVICE` binding with `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>` (site secret; must match the worker's `SERVICE_AUTH_TOKEN` secret). No referer/session back-call, no `IS_DEV`.
+- **Emails** `byzantini-website-emails` (`services/emailWorker` — the whole `email/` stack moved here, incl. the campaign CLI): `bunx wrangler dev --config wrangler.jsonc` (port 8788, `DRY_RUN=true` logs instead of sending) / `bunx wrangler deploy --config wrangler.jsonc`. Transactional sends (registration + sysuser invite) via MailerSend REST (the `mailersend` npm package is gaxios-based and cannot run on workerd); the site calls it through the `EMAIL_SERVICE` binding with the `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body (must match the worker's `SERVICE_AUTH_TOKEN` secret); per-send templates are read from the worker's own `BUCKET` R2 binding (`html_templates/<name>`, same keys `POST /html-templates` writes — no `<SITE_URL>` HTTP fetch). `POST /html-templates` publishes built templates (`byzantini-bucket`; `templates:build --prod/--dev` calls it — no AWS SDK/S3 credentials anywhere; `templates:build --dev` also seeds the local worker's R2 for dev sends). The campaign CLI (`bun run campaign`) reads recipients from **Cloudflare D1** through `wrangler d1 execute --remote` (`src/db.ts` — spawned per query, uses the existing `wrangler login`, **no API token / no server**): `--db prod` ⇒ `byzantini-db`, default `dev` ⇒ `byzantini-db-preview`.
 
 Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
 `bun run build` then `wrangler deploy --config dist/server/wrangler.json`
@@ -138,11 +144,23 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 - Storage goes through `Bucket` (`lib/bucket/index.ts`) — R2 binding in
   production, local HTTP store (`bun run bucket:serve`) in dev. Never access
   the binding directly in route code.
+- **Worker↔worker calls go through service bindings, never HTTP URLs**: the
+  site's `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`)
+  and `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
+  named environment. Handlers reach them via the handler `env` (runtimeEnv)
+  as `Fetcher`s: `lib/api/routes/emailService.ts` (`sendAutomatedEmail`) and
+  `lib/api/routes/pdf.ts` (`Pdf.generate`, proxies `POST /api/pdf` to the PDF
+  worker). Local secrets: `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` (emails worker
+  body token) and `PDF_SERVICE_AUTH_TOKEN` (PDF worker bearer token) — each
+  must match the corresponding worker's `SERVICE_AUTH_TOKEN`. Do not reintroduce
+  service URLs or shared-token secrets in code.
 - PDF generation is delegated to the Cloudflare Worker `byzantini-website-pdf-gen`
-  (`services/pdfWorker`; templates+font bundled in its assets) via
-  `lib/pdf.client.ts` (`Authorization: Bearer <session_id>`); the endpoint URL
-  is `VITE_PDF_SERVICE_URL` (`.env` / `.env.production`). The old
-  Docker/Cloud Run service is retired and must not be referenced.
+  (`services/pdfWorker`; templates+font bundled in its assets). The browser
+  client `lib/pdf.client.ts` posts to the site's `Pdf.generate` route
+  (`POST /api/pdf`, session-cookie authenticated), which proxies through the
+  `PDF_SERVICE` binding with `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>`.
+  The old Docker/Cloud Run service and direct browser→worker URL are retired
+  and must not be referenced.
 - Image thumbnails (announcements) are generated in-process on the Cloudflare
   Images binding (`IMAGES` in `wrangler.jsonc`) via `lib/images.ts`
   (`compressImageForThumb`) — the old `services/imageCompression`
