@@ -1,0 +1,28 @@
+{
+	// Cloudflare Worker for PDF generation (replaces the dockerized/Cloud Run
+	// Bun service — Phase 8 PDF port). Deployed as `byzantini-website-pdf-gen`.
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "byzantini-website-pdf-gen",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-31",
+	"compatibility_flags": ["nodejs_compat"],
+
+	// Registration templates + DidactGothic font, bundled with the worker
+	// (served internally through the ASSETS binding — no dependency on the site).
+	"assets": {
+		"directory": "./assets",
+		"binding": "ASSETS"
+	},
+
+	// Where the worker validates bearer session tokens (POST <SITE_URL>/api/auth/session).
+	// The website's prod worker hostname; point at musicschool-metamorfosi.gr once the
+	// domain switch (Phase 7) is done. IS_DEV comes from .dev.vars locally (skip auth)
+	// and must remain unset in production.
+	"vars": {
+		"SITE_URL": "https://byzantini-website-production.koxafis.workers.dev"
+	},
+
+	"observability": {
+		"enabled": true
+	}
+}

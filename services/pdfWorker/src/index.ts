@@ -2,99 +2,129 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument } from "pdf-lib";
 import { EndpointResponse, PDFRegstration, PDFRequest, TemplateCoords } from "./types";
 
-const { SITE_URL, IS_DEV, PORT } = Bun.env;
+export interface Env {
+	ASSETS: Fetcher;
+	/** Website base URL used for bearer-session validation (POST /api/auth/session). */
+	SITE_URL?: string;
+	/** Set to "true" locally (.dev.vars) to skip referer/session checks (old IS_DEV). */
+	IS_DEV?: string;
+}
 
 const corsHeaders = {
 	"Access-Control-Allow-Origin": "*",
 	"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 	"Access-Control-Allow-Headers": "*",
 };
+
+/**
+ * Referer allowlist (production only). The bearer-session check below is the
+ * real gate; the referer check is kept for parity with the old service.
+ */
+const ALLOWED_HOSTS = new Set([
+	"musicschool-metamorfosi.gr",
+	"byzantini-website.pages.dev",
+	"byzantini-website-production.koxafis.workers.dev",
+	"byzantini-website.preview.workers.dev",
+]);
+
 function handleOptions(request: Request) {
-	if (request.headers.get("Origin") !== null &&
+	if (
+		request.headers.get("Origin") !== null &&
 		request.headers.get("Access-Control-Request-Method") !== null &&
-		request.headers.get("Access-Control-Request-Headers") !== null) {
+		request.headers.get("Access-Control-Request-Headers") !== null
+	) {
 		// Handle CORS pre-flight request
 		return new Response(null, { headers: corsHeaders });
 	} else {
 		// Handle standard OPTIONS request
-		return new Response(null, { headers: { "Allow": "GET, HEAD, POST, OPTIONS" } });
+		return new Response(null, { headers: { Allow: "GET, HEAD, POST, OPTIONS" } });
 	}
 }
 
-Bun.serve({
-	port: PORT || 3000,
-	async fetch(req: Request): Promise<Response> {
-		if (SITE_URL === null || SITE_URL === undefined ||
-			IS_DEV === null || IS_DEV === undefined
-		) return new Response("Internall service error", { status: 500 });
-		if (req.method === "OPTIONS")
-			return handleOptions(req);
-		if (req.method !== "POST")
+export default {
+	async fetch(request: Request, env: Env): Promise<Response> {
+		if (request.method === "OPTIONS") return handleOptions(request);
+		if (request.method !== "POST")
 			return new Response("Invalid request. This service accepts only POST requests", { status: 400 });
 
-		if (!IS_DEV) {
-			const { hostname } = new URL(req.headers.get("referer") || "");
-			if (hostname !== "musicschool-metamorfosi.gr" && hostname !== "byzantini-website.pages.dev")
-				return new Response("Invalid request from: " + req.headers, { status: 401, headers: corsHeaders });
+		if (env.IS_DEV !== "true") {
+			const referer = request.headers.get("referer") || "";
+			let hostname = "";
+			try {
+				hostname = new URL(referer).hostname;
+			} catch {
+				hostname = "";
+			}
+			if (!hostname || !ALLOWED_HOSTS.has(hostname))
+				return new Response("Invalid request from: " + (referer || "<no referer>"), {
+					status: 401,
+					headers: corsHeaders,
+				});
 
-			//Authenticate the request
-			const isAuthenticated = await authenticateUser(req);
+			if (!env.SITE_URL) return new Response("Internall service error", { status: 500 });
+			const isAuthenticated = await authenticateUser(request, env);
 			if (isAuthenticated !== true)
 				return new Response("Invalid credentials: " + isAuthenticated, { status: 401, headers: corsHeaders });
 		}
 
-		const body = await req.json() as PDFRequest;
+		const body = (await request.json().catch(() => null)) as PDFRequest | null;
 		if (!body) return new Response("Malformed request, please check the request body.", { status: 400 });
 
 		const requestType = body.type;
 		try {
 			if (requestType === "registration") {
-				return handleRegistrationPDFRequest(body);
+				return await handleRegistrationPDFRequest(env, body);
 			} else {
 				return new Response("Invalid request type. This service accepts only 'registration' requests", { status: 400 });
 			}
 		} catch (e) {
+			// eslint-disable-next-line no-console
+			console.error("PDF generation failed:", e);
 			return new Response("Malformed request, please check the request body.", { status: 400 });
 		}
 	},
-});
+};
 
-
-async function handleRegistrationPDFRequest(body: PDFRequest): Promise<Response> {
+async function handleRegistrationPDFRequest(env: Env, body: PDFRequest): Promise<Response> {
 	const req = body.request;
 	if (req.isMultiple) {
-		const pdfs = await Promise.all(req.data.map(async registration => {
-			const pdf = new PDF();
-			await pdf.fillTemplate(registration);
-			return pdf;
-		}));
-		const mergedBlob = await new PDF().mergePDFs(pdfs);
+		const pdfs = await Promise.all(
+			req.data.map(async (registration) => {
+				const pdf = new PDF(env);
+				await pdf.fillTemplate(registration);
+				return pdf;
+			}),
+		);
+		const mergedBlob = await new PDF(env).mergePDFs(pdfs);
 		return new Response(mergedBlob, { headers: { ...corsHeaders, "Content-Type": "application/pdf" } });
 	} else {
-		const pdf = new PDF();
+		const pdf = new PDF(env);
 		await pdf.fillTemplate(req.data);
 		return new Response(await pdf.getBlob(), {
 			headers: {
 				...corsHeaders,
 				"Content-Type": "application/pdf",
 				"Access-Control-Allow-Origin": "*",
-			}
+			},
 		});
 	}
 }
 
 export class PDF {
+	private env: Env;
 	private doc = {} as typeof PDFDocument.prototype;
-	constructor() { };
+	constructor(env: Env) {
+		this.env = env;
+	}
 
 	public async fillTemplate(reg: PDFRegstration): Promise<void> {
-		this.doc = await PDFDocument.load(await PDF.getBuffer(reg.url));
+		this.doc = await PDFDocument.load(await PDF.getBuffer(this.env, reg.url));
 
 		const p = this.doc.getPages()[0];
 		const c = TemplateCoords;
 
 		this.doc.registerFontkit(fontkit);
-		const font = await this.doc.embedFont(await PDF.getFont());
+		const font = await this.doc.embedFont(await PDF.getFont(this.env));
 
 		const fontSize = 14;
 		const smFontSize = 12;
@@ -108,32 +138,36 @@ export class PDF {
 		p.drawText("" + s.number, { x: c.number.x, y: c.number.y, size: fontSize, font });
 		p.drawText("" + s.tk, { x: c.tk.x, y: c.tk.y, size: fontSize, font });
 		p.drawText("" + s.region, { x: c.region.x, y: c.region.y, size: fontSize, font });
-		p.drawText("" + (new Date(s.birth_date)).getFullYear(), { x: c.birthDate.x, y: c.birthDate.y, size: fontSize, font });
+		p.drawText("" + new Date(s.birth_date).getFullYear(), { x: c.birthDate.x, y: c.birthDate.y, size: fontSize, font });
 		p.drawText("" + s.telephone, { x: c.telephone.x, y: c.telephone.y, size: fontSize, font });
 		p.drawText("" + s.cellphone, { x: c.cellphone.x, y: c.cellphone.y, size: fontSize, font });
 		p.drawText("" + s.email, { x: c.email.x, y: c.email.y, size: fontSize, font });
 		p.drawText("" + s.registration_year, { x: c.registrationYear.x, y: c.registrationYear.y, size: fontSize, font });
 		p.drawText("" + s.class_year, { x: c.classYear.x, y: c.classYear.y, size: fontSize, font });
 		if (reg.teachersName) {
-			p.drawText("" + reg.teachersName, { x: c.teachersName.x, y: c.teachersName.y, size: reg.teachersName.length <= 24 ? fontSize : (reg.teachersName.length <= 30 ? smFontSize : xsFontSize), font });
+			p.drawText("" + reg.teachersName, {
+				x: c.teachersName.x,
+				y: c.teachersName.y,
+				size: reg.teachersName.length <= 24 ? fontSize : reg.teachersName.length <= 30 ? smFontSize : xsFontSize,
+				font,
+			});
 		} else {
 			p.drawText("-", { x: c.teachersName.x, y: c.teachersName.y, size: fontSize, font });
 		}
 
 		const date = new Date(s.date);
-		let month = (date.getMonth() + 1) + "";
+		let month = date.getMonth() + 1 + "";
 		month = month.length === 1 ? "0" + month : month;
 
 		let day = date.getDate() + "";
 		day = day.length === 1 ? "0" + day : day;
 
-		let year = (date.getFullYear() % 100) + "";
+		let year = date.getFullYear() % 100 + "";
 		year = year.length === 1 ? "0" + year : year;
 
 		p.drawText(day, { x: c.dateDD.x, y: c.dateDD.y, size: fontSize, font });
 		p.drawText(month, { x: c.dateMM.x, y: c.dateMM.y, size: fontSize, font });
 		p.drawText(year, { x: c.dateYYYY.x, y: c.dateYYYY.y, size: fontSize, font });
-
 
 		const currentDate = new Date();
 		const currentYear = currentDate.getFullYear();
@@ -144,8 +178,8 @@ export class PDF {
 		const year1 = currentMonth >= 8 ? currentYear : currentYear - 1;
 		const year2 = year1 + 1;
 
-		p.drawText((year1 % 100).toString().padStart(2, '0'), { x: c.year1.x, y: c.year1.y, size: fontSize, font });
-		p.drawText((year2 % 100).toString().padStart(2, '0'), { x: c.year2.x, y: c.year2.y, size: fontSize, font });
+		p.drawText((year1 % 100).toString().padStart(2, "0"), { x: c.year1.x, y: c.year1.y, size: fontSize, font });
+		p.drawText((year2 % 100).toString().padStart(2, "0"), { x: c.year2.x, y: c.year2.y, size: fontSize, font });
 
 		if (reg?.instrument && reg?.instrument.length > 15) {
 			p.drawText(reg.instrument, { x: c.instrumentLarge.x, y: c.instrumentLarge.y, size: fontSize, font });
@@ -182,18 +216,25 @@ export class PDF {
 	private static Font: ArrayBuffer | null = null;
 	private static TemplateCache: Record<string, ArrayBuffer> = {};
 
-	private static async getFont(): Promise<ArrayBuffer> {
+	private static async getFont(env: Env): Promise<ArrayBuffer> {
 		if (!PDF.Font) {
-			PDF.Font = await DidactGothicFontBuffer();
+			PDF.Font = await PDF.fetchAsset(env, "/fonts/DidactGothic-Regular.ttf");
 		}
 		return PDF.Font;
 	}
 
-	private static async getBuffer(url: string): Promise<ArrayBuffer> {
+	private static async getBuffer(env: Env, url: string): Promise<ArrayBuffer> {
 		if (!PDF.TemplateCache[url]) {
-			PDF.TemplateCache[url] = await (await fetch(SITE_URL + url)).arrayBuffer();
+			PDF.TemplateCache[url] = await PDF.fetchAsset(env, url);
 		}
 		return PDF.TemplateCache[url];
+	}
+
+	/** Fetch a bundled static asset (templates + font) via the ASSETS binding. */
+	private static async fetchAsset(env: Env, path: string): Promise<ArrayBuffer> {
+		const asset = await env.ASSETS.fetch(new URL(path, "https://assets.local"));
+		if (!asset.ok) throw new Error("Asset not found: " + path);
+		return asset.arrayBuffer();
 	}
 }
 
@@ -226,13 +267,9 @@ const TemplateCoords: TemplateCoords = {
 	signatureByz: { x: 360, y: 622 },
 	signatureEur: { x: 360, y: 662 },
 };
-Object.values(TemplateCoords).forEach(v => v.y = H(v.y));
+Object.values(TemplateCoords).forEach((v) => (v.y = H(v.y)));
 
-const DidactGothicFontBuffer = async () => {
-	return await (await fetch(SITE_URL + "/fonts/DidactGothic-Regular.ttf")).arrayBuffer();
-};
-
-const authenticateUser = async (req: Request) => {
+const authenticateUser = async (req: Request, env: Env) => {
 	const authHeader = req.headers.get("Authorization");
 	if (!authHeader || !authHeader.startsWith("Bearer ")) return "No Authorization header provided";
 
@@ -240,14 +277,19 @@ const authenticateUser = async (req: Request) => {
 	if (!token) return "No token provided";
 
 	try {
-		const res = await fetch(SITE_URL + "/api/auth/session", {
+		const res = await fetch(env.SITE_URL! + "/api/auth/session", {
 			method: "POST",
 			headers: {
-				"Cookie": `session_id=${token}`
-			}
+				Cookie: `session_id=${token}`,
+			},
 		});
-		const data = await res.json() as EndpointResponse<{ isValid: boolean; }>;
-		return data.res?.data?.isValid || false;
+		const data = (await res.json()) as
+			| (EndpointResponse<{ isValid: boolean }> & { data?: { isValid: boolean } })
+			| { data?: { isValid: boolean } };
+		// New API envelope: { data: { isValid } }; old service envelope: { res: { data: { isValid } } }
+		const isValid =
+			("data" in data && data.data?.isValid) || ("res" in data && data.res?.data?.isValid) || false;
+		return isValid;
 	} catch (e) {
 		return "Could not connect to the authentication server";
 	}

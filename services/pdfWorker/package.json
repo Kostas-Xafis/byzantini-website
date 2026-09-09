@@ -1,12 +1,19 @@
 {
 	"name": "pdfworker",
-	"module": "src/index.ts",
 	"type": "module",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "bunx --bun wrangler dev",
+		"deploy": "bunx --bun wrangler deploy",
+		"types": "bunx --bun wrangler types",
+		"tail": "bunx --bun wrangler tail"
+	},
 	"dependencies": {
 		"@pdf-lib/fontkit": "^1.1.1",
 		"pdf-lib": "^1.17.1"
 	},
 	"devDependencies": {
-		"@types/bun": "^1.1.9"
+		"wrangler": "^4.127.1"
 	}
 }
