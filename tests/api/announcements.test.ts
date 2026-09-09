@@ -2,12 +2,11 @@ import { expect, test } from "bun:test";
 import fs from "fs";
 import path from "path";
 import { array, number, object } from "valibot";
-import { Bucket } from "@bucket/index.ts";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { MIMETypeMap } from "@lib/utils.server.ts";
 import { v_AnnouncementImages, v_Announcements } from "@_types/entities";
-import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
+import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers.ts";
 
 function announcementsTest() {
 	const announcement = {
@@ -81,7 +80,7 @@ function announcementsTest() {
 
 		newAnnouncementId = json.data.insertId;
 
-		const sitemap = await Bucket.getDev("sitemap-announcements.xml");
+		const sitemap = await fetchBucketFile("sitemap-announcements.xml");
 		expect(sitemap).not.toBeNull();
 
 		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
@@ -138,7 +137,7 @@ function announcementsTest() {
 		const json = await getJson<APIResponse["Announcements.update"]>(res);
 		expectBody(json, "Announcement updated successfully");
 
-		const sitemap = await Bucket.getDev("sitemap-announcements.xml");
+		const sitemap = await fetchBucketFile("sitemap-announcements.xml");
 		expect(sitemap).not.toBeNull();
 
 		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
@@ -153,7 +152,7 @@ function announcementsTest() {
 		const json = await getJson<APIResponse["Announcements.delete"]>(res);
 		expectBody(json, "Announcement/s deleted successfully");
 
-		const sitemap = await Bucket.getDev("sitemap-announcements.xml");
+		const sitemap = await fetchBucketFile("sitemap-announcements.xml");
 		expect(sitemap).not.toBeNull();
 
 		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);

@@ -5,6 +5,9 @@
 >
 > Snapshot surveyed on the `Workers` branch, generated from a full read-only sweep of the repo (pages, API
 > layer, DB schema, storage, both aux workers, tooling). English annotations; user-facing UI text is Greek.
+>
+> Per-environment runtime map (what each environment reads/writes, local-vs-prod isolation): see
+> **`ENVIRONMENTS.md`** in this folder.
 
 ---
 
@@ -91,7 +94,7 @@ services/                          aux workers (SEPARATE git repos, ignored by m
   pdfWorker/  byzantini-website-pdf-gen   emailWorker/  byzantini-website-emails
 email/                             STALE duplicate of the emailWorker stack (gitignored; safe to delete)
 tests/                             tests/api/*.test.ts (10 files) + testHelpers.ts
-scripts/                           bucketServer, cf, replicate, googleReviews, exportTurso (leftover)
+scripts/                           cf, replicate, googleReviews, exportTurso (leftover)
 public/                            fonts, fa (Font Awesome), images, robots.txt, llms.txt
 docs/ + MIGRATION_PLAN.md          migration specs + phase plans
 types/                             entities, env, helpers (TS6-safe IsAny), global, custom-events
@@ -278,8 +281,10 @@ Facts:
 
 ## 7 · Storage (Bucket / R2)
 
-`Bucket` (`lib/bucket/index.ts`): prod → R2 binding; dev → local HTTP store (`bun run bucket:serve`,
-port 4567 over `bucket/latest`, started with `bun run dev`). R2 key layout in dev mirror (`bucket/latest`):
+`Bucket` (`lib/bucket/index.ts`): always the R2 binding `S3_BUCKET` — real R2 in production, the
+miniflare-emulated local store in dev (`.wrangler/state/v3/r2`, wiped+seeded by `replicate:bucket`
+like the D1 step). `bucket/latest/` remains a plain-folder download cache/mirror + dated snapshot
+source (no HTTP server — the retired `bucket:serve` is gone). R2 key layout (same in prod and dev):
 
 ```
 anakoinoseis/images/<announcement_id>/<file>   (+ thumb_<file> via CF Images)
@@ -288,7 +293,8 @@ html_templates/<year>/…                        pdf_templates/ (legacy copies)
 emails/files/                                  choir/ + root poster.jpg, sitemaps, mitropolitis.jpg
 ```
 
-`scripts/replicate.ts` syncs prod R2 → `bucket/latest` and archives dated snapshots `bucket/YY-MM-DD/`;
+`scripts/replicate.ts` syncs prod R2 → `bucket/latest`, archives dated snapshots `bucket/YY-MM-DD/`,
+then seeds the local R2 emulation via Miniflare (`.wrangler/state/v3/r2`);
 `googleReviews.ts` collects Google reviews into `google-reviews/` (testimonials source on the home page).
 
 ## 8 · Aux services
@@ -358,13 +364,13 @@ Transactional triggers (only two, grep-verified):
 flowchart LR
   subgraph DEV["one terminal: bun run dev"]
     ASTRO["astro dev :4321"]:::dev
-    BS["bucket:serve :4567 (bucket/latest)"]:::dev
   end
   PDFD["wrangler dev pdfWorker :8787"]:::aux
   EMAILD["wrangler dev emailWorker :8788<br/>DRY_RUN=true"]:::aux
   D1L["D1 local SQLite<br/>.wrangler/state/v3/d1"]:::dev
-  ASTRO --> BS
+  R2L["R2 emulation<br/>.wrangler/state/v3/r2 (seeded by replicate:bucket)"]:::dev
   ASTRO --> D1L
+  ASTRO --> R2L
   ASTRO -->|PDF_SERVICE binding<br/>(cross-command resolution)| PDFD
   ASTRO -->|EMAIL_SERVICE binding<br/>(cross-command resolution)| EMAILD
   classDef dev fill:#123f33,stroke:#2f7a63,color:#d9f4ec
@@ -376,7 +382,7 @@ flowchart LR
 | Core | `bun install` · `bun run dev` (:4321 + bucket) · `bun run build` · `bun run typecheck` / `astro-check` / `check` |
 | DB | `bun run db:reset` (rebuild from snapshot) · `db:query` / `db:query:prod` · `db:logs` · `db:replicate` |
 | Data sync | `bun run replicate:all|db|bucket` (prod R2/D1 → dev) · `google:reviews` |
-| Tests | `bun run test` — needs dev server + bucket:serve + `tests/.env.test`; 10 files cover most groups (Auth used only by helper; queryLogs/settingsBackup untested) |
+| Tests | `bun run test` — needs the dev server + `tests/.env.test`; 10 files cover most groups (Auth used only by helper; queryLogs/settingsBackup untested) |
 | Aux workers | inside each `services/*`: `wrangler dev|deploy --config wrangler.jsonc` (never `--bun`); emailWorker also `templates:build --prod|--dev`, `campaign`, `remove-suppressed` |
 
 Deploy (manual, real credentials — never in routine work): `bun run build` → `wrangler deploy
@@ -396,7 +402,6 @@ Deploy (manual, real credentials — never in routine work): `bun run build` →
 | `VITE_URL` | `.env` | origin (tests, oauth) |
 | `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY` | `.env` (dev) / CF secrets (prod) | password pepper · Google OAuth login · review collector |
 | `TURSO_DB_URL` `TURSO_DB_TOKEN` | `.env` | legacy DB export (`scripts/exportTurso.ts`) — kept until the final cutover |
-| `DEV_BUCKET_LOCATION` | `.env` | local bucket store root (bucketServer; `DEV_BUCKET_URL` falls back to `127.0.0.1:4567`) |
 | `MAILERSEND_API_KEY`, `SERVICE_AUTH_TOKEN`, `DRY_RUN` | emailWorker `.dev.vars` / `.env.*` | sending, auth, dry-run |
 | `SERVICE_AUTH_TOKEN` | pdfWorker `.dev.vars` / secret | shared token for PDF_SERVICE binding calls |
 | `TEST_EMAIL` `TEST_PASSWORD` `VITE_URL` | `tests/.env.test` | API test suite login |

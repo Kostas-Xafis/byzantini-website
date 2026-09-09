@@ -15,8 +15,7 @@ export async function GET(ctx: APIContext) {
 		const file = await Bucket.get(ctx, url);
 		if (!file) return ctx.rewrite("/404");
 
-		if ("byteLength" in file) return new Response(file, { status: 200 });
-		else return new Response(await file.arrayBuffer(), { status: 200 });
+		return new Response(await file.arrayBuffer(), { status: 200 });
 	} catch {
 		return ctx.rewrite("/404");
 	}

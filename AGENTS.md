@@ -30,9 +30,12 @@ bindings**: `byzantini-website-emails` (`services/emailWorker`) and
 - Validation: Zod (`astro/zod`); schemas in `lib/api/schemas.ts`.
 - Database: Cloudflare D1 (binding `DB`, `cloudflare:workers` env) — see
   `lib/db.ts`; schema in `migrations/` (`wrangler d1 migrations apply`).
-- Storage: Cloudflare R2 (`S3_BUCKET` binding) in production; dev goes through
-  `bun run bucket:serve` (local HTTP store on `bucket/latest`, see
-  `lib/bucket/index.ts` + `scripts/bucketServer.ts`).
+- Storage: Cloudflare R2 (`S3_BUCKET` binding) in production; in dev the SAME
+  binding is emulated locally by miniflare (persisted under
+  `.wrangler/state/v3/r2`, wiped+seeded from prod by `bun run replicate:bucket`
+  — see `lib/bucket/index.ts`). The retired dev HTTP store (`bucket:serve`,
+  `scripts/bucketServer.ts`) is gone; the R2 binding works in dev like D1's
+  does.
 - Deploy: `@astrojs/cloudflare` adapter → `dist/server/entry.mjs` + `dist/client/`;
   config in `wrangler.jsonc`; manual deploys via `wrangler deploy`
   (deploy plumbing lands in Phase 6; CI/Pages integration is retired).
@@ -53,14 +56,14 @@ Core loop:
 | Task | Command | Notes |
 | --- | --- | --- |
 | Install | `bun install` | real lockfile is `bun.lock` |
-| Dev server | `bun run dev` | Astro dev, port **4321**; also starts `bun run bucket:serve` |
+| Dev server | `bun run dev` | Astro dev, port **4321** |
 | Dev server (alt) | `bun run start` | alias for `dev` |
 | Build | `bun run build` | production build |
 | Types | `bun run types` | regenerate `worker-configuration.d.ts` after `wrangler.jsonc` changes |
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | full suite; needs dev server + `bucket:serve` (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
+| Tests | `bun run test` | full suite; needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -142,7 +145,7 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
   vars/secrets). **Site dev values live in `.env`** (gitignored, auto-loaded by
   Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
   `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`,
-  `TURSO_DB_URL/TOKEN` (kept until the final cutover), `DEV_BUCKET_LOCATION`.
+  `TURSO_DB_URL/TOKEN` (kept until the final cutover).
   Production runtime secrets stay **Cloudflare secrets** (`wrangler secret
   put`, never in files). The site has **no `.dev.vars`**; pure-wrangler
   services (pdfWorker/emailWorker dev) still keep theirs.
@@ -157,9 +160,12 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
   `.env`/`.env.production`. Never hardcode the owner email in features;
   owner-only UI (global search, query-logs link, user deletion) goes through
   this module.
-- Storage goes through `Bucket` (`lib/bucket/index.ts`) — R2 binding in
-  production, local HTTP store (`bun run bucket:serve`) in dev. Never access
-  the binding directly in route code.
+- Storage goes through `Bucket` (`lib/bucket/index.ts`) — always the R2
+  binding `S3_BUCKET`: real R2 in production, miniflare-emulated locally
+  (`.wrangler/state/v3/r2`). Dev data comes from `bun run replicate:bucket`,
+  which wipes the local store and seeds it from production (D1-style) plus a
+  `bucket/YY-MM-DD/` archive; restart the dev server after replicating.
+  Never access the binding directly in route code.
 - **Worker↔worker calls go through service bindings, never HTTP URLs**: the
   site's `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`)
   and `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each

@@ -80,7 +80,8 @@ Use it for: `wrangler.jsonc` shape, `scripts/cf.ts` CLI wrapper, `migrations/` w
   Not upgrade regressions; don't "fix" them in this migration unless asked.
 - `tsc --noEmit` is fully green (`bun run typecheck`).
 - Adapter v14 auto-adds `SESSION` KV + IMAGES bindings (Astro sessions/images). We don't use
-  Astro sessions — revisit in Phase 2 (may disable/ignore). The IMAGES binding is now used
+  Astro sessions — resolved (2026-09): `session: false` in `astro.config.mjs`, so the auto-added
+  `SESSION` KV binding is gone (dev and deploy configs). The IMAGES binding is used
   deliberately for announcement thumbnails (Phase 8) and is declared explicitly in
   `wrangler.jsonc` (top level + `production`/`preview`).
 - Pre-existing test failure on BOTH stacks: `tests/api/announcements.test.ts` `#3`

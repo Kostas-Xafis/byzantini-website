@@ -23,6 +23,9 @@ export default defineConfig({
 		}),
 	],
 	adapter: cloudflare(),
+	// Astro Sessions are not used (auth is cookie + D1 sys_users). Disabling
+	// them stops @astrojs/cloudflare from auto-adding the SESSION KV binding.
+	session: false,
 	prefetch: {
 		prefetchAll: false,
 		defaultStrategy: "hover",

@@ -48,7 +48,7 @@
 - Server-side env comes from `cloudflare:workers` (`lib/env/runtime.ts`
   bridge + `Env.env`, which merges `import.meta.env` with the runtime env).
   **Site dev values live in `.env`** (gitignored, auto-loaded by Bun/Vite:
-  SECRET, GOOGLE_*, tokens, TURSO_*, DEV_BUCKET_LOCATION); production runtime
+  SECRET, GOOGLE_*, tokens, TURSO_*); production runtime
   secrets are Cloudflare secrets. The site has **no `.dev.vars`**; the
   pure-wrangler services keep theirs (wrangler dev reads secrets only from
   `.dev.vars`). Non-prefixed `.env.production` keys are never inlined.
@@ -58,9 +58,11 @@
   `isOwnerEmail(...)`), backed by `VITE_OWNER_EMAIL` (inlined into client AND
   server bundles; hardcoded fallback in the module). Owner-only UI (global
   search, query-logs link, user deletion) must go through this module.
-- Storage abstraction is `Bucket` (`lib/bucket/index.ts`): production uses
-  Cloudflare R2 binding `S3_BUCKET`; development uses the local HTTP store
-  (`bun run bucket:serve`, `scripts/bucketServer.ts`).
+- Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
+  Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
+  locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by
+  `bun run replicate:bucket`; restart the dev server afterwards). No
+  `bucket:serve` / HTTP store anymore.
 - **Worker↔worker calls use service bindings, never HTTP URLs.** The site's
   `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`) and
   `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
@@ -95,13 +97,13 @@
   `.env.development`/`.env.production`).
 
 ## Workflows and conventions
-- Core commands: `bun run dev` (starts `bucket:serve` too), `bun run build`,
+- Core commands: `bun run dev`, `bun run build`,
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
   `bun run db:reset`, `bun run typecheck`, `bun run check`.
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
-  from `tests/.env.test`, 10s per-test timeout; they need the dev server,
-  `bucket:serve`, and (for the sysusers suite, which sends the invite email)
-  the emails worker running locally on 8788.
+  from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
+  for the sysusers suite, which sends the invite email, the emails worker
+  running locally on 8788).
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,

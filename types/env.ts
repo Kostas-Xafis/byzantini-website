@@ -6,8 +6,6 @@ export type EnvTypes = {
 	BASE_URL: string;
 	SITE?: string;
 
-	DEV_BUCKET_LOCATION?: string;
-	DEV_BUCKET_URL?: string;
 	SECRET?: string;
 	GOOGLE_MAPS_KEY?: string;
 	GOOGLE_CLIENT_ID?: string;

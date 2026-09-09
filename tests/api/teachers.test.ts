@@ -1,10 +1,9 @@
 import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers } from "@_types/entities";
-import { Bucket } from "@bucket/index.ts";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { test } from "bun:test";
 import { array, number, object } from "valibot";
-import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
+import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers.ts";
 
 const areBuffersEqual = (first: ArrayBuffer, second: ArrayBuffer) => {
 	const firstView = new Uint8Array(first);
@@ -14,12 +13,6 @@ const areBuffersEqual = (first: ArrayBuffer, second: ArrayBuffer) => {
 		if (firstView[i] !== secondView[i]) return false;
 	}
 	return true;
-};
-
-const isMissingObjectError = (err: unknown) => {
-	if (!(err instanceof Error)) return false;
-	const msg = err.message || "";
-	return msg.includes("NoSuchKey") || msg.includes("404") || msg.includes("does not exist");
 };
 
 function teachersTest() {
@@ -72,7 +65,7 @@ function teachersTest() {
 			throw new Error("Teacher CV was not saved after upload");
 		}
 
-		const uploadedFile = await Bucket.getDev(`kathigites/cv/${teacherJson.data.cv}`);
+		const uploadedFile = await fetchBucketFile(`kathigites/cv/${teacherJson.data.cv}`);
 		if (uploadedFile == null) {
 			throw new Error("Uploaded teacher CV file was not found in bucket");
 		}
@@ -116,13 +109,9 @@ function teachersTest() {
 			throw new Error("Teacher CV was not cleared after deletion");
 		}
 
-		try {
-			const deletedFile = await Bucket.getDev(`kathigites/cv/${deletedCvFilename}`);
-			if (deletedFile != null) {
-				throw new Error("Teacher CV file still exists in bucket after deletion");
-			}
-		} catch (err) {
-			if (!isMissingObjectError(err)) throw err;
+		const deletedFile = await fetchBucketFile(`kathigites/cv/${deletedCvFilename}`);
+		if (deletedFile != null) {
+			throw new Error("Teacher CV file still exists in bucket after deletion");
 		}
 	});
 	test("--teachers-- #5", async () => {

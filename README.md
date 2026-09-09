@@ -121,7 +121,6 @@ PDF_SERVICE_AUTH_TOKEN=       # shared with the pdfWorker's SERVICE_AUTH_TOKEN (
 AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=   # shared with the emailWorker's SERVICE_AUTH_TOKEN (send body)
 TURSO_DB_URL=                 # kept until the final cutover (scripts/exportTurso.ts)
 TURSO_DB_TOKEN=
-DEV_BUCKET_LOCATION=          # local bucket store root (bucketServer)
 
 VITE_OWNER_EMAIL=             # owner gate (inlined client + server)
 VITE_URL=                     # local origin
@@ -167,7 +166,7 @@ bun run build-preview
 
 ### App and deployment
 
-- `bun run dev`: Start Astro dev server (port 4321) + local bucket server
+- `bun run dev`: Start the Astro dev server (port 4321)
 - `bun run start`: Alias for `dev`
 - `bun run build`: Production build (`CLOUDFLARE_ENV=production astro build`)
 - Deploy (manual): `bun run build`, then `wrangler deploy --config dist/server/wrangler.json`
@@ -176,8 +175,8 @@ bun run build-preview
 
 ### Tests
 
-- `bun run test`: Full API test suite (env from `tests/.env.test`; needs dev
-  server + `bucket:serve`; the sysusers suite also needs the emails worker
+- `bun run test`: Full API test suite (env from `tests/.env.test`; needs the dev
+  server; the sysusers suite also needs the emails worker
   running locally — `wrangler dev` on 8788 — because `createRegisterLink`
   sends the invite email)
 
@@ -191,7 +190,7 @@ bun run build-preview
 
 ### Data replication (dev mirrors prod)
 
-- `bun run replicate:all` / `replicate:db` / `replicate:bucket`: pull remote D1 + R2 into the local dev stores (`scripts/replicate.ts`)
+- `bun run replicate:all` / `replicate:db` / `replicate:bucket`: pull remote D1 + R2 into the local dev stores (`scripts/replicate.ts`; `--bucket` also seeds the local R2 emulation)
 
 ### Aux workers (local)
 
@@ -224,7 +223,10 @@ printing/downloads or admin invites/registration emails.
 
 `scripts/replicate.ts` (also `bun run replicate:*`) mirrors production into dev:
 - DB: `wrangler d1 export` (remote) → `dbSnapshots/dev-snapshot.sql` → replays into the local D1 store
-- Bucket: downloads the production R2 objects into `bucket/latest/` (resumable, mirror semantics), then snapshots to `bucket/YY-MM-DD/`
+- Bucket: downloads the production R2 objects into `bucket/latest/` (resumable
+  cache/mirror), snapshots to `bucket/YY-MM-DD/`, then **wipes and seeds the
+  local R2 emulation** (`.wrangler/state/v3/r2`) — restart the dev server
+  afterwards, like after a DB replication
 
 `bun run db:reset` rebuilds the local dev D1 from `dbSnapshots/dev-snapshot.sql`.
 
@@ -232,7 +234,9 @@ printing/downloads or admin invites/registration emails.
 
 `lib/bucket/index.ts` exposes the `Bucket` abstraction:
 - Production: Cloudflare R2 via the `S3_BUCKET` binding
-- Development: local HTTP store (`bun run bucket:serve` → `bucket/latest/`)
+- Development: the same binding, emulated locally by miniflare
+  (`.wrangler/state/v3/r2`) and seeded from production with
+  `bun run replicate:bucket` — no extra server
 
 Common operations:
 - `Bucket.list(...)`
@@ -316,7 +320,8 @@ Typical release path:
 - Validation failures: confirm request shape matches Valibot schema.
 - Unauthorized responses: confirm session cookie/token and `authentication` flag behavior.
 - DB connection errors: verify the D1 binding (`DB` in `wrangler.jsonc`) and local dev state (`.wrangler/state/v3/d1`).
-- Missing bucket access: verify the R2 binding in Cloudflare; in dev, ensure `bun run bucket:serve` is running.
+- Missing bucket access: verify the R2 binding in Cloudflare; in dev, run
+  `bun run replicate:bucket` to seed the local R2 emulation.
 
 ## AI-Assisted Development 🤖
 

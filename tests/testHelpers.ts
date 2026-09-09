@@ -114,3 +114,22 @@ export async function getJson<T>(res: Response): Promise<any> {
 	expect(json).toBeDefined();
 	return json;
 }
+
+/**
+ * Reads a bucket object through the dev server's file proxy
+ * (`src/pages/[...slug].ts` → Bucket → the locally emulated R2 binding).
+ * Returns the bytes, or null when the object does not exist (404).
+ */
+export async function fetchBucketFile(filename: string): Promise<ArrayBuffer | null> {
+	const base = VITE_URL.endsWith("/") ? VITE_URL : `${VITE_URL}/`;
+	const url =
+		base +
+		filename
+			.split("/")
+			.map((segment) => encodeURIComponent(segment))
+			.join("/");
+	const res = await fetch(url);
+	if (res.status === 404) return null;
+	if (!res.ok) throw new Error(`Bucket proxy GET failed (${res.status}) for ${filename}`);
+	return res.arrayBuffer();
+}

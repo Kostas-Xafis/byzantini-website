@@ -36,8 +36,7 @@ export async function GET(ctx: APIContext) {
 			// Secondary source: the admin-maintained bucket copy.
 			const bucketSitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
 			if (bucketSitemap) {
-				const body = "byteLength" in bucketSitemap ? bucketSitemap : await bucketSitemap.arrayBuffer();
-				return new Response(body, { headers: XML_HEADERS });
+				return new Response(await bucketSitemap.arrayBuffer(), { headers: XML_HEADERS });
 			}
 		} catch (bucketError) {
 			console.error("sitemap-announcements: bucket fallback failed", bucketError);
