@@ -390,15 +390,24 @@ Deploy (manual, real credentials — never in routine work): `bun run build` →
 | --- | --- | --- |
 | `DB` `S3_BUCKET` `IMAGES` `ASSETS` | wrangler.jsonc bindings | D1 / R2 / CF Images / static assets (per env) |
 | `EMAIL_SERVICE` `PDF_SERVICE` | wrangler.jsonc `services` (top + named envs) | service bindings → `byzantini-website-emails` / `byzantini-website-pdf-gen` |
-| `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` | `.dev.vars` server env | shared token for the emails worker (body `authToken`; must match worker `SERVICE_AUTH_TOKEN`) |
-| `PDF_SERVICE_AUTH_TOKEN` | `.dev.vars` server env | shared token for the PDF worker (`Authorization: Bearer`; must match worker `SERVICE_AUTH_TOKEN`) |
+| `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` | `.env` (dev) / CF secret (prod) | shared token for the emails worker (body `authToken`; must match worker `SERVICE_AUTH_TOKEN`) |
+| `PDF_SERVICE_AUTH_TOKEN` | `.env` (dev) / CF secret (prod) | shared token for the PDF worker (`Authorization: Bearer`; must match worker `SERVICE_AUTH_TOKEN`) |
 | `OWNER_EMAIL` / `VITE_OWNER_EMAIL` | `.env(.production)` | owner gate (`lib/env/ownerEmail.ts`, hardcoded fallback) |
 | `VITE_URL` | `.env` | origin (tests, oauth) |
-| `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY` | `.dev.vars` | OAuth login · review collector |
-| `SECRET`, `TURSO_DB_URL/TOKEN`, `CONTACT_INFO`, `*_SNAPSHOT_LOCATION`, `DEV_BUCKET_LOCATION`, `LATEST_MIGRATION_FILE`, `PROJECT_ABSOLUTE_PATH`, `FORCE_TEST` | `.dev.vars` | sessions (legacy) · Turso cutover leftover · snapshots/bucket tooling |
-| `MAILERSEND_API_KEY`, `SERVICE_AUTH_TOKEN`, `DRY_RUN` | emailWorker | sending, auth, dry-run (`.dev.vars`) |
-| `SERVICE_AUTH_TOKEN` | pdfWorker | shared token for PDF_SERVICE binding calls (`.dev.vars` / secret) |
+| `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY` | `.env` (dev) / CF secrets (prod) | password pepper · Google OAuth login · review collector |
+| `TURSO_DB_URL` `TURSO_DB_TOKEN` | `.env` | legacy DB export (`scripts/exportTurso.ts`) — kept until the final cutover |
+| `DEV_BUCKET_LOCATION` | `.env` | local bucket store root (bucketServer; `DEV_BUCKET_URL` falls back to `127.0.0.1:4567`) |
+| `MAILERSEND_API_KEY`, `SERVICE_AUTH_TOKEN`, `DRY_RUN` | emailWorker `.dev.vars` / `.env.*` | sending, auth, dry-run |
+| `SERVICE_AUTH_TOKEN` | pdfWorker `.dev.vars` / secret | shared token for PDF_SERVICE binding calls |
 | `TEST_EMAIL` `TEST_PASSWORD` `VITE_URL` | `tests/.env.test` | API test suite login |
+
+> The site's root `.dev.vars` was removed (2026-09): dev values live in `.env`
+> (Bun/Vite auto-load it; `Env.env` merges `import.meta.env` + the runtime
+> env), production runtime secrets are Cloudflare secrets. Dead keys removed:
+> `CONTACT_INFO`, `SAFE_BACKUP_SNAPSHOT`, `BACKUP_SNAPSHOT_LOCATION`,
+> `DEV_SNAPSHOT_LOCATION`, `LATEST_MIGRATION_FILE`, `FORCE_TEST`,
+> `PROJECT_ABSOLUTE_PATH` (main-repo copy). Pure-wrangler services keep their
+> own `.dev.vars` (wrangler dev reads secrets only from there).
 
 ## 11 · Observations & risk register
 

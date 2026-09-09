@@ -1,3 +1,4 @@
+import { Env } from "@env/env";
 import { z } from "astro/zod";
 import { APIServer, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -24,7 +25,9 @@ const pdfReqSchema = z.object({
 export const pdfRoutes = {
 	generate: new APIServer({ method: "POST", path: "/pdf", schema: pdfReqSchema }, [authenticateMiddleware], async ({ body, env }) => {
 		const service = (env ?? {})["PDF_SERVICE"] as Fetcher | undefined;
-		const authToken = (env ?? {})["PDF_SERVICE_AUTH_TOKEN"] as string | undefined;
+		// Token via the merged Env.env (dev: `.env`; prod: the CF secret, which
+		// wins in the merge), with the raw runtime env as fallback.
+		const authToken = (Env.env.PDF_SERVICE_AUTH_TOKEN ?? (env ?? {})["PDF_SERVICE_AUTH_TOKEN"]) as string | undefined;
 		if (!service || !authToken) return APIServer.jsonError("Unauthorized access to the PDF service", HTTP.INTERNAL_SERVER_ERROR);
 
 		let upstream: Response;

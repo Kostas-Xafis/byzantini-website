@@ -2,7 +2,8 @@
  * Minimal dotenv-style parser (moved from loadEnvVars.ts, which was retired in
  * the Cloudflare Workers migration — Phase 2).
  *
- * Used by CLI tooling (getData/query.ts) to read wrangler `.dev.vars` files.
+ * Used by CLI tooling (scripts/exportTurso.ts, legacy getData/query.ts) to
+ * read `.env` / `.dev.vars` style files.
  */
 export function parseEnvFile(content: string): Record<string, string> {
 	const vars: Record<string, string> = {};

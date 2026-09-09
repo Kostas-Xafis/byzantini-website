@@ -1,9 +1,14 @@
 // Turso → SQL dump (data only) for the D1 import. Values never printed.
 import { createClient } from "@libsql/client";
 import { parseEnvFile } from "../lib/utilities/envFile";
+import { existsSync } from "node:fs";
 import { writeFileSync } from "node:fs";
 
-const vars = parseEnvFile(await Bun.file(".dev.vars").text());
+// TURSO_* live in `.env` now (kept until the final cutover); `.dev.vars` is
+// only a fallback for older checkouts that still have it.
+const envSource = [".env", ".dev.vars"].find((file) => existsSync(file));
+if (!envSource) throw new Error("Missing .env (TURSO_DB_URL/TURSO_DB_TOKEN)");
+const vars = parseEnvFile(await Bun.file(envSource).text());
 const client = createClient({ url: vars.TURSO_DB_URL, authToken: vars.TURSO_DB_TOKEN });
 
 const tables = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND sql IS NOT NULL AND name != "sqlite_sequence" ORDER BY name');

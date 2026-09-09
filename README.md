@@ -99,33 +99,38 @@ Endpoint keys are strongly typed and follow the format:
 
 ## Environment Variables 🔐
 
-Environment files:
-- `.dev.vars` for the local dev runtime (bindings, vars, secrets)
-- `.env` / `.env.production` for Vite (client-visible `VITE_*`/`PUBLIC_*` only)
+Environment files (all gitignored):
+- `.env` — **all local dev values** (client `VITE_*` and server-side values
+  alike: Bun/Vite auto-load it and `Env.env` merges it with the runtime env).
+  The site has **no `.dev.vars`** anymore.
+- `.env.production` — build-time values; only `VITE_*`/`PUBLIC_*` are inlined
+  into client code. `bun run worker-secrets` also mirrors the deployed token
+  pairs here (archival/recovery).
+- Production runtime secrets live as **Cloudflare secrets** (`wrangler secret
+  put`), never in these files. The pure-wrangler services keep their own
+  `.dev.vars` (that's where `wrangler dev` reads secrets from).
 
-Important variables (from `types/env.ts`):
+Important variables (dev, in `.env`):
 
 ```env
-SECRET=
-GOOGLE_MAPS_KEY=
+SECRET=                       # password-hash pepper (runtime)
+GOOGLE_CLIENT_ID=             # Google OAuth (runtime)
+GOOGLE_CLIENT_SECRET=         # Google OAuth (runtime)
+GOOGLE_MAPS_KEY=              # google:reviews script only
+PDF_SERVICE_AUTH_TOKEN=       # shared with the pdfWorker's SERVICE_AUTH_TOKEN (bearer on PDF_SERVICE calls)
+AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=   # shared with the emailWorker's SERVICE_AUTH_TOKEN (send body)
+TURSO_DB_URL=                 # kept until the final cutover (scripts/exportTurso.ts)
+TURSO_DB_TOKEN=
+DEV_BUCKET_LOCATION=          # local bucket store root (bucketServer)
 
-PDF_SERVICE_AUTH_TOKEN=        # shared with the pdfWorker's SERVICE_AUTH_TOKEN (Authorization: Bearer on binding calls)
-
-AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=   # shared with the emailWorker's SERVICE_AUTH_TOKEN (sent in the send body)
-
-SAFE_BACKUP_SNAPSHOT=
-BACKUP_SNAPSHOT_LOCATION=
-DEV_SNAPSHOT_LOCATION=
-LATEST_MIGRATION_FILE=
-PROJECT_ABSOLUTE_PATH=
-
-TEST_EMAIL=
-TEST_PASSWORD=
-VITE_URL=
+VITE_OWNER_EMAIL=             # owner gate (inlined client + server)
+VITE_URL=                     # local origin
 ```
 
 Notes:
-- In production builds, only variables prefixed with `VITE_` or `PUBLIC_` are exposed to client code.
+- In production builds, only variables prefixed with `VITE_` or `PUBLIC_` are
+  exposed to client code; non-prefixed keys are never inlined into the worker
+  bundle — production reads them from the Cloudflare secrets.
 - Runtime env is accessed through `Env.env` / `Env.setEnv(ctx)`.
 - The retired service URLs (`VITE_PDF_SERVICE_URL`, `AUTOMATED_EMAILS_SERVICE_URL`)
   are gone — the workers are reached through the `PDF_SERVICE` / `EMAIL_SERVICE`
@@ -196,6 +201,19 @@ inside the folder: `bunx wrangler dev --config wrangler.jsonc` (pdfWorker
 `PDF_SERVICE` service bindings to those sessions automatically
 (cross-command service bindings); start them whenever you exercise PDF
 printing/downloads or admin invites/registration emails.
+
+### Worker secrets (shared pairs)
+
+- `bun run worker-secrets`: create/rotate the two shared site↔worker token
+  pairs on the deployed workers (`PDF_SERVICE_AUTH_TOKEN` ↔ pdfWorker
+  `SERVICE_AUTH_TOKEN`; `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` ↔ emailWorker
+  `SERVICE_AUTH_TOKEN`). Requires `wrangler login`; `--dry-run` first, see
+  `--help` for flags. Values are generated locally and never printed.
+- Every rotated value is automatically mirrored into the local env files
+  (site `.env`/`.env.production`, the services' `.dev.vars`, emailWorker
+  `.env.development`/`.env.production`), so `wrangler dev`, local dev and
+  `templates:build --prod/--dev` pick the new tokens up with no manual steps.
+  Use `--no-env-files` to skip the mirroring.
 
 ## Testing Notes ✅
 

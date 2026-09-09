@@ -46,7 +46,12 @@
 
 ## Env, storage, and external services
 - Server-side env comes from `cloudflare:workers` (`lib/env/runtime.ts`
-  bridge + `Env.env`); local secrets live in `.dev.vars`.
+  bridge + `Env.env`, which merges `import.meta.env` with the runtime env).
+  **Site dev values live in `.env`** (gitignored, auto-loaded by Bun/Vite:
+  SECRET, GOOGLE_*, tokens, TURSO_*, DEV_BUCKET_LOCATION); production runtime
+  secrets are Cloudflare secrets. The site has **no `.dev.vars`**; the
+  pure-wrangler services keep theirs (wrangler dev reads secrets only from
+  `.dev.vars`). Non-prefixed `.env.production` keys are never inlined.
 - Client `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
   (gitignored).
 - Owner (super-admin) email belongs in `@env/ownerEmail` (`OWNER_EMAIL`,
@@ -82,6 +87,12 @@
 - Aux workers: run wrangler from inside the `services/*` folder with
   `--config wrangler.jsonc` and WITHOUT `--bun` (the Bun runtime wedges
   wrangler dev; `--config` avoids the repo's `.wrangler/deploy` conflict).
+- Shared-secret rotation: `bun run worker-secrets` (root
+  `scripts/workerSecrets.ts`) sets/rotates the two matching site↔worker token
+  pairs on the deployed workers (`wrangler login` required; values never
+  printed) and mirrors them into the local env files (site `.env`/
+  `.env.production`, the services' `.dev.vars`, emailWorker
+  `.env.development`/`.env.production`).
 
 ## Workflows and conventions
 - Core commands: `bun run dev` (starts `bucket:serve` too), `bun run build`,

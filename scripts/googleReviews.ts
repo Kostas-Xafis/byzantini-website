@@ -17,7 +17,7 @@
  *   5. Γράφει: reviews.json (δομημένα), reviews.csv (Excel),
  *      reviews.md (φύλλο για "refine" της καθεμιάς ξεχωριστά).
  *
- * Χρήση (κλειδί: env GOOGLE_MAPS_KEY ή .dev.vars / .env — δεν τυπώνεται ποτέ):
+ * Χρήση (κλειδί: env GOOGLE_MAPS_KEY ή .env — δεν τυπώνεται ποτέ):
  *   bun run google:reviews                          # σχολή (default)
  *   bun run google:reviews -- --place-id "ChIJ..."  # συγκεκριμένο place
  *   bun run google:reviews -- --query "..."         # αναζήτηση με όνομα
@@ -162,11 +162,11 @@ function parseArgs(argv: string[]): CliArgs {
 	return args;
 }
 
-/** Κλειδί API: env → .dev.vars → .env. Ποτέ δεν τυπώνεται. */
+/** Κλειδί API: env → .env → .dev.vars. Ποτέ δεν τυπώνεται. */
 function loadApiKey(): string {
 	const fromEnv = process.env.GOOGLE_MAPS_KEY?.trim();
 	if (fromEnv) return fromEnv;
-	for (const file of [".dev.vars", ".env"]) {
+	for (const file of [".env", ".dev.vars"]) {
 		if (!existsSync(file)) continue;
 		for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
 			const eq = line.indexOf("=");
@@ -178,7 +178,7 @@ function loadApiKey(): string {
 			if (value) return value;
 		}
 	}
-	fail("Δεν βρέθηκε κλειδί API: βάλτε GOOGLE_MAPS_KEY στο .dev.vars (ή env) και ξανατρέξτε.");
+	fail("Δεν βρέθηκε κλειδί API: βάλτε GOOGLE_MAPS_KEY στο .env (ή env) και ξανατρέξτε.");
 }
 
 async function callApi<T>(url: string, key: string, init?: RequestInit): Promise<T> {

@@ -36,9 +36,13 @@ bindings**: `byzantini-website-emails` (`services/emailWorker`) and
 - Deploy: `@astrojs/cloudflare` adapter → `dist/server/entry.mjs` + `dist/client/`;
   config in `wrangler.jsonc`; manual deploys via `wrangler deploy`
   (deploy plumbing lands in Phase 6; CI/Pages integration is retired).
-- Env: server-side via `cloudflare:workers` env (`.dev.vars` local secrets +
-  `vars` in `wrangler.jsonc`); client-side via Vite-native `.env`
-  (gitignored, `VITE_`/`PUBLIC_` only).
+- Env: server-side runtime values via `cloudflare:workers` env (bindings + CF
+  secrets/vars in prod) merged with `import.meta.env`; **dev values live in
+  Vite-native `.env`** (gitignored — Bun/Vite auto-load it, `Env.env` merges
+  both views). The site no longer uses `.dev.vars` (deleted 2026-09; pure-
+  wrangler services still do — wrangler dev reads secrets only from their
+  `.dev.vars`). `.env.production` holds prod mirrors; only `VITE_`/`PUBLIC_`
+  are inlined client-side.
 - TS config: `tsconfig.json` extends `astro/tsconfigs/strict`, no emit;
   runtime types from generated `worker-configuration.d.ts` (`bun run types`).
 
@@ -83,6 +87,8 @@ automatically (cross-command service bindings — start a worker when you
 exercise its feature). No service URLs anywhere:
 - **PDF** `byzantini-website-pdf-gen` (`services/pdfWorker`): `bunx wrangler dev --config wrangler.jsonc` (port 8787) / `bunx wrangler deploy --config wrangler.jsonc`. Templates+font bundled in `assets/`; the browser never calls it — `lib/pdf.client.ts` posts to the site's `Pdf.generate` route (`POST /api/pdf`, session-cookie auth), which proxies through the `PDF_SERVICE` binding with `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>` (site secret; must match the worker's `SERVICE_AUTH_TOKEN` secret). No referer/session back-call, no `IS_DEV`.
 - **Emails** `byzantini-website-emails` (`services/emailWorker` — the whole `email/` stack moved here, incl. the campaign CLI): `bunx wrangler dev --config wrangler.jsonc` (port 8788, `DRY_RUN=true` logs instead of sending) / `bunx wrangler deploy --config wrangler.jsonc`. Transactional sends (registration + sysuser invite) via MailerSend REST (the `mailersend` npm package is gaxios-based and cannot run on workerd); the site calls it through the `EMAIL_SERVICE` binding with the `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body (must match the worker's `SERVICE_AUTH_TOKEN` secret); per-send templates are read from the worker's own `BUCKET` R2 binding (`html_templates/<name>`, same keys `POST /html-templates` writes — no `<SITE_URL>` HTTP fetch). `POST /html-templates` publishes built templates (`byzantini-bucket`; `templates:build --prod/--dev` calls it — no AWS SDK/S3 credentials anywhere; `templates:build --dev` also seeds the local worker's R2 for dev sends). The campaign CLI (`bun run campaign`) reads recipients from **Cloudflare D1** through `wrangler d1 execute --remote` (`src/db.ts` — spawned per query, uses the existing `wrangler login`, **no API token / no server**): `--db prod` ⇒ `byzantini-db`, default `dev` ⇒ `byzantini-db-preview`.
+
+Shared-secret bootstrap/rotation: `bun run worker-secrets` (`scripts/workerSecrets.ts`) — sets the two matching site↔worker pairs on the deployed workers (defaults: pdfWorker/emailWorker + site envs `production`,`preview`; `--help` for flags) and **mirrors the values into the local env files** (site `.env`/`.env.production`, the services' `.dev.vars`, emailWorker `.env.development`/`.env.production`), so dev, `wrangler dev` and `templates:build` pick the new tokens automatically. Requires `wrangler login`; values are generated locally, never passed as argv and never printed.
 
 Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
 `bun run build` then `wrangler deploy --config dist/server/wrangler.json`
@@ -132,9 +138,19 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 
 - Server-side env comes from the `cloudflare:workers` env module
   (`lib/env/runtime.ts` bridge, `Env.env` for the merged view) — never ad-hoc
-  globals; local secrets live in `.dev.vars`.
-- Client-visible `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
-  (gitignored; `.env` for dev, `.env.production` for builds).
+  globals. The merged view = `import.meta.env` + the runtime env (bindings,
+  vars/secrets). **Site dev values live in `.env`** (gitignored, auto-loaded by
+  Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
+  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`,
+  `TURSO_DB_URL/TOKEN` (kept until the final cutover), `DEV_BUCKET_LOCATION`.
+  Production runtime secrets stay **Cloudflare secrets** (`wrangler secret
+  put`, never in files). The site has **no `.dev.vars`**; pure-wrangler
+  services (pdfWorker/emailWorker dev) still keep theirs.
+- `VITE_`/`PUBLIC_` client vars come from Vite-native `.env` files
+  (gitignored; `.env` for dev, `.env.production` for builds). `.env.production`
+  also mirrors the prod token pairs for archival/recovery — only
+  `VITE_`/`PUBLIC_` keys are ever inlined client-side; non-prefixed keys are
+  NOT inlined into the worker (runtime reads them from the CF secret).
 - Owner (super-admin) email: use `@env/ownerEmail` (`OWNER_EMAIL`,
   `isOwnerEmail(...)`) — backed by `VITE_OWNER_EMAIL` (same var inlines into
   client AND server bundles; hardcoded fallback in the module) and set in

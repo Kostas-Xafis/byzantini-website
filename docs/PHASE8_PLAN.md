@@ -159,4 +159,5 @@ be a binding).
 - **Rollout order**: deploy both aux workers first (and set pdfWorker's
   `SERVICE_AUTH_TOKEN` secret), then rebuild + deploy the site. Old
   deployed secrets (`AUTOMATED_EMAILS_SERVICE_URL`, `VITE_PDF_SERVICE_URL`)
-  can be deleted afterwards.
+  can be deleted afterwards. Secret bootstrap/rotation: `bun run worker-secrets`
+  (`scripts/workerSecrets.ts`) — dry-run first.

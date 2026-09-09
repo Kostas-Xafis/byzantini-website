@@ -17,6 +17,7 @@
 		"db:reset": "rm -rf .wrangler/state/v3/d1 && bunx wrangler d1 execute DB --local --file dbSnapshots/dev-snapshot.sql",
 		"db:logs": "bunx wrangler d1 execute DB --local --command \"SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs ORDER BY date DESC LIMIT 100\"",
 		"bucket:serve": "bun scripts/bucketServer.ts",
+		"worker-secrets": "bun scripts/workerSecrets.ts",
 		"types": "bunx wrangler types",
 		"cf": "bun scripts/cf.ts",
 		"dev": "(bun run bucket:serve &) && bunx --bun astro dev",
