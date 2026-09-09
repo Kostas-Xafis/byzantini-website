@@ -22,15 +22,19 @@ Wrangler `vars` (see `wrangler.jsonc`) + `.dev.vars` locally:
 ## Local Run
 
 ```bash
-bunx --bun wrangler dev          # http://127.0.0.1:8787
+bunx --bun wrangler dev --config wrangler.jsonc   # http://127.0.0.1:8787
 ```
 
 ## Deploy
 
 ```bash
-bunx --bun wrangler deploy       # creates/updates byzantini-website-pdf-gen
+bunx --bun wrangler deploy --config wrangler.jsonc   # creates/updates byzantini-website-pdf-gen
 ```
 
+> `--config wrangler.jsonc` is required: this worker lives inside the website
+> repo, and wrangler otherwise walks up and picks up
+> `../../.wrangler/deploy/config.json` ("config base path" error).
+>
 > First deploy creates the Worker; the website is rebuilt with
 > `VITE_PDF_SERVICE_URL=https://byzantini-website-pdf-gen.koxafis.workers.dev`
 > (root `.env.production`) and redeployed to pick up the new service.
