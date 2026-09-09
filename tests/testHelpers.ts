@@ -15,25 +15,30 @@ async function setSessionId() {
 	}
 	if (session_id !== "") return;
 	collectingId = true;
-	const { TEST_EMAIL, TEST_PASSWORD } = Env.env;
-	if (TEST_EMAIL == null || TEST_PASSWORD == null) throw new Error("TEST_MAIL and TEST_PASSWORD must be set in the environment");
-	const response = await useTestAPI(
-		"Authentication.userLogin",
-		{
-			RequestObject: { email: TEST_EMAIL, password: TEST_PASSWORD },
-		},
-		false,
-	);
+	try {
+		const { TEST_EMAIL, TEST_PASSWORD } = Env.env;
+		if (TEST_EMAIL == null || TEST_PASSWORD == null) throw new Error("TEST_MAIL and TEST_PASSWORD must be set in the environment");
+		const response = await useTestAPI(
+			"Authentication.userLogin",
+			{
+				RequestObject: { email: TEST_EMAIL, password: TEST_PASSWORD },
+			},
+			false,
+		);
 
-	const body = await getJson<APIResponse["Authentication.userLogin"]>(response);
-	expect(body).toBeDefined();
-	const data = body.data;
-	expect(data).toBeDefined();
-	expect(data.isValid).toBe(true);
-	if (data.isValid) {
-		session_id = data.session_id;
+		const body = await getJson<APIResponse["Authentication.userLogin"]>(response);
+		expect(body).toBeDefined();
+		const data = body.data;
+		expect(data).toBeDefined();
+		expect(data.isValid).toBe(true);
+		if (data.isValid) {
+			session_id = data.session_id;
+		}
+	} finally {
+		// Always release the lock: previously a failed login left `collectingId`
+		// stuck at `true` and every later test spun here until its timeout.
+		collectingId = false;
 	}
-	collectingId = false;
 }
 // testing purposes version — Phase 4 envelope: server returns `{ data }` | `{ message }` | `{ error }`
 export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], getSessionId = true) => {
@@ -52,9 +57,7 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 			if (Route.validation) {
 				const result = Route.validation.safeParse(req.RequestObject);
 				if (!result.success) {
-					throw new Error(
-						(result.error.issues as any[]).map((i: any) => i.message).join("; ") || "Μη έγκυρο αίτημα",
-					);
+					throw new Error((result.error.issues as any[]).map((i: any) => i.message).join("; ") || "Μη έγκυρο αίτημα");
 				}
 				if (Route.multipart) {
 					req.RequestObject = objToFormData(req.RequestObject as any);
@@ -82,7 +85,6 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 	}
 };
 
-
 /** Phase 4 envelope: `{ data }` | `{ message }` | `{ error }`. */
 export function expectBody(body: any, expected?: string | BaseSchema<any, any>, isError = false) {
 	if (isError) {
@@ -105,7 +107,9 @@ export function expectBody(body: any, expected?: string | BaseSchema<any, any>, 
 }
 
 export async function getJson<T>(res: Response): Promise<any> {
-	expect(res.status).toBe(200);
+	// Include the response body in the failure message — a bare "Expected 200,
+	// Received 400" hides the server's actual validation error.
+	expect(res.status, `API returned ${res.status}: ${await res.clone().text()}`).toBe(200);
 	const json = await res.json();
 	expect(json).toBeDefined();
 	return json;

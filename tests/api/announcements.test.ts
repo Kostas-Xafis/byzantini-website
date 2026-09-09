@@ -21,12 +21,24 @@ function announcementsTest() {
 	const imagePaths = fs.readdirSync(path.join(process.cwd(), "notAssets")).filter((f) => f.endsWith(".jpg") || f.endsWith(".png"));
 
 	const mainImage = R.item(imagePaths);
-	const images = R.uniqueItems(imagePaths, 4);
+	// Bucket keys are name-based (`anakoinoseis/images/{id}/{name}`), so the main
+	// image must not be re-uploaded as a regular image: a duplicate name would
+	// overwrite its bucket file and break the delete-flow coverage below.
+	const images = R.uniqueItems(
+		imagePaths.filter((p) => p !== mainImage),
+		4,
+	);
 	let newAnnouncementId: number | null;
 	let newImageIds: number[] = [];
 
 	const uploadImages = async () => {
-		const data = new Blob([fs.readFileSync(path.join(process.cwd(), "notAssets", mainImage))]);
+		// Must be a File WITH a name, like the browser client sends. A nameless
+		// Blob is serialized without a `filename` part header, so the server
+		// parses it as a plain string field and `z_BlobUpload` rejects the
+		// request with "Μη έγκυρο αρχείο".
+		const data = new File([fs.readFileSync(path.join(process.cwd(), "notAssets", mainImage))], mainImage, {
+			type: MIMETypeMap[mainImage.split(".").pop() as string],
+		});
 		const res = await useTestAPI("Announcements.postImage", {
 			RequestObject: {
 				name: mainImage,
@@ -42,7 +54,9 @@ function announcementsTest() {
 		newImageIds.push(json.data.insertId);
 
 		for await (const image of images) {
-			const data = new Blob([fs.readFileSync(path.join(process.cwd(), "notAssets", image))]);
+			const data = new File([fs.readFileSync(path.join(process.cwd(), "notAssets", image))], image, {
+				type: MIMETypeMap[image.split(".").pop() as string],
+			});
 			const res = await useTestAPI("Announcements.postImage", {
 				RequestObject: {
 					name: image,
@@ -91,6 +105,10 @@ function announcementsTest() {
 		expect(json.data).toHaveLength(5);
 	});
 	test("--announcements-- #5", async () => {
+		// Defensive: `R.uniqueItems([], ...)` spins forever (and blocks the
+		// event loop, so even the test timeout can't fire) — fail loudly if the
+		// upload step didn't produce the expected image ids.
+		expect(newImageIds.length).toBeGreaterThanOrEqual(2);
 		const res = await useTestAPI("Announcements.imagesDelete", {
 			UrlArgs: { announcement_id: newAnnouncementId as number },
 			RequestObject: R.uniqueItems(newImageIds, 2),

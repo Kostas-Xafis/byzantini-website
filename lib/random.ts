@@ -131,6 +131,10 @@ export class Random {
 		const arr: T[] = [];
 		for (let i = 0; i < size; i++) {
 			const item = cb();
+			// Guard the infinite `i--` loop: an exhausted/empty source (e.g.
+			// `R.item([])`) returns `undefined` forever and blocks the event
+			// loop so hard that even the test timeout cannot fire.
+			if (item === undefined) throw new Error("Random.uniqueArray: callback returned undefined (empty source?)");
 			if (!arr.includes(item)) {
 				arr.push(item);
 			} else i--;
