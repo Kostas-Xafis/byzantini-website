@@ -76,8 +76,10 @@ SQLite at `.wrangler/state/v3/d1`):
 | Query remote DB | `bun run db:query:prod -- "..."` | requires the remote database (Phase 6) |
 | Recent query logs | `bun run db:logs` | |
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
-| Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql` |
+| Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql`; **does not re-run migrations** — follow with `bunx wrangler d1 migrations apply DB --local` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
+| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
+| Pupil backfill | `bun run pupils:migrate` / `pupils:migrate:apply` | the one-time `registrations` → `pupils` + `pupil_enrollments` migration; dry-run by default, `--db prod --yes-prod` for production; see `docs/PUPILS_MIGRATION.md` |
 
 Aux services (separate Cloudflare Workers in `services/`; each has its own
 `package.json`/`wrangler.jsonc` — run wrangler from inside the folder with
@@ -89,7 +91,7 @@ environments); local `astro dev` resolves them to the `wrangler dev` sessions
 automatically (cross-command service bindings — start a worker when you
 exercise its feature). No service URLs anywhere:
 - **PDF** `byzantini-website-pdf-gen` (`services/pdfWorker`): `bunx wrangler dev --config wrangler.jsonc` (port 8787) / `bunx wrangler deploy --config wrangler.jsonc`. Templates+font bundled in `assets/`; the browser never calls it — `lib/pdf.client.ts` posts to the site's `Pdf.generate` route (`POST /api/pdf`, session-cookie auth), which proxies through the `PDF_SERVICE` binding with `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>` (site secret; must match the worker's `SERVICE_AUTH_TOKEN` secret). No referer/session back-call, no `IS_DEV`.
-- **Emails** `byzantini-website-emails` (`services/emailWorker` — the whole `email/` stack moved here, incl. the campaign CLI): `bunx wrangler dev --config wrangler.jsonc` (port 8788, `DRY_RUN=true` logs instead of sending) / `bunx wrangler deploy --config wrangler.jsonc`. Transactional sends (registration + sysuser invite) via MailerSend REST (the `mailersend` npm package is gaxios-based and cannot run on workerd); the site calls it through the `EMAIL_SERVICE` binding with the `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body (must match the worker's `SERVICE_AUTH_TOKEN` secret); per-send templates are read from the worker's own `BUCKET` R2 binding (`html_templates/<name>`, same keys `POST /html-templates` writes — no `<SITE_URL>` HTTP fetch). `POST /html-templates` publishes built templates (`byzantini-bucket`; `templates:build --prod/--dev` calls it — no AWS SDK/S3 credentials anywhere; `templates:build --dev` also seeds the local worker's R2 for dev sends). The campaign CLI (`bun run campaign`) reads recipients from **Cloudflare D1** through `wrangler d1 execute --remote` (`src/db.ts` — spawned per query, uses the existing `wrangler login`, **no API token / no server**): `--db prod` ⇒ `byzantini-db`, default `dev` ⇒ `byzantini-db-preview`.
+- **Emails** `byzantini-website-emails` (`services/emailWorker` — the whole `email/` stack moved here, incl. the campaign CLI): `bunx wrangler dev --config wrangler.jsonc` (port 8788) / `bunx wrangler deploy --config wrangler.jsonc`. **The site calls this worker in EVERY environment** (registration confirmations + sysuser invites): the dry-run decision lives in the worker (`decideDryRun` in `src/index.ts`), not behind an `isProduction()` gate on the site, so local dev exercises the real send path instead of skipping it. A local `wrangler dev` request **never sends** — `decideDryRun` checks `DRY_RUN` (explicit override), then `ENVIRONMENT`, then a missing `MAILERSEND_API_KEY`, then the absence of `CF-Connecting-IP` (not an edge request), and anything local renders the email, logs `[dry-run:<reason>]` with a masked recipient, and returns 200. Transactional sends go via MailerSend REST (the `mailersend` npm package is gaxios-based and cannot run on workerd); the site calls it through the `EMAIL_SERVICE` binding with the `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body (must match the worker's `SERVICE_AUTH_TOKEN` secret); per-send templates are read from the worker's own `BUCKET` R2 binding (`html_templates/<name>`, same keys `POST /html-templates` writes — no `<SITE_URL>` HTTP fetch). `POST /html-templates` publishes built templates (`byzantini-bucket`; `templates:build --prod/--dev` calls it — no AWS SDK/S3 credentials anywhere; `templates:build --dev` also seeds the local worker's R2 for dev sends). The campaign CLI (`bun run campaign`) reads recipients from **Cloudflare D1** through `wrangler d1 execute --remote` (`src/db.ts` — spawned per query, uses the existing `wrangler login`, **no API token / no server**): `--db prod` ⇒ `byzantini-db`, default `dev` ⇒ `byzantini-db-preview`.
 
 Shared-secret bootstrap/rotation: `bun run worker-secrets` (`scripts/workerSecrets.ts`) — sets the two matching site↔worker pairs on the deployed workers (defaults: pdfWorker/emailWorker + site envs `production`,`preview`; `--help` for flags) and **mirrors the values into the local env files** (site `.env`/`.env.production`, the services' `.dev.vars`, emailWorker `.env.development`/`.env.production`), so dev, `wrangler dev` and `templates:build` pick the new tokens automatically. Requires `wrangler login`; values are generated locally, never passed as argv and never printed.
 
@@ -129,13 +131,50 @@ Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in 
 - Multiple-value SQL uses `???` placeholders (expanded by
   `questionMarks` in `lib/db.ts`).
 - Multi-step writes use the transaction callback pattern — see
-  `lib/api/routes/registrations.ts` for the canonical example.
+  `lib/api/routes/pupils.ts` (`Pupils.post`, the public registration flow:
+  find-or-create the pupil, append the enrollment, upsert the subscription) for
+  the canonical example.
 - **D1 has no interactive transactions**: `executeTransaction` executes
   statements immediately (no rollback). Rollback-sensitive flows must be
   refactored to `db.batch(...)` or made idempotent — see `docs/MIGRATION_SPEC.md`.
 - Prefer SQL parameterization; never interpolate user input into SQL strings.
 - Schema changes go through `migrations/NNNN_*.sql` +
   `wrangler d1 migrations apply DB --local` (never ad-hoc DDL in route code).
+
+## Pupil register (Μαθητολόγιο)
+
+The person data that used to live on `registrations` is split into two tables
+(migration `0002_pupils.sql`); the legacy `registrations` table was dropped in
+`0003_drop_registrations.sql`. Full plan + data-cleansing rules:
+`docs/PUPILS_MIGRATION.md`.
+
+- `pupils` — identity, one row per person, keyed by ΑΜ (Αριθμός Μητρώου, an
+  INTEGER). `am` is NULL for the two review cases: true orphans (no ΑΜ at all →
+  `orphan_code` `000-Ο1`…) and rows split off a shared ΑΜ (`split_from_am` →
+  `111-Σ1`…). `needs_review` marks the ~62 rows the secretaries must resolve.
+  `registration_url` lives here and is permanent (the links already emailed to
+  students keep working).
+- `pupil_enrollments` — history, one row per pupil / school year / music type /
+  instrument. `class_id` is the music type (0 Βυζαντινή, 1 Παραδοσιακή,
+  2 Ευρωπαϊκή); `source` records whether the row came from `migration`, the
+  public `form` or an `admin`.
+- `total_enrollments` replaces the old `total_registrations` counter (counts
+  enrollment rows, re-derivable from the table).
+- Routes: `Pupils.*` (`lib/api/routes/pupils.ts`). The enrollment listing routes
+  return the **joined** row (`z_JoinedEnrollments`) — a superset of the old
+  `registrations` row, so the admin table, the Excel/PDF exports and the PDF
+  worker keep their shape. `am` is a STRING there ('706', or the orphan code).
+- Newsletter routes live in `EmailSubscriptions.*`
+  (`lib/api/routes/emailSubscriptions.ts`) but keep their public paths
+  (`/registrations/email-*`) — those URLs are inside already-sent emails.
+- The public form (`RegistrationForm.solid.tsx`) is a three-step flow: pick a
+  music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student" with
+  `ΑΜ = 000`) → the form. The identification happens ONCE; switching department
+  afterwards must not send the user back through it.
+- Cleansing/backfill tooling: `bun run pupils:migrate` (dry run) /
+  `pupils:migrate:apply`, `--db prod --yes-prod` for production.
+  `bun run dev:clean` removes the fixtures the API suite writes to the local
+  dev DB.
 
 ## Env, storage and external services
 

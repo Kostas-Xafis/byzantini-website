@@ -266,51 +266,176 @@ export interface Registrations {
 	pass: boolean;
 }
 
-// export const v_StudentRecord = object({
-// 	id: positiveInt("Μη έγκυρο id"),
-// 	am: string("Μη έγκυρο ΑΜ"),
-// 	amka: union([string([length(11)]), literal("")], "Μη έγκυρο ΑΜΚΑ"),
-// 	first_name: string("Μη έγκυρο όνομα"),
-// 	last_name: string("Μη έγκυρο επώνυμο"),
-// 	fathers_name: string("Μη έγκυρο όνομα πατέρα"),
-// 	birth_date: number("Μη έγκυρη ημερομηνία γέννησης", [integer()]),
-// 	telephone: string("Μη έγκυρο τηλέφωνο"),
-// 	cellphone: string("Μη έγκυρο κινητό τηλέφωνο"),
-// 	email: string("Μη έγκυρο email", [email()]),
-// 	road: string("Μη έγκυρος δρόμος"),
-// 	number: positiveInt("Μη έγκυρος αριθμός"),
-// 	tk: positiveInt("Μη έγκυρος ταχυδρομικός κώδικας"),
-// 	region: string("Μη έγκυρη περιοχή")
-// });
+// The old `StudentRecord` / `StudentClass` sketch that used to live here was
+// implemented for real as `Pupils` / `PupilEnrollments` below (migration
+// 0002_pupils.sql, docs/PUPILS_MIGRATION.md).
 
-// export interface StudentRecord {
-// 	id: number;
-// 	am: string;
-// 	amka: string;
-// 	first_name: string;
-// 	last_name: string;
-// 	fathers_name: string;
-// 	birth_date: number;
-// 	telephone: string;
-// 	cellphone: string;
-// 	email: string;
-// 	road: string;
-// 	number: number;
-// 	tk: number;
-// 	region: string;
-// }
+/**
+ * Pupil register (Μαθητολόγιο) — replaces the person half of `registrations`.
+ *
+ * `am` is NULL when the pupil has no usable ΑΜ: either a true orphan (no ΑΜ at
+ * all, see `orphan_code`) or a row split off a shared ΑΜ (see `split_from_am`).
+ * `registration_url` is permanent — the links already emailed to students keep
+ * working forever.
+ */
+export const v_Pupils = object({
+	id: positiveInt("Μη έγκυρο id"),
+	am: nullable(positiveInt("Μη έγκυρο ΑΜ")),
+	orphan_code: string("Μη έγκυρος κωδικός εκκρεμότητας"),
+	split_from_am: nullable(positiveInt("Μη έγκυρο split_from_am")),
+	first_name: string("Μη έγκυρο όνομα"),
+	last_name: string("Μη έγκυρο επώνυμο"),
+	fathers_name: string("Μη έγκυρο όνομα πατέρα"),
+	birth_date: number("Μη έγκυρη ημερομηνία γέννησης", [integer()]),
+	road: string("Μη έγκυρος δρόμος"),
+	number: positiveInt("Μη έγκυρος αριθμός"),
+	tk: positiveInt("Μη έγκυρος ταχυδρομικός κώδικας"),
+	region: string("Μη έγκυρη περιοχή"),
+	telephone: string("Μη έγκυρο τηλέφωνο"),
+	cellphone: string("Μη έγκυρο κινητό τηλέφωνο"),
+	email: string("Μη έγκυρο email"),
+	amka: union([string([length(11)]), literal("")], "Μη έγκυρο ΑΜΚΑ"),
+	registration_url: string("Μη έγκυρο registration_url"),
+	needs_review: looseBoolean("Μη έγκυρη σήμανση ελέγχου"),
+	review_note: string("Μη έγκυρη σημείωση ελέγχου"),
+	created_at: positiveInt("Μη έγκυρη ημερομηνία δημιουργίας"),
+	updated_at: positiveInt("Μη έγκυρη ημερομηνία ενημέρωσης"),
+});
+export interface Pupils {
+	id: number;
+	am: number | null;
+	orphan_code: string;
+	split_from_am: number | null;
+	first_name: string;
+	last_name: string;
+	fathers_name: string;
+	birth_date: number;
+	road: string;
+	number: number;
+	tk: number;
+	region: string;
+	telephone: string;
+	cellphone: string;
+	email: string;
+	amka: string;
+	registration_url: string;
+	needs_review: boolean;
+	review_note: string;
+	created_at: number;
+	updated_at: number;
+}
 
-// export interface StudentClass {
-// 	id: number;
-// 	registration_id: number;
-// 	class_id: number;
-// 	teacher_id: number;
-// 	instrument_id: number;
-// 	payment_amount: number;
-// 	total_payment: number;
-// 	payment_date?: number | null;
-// 	pass: boolean;
-// }
+/** One year / music type / instrument of a pupil's history. */
+export const v_PupilEnrollments = object({
+	id: positiveInt("Μη έγκυρο id"),
+	pupil_id: positiveInt("Μη έγκυρο pupil_id"),
+	registration_year: string("Μη έγκυρο έτος εγγραφής"),
+	class_id: positiveInt("Μη έγκυρο μάθημα"),
+	class_year: string("Μη έγκυρο έτος τάξης"),
+	teacher_id: number("Μη έγκυρος καθηγητής", [integer(), minValue(-1)]),
+	instrument_id: positiveInt("Μη έγκυρο μουσικό όργανο"),
+	date: positiveInt("Μη έγκυρη ημερομηνία"),
+	payment_amount: positiveInt("Μη έγκυρο ποσό πληρωμής"),
+	total_payment: positiveInt("Μη έγκυρο συνολικό ποσό πληρωμής"),
+	payment_date: optional(nullable(positiveInt("Μη έγκυρη ημερομηνία πληρωμής"))),
+	pass: looseBoolean("Μη έγκυρη προαγωγή"),
+	source: string("Μη έγκυρη πηγή εγγραφής"),
+	created_at: positiveInt("Μη έγκυρη ημερομηνία δημιουργίας"),
+});
+export interface PupilEnrollments {
+	id: number;
+	pupil_id: number;
+	registration_year: string;
+	class_id: number;
+	class_year: string;
+	teacher_id: number;
+	instrument_id: number;
+	date: number;
+	payment_amount: number;
+	total_payment: number;
+	payment_date?: number | null;
+	pass: boolean;
+	source: string;
+	created_at: number;
+}
+
+/**
+ * Joined row returned by the enrollment listing routes: the enrollment plus its
+ * pupil's identity, in the exact shape the admin table, the Excel/PDF exports
+ * and the PDF worker expect (a superset of the old `registrations` row).
+ *
+ * `am` is a STRING here on purpose: the legacy contract (and every export) wants
+ * '706'. Orphans have no ΑΜ, so `orphan_code` ('000-Ο1') stands in for it.
+ */
+export const v_JoinedEnrollments = object({
+	id: positiveInt("Μη έγκυρο id"),
+	pupil_id: positiveInt("Μη έγκυρο pupil_id"),
+	am: string("Μη έγκυρο ΑΜ"),
+	orphan_code: string("Μη έγκυρος κωδικός εκκρεμότητας"),
+	split_from_am: nullable(positiveInt("Μη έγκυρο split_from_am")),
+	last_name: string("Μη έγκυρο επώνυμο"),
+	first_name: string("Μη έγκυρο όνομα"),
+	fathers_name: string("Μη έγκυρο όνομα πατέρα"),
+	birth_date: number("Μη έγκυρη ημερομηνία γέννησης", [integer()]),
+	road: string("Μη έγκυρος δρόμος"),
+	number: positiveInt("Μη έγκυρος αριθμός"),
+	tk: positiveInt("Μη έγκυρος ταχυδρομικός κώδικας"),
+	region: string("Μη έγκυρη περιοχή"),
+	telephone: string("Μη έγκυρο τηλέφωνο"),
+	cellphone: string("Μη έγκυρο κινητό τηλέφωνο"),
+	email: string("Μη έγκυρο email"),
+	amka: union([string([length(11)]), literal("")], "Μη έγκυρο ΑΜΚΑ"),
+	registration_url: string("Μη έγκυρο registration_url"),
+	needs_review: looseBoolean("Μη έγκυρη σήμανση ελέγχου"),
+	registration_year: string("Μη έγκυρο έτος εγγραφής"),
+	class_year: string("Μη έγκυρο έτος τάξης"),
+	class_id: positiveInt("Μη έγκυρο μάθημα"),
+	teacher_id: number("Μη έγκυρος καθηγητής", [integer(), minValue(-1)]),
+	instrument_id: positiveInt("Μη έγκυρο μουσικό όργανο"),
+	date: positiveInt("Μη έγκυρη ημερομηνία"),
+	payment_amount: positiveInt("Μη έγκυρο ποσό πληρωμής"),
+	total_payment: positiveInt("Μη έγκυρο συνολικό ποσό πληρωμής"),
+	payment_date: optional(nullable(positiveInt("Μη έγκυρη ημερομηνία πληρωμής"))),
+	pass: looseBoolean("Μη έγκυρη προαγωγή"),
+});
+export interface JoinedEnrollments extends Omit<Pupils, "id" | "am" | "created_at" | "updated_at" | "review_note"> {
+	/** The enrollment id (the old `registrations.id`). */
+	id: number;
+	/** The pupil's id (what the Μαθητολόγιο links to). */
+	pupil_id: number;
+	/** String form of the pupil's ΑΜ, or their orphan code when there is none. */
+	am: string;
+	registration_year: string;
+	class_year: string;
+	class_id: number;
+	teacher_id: number;
+	instrument_id: number;
+	date: number;
+	payment_amount: number;
+	total_payment: number;
+	payment_date?: number | null;
+	pass: boolean;
+}
+
+/** Search result row: enough for the Μαθητολόγιο list without the history. */
+export interface PupilSearchResult {
+	id: number;
+	am: number | null;
+	orphan_code: string;
+	split_from_am: number | null;
+	first_name: string;
+	last_name: string;
+	fathers_name: string;
+	birth_date: number;
+	telephone: string;
+	cellphone: string;
+	email: string;
+	amka: string;
+	needs_review: boolean;
+	enrollment_count: number;
+	last_registration_year: string;
+	music_types: string;
+}
 
 export const v_EmailSubscriptions = object({
 	email: string([email("Μη έγκυρο email")]),

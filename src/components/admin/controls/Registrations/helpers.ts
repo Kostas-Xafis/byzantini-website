@@ -1,4 +1,4 @@
-import type { Instruments, Registrations, Teachers } from "@_types/entities";
+import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
 import { classYearsForClassId } from "@lib/classYears";
 import type { APIClient } from "@hooks/useAPIClient.solid";
 import { type Props as InputProps } from "../../../input/Input.solid";
@@ -7,7 +7,32 @@ export const PREFIX = "registrations";
 
 export type APIHook = APIClient;
 
-export const RegistrationsInputs = (student: Registrations, teachers: Teachers[], instruments: Instruments[]): Record<keyof Registrations, InputProps> => {
+/**
+ * The fields the enrollment editor manages: the enrollment plus the pupil's
+ * identity — ΑΜ, επώνυμο, όνομα, πατρώνυμο — mirroring the pupil columns the
+ * table shows. The rest of the pupil record (ΑΜΚΑ, phones, email, birth date,
+ * address) belongs to the Μαθητολόγιο and is deliberately absent here, as are
+ * the joined row's bookkeeping columns (`orphan_code`, `split_from_am`,
+ * `needs_review`, `pupil_id`).
+ */
+export type EnrollmentEditFields = Omit<
+	JoinedEnrollments,
+	| "orphan_code"
+	| "split_from_am"
+	| "needs_review"
+	| "pupil_id"
+	| "amka"
+	| "telephone"
+	| "cellphone"
+	| "email"
+	| "birth_date"
+	| "road"
+	| "number"
+	| "tk"
+	| "region"
+>;
+
+export const RegistrationsInputs = (student: JoinedEnrollments, teachers: Teachers[], instruments: Instruments[]): Record<keyof EnrollmentEditFields, InputProps> => {
 	let sortTeachers = teachers
 		.map((t) => t)
 		.sort((a, b) => {
@@ -33,12 +58,6 @@ export const RegistrationsInputs = (student: Registrations, teachers: Teachers[]
 			type: "text",
 			iconClasses: "fa-solid fa-id-card",
 		},
-		amka: {
-			label: "ΑΜΚΑ",
-			name: "amka",
-			type: "text",
-			iconClasses: "fa-solid fa-id-card",
-		},
 		last_name: {
 			label: "Επώνυμο",
 			name: "last_name",
@@ -56,54 +75,6 @@ export const RegistrationsInputs = (student: Registrations, teachers: Teachers[]
 			name: "fathers_name",
 			type: "text",
 			iconClasses: "fa-solid fa-user",
-		},
-		telephone: {
-			label: "Τηλέφωνο",
-			name: "telephone",
-			type: "text",
-			iconClasses: "fa-solid fa-phone",
-		},
-		cellphone: {
-			label: "Κινητό",
-			name: "cellphone",
-			type: "text",
-			iconClasses: "fa-solid fa-mobile-screen",
-		},
-		email: {
-			label: "Email",
-			name: "email",
-			type: "email",
-			iconClasses: "fa-solid fa-envelope",
-		},
-		birth_date: {
-			label: "Ημερομηνία Γέννησης",
-			name: "birth_date",
-			type: "date",
-			iconClasses: "fa-regular fa-calendar-days",
-		},
-		road: {
-			label: "Οδός",
-			name: "road",
-			type: "text",
-			iconClasses: "fa-solid fa-location-dot",
-		},
-		number: {
-			label: "Αριθμός",
-			name: "number",
-			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
-		},
-		tk: {
-			label: "Τ.Κ.",
-			name: "tk",
-			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
-		},
-		region: {
-			label: "Δήμος/Περιοχή",
-			name: "region",
-			type: "text",
-			iconClasses: "fa-solid fa-tree-city",
 		},
 		registration_year: {
 			label: "Σχολικό Έτος",

@@ -15,6 +15,7 @@ const sections: NavSection[] = [
 		title: "Σχολή",
 		links: [
 			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "fa-solid fa-clipboard-list" },
+			{ name: "Μαθητολόγιο", url: "/admin/pupils", force: false, icon: "fa-solid fa-address-book" },
 			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "fa-solid fa-chalkboard-user" },
 			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "fa-solid fa-location-dot" },
 			{ name: "Βιβλία", url: "/admin/books", force: false, icon: "fa-solid fa-book" },
@@ -229,6 +230,14 @@ export default function AdminNav(props: RouterProps) {
 					{`/* Staggered slide-down for the mobile menu. Selectors are
 			count-independent: :nth-of-type counts only <a> siblings, ignoring
 			section headings, so hiding a link never breaks the sequence. */
+			#burgerNavMenu a:nth-of-type(13) {
+				transition-duration: 0.425s;
+				transform: translateY(-12px);
+			}
+			#burgerNavMenu a:nth-of-type(12) {
+				transition-duration: 0.45s;
+				transform: translateY(-11px);
+			}
 			#burgerNavMenu a:nth-of-type(11) {
 				transition-duration: 0.475s;
 				transform: translateY(-10px);
@@ -287,6 +296,12 @@ export default function AdminNav(props: RouterProps) {
 			}
 			#burgerNav:has(:checked) a:nth-of-type(11) {
 				transition-duration: 0.85s;
+			}
+			#burgerNav:has(:checked) a:nth-of-type(12) {
+				transition-duration: 0.875s;
+			}
+			#burgerNav:has(:checked) a:nth-of-type(13) {
+				transition-duration: 0.9s;
 			}
 			#burgerNav:has(:checked) a:nth-of-type(5) {
 				transition-duration: 0.7s;

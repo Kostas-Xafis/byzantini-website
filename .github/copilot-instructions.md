@@ -24,12 +24,25 @@
   `lib/hooks/useAPI.solid.ts` (browser); keys look like `Authentication.userLogin`.
 
 ## Middleware, validation, and responses
-- Prefer `execTryCatch(...)` + wrappers in `lib/utils.server.ts` for handler
-  returns/errors.
-- Set route flags (`authentication`, `validation`, `multipart`) in route
-  contracts; middleware auto-attaches in `lib/routes/index.server.ts`.
-- Validation is Valibot-based via `requestValidation(...)` in
-  `lib/middleware/requestValidation.ts`.
+- Use `handlerResult(...)` for handler returns/errors (`lib/api/routes/APIServer.ts`);
+  it runs the 1-arg form inside the D1 transaction shim, maps a string result to
+  `{ message }` and anything else to `{ data }`.
+- Middleware is attached per route via the `APIServer` middleware array
+  (`authenticateMiddleware` from `lib/api/routes/middleware/authenticate.ts`).
+- Validation is Zod, declared on the route instance (`schema` for requests,
+  `responseSchema` for the `{ data }` payload).
+
+## Pupil register (Μαθητολόγιο)
+- Person data lives in `pupils` (identity, keyed by ΑΜ) + `pupil_enrollments`
+  (one row per pupil / year / music type / instrument); the legacy
+  `registrations` table was dropped. See `docs/PUPILS_MIGRATION.md`.
+- `pupils.am` is an INTEGER and NULL for review cases (`orphan_code` `000-Ο1`…,
+  `split_from_am` `111-Σ1`…); `registration_url` on the pupil is permanent.
+- Routes are `Pupils.*`; enrollment listings return the JOINED row
+  (`z_JoinedEnrollments`) which keeps the old `registrations` wire shape (with
+  `am` as a string) for the admin table and the PDF/Excel exports.
+- Newsletter routes are `EmailSubscriptions.*` but deliberately keep their
+  public paths (`/registrations/email-*`) — they are inside sent emails.
 
 ## Database + transactions
 - Access DB through `executeQuery(...)` / `executeTransaction(...)`
@@ -81,7 +94,11 @@
   (`services/emailWorker` — the whole `email/` stack moved there; MailerSend
   REST API; secrets `MAILERSEND_API_KEY` + `SERVICE_AUTH_TOKEN`); the site
   calls it through the `EMAIL_SERVICE` binding with
-  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body, and the worker reads its
+  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body **in every environment** —
+  the dry-run decision lives in the worker (`decideDryRun`: `DRY_RUN` →
+  `ENVIRONMENT` → missing API key → no `CF-Connecting-IP`), so a local
+  `wrangler dev` request renders + logs the email and never sends. The worker
+  reads its
   per-send templates from its own `BUCKET` R2 binding (`html_templates/<name>`,
   no `SITE_URL` HTTP fetch). The campaign CLI (`bun run campaign`) reads
   recipients from Cloudflare D1 via spawned `wrangler d1 execute --remote`
@@ -99,7 +116,12 @@
 ## Workflows and conventions
 - Core commands: `bun run dev`, `bun run build`,
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
-  `bun run db:reset`, `bun run typecheck`, `bun run check`.
+  `bun run db:reset` (then re-apply migrations — the snapshot does not carry
+  them), `bun run typecheck`, `bun run check`.
+- Database maintenance helpers: `bun run dev:clean` removes the rows the API
+  suite writes to the local dev DB; `bun run pupils:migrate` (dry run) /
+  `pupils:migrate:apply` is the `registrations` → `pupils` + `pupil_enrollments`
+  backfill.
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker

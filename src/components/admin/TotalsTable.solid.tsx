@@ -41,11 +41,11 @@ export default function TotalsTable() {
 	});
 
 	const initialRegistrationsArgs = { UrlArgs: { year: getAcademicYearStart() } };
-	createAPIResource(API.Registrations.getTotalByYear, undefined, { cache: setStore });
-	createAPIResource(API.Registrations.get, () => initialRegistrationsArgs, { cache: setStore });
+	createAPIResource(API.Pupils.getTotalByYear, undefined, { cache: setStore });
+	createAPIResource(API.Pupils.getEnrollmentsByYear, () => initialRegistrationsArgs, { cache: setStore });
 
 	const growthChart = createMemo(() => {
-		const totals = store[API.Registrations.getTotalByYear];
+		const totals = store[API.Pupils.getTotalByYear];
 		if (!totals) return { labels: [] as string[], values: [] as number[], lastValue: 0 };
 
 		const values = years.map((year) => totals[year] || 0);
@@ -148,7 +148,7 @@ export default function TotalsTable() {
 	});
 
 	const summary = createMemo(() => {
-		const registrations = store[API.Registrations.get] || [];
+		const registrations = store[API.Pupils.getEnrollmentsByYear] || [];
 		const now = new Date();
 
 		const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -174,7 +174,7 @@ export default function TotalsTable() {
 	});
 
 	return (
-		<Show when={store[API.Registrations.getTotalByYear]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show when={store[API.Pupils.getTotalByYear]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-red-950 dark:text-red-50">
 				<div class="w-full max-w-5xl justify-self-center grid grid-cols-2 max-md:grid-cols-1 gap-4">
 					<div class="rounded-xl border border-red-900/20 dark:border-red-800/50 shadow-md shadow-gray-300 dark:shadow-gray-700 bg-white dark:bg-dark p-4">

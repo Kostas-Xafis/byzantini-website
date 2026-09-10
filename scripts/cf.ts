@@ -99,7 +99,7 @@ Commands:
 Examples:
   bun run cf
   bun run cf deploy
-  bun run cf d1:query "SELECT COUNT(*) FROM registrations"
+  bun run cf d1:query "SELECT COUNT(*) FROM pupils"
   bun run cf tail --format=json
 `);
 }

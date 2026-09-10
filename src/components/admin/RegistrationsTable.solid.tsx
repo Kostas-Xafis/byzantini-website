@@ -63,20 +63,20 @@ export default function RegistrationsTable() {
 		setStore,
 		mutations: [
 			{
-				srcEndpoint: API.Registrations.getById,
-				destEndpoint: API.Registrations.get,
+				srcEndpoint: API.Pupils.getEnrollmentById,
+				destEndpoint: API.Pupils.getEnrollmentsByYear,
 			},
 		],
 	});
 
-	createAPIResource(API.Registrations.getYears, undefined, { cache: setStore });
+	createAPIResource(API.Pupils.getYears, undefined, { cache: setStore });
 	createAPIResource(API.Teachers.getByFullnames, undefined, { cache: setStore });
 	createAPIResource(API.Instruments.get, undefined, { cache: setStore });
 
 	// Year-driven registrations fetch: waits while no year is selected and
 	// refetches whenever the year changes (replaces the legacy on(year) fetch effect).
 	createAPIResource(
-		API.Registrations.get,
+		API.Pupils.getEnrollmentsByYear,
 		() => {
 			const y = year();
 			return y === null ? undefined : { UrlArgs: { year: y } };
@@ -87,7 +87,7 @@ export default function RegistrationsTable() {
 	// Automatically select the latest available school year once known,
 	// so the table opens populated without requiring a button press.
 	createEffect(() => {
-		const availableYears = store[API.Registrations.getYears];
+		const availableYears = store[API.Pupils.getYears];
 		if (!availableYears) return;
 		const currentYear = new Date().getFullYear();
 		if (availableYears.length === 0) {
@@ -110,7 +110,7 @@ export default function RegistrationsTable() {
 	const onPrint = onPrintMemo(store, selectedItems);
 
 	createEffect(() => {
-		const registrations = store[API.Registrations.get];
+		const registrations = store[API.Pupils.getEnrollmentsByYear];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!registrations || !teachers || !instruments) return;
@@ -127,7 +127,7 @@ export default function RegistrationsTable() {
 		document.addEventListener("hydrate", (e) => {
 			e.stopPropagation();
 			untrack(() => {
-				let registrations = store[API.Registrations.get];
+				let registrations = store[API.Pupils.getEnrollmentsByYear];
 				if (!registrations) return;
 				let rows = [...document.querySelectorAll<HTMLElement>(".row[data-id]")];
 				let resultArray = [];
@@ -167,9 +167,7 @@ export default function RegistrationsTable() {
 
 	return (
 		<>
-			<Show
-				when={store[API.Registrations.get] && store[API.Teachers.getByFullnames] && store[API.Instruments.get]}
-				fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+			<Show when={store[API.Pupils.getEnrollmentsByYear]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 				<Table
 					prefix={PREFIX}
 					data={shapedData}
@@ -188,7 +186,7 @@ export default function RegistrationsTable() {
 									searchQuery,
 									setSearchQuery,
 									resultsCount: dataLength,
-									totalCount: () => store[API.Registrations.get]?.length ?? 0,
+									totalCount: () => store[API.Pupils.getEnrollmentsByYear]?.length ?? 0,
 									searchToIndex: (columnName) =>
 										columnName === ALL_COLUMNS ? "all" : columnIndexOf(columnName) >= 0 ? [columnIndexOf(columnName)] : undefined,
 									onQueryChange,

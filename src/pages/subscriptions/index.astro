@@ -44,7 +44,7 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 			if (data.email === "") {
 				throw new Error("Το πεδίο διεύθυνσης email είναι υποχρεωτικό.");
 			}
-			const res = await useAPI("Registrations.emailSubscribe", {
+			const res = await useAPI("EmailSubscriptions.emailSubscribe", {
 				RequestObject: data,
 			});
 			if (res.data && res.data.subscribed) {

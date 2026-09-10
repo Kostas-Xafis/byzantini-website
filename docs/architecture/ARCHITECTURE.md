@@ -3,6 +3,9 @@
 > Live interactive version: open **`visualize.html`** (same folder) in a browser — all diagrams rendered
 > client-side with Mermaid 11, each with a “toggle source” / “copy” button.
 >
+> ⚠️ `visualize.html` is a generated snapshot of this file and is currently **stale** for the
+> pupil-register split (it still shows `registrations`); regenerate it from this document when convenient.
+>
 > Snapshot surveyed on the `Workers` branch, generated from a full read-only sweep of the repo (pages, API
 > layer, DB schema, storage, both aux workers, tooling). English annotations; user-facing UI text is Greek.
 >
@@ -128,7 +131,7 @@ interactive page uses vanilla `<script>` + `fetch`/`useAPI`.
 Αρχική · Η Σχολή μας ▾ (Διοικητικό Συμβούλιο, Ανακοινώσεις, Χορωδία) · Εγγραφές · Καθηγητές ·
 Σπουδαστήρια · Επικοινωνία. CSS-only mobile burger; `data-astro-prefetch="hover"`. No public footer exists.
 
-### 4.3 Admin SPA (one island, 11 routes)
+### 4.3 Admin SPA (one island, 12 routes)
 
 ```mermaid
 flowchart LR
@@ -136,11 +139,12 @@ flowchart LR
   R --> CH["AdminPage: AdminNav + AlertStack + GlobalSearch (owner-only)"]
   R --> D1["/admin dashboard TotalsTable"]
   R --> D2["/admin/registrations + PDF/print/XLSX"]
+  R --> D5["/admin/pupils Μαθητολόγιο<br/>search → record → history"]
   R --> D3["/admin/teachers | locations | books | announcements"]
   R --> D4["/admin/payments | payoffs | sysusers | query-logs | settings"]
 ```
 
-Admin sidebar groups: Σχολή (Εγγραφές, Καθηγητές, Παραρτήματα, Βιβλία, Ανακοινώσεις), Οικονομικά
+Admin sidebar groups: Σχολή (Εγγραφές, Μαθητολόγιο, Καθηγητές, Παραρτήματα, Βιβλία, Ανακοινώσεις), Οικονομικά
 (Οφειλές Μαθητών, Οφειλές Σχολής), Σύστημα (Διαχειριστές, Καταγραφή Ερωτημάτων, Ρυθμίσεις, Έξοδος).
 Data flow: `createAPIResource` caches per endpoint → tables mutate via `useAPIClient`/`apiCall` →
 `useCacheMutations` re-hydrates lists after writes.
@@ -175,7 +179,8 @@ flowchart TB
   G9["teachers · 16<br/>6 public"]:::mix
   G10["sysusers · 7<br/>register public"]:::mix
   G11["queryLogs · 2 Y"]:::adm
-  G12["registrations · 13<br/>self-service + admin"]:::mix
+  G12["pupils · 14<br/>self-service + admin"]:::mix
+  G16["emailSubscriptions · 4<br/>public (paths stay /registrations/email-*)"]:::mix
   G13["schema backup · 1 Y"]:::adm
   G14["settingsBackup · 3 Y"]:::adm
   G15["pdf · 1 Y<br/>binary proxy → PDF_SERVICE binding"]:::adm
@@ -232,7 +237,8 @@ Caller mechanics worth knowing:
 
 ```mermaid
 erDiagram
-  REGISTRATIONS { int id PK; varchar am; varchar email; int class_id; int teacher_id; int instrument_id; varchar registration_url; int pass }
+  PUPILS { int id PK; int am; varchar orphan_code; varchar last_name; varchar first_name; varchar email; varchar amka; varchar registration_url; int needs_review }
+  PUPIL_ENROLLMENTS { int id PK; int pupil_id FK; varchar registration_year; int class_id; varchar class_year; int teacher_id; int instrument_id; int pass }
   TEACHERS { int id PK; string fullname; varchar amka; int online }
   CLASS_TYPE { int id PK; string name }
   TEACHER_CLASSES { int teacher_id PK; int class_id PK; int priority; varchar registration_number }
@@ -250,7 +256,7 @@ erDiagram
   SYS_USER_REGISTER_LINKS { string link; int exp_date }
   EMAIL_SUBSCRIPTIONS { string email PK; string unsubscribe_token; int unrelated }
   TOTAL_PAYMENTS { int amount }
-  TOTAL_REGISTRATIONS { int amount; int year }
+  TOTAL_ENROLLMENTS { int amount }
   TOTAL_SCHOOL_PAYOFFS { int amount }
   QUERY_LOGS { string id PK; string query; string args; int date; int error }
   TEACHERS ||--o{ TEACHER_CLASSES : teaches
@@ -259,9 +265,10 @@ erDiagram
   LOCATIONS ||--o{ TEACHER_LOCATIONS : hosts
   TEACHERS ||--o{ TEACHER_INSTRUMENTS : plays
   INSTRUMENTS ||--o{ TEACHER_INSTRUMENTS : used
-  REGISTRATIONS }o--|| TEACHERS : teacher_id
-  REGISTRATIONS }o--o| CLASS_TYPE : class_id
-  REGISTRATIONS }o--o| INSTRUMENTS : instrument_id
+  PUPILS ||--o{ PUPIL_ENROLLMENTS : history
+  PUPIL_ENROLLMENTS }o--|| TEACHERS : teacher_id
+  PUPIL_ENROLLMENTS }o--o| CLASS_TYPE : class_id
+  PUPIL_ENROLLMENTS }o--o| INSTRUMENTS : instrument_id
   WHOLESALERS ||--o{ BOOKS : supplies
   BOOKS ||--o{ PAYMENTS : sold-as
   WHOLESALERS ||--o{ SCHOOL_PAYOFFS : paid-out
@@ -341,7 +348,7 @@ Two endpoints:
 Transactional triggers (only two, grep-verified):
 
 1. `Registrations.post` — success email **only in production**, template picked from 7
-   `epitixis_eggrafi*.html` variants by class/year (map in `registrations.ts`).
+   `epitixis_eggrafi*.html` variants by class/year (map in `pupils.ts`, `Pupils.post`).
 2. `SysUsers.createRegisterLink` — admin invite (`sysuser_register_link.html`, 24 h link).
 
 ### 8.3 Campaigns & template pipeline (CLI side)

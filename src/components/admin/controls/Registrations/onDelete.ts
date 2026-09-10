@@ -12,12 +12,12 @@ export const onDelete = function (hydrate: CacheMutationsReturnType, store: Part
 			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE,
 		};
-		const registrations = store[API.Registrations.get];
+		const registrations = store[API.Pupils.getEnrollmentsByYear];
 		if (!registrations || selectedItems.length < 1) return deleteModal;
 
 		const submit = async function () {
 			const data = selectedItems.map((id) => id);
-			const res = await apiHook(API.Registrations.delete, {
+			const res = await apiHook(API.Pupils.deleteEnrollments, {
 				RequestObject: data,
 			});
 			if (!("data" in res ? res.data : res.message)) return;

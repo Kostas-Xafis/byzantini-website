@@ -289,15 +289,26 @@ async function loadRegistrationId(apiHook: ReturnType<typeof useAPI>) {
 	if (urlParams.has("regid")) {
 		const reg_url = urlParams.get("regid") as string;
 		try {
-			const res = await apiHook(API.Registrations.getByReregistrationUrl, {
+			const res = await apiHook(API.Pupils.getByReregistrationUrl, {
 				UrlArgs: { url: reg_url },
 			});
 			if (!res.data) return;
-			res.data.registration_year = genericInputs.registration_year.value as any;
-			res.data.class_year = "";
-			res.data.teacher_id = -1;
-			res.data.instrument_id = -1;
-			return res.data;
+			// The pupil's permanent registration_url resolves to the pupil plus
+			// their history. The form edits a flat row, so merge the identity
+			// fields with the most recent enrollment.
+			const { pupil, enrollments } = res.data;
+			const latest = [...enrollments].sort(
+				(a, b) => (b.registration_year || "").localeCompare(a.registration_year || "") || (b.date || 0) - (a.date || 0),
+			)[0];
+			return {
+				...pupil,
+				am: pupil.am === null ? "" : String(pupil.am),
+				registration_year: genericInputs.registration_year.value as string,
+				class_year: "",
+				class_id: latest?.class_id ?? 0,
+				teacher_id: -1,
+				instrument_id: -1,
+			} as unknown as Registrations;
 		} catch (err) {}
 	}
 }
@@ -308,6 +319,19 @@ export function RegistrationForm() {
 	const apiHook = useAPI(setStore);
 	const [musicType, setMusicType] = createSignal<MusicType>(musicTypeFromURL());
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
+	/**
+	 * Three-step flow:
+	 *  - "type"   — pick a music type
+	 *  - "lookup" — ΑΜ + ΑΜΚΑ only, so a returning student can be identified and
+	 *               the form prefilled (or the "new student" path chosen)
+	 *  - "form"   — the full registration form
+	 */
+	type Step = "type" | "lookup" | "form";
+	const [step, setStep] = createSignal<Step>("type");
+	const [lookupAm, setLookupAm] = createSignal("");
+	const [lookupAmka, setLookupAmka] = createSignal("");
+	const [lookupError, setLookupError] = createSignal("");
+	const [lookupBusy, setLookupBusy] = createSignal(false);
 
 	useHydrate(() => {
 		apiHook(API.Teachers.get);
@@ -322,19 +346,104 @@ export function RegistrationForm() {
 	// Load registration data from URL on mount if any
 	onMount(async () => {
 		const regData = await loadRegistrationId(apiHook);
-		console.log(regData);
 		if (!regData) return;
 		setRegistrationData((prev) => {
 			return { ...prev, ...regData };
 		});
 		setMusicType(MusicTypeArr[regData.class_id]);
+		// The permanent link already identifies the pupil — skip the lookup step.
+		setStep("form");
 	});
 
 	const onMusicTypeChange = (type: MusicType) => {
+		const switchingInsideForm = step() === "form";
 		setMusicType(type);
+		// The class year / teacher / instrument belong to the department being
+		// registered for, so they reset when the department changes.
 		setRegistrationData((prev) => {
-			return { ...prev, instrument_id: -1, teacher_id: -1 };
+			return { ...prev, class_year: "", instrument_id: -1, teacher_id: -1 };
 		});
+		if (switchingInsideForm) return;
+		// First pick (from the type screen) lands on the returning/new-student
+		// choice; identifying the pupil happens ONCE, so switching department later
+		// must not send the user back through the lookup.
+		setStep("lookup");
+		setLookupError("");
+	};
+
+	/** Returning student: ΑΜ + ΑΜΚΑ must both match, then prefill from the record. */
+	const onLookup = async (e: Event) => {
+		e.preventDefault();
+		const am = Number(lookupAm().trim());
+		const amka = lookupAmka().trim();
+		if (!Number.isInteger(am) || am <= 0) {
+			setLookupError("Συμπληρώστε τον αριθμό μητρώου σας.");
+			return;
+		}
+		if (amka.length !== 11) {
+			setLookupError("Ο ΑΜΚΑ αποτελείται από 11 ψηφία.");
+			return;
+		}
+		setLookupError("");
+		setLookupBusy(true);
+		try {
+			const res = await apiHook(API.Pupils.getByAm, { RequestObject: { am, amka } });
+			if (!res.data) {
+				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
+				return;
+			}
+			const { pupil, enrollments } = res.data;
+			const latest = [...enrollments].sort(
+				(a, b) => (b.registration_year || "").localeCompare(a.registration_year || "") || (b.date || 0) - (a.date || 0),
+			)[0];
+			// Identity comes from the record; the enrollment fields reset so the
+			// student re-registers for the current year.
+			setRegistrationData((prev) => ({
+				...prev,
+				...pupil,
+				am: String(pupil.am ?? ""),
+				amka: pupil.amka,
+				registration_year: genericInputs.registration_year.value as string,
+				class_year: "",
+				teacher_id: -1,
+				instrument_id: -1,
+			}));
+			// Keep the department the student was last enrolled in, when it maps to
+			// a valid music type for the form ('' / MusicType.None falls through).
+			const lastType = latest ? MusicTypeArr[latest.class_id] : undefined;
+			if (lastType) setMusicType(lastType);
+			setStep("form");
+		} catch (err) {
+			setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
+		} finally {
+			setLookupBusy(false);
+		}
+	};
+
+	/** New student: blank form, ΑΜ defaults to the '000' placeholder. */
+	const onNewStudent = () => {
+		setRegistrationData((prev) => ({
+			...prev,
+			am: "000",
+			amka: "",
+			last_name: "",
+			first_name: "",
+			fathers_name: "",
+			telephone: "",
+			cellphone: "",
+			email: "",
+			birth_date: undefined as any,
+			road: "",
+			number: undefined as any,
+			tk: undefined as any,
+			region: "",
+			registration_year: genericInputs.registration_year.value as string,
+			class_year: "",
+			teacher_id: -1,
+			instrument_id: -1,
+		}));
+		setLookupError("");
+		setStep("form");
 	};
 
 	const onSubmit = async function (e: Event) {
@@ -392,7 +501,7 @@ export function RegistrationForm() {
 				throw Error("");
 			}
 			setSpinner(true);
-			const res = await apiHook(API.Registrations.post, { RequestObject: data });
+			const res = await apiHook(API.Pupils.post, { RequestObject: data });
 			if (res.data) {
 				PopupShow();
 				setRegistrationData((prevReg) => {
@@ -497,36 +606,126 @@ export function RegistrationForm() {
 					<div
 						id="registrationContainer"
 						class="relative z-10 w-full h-full flex flex-col grid-cols-1 py-10 gap-y-4 place-items-center font-dicact max-sm:gap-y-12">
-						<form
-							id="registrationForm"
-							data-prefix={PREFIX}
-							class="group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm"
-							onSubmit={onSubmit}>
-							<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
-								{heading[musicType()]}
-							</h1>
-							{Object.values(genericInputs).map((input) => {
-								return <Input {...input} prefix={PREFIX} value={registrationData[input.name as keyof Registrations] as any} />;
-							})}
-							<For each={inputsByMusicType(musicType(), store, registrationData)}>
-								{(input) => <Input {...input} prefix={PREFIX} onchange={onFormInputsChange} />}
-							</For>
-							<Show
-								when={!spinner()}
-								fallback={
-									<div class="col-span-full w-max place-self-center p-2 px-6">
-										<Spinner />
-									</div>
-								}>
+						<Show
+							when={step() === "lookup"}
+							fallback={
+								<form
+									id="registrationForm"
+									data-prefix={PREFIX}
+									class="group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm"
+									onSubmit={onSubmit}>
+									<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+										{heading[musicType()]}
+									</h1>
+									{Object.values(genericInputs).map((input) => {
+										return <Input {...input} prefix={PREFIX} value={registrationData[input.name as keyof Registrations] as any} />;
+									})}
+									<For each={inputsByMusicType(musicType(), store, registrationData)}>
+										{(input) => <Input {...input} prefix={PREFIX} onchange={onFormInputsChange} />}
+									</For>
+									<Show
+										when={!spinner()}
+										fallback={
+											<div class="col-span-full w-max place-self-center p-2 px-6">
+												<Spinner />
+											</div>
+										}>
+										<button
+											class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
+											type="submit">
+											Εγγραφή
+										</button>
+									</Show>
+								</form>
+							}>
+							{/* ---- returning student: ΑΜ + ΑΜΚΑ only ---- */}
+							<div
+								id="registrationLookup"
+								class="relative z-10 w-[min(92vw,34rem)] px-10 max-sm:px-5 py-10 grid gap-y-6 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm">
+								<div class="grid gap-y-1 text-center">
+									<h1 class="text-4xl max-sm:text-3xl text-red-900 font-anaktoria font-bold drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+										{heading[musicType()]}
+									</h1>
+									<p class="font-didact text-base text-red-950/80">
+										Συμπληρώστε τον αριθμό μητρώου και τον ΑΜΚΑ σας για να ανακτήσουμε τα στοιχεία σας.
+									</p>
+								</div>
+
+								<form class="grid gap-y-5" onSubmit={onLookup}>
+									<label class="grid gap-y-1">
+										<span class="font-didact text-sm font-semibold text-red-950">Αριθμός Μητρώου</span>
+										<input
+											name="lookup-am"
+											type="text"
+											inputmode="numeric"
+											autocomplete="off"
+											class="rounded-md border border-red-900/40 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-inner focus:outline-hidden focus:ring-2 focus:ring-red-900"
+											value={lookupAm()}
+											onInput={(e) => setLookupAm(e.currentTarget.value)}
+										/>
+									</label>
+									<label class="grid gap-y-1">
+										<span class="font-didact text-sm font-semibold text-red-950">ΑΜΚΑ</span>
+										<input
+											name="lookup-amka"
+											type="text"
+											inputmode="numeric"
+											maxlength={11}
+											autocomplete="off"
+											class="rounded-md border border-red-900/40 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-inner focus:outline-hidden focus:ring-2 focus:ring-red-900"
+											value={lookupAmka()}
+											onInput={(e) => setLookupAmka(e.currentTarget.value)}
+										/>
+									</label>
+
+									<Show when={lookupError()}>
+										<p role="alert" class="rounded-md bg-red-100 px-3 py-2 font-didact text-sm text-red-900">
+											<i class="fa-solid fa-circle-exclamation mr-2" aria-hidden="true"></i>
+											{lookupError()}
+										</p>
+									</Show>
+
+									<Show
+										when={!lookupBusy()}
+										fallback={
+											<div class="w-max place-self-center p-2">
+												<Spinner />
+											</div>
+										}>
+										<button
+											type="submit"
+											class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
+											Ανάκτηση στοιχείων
+										</button>
+									</Show>
+								</form>
+
+								<div class="grid gap-y-3 border-t border-red-900/15 pt-5">
+									<p class="text-center font-didact text-base text-red-950/80">Είστε νέος μαθητής;</p>
+									<button
+										type="button"
+										onClick={onNewStudent}
+										class="w-max place-self-center rounded-xl border-2 border-red-900 px-6 py-2 text-xl font-semibold text-red-900 transition-colors hover:bg-red-900 hover:text-red-50 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2">
+										Πατήστε εδώ
+									</button>
+								</div>
+
 								<button
-									class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
-									type="submit">
-									Εγγραφή
+									type="button"
+									onClick={() => {
+										setStep("type");
+										setMusicType(MusicType.None);
+									}}
+									class="w-max place-self-center font-didact text-sm text-red-900/70 underline underline-offset-2 hover:text-red-900">
+									Πίσω στην επιλογή μουσικής
 								</button>
-							</Show>
-						</form>
+							</div>
+						</Show>
 					</div>
-					<nav id="registrationSelect" class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]" aria-label="Κατηγορίες μαθημάτων">
+					<nav
+						id="registrationSelect"
+						class={"fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]" + (step() === "form" ? "" : " hidden")}
+						aria-label="Κατηγορίες μαθημάτων">
 						<div class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 							<For each={btns}>
 								{([str, type]) => (
@@ -568,11 +767,13 @@ export function RegistrationForm() {
 				}
 				onClose={() => {
 					setMusicType(MusicType.None);
+					setStep("type");
 				}}
 			/>
 			<style>
 				{`
 	#registrationSelect,
+	#registrationLookup,
 	#registrationForm {
 		opacity: 0.0001;
         animation: fadeIn 0.3s ease-in-out forwards;

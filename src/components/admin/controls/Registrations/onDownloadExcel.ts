@@ -1,4 +1,4 @@
-import type { Instruments, Registrations, Teachers } from "@_types/entities";
+import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
 import { loadXLSX } from "@lib/pdf.client";
 import { API, type APIResponse } from "@lib/routes/index.client";
 import { createMemo } from "solid-js";
@@ -11,7 +11,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 			type: ActionEnum.DOWNLOAD_EXCEL,
 			icon: ActionIcon.DOWNLOAD_EXCEL,
 		};
-		const registrations = store[API.Registrations.get];
+		const registrations = store[API.Pupils.getEnrollmentsByYear];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		if (!teachers || !registrations || !instruments || selectedItems.length <= 0) return excelModal;
@@ -26,7 +26,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 						return { student, teacher, instrument };
 					})
 					.filter((x) => !!x) as {
-					student: Registrations;
+					student: JoinedEnrollments;
 					teacher?: Teachers;
 					instrument: Instruments | null;
 				}[]

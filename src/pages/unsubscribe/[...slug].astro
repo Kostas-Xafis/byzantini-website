@@ -16,11 +16,11 @@ let state: UnsubscribeState = "failure";
 if (restoredUrl.pathname.endsWith("/success")) {
 	state = "success";
 } else if (Astro.request.method === "POST") {
-	const res = await useAPI("Registrations.emailUnsubscribe", { RequestObject: { token } }, Astro);
+	const res = await useAPI("EmailSubscriptions.emailUnsubscribe", { RequestObject: { token } }, Astro);
 	if (res.data?.isValid) return Astro.redirect("/unsubscribe/success");
 	state = "failure";
 } else {
-	const res = await useAPI("Registrations.emailUnsubscribeValidate", { RequestObject: { token } }, Astro);
+	const res = await useAPI("EmailSubscriptions.emailUnsubscribeValidate", { RequestObject: { token } }, Astro);
 	state = res.data?.isValid ? "confirm" : "failure";
 }
 ---

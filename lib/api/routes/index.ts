@@ -2,13 +2,14 @@ import type { z } from "astro/zod";
 import { announcementsRoutes } from "./announcements";
 import { authenticationRoutes } from "./authentication";
 import { booksRoutes } from "./books";
+import { emailSubscriptionsRoutes } from "./emailSubscriptions";
 import { instrumentsRoutes } from "./instruments";
 import { locationsRoutes } from "./locations";
 import { paymentsRoutes } from "./payments";
 import { payoffsRoutes } from "./payoffs";
 import { pdfRoutes } from "./pdf";
+import { pupilsRoutes } from "./pupils";
 import { queryLogsRoutes } from "./queryLogs";
-import { registrationsRoutes } from "./registrations";
 import { schemaRoutes } from "./schema";
 import { settingsBackupRoutes } from "./settingsBackup";
 import { sysusersRoutes } from "./sysusers";
@@ -37,7 +38,8 @@ export const routeGroups = {
 	Instruments: instrumentsRoutes,
 	SysUsers: sysusersRoutes,
 	QueryLogs: queryLogsRoutes,
-	Registrations: registrationsRoutes,
+	Pupils: pupilsRoutes,
+	EmailSubscriptions: emailSubscriptionsRoutes,
 	PDF: pdfRoutes,
 	Announcements: announcementsRoutes,
 	Schema: schemaRoutes,

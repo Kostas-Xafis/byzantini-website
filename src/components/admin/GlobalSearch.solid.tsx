@@ -4,7 +4,7 @@ import { useNavigate } from "@solidjs/router";
 import { API } from "@routes/index.client";
 import { apiCall, type APICallResult } from "@hooks/apiCall";
 import { looseStringIncludes } from "@utilities/string";
-import type { Announcements, Books, Locations, Payoffs, Payments, Registrations, Teachers } from "@_types/entities";
+import type { Announcements, Books, JoinedEnrollments, Locations, Payoffs, Payments, Teachers } from "@_types/entities";
 
 type PaletteEntry =
 	| { kind: "group"; key: string; label: string; icon: string }
@@ -12,7 +12,7 @@ type PaletteEntry =
 
 type PaletteSources = {
 	year: number;
-	registrations: Registrations[];
+	registrations: JoinedEnrollments[];
 	teachers: Teachers[];
 	books: Books[];
 	payments: Payments[];
@@ -67,12 +67,12 @@ export default function GlobalSearch() {
 					apiCall(API.Announcements.get),
 					apiCall(API.SysUsers.get),
 					apiCall(API.Wholesalers.get),
-					apiCall(API.Registrations.getYears),
+					apiCall(API.Pupils.getYears),
 				]);
 				// Registrations are per school year; index the most recent one.
 				const yearList = getData(years) ?? [];
 				const year = yearList.length ? Number(yearList[yearList.length - 1].split("-")[0]) : new Date().getFullYear();
-				const registrations = await apiCall(API.Registrations.get, { UrlArgs: { year } });
+				const registrations = await apiCall(API.Pupils.getEnrollmentsByYear, { UrlArgs: { year } });
 				setState({
 					loading: false,
 					ready: true,

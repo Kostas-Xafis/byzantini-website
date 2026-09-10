@@ -1,4 +1,4 @@
-import type { Instruments, Registrations, Teachers } from "@_types/entities";
+import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
 import { PDF } from "@lib/pdf.client";
 import { API, type APIResponse } from "@routes/index.client";
 import { createMemo } from "solid-js";
@@ -7,7 +7,7 @@ import { ActionEnum, ActionIcon } from "../../table/TableControlTypes";
 
 export const onPrint = function (store: Partial<APIResponse>, selectedItems: number[]) {
 	return createMemo(() => {
-		const registrations = store[API.Registrations.get];
+		const registrations = store[API.Pupils.getEnrollmentsByYear];
 		const teachers = store[API.Teachers.getByFullnames];
 		const instruments = store[API.Instruments.get];
 		const printModal = {
@@ -18,7 +18,7 @@ export const onPrint = function (store: Partial<APIResponse>, selectedItems: num
 
 		const submit = async function () {
 			const items = selectedItems.map((id) => {
-				const student = registrations.find((r) => r.id === id) as Registrations;
+				const student = registrations.find((r) => r.id === id) as JoinedEnrollments;
 				const teacher = teachers.find((t) => t.id === student.teacher_id) as Teachers;
 				const instrument = (student.class_id && (instruments.find((i) => i.id === student.instrument_id) as Instruments)) || null;
 				return { student, teacher, instrument };
