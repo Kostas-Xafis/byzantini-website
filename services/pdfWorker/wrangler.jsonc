@@ -16,10 +16,31 @@
 		"binding": "ASSETS"
 	},
 
+	// Lite request telemetry: one Analytics Engine data point per request
+	// (outcome, duration, status, mode, colo) plus a structured JSON log line.
+	// Metadata only — request bodies carry personal data (names, emails, AMKA,
+	// addresses) and are never written here. The dataset is created
+	// automatically on the first write after deploy; query it with the WAE SQL
+	// API (see README § Observability).
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS",
+			"dataset": "byzantini_pdf_worker_requests"
+		}
+	],
+
 	// Auth is the SERVICE_AUTH_TOKEN secret (`wrangler secret put
 	// SERVICE_AUTH_TOKEN`), shared with the site's PDF_SERVICE_AUTH_TOKEN;
 	// local dev uses the same value in `.dev.vars`. No vars here.
+	//
+	// Volume is low (admin-triggered PDF generation), so sample everything and
+	// keep the per-invocation logs alongside our own structured lines.
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		}
 	}
 }

@@ -55,6 +55,66 @@ bunx wrangler deploy --config wrangler.jsonc   # creates/updates byzantini-websi
 > rolling out the service bindings — the site's binding needs the target
 > worker to exist on the account.
 
+## Observability
+
+Enabled in `wrangler.jsonc`:
+
+- `observability` — Workers Logs at 100% sampling (`head_sampling_rate: 1`,
+  `logs.invocation_logs: true`), since volume is low.
+- `analytics_engine_datasets` — binding `env.ANALYTICS` to the
+  `byzantini_pdf_worker_requests` dataset. The dataset is created automatically
+  on the first write after deploy; no manual dashboard step.
+
+Every request emits **one Analytics Engine data point** and **one structured
+JSON log line** (`{"event":"pdf_request",...}`), including requests that fail
+auth or validation. The response also carries an `X-Request-Id` header that
+matches the `requestId` of both records.
+
+Recorded fields:
+
+| Analytics Engine | Field | Meaning |
+| --- | --- | --- |
+| blob1 | `outcome` | `ok` \| `bad_request` \| `unauthorized` \| `error` |
+| blob2 | `type` | request body `type` (`-` if unparsed) |
+| blob3 | `mode` | `single` \| `multiple` (`-` if unparsed) |
+| blob4 | `requestId` | UUID, also returned as `X-Request-Id` |
+| blob5 | `colo` | Cloudflare colo that served the request |
+| blob6 | `error` | short failure reason (`-` on success) |
+| double1 | `durationMs` | wall-clock handling time |
+| double2 | `status` | HTTP status returned |
+| double3 | `count` | registrations rendered |
+| index | `outcome` | sampling/grouping key |
+
+> **No personal data.** Request bodies (names, emails, phone numbers, AMKA,
+> addresses) and the `Authorization` header are never logged — only request
+> metadata. Keep it that way when extending `src/observability.ts`.
+
+Query the dataset with the [Workers Analytics Engine SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)
+(token needs **Account Analytics Read**):
+
+```sql
+-- request volume and failures, last 24h
+SELECT blob1 AS outcome, SUM(_sample_interval) AS requests
+FROM byzantini_pdf_worker_requests
+WHERE timestamp > NOW() - INTERVAL '1' DAY
+GROUP BY outcome
+ORDER BY requests DESC;
+```
+
+```sql
+-- average / worst handling time per mode, last 7 days
+SELECT blob3 AS mode,
+       SUM(_sample_interval * double1) / SUM(_sample_interval) AS avg_ms,
+       MAX(double1) AS max_ms
+FROM byzantini_pdf_worker_requests
+WHERE timestamp > NOW() - INTERVAL '7' DAY
+GROUP BY mode
+ORDER BY avg_ms DESC;
+```
+
+In local dev (`wrangler dev`), the binding resolves to a local simulation of
+Analytics Engine; structured log lines still print to the terminal.
+
 ## API
 
 ### Endpoint
@@ -132,6 +192,8 @@ Bundled assets:
 - `200`: PDF bytes (`Content-Type: application/pdf`)
 - `400`: malformed body or unsupported request type
 - `401`: missing/invalid bearer token
+
+Every response also carries `X-Request-Id` (see [Observability](#observability)).
 
 ## Local smoke test
 
