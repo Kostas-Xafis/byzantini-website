@@ -567,7 +567,7 @@ export function RegistrationForm() {
 					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
 					<div
 						id="registrationContainer"
-						class="w-full max-sm:w-[100dvw] h-full max-sm:h-[calc(100dvh_-_6rem)] max-3xs:h-[calc(100dvh_-_4rem)] place-items-center font-dicact">
+						class="w-full max-sm:w-[calc(100dvw - 4.25rem)] h-full max-sm:h-[calc(100dvh - 4.25rem)] place-items-center font-dicact">
 						<h1 class="sr-only">Εγγραφές στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής</h1>
 						<div id="firstSelect" class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
 							<For each={btns}>

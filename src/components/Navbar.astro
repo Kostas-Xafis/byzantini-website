@@ -35,9 +35,9 @@ const highlight = (url: string) => {
 	<nav
 		class={"glass-dark fixed top-0 left-0 w-full z-[1000] transition-colors" +
 			" grid grid-cols-[max-content_1fr] grid-rows-[4.1vw] md:h-[4.2vw]" +
-			" max-sm:flex max-sm:flex-col max-sm:h-[4.25rem]"}>
+			" max-md:flex max-md:flex-col max-md:h-[4.25rem]"}>
 		{/* Desktop header: logo + titles (hidden below sm) */}
-		<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[1fr] gap-x-4 font-anaktoria self-center z-10 max-sm:hidden">
+		<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[1fr] gap-x-4 font-anaktoria self-center z-10 max-md:hidden">
 			<a
 				href="/"
 				class="row-span-full sm:w-[80px] aspect-square place-self-center [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]">
@@ -60,7 +60,7 @@ const highlight = (url: string) => {
 		</div>
 
 		{/* Desktop links (hidden below sm) */}
-		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-sm:hidden">
+		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-md:hidden">
 			{
 				links.map((link) =>
 					link.expand ? (
@@ -116,7 +116,7 @@ const highlight = (url: string) => {
 			  logo | Sub title  | Burger
 		*/
 		}
-		<div class="hidden max-sm:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1">
+		<div class="hidden max-md:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1">
 			<div class="relative row-span-2 place-self-center">
 				<div
 					class="absolute inset-0 translate-x-[2px] translate-y-[2px] [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]"
@@ -130,7 +130,7 @@ const highlight = (url: string) => {
 			</div>
 			<p
 				class="navTitle col-start-2 row-start-1 self-end text-lg leading-5 font-bold font-anaktoria text-red-50 text-left drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] max-2xs:text-xs max-2xs:leading-4">
-				Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
+				Σχολή Βυζαντινής & <span class="whitespace-nowrap">Παραδοσιακής Μουσικής</span>
 			</p>
 			<p
 				class="navTitle col-start-2 row-start-2 self-start text-base leading-4 font-bold font-anaktoria text-red-50 text-left drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] max-2xs:text-[10px]">
@@ -157,7 +157,7 @@ const highlight = (url: string) => {
 	<input id="mobile-nav-toggle" type="checkbox" class="peer sr-only" />
 	<div
 		id="mobile-nav-menu"
-		class="glass-dark fixed inset-x-0 bottom-0 top-[4.25rem] z-[999] sm:hidden overflow-y-auto opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out peer-checked:opacity-100 peer-checked:pointer-events-auto">
+		class="glass-dark fixed inset-x-0 bottom-0 top-[4.25rem] z-[999] md:hidden overflow-y-auto opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out peer-checked:opacity-100 peer-checked:pointer-events-auto">
 		<div class="grid">
 			{
 				links.map((link) =>

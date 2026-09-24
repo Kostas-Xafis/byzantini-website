@@ -31,7 +31,7 @@
 	}
 	.glass-dark {
 		/*tw red 950*/
-		background: oklch(25.8% 0.092 26.042 / 0.45);
+		background: oklch(25.8% 0.092 26.042 / 0.8);
 		backdrop-filter: blur(6px);
 		border: 1px solid rgb(153 27 27 / 0.3);
 	}

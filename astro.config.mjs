@@ -18,7 +18,7 @@ export default defineConfig({
 		sitemap({
 			filter: (page) => !unmappedRoutes(page),
 			changefreq: "weekly",
-			priority: 0.8,
+			priority: 1,
 			lastmod: new Date(),
 		}),
 	],
