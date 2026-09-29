@@ -33,9 +33,10 @@ const highlight = (url: string) => {
 
 <>
 	<nav
-		class={"glass-dark fixed top-0 left-0 w-full z-[1000] transition-colors" +
+		class={"group/nav glass-dark fixed top-0 left-0 w-full z-[1000] transition-colors" +
 			" grid grid-cols-[max-content_1fr] grid-rows-[4.1vw] md:h-[4.2vw]" +
 			" max-md:flex max-md:flex-col max-md:h-[4.25rem]"}>
+		<input id="mobile-nav-toggle" type="checkbox" class="peer sr-only" />
 		{/* Desktop header: logo + titles (hidden below sm) */}
 		<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[1fr] gap-x-4 font-anaktoria self-center z-10 max-md:hidden">
 			<a
@@ -44,8 +45,8 @@ const highlight = (url: string) => {
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
-			<div class="absolute top-[50%] translate-y-[calc(-50%_+_2px)] left-[calc(1rem_-_1px)] -z-10">
-				<div class="sm:w-[80px] aspect-square [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]">
+			<div class="absolute top-[50%] translate-y-[calc(-50%+2px)] left-[calc(1rem-1px)] -z-10">
+				<div class="sm:w-[80px] aspect-square mask-[url('/logo.png')] mask-contain mask-no-repeat">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>
@@ -116,29 +117,28 @@ const highlight = (url: string) => {
 			  logo | Sub title  | Burger
 		*/
 		}
-		<div class="hidden max-md:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1">
+		<div
+			class="hidden max-md:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1 transition-colors group-has-checked/nav:bg-red-950">
 			<div class="relative row-span-2 place-self-center">
-				<div
-					class="absolute inset-0 translate-x-[2px] translate-y-[2px] [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]"
-					aria-hidden="true">
-					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
+				<div class="absolute inset-0 translate-x-[2px] translate-y-[2px] mask-[url('/logo.png')] mask-contain mask-no-repeat" aria-hidden="true">
+					<div class="w-full h-full bg-[rgb(0_0_0_/0.25)]"></div>
 				</div>
-				<a href="/" class="relative block w-12 aspect-square [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]">
+				<a href="/" class="relative block w-12 aspect-square mask-[url('/logo.png')] mask-contain mask-no-repeat">
 					<div class="w-full h-full bg-red-50"></div>
 					<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 				</a>
 			</div>
 			<p
-				class="navTitle col-start-2 row-start-1 self-end text-lg leading-5 font-bold font-anaktoria text-red-50 text-left drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] max-2xs:text-xs max-2xs:leading-4">
+				class="navTitle col-start-2 row-start-1 self-end text-lg leading-5 font-bold font-anaktoria text-red-50 text-left drop-shadow-[-2px_1px_2px_rgba(0_0_0_/0.75)] max-2xs:text-xs max-2xs:leading-4">
 				Σχολή Βυζαντινής & <span class="whitespace-nowrap">Παραδοσιακής Μουσικής</span>
 			</p>
 			<p
-				class="navTitle col-start-2 row-start-2 self-start text-base leading-4 font-bold font-anaktoria text-red-50 text-left drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] max-2xs:text-[10px]">
+				class="navTitle col-start-2 row-start-2 self-start text-base leading-4 font-bold font-anaktoria text-red-50 text-left drop-shadow-[-2px_1px_2px_rgba(0_0_0_/0.75)] max-2xs:text-2xs">
 				Ι.Ν. Μεταμορφώσεως του Σωτήρος
 			</p>
 			<div class="col-start-3 row-span-2 relative flex h-full items-center justify-end">
 				<span
-					class="absolute -inset-y-1 left-0 w-px bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(254_226_226_/_0.85),_rgb(254_226_226_/_0.2)_55%,_transparent_100%)]"
+					class="absolute -inset-y-1 left-0 w-px bg-[radial-gradient(50%_50%_at_50%_50%,rgb(254_226_226_/0.85),rgb(254_226_226_/0.2)_55%,transparent_100%)]"
 					aria-hidden="true"></span>
 				<label
 					for="mobile-nav-toggle"
@@ -148,54 +148,54 @@ const highlight = (url: string) => {
 				</label>
 			</div>
 		</div>
-	</nav>
-
-	{
-		/* Mobile menu: full-height dropdown below the nav (kept outside <nav> so the
-			`glass` backdrop-filter on the main page can't clip it). */
-	}
-	<input id="mobile-nav-toggle" type="checkbox" class="peer sr-only" />
-	<div
-		id="mobile-nav-menu"
-		class="glass-dark fixed inset-x-0 bottom-0 top-[4.25rem] z-[999] md:hidden overflow-y-auto opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out peer-checked:opacity-100 peer-checked:pointer-events-auto">
-		<div class="grid">
-			{
-				links.map((link) =>
-					link.expand ? (
-						<div class="group/sub border-b-2 border-b-red-950">
-							<label for="sxoli-sub-toggle" class="relative grid py-4 cursor-pointer select-none transition-colors ease-in-out hover:bg-red-950">
-								<span class="relative mx-auto w-max font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-2xl">
-									{link.name}
-									<i
-										class="absolute left-full top-1/2 -translate-y-1/2 ml-2.5 fa-solid fa-chevron-down text-sm text-red-100 transition-transform duration-300 ease-in-out group-has-checked/sub:rotate-180"
-										aria-hidden="true"
-									/>
-								</span>
-							</label>
-							<input type="checkbox" id="sxoli-sub-toggle" class="sr-only" />
-							<div class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out group-has-checked/sub:grid-rows-[1fr]">
-								<div class="overflow-hidden">
-									{link.expand.map((sublink) => (
-										<a href={link.url + sublink.url} class="grid bg-red-950 py-4 transition-colors ease-in-out hover:bg-red-900">
-											<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
-												{sublink.name}
-											</p>
-										</a>
-									))}
+		{
+			/* Mobile menu: full-height dropdown below the nav (kept outside <nav> so the
+					`glass` backdrop-filter on the main page can't clip it). */
+		}
+		<div
+			id="mobile-nav-menu"
+			class="fixed inset-x-0 bottom-0 top-[4.25rem] h-dvh z-999 md:hidden overflow-y-auto opacity-0 pointer-events-none transition-all duration-300 ease-in-out group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto bg-red-900">
+			<div class="grid">
+				{
+					links.map((link) =>
+						link.expand ? (
+							<div class="group/sub border-b-2 border-b-red-950">
+								<label
+									for="sxoli-sub-toggle"
+									class="relative grid py-4 cursor-pointer select-none transition-colors ease-in-out hover:bg-red-950">
+									<span class="relative mx-auto w-max font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-2xl">
+										{link.name}
+										<i
+											class="absolute left-full top-1/2 -translate-y-1/2 ml-2.5 fa-solid fa-chevron-down text-sm text-red-100 transition-transform duration-300 ease-in-out group-has-checked/sub:rotate-180"
+											aria-hidden="true"
+										/>
+									</span>
+								</label>
+								<input type="checkbox" id="sxoli-sub-toggle" class="sr-only" />
+								<div class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out group-has-checked/sub:grid-rows-[1fr]">
+									<div class="overflow-hidden">
+										{link.expand.map((sublink) => (
+											<a href={link.url + sublink.url} class="grid bg-red-950 py-4 transition-colors ease-in-out hover:bg-red-900">
+												<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
+													{sublink.name}
+												</p>
+											</a>
+										))}
+									</div>
 								</div>
 							</div>
-						</div>
-					) : (
-						<a class="grid py-4 transition-colors ease-in-out hover:bg-red-950 border-b-2 border-b-red-950" href={link.url}>
-							<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-2xl">
-								{link.name}
-							</p>
-						</a>
-					),
-				)
-			}
+						) : (
+							<a class="grid py-4 transition-colors ease-in-out hover:bg-red-950 border-b-2 border-b-red-950" href={link.url}>
+								<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-2xl">
+									{link.name}
+								</p>
+							</a>
+						),
+					)
+				}
+			</div>
 		</div>
-	</div>
+	</nav>
 </>
 <script>
 	import { iOS, onElementMount } from "@utilities/dom";

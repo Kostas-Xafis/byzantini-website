@@ -1,6 +1,7 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
 import { z_JoinedEnrollments, z_PupilSearchResponse, z_PupilWithEnrollments, z_Registrations } from "@lib/api/schemas";
 import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
+import { ALL_YEARS, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
@@ -34,7 +35,7 @@ const successfulRegistrationTemplates = {
 	default: "epitixis/epitixis_eggrafi.html",
 	byzantineDefault: "epitixis/epitixis_eggrafi_byzantine.html",
 	byzantineE: "epitixis/epitixis_eggrafi_byzantine_e.html",
-	byzantineBDiploma: "epitixis/epitixis_eggrafi_b_diploma.html",
+	byzantineBDiploma: "epitixis/epitixis_eggrafi_byzantine_b_diploma.html",
 	traditionalDefault: "epitixis/epitixis_eggrafi_traditional.html",
 	traditionalBAnotera: "epitixis/epitixis_eggrafi_traditional_b_anotera.html",
 	traditionalBDiploma: "epitixis/epitixis_eggrafi_traditional_b_diploma.html",
@@ -496,16 +497,21 @@ export const pupilsRoutes = {
 	// ---------------------------------------------------------------------
 	// Reads used by the existing admin table / exports / dashboard
 	// ---------------------------------------------------------------------
+	/**
+	 * Enrollment listing behind the admin registrations table. `year` is either
+	 * the START year of a school year ("2025") or `ALL_YEARS` ("all"), which
+	 * lists every enrollment without any year constraint.
+	 */
 	getEnrollmentsByYear: new APIServer(
-		{ method: "GET", path: "/pupils/enrollments/[year:number]", responseSchema: z.array(z_JoinedEnrollments) },
+		{ method: "GET", path: "/pupils/enrollments/[year:string]", responseSchema: z.array(z_JoinedEnrollments) },
 		[authenticateMiddleware],
 		({ params }) =>
 			handlerResult(async () => {
-				const year = `${params.year}-${Number(params.year) + 1}`;
-				const rows = await executeQuery<Record<string, unknown>>(
-					`${JOINED_SELECT} WHERE e.registration_year = ? ORDER BY p.last_name ASC, p.first_name ASC`,
-					[year],
-				);
+				const orderBy = "ORDER BY p.last_name ASC, p.first_name ASC";
+				const rows =
+					params.year === ALL_YEARS
+						? await executeQuery<Record<string, unknown>>(`${JOINED_SELECT} ${orderBy}`)
+						: await executeQuery<Record<string, unknown>>(`${JOINED_SELECT} WHERE e.registration_year = ? ${orderBy}`, [schoolYearOf(params.year)]);
 				return rows.map((row) => {
 					const { enrollment, pupil } = splitJoined(row);
 					return toJoined(enrollment, pupil);

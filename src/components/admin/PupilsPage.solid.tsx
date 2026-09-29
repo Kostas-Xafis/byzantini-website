@@ -1,25 +1,29 @@
-import type { Instruments, PupilEnrollments, Pupils, Teachers } from "@_types/entities";
-import { classYearsForClassId, MusicTypeArr } from "@lib/classYears";
+import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { classYearsForClassId, MusicTypeArr } from "@lib/classYears";
 import { API, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
-import { createEffect, createMemo, createSignal, For, on, onMount, Show, untrack } from "solid-js";
-import { createAlert, pushAlert } from "./Alert.solid";
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack } from "solid-js";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
 import { ActionEnum, ActionIcon } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
 /**
  * Μαθητολόγιο — the pupil register.
  *
- * Search-first: the page opens on a large search field; picking a pupil moves
- * the search bar to the top and reveals the two-column record:
+ * Search-first: the page opens on a search field; picking a pupil keeps the
+ * field pinned at the top (one shared column width, so nothing jumps) and
+ * reveals the two-column record:
  *
  *   left  — personal information
  *   right — the pupil's music types as tabs (only the ones they ever enrolled
  *           in), each showing that department's history, with a per-instrument /
  *           per-class breakdown underneath.
+ *
+ * Typing a new query — or toggling "Μόνο προς έλεγχο" — always returns to the
+ * result list, so the field never sits there inertly while a record is open.
  *
  * Actions: edit the pupil's details, or add a (possibly historical) enrollment.
  * The table system is deliberately NOT used here — `Table` is a fixed grid with
@@ -37,6 +41,9 @@ const MUSIC_TYPES = [
 const musicLabel = (classId: number) => MUSIC_TYPES.find((type) => type.id === classId)?.label ?? "Άγνωστο";
 
 const formatDate = (value: number | null | undefined) => (value ? new Date(value).toLocaleDateString("el-GR") : "-");
+
+/** Greek needs the singular for exactly one ('1 μαθητής' / '2 μαθητές'). */
+const countLabel = (count: number, singular: string, plural: string) => `${count} ${count === 1 ? singular : plural}`;
 
 /** ΑΜ display: the real number, or the review code for orphans/splits. */
 const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === null ? pupil.orphan_code || "—" : String(pupil.am));
@@ -165,6 +172,42 @@ export default function PupilsPage() {
 
 	const PAGE_SIZE = 20;
 
+	let searchInput!: HTMLInputElement;
+	let bodyRef: HTMLDivElement | undefined;
+
+	/**
+	 * The page is a 100dvh shell whose middle section scrolls on its own (like
+	 * `Table`'s data container), so the document never grows: reset that scroller,
+	 * and the window too for the mobile layout where the page flows normally.
+	 */
+	const scrollToTop = () => {
+		bodyRef?.scrollTo({ top: 0, behavior: "smooth" });
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
+	/** Paging keeps the list start in view (the rows scroll, the page does not). */
+	const goToPage = (nextPage: number) => {
+		scrollToTop();
+		void runSearch(nextPage);
+	};
+
+	/**
+	 * Mirror the shareable state into the URL: `?pupil=<id>` for the open record,
+	 * `?q=<query>` for the search. The typed query is component state, so without
+	 * this it is lost the moment the page remounts (reload, or a detour to another
+	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
+	 */
+	const syncUrl = (id: number | null) => {
+		const text = untrack(() => query()).trim();
+		const params = new URLSearchParams(window.location.search);
+		if (id === null) params.delete("pupil");
+		else params.set("pupil", String(id));
+		if (text) params.set("q", text);
+		else params.delete("q");
+		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
+		if (next !== `${window.location.pathname}${window.location.search}`) window.history.replaceState({}, "", next);
+	};
+
 	const runSearch = async (nextPage = 0) => {
 		setSearching(true);
 		try {
@@ -174,6 +217,9 @@ export default function PupilsPage() {
 			if ("data" in res) {
 				setResults(res.data);
 				setPage(nextPage);
+				// the query is page state; mirror it so it survives a reload or a
+				// trip to another admin page (which remounts this component)
+				syncUrl(selectedId());
 			}
 		} catch (error) {
 			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την αναζήτηση"));
@@ -187,23 +233,51 @@ export default function PupilsPage() {
 		setSelectedId(id);
 		try {
 			const res = await apiHook(API.Pupils.get, { UrlArgs: { id } });
+			// A newer selection — or a return to the list — won the race: drop this one.
+			if (selectedId() !== id) return;
 			if ("data" in res) {
 				setRecord(res.data);
 				const first = availableMusicTypes(res.data.enrollments)[0] ?? null;
 				setActiveMusic(first);
 			}
 		} catch (error) {
+			if (selectedId() !== id) return;
+			setLoadingRecord(false);
 			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την ανάκτηση του μαθητή"));
 			setSelectedId(null);
+			return;
 		} finally {
-			setLoadingRecord(false);
+			if (selectedId() === id) setLoadingRecord(false);
 		}
+	};
+
+	/** Open a record from the result list (or a deep link). */
+	const openPupil = (id: number) => {
+		scrollToTop();
+		void loadPupil(id);
 	};
 
 	const closeRecord = () => {
 		setSelectedId(null);
 		setRecord(null);
 		setActiveMusic(null);
+	};
+
+	/** Back to the result list without touching the query. */
+	const backToSearch = () => {
+		closeRecord();
+		scrollToTop();
+		searchInput?.focus();
+	};
+
+	/**
+	 * Any search the user drives (typing, Enter, the review filter, clearing)
+	 * also drops an open record: the list is where results are shown, so the
+	 * search field can never look active while doing nothing.
+	 */
+	const startSearch = (nextPage = 0) => {
+		closeRecord();
+		void runSearch(nextPage);
 	};
 
 	/** Music types the pupil has ever enrolled in, in canonical order. */
@@ -235,6 +309,18 @@ export default function PupilsPage() {
 
 	const teacherName = (id: number) => teachers().find((teacher) => teacher.id === id)?.fullname ?? (id < 0 ? "-" : `#${id}`);
 
+	/** One-line summary of a result row: history size, latest year, departments. */
+	const resultMeta = (row: PupilSearchResult) => {
+		const parts = [countLabel(row.enrollment_count, "εγγραφή", "εγγραφές")];
+		if (row.last_registration_year) parts.push(`τελευταία: ${row.last_registration_year}`);
+		const types = row.music_types
+			.split(",")
+			.filter(Boolean)
+			.map((id) => musicLabel(Number(id)));
+		if (types.length) parts.push(types.join(", "));
+		return parts.join(" · ");
+	};
+
 	// ---- lifecycle ----------------------------------------------------------
 	onMount(() => {
 		// reference data (cached store is not needed here — plain signals)
@@ -248,31 +334,36 @@ export default function PupilsPage() {
 			}
 		})();
 
-		// deep link: /admin/pupils?pupil=<id>
-		const deepLink = new URLSearchParams(window.location.search).get("pupil");
+		// deep link: /admin/pupils?pupil=<id> (and/or ?q=<query>)
+		const params = new URLSearchParams(window.location.search);
+		const deepLink = params.get("pupil");
+		const deepQuery = params.get("q");
+		if (deepQuery) {
+			setQuery(deepQuery);
+			// the search below already covers the seeded query, so drop the debounce
+			clearTimeout(debounceTimer);
+		}
 		if (deepLink && /^\d+$/.test(deepLink)) void loadPupil(Number(deepLink));
 		void runSearch(0);
 	});
 
-	// debounce the query
+	// debounce the query (deferred: the mount search above already covers page 0)
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+	onCleanup(() => clearTimeout(debounceTimer));
 	createEffect(
-		on(query, () => {
-			if (selectedId() !== null) return;
-			clearTimeout(debounceTimer);
-			debounceTimer = setTimeout(() => untrack(() => void runSearch(0)), 250);
-		}),
+		on(
+			query,
+			() => {
+				clearTimeout(debounceTimer);
+				debounceTimer = setTimeout(() => untrack(() => startSearch(0)), 250);
+			},
+			{ defer: true },
+		),
 	);
 
-	// keep ?pupil= in the URL so a record is shareable
-	createEffect(() => {
-		const id = selectedId();
-		const params = new URLSearchParams(window.location.search);
-		if (id === null) params.delete("pupil");
-		else params.set("pupil", String(id));
-		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
-		if (next !== `${window.location.pathname}${window.location.search}`) window.history.replaceState({}, "", next);
-	});
+	// keep ?pupil= in the URL so a record is shareable; ?q= is written by runSearch
+	// (once per search, not per keystroke — Safari rate-limits replaceState)
+	createEffect(() => syncUrl(selectedId()));
 
 	// ---- actions ------------------------------------------------------------
 	const editAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
@@ -280,7 +371,7 @@ export default function PupilsPage() {
 		if (!data) return emptyAction(ActionEnum.MODIFY, ActionIcon.MODIFY);
 		const inputs = new InputFields(pupilInputs(data.pupil)).fill((input, key) => {
 			const value = (data.pupil as unknown as Record<string, unknown>)[key as string];
-			input.value = key === "birth_date" ? ((value as number) || undefined) : ((value as string | number) ?? "");
+			input.value = key === "birth_date" ? (value as number) || undefined : ((value as string | number) ?? "");
 		});
 
 		return {
@@ -362,58 +453,83 @@ export default function PupilsPage() {
 	});
 
 	// ---- render -------------------------------------------------------------
+	// Shell: the admin content cell is already exactly one viewport tall
+	// (#AdminPage: 100dvh grid rows), so the page fills it and scrolls its MIDDLE
+	// section instead of growing the document — same shape as `Table`'s
+	// top-tools / scrolling data / bottom-tools grid. On small screens the shell
+	// releases the height and the page scrolls normally, like the tables do.
 	return (
-		<div class="w-full min-h-screen p-6 max-sm:p-3 grid gap-y-6 text-red-950 dark:text-red-50">
-			{/* ---- search ---- */}
-			<div class={selectedId() === null ? "w-full max-w-3xl justify-self-center place-self-center grid gap-y-4 pt-[12vh]" : "w-full max-w-5xl justify-self-center grid gap-y-3"}>
+		<div class="flex h-full w-full flex-col overflow-hidden p-6 text-red-950 max-sm:h-auto max-sm:grid max-sm:grid-rows-[20%_75%_5%] max-sm:p-3 dark:text-red-50">
+			{/* ---- pinned top: title + search ---- */}
+			<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-y-4">
+				{/* ---- landing heading ---- */}
 				<Show when={selectedId() === null}>
-					<div class="grid gap-y-2 text-center">
+					<div class="grid justify-items-center gap-y-2 pt-[6vh] pb-2 text-center max-sm:pt-2">
 						<h1 class="font-anaktoria text-5xl max-sm:text-4xl">Μαθητολόγιο</h1>
-						<p class="text-base text-gray-600 dark:text-gray-300">
+						<p class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
 							Αναζητήστε μαθητή με ΑΜ, ονοματεπώνυμο, ΑΜΚΑ, τηλέφωνο, email ή περιοχή.
 						</p>
 					</div>
 				</Show>
 
+				{/* ---- search ---- */}
 				<div
-					class={
-						"flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-red-900 dark:border-red-700 bg-white dark:bg-dark px-4 py-2 shadow-md shadow-gray-300 dark:shadow-gray-700 " +
-						(selectedId() === null ? "py-3" : "")
-					}>
+					role="search"
+					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark dark:shadow-gray-700">
 					<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200" aria-hidden="true"></i>
 					<input
+						ref={searchInput}
 						type="search"
 						name="pupil-search"
 						autocomplete="off"
 						spellcheck="false"
 						aria-label="Αναζήτηση μαθητή"
 						placeholder="Αναζήτηση…"
-						class="min-w-0 flex-1 bg-transparent font-didact text-lg max-sm:text-base text-red-950 dark:text-red-50 placeholder:text-gray-400 focus-visible:outline-hidden"
+						class="min-w-0 flex-1 bg-transparent font-didact text-lg max-sm:text-base text-red-950 dark:text-red-50 placeholder:text-gray-400 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
 						value={query()}
 						onInput={(e) => setQuery(e.currentTarget.value)}
 						onKeyDown={(e) => {
 							if (e.key === "Enter") {
 								clearTimeout(debounceTimer);
-								void runSearch(0);
+								startSearch(0);
 							}
-							if (e.key === "Escape") setQuery("");
+							if (e.key === "Escape") {
+								setQuery("");
+								clearTimeout(debounceTimer);
+								startSearch(0);
+							}
 						}}
 					/>
 					<Show when={searching()}>
 						<i class="fa-solid fa-circle-notch fa-spin text-red-900 dark:text-red-200" aria-hidden="true"></i>
 					</Show>
+					<Show when={query()}>
+						<button
+							type="button"
+							aria-label="Καθαρισμός αναζήτησης"
+							class="grid h-6 w-6 shrink-0 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/70"
+							onClick={() => {
+								setQuery("");
+								clearTimeout(debounceTimer);
+								startSearch(0);
+								searchInput?.focus();
+							}}>
+							<i class="fa-solid fa-xmark text-sm leading-none" aria-hidden="true"></i>
+						</button>
+					</Show>
 					<Show when={results()}>
 						<span class="whitespace-nowrap font-didact text-sm text-gray-600 dark:text-gray-300" aria-live="polite">
-							{results()!.total} μαθητές
+							{countLabel(results()!.total, "μαθητής", "μαθητές")}
 						</span>
 					</Show>
-					<label class="flex items-center gap-2 whitespace-nowrap font-didact text-sm text-gray-700 dark:text-gray-200">
+					<label class="flex cursor-pointer items-center gap-x-2 whitespace-nowrap font-didact text-sm text-gray-700 dark:text-gray-200">
 						<input
 							type="checkbox"
+							class="size-4 cursor-pointer accent-red-900 dark:accent-red-500"
 							checked={needsReviewOnly()}
 							onChange={(e) => {
 								setNeedsReviewOnly(e.currentTarget.checked);
-								void runSearch(0);
+								startSearch(0);
 							}}
 						/>
 						Μόνο προς έλεγχο
@@ -421,247 +537,295 @@ export default function PupilsPage() {
 					<Show when={selectedId() !== null}>
 						<button
 							type="button"
-							onClick={closeRecord}
-							class="rounded-md border border-red-900 dark:border-red-700 px-3 py-1 font-didact text-sm hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
+							onClick={backToSearch}
+							class="rounded-md border border-red-900 px-3 py-1 font-didact text-sm transition-colors hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/35">
 							Πίσω στην αναζήτηση
 						</button>
 					</Show>
 				</div>
+			</div>
 
+			{/* ---- scrolling body: results or the open record ---- */}
+			<div id="pupilsScroller" ref={bodyRef} class="mx-auto mt-6 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-scroll max-sm:mt-4">
 				{/* ---- result list ---- */}
 				<Show when={selectedId() === null}>
-					<Show
-						when={!searching() || results()}
-						fallback={
-							<div class="py-10">
-								<Spinner />
-							</div>
-						}>
-						<div class="grid gap-y-2">
-							<Show when={results() && results()!.rows.length === 0}>
-								<p class="py-10 text-center text-lg text-gray-600 dark:text-gray-300">Δεν βρέθηκε μαθητής.</p>
-							</Show>
-							<For each={results()?.rows ?? []}>
-								{(row) => (
-									<button
-										type="button"
-										onClick={() => void loadPupil(row.id)}
-										class="group w-full grid grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-red-900/20 dark:border-red-800/50 bg-white dark:bg-dark px-4 py-3 text-left shadow-sm shadow-gray-200 dark:shadow-gray-800 transition-colors hover:bg-red-50 dark:hover:bg-red-900/25">
-										<span class="font-didact text-lg font-bold text-red-900 dark:text-red-100 tabular-nums">{amLabel(row)}</span>
-										<span class="min-w-0 grid">
-											<span class="truncate text-lg font-semibold">
-												{row.last_name} {row.first_name}
-												<Show when={row.fathers_name}> <span class="font-normal text-gray-500 dark:text-gray-400">({row.fathers_name})</span></Show>
+					<div class="grid gap-y-4">
+						<Show
+							when={!searching() || results()}
+							fallback={
+								<div class="py-10">
+									<Spinner />
+								</div>
+							}>
+							<div class="grid gap-y-2">
+								<Show when={results() && results()!.rows.length === 0}>
+									<p class="py-10 text-center text-lg text-gray-600 dark:text-gray-300">
+										<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
+											Δεν βρέθηκε μαθητής για «{query().trim()}».
+										</Show>
+									</p>
+								</Show>
+								<For each={results()?.rows ?? []}>
+									{(row) => (
+										<button
+											type="button"
+											onClick={() => openPupil(row.id)}
+											class="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-red-900/20 bg-white px-4 py-3 text-left shadow-sm shadow-gray-200 transition-colors hover:border-red-900/40 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-800/50 dark:bg-dark dark:shadow-gray-800 dark:hover:border-red-700/70 dark:hover:bg-red-900/25">
+											<span class="rounded-md bg-red-50 px-2 py-0.5 font-didact text-lg font-bold tabular-nums text-red-900 dark:bg-red-900/40 dark:text-red-100">
+												{amLabel(row)}
 											</span>
-											<span class="truncate text-sm text-gray-600 dark:text-gray-300">
-												{row.enrollment_count} εγγραφές · τελευταία: {row.last_registration_year || "-"} ·{" "}
-												{row.music_types
-													.split(",")
-													.filter(Boolean)
-													.map((id) => musicLabel(Number(id)))
-													.join(", ")}
-											</span>
-										</span>
-										<span class="flex items-center gap-x-2">
-											<Show when={row.needs_review}>
-												<span
-													title="Χρειάζεται έλεγχο"
-													class="rounded-full bg-amber-200 dark:bg-amber-700 px-2 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-50">
-													έλεγχος
+											<span class="grid min-w-0">
+												<span class="truncate text-lg font-semibold">
+													{row.last_name} {row.first_name}
+													<Show when={row.fathers_name}>
+														{" "}
+														<span class="font-normal text-gray-500 dark:text-gray-400">({row.fathers_name})</span>
+													</Show>
 												</span>
-											</Show>
-											<i class="fa-solid fa-chevron-right text-red-900/60 dark:text-red-200/60 transition-transform group-hover:translate-x-0.5" aria-hidden="true"></i>
-										</span>
-									</button>
-								)}
-							</For>
-						</div>
-
-						{/* pagination */}
-						<Show when={results() && results()!.total > PAGE_SIZE}>
-							<div class="flex items-center justify-center gap-x-4 pt-2">
-								<button
-									type="button"
-									disabled={page() === 0}
-									onClick={() => void runSearch(page() - 1)}
-									class="rounded-md border border-red-900 dark:border-red-700 px-3 py-1 font-didact text-sm disabled:opacity-40 hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
-									Προηγούμενη
-								</button>
-								<span class="font-didact text-sm text-gray-600 dark:text-gray-300">
-									Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
-								</span>
-								<button
-									type="button"
-									disabled={(page() + 1) * PAGE_SIZE >= results()!.total}
-									onClick={() => void runSearch(page() + 1)}
-									class="rounded-md border border-red-900 dark:border-red-700 px-3 py-1 font-didact text-sm disabled:opacity-40 hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
-									Επόμενη
-								</button>
+												<span class="truncate text-sm text-gray-600 dark:text-gray-300">{resultMeta(row)}</span>
+											</span>
+											<span class="flex items-center gap-x-2">
+												<Show when={row.needs_review}>
+													<span
+														title="Χρειάζεται έλεγχο"
+														class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+														έλεγχος
+													</span>
+												</Show>
+												<i
+													class="fa-solid fa-chevron-right text-red-900/60 transition-transform group-hover:translate-x-0.5 dark:text-red-200/60"
+													aria-hidden="true"></i>
+											</span>
+										</button>
+									)}
+								</For>
 							</div>
 						</Show>
+					</div>
+				</Show>
+
+				{/* ---- record ---- */}
+				<Show when={selectedId() !== null}>
+					<Show
+						when={record()}
+						fallback={
+							<Show when={loadingRecord()}>
+								<div class="py-16">
+									<Spinner />
+								</div>
+							</Show>
+						}>
+						{(data) => (
+							<div class="grid w-full gap-y-4">
+								{/* header + actions */}
+								<div class="flex flex-wrap items-center justify-between gap-3">
+									<div class="grid gap-y-1">
+										<h1 class="font-anaktoria text-4xl leading-tight max-sm:text-3xl">
+											{data().pupil.last_name} {data().pupil.first_name}
+										</h1>
+										<p class="flex flex-wrap items-center gap-x-2 font-didact text-base text-gray-600 dark:text-gray-300">
+											<Show when={data().pupil.needs_review}>
+												<span class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+													χρειάζεται έλεγχο
+												</span>
+											</Show>
+										</p>
+									</div>
+									<TableControlsGroup prefix={PREFIX}>
+										<TableControl prefix={PREFIX} action={editAction} />
+										<TableControl prefix={PREFIX} action={enrollAction} />
+									</TableControlsGroup>
+								</div>
+
+								<Show when={data().pupil.review_note}>
+									<p class="rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-sm dark:border-amber-600 dark:bg-amber-900/25">
+										<i class="fa-solid fa-triangle-exclamation mr-2 text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
+										{data().pupil.review_note}
+									</p>
+								</Show>
+
+								<div class="grid grid-cols-[minmax(260px,1fr)_2fr] gap-4 max-lg:grid-cols-1">
+									{/* ---- left: personal information ---- */}
+									<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+										<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
+										<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
+											<dt>ΑΜ:</dt>
+											<dd class="font-semibold">{amLabel(data().pupil)}</dd>
+											<dt>ΑΜΚΑ:</dt>
+											<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
+											<dt>Πατρώνυμο:</dt>
+											<dd>{data().pupil.fathers_name || "-"}</dd>
+											<dt>Γέννηση:</dt>
+											<dd>{formatDate(data().pupil.birth_date)}</dd>
+											<dt>Διεύθυνση:</dt>
+											<dd>
+												{data().pupil.road} {data().pupil.number}
+												<Show when={data().pupil.region}>
+													<br />
+													{data().pupil.tk} {data().pupil.region}
+												</Show>
+											</dd>
+											<dt>Τηλέφωνα:</dt>
+											<dd>
+												{data().pupil.telephone || "-"}
+												<br />
+												{data().pupil.cellphone || "-"}
+											</dd>
+											<dt>Email:</dt>
+											<dd class="break-all">{data().pupil.email || "-"}</dd>
+											<dt class="pt-1">Σύνδεσμος:</dt>
+											<dd>
+												<Show when={data().pupil.registration_url} fallback="-">
+													<a
+														href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
+														target="_blank"
+														rel="noreferrer"
+														title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
+														aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
+														class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
+														<i class="fa-solid fa-up-right-from-square text-sm" aria-hidden="true"></i>
+													</a>
+												</Show>
+											</dd>
+										</dl>
+									</section>
+
+									{/* ---- right: music types + history ---- */}
+									<section class="grid h-max gap-y-4 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+										<Show
+											when={availableMusicTypes(data().enrollments).length > 0}
+											fallback={<p class="text-gray-600 dark:text-gray-300">Δεν υπάρχουν εγγραφές.</p>}>
+											{/* tabs — only the departments this pupil ever enrolled in */}
+											<div
+												role="tablist"
+												aria-label="Μουσικές"
+												class="flex flex-wrap gap-2"
+												onKeyDown={(event) => {
+													if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+													const tabs = availableMusicTypes(data().enrollments);
+													const current = Math.max(tabs.indexOf(activeMusic() ?? tabs[0]), 0);
+													const next = (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+													event.preventDefault();
+													setActiveMusic(tabs[next]);
+													const tabButtons = (event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>("[role='tab']");
+													tabButtons[next]?.focus();
+												}}>
+												<For each={availableMusicTypes(data().enrollments)}>
+													{(classId) => (
+														<button
+															type="button"
+															role="tab"
+															aria-selected={activeMusic() === classId ? "true" : "false"}
+															tabIndex={activeMusic() === classId ? 0 : -1}
+															onClick={() => setActiveMusic(classId)}
+															class={
+																"rounded-full px-4 py-1.5 font-didact text-sm font-semibold transition-colors " +
+																(activeMusic() === classId
+																	? "bg-red-900 text-red-50 dark:bg-red-800"
+																	: "border border-red-900 text-red-900 hover:bg-red-50 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/35")
+															}>
+															{musicLabel(classId)}
+															<span class="ml-2 opacity-70">{enrollmentsFor(classId).length}</span>
+														</button>
+													)}
+												</For>
+											</div>
+
+											{/* history for the active department, grouped by instrument/class */}
+											<div class="grid gap-y-4">
+												<For each={instrumentGroups()}>
+													{(group) => (
+														<div class="grid gap-y-1">
+															<p class="flex flex-wrap items-baseline gap-x-2">
+																<span class="font-anaktoria text-lg">{group.name}</span>
+																<span class="font-didact text-sm text-gray-500 dark:text-gray-400">
+																	{countLabel(group.rows.length, "εγγραφή", "εγγραφές")}
+																</span>
+															</p>
+															<div class="overflow-x-auto">
+																<table class="w-full border-collapse font-didact text-sm">
+																	<thead>
+																		<tr class="bg-red-50 text-left dark:bg-red-900/25">
+																			<th scope="col" class="px-2 py-1.5 font-semibold">
+																				Έτος
+																			</th>
+																			<th scope="col" class="px-2 py-1.5 font-semibold">
+																				Τάξη
+																			</th>
+																			<th scope="col" class="px-2 py-1.5 font-semibold">
+																				Καθηγητής
+																			</th>
+																			<th scope="col" class="px-2 py-1.5 text-right font-semibold">
+																				Πληρωμή
+																			</th>
+																			<th scope="col" class="px-2 py-1.5 text-center font-semibold">
+																				Προάχθει
+																			</th>
+																		</tr>
+																	</thead>
+																	<tbody>
+																		<For each={group.rows}>
+																			{(row) => (
+																				<tr class="border-t border-red-900/10 transition-colors hover:bg-red-50/60 dark:border-red-800/40 dark:hover:bg-red-900/15">
+																					<td class="whitespace-nowrap px-2 py-1.5 tabular-nums">
+																						{row.registration_year}
+																					</td>
+																					<td class="whitespace-nowrap px-2 py-1.5">{row.class_year || "-"}</td>
+																					<td class="px-2 py-1.5">{teacherName(row.teacher_id)}</td>
+																					<td class="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
+																						{row.payment_amount} / {row.total_payment} €
+																					</td>
+																					<td class="px-2 py-1.5 text-center">
+																						<span
+																							class={
+																								"rounded-full px-2 py-0.5 text-xs font-semibold " +
+																								(row.pass
+																									? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100"
+																									: "bg-gray-200 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200")
+																							}>
+																							{row.pass ? "Ναί" : "Όχι"}
+																						</span>
+																					</td>
+																				</tr>
+																			)}
+																		</For>
+																	</tbody>
+																</table>
+															</div>
+														</div>
+													)}
+												</For>
+											</div>
+										</Show>
+									</section>
+								</div>
+							</div>
+						)}
 					</Show>
 				</Show>
 			</div>
 
-			{/* ---- record ---- */}
-			<Show when={selectedId() !== null}>
-				<Show
-					when={record()}
-					fallback={
-						<Show when={loadingRecord()}>
-							<div class="py-16">
-								<Spinner />
-							</div>
-						</Show>
-					}>
-					{(data) => (
-						<div class="w-full max-w-5xl justify-self-center grid gap-y-4">
-							{/* header + actions */}
-							<div class="flex flex-wrap items-center justify-between gap-3">
-								<div class="grid">
-									<h1 class="font-anaktoria text-4xl max-sm:text-3xl">
-										{data().pupil.last_name} {data().pupil.first_name}
-									</h1>
-									<p class="font-didact text-base text-gray-600 dark:text-gray-300">
-										ΑΜ {amLabel(data().pupil)}
-										<Show when={data().pupil.needs_review}>
-											<span class="ml-2 rounded-full bg-amber-200 dark:bg-amber-700 px-2 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-50">
-												χρειάζεται έλεγχο
-											</span>
-										</Show>
-									</p>
-								</div>
-								<TableControlsGroup prefix={PREFIX}>
-									<TableControl prefix={PREFIX} action={editAction} />
-									<TableControl prefix={PREFIX} action={enrollAction} />
-								</TableControlsGroup>
-							</div>
-
-							<Show when={data().pupil.review_note}>
-								<p class="rounded-lg border border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/25 px-4 py-2 text-sm">
-									<i class="fa-solid fa-triangle-exclamation mr-2 text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
-									{data().pupil.review_note}
-								</p>
-							</Show>
-
-							<div class="grid grid-cols-[minmax(260px,1fr)_2fr] max-lg:grid-cols-1 gap-4">
-								{/* ---- left: personal information ---- */}
-								<section class="rounded-xl border border-red-900/20 dark:border-red-800/50 bg-white dark:bg-dark p-4 shadow-md shadow-gray-300 dark:shadow-gray-700 h-max">
-									<h2 class="font-anaktoria text-2xl mb-3">Στοιχεία Μαθητή</h2>
-									<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-										<dt class="text-gray-500 dark:text-gray-400">ΑΜ</dt>
-										<dd class="font-semibold tabular-nums">{amLabel(data().pupil)}</dd>
-										<dt class="text-gray-500 dark:text-gray-400">ΑΜΚΑ</dt>
-										<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
-										<dt class="text-gray-500 dark:text-gray-400">Πατρώνυμο</dt>
-										<dd>{data().pupil.fathers_name || "-"}</dd>
-										<dt class="text-gray-500 dark:text-gray-400">Γέννηση</dt>
-										<dd>{formatDate(data().pupil.birth_date)}</dd>
-										<dt class="text-gray-500 dark:text-gray-400">Διεύθυνση</dt>
-										<dd>
-											{data().pupil.road} {data().pupil.number}
-											<Show when={data().pupil.region}>
-												<br />
-												{data().pupil.tk} {data().pupil.region}
-											</Show>
-										</dd>
-										<dt class="text-gray-500 dark:text-gray-400">Τηλέφωνα</dt>
-										<dd>
-											{data().pupil.telephone || "-"}
-											<br />
-											{data().pupil.cellphone || "-"}
-										</dd>
-										<dt class="text-gray-500 dark:text-gray-400">Email</dt>
-										<dd class="break-all">{data().pupil.email || "-"}</dd>
-										<dt class="text-gray-500 dark:text-gray-400">Σύνδεσμος</dt>
-										<dd class="break-all">
-											<Show when={data().pupil.registration_url} fallback="-">
-												<a
-													class="underline underline-offset-2 hover:text-red-900 dark:hover:text-red-200"
-													href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
-													target="_blank"
-													rel="noreferrer">
-													/eggrafes/?regid=…
-												</a>
-											</Show>
-										</dd>
-									</dl>
-								</section>
-
-								{/* ---- right: music types + history ---- */}
-								<section class="rounded-xl border border-red-900/20 dark:border-red-800/50 bg-white dark:bg-dark p-4 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-y-4 h-max">
-									<Show
-										when={availableMusicTypes(data().enrollments).length > 0}
-										fallback={<p class="text-gray-600 dark:text-gray-300">Δεν υπάρχουν εγγραφές.</p>}>
-										{/* tabs — only the departments this pupil ever enrolled in */}
-										<div role="tablist" aria-label="Μουσικές" class="flex flex-wrap gap-2">
-											<For each={availableMusicTypes(data().enrollments)}>
-												{(classId) => (
-													<button
-														type="button"
-														role="tab"
-														aria-selected={activeMusic() === classId ? "true" : "false"}
-														onClick={() => setActiveMusic(classId)}
-														class={
-															"rounded-full px-4 py-1.5 font-didact text-sm font-semibold transition-colors " +
-															(activeMusic() === classId
-																? "bg-red-900 text-red-50 dark:bg-red-800"
-																: "border border-red-900 dark:border-red-700 text-red-900 dark:text-red-100 hover:bg-red-50 dark:hover:bg-red-900/35")
-														}>
-														{musicLabel(classId)}
-														<span class="ml-2 opacity-70">{enrollmentsFor(classId).length}</span>
-													</button>
-												)}
-											</For>
-										</div>
-
-										{/* history for the active department, grouped by instrument/class */}
-										<div class="grid gap-y-4">
-											<For each={instrumentGroups()}>
-												{(group) => (
-													<div class="grid gap-y-1">
-														<p class="font-anaktoria text-lg">
-															{group.name}
-															<span class="ml-2 font-didact text-sm text-gray-500 dark:text-gray-400">{group.rows.length} εγγραφές</span>
-														</p>
-														<div class="overflow-x-auto">
-															<table class="w-full border-collapse font-didact text-sm">
-																<thead>
-																	<tr class="bg-red-50 dark:bg-red-900/25 text-left">
-																		<th class="px-2 py-1">Έτος</th>
-																		<th class="px-2 py-1">Τάξη</th>
-																		<th class="px-2 py-1">Καθηγητής</th>
-																		<th class="px-2 py-1 text-right">Πληρωμή</th>
-																		<th class="px-2 py-1 text-center">Προάχθει</th>
-																	</tr>
-																</thead>
-																<tbody>
-																	<For each={group.rows}>
-																		{(row) => (
-																			<tr class="border-t border-red-900/10 dark:border-red-800/40">
-																				<td class="px-2 py-1 whitespace-nowrap tabular-nums">{row.registration_year}</td>
-																				<td class="px-2 py-1">{row.class_year || "-"}</td>
-																				<td class="px-2 py-1">{teacherName(row.teacher_id)}</td>
-																				<td class="px-2 py-1 text-right whitespace-nowrap tabular-nums">
-																					{row.payment_amount} / {row.total_payment}
-																				</td>
-																				<td class="px-2 py-1 text-center">{row.pass ? "Ναι" : "Όχι"}</td>
-																			</tr>
-																		)}
-																	</For>
-																</tbody>
-															</table>
-														</div>
-													</div>
-												)}
-											</For>
-										</div>
-									</Show>
-								</section>
-							</div>
-						</div>
-					)}
-				</Show>
+			{/* ---- pinned bottom: pagination (list only) ---- */}
+			<Show when={selectedId() === null && results() && results()!.total > PAGE_SIZE}>
+				<div class="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-center gap-x-4 pt-4">
+					<button
+						type="button"
+						disabled={page() === 0}
+						onClick={() => goToPage(page() - 1)}
+						class="rounded-md border border-red-900 px-3 py-1 font-didact text-sm transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						Προηγούμενη
+					</button>
+					<span class="font-didact text-sm text-gray-600 dark:text-gray-300">
+						Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
+					</span>
+					<button
+						type="button"
+						disabled={(page() + 1) * PAGE_SIZE >= results()!.total}
+						onClick={() => goToPage(page() + 1)}
+						class="rounded-md border border-red-900 px-3 py-1 font-didact text-sm transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						Επόμενη
+					</button>
+				</div>
 			</Show>
 		</div>
 	);

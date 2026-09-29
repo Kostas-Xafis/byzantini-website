@@ -1,7 +1,7 @@
 {
 	"extends": "astro/tsconfigs/strict",
 	"exclude": ["./.astro", "./.vscode", "./.wrangler", "./dist", "./node_modules", "./tests", "./services", "./email"],
-	"include": [".astro/types.d.ts", "lib", "src", "types", "scritps"],
+	"include": [".astro/types.d.ts", "lib", "src", "types", "scripts"],
 	"compilerOptions": {
 		"noErrorTruncation": true,
 		"strict": true,

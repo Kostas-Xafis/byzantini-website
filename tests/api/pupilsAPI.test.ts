@@ -174,7 +174,7 @@ function pupilsTest() {
 	});
 
 	test("--pupils-- #11 getEnrollmentsByYear returns the joined legacy-compatible row", async () => {
-		const res = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: 2025 } });
+		const res = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "2025" } });
 		const json = await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(res);
 		expect(json.data.length).toBeGreaterThan(0);
 		const row = json.data[0]!;
@@ -211,8 +211,33 @@ function pupilsTest() {
 		expect(row.registration_year).toBe("2025-2026");
 	});
 
+	test("--pupils-- #11b getEnrollmentsByYear with the all token lists every school year", async () => {
+		const [all, oneYear, yearsRes] = await Promise.all([
+			useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "all" } }),
+			useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "2025" } }),
+			useTestAPI("Pupils.getYears"),
+		]);
+		const allJson = await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(all);
+		const oneYearJson = await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(oneYear);
+		const availableYears = await getJson<APIResponse["Pupils.getYears"]>(yearsRes);
+		expect(allJson.data.length).toBeGreaterThan(0);
+
+		// The token lifts the year constraint: the rows span every school year
+		// that has enrollments, so strictly more than one of them.
+		const listedYears = new Set(allJson.data.map((row) => row.registration_year));
+		expect(listedYears.size).toBeGreaterThan(1);
+		for (const schoolYear of availableYears.data) {
+			expect(listedYears.has(schoolYear), `missing school year ${schoolYear}`).toBe(true);
+		}
+
+		// ...and more rows than a single school year returns, with the same
+		// joined contract as the year-scoped listing.
+		expect(allJson.data.length).toBeGreaterThan(oneYearJson.data.length);
+		expect(typeof allJson.data[0]!.am).toBe("string");
+	});
+
 	test("--pupils-- #12 getEnrollmentById returns a single joined row", async () => {
-		const list = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: 2025 } });
+		const list = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "2025" } });
 		const rows = await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(list);
 		enrollmentId = rows.data[0]!.id;
 

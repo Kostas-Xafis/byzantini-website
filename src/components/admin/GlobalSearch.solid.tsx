@@ -72,7 +72,7 @@ export default function GlobalSearch() {
 				// Registrations are per school year; index the most recent one.
 				const yearList = getData(years) ?? [];
 				const year = yearList.length ? Number(yearList[yearList.length - 1].split("-")[0]) : new Date().getFullYear();
-				const registrations = await apiCall(API.Pupils.getEnrollmentsByYear, { UrlArgs: { year } });
+				const registrations = await apiCall(API.Pupils.getEnrollmentsByYear, { UrlArgs: { year: String(year) } });
 				setState({
 					loading: false,
 					ready: true,

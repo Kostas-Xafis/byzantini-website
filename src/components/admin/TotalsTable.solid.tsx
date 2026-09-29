@@ -40,7 +40,8 @@ export default function TotalsTable() {
 		themeObserver.observe(root, { attributes: true, attributeFilter: ["class"] });
 	});
 
-	const initialRegistrationsArgs = { UrlArgs: { year: getAcademicYearStart() } };
+	// The listing route takes the school year as a string token (see lib/pupils/years.ts).
+	const initialRegistrationsArgs = { UrlArgs: { year: String(getAcademicYearStart()) } };
 	createAPIResource(API.Pupils.getTotalByYear, undefined, { cache: setStore });
 	createAPIResource(API.Pupils.getEnrollmentsByYear, () => initialRegistrationsArgs, { cache: setStore });
 

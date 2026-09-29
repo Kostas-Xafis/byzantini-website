@@ -50,7 +50,7 @@ export type APIResourceResult<T extends APIEndpointNames> = ReturnType<typeof cr
  * // ...or arg-driven, waiting for a selected year:
  * const [registrations, { refetch }] = createAPIResource(
  *   API.Pupils.getEnrollmentsByYear,
- *   () => (year() ? { UrlArgs: { year: year()! } } : undefined),
+ *   () => (year() ? { UrlArgs: { year: String(year()) } } : undefined),
  *   { cache: setStore },
  * );
  */

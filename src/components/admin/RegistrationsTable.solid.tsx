@@ -12,6 +12,7 @@ import { ALL_COLUMNS } from "./table/searchMatch";
 import Table from "./table/Table.solid";
 
 import { onElementMount } from "@utilities/dom";
+import { ALL_YEARS } from "@lib/pupils/years";
 import {
 	columnIndexOf,
 	columns,
@@ -31,6 +32,11 @@ const schoolYearLabel = (registrationYear: string) => {
 	return `${start}-${end.slice(2)}`;
 };
 
+/**
+ * Εγγραφές table: one row per enrollment, scoped by the school-year picker at
+ * the bottom. The picker's `ALL_YEARS` option lifts that scope and lists every
+ * enrollment, exactly as the listing route's `year` token does.
+ */
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter>({});
@@ -38,9 +44,11 @@ export default function RegistrationsTable() {
 	// Deep-link support: /admin/registrations?year=2024&search=<query>&col=<key>.
 	// URL params are read ONCE on mount (link pasting only, no live state
 	// tracking); afterwards the search bar/year picker write the URL but the
-	// URL never drives the UI.
+	// URL never drives the UI. `year=all` opens the unconstrained listing.
 	const [params, setParams] = useSearchParams();
-	const [year, setYear] = createSignal<number | null>(params.year ? Number(params.year) : null);
+	// Selected school year: its START year as a string ("2025"), or ALL_YEARS
+	// ("all") for every year; null until the user (or the auto-select) picks one.
+	const [year, setYear] = createSignal<string | null>(params.year ? String(params.year) : null);
 	onMount(() => {
 		const search = params.search;
 		if (search === undefined) return;
@@ -75,6 +83,8 @@ export default function RegistrationsTable() {
 
 	// Year-driven registrations fetch: waits while no year is selected and
 	// refetches whenever the year changes (replaces the legacy on(year) fetch effect).
+	// The year token doubles as the route's own: a start year, or ALL_YEARS for
+	// the listing without a year constraint.
 	createAPIResource(
 		API.Pupils.getEnrollmentsByYear,
 		() => {
@@ -92,11 +102,11 @@ export default function RegistrationsTable() {
 		const currentYear = new Date().getFullYear();
 		if (availableYears.length === 0) {
 			setYears([`${currentYear}-${currentYear + 1}`]);
-			if (year() === null) setYear(currentYear);
+			if (year() === null) setYear(String(currentYear));
 			return;
 		}
 		setYears(availableYears);
-		if (year() === null) setYear(Number(availableYears[0].split("-")[0]));
+		if (year() === null) setYear(availableYears[0].split("-")[0]);
 	});
 
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
@@ -208,17 +218,21 @@ export default function RegistrationsTable() {
 												onChange={(e) => {
 													const value = e.currentTarget.value;
 													if (value === "") return;
-													setYear(Number(value));
+													setYear(value);
 													setSearchQuery({}); // Year change resets the search
 													// and clears both URL query params so links stay accurate.
-													setParams({ year: Number(value), search: undefined, col: undefined });
+													setParams({ year: value, search: undefined, col: undefined });
 												}}>
 												<Show when={year() === null}>
 													<option value="" selected></option>
 												</Show>
+												{/* Widest scope first, like the search control's "Όλα τα πεδία". */}
+												<option value={ALL_YEARS} selected={year() === ALL_YEARS}>
+													Όλα τα έτη
+												</option>
 												<For each={years()}>
 													{(schoolYear) => {
-														const startYear = Number(schoolYear.split("-")[0]);
+														const startYear = schoolYear.split("-")[0];
 														return (
 															<option value={startYear} selected={year() === startYear}>
 																{schoolYearLabel(schoolYear)}
