@@ -71,6 +71,12 @@ export const prerender = true;
 <script>
 	import { useAPI } from "@hooks/useAPI.astro";
 	import { setCookie } from "@utilities/cookies";
+	import { ADMIN_HOME, readRedirectTarget, rememberRedirectTarget } from "@utilities/redirect";
+
+	// The URL the admin was intercepted on (`?redirect_url=`, set by the
+	// dashboard guard) — null when they simply opened the sign-in screen.
+	// Read once: the query string does not change while this page is open.
+	const redirectTarget = readRedirectTarget(window.location.search);
 
 	let tid: number | null = null;
 	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
@@ -92,7 +98,7 @@ export const prerender = true;
 					avatar_url: avatar_url ?? null,
 				}),
 			);
-			window.location.href = "/admin";
+			window.location.href = redirectTarget ?? ADMIN_HOME;
 		} else {
 			if (tid) {
 				clearTimeout(tid);
@@ -109,6 +115,9 @@ export const prerender = true;
 	// Google login button handler
 	document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
 		try {
+			// Google returns to /oauth2callback, which never sees this page's query
+			// string — park the requested URL so the callback can restore it.
+			rememberRedirectTarget(redirectTarget);
 			const res = await useAPI("Authentication.getGoogleOAuthState", {});
 			if (res.data && res.data.OAuthUrl) {
 				window.location.href = res.data.OAuthUrl;

@@ -286,12 +286,16 @@ const { title } = Astro.props;
 	<body class="box-border p-0">
 		<script>
 			import { API, useAPI } from "@hooks/useAPI.astro";
+			import { buildLoginUrl, currentRedirectTarget } from "@utilities/redirect";
 
 			try {
 				const res = await useAPI(API.Authentication.authenticateSession);
 				if (!res?.data?.isValid) throw new Error("Invalid Session");
 			} catch (e) {
-				window.location.href = "/login";
+				// Hand the requested URL (deep links such as /admin/pupils?q=… carry
+				// the search query in the query string) to the sign-in screen so the
+				// admin lands back on it instead of the dashboard home.
+				window.location.href = buildLoginUrl(currentRedirectTarget());
 			}
 		</script>
 		<slot />

@@ -159,16 +159,24 @@ const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
 </html>
 <script>
 	import { setCookie } from "@utilities/cookies";
+	import { ADMIN_HOME, buildLoginUrl, takeRedirectTarget } from "@utilities/redirect";
 
 	const statusEl = document.getElementById("status");
 	const callbackUrl = document.getElementById("oauthCallbackUrl")?.textContent?.trim() || "";
+
+	/**
+	 * The URL the admin was intercepted on, parked by the sign-in screen before it
+	 * sent them to Google (`rememberRedirectTarget`) — Google comes back here, not
+	 * to `/login`, so this is the only place the query string can be restored.
+	 */
+	const redirectTarget = takeRedirectTarget();
 
 	if (!callbackUrl) {
 		if (statusEl) {
 			statusEl.textContent = "Προέκυψε σφάλμα. Επιστροφή στη σελίδα εισόδου...";
 		}
 		setTimeout(() => {
-			window.location.href = "/login";
+			window.location.href = buildLoginUrl(redirectTarget);
 		}, 800);
 		throw new Error("Missing OAuth callback URL");
 	}
@@ -194,7 +202,7 @@ const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
 					}),
 				);
 				setTimeout(() => {
-					window.location.href = "/admin";
+					window.location.href = redirectTarget ?? ADMIN_HOME;
 				}, 150);
 			} else {
 				console.error("OAuth callback failed:", data?.error || "Unknown error");
@@ -202,7 +210,7 @@ const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
 					statusEl.textContent = "Η σύνδεση απέτυχε. Επιστροφή στη σελίδα εισόδου...";
 				}
 				setTimeout(() => {
-					window.location.href = "/login";
+					window.location.href = buildLoginUrl(redirectTarget);
 				}, 800);
 			}
 		})
@@ -212,7 +220,7 @@ const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
 				statusEl.textContent = "Προέκυψε σφάλμα. Επιστροφή στη σελίδα εισόδου...";
 			}
 			setTimeout(() => {
-				window.location.href = "/login";
+				window.location.href = buildLoginUrl(redirectTarget);
 			}, 800);
 		});
 </script>
