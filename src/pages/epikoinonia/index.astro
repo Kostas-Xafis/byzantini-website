@@ -1,9 +1,10 @@
 ---
+import DeveloperCredit from "@components/other/DeveloperCredit.astro";
 import GMap from "@components/other/GMap.astro";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { API, useAPI } from "@hooks/useAPI.astro";
 import Layout from "@layouts/Layout.astro";
-import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import { breadcrumbsSchema, DEVELOPER, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import type { Locations } from "@_types/entities";
 
 export const prerender = false;
@@ -105,6 +106,15 @@ const contactPageSchema = {
 	description: "Στοιχεία επικοινωνίας της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής Μεταμόρφωσης: τηλέφωνα, e-mail, διεύθυνση, ωράριο και σπουδαστήρια.",
 	inLanguage: "el",
 	mainEntity: { "@id": SCHOOL_ID },
+	// Machine-readable counterpart of the DeveloperCredit band below: the page is
+	// authored by the developer (a student of the school), not by the school.
+	// Names the page's creator only — the school remains its publisher.
+	creator: {
+		"@type": "Person",
+		name: DEVELOPER.name,
+		url: DEVELOPER.portfolio,
+		affiliation: { "@id": SCHOOL_ID },
+	},
 };
 ---
 
@@ -356,6 +366,13 @@ const contactPageSchema = {
 					))
 				}
 			</div>
+		</section>
+
+		<!-- Στοιχεία κατασκευής: ο σχεδιασμός και η ανάπτυξη της ιστοσελίδας
+		     από μαθητή της Σχολής, σε ουδέτερη λωρίδα ώστε να μη διαβάζεται
+		     ως ακόμη ένας επίσημος σύνδεσμος της Σχολής. -->
+		<section class="flex flex-col items-center">
+			<DeveloperCredit />
 		</section>
 
 		<!-- Συχνές ερωτήσεις -->

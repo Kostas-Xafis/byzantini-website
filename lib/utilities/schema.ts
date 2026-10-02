@@ -31,6 +31,16 @@ export const SCHOOL = {
 // Unique identifier of the school entity, referenced by other schemas.
 export const SCHOOL_ID = `${SCHOOL.url}/#school`;
 
+// The site's developer, credited as a student of the school (see
+// components/other/DeveloperCredit.astro). Single source for the name and the
+// portfolio URL so the visible credit, the `rel="author"` link and the
+// `<meta name="author">` tag can never drift apart.
+export const DEVELOPER = {
+	name: "Κωνσταντίνος Χάφης",
+	portfolio: "https://kostas-portfolio.pages.dev/",
+	role: "μαθητής της Σχολής",
+} as const;
+
 export const organizationSchema = () => {
 	return {
 		"@context": "https://schema.org",

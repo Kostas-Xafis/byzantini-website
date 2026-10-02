@@ -1,6 +1,7 @@
 ---
 import "../../styles/global.css";
 import { isProduction } from "@lib/utils.server.ts";
+import { DEVELOPER } from "@utilities/schema";
 import { SEO } from "astro-seo";
 
 export interface Props {
@@ -39,6 +40,9 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 <>
 	<meta name="viewport" content="width=device-width" />
 	<meta name="generator" content={Astro.generator} />
+	{/* Authorship credit in every page head; the visible counterpart is
+	    components/other/DeveloperCredit.astro. */}
+	<meta name="author" content={DEVELOPER.name} />
 	<meta name="theme-color" content="#7f1d1d" />
 	<SEO
 		charset="utf-8"
