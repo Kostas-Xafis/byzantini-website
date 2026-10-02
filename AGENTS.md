@@ -48,6 +48,8 @@ bindings**: `byzantini-website-emails` (`services/emailWorker`) and
   are inlined client-side.
 - TS config: `tsconfig.json` extends `astro/tsconfigs/strict`, no emit;
   runtime types from generated `worker-configuration.d.ts` (`bun run types`).
+  `include` covers `lib`, `src`, `types` and `scripts` (the old `scritps` typo
+  meant `scripts/` was never typechecked).
 
 ## Command reference (use Bun)
 
@@ -64,7 +66,7 @@ Core loop:
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
 | Tests | `bun run test` | full suite; needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
-| Format | `bun run format` | prettier (tabs, width 100) over source dirs — see note below |
+| Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
 Database tooling (wrangler D1 commands — local dev database is the miniflare
@@ -79,7 +81,11 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql`; **does not re-run migrations** — follow with `bunx wrangler d1 migrations apply DB --local` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
-| Pupil backfill | `bun run pupils:migrate` / `pupils:migrate:apply` | the one-time `registrations` → `pupils` + `pupil_enrollments` migration; dry-run by default, `--db prod --yes-prod` for production; see `docs/PUPILS_MIGRATION.md` |
+| **Rebuild D1 from Turso (the one command)** | `bun run port --db local` · `port:preview` · `port:prod --yes-prod` · `port:all --yes-prod` · `port:verify` | `scripts/portD1.ts`: extract → wipe → migrate → load → **regenerate the pupil register** → verify, per target. Reuses `--from latest`/`<stamp>`; `--dry-run` writes nothing at all, `--verify-only` compares without writing, remote targets get a pre-wipe `wrangler d1 export` backup. Safely re-runnable. Runbook: `docs/D1_PORT_RUNBOOK.md` |
+| Turso → D1 data port (low-level) | `bun run turso:export` / `turso:verify` / `turso:apply:prod` | `scripts/exportTurso.ts`: exports Turso to a verified bundle under `dbSnapshots/turso-export/<stamp>/`, `--verify` reports drift (row count + SHA-256 digest), `--apply` replaces the target rows through parameterised D1 REST batches; `query_logs` is excluded. `--wipe` (apply-only; `--dry-run` to plan) drops **every** target table incl. `d1_migrations`, replays `wrangler d1 migrations apply`, then loads — it does **not** rebuild the pupil register, so it refuses a target that holds pupils unless `--allow-pupil-loss`. `--exclude` also filters a `--from` bundle |
+| Pupil backfill (target-side) | `bun run pupils:migrate` / `pupils:migrate:apply` / `pupils:migrate:prod` | the one-time `registrations` → `pupils` + `pupil_enrollments` migration for a target that still holds `registrations`; dry-run by default, `--db prod --yes-prod` for production; see `docs/PUPILS_MIGRATION.md`. **Never `d1 migrations apply` before it has run — that also runs 0003 and drops `registrations`** (the script prints the safe order). The `port` flow above has no such ordering trap: it plans the register from the bundle before anything is written |
+| Shared D1 transport | `scripts/lib/d1.ts` | used by all of the above: local miniflare SQLite or the D1 REST API (single `query` / parameterised `batch`), credentials from `CLOUDFLARE_API_TOKEN` or the wrangler session, database ids read from `wrangler.jsonc`. **Address a target by its binding `DB`, never by database name** — `-e preview` binds `DB` to `byzantini-db-preview` |
+| Port implementation libs | `scripts/lib/portBundle.ts` · `scripts/lib/pupilsRun.ts` | the bundle/digest/schema/wipe/migrate/load/compare primitives and the pupil-register run — one implementation behind `portD1.ts`, `exportTurso.ts` and `migratePupils.ts`. The Turso connection is **read-only by construction** (a guard rejects any non-read statement) |
 
 Aux services (separate Cloudflare Workers in `services/`; each has its own
 `package.json`/`wrangler.jsonc` — run wrangler from inside the folder with
@@ -171,8 +177,10 @@ The person data that used to live on `registrations` is split into two tables
   music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student" with
   `ΑΜ = 000`) → the form. The identification happens ONCE; switching department
   afterwards must not send the user back through it.
-- Cleansing/backfill tooling: `bun run pupils:migrate` (dry run) /
-  `pupils:migrate:apply`, `--db prod --yes-prod` for production.
+- Rebuild tooling: `bun run port --db local|preview|prod` (one command;
+  `--db prod` needs `--yes-prod`) rebuilds the whole database from Turso,
+  including this register. The target-side backfill remains available as
+  `bun run pupils:migrate` (dry run) / `pupils:migrate:apply`.
   `bun run dev:clean` removes the fixtures the API suite writes to the local
   dev DB.
 
@@ -259,7 +267,7 @@ The person data that used to live on `registrations` is split into two tables
   ref becomes `never` inside `onMount` callbacks.
 - `astro` no longer exports `ComponentInstance` (Astro 5) — use
   `astroHTML.JSX.Element` (see `src/components/other/Popup.astro`).
-- Formatting: tabs, print width 100, `bracketSameLine` (`.prettierrc`);
+- Formatting: tabs, print width 160, `bracketSameLine` (`.prettierrc`);
   `.editorconfig` requires tab indentation and UTF-8. **Caveat:** the existing
   codebase is not fully prettier-formatted and `src/pages/kathigites/index.astro`
   currently fails the astro prettier plugin's parser (`< />` empty tag) — do

@@ -343,7 +343,9 @@ async function main(): Promise<void> {
 				continue;
 			}
 
-			const pairFailedBefore = failed;
+			// Annotated to break a TS7022 inference cycle: the evolving type of
+			// `failed` is narrowed at line ~368 by comparing it to this variable.
+			const pairFailedBefore: boolean = failed;
 			for (const target of targetsOf(pair, opts)) {
 				const key = keyFor(pair, target);
 				// `secret bulk` reads {key: value} from a 0600 JSON file — fully
