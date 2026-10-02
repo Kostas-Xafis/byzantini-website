@@ -1,4 +1,5 @@
 import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
+import { customEvent } from "@_types/custom-events";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { classYearsForClassId, MusicTypeArr } from "@lib/classYears";
 import { API, type APIResponse } from "@routes/index.client";
@@ -77,11 +78,26 @@ function pupilInputs(pupil: Pupils): Record<string, InputProps> {
 	};
 }
 
-/** Enroll form: one history row (a year, a music type, a class/instrument). */
+/** The instruments a music type is taught with (Βυζαντινή has none). */
+const instrumentsForClassId = (instruments: Instruments[], classId: number) => instruments.filter((instrument) => instrument.type === MusicTypeArr[classId]);
+
+/** Rewrites a select's options in place, keeping `Input`'s blank first option. */
+function setSelectOptions(select: HTMLSelectElement | null | undefined, options: { value: string | number; label: string }[]) {
+	select?.replaceChildren(new Option("", "undefined"), ...options.map((option) => new Option(option.label, String(option.value))));
+}
+
+/**
+ * Enroll form: one history row (a year, a music type, a class/instrument).
+ *
+ * The inputs are built once per modal open and `Input` freezes the props it is
+ * given, so `class_id`'s change handler re-fills the department-dependent
+ * selects: the class year and the instrument belong to the music type being
+ * enrolled in, which is not necessarily the tab the modal was opened from.
+ */
 function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defaults: Partial<PupilEnrollments>): Record<string, InputProps> {
-	const byzantine = defaults.class_id === 0;
+	const defaultClassId = defaults.class_id ?? 0;
 	const teacherList = teachers.filter((teacher) => teacher.id >= 0).sort((a, b) => a.fullname.localeCompare(b.fullname, "el"));
-	const instrumentList = byzantine ? [] : instruments.filter((instrument) => instrument.type === MusicTypeArr[defaults.class_id ?? 0]);
+	const instrumentList = instrumentsForClassId(instruments, defaultClassId);
 
 	return {
 		registration_year: {
@@ -100,8 +116,26 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			iconClasses: "fa-solid fa-music",
 			selectList: MUSIC_TYPES.map((type) => type.label),
 			valueList: MUSIC_TYPES.map((type) => type.id),
-			value: defaults.class_id ?? 0,
+			value: defaultClassId,
 			listeners: true,
+			onchange: (event) => {
+				const classSelect = event.currentTarget as HTMLSelectElement;
+				const classId = Number(classSelect.value);
+				const form = classSelect.form;
+				// Both lists are rebuilt empty-selected: a year or an instrument of the
+				// previous department must not survive the switch.
+				setSelectOptions(
+					form?.querySelector<HTMLSelectElement>("select[name='class_year']"),
+					classYearsForClassId(classId).map((year) => ({ value: year, label: year })),
+				);
+				const instrumentSelect = form?.querySelector<HTMLSelectElement>("select[name='instrument_id']");
+				setSelectOptions(
+					instrumentSelect,
+					instrumentsForClassId(instruments, classId).map((instrument) => ({ value: instrument.id, label: instrument.name })),
+				);
+				// Όργανο is a Παραδοσιακή/Ευρωπαϊκή field only (see `Input.listeners`).
+				instrumentSelect?.dispatchEvent(customEvent("enable_input", classId !== 0));
+			},
 		},
 		class_year: {
 			label: "Έτος Φοίτησης",
@@ -109,7 +143,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			type: "select",
 			required: true,
 			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: classYearsForClassId(defaults.class_id ?? 0),
+			selectList: classYearsForClassId(defaultClassId),
 			valueLiteral: true,
 			listeners: true,
 		},
@@ -121,16 +155,16 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			selectList: teacherList.map((teacher) => teacher.fullname),
 			valueList: teacherList.map((teacher) => teacher.id),
 		},
-		instrument_id: byzantine
-			? { label: "", name: "", type: null }
-			: {
-					label: "Όργανο / Μάθημα",
-					name: "instrument_id",
-					type: "select",
-					iconClasses: "fa-solid fa-guitar",
-					selectList: instrumentList.map((instrument) => instrument.name),
-					valueList: instrumentList.map((instrument) => instrument.id),
-				},
+		instrument_id: {
+			label: "Όργανο / Μάθημα",
+			name: "instrument_id",
+			type: "select",
+			iconClasses: "fa-solid fa-guitar",
+			selectList: instrumentList.map((instrument) => instrument.name),
+			valueList: instrumentList.map((instrument) => instrument.id),
+			show: defaultClassId !== 0,
+			listeners: true,
+		},
 		payment_amount: { label: "Ποσό Πληρωμής", name: "payment_amount", type: "number", iconClasses: "fa-solid fa-euro-sign" },
 		total_payment: { label: "Σύνολο Πληρωμής", name: "total_payment", type: "number", iconClasses: "fa-solid fa-euro-sign" },
 		payment_date: { label: "Ημερομηνία Πληρωμής", name: "payment_date", type: "date", iconClasses: "fa-regular fa-calendar-days" },
