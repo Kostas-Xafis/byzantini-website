@@ -114,6 +114,10 @@ type InputProps = {
 	iconClasses?: string;
 	disabled?: boolean;
 	blurDisabled?: boolean;
+	/** Browser autofill hint for text-like inputs (e.g. "family-name", "postal-code", "off"). */
+	autocomplete?: string;
+	/** On-screen keyboard for text-like inputs (e.g. "numeric" for ΑΜ/ΑΜΚΑ). */
+	inputMode?: "numeric" | "tel" | "email" | "text";
 	selectList?: string[];
 	valueList?: (string | number)[];
 	valueLiteral?: boolean;
@@ -147,6 +151,8 @@ export default function Input(props: InputProps) {
 		iconClasses,
 		disabled,
 		blurDisabled = true,
+		autocomplete,
+		inputMode,
 		selectList,
 		valueList,
 		valueLiteral = false,
@@ -229,6 +235,8 @@ export default function Input(props: InputProps) {
 					type={type}
 					name={name}
 					aria-required={required ? "true" : undefined}
+					autocomplete={autocomplete}
+					inputmode={inputMode}
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}

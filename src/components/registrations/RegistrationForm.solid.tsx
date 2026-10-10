@@ -2,7 +2,6 @@ import { customEvent } from "@_types/custom-events";
 import type { Instruments, Registrations } from "@_types/entities";
 import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
 import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
-import { Random as R } from "@lib/random";
 import { AnimTimeline } from "@utilities/dom";
 import { ExtendedFormData } from "@utilities/forms";
 import { sleep } from "@utilities/sleep";
@@ -34,6 +33,8 @@ const genericInputs: Record<
 	am: {
 		label: "Αριθμός Μητρώου",
 		name: "am",
+		autocomplete: "off",
+		inputMode: "numeric",
 		type: "text",
 		value: "000",
 		required: true,
@@ -49,6 +50,8 @@ const genericInputs: Record<
 	amka: {
 		label: "ΑΜΚΑ",
 		name: "amka",
+		autocomplete: "off",
+		inputMode: "numeric",
 		type: "text",
 		required: true,
 		iconClasses: "fa-solid fa-id-card",
@@ -60,6 +63,7 @@ const genericInputs: Record<
 	last_name: {
 		label: "Επώνυμο",
 		name: "last_name",
+		autocomplete: "family-name",
 		type: "text",
 		required: true,
 		iconClasses: "fa-solid fa-user",
@@ -71,6 +75,7 @@ const genericInputs: Record<
 	first_name: {
 		label: "Όνομα",
 		name: "first_name",
+		autocomplete: "given-name",
 		type: "text",
 		required: true,
 		iconClasses: "fa-solid fa-user",
@@ -89,12 +94,14 @@ const genericInputs: Record<
 	telephone: {
 		label: "Τηλέφωνο",
 		name: "telephone",
+		autocomplete: "tel",
 		type: "tel",
 		iconClasses: "fa-solid fa-phone",
 	},
 	cellphone: {
 		label: "Κινητό",
 		name: "cellphone",
+		autocomplete: "tel",
 		type: "tel",
 		required: true,
 		iconClasses: "fa-solid fa-mobile-screen",
@@ -102,6 +109,7 @@ const genericInputs: Record<
 	email: {
 		label: "Email",
 		name: "email",
+		autocomplete: "email",
 		type: "email",
 		required: true,
 		iconClasses: "fa-solid fa-envelope",
@@ -116,6 +124,7 @@ const genericInputs: Record<
 	road: {
 		label: "Οδός",
 		name: "road",
+		autocomplete: "street-address",
 		type: "text",
 		required: true,
 		iconClasses: "fa-solid fa-location-dot",
@@ -130,6 +139,8 @@ const genericInputs: Record<
 	tk: {
 		label: "Τ.Κ.",
 		name: "tk",
+		autocomplete: "postal-code",
+		inputMode: "numeric",
 		type: "number",
 		required: true,
 		iconClasses: "fa-solid fa-hashtag",
@@ -137,6 +148,7 @@ const genericInputs: Record<
 	region: {
 		label: "Δήμος/Περιοχή",
 		name: "region",
+		autocomplete: "address-level2",
 		type: "text",
 		required: true,
 		iconClasses: "fa-solid fa-tree-city",
@@ -355,6 +367,8 @@ export function RegistrationForm() {
 	const [lookupError, setLookupError] = createSignal("");
 	const [lookupBusy, setLookupBusy] = createSignal(false);
 	const [submitError, setSubmitError] = createSignal("");
+	// Set once the pupil is found by ΑΜ + ΑΜΚΑ: those two are then locked so the identification cannot be undone by editing them.
+	const [identified, setIdentified] = createSignal(false);
 
 	useHydrate(() => {
 		apiHook(API.Teachers.getPublic);
@@ -415,10 +429,7 @@ export function RegistrationForm() {
 				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
 				return;
 			}
-			const { pupil, enrollments } = res.data;
-			const latest = [...enrollments].sort(
-				(a, b) => (b.registration_year || "").localeCompare(a.registration_year || "") || (b.date || 0) - (a.date || 0),
-			)[0];
+			const { pupil } = res.data;
 			// Identity comes from the record; the enrollment fields reset so the
 			// student re-registers for the current year.
 			setRegistrationData((prev) => ({
@@ -431,10 +442,8 @@ export function RegistrationForm() {
 				teacher_id: -1,
 				instrument_id: -1,
 			}));
-			// Keep the department the student was last enrolled in, when it maps to
-			// a valid music type for the form ('' / MusicType.None falls through).
-			const lastType = latest ? MusicTypeArr[latest.class_id] : undefined;
-			if (lastType) setMusicType(lastType);
+			// Keep the department the family picked — they may be enrolling in a different one this year.
+			setIdentified(true);
 			setStep("form");
 		} catch (err) {
 			// Only a 404 means "no such pupil" — anything else must not push the family onto the new-student path.
@@ -471,6 +480,7 @@ export function RegistrationForm() {
 			instrument_id: -1,
 		}));
 		setLookupError("");
+		setIdentified(false);
 		setStep("form");
 	};
 
@@ -512,7 +522,6 @@ export function RegistrationForm() {
 			teacher_id: formData.number("teacher_id", -1),
 			instrument_id: formData.multiSelect("instruments" as any, "number", { single: true }) || formData.number("instruments-all" as any, 0),
 			date: Date.now(),
-			registration_url: R.string(32),
 			pass: false,
 		};
 		setRegistrationData(data);
@@ -535,7 +544,7 @@ export function RegistrationForm() {
 				throw Error("Παρακαλώ επιλέξτε έτος φοίτησης.");
 			}
 			setSpinner(true);
-			const res = await apiHook(API.Pupils.post, { RequestObject: data });
+			const res = await apiHook(API.Pupils.post, { RequestObject: { ...data, class_id: data.class_id as 0 | 1 | 2 } });
 			if (res.data) {
 				PopupShow();
 				setRegistrationData((prevReg) => {
@@ -661,7 +670,17 @@ export function RegistrationForm() {
 										{heading[musicType()]}
 									</h1>
 									{Object.values(genericInputs).map((input) => {
-										return <Input {...input} prefix={PREFIX} value={registrationData[input.name as keyof Registrations] as any} />;
+										// After the ΑΜ + ΑΜΚΑ lookup those two are read-only (still submitted).
+										const locked = identified() && (input.name === "am" || input.name === "amka");
+										return (
+											<Input
+												{...input}
+												prefix={PREFIX}
+												value={registrationData[input.name as keyof Registrations] as any}
+												disabled={input.disabled || locked}
+												blurDisabled={locked ? false : input.blurDisabled}
+											/>
+										);
 									})}
 									<For each={inputsByMusicType(musicType(), store, registrationData)}>
 										{(input) => <Input {...input} prefix={PREFIX} onchange={onFormInputsChange} />}

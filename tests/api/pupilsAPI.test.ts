@@ -538,6 +538,42 @@ function pupilsTest() {
 		expect(after.status).toBe(409);
 	});
 
+	test("--pupils-- #20e the public form cannot set promotion, a foreign class year or a far school year", async () => {
+		const base = {
+			am: String(R.int(9000, 9999)),
+			amka: "44444444444",
+			first_name: "Δοκιμαστικός",
+			last_name: "Μαθητής",
+			fathers_name: "Δοκιμαστικός",
+			birth_date: Date.UTC(2002, 1, 2),
+			road: "Δοκιμαστική",
+			number: 1,
+			tk: 10000,
+			region: "Δοκιμή",
+			telephone: "-",
+			cellphone: "6900000004",
+			email: `pupils.test.${R.hex(4)}@example.com`,
+			registration_year: "2026-2027",
+			class_year: "Α' Ετος",
+			class_id: 0 as const,
+			teacher_id: -1,
+			instrument_id: 0,
+			date: Date.UTC(2000, 0, 1),
+			pass: true,
+		};
+		// A class year from another department, a school year far away, an over-long name.
+		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, class_year: "Α' Μέση" } }, false)).rejects.toThrow("Μη έγκυρο έτος φοίτησης για το τμήμα");
+		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, registration_year: "2019-2020" } }, false)).rejects.toThrow("Μη έγκυρο σχολικό έτος");
+		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, last_name: "Μ".repeat(81) } }, false)).rejects.toThrow("έως 80 χαρακτήρες");
+
+		// `pass` and `date` come from the server, not the form.
+		const created = await getJson<APIResponse["Pupils.post"]>(await useTestAPI("Pupils.post", { RequestObject: base }, false));
+		const read = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: created.data.pupilId } }));
+		const enrollment = read.data.enrollments.find((row) => row.id === created.data.insertId)!;
+		expect(Boolean(enrollment.pass)).toBe(false);
+		expect(enrollment.date).toBeGreaterThan(Date.UTC(2020, 0, 1));
+	});
+
 	test("--pupils-- #21 authenticated routes reject anonymous callers", async () => {
 		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
 		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/total`);

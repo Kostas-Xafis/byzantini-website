@@ -7,6 +7,7 @@ import { decodeIdToken, generateCodeVerifier, generateState, type OAuth2Tokens }
 import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE, SESSION_COOKIE_OPTIONS } from "./cookies";
 import { authenticateMiddleware } from "./middleware/authenticate";
+import { rateLimitMiddleware } from "./middleware/rateLimit";
 import { consumeRegisterLink, findRegisterLink } from "./sysusers";
 
 /**
@@ -64,7 +65,7 @@ export const authenticationRoutes = {
 	),
 	userLogin: new APIServer(
 		{ method: "POST", path: "/auth/login", schema: z_LoginCredentials, responseSchema: z_UserLoginRes },
-		[],
+		[rateLimitMiddleware("login")],
 		({ body, cookies }) =>
 			handlerResult(
 				async (T) => {
