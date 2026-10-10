@@ -7,6 +7,7 @@ import Input from "../../input/Input.solid";
 import Spinner from "../../other/Spinner.solid";
 import { createAlert, pushAlert } from "../Alert.solid";
 import { CloseButton } from "./CloseButton.solid";
+import { ActionEnum } from "./TableControlTypes";
 import type { Action } from "./TableControls.solid";
 
 type Props = {
@@ -50,7 +51,7 @@ const submitWrapper = (
 			setModalOpen(false);
 		} catch (error: any) {
 			console.error(error);
-			pushAlert(createAlert("error", "Error: ", error.message));
+			pushAlert(createAlert("error", "Σφάλμα: ", error.message));
 			const form = document.querySelector(".modal:is(:not(.hidden)) > div > form") as HTMLFormElement;
 			void form.report;
 			form.classList.add("animate-shake");
@@ -99,6 +100,11 @@ export default function Modal(props: Props) {
 				}>
 				<div class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-white dark:bg-dark place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center text-red-950 dark:text-red-50">
 					<p class="text-4xl p-2 w-full text-center max-sm:text-3xl">{actionStore.action.headerText}</p>
+					<Show when={actionStore.action.summary?.length}>
+						<ul class="max-h-[40vh] overflow-y-auto px-4 text-lg list-disc list-inside">
+							<For each={actionStore.action.summary}>{(line) => <li>{line}</li>}</For>
+						</ul>
+					</Show>
 					<form data-prefix={MODAL_PREFIX} class="peer/form group/form grid grid-cols-3 auto-rows-max gap-10 py-4 overflow-y-auto max-sm:grid-cols-1">
 						<Show when={Object.entries(actionStore.action.inputs).length > 0}>
 							<For each={Object.values(actionStore.action.inputs).filter((input) => !!input.name)}>
@@ -111,7 +117,11 @@ export default function Modal(props: Props) {
 					<Show when={!loading()} fallback={<Spinner classes="max-sm:h-[100svh]"></Spinner>}>
 						<button
 							class={
-								"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors bg-green-500 text-white hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 peer-[:is(.animate-shake)]/form:bg-red-600 dark:peer-[:is(.animate-shake)]/form:bg-red-700" +
+								"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors text-white peer-[:is(.animate-shake)]/form:bg-red-600 dark:peer-[:is(.animate-shake)]/form:bg-red-700" +
+								// Destructive actions get a red button, everything else stays green.
+								(actionStore.action.type === ActionEnum.DELETE
+									? " bg-red-700 hover:bg-red-800 focus:bg-red-800"
+									: " bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500") +
 								" max-sm:text-2xl"
 							}
 							type="submit"

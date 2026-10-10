@@ -15,6 +15,15 @@ export const onDelete = function (hydrate: CacheMutationsReturnType, store: Part
 		const registrations = store[API.Pupils.getEnrollmentsByYear];
 		if (!registrations || selectedItems.length < 1) return deleteModal;
 
+		const fullname = (id: number) => {
+			const reg = registrations.find((r) => r.id === id);
+			return reg ? `${reg.last_name} ${reg.first_name}` : `#${id}`;
+		};
+		const count = selectedItems.length;
+		// "Select all" selects every row of the current search/year, not just the visible page — list who goes.
+		const shown = selectedItems.slice(0, 15).map(fullname);
+		const summary = count > shown.length ? [...shown, `… και ${count - shown.length} ακόμη`] : shown;
+
 		const submit = async function () {
 			const data = selectedItems.map((id) => id);
 			const res = await apiHook(API.Pupils.deleteEnrollments, {
@@ -22,17 +31,14 @@ export const onDelete = function (hydrate: CacheMutationsReturnType, store: Part
 			});
 			if (!("data" in res ? res.data : res.message)) return;
 			hydrate({ action: ActionEnum.DELETE, ids: data });
-			data.forEach((id) => {
-				const reg = registrations.find((r) => r.id === id);
-				let fullname = reg?.last_name + " " + reg?.first_name;
-				pushAlert(createAlert("success", `Επιτυχής διαγραφή εγγραφής: ${fullname}`));
-			});
+			pushAlert(createAlert("success", count === 1 ? `Επιτυχής διαγραφή εγγραφής: ${summary[0]}` : `Επιτυχής διαγραφή ${count} εγγραφών`));
 		};
 		return {
 			inputs: {},
 			onSubmit: submit,
 			submitText: "Διαγραφή",
-			headerText: "Διαγραφή Εγγραφής",
+			headerText: count === 1 ? "Διαγραφή 1 εγγραφής" : `Διαγραφή ${count} εγγραφών`,
+			summary,
 			...deleteModal,
 		};
 	});
