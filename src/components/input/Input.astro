@@ -15,7 +15,7 @@ export interface Props {
 const { type, name, label, placeholder, value, required, disabled, iconClasses, selectList, minmax } = Astro.props;
 ---
 
-<label for={name} class={"relative h-min max-w-[30ch] max-sm:w-[27.5ch] grid text-xl rounded-md font-didact z-10 "}>
+<label class={"relative h-min max-w-[30ch] max-sm:w-[27.5ch] grid text-xl rounded-md font-didact z-10 "}>
 	{
 		type !== "select" ? (
 			<>

@@ -171,7 +171,7 @@ const inputsByMusicType = (musicType: MusicType, store: APIStore, regData: Regis
 		// Filter teachers by music type
 		const tcs = store[API.Teachers.getClasses];
 		const tis = store[API.Teachers.getInstruments];
-		const teachers = (store[API.Teachers.get] || [])
+		const teachers = (store[API.Teachers.getPublic] || [])
 			// Filter By Music type — the store may hold a failed-fetch error (or
 			// undefined) instead of an array; never let `.find` throw on a UI page.
 			.filter((t) => {
@@ -313,6 +313,28 @@ async function loadRegistrationId(apiHook: ReturnType<typeof useAPI>) {
 	}
 }
 
+/**
+ * Turns a failed request into a message for the family filling the form:
+ * invalid fields (zod), a rejected request (4xx), a server failure (5xx / non-JSON) or no connection.
+ */
+function describeError(err: unknown): string {
+	const e = err as { issues?: { message: string }[]; status?: number; message?: string; name?: string };
+	if (Array.isArray(e?.issues) && e.issues.length) return [...new Set(e.issues.map((i) => i.message))].join(" · ");
+	if (typeof e?.status === "number" && e.status < 500) {
+		return e.message && e.message !== "Invalid request body" ? e.message : "Ορισμένα στοιχεία δεν είναι έγκυρα. Ελέγξτε τα πεδία της φόρμας.";
+	}
+	if (typeof e?.status === "number" || e?.name === "SyntaxError") {
+		return "Παρουσιάστηκε σφάλμα στον διακομιστή. Δοκιμάστε ξανά σε λίγο ή επικοινωνήστε με τη Γραμματεία της Σχολής.";
+	}
+	return "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο και δοκιμάστε ξανά.";
+}
+
+/** Required inputs the user left empty (a select's empty option has the value "undefined"). */
+function emptyRequiredFields(form: HTMLFormElement) {
+	const fields = [...form.querySelectorAll("[aria-required='true']")] as (HTMLInputElement | HTMLSelectElement)[];
+	return fields.filter((el) => !el.closest(".hidden") && (el.value.trim() === "" || el.value === "undefined"));
+}
+
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
 	const [registrationData, setRegistrationData] = createStore<Registrations>({} as any);
@@ -332,9 +354,10 @@ export function RegistrationForm() {
 	const [lookupAmka, setLookupAmka] = createSignal("");
 	const [lookupError, setLookupError] = createSignal("");
 	const [lookupBusy, setLookupBusy] = createSignal(false);
+	const [submitError, setSubmitError] = createSignal("");
 
 	useHydrate(() => {
-		apiHook(API.Teachers.get);
+		apiHook(API.Teachers.getPublic);
 		apiHook(API.Teachers.getClasses);
 		apiHook(API.Teachers.getInstruments);
 		apiHook(API.Instruments.get);
@@ -414,7 +437,12 @@ export function RegistrationForm() {
 			if (lastType) setMusicType(lastType);
 			setStep("form");
 		} catch (err) {
-			setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
+			// Only a 404 means "no such pupil" — anything else must not push the family onto the new-student path.
+			if ((err as { status?: number })?.status === 404) {
+				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
+			} else {
+				setLookupError(describeError(err));
+			}
 		} finally {
 			setLookupBusy(false);
 		}
@@ -448,10 +476,21 @@ export function RegistrationForm() {
 
 	const onSubmit = async function (e: Event) {
 		e.preventDefault();
-		const teachers = store[API.Teachers.get];
+		const teachers = store[API.Teachers.getPublic];
 		if (!teachers) return;
 
 		const form = e.target as HTMLFormElement;
+		setSubmitError("");
+		const missing = emptyRequiredFields(form);
+		if (missing.length) {
+			// Mark them (the inputs style `:invalid` red) and say which ones.
+			missing.forEach((el) => el.setAttribute("required", ""));
+			const names = missing.map((el) => el.closest("label")?.querySelector("p")?.textContent?.trim()).filter(Boolean);
+			setSubmitError(`Συμπληρώστε τα υποχρεωτικά πεδία: ${names.join(", ")}.`);
+			missing[0].focus();
+			shakeForm();
+			return;
+		}
 		const formData = new ExtendedFormData<Registrations>(form);
 		const data: Omit<Registrations, "id" | "payment_amount" | "total_payment"> = {
 			last_name: formData.string("last_name"),
@@ -479,26 +518,21 @@ export function RegistrationForm() {
 		setRegistrationData(data);
 		try {
 			if (data.am.startsWith("0") && data.class_year !== "Υπό Κατάταξη" && data.class_year !== "Α' Προκαταρκτική" && data.class_year !== "Α' Ετος") {
-				alert(
-					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζεται το ΑΜ, θα το βρείτε σε προσωπικό μαιλ, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής.",
+				throw Error(
+					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζετε τον ΑΜ, θα τον βρείτε σε προσωπικό email, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής.",
 				);
-				throw Error("");
 			}
 			if (data.amka.length !== 11) {
-				alert("Ο ΑΜΚΑ αποτελείται μόνο από 11 ψηφία.");
-				throw Error("");
+				throw Error("Ο ΑΜΚΑ αποτελείται μόνο από 11 ψηφία.");
 			}
 			if (data.teacher_id === -1 && data.class_year !== "Α' Προκαταρκτική" && data.class_year !== "Υπό Κατάταξη") {
-				alert("Παρακαλώ επιλέξτε καθηγητή");
-				throw Error("");
+				throw Error("Παρακαλώ επιλέξτε καθηγητή.");
 			}
 			if (data.instrument_id === 0 && data.class_id > 0) {
-				alert("Παρακαλώ επιλέξτε όργανο / μάθημα");
-				throw Error("");
+				throw Error("Παρακαλώ επιλέξτε όργανο / μάθημα.");
 			}
 			if (data.class_year === "undefined") {
-				alert("Παρακαλώ επιλέξτε έτος φοίτησης");
-				throw Error("");
+				throw Error("Παρακαλώ επιλέξτε έτος φοίτησης.");
 			}
 			setSpinner(true);
 			const res = await apiHook(API.Pupils.post, { RequestObject: data });
@@ -513,20 +547,29 @@ export function RegistrationForm() {
 				});
 			}
 		} catch (err) {
-			const form = document.querySelector("#registrationForm") as HTMLElement;
-			const atl = new AnimTimeline();
-			atl.step({
-				time: 50,
-				anim: () => form.classList.add("animate-shake"),
-			})
-				.step({
-					time: 500,
-					anim: () => form.classList.remove("animate-shake"),
-				})
-				.start();
+			// Our own checks throw plain Errors with a Greek message; request failures get described.
+			const isLocalCheck = err instanceof Error && err.name === "Error" && !("status" in err) && !("issues" in err);
+			setSubmitError(isLocalCheck ? err.message : describeError(err));
+			shakeForm();
 		} finally {
 			setSpinner(false);
 		}
+	};
+
+	const shakeForm = () => {
+		const form = document.querySelector("#registrationForm") as HTMLElement | null;
+		if (!form) return;
+		queueMicrotask(() => form.querySelector<HTMLElement>("[data-submit-error]")?.scrollIntoView({ block: "center", behavior: "smooth" }));
+		const atl = new AnimTimeline();
+		atl.step({
+			time: 50,
+			anim: () => form.classList.add("animate-shake"),
+		})
+			.step({
+				time: 500,
+				anim: () => form.classList.remove("animate-shake"),
+			})
+			.start();
 	};
 
 	const btns = [
@@ -623,6 +666,15 @@ export function RegistrationForm() {
 									<For each={inputsByMusicType(musicType(), store, registrationData)}>
 										{(input) => <Input {...input} prefix={PREFIX} onchange={onFormInputsChange} />}
 									</For>
+									<Show when={submitError()}>
+										<p
+											role="alert"
+											data-submit-error
+											class="col-span-full justify-self-center max-w-[60ch] rounded-md bg-red-100 px-4 py-3 font-didact text-base text-red-900">
+											<i class="fa-solid fa-circle-exclamation mr-2" aria-hidden="true"></i>
+											{submitError()}
+										</p>
+									</Show>
 									<Show
 										when={!spinner()}
 										fallback={

@@ -163,17 +163,6 @@ export default function Input(props: InputProps) {
 
 	let [isShown, setIsShown] = createSignal(show);
 
-	document.querySelectorAll(".formInputs").forEach((inp) => {
-		inp.addEventListener("focus", (e: FocusEvent) => {
-			(e.currentTarget as HTMLElement).removeAttribute("required");
-		});
-	});
-	document.querySelectorAll(".formInputs").forEach((inp) => {
-		inp.addEventListener("blur", (e: FocusEvent) => {
-			(e.currentTarget as HTMLElement).setAttribute("required", "");
-		});
-	});
-
 	if (listeners) {
 		onMount(() => {
 			const selector = document.querySelector(`[name='${name}']`);
@@ -220,8 +209,8 @@ export default function Input(props: InputProps) {
 	};
 
 	return (
+		// The label wraps its control, which is what links them — an explicit `for` without a matching id would break it.
 		<label
-			for={name}
 			class={
 				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
 				getInputSpecific(type) +
@@ -239,6 +228,7 @@ export default function Input(props: InputProps) {
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
 					type={type}
 					name={name}
+					aria-required={required ? "true" : undefined}
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
@@ -264,6 +254,7 @@ export default function Input(props: InputProps) {
 				<select
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
+					aria-required={required ? "true" : undefined}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
 					onchange={onchange}
@@ -338,6 +329,7 @@ export default function Input(props: InputProps) {
 				<textarea
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
+					aria-required={required ? "true" : undefined}
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}

@@ -441,6 +441,103 @@ function pupilsTest() {
 		reRegistrationEnrollmentId = null;
 	});
 
+	test("--pupils-- #20c a known ΑΜ with the wrong ΑΜΚΑ cannot overwrite the pupil", async () => {
+		expect(pupilId).not.toBeNull();
+		const before = await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } });
+		const beforeJson = await getJson<APIResponse["Pupils.get"]>(before);
+
+		const res = await useTestAPI(
+			"Pupils.post",
+			{
+				RequestObject: {
+					am: String(createdAm),
+					amka: "99999999999",
+					first_name: "Άλλος",
+					last_name: "Χρήστης",
+					fathers_name: "Άλλος",
+					birth_date: Date.UTC(1990, 0, 1),
+					road: "Άλλη",
+					number: 2,
+					tk: 20000,
+					region: "Αλλού",
+					telephone: "-",
+					cellphone: "6900000009",
+					email: `pupils.test.attacker.${R.hex(4)}@example.com`,
+					registration_year: "2026-2027",
+					class_year: "Β' Ετος",
+					class_id: 0,
+					teacher_id: -1,
+					instrument_id: 0,
+					date: Date.now(),
+					pass: false,
+				},
+			},
+			false,
+		);
+		expect(res.status).toBe(409);
+		expectBody(await res.json(), undefined, true);
+
+		const after = await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } });
+		const afterJson = await getJson<APIResponse["Pupils.get"]>(after);
+		expect(afterJson.data.pupil.email).toBe(beforeJson.data.pupil.email);
+		expect(afterJson.data.pupil.amka).toBe(beforeJson.data.pupil.amka);
+		expect(afterJson.data.enrollments.length).toBe(beforeJson.data.enrollments.length);
+	});
+
+	test("--pupils-- #20d a record without ΑΜΚΑ (2023-24) is claimed by surname + birth date, then locked to that ΑΜΚΑ", async () => {
+		const am = String(R.int(9000, 9999));
+		const birth_date = Date.UTC(2001, 4, 12);
+		const form = (overrides: Record<string, unknown>) =>
+			useTestAPI(
+				"Pupils.post",
+				{
+					RequestObject: {
+						am,
+						amka: "",
+						// the dev:clean fixture name, so the row is removed with the others
+						first_name: "Δοκιμαστικός",
+						last_name: "Μαθητής",
+						fathers_name: "Δοκιμαστικός",
+						birth_date,
+						road: "Δοκιμαστική",
+						number: 1,
+						tk: 10000,
+						region: "Δοκιμή",
+						telephone: "-",
+						cellphone: "6900000003",
+						email: `pupils.test.${R.hex(4)}@example.com`,
+						registration_year: "2026-2027",
+						class_year: "Α' Ετος",
+						class_id: 0,
+						teacher_id: -1,
+						instrument_id: 0,
+						date: Date.now(),
+						pass: false,
+						...overrides,
+					} as any,
+				},
+				false,
+			);
+
+		// A pupil kept without an ΑΜΚΑ, as in 2023-24.
+		const created = await getJson<APIResponse["Pupils.post"]>(await form({}));
+		const legacyPupilId = created.data.pupilId;
+
+		// Same ΑΜ but another surname: refused, nothing changes.
+		const wrong = await form({ amka: "11111111111", last_name: "Ξένος" });
+		expect(wrong.status).toBe(409);
+
+		// Same surname + birth date: accepted, and the ΑΜΚΑ is stored.
+		const claimed = await getJson<APIResponse["Pupils.post"]>(await form({ amka: "22222222222" }));
+		expect(claimed.data.pupilId).toBe(legacyPupilId);
+		const read = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: legacyPupilId } }));
+		expect(read.data.pupil.amka).toBe("22222222222");
+
+		// From now on the ΑΜΚΑ is required: surname + birth date alone no longer work.
+		const after = await form({ amka: "33333333333" });
+		expect(after.status).toBe(409);
+	});
+
 	test("--pupils-- #21 authenticated routes reject anonymous callers", async () => {
 		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
 		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/total`);

@@ -115,8 +115,17 @@ const z_EnrollmentInput = z.object({
 const z_EnrollmentUpdate = z_EnrollmentInput.extend({ id: z.number().int().min(1, "Μη έγκυρο id") });
 
 /** Public registration-form payload: pupil identity + one enrollment. */
+const requiredText = (message: string) => z.string(message).trim().min(1, message);
 const z_PupilPost = z_Registrations.omit({ id: true, payment_date: true, payment_amount: true, total_payment: true }).extend({
 	registration_url: z.string("Μη έγκυρο registration_url").optional(),
+	// The form's required fields must not arrive empty (they used to be accepted blank).
+	last_name: requiredText("Συμπληρώστε το επώνυμο"),
+	first_name: requiredText("Συμπληρώστε το όνομα"),
+	fathers_name: requiredText("Συμπληρώστε το πατρώνυμο"),
+	cellphone: requiredText("Συμπληρώστε το κινητό τηλέφωνο"),
+	road: requiredText("Συμπληρώστε την οδό"),
+	region: requiredText("Συμπληρώστε την περιοχή"),
+	class_year: requiredText("Επιλέξτε έτος φοίτησης"),
 });
 
 const z_InsertResponse = z.object({ insertId: z.number().int().min(0, "Μη έγκυρο insertId") });
@@ -133,6 +142,22 @@ const z_AmLookup = z.object({
 });
 
 // ---- Helpers ----
+
+type PupilProof = Pick<Pupils, "amka" | "last_name" | "birth_date">;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a public form submission may update an existing pupil: the ΑΜΚΑ must match.
+ * Records kept without an ΑΜΚΑ (2023-24 did not require one) are matched on surname +
+ * birth date instead; that submission stores the ΑΜΚΑ, so later ones need it too.
+ * (Birth dates are compared within a day and a half to absorb timezone offsets.)
+ */
+function canUpdatePupil(pupil: PupilProof, body: Pick<Pupils, "amka" | "last_name" | "birth_date">): boolean {
+	if (pupil.amka) return pupil.amka === body.amka;
+	const sameSurname = normalizeKey(pupil.last_name) === normalizeKey(body.last_name);
+	const sameBirthDate = Math.abs(Number(pupil.birth_date) - Number(body.birth_date)) < 1.5 * DAY_MS;
+	return sameSurname && sameBirthDate;
+}
 
 type PupilRow = Pupils & { needs_review: 0 | 1 | boolean };
 type EnrollmentRow = PupilEnrollments & { pass: 0 | 1 | boolean; payment_date: number | null };
@@ -316,22 +341,35 @@ export const pupilsRoutes = {
 	post: new APIServer(
 		{ method: "POST", path: "/pupils", schema: z_PupilPost, responseSchema: z.object({ insertId: z.number().int(), pupilId: z.number().int() }) },
 		[],
-		({ body, env }) =>
-			handlerResult(async (T) => {
-				const parsed = parseAm(body.am);
+		async ({ body, env }) => {
+			// This route is public: an existing pupil may only be updated by whoever proves
+			// it is them (see canUpdatePupil) — a known ΑΜ with other details is refused
+			// instead of overwriting that pupil's contact data.
+			const parsed = parseAm(body.am);
+			if (parsed.kind === "valid") {
+				const [owner] = await executeQuery<PupilProof>("SELECT amka, last_name, birth_date FROM pupils WHERE am = ? LIMIT 1", [parsed.am]);
+				if (owner && !canUpdatePupil(owner, body)) {
+					return APIServer.jsonError(
+						"Ο αριθμός μητρώου και ο ΑΜΚΑ δεν αντιστοιχούν στα στοιχεία του μαθητή. Ελέγξτε τα ή επικοινωνήστε με τη Γραμματεία της Σχολής.",
+						HTTP.CONFLICT,
+					);
+				}
+			}
+			return handlerResult(async (T) => {
 				const now = Date.now();
 				const year = body.registration_year;
 
 				// 1. Find or create the pupil.
 				let pupil: Pupils | undefined;
 				if (parsed.kind === "valid") {
+					// Ownership was checked above.
 					[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ?", [parsed.am]);
 				} else {
-					// No usable ΑΜ: reuse this person's existing orphan row (matched on
-					// the normalized name) instead of creating a duplicate every year.
+					// No usable ΑΜ: reuse this person's existing orphan row instead of creating
+					// a duplicate every year — never on the name alone (anyone can type a name).
 					const candidates = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND orphan_code <> ''");
 					const nameKey = normalizeKey(`${body.last_name} ${body.first_name}`);
-					pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey);
+					pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey && canUpdatePupil(row, body));
 				}
 				let pupilId: number;
 				if (pupil) {
@@ -428,7 +466,8 @@ export const pupilsRoutes = {
 				}).catch((error) => console.error("Registration confirmation email failed:", error));
 
 				return { insertId, pupilId };
-			}, "Σφάλμα κατά την προσθήκη της εγγραφής"),
+			}, "Σφάλμα κατά την προσθήκη της εγγραφής");
+		},
 	),
 
 	// ---------------------------------------------------------------------
