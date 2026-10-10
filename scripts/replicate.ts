@@ -33,12 +33,12 @@
  * After a DB/R2 replication the dev server must be restarted (workerd keeps
  * the old store open).
  */
+import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { cp, mkdir, readFile, readdir, rm } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
+import { cp, mkdir, readdir, readFile, rm } from "node:fs/promises";
 import { homedir } from "node:os";
-import { convertV4MiniflareOptions, Miniflare } from "miniflare";
+import { dirname, join, relative } from "node:path";
 
 const args = process.argv.slice(2);
 const bucketFlagIndex = args.indexOf("--bucket");
@@ -138,6 +138,7 @@ async function replicateBucket() {
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	async function downloadOne(key: string, size: number): Promise<void> {
+		const dest = join(ROOT, "bucket/latest", ...key.split("/"));
 		const encodedKey = key.split("/").map(encodeURIComponent).join("/");
 		const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/r2/buckets/${BUCKET}/objects/${encodedKey}`;
 
@@ -155,7 +156,7 @@ async function replicateBucket() {
 				}
 				if (!res.body) throw new Error("empty response body");
 				// Stream straight to disk — no full-body buffer copy.
-				const written = await Bun.write(dest, res.body);
+				const written = await Bun.write(dest, res);
 				if (written !== size) throw new Error(`size mismatch: expected ${size}, wrote ${written}`);
 				done++;
 				if (process.env.REPLICATE_VERBOSE) console.log(`  ${key}`);

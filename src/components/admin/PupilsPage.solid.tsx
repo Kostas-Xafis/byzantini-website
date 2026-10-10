@@ -1,5 +1,5 @@
-import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
 import { customEvent } from "@_types/custom-events";
+import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { classYearsForClassId, MusicTypeArr } from "@lib/classYears";
 import { API, type APIResponse } from "@routes/index.client";
@@ -121,14 +121,15 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			onchange: (event) => {
 				const classSelect = event.currentTarget as HTMLSelectElement;
 				const classId = Number(classSelect.value);
-				const form = classSelect.form;
+				const form = classSelect.form as HTMLFormElement;
 				// Both lists are rebuilt empty-selected: a year or an instrument of the
 				// previous department must not survive the switch.
+				const classYearSelect = form.querySelector("select[name='class_year']") as any as HTMLSelectElement;
 				setSelectOptions(
-					form?.querySelector<HTMLSelectElement>("select[name='class_year']"),
+					classYearSelect,
 					classYearsForClassId(classId).map((year) => ({ value: year, label: year })),
 				);
-				const instrumentSelect = form?.querySelector<HTMLSelectElement>("select[name='instrument_id']");
+				const instrumentSelect = form?.querySelector("select[name='instrument_id']") as any as HTMLSelectElement;
 				setSelectOptions(
 					instrumentSelect,
 					instrumentsForClassId(instruments, classId).map((instrument) => ({ value: instrument.id, label: instrument.name })),
