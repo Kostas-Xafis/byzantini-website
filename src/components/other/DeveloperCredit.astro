@@ -1,0 +1,71 @@
+---
+import { DEVELOPER } from "@utilities/schema";
+
+/**
+ * Developer attribution, framed so the school is the subject and the developer
+ * is its achievement ("one of our own built this") rather than an outside
+ * vendor. That framing is the reason the credit is likely to be kept.
+ *
+ * Variants:
+ *  - "contact" (default): a closing band for the Επικοινωνία page. Deliberately
+ *    styled apart from the school's own social buttons so it reads as a credit
+ *    band and never as another official channel of the school.
+ *  - "signin": a muted line for the admin sign-in screen (light + dark).
+ */
+export interface Props {
+	variant?: "contact" | "signin";
+	/** Overrides the default portfolio URL from `DEVELOPER`. */
+	href?: string;
+}
+
+const { variant = "contact", href = DEVELOPER.portfolio } = Astro.props;
+const isContact = variant === "contact";
+---
+
+{
+	isContact ? (
+		<aside
+			role="note"
+			aria-label="Στοιχεία κατασκευής ιστοσελίδας"
+			class="relative w-full max-w-[900px] overflow-hidden rounded-2xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-6 shadow-xl shadow-red-900/30 max-sm:px-5 max-sm:py-5">
+			{/* Amber hairline along the top edge — the "seal" that marks this as a credit band. */}
+			<div class="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgb(251_191_36_/_0.7),transparent)]" aria-hidden="true" />
+			<div class="relative flex flex-col items-center gap-y-4 sm:flex-row sm:items-center sm:gap-x-6">
+				<span class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60 max-sm:size-12">
+					<i class="fa-solid fa-code text-2xl max-sm:text-xl" aria-hidden="true" />
+				</span>
+				<div class="flex-1 text-center sm:text-left">
+					<p class="text-2xl max-sm:text-xl font-bold font-anaktoria leading-tight text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
+						Την ιστοσελίδα σχεδίασε &amp; ανέπτυξε
+					</p>
+					<p class="mt-1 text-lg max-sm:text-base leading-relaxed font-semibold text-white/95">
+						ο <span class="font-semibold text-amber-300">{DEVELOPER.name}</span>, {DEVELOPER.role}
+					</p>
+				</div>
+				<a
+					href={href}
+					target="_blank"
+					rel="author noopener"
+					class="group/credit shrink-0 inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-semibold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+					<i
+						class="fa-solid fa-briefcase text-amber-400 transition-colors duration-300 group-hover/credit:text-red-950 motion-reduce:transition-none"
+						aria-hidden="true"
+					/>
+					Δείτε τη δουλειά μου
+				</a>
+			</div>
+		</aside>
+	) : (
+		<p class="text-center text-sm text-gray-500 dark:text-gray-400">
+			Ιστοσελίδα από
+			<a
+				href={href}
+				target="_blank"
+				rel="author noopener"
+				class="font-semibold text-red-900 underline decoration-1 underline-offset-4 transition-colors hover:text-red-700 dark:text-red-300 dark:hover:text-red-200">
+				{DEVELOPER.name}
+			</a>
+			<span class="text-gray-400 dark:text-gray-500">, {DEVELOPER.role}</span>
+		</p>
+	)
+}
