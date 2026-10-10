@@ -11,7 +11,7 @@ code, and checked the public site live on `bun run dev` (desktop 800/1024/1366 p
 The admin panel was reviewed from code only (not logged in live). Items marked **[live]** were
 reproduced in the running app; **[verify]** needs a deployed environment to confirm.
 
-**Status** (as of `737bd57`, 2026-10-10): ✅ Done · 🟡 Partly done (what is left is noted) · ⬜ Open · ⏸ Deferred.
+**Status** (as of `3c559a1`, 2026-10-10): ✅ Done · 🟡 Partly done (what is left is noted) · ⬜ Open · ⏸ Deferred.
 Every ID below carries its status; update it in the same commit that changes it.
 
 **Severity.** **BLOCKER** = fix before merging · **SHOULD** = fix soon after / before go-live polish ·
@@ -27,11 +27,11 @@ Every ID below carries its status; update it in the same commit that changes it.
 | B2 | `bun run typecheck` is red (7 errors); `replicate:bucket` is broken at runtime | Build | ✅ Done |
 | B3 | Production emails most likely all **dry-run** (never sent); send is fire-and-forget and can 500 after writes **[verify]** | Reliability | ⏸ Deferred |
 | B4 | Public `GET /api/teachers` returns every teacher's **ΑΜΚΑ**, email, phone — incl. hidden ones **[live]** | Privacy | ✅ Done |
-| B5 | Public registration overwrites any pupil's contact data/ΑΜΚΑ by ΑΜ alone; doubles as a phishing relay | Security | 🟡 Partly done |
+| B5 | Public registration overwrites any pupil's contact data/ΑΜΚΑ by ΑΜ alone; doubles as a phishing relay | Security | ✅ Done |
 | B6 | Admin invite links are reusable and not bound to an email; `sys_users.email` not unique → owner takeover | Security | ✅ Done |
 | B7 | Session tokens from `Math.random()`, cookie not `HttpOnly`/`Secure`, expiry never checked, logout doesn't revoke | Security | 🟡 Partly done |
 | B8 | Desktop navbar overflows from 768 px to >1366 px — links unreachable on most laptops/tablets **[live]** | UX | ✅ Done |
-| B9 | Registration form: required fields not enforced (client or server), submit failures are silent, lookup errors look like "not found" **[live]** | UX | 🟡 Partly done |
+| B9 | Registration form: required fields not enforced (client or server), submit failures are silent, lookup errors look like "not found" **[live]** | UX | ✅ Done |
 | B10 | Admin "select all" + delete wipes enrollments on **all pages** behind an empty, green confirmation | UX / data | ✅ Done |
 | B11 | Multi-statement write flows (payments, books, payoffs, teachers, pupils) are non-atomic on D1 | Data integrity | ⏸ Deferred |
 
@@ -54,7 +54,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 
 ### B2. Typecheck is red, and one error is a real runtime bug
 
-**Status:** ✅ Done — owner fixes, not yet committed
+**Status:** ✅ Done — owner fixes in `d1ae440`
 - `scripts/replicate.ts:158` — `Bun.write(dest, …)` inside `downloadOne()`, but `dest` is declared in `worker()`
   (`:176`). ReferenceError → swallowed by retry → **every object download fails**: `bun run replicate:bucket` is broken.
   Fix: pass `dest` into `downloadOne`.
@@ -101,7 +101,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 
 ### B5. Public registration can overwrite any pupil — and send school-branded mail anywhere
 
-**Status:** 🟡 Partly done — `2b00116`: ΑΜ+ΑΜΚΑ ownership check, no name-only orphan match, required fields. Left: `pass`/`class_id` whitelist, `.max()` lengths, HTML-escaping `templateData` in the email worker, rate limiting
+**Status:** ✅ Done — `2b00116` (ΑΜ+ΑΜΚΑ ownership, no name-only orphan match, required fields), `3c559a1` (rate limit, server-side `pass`/date/link, whitelists, length limits), emailWorker `389c65a` (escaped template values)
 - `lib/api/routes/pupils.ts:316–431` `POST /api/pupils` (unauthenticated). Pupil is matched by **ΑΜ alone** (`:327`), then
   `UPDATE pupils SET … email, telephone, cellphone, road, …, amka …` (`:341`). For no-ΑΜ submissions, orphans are matched by name only (`:334`).
 - ΑΜ is a small integer → a loop over 1–9999 rewrites the register's contact data, then passes `getByAm` (ΑΜ+ΑΜΚΑ) with the
@@ -127,7 +127,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 
 ### B7. Session handling needs hardening
 
-**Status:** 🟡 Partly done — `94e84ae`: crypto tokens, HttpOnly/Secure cookie, expiry check, 5-min cache, cookie-based logout, log redaction, owner-only query logs. Left: password hashing (PBKDF2), login rate limiting, `session_id` still in JSON bodies, DB backup routes open to any admin
+**Status:** 🟡 Partly done — `94e84ae`: crypto tokens, HttpOnly/Secure cookie, expiry check, 5-min cache, cookie-based logout, log redaction, owner-only query logs; `3c559a1`: login rate limit. Left: password hashing (PBKDF2), `session_id` still in JSON bodies, DB backup routes open to any admin
 - **Weak randomness:** `lib/random.ts:56` uses `Math.random()` for session ids (`authentication.ts:60`), invite links, `registration_url`
   and unsubscribe tokens. Public `getSubscriptionToken` hands out fresh outputs → state recovery is feasible.
   → `crypto.getRandomValues` / `crypto.randomUUID()`.
@@ -156,7 +156,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 
 ### B9. The registration form doesn't enforce or explain anything **[live]**
 
-**Status:** 🟡 Partly done — `2b00116`: required fields, inline errors, lookup 404 vs network, labels. Left: lookup switching the chosen department, ΑΜ/ΑΜΚΑ editable after identification, `autocomplete`/`inputmode` on the main form
+**Status:** ✅ Done — `2b00116` (required fields, inline errors, lookup 404 vs network, labels), `3c559a1` (chosen department kept, ΑΜ/ΑΜΚΑ locked after lookup, autocomplete/inputmode)
 - **Required not enforced:** `Input.solid.tsx:238–252` never renders `required`; it's toggled on blur (inverted for `<select>`,
   `:267–268`). Live: all 16 inputs report `required=false`. Server `z_Registrations` (`lib/api/schemas.ts:139–153`) uses bare
   `z.string()` → blank names/addresses are accepted end-to-end. Date default value is the literal `"dd/mm/yyyy"`.
@@ -230,7 +230,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 | S1 | **Stored XSS via JSON-LD:** `set:html={JSON.stringify(...)}` doesn't escape `<`; announcement titles/location fields flow in. With the non-HttpOnly session cookie (B7) this is admin-session theft. | `seo/JsonLd.astro:8`, `spoudastiria/index.astro:343` | `.replace(/</g, "\\u003c")`. | ⬜ Open |
 | S2 | R2 catch-all serves **any** bucket key publicly (incl. `html_templates/*`), with no `Content-Type`/`nosniff`; uploads accept client-chosen type/name, no size limit, SVG allowed. | `src/pages/[...slug].ts:6–22`, `announcements.ts:246–263` | Prefix allowlist, `writeHttpMetadata`, `nosniff`, attachment/CSP-sandbox for non-raster types, validate uploads. | ⬜ Open |
 | S3 | No security headers at all (CSP, frame-ancestors, HSTS, nosniff, Referrer-Policy); no `src/middleware.ts`. | — | Astro middleware with a baseline set; strict CSP on `/admin`. | ⬜ Open |
-| S4 | ΑΜ+ΑΜΚΑ lookup is brute-forceable (ΑΜΚΑ = DDMMYY+5 digits; ~10k guesses with a known birth date) and returns the full row incl. `review_note`, `needs_review`, payment fields. | `pupils.ts:574–597` | Rate limit/Turnstile; return only prefill fields. | ⬜ Open |
+| S4 | ΑΜ+ΑΜΚΑ lookup is brute-forceable (ΑΜΚΑ = DDMMYY+5 digits; ~10k guesses with a known birth date) and returns the full row incl. `review_note`, `needs_review`, payment fields. | `pupils.ts:574–597` | Rate limit/Turnstile; return only prefill fields. | 🟡 Partly done — `3c559a1`: rate limited. Left: return only the fields the form needs |
 | S5 | Newsletter: `getSubscriptionToken` returns anyone's unsubscribe token (→ unsubscribe anyone, membership oracle); `emailSubscribe` accepts any string, no double opt-in. | `emailSubscriptions.ts:23–61` | Remove/guard the token route; `z.email()`; confirmation email. | 🟡 Partly done — `94e84ae`: tokens are now cryptographically random. Left: the public token route, email validation, double opt-in |
 | S6 | Both aux workers are reachable on `*.workers.dev` (default `workers_dev: true`); the email worker exposes `/html-templates` (bucket writes) behind the shared token. | `services/*/wrangler.jsonc` | `"workers_dev": false`; separate token or `wrangler r2 object put` for templates. | ⬜ Open |
 | S7 | OAuth: `email_verified` not checked; `code`/`state` unencoded in the callback URL; logout revokes the `sid` from the body, not the cookie; `authentication.ts:189` duplicates the `:185` check (dead). | `authentication.ts`, `oauth2callback.astro:14` | — | 🟡 Partly done — `94e84ae`: `email_verified` checked, logout uses the cookie. Left: callback URL encoding, duplicate state check |
