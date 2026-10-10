@@ -70,7 +70,6 @@ export const prerender = true;
 </SigninLayout>
 <script>
 	import { useAPI } from "@hooks/useAPI.astro";
-	import { setCookie } from "@utilities/cookies";
 	import { ADMIN_HOME, readRedirectTarget, rememberRedirectTarget } from "@utilities/redirect";
 
 	// The URL the admin was intercepted on (`?redirect_url=`, set by the
@@ -89,8 +88,7 @@ export const prerender = true;
 		};
 		const res = await useAPI("Authentication.userLogin", { RequestObject: data });
 		if (res.data && res.data.isValid) {
-			const { session_id, email, avatar_url } = res.data;
-			setCookie("session_id", session_id || "", 14);
+			const { email, avatar_url } = res.data;
 			localStorage.setItem(
 				"sys_user",
 				JSON.stringify({

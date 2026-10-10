@@ -158,7 +158,6 @@ const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
 	</body>
 </html>
 <script>
-	import { setCookie } from "@utilities/cookies";
 	import { ADMIN_HOME, buildLoginUrl, takeRedirectTarget } from "@utilities/redirect";
 
 	const statusEl = document.getElementById("status");
@@ -188,12 +187,9 @@ const callbackUrl = `/api/auth/google/callback?code=${code}&state=${state}`;
 		.then((response) => response.json())
 		.then((payload: any) => {
 			const data = payload?.res?.data ?? payload?.data ?? payload;
-			console.log("OAuth callback response:", data);
 			if (data?.isValid && data?.session_id) {
 				if (statusEl) statusEl.textContent = "Η σύνδεση ολοκληρώθηκε. Μεταφορά...";
 
-				// Store session cookie for 14 days
-				setCookie("session_id", data.session_id, 14);
 				localStorage.setItem(
 					"sys_user",
 					JSON.stringify({

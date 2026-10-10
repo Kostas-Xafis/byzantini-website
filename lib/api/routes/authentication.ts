@@ -1,12 +1,13 @@
 import { z } from "astro/zod";
-import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
+import type { SysUsers } from "@_types/entities";
 import { z_LoginCredentials } from "@lib/api/schemas";
-import { createSessionId, generateShaKey, isSessionValid } from "@utilities/authentication";
+import { createSessionId, forgetSession, generateShaKey, isSessionValid } from "@utilities/authentication";
 import { google } from "@utilities/Google";
 import { decodeIdToken, generateCodeVerifier, generateState, type OAuth2Tokens } from "arctic";
 import { APIServer, handlerResult } from "./APIServer";
-import { COOKIE } from "./cookies";
+import { COOKIE, SESSION_COOKIE_OPTIONS } from "./cookies";
 import { authenticateMiddleware } from "./middleware/authenticate";
+import { consumeRegisterLink, findRegisterLink } from "./sysusers";
 
 /**
  * Authentication — Phase 4 route group (contracts + handlers in one place).
@@ -17,9 +18,6 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  * getGoogleOAuthStateForSignup, oauthCallback.
  */
 
-const z_LogoutReq = z.object({
-	sid: z.string().min(1, "Μη έγκυρο sid"),
-});
 
 const z_UserLoginRes = z.union([
 	z.object({
@@ -87,19 +85,21 @@ export const authenticationRoutes = {
 						session_exp_date,
 						credentials.email,
 					]);
-					cookies.set(COOKIE.sessionId, session_id);
+					cookies.set(COOKIE.sessionId, session_id, SESSION_COOKIE_OPTIONS);
 					return { isValid, session_id, email: credentials.email, avatar_url: null };
 				},
 				"Σφάλμα κατά την είσοδο",
 			),
 	),
 	userLogout: new APIServer(
-		{ method: "POST", path: "/auth/logout", schema: z_LogoutReq },
+		{ method: "POST", path: "/auth/logout" },
 		[authenticateMiddleware],
-		({ body, cookies }) =>
+		({ cookies }) =>
 			handlerResult(async (T) => {
-				const { sid } = body;
+				// The session cookie is HttpOnly — the server reads it; the page cannot.
+				const sid = cookies.get(COOKIE.sessionId);
 				await T.executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
+				forgetSession(sid);
 				cookies.delete(COOKIE.sessionId);
 				return "Logged out";
 			}),
@@ -107,21 +107,19 @@ export const authenticationRoutes = {
 	getGoogleOAuthState: new APIServer(
 		{ method: "GET", path: "/auth/google", responseSchema: z_OAuthStateRes },
 		[],
-		({ request, cookies, env }) =>
+		({ request, cookies }) =>
 			handlerResult(async () => {
 				const state = generateState();
 				const codeVerifier = generateCodeVerifier();
 				const url = google(oauthOrigin(request)).createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
 				cookies.set("google_oauth_state" as any, state, {
 					path: "/",
-					secure: env?.PROD,
 					httpOnly: true,
 					maxAge: 60 * 10, // 10 minutes
 					sameSite: "Lax",
 				});
 				cookies.set("google_code_verifier" as any, codeVerifier, {
 					path: "/",
-					secure: env?.PROD,
 					httpOnly: true,
 					maxAge: 60 * 10, // 10 minutes
 					sameSite: "Lax",
@@ -132,11 +130,10 @@ export const authenticationRoutes = {
 	getGoogleOAuthStateForSignup: new APIServer(
 		{ method: "GET", path: "/auth/google/signup/[link:string]", responseSchema: z_OAuthStateRes },
 		[],
-		({ params, request, cookies, env }) =>
+		({ params, request, cookies }) =>
 			handlerResult(async (T) => {
 				const { link } = params;
-				const [linkCheck] = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ? LIMIT 1", [link]);
-				if (!linkCheck || linkCheck.exp_date < Date.now()) {
+				if (!(await findRegisterLink(T, link))) {
 					throw new Error("Invalid Link");
 				}
 
@@ -146,21 +143,18 @@ export const authenticationRoutes = {
 
 				cookies.set("google_oauth_state" as any, state, {
 					path: "/",
-					secure: env?.PROD,
 					httpOnly: true,
 					maxAge: 60 * 10,
 					sameSite: "Lax",
 				});
 				cookies.set("google_code_verifier" as any, codeVerifier, {
 					path: "/",
-					secure: env?.PROD,
 					httpOnly: true,
 					maxAge: 60 * 10,
 					sameSite: "Lax",
 				});
 				cookies.set("google_signup_link" as any, link, {
 					path: "/",
-					secure: env?.PROD,
 					httpOnly: true,
 					maxAge: 60 * 10,
 					sameSite: "Lax",
@@ -197,20 +191,20 @@ export const authenticationRoutes = {
 						// Invalid code or client credentials
 						return { error: "Invalid authorization code", isValid: false };
 					}
-					const claims = decodeIdToken(tokens.idToken()) as { sub: string; name?: string; email?: string; picture?: string };
+					const claims = decodeIdToken(tokens.idToken()) as { sub: string; name?: string; email?: string; email_verified?: boolean; picture?: string };
 					const googleEmail = claims.email;
 					const avatarUrl = claims.picture || null;
 
-					if (!googleEmail) {
-						return { error: "No email found in Google account", isValid: false };
+					if (!googleEmail || claims.email_verified === false) {
+						return { error: "No verified email found in Google account", isValid: false };
 					}
 
 					// Check if user exists with this email
-					const [existingUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [googleEmail]);
+					const [existingUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [googleEmail]);
 
 					if (!existingUser && signupLink) {
-						const [linkCheck] = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ? LIMIT 1", [signupLink]);
-						if (!linkCheck || linkCheck.exp_date < Date.now()) {
+						// The invite must be for this Google account's email; it is used up here.
+						if (!(await consumeRegisterLink(T, signupLink, googleEmail))) {
 							return { error: "Invalid Link", isValid: false };
 						}
 
@@ -229,14 +223,14 @@ export const authenticationRoutes = {
 
 					// Create session for the user
 					const { session_exp_date, session_id } = createSessionId();
-					await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [session_id, session_exp_date, googleEmail]);
+					await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ? COLLATE NOCASE", [session_id, session_exp_date, googleEmail]);
 
 					// Clear OAuth cookies
 					cookies.delete("google_oauth_state" as any, "/");
 					cookies.delete("google_code_verifier" as any, "/");
 					cookies.delete("google_signup_link" as any, "/");
 
-					cookies.set(COOKIE.sessionId, session_id);
+					cookies.set(COOKIE.sessionId, session_id, SESSION_COOKIE_OPTIONS);
 
 					return { isValid: true, session_id, email: googleEmail, avatar_url: avatarUrl };
 				},

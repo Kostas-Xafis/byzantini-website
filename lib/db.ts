@@ -50,8 +50,8 @@ export async function dbExec<T = undefined>(query: string, args: QueryArguments 
 	const stmt = getDb().prepare(sql).bind(...bindArgs);
 	const trimmed = query.trim();
 
-	// SELECT-like statements return rows; everything else returns last row id.
-	if (/^(SELECT|WITH|PRAGMA|EXPLAIN|SHOW)/i.test(trimmed)) {
+	// SELECT-like statements (and writes with RETURNING) return rows; everything else returns last row id.
+	if (/^(SELECT|WITH|PRAGMA|EXPLAIN|SHOW)/i.test(trimmed) || /\bRETURNING\b/i.test(trimmed)) {
 		const res = await stmt.all<T>();
 		return { insertId: "0", rows: res.results } as T extends undefined ? { insertId: string } : ExecReturn<T>;
 	}
@@ -61,7 +61,8 @@ export async function dbExec<T = undefined>(query: string, args: QueryArguments 
 
 const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][number], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
-	let argStr = JSON.stringify(Array.isArray(args) ? args : objectToArrayFromQuery(args, query));
+	// sys_users writes carry session ids and password hashes — never store their values.
+	let argStr = /\bsys_users\b/i.test(query) ? '"[redacted]"' : JSON.stringify(Array.isArray(args) ? args : objectToArrayFromQuery(args, query));
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
 		await getDb()

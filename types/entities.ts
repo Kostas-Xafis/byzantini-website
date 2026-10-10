@@ -85,6 +85,8 @@ export const v_SysUserRegisterLink = object({
 export interface SysUserRegisterLink {
 	link: string;
 	exp_date: number;
+	/** The invited email — the account created from the link must use it. */
+	email: string | null;
 }
 
 export const v_LoginCredentials = object({

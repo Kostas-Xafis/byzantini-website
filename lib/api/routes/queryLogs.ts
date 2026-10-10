@@ -3,7 +3,7 @@ import type { QueryLogs } from "@_types/entities";
 import { executeQuery } from "@lib/utils.server";
 import { z_QueryLogs } from "@lib/api/schemas";
 import { APIServer, handlerResult } from "./APIServer";
-import { authenticateMiddleware } from "./middleware/authenticate";
+import { authenticateMiddleware, ownerOnlyMiddleware } from "./middleware/authenticate";
 
 /**
  * QueryLogs — Phase 4 route group (contracts + handlers in one place).
@@ -17,7 +17,7 @@ const v_QueryLogsFilters = z.object({
 });
 
 export const queryLogsRoutes = {
-	get: new APIServer({ method: "GET", path: "/query-logs", responseSchema: z.array(z_QueryLogs) }, [authenticateMiddleware], () =>
+	get: new APIServer({ method: "GET", path: "/query-logs", responseSchema: z.array(z_QueryLogs) }, [authenticateMiddleware, ownerOnlyMiddleware], () =>
 		handlerResult(
 			() => executeQuery<QueryLogs>("SELECT id, query, args, date, error FROM query_logs ORDER BY date DESC LIMIT 100"),
 			"Σφάλμα κατά την ανάκτηση των καταγραφών ερωτημάτων",
@@ -25,7 +25,7 @@ export const queryLogsRoutes = {
 	),
 	getByFilters: new APIServer(
 		{ method: "POST", path: "/query-logs/filter", schema: v_QueryLogsFilters, responseSchema: z.array(z_QueryLogs) },
-		[authenticateMiddleware],
+		[authenticateMiddleware, ownerOnlyMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
 				const { startDate = null, endDate = null, limit } = body;
