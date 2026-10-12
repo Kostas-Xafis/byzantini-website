@@ -1,9 +1,12 @@
 import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers } from "@_types/entities";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { test } from "bun:test";
-import { array, number, object } from "valibot";
+import { expect, test } from "bun:test";
+import { array, number, object, omit } from "valibot";
+import { Env } from "../../lib/env/env.ts";
 import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers.ts";
+
+const v_PublicTeacher = omit(v_Teachers, ["amka", "telephone", "email"]);
 
 const areBuffersEqual = (first: ArrayBuffer, second: ArrayBuffer) => {
 	const firstView = new Uint8Array(first);
@@ -227,5 +230,31 @@ test("--teachers--", async () => {
 	});
 
 	const json = await getJson<APIResponse["Teachers.getByPriorityClasses"]>(res);
-	expectBody(json, array(v_Teachers));
+	expectBody(json, array(v_PublicTeacher));
+});
+
+// Public teacher routes must never leak ΑΜΚΑ, phone or email; the full rows are admin-only.
+const anonymousBase = (() => {
+	const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
+	return (base.endsWith("/") ? base : base + "/") + "api";
+})();
+const privateTeacherFields = ["amka", "telephone", "email"];
+
+test("--teachers-- public routes omit private fields", async () => {
+	for (const path of ["/teachers/public", "/teachers/priority/byz"]) {
+		const res = await fetch(anonymousBase + path);
+		expect(res.status).toBe(200);
+		const json = (await res.json()) as { data: Record<string, unknown>[] };
+		expectBody(json, array(v_PublicTeacher));
+		for (const row of json.data) {
+			for (const field of privateTeacherFields) expect(row).not.toHaveProperty(field);
+		}
+	}
+});
+
+test("--teachers-- full teacher rows reject anonymous callers", async () => {
+	for (const path of ["/teachers", "/teachers/fullnames"]) {
+		const res = await fetch(anonymousBase + path);
+		expect(res.status).toBe(401);
+	}
 });

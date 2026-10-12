@@ -24,10 +24,11 @@ export async function generateShaKey(key: string, salt?: string) {
 }
 
 // This class is used to authenticate a user by his session id
-// and therefore avoid querying the database for every request
+// and therefore avoid querying the database for every request.
+// Kept short: it is per isolate, so a logout or a deleted admin elsewhere is only seen after the timeout.
 class AuthCache {
 	private cache = new Map<string, number>();
-	private timeout = 1000 * 60 * 60 * 12;
+	private timeout = 1000 * 60 * 5;
 
 	constructor() {}
 
@@ -69,13 +70,19 @@ export const isSessionValid = async (session_id: string): Promise<boolean> => {
 	if (small_cache.has(session_id)) {
 		return true;
 	}
-	const [user] = await executeQuery<SysUsers>("SELECT * FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
+	const [user] = await executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE session_id = ? AND session_exp_date > ? LIMIT 1", [
+		session_id,
+		Date.now(),
+	]);
 	const isValid = user !== undefined;
 	if (isValid) small_cache.set(session_id);
 	else small_cache.delete(session_id);
 
 	return isValid;
 };
+
+/** Drops a session from this isolate's cache (logout). */
+export const forgetSession = (session_id: string) => small_cache.delete(session_id);
 
 export async function authentication(ctx: APIContext) {
 	const session_id = getSessionId(ctx);

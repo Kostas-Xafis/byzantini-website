@@ -103,7 +103,7 @@ export default function DateInput(props: DateInputProps) {
 		function setAfterDatePicker(date?: Date, time = 200) {
 			// set value after datepicker is initialized because it resets the starting value
 			sleep(time).then(() => {
-				dateInput.value = date ? formatDateToMarineTime(date) : "dd/mm/yyyy";
+				dateInput.value = date ? formatDateToMarineTime(date) : "";
 			});
 		}
 		setAfterDatePicker(hasValue ? new Date(value as number) : undefined, 1000);
@@ -133,8 +133,10 @@ export default function DateInput(props: DateInputProps) {
 				}
 				type="text"
 				readOnly={true}
-				value={(value && formatDateToMarineTime(value as number)) || "dd/mm/yyyy"}
+				value={(value && formatDateToMarineTime(value as number)) || ""}
+				placeholder="dd/mm/yyyy"
 				name={name}
+				aria-required={required ? "true" : undefined}
 				onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 				onblur={(e: FocusEvent) =>
 					required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")

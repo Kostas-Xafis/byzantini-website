@@ -1,7 +1,7 @@
 import { v_SysUsers, type SysUsers } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 import { array, literal, number, object, pick, string } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
@@ -33,6 +33,14 @@ function sysUsersTest() {
 		const json = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(res);
 		expectBody(json, object({ isValid: literal(true) }));
 	});
+	test("--sysusers-- #2b invite rejects a different email", async () => {
+		const res = await useTestAPI("SysUsers.registerSysUser", {
+			RequestObject: { email: R.email(), password: sysUser.password },
+			UrlArgs: { link: newSysUserLink as string },
+		});
+		expect(res.status).not.toBe(200);
+		expectBody(await res.json(), undefined, true);
+	});
 	test("--sysusers-- #3", async () => {
 		const res = await useTestAPI("SysUsers.registerSysUser", {
 			RequestObject: sysUser,
@@ -43,6 +51,18 @@ function sysUsersTest() {
 		expectBody(json, object({ session_id: string(), id: number() }));
 
 		newSysUserId = json.data.id;
+	});
+	test("--sysusers-- #3b invite cannot be used twice", async () => {
+		const res = await useTestAPI("SysUsers.registerSysUser", {
+			RequestObject: sysUser,
+			UrlArgs: { link: newSysUserLink as string },
+		});
+		expect(res.status).not.toBe(200);
+		expectBody(await res.json(), undefined, true);
+
+		const check = await useTestAPI("SysUsers.validateRegisterLink", { UrlArgs: { link: newSysUserLink as string } });
+		const checkJson = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(check);
+		expectBody(checkJson, object({ isValid: literal(false) }));
 	});
 	test("--sysusers-- #4", async () => {
 		const res = await useTestAPI("SysUsers.getById", {

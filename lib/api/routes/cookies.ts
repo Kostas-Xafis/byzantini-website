@@ -12,6 +12,9 @@ export const COOKIE = {
 } as const;
 export type CookieName = (typeof COOKIE)[keyof typeof COOKIE];
 
+/** The session cookie is never readable from page scripts. */
+export const SESSION_COOKIE_OPTIONS: CookieOptions = { httpOnly: true };
+
 export type CookieOptions = {
 	expires?: number;
 	path?: string;
@@ -31,10 +34,13 @@ export class ServerCookies {
 	private pendingSets = new Map<CookieName, PendingSet>();
 	private pendingDeletes = new Map<CookieName, string>();
 	private allCookies: Record<string, string>;
+	/** Cookies are `Secure` whenever the request came over https (production); plain http in local dev. */
+	private secureByDefault: boolean;
 
 	constructor(request: Request) {
 		this.requestHeaders = request.headers;
 		this.allCookies = this.#parseCookies(request);
+		this.secureByDefault = new URL(request.url).protocol === "https:";
 	}
 
 	get(name: CookieName): string {
@@ -72,7 +78,7 @@ export class ServerCookies {
 		if (this.pendingSets.size === 0 && this.pendingDeletes.size === 0) return response;
 
 		for (const [name, entry] of this.pendingSets) {
-			response.headers.append("Set-Cookie", buildSetCookie(name, entry.value, entry.options));
+			response.headers.append("Set-Cookie", buildSetCookie(name, entry.value, { secure: this.secureByDefault, ...entry.options }));
 		}
 		for (const [name, path] of this.pendingDeletes) {
 			response.headers.append("Set-Cookie", `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}`);

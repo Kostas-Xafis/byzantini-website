@@ -53,9 +53,11 @@ export const useAPI =
 					body,
 				});
 			}
-			const response = (await (await fetcher).json()) as any;
+			const httpResponse = await fetcher;
+			const response = (await httpResponse.json()) as any;
 			if (response && typeof response === "object" && "error" in response) {
-				throw Error(response.error);
+				// Keep the HTTP status so callers can tell "not found" from a server failure.
+				throw Object.assign(Error(response.error), { status: httpResponse.status });
 			}
 			if (response && typeof response === "object" && "message" in response) {
 				setStore && setStore(response.message as any);

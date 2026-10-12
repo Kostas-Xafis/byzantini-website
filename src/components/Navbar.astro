@@ -34,39 +34,39 @@ const highlight = (url: string) => {
 <>
 	<nav
 		class={"group/nav glass-dark fixed top-0 left-0 w-full z-[1000] transition-colors" +
-			" grid grid-cols-[max-content_1fr] grid-rows-[4.1vw] md:h-[4.2vw]" +
-			" max-md:flex max-md:flex-col max-md:h-[4.25rem]"}>
+			" grid grid-cols-[max-content_1fr] grid-rows-[100%] h-(--nav-h)" +
+			" max-xl:flex max-xl:flex-col"}>
 		<input id="mobile-nav-toggle" type="checkbox" class="peer sr-only" />
-		{/* Desktop header: logo + titles (hidden below sm) */}
-		<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[1fr] gap-x-4 font-anaktoria self-center z-10 max-md:hidden">
+		{/* Desktop header: logo + titles (hidden below xl, where the burger menu takes over) */}
+		<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[1fr] gap-x-4 font-anaktoria self-center z-10 max-xl:hidden">
 			<a
 				href="/"
-				class="row-span-full sm:w-[80px] aspect-square place-self-center [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]">
+				class="row-span-full w-[calc(var(--nav-h)-0.75rem)] aspect-square place-self-center [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]">
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
 			<div class="absolute top-[50%] translate-y-[calc(-50%+2px)] left-[calc(1rem-1px)] -z-10">
-				<div class="sm:w-[80px] aspect-square mask-[url('/logo.png')] mask-contain mask-no-repeat">
+				<div class="w-[calc(var(--nav-h)-0.75rem)] aspect-square mask-[url('/logo.png')] mask-contain mask-no-repeat">
 					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
 				</div>
 			</div>
 			<div class="flex flex-col justify-center h-full">
-				<p class="navTitle mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-4xl">
+				<p class="navTitle mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[clamp(1.5rem,1.75vw,2.25rem)] leading-tight">
 					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 				</p>
-				<p class="navTitle font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-2xl max-sm:pl-4">
-					Ι.Ν. Μεταμορφώσεως του Σωτήρος<span class="max-sm:hidden">, ομωνύμου δήμου</span>
+				<p class="navTitle font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[clamp(1rem,1.2vw,1.5rem)] leading-tight">
+					Ι.Ν. Μεταμορφώσεως του Σωτήρος<span class="max-2xl:hidden">, ομωνύμου δήμου</span>
 				</p>
 			</div>
 		</div>
 
-		{/* Desktop links (hidden below sm) */}
-		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-md:hidden">
+		{/* Desktop links (hidden below xl) */}
+		<div class="w-min grid auto-cols-auto grid-rows-[1fr] grid-flow-col justify-self-end px-4 max-xl:hidden">
 			{
 				links.map((link) =>
 					link.expand ? (
-						<div class="group relative grid grid-rows-[minmax(min-content, 60px)] place-content-center px-1 cursor-pointer">
-							<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-2px_1px_0px_rgba(0,0,0,0.25)] text-[1.5vw]">
+						<div tabindex="0" class="group relative grid grid-rows-[minmax(min-content, 60px)] place-content-center px-1 cursor-pointer">
+							<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-2px_1px_0px_rgba(0,0,0,0.25)] text-[clamp(1.05rem,1.3vw,1.6rem)]">
 								{link.name}
 							</div>
 							<div
@@ -77,7 +77,7 @@ const highlight = (url: string) => {
 										: " scale-x-0 transition-transform duration-300 group-hover:bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))] group-hover:scale-x-100")
 								}
 							/>
-							<div class="absolute top-[100%] left-0 bg-red-900 opacity-0 pointer-events-none overflow-hidden rounded-b-md shadow-md shadow-gray-600 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-hover:pointer-events-auto">
+							<div class="absolute top-[100%] left-0 bg-red-900 opacity-0 pointer-events-none overflow-hidden rounded-b-md shadow-md shadow-gray-600 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
 								{link.expand.map((sublink) => (
 									<a href={link.url + sublink.url} class="relative grid py-4 transition-colors ease-in-out hover:bg-red-950">
 										<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
@@ -92,7 +92,7 @@ const highlight = (url: string) => {
 							class="group relative grid grid-rows-[minmax(min-content, 60px)] place-content-center px-1"
 							href={link.url}
 							data-astro-prefetch="hover">
-							<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-2px_1px_0px_rgba(0,0,0,0.25)] text-[1.5vw]">
+							<div class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-2px_1px_0px_rgba(0,0,0,0.25)] text-[clamp(1.05rem,1.3vw,1.6rem)]">
 								{link.name}
 							</div>
 							<div
@@ -111,14 +111,14 @@ const highlight = (url: string) => {
 
 		{
 			/*
-			Mobile header (hidden at sm+): two rows pulled left by the hidden
+			Mobile header (hidden at xl+): two rows pulled left by the hidden
 			checkbox (peer) — the burger label toggles it with zero JS.
 			  logo | Main title | Burger
 			  logo | Sub title  | Burger
 		*/
 		}
 		<div
-			class="hidden max-md:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1 transition-colors group-has-checked/nav:bg-red-950">
+			class="hidden max-xl:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1 transition-colors group-has-checked/nav:bg-red-950">
 			<div class="relative row-span-2 place-self-center">
 				<div class="absolute inset-0 translate-x-[2px] translate-y-[2px] mask-[url('/logo.png')] mask-contain mask-no-repeat" aria-hidden="true">
 					<div class="w-full h-full bg-[rgb(0_0_0_/0.25)]"></div>
@@ -154,7 +154,7 @@ const highlight = (url: string) => {
 		}
 		<div
 			id="mobile-nav-menu"
-			class="fixed inset-x-0 bottom-0 top-[4.25rem] h-dvh z-999 md:hidden overflow-y-auto opacity-0 pointer-events-none transition-all duration-300 ease-in-out group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto bg-red-900">
+			class="fixed inset-x-0 bottom-0 top-(--nav-h) h-dvh z-999 xl:hidden overflow-y-auto opacity-0 pointer-events-none transition-all duration-300 ease-in-out group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto bg-red-900">
 			<div class="grid">
 				{
 					links.map((link) =>

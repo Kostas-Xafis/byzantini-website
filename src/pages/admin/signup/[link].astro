@@ -8,11 +8,13 @@ const { link } = Astro.params;
 if (!link) {
 	return Astro.redirect("/");
 }
-const res = await useAPI(API.SysUsers.validateRegisterLink, { UrlArgs: { link } }, Astro);
+const res = await useAPI(API.SysUsers.validateRegisterLink, { UrlArgs: { link } }, Astro).catch(() => null);
 
-if (res.data && !res.data.isValid) {
+if (!res?.data?.isValid) {
 	return Astro.redirect("/");
 }
+// The account must be created with the invited email (enforced server-side).
+const invitedEmail = res.data.email;
 ---
 
 <SigninLayout title="Διαχείρηση">
@@ -26,7 +28,7 @@ if (res.data && !res.data.isValid) {
 		</div>
 		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">Εγγραφή Διαχειρηστή</h2>
 		<form id="signupForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
-			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" required />
+			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" value={invitedEmail} required />
 			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
 			<button
 				class="text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
@@ -81,12 +83,6 @@ if (res.data && !res.data.isValid) {
 </SigninLayout>
 <script>
 	import { API, useAPI } from "@hooks/useAPI.astro";
-	function setCookie(name: string, value: string, exdays: number) {
-		const d = new Date();
-		d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
-		let expires = "expires=" + d.toUTCString();
-		document.cookie = name + "=" + value + ";" + expires + ";path=/";
-	}
 
 	let tid: number | null = null;
 	document.getElementById("signupForm")?.addEventListener("submit", async (e) => {
@@ -104,8 +100,7 @@ if (res.data && !res.data.isValid) {
 		});
 
 		if (res.data) {
-			const { session_id, email, avatar_url } = res.data;
-			setCookie("session_id", session_id || "", 14);
+			const { email, avatar_url } = res.data;
 			localStorage.setItem(
 				"sys_user",
 				JSON.stringify({

@@ -51,9 +51,11 @@ export class Random {
 			return Random.string(1, "1-9") + Random.string(size - 1, "0-9");
 		}
 
+		// Cryptographic randomness: these strings back session ids, invite links and unsubscribe tokens.
+		const values = crypto.getRandomValues(new Uint32Array(size));
 		let str = "";
 		for (let j = 0; j < size; j++) {
-			str += strLookup[Math.floor(Math.random() * luSize)];
+			str += strLookup[values[j] % luSize];
 		}
 		return str;
 	}

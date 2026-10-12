@@ -3,7 +3,7 @@ import type { APIContext } from "astro";
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
 import { ImageMIMEType, executeQuery } from "@lib/utils.server";
-import { z_BlobUpload, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
+import { z_BlobUpload, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -43,9 +43,19 @@ const fileDeleteReq = z.object({
 
 const z_IdArray = z.array(positiveInt());
 
+// Columns safe to serve without a session (mirror of z_PublicTeacher): never ΑΜΚΑ, phone or email.
+const publicTeacherColumns = "id, fullname, picture, cv, linktree, gender, title, visible, online";
+type PublicTeacher = Omit<Teachers, "amka" | "email" | "telephone">;
+
 export const teachersRoutes = {
-	get: new APIServer({ method: "GET", path: "/teachers", responseSchema: z.array(z_Teachers) }, () =>
+	get: new APIServer({ method: "GET", path: "/teachers", responseSchema: z.array(z_Teachers) }, [authenticateMiddleware], () =>
 		handlerResult(() => executeQuery<Teachers>("SELECT * FROM teachers"), "Σφάλμα κατά την ανάκτηση των δασκάλων"),
+	),
+	getPublic: new APIServer({ method: "GET", path: "/teachers/public", responseSchema: z.array(z_PublicTeacher) }, () =>
+		handlerResult(
+			() => executeQuery<PublicTeacher>(`SELECT ${publicTeacherColumns} FROM teachers ORDER BY fullname ASC`),
+			"Σφάλμα κατά την ανάκτηση των δασκάλων",
+		),
 	),
 	getById: new APIServer({ method: "POST", path: "/teachers/id", schema: z_IdArray, responseSchema: z_Teachers }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async () => {
@@ -54,17 +64,19 @@ export const teachersRoutes = {
 			return teacher;
 		}, "Δάσκαλος δεν βρέθηκε"),
 	),
-	getByPriorityClasses: new APIServer({ method: "GET", path: "/teachers/priority/[class_type:string]", responseSchema: z.array(z_Teachers) }, ({ params }) =>
-		handlerResult(() => {
-			const class_id = ["byz", "par", "eur"].findIndex((v) => v === params.class_type);
-			if (class_id === -1) throw Error("Invalid class type");
-			return executeQuery<Teachers>(
-				"SELECT t.* FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC",
-				[class_id],
-			);
-		}, "Σφάλμα κατά την ανάκτηση των δασκάλων"),
+	getByPriorityClasses: new APIServer(
+		{ method: "GET", path: "/teachers/priority/[class_type:string]", responseSchema: z.array(z_PublicTeacher) },
+		({ params }) =>
+			handlerResult(() => {
+				const class_id = ["byz", "par", "eur"].findIndex((v) => v === params.class_type);
+				if (class_id === -1) throw Error("Invalid class type");
+				return executeQuery<PublicTeacher>(
+					`SELECT ${publicTeacherColumns.replace(/(\w+)/g, "t.$1")} FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC`,
+					[class_id],
+				);
+			}, "Σφάλμα κατά την ανάκτηση των δασκάλων"),
 	),
-	getByFullnames: new APIServer({ method: "GET", path: "/teachers/fullnames", responseSchema: z.array(z_Teachers) }, () =>
+	getByFullnames: new APIServer({ method: "GET", path: "/teachers/fullnames", responseSchema: z.array(z_Teachers) }, [authenticateMiddleware], () =>
 		handlerResult(() => executeQuery<Teachers>("SELECT * FROM teachers ORDER BY fullname ASC"), "Σφάλμα κατά την ανάκτηση των δασκάλων"),
 	),
 	getClasses: new APIServer({ method: "GET", path: "/teachers/teacherClasses", responseSchema: z.array(z_TeacherClassesResponse) }, () =>

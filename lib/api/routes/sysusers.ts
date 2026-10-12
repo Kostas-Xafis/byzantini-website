@@ -2,11 +2,12 @@ import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
 import { isOwnerEmail } from "@env/ownerEmail";
 import { z_LoginCredentials, z_SysUsers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
+import type { Transaction } from "@lib/db";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { createSessionId, generateShaKey } from "@utilities/authentication";
 import { z } from "astro/zod";
 import { APIServer, handlerResult } from "./APIServer";
-import { COOKIE } from "./cookies";
+import { COOKIE, SESSION_COOKIE_OPTIONS } from "./cookies";
 import { sendAutomatedEmail } from "./emailService";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -36,6 +37,25 @@ const z_RegisterSysUserResponse = z.object({
 	email: z.email("Μη έγκυρο email"),
 	avatar_url: z.string().nullable(),
 });
+
+/**
+ * Uses up an unexpired invite issued for `email`. A single `DELETE … RETURNING`
+ * statement, so the same link can never create two accounts (no transaction needed).
+ */
+export async function consumeRegisterLink(T: Transaction, link: string, email: string): Promise<boolean> {
+	const consumed = await T.executeQuery<Pick<SysUserRegisterLink, "link">>(
+		"DELETE FROM sys_user_register_links WHERE link = ? AND email = ? COLLATE NOCASE AND exp_date >= ? RETURNING link",
+		[link, email, Date.now()],
+	);
+	return consumed.length === 1;
+}
+
+/** The invite behind `link`, or undefined when it does not exist or has expired. */
+export async function findRegisterLink(T: Transaction, link: string): Promise<SysUserRegisterLink | undefined> {
+	const [invite] = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ? LIMIT 1", [link]);
+	if (!invite?.email || invite.exp_date < Date.now()) return undefined;
+	return invite;
+}
 
 export const sysusersRoutes = {
 	get: new APIServer({ method: "GET", path: "/sys", responseSchema: z.array(z_SysUsers.pick({ id: true, email: true })) }, [authenticateMiddleware], () =>
@@ -88,21 +108,19 @@ export const sysusersRoutes = {
 	),
 	registerSysUser: new APIServer(
 		{ method: "POST", path: "/sys/register/[link:string]", schema: z_LoginCredentials, responseSchema: z_RegisterSysUserResponse },
-		({ params, body }) =>
+		({ params, body, cookies }) =>
 			handlerResult(async (T) => {
-				const linkCheck = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ?", [params.link]);
-				if (linkCheck.length === 0) {
-					throw new Error("Invalid Link");
-				} else if (linkCheck[0].exp_date < Date.now()) {
-					await T.executeQuery("DELETE FROM sys_user_register_links WHERE link = ?", [params.link]);
-					throw new Error("Invalid Link");
-				}
-
 				const { email, password } = body;
+				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
+				if (existingUser) throw new Error("Ο χρήστης υπάρχει ήδη");
+				// The link must have been issued for this email; it is used up here.
+				if (!(await consumeRegisterLink(T, params.link, email))) throw new Error("Invalid Link");
+
 				const key = await generateShaKey(password);
 
 				const args = { email, password: key, ...createSessionId() };
 				const { insertId } = await T.executeQuery("INSERT INTO sys_users (email, password, session_id, session_exp_date) VALUES (???)", args);
+				cookies.set(COOKIE.sessionId, args.session_id, SESSION_COOKIE_OPTIONS);
 				return { id: insertId, session_id: args.session_id, email, avatar_url: null };
 			}, "Σφάλμα κατά την εγγραφή του χρήστη"),
 	),
@@ -112,13 +130,14 @@ export const sysusersRoutes = {
 		({ body, request, env }) =>
 			handlerResult(async (T) => {
 				const { email } = body;
-				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? LIMIT 1", [email]);
+				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
 				if (existingUser) throw new Error("Ο χρήστης υπάρχει ήδη");
 
 				const link = R.link(64);
 				// 24 hours expiration
 				const exp_date = Date.now() + 1000 * 60 * 60 * 24;
-				await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date) VALUES (?, ?)", [link, exp_date]);
+				await T.executeQuery("DELETE FROM sys_user_register_links WHERE exp_date < ?", [Date.now()]);
+				await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date, email) VALUES (?, ?, ?)", [link, exp_date, email]);
 
 				const signupLink = `${new URL(request.url).origin}/admin/signup/${link}`;
 				await sendAutomatedEmail(env, {
@@ -132,19 +151,15 @@ export const sysusersRoutes = {
 			}, "Σφάλμα κατά την δημιουργία του συνδέσμου εγγραφής"),
 	),
 	validateRegisterLink: new APIServer(
-		{ method: "POST", path: "/sys/register/validate/[link:string]", responseSchema: z.object({ isValid: z.boolean() }) },
+		{
+			method: "POST",
+			path: "/sys/register/validate/[link:string]",
+			responseSchema: z.object({ isValid: z.boolean(), email: z.email().optional() }),
+		},
 		({ params }) =>
 			handlerResult(async (T) => {
-				const [{ exp_date }] = await T.executeQuery<Pick<SysUserRegisterLink, "exp_date">>(
-					"SELECT exp_date FROM sys_user_register_links WHERE link = ? LIMIT 1",
-					[params.link],
-				);
-				if (!exp_date) throw new Error("Invalid Link");
-				if (exp_date < Date.now()) {
-					await T.executeQuery("DELETE FROM sys_user_register_links WHERE link = ?", [params.link]);
-					throw new Error("Invalid Link");
-				}
-				return { isValid: true };
+				const invite = await findRegisterLink(T, params.link);
+				return invite ? { isValid: true, email: invite.email ?? undefined } : { isValid: false };
 			}, "Σφάλμα κατά τον έλεγχο του συνδέσμου εγγραφής"),
 	),
 };

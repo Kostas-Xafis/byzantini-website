@@ -1,6 +1,7 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
 import { z_JoinedEnrollments, z_PupilSearchResponse, z_PupilWithEnrollments, z_Registrations } from "@lib/api/schemas";
 import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
+import { classYearsByMusicType, MusicTypeArr } from "@lib/classYears";
 import { ALL_YEARS, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
@@ -8,6 +9,7 @@ import { z } from "astro/zod";
 import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { sendAutomatedEmail } from "./emailService";
 import { authenticateMiddleware } from "./middleware/authenticate";
+import { rateLimitMiddleware } from "./middleware/rateLimit";
 
 /**
  * Pupils — the Μαθητολόγιο domain. Replaces the `Registrations` group: the
@@ -115,9 +117,41 @@ const z_EnrollmentInput = z.object({
 const z_EnrollmentUpdate = z_EnrollmentInput.extend({ id: z.number().int().min(1, "Μη έγκυρο id") });
 
 /** Public registration-form payload: pupil identity + one enrollment. */
-const z_PupilPost = z_Registrations.omit({ id: true, payment_date: true, payment_amount: true, total_payment: true }).extend({
-	registration_url: z.string("Μη έγκυρο registration_url").optional(),
-});
+const tooLong = (max: number) => `Πολύ μεγάλο κείμενο (έως ${max} χαρακτήρες)`;
+const requiredText = (message: string, max: number) => z.string(message).trim().min(1, message).max(max, tooLong(max));
+/** "2026-2027": two consecutive years, the start year within a year of today (current, previous or next school year). */
+const z_PublicSchoolYear = z
+	.string("Μη έγκυρο σχολικό έτος")
+	.regex(/^\d{4}-\d{4}$/, "Μη έγκυρο σχολικό έτος")
+	.refine((value) => {
+		const [start, end] = value.split("-").map(Number);
+		return end === start + 1 && Math.abs(start - new Date().getFullYear()) <= 1;
+	}, "Μη έγκυρο σχολικό έτος");
+const z_PupilPost = z_Registrations
+	.omit({ id: true, payment_date: true, payment_amount: true, total_payment: true })
+	.extend({
+		// Ignored by the handler (the server issues the link) — kept so older clients still validate.
+		registration_url: z.string("Μη έγκυρο registration_url").optional(),
+		// The form's required fields must not arrive empty, and nothing may exceed its column.
+		am: z.string("Μη έγκυρο ΑΜ").trim().max(10, tooLong(10)),
+		last_name: requiredText("Συμπληρώστε το επώνυμο", 80),
+		first_name: requiredText("Συμπληρώστε το όνομα", 80),
+		fathers_name: requiredText("Συμπληρώστε το πατρώνυμο", 80),
+		telephone: z.string("Μη έγκυρο τηλέφωνο").trim().max(20, tooLong(20)),
+		cellphone: requiredText("Συμπληρώστε το κινητό τηλέφωνο", 20),
+		email: z.email("Μη έγκυρο email").max(80, tooLong(80)),
+		road: requiredText("Συμπληρώστε την οδό", 80),
+		region: requiredText("Συμπληρώστε την περιοχή", 80),
+		class_id: z.union([z.literal(0), z.literal(1), z.literal(2)], { message: "Μη έγκυρο τμήμα" }),
+		class_year: requiredText("Επιλέξτε έτος φοίτησης", 40),
+		registration_year: z_PublicSchoolYear,
+	})
+	// Only the class years the form offers for that department.
+	.superRefine((value, ctx) => {
+		if (!classYearsByMusicType[MusicTypeArr[value.class_id]].includes(value.class_year)) {
+			ctx.addIssue({ code: "custom", path: ["class_year"], message: "Μη έγκυρο έτος φοίτησης για το τμήμα" });
+		}
+	});
 
 const z_InsertResponse = z.object({ insertId: z.number().int().min(0, "Μη έγκυρο insertId") });
 
@@ -133,6 +167,22 @@ const z_AmLookup = z.object({
 });
 
 // ---- Helpers ----
+
+type PupilProof = Pick<Pupils, "amka" | "last_name" | "birth_date">;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a public form submission may update an existing pupil: the ΑΜΚΑ must match.
+ * Records kept without an ΑΜΚΑ (2023-24 did not require one) are matched on surname +
+ * birth date instead; that submission stores the ΑΜΚΑ, so later ones need it too.
+ * (Birth dates are compared within a day and a half to absorb timezone offsets.)
+ */
+function canUpdatePupil(pupil: PupilProof, body: Pick<Pupils, "amka" | "last_name" | "birth_date">): boolean {
+	if (pupil.amka) return pupil.amka === body.amka;
+	const sameSurname = normalizeKey(pupil.last_name) === normalizeKey(body.last_name);
+	const sameBirthDate = Math.abs(Number(pupil.birth_date) - Number(body.birth_date)) < 1.5 * DAY_MS;
+	return sameSurname && sameBirthDate;
+}
 
 type PupilRow = Pupils & { needs_review: 0 | 1 | boolean };
 type EnrollmentRow = PupilEnrollments & { pass: 0 | 1 | boolean; payment_date: number | null };
@@ -315,23 +365,36 @@ export const pupilsRoutes = {
 	 */
 	post: new APIServer(
 		{ method: "POST", path: "/pupils", schema: z_PupilPost, responseSchema: z.object({ insertId: z.number().int(), pupilId: z.number().int() }) },
-		[],
-		({ body, env }) =>
-			handlerResult(async (T) => {
-				const parsed = parseAm(body.am);
+		[rateLimitMiddleware("registration")],
+		async ({ body, env }) => {
+			// This route is public: an existing pupil may only be updated by whoever proves
+			// it is them (see canUpdatePupil) — a known ΑΜ with other details is refused
+			// instead of overwriting that pupil's contact data.
+			const parsed = parseAm(body.am);
+			if (parsed.kind === "valid") {
+				const [owner] = await executeQuery<PupilProof>("SELECT amka, last_name, birth_date FROM pupils WHERE am = ? LIMIT 1", [parsed.am]);
+				if (owner && !canUpdatePupil(owner, body)) {
+					return APIServer.jsonError(
+						"Ο αριθμός μητρώου και ο ΑΜΚΑ δεν αντιστοιχούν στα στοιχεία του μαθητή. Ελέγξτε τα ή επικοινωνήστε με τη Γραμματεία της Σχολής.",
+						HTTP.CONFLICT,
+					);
+				}
+			}
+			return handlerResult(async (T) => {
 				const now = Date.now();
 				const year = body.registration_year;
 
 				// 1. Find or create the pupil.
 				let pupil: Pupils | undefined;
 				if (parsed.kind === "valid") {
+					// Ownership was checked above.
 					[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ?", [parsed.am]);
 				} else {
-					// No usable ΑΜ: reuse this person's existing orphan row (matched on
-					// the normalized name) instead of creating a duplicate every year.
+					// No usable ΑΜ: reuse this person's existing orphan row instead of creating
+					// a duplicate every year — never on the name alone (anyone can type a name).
 					const candidates = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND orphan_code <> ''");
 					const nameKey = normalizeKey(`${body.last_name} ${body.first_name}`);
-					pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey);
+					pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey && canUpdatePupil(row, body));
 				}
 				let pupilId: number;
 				if (pupil) {
@@ -368,7 +431,7 @@ export const pupilsRoutes = {
 							cellphone: body.cellphone,
 							email: body.email,
 							amka: body.amka,
-							registration_url: body.registration_url || R.string(32),
+							registration_url: R.string(32),
 							needs_review: orphan ? 1 : 0,
 							review_note: orphan ? "χωρίς ΑΜ — νέα εγγραφή, εκκρεμεί απονομή ΑΜ" : "",
 							created_at: now,
@@ -388,11 +451,12 @@ export const pupilsRoutes = {
 						class_year: body.class_year,
 						teacher_id: body.teacher_id,
 						instrument_id: body.instrument_id,
-						date: body.date,
+						date: now,
 						payment_amount: 0,
 						total_payment: 0,
 						payment_date: null,
-						pass: body.pass ? 1 : 0,
+						// Promotion is decided by the school, never by the public form.
+						pass: 0,
 						source: "form",
 						created_at: now,
 					},
@@ -428,7 +492,8 @@ export const pupilsRoutes = {
 				}).catch((error) => console.error("Registration confirmation email failed:", error));
 
 				return { insertId, pupilId };
-			}, "Σφάλμα κατά την προσθήκη της εγγραφής"),
+			}, "Σφάλμα κατά την προσθήκη της εγγραφής");
+		},
 	),
 
 	// ---------------------------------------------------------------------
@@ -571,15 +636,19 @@ export const pupilsRoutes = {
 	 * both match. 404 when the pair is unknown so the form can tell the user to
 	 * register as a new student instead.
 	 */
-	getByAm: new APIServer({ method: "POST", path: "/pupils/lookup", schema: z_AmLookup, responseSchema: z_PupilWithEnrollments }, [], async ({ body }) => {
-		const [pupil] = await executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ? AND amka = ?", [body.am, body.amka]);
-		if (!pupil) return APIServer.jsonError("Δεν βρέθηκε μαθητής με αυτόν τον αριθμό μητρώου και ΑΜΚΑ", HTTP.NOT_FOUND);
-		const enrollments = await executeQuery<PupilEnrollments>(
-			`SELECT * FROM pupil_enrollments WHERE pupil_id = ? ORDER BY registration_year DESC, class_id ASC, instrument_id ASC`,
-			[pupil.id],
-		);
-		return APIServer.jsonData({ pupil, enrollments });
-	}),
+	getByAm: new APIServer(
+		{ method: "POST", path: "/pupils/lookup", schema: z_AmLookup, responseSchema: z_PupilWithEnrollments },
+		[rateLimitMiddleware("lookup")],
+		async ({ body }) => {
+			const [pupil] = await executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ? AND amka = ?", [body.am, body.amka]);
+			if (!pupil) return APIServer.jsonError("Δεν βρέθηκε μαθητής με αυτόν τον αριθμό μητρώου και ΑΜΚΑ", HTTP.NOT_FOUND);
+			const enrollments = await executeQuery<PupilEnrollments>(
+				`SELECT * FROM pupil_enrollments WHERE pupil_id = ? ORDER BY registration_year DESC, class_id ASC, instrument_id ASC`,
+				[pupil.id],
+			);
+			return APIServer.jsonData({ pupil, enrollments });
+		},
+	),
 
 	/** Re-registration deep link: the pupil behind a permanent `registration_url`. */
 	getByReregistrationUrl: new APIServer(

@@ -12,6 +12,8 @@ export type Action = {
 		| ((formData: ExtendedFormData<any>, form?: HTMLFormElement) => AsyncGenerator<undefined, void, unknown>);
 	submitText: string;
 	headerText: string;
+	/** Read-only lines shown above the inputs, e.g. what a delete will remove. */
+	summary?: string[];
 	icon: ActionIcon;
 	type: ActionEnum;
 };

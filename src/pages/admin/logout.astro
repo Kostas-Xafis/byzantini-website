@@ -11,11 +11,9 @@ if (!sid) return Astro.redirect("/admin");
 	<h1>Αποσύνδεση...</h1>
 	<script>
 		import { useAPI } from "@hooks/useAPI.astro";
-		import { getCookie, setCookie } from "@utilities/cookies";
-		const sid = getCookie("session_id");
 		try {
-			await useAPI("Authentication.userLogout", { RequestObject: { sid } });
-			setCookie("session_id", "", -1);
+			// The server clears the HttpOnly session cookie.
+			await useAPI("Authentication.userLogout");
 			document.location.pathname = "/login";
 		} catch (e) {
 			document.location.pathname = "/admin";

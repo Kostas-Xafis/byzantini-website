@@ -22,6 +22,17 @@
 	--color-dark: #1a1a1a;
 }
 
+/* Fixed navbar height, shared by the navbar and the page offset below it (Layout.astro).
+   The desktop bar (xl+) grows with the viewport but never below what its two-line title needs. */
+:root {
+	--nav-h: 4.25rem;
+}
+@media (width >= 80rem) {
+	:root {
+		--nav-h: max(4.75rem, 4.2vw);
+	}
+}
+
 @layer components {
 	.glass {
 		/*tw red 900*/

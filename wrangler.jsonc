@@ -53,6 +53,9 @@
 		{ "binding": "PDF_SERVICE", "service": "byzantini-website-pdf-gen" }
 	],
 
+	// Per-client limit on the public form, ΑΜ lookup and login (lib/api/routes/middleware/rateLimit.ts).
+	"ratelimits": [{ "name": "PUBLIC_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
+
 	"observability": {
 		"enabled": true
 	},
@@ -67,7 +70,8 @@
 			"services": [
 				{ "binding": "EMAIL_SERVICE", "service": "byzantini-website-emails" },
 				{ "binding": "PDF_SERVICE", "service": "byzantini-website-pdf-gen" }
-			]
+			],
+			"ratelimits": [{ "name": "PUBLIC_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }]
 		},
 		"preview": {
 			"d1_databases": [
@@ -78,7 +82,8 @@
 			"services": [
 				{ "binding": "EMAIL_SERVICE", "service": "byzantini-website-emails" },
 				{ "binding": "PDF_SERVICE", "service": "byzantini-website-pdf-gen" }
-			]
+			],
+			"ratelimits": [{ "name": "PUBLIC_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }]
 		}
 	}
 }

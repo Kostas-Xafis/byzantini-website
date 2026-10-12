@@ -87,6 +87,18 @@ export const z_Teachers = z.object({
 	online: looseBoolean("Μη έγκυρη σύνδεση"),
 	amka: z.union([z.string().length(11), z.literal("")], { message: "Μη έγκυρο ΑΜΚΑ" }),
 });
+// Public shape: what the website and the registration form need — no ΑΜΚΑ, phone or email.
+export const z_PublicTeacher = z_Teachers.pick({
+	id: true,
+	fullname: true,
+	picture: true,
+	cv: true,
+	linktree: true,
+	gender: true,
+	title: true,
+	visible: true,
+	online: true,
+});
 
 export const z_TeacherLocations = z.object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
