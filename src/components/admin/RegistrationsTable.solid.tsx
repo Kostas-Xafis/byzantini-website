@@ -11,6 +11,7 @@ import { type SearchSetter } from "./SearchTable.solid";
 import Table from "./table/Table.solid";
 
 import { onElementMount } from "@utilities/dom";
+import { ALL_YEARS } from "@utilities/schoolYears";
 import {
 	columns,
 	onDeleteMemo,
@@ -29,11 +30,17 @@ const schoolYearLabel = (registrationYear: string) => {
 	return `${start}-${end.slice(2)}`;
 };
 
+/**
+ * Εγγραφές table, scoped by the school-year picker at the bottom. The picker's
+ * `ALL_YEARS` option lifts that scope and lists every registration.
+ */
 export default function RegistrationsTable() {
 	const selectedItems = new SelectedRows().useSelectedRows();
 	const [searchQuery, setSearchQuery] = createStore<SearchSetter<Registrations>>({});
 
-	const [year, setYear] = createSignal<number | null>(null);
+	// Selected school year: its START year, or ALL_YEARS for every year;
+	// null until the user (or the auto-select) picks one.
+	const [year, setYear] = createSignal<number | typeof ALL_YEARS | null>(null);
 	const [years, setYears] = createSignal<string[]>([]);
 	const [store, setStore] = createStore<APIResourceStore>({});
 	const apiHook = useAPIClient(setStore);
@@ -185,11 +192,15 @@ export default function RegistrationsTable() {
 												onChange={(e) => {
 													const value = e.currentTarget.value;
 													if (value === "") return;
-													setYear(Number(value));
+													setYear(value === ALL_YEARS ? ALL_YEARS : Number(value));
 												}}>
 												<Show when={year() === null}>
 													<option value="" selected></option>
 												</Show>
+												{/* Widest scope first, like the search control's "Όλα τα πεδία". */}
+												<option value={ALL_YEARS} selected={year() === ALL_YEARS}>
+													Όλα τα έτη
+												</option>
 												<For each={years()}>
 													{(schoolYear) => {
 														const startYear = Number(schoolYear.split("-")[0]);

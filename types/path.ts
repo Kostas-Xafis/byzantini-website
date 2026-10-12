@@ -9,7 +9,14 @@ type StringToType = {
 type InferToNum<T extends number> = T;
 type ToDigit<T extends number | string> = T extends number ? T : T extends `${InferToNum<infer N>}` ? N : never;
 
-type GetLiteral<Literal> = Literal extends `"${infer Str}"` ? Str : Literal extends `${infer Num}` ? ToDigit<Num> : never;
+// Union members may also be plain type keywords (`[year:number | "all"]`).
+type GetLiteral<Literal> = Literal extends keyof StringToType
+	? StringToType[Literal]
+	: Literal extends `"${infer Str}"`
+		? Str
+		: Literal extends `${infer Num}`
+			? ToDigit<Num>
+			: never;
 
 type ExtractLiteral<Param> = Param extends `${infer Literal} | ${infer Next}`
 	? GetLiteral<Literal> | ExtractLiteral<Next>

@@ -2,10 +2,12 @@ import { v_Registrations, type Insert, type Registrations } from "@_types/entiti
 import type { EndpointRoute } from "@_types/routes";
 import { object, omit, string } from "valibot";
 
-const get: EndpointRoute<"/registrations/[year:number]", any, Registrations[]> = {
+// `year` is the START year of a school year (2025 → "2025-2026") or "all"
+// (ALL_YEARS in @utilities/schoolYears) to list every registration.
+const get: EndpointRoute<'/registrations/[year:number | "all"]', any, Registrations[]> = {
 	authentication: true,
 	method: "GET",
-	path: "/registrations/[year:number]",
+	path: '/registrations/[year:number | "all"]',
 	hasUrlParams: true,
 	validation: undefined,
 };

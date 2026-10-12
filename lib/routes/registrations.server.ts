@@ -2,6 +2,7 @@ import type { EmailSubscriptions, Registrations } from "@_types/entities";
 import { Env } from "@env/env";
 import { Random as R } from "@lib/random";
 import { deepCopy } from "@utilities/objects";
+import { ALL_YEARS, schoolYearOf } from "@utilities/schoolYears";
 import { execTryCatch, executeQuery, getUsedBody, isProduction } from "../utils.server";
 import { RegistrationsRoutes } from "./registrations.client";
 
@@ -45,7 +46,8 @@ function successfulRegistrationTemplate(classId: number, classYear: string): str
 serverRoutes.get.func = ({ slug }) => {
 	return execTryCatch(() => {
 		const { year } = slug;
-		return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [`${year}-${year + 1}`]);
+		if (year === ALL_YEARS) return executeQuery<Registrations>("SELECT * FROM registrations");
+		return executeQuery<Registrations>("SELECT * FROM registrations WHERE registration_year LIKE ?", [schoolYearOf(year)]);
 	}, "Σφάλμα κατά την ανάκτηση των εγγραφών");
 };
 

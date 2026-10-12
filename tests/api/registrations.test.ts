@@ -1,7 +1,7 @@
 import { v_Registrations, type Registrations } from "@_types/entities";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 import { array, boolean, number, object, string } from "valibot";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
@@ -165,6 +165,20 @@ test("--registrations--", async () => {
 	} catch (err) {
 		console.error({ err });
 	}
+});
+
+test("--registrations-- all years", async () => {
+	const [all, oneYear] = await Promise.all([
+		useTestAPI("Registrations.get", { UrlArgs: { year: "all" } }),
+		useTestAPI("Registrations.get", { UrlArgs: { year: 2025 } }),
+	]);
+	const allJson = await getJson<APIResponse["Registrations.get"]>(all);
+	const oneYearJson = await getJson<APIResponse["Registrations.get"]>(oneYear);
+	expectBody(allJson, array(v_Registrations));
+	// The "all" token lifts the year constraint: it spans several school years
+	// and returns more rows than a single one.
+	expect(new Set(allJson.data.map((r) => r.registration_year)).size).toBeGreaterThan(1);
+	expect(allJson.data.length).toBeGreaterThan(oneYearJson.data.length);
 });
 
 test("--registrations--", async () => {
