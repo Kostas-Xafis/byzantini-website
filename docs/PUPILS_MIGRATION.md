@@ -10,46 +10,46 @@ verifiable step; we execute them one by one, top to bottom.
 
 ## 0. Decisions locked so far (from the owner)
 
-| # | Question | Decision |
-| --- | --- | --- |
-| D1 | `pupils` columns | `am`, `first_name`, `last_name`, `fathers_name`, `birth_date`, `road`, `number`, `tk`, `region`, `telephone`, `cellphone`, `email`, `amka` |
-| D2 | Identity conflicts | Match on `amka` as last resort; every orphan/unresolvable ΑΜ becomes `000-1`, `000-2`, … and goes through human review by the secretaries |
-| D3 | ΑΜ format | Plain incremental integer, 3–4 digits |
-| D4 | Empty `amka` | Not an error — it was not collected in earlier years |
-| D5 | Multiple registrations per ΑΜ | Pupil data comes from the **latest** registration (by `date`) |
-| D6 | History model | **One** `pupil_enrollments` table, filtered by music type in the UI |
-| D7 | `registrations` after the split | **Dropped entirely** — the table disappears at the end of this process |
-| D8 | Search | Server-side search + pagination (`Pupils.search`) |
-| D9 | Tooling | Permanent, idempotent script under `scripts/`, dry-run by default, works against local dev **and** production D1 |
-| D10 | Deliverables | (a) runnable script, (b) migration file in `migrations/` |
-| D11 | Enrollment table (O1) | **Option B — a real `pupil_enrollments` table** |
-| D12 | Column strip (O2) | Same migration family; `registrations` is dropped, not just stripped |
-| D13 | Production | **Untouched by this work.** All execution is local; the script is merely *written* to be prod-capable |
-| D14 | Safety | Local state is backed up before each destructive step; a failed run is reverted and retried |
-| Q1 | Public form target | **Writes straight into `pupils` + `pupil_enrollments`**, linking by ΑΜ; new pupils get `needs_review = 1` |
-| Q2 | Orphan codes | Separate `orphan_code` column; `pupils.am` stays `INTEGER` and is NULL for orphans |
-| Q3 | API surface | **Rename everything to `Pupils.*`** (paths `/pupils/*`); the `Registrations` group is retired |
-| Q4 | Totals counter | `total_registrations` → **`total_enrollments`**, counting enrollment rows |
-| Q5 | Migration split | **0002 create + 0003 drop** (two files, verifiable in between) |
-| Q6 | Re-registration link | **`registration_url` moves to `pupils`** and becomes permanent — one fixed link per pupil, seeded from their 2025-2026 registration |
-| Q7 | `RegistrationForm.solid.tsx` | **Adapted in Phase 4** (mechanical: `Pupils.*` + `{ pupil, enrollment }` payload), behaviour unchanged |
+| #   | Question                        | Decision                                                                                                                                   |
+| --- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| D1  | `pupils` columns                | `am`, `first_name`, `last_name`, `fathers_name`, `birth_date`, `road`, `number`, `tk`, `region`, `telephone`, `cellphone`, `email`, `amka` |
+| D2  | Identity conflicts              | Match on `amka` as last resort; every orphan/unresolvable ΑΜ becomes `000-1`, `000-2`, … and goes through human review by the secretaries  |
+| D3  | ΑΜ format                       | Plain incremental integer, 3–4 digits                                                                                                      |
+| D4  | Empty `amka`                    | Not an error — it was not collected in earlier years                                                                                       |
+| D5  | Multiple registrations per ΑΜ   | Pupil data comes from the **latest** registration (by `date`)                                                                              |
+| D6  | History model                   | **One** `pupil_enrollments` table, filtered by music type in the UI                                                                        |
+| D7  | `registrations` after the split | **Dropped entirely** — the table disappears at the end of this process                                                                     |
+| D8  | Search                          | Server-side search + pagination (`Pupils.search`)                                                                                          |
+| D9  | Tooling                         | Permanent, idempotent script under `scripts/`, dry-run by default, works against local dev **and** production D1                           |
+| D10 | Deliverables                    | (a) runnable script, (b) migration file in `migrations/`                                                                                   |
+| D11 | Enrollment table (O1)           | **Option B — a real `pupil_enrollments` table**                                                                                            |
+| D12 | Column strip (O2)               | Same migration family; `registrations` is dropped, not just stripped                                                                       |
+| D13 | Production                      | **Untouched by this work.** All execution is local; the script is merely _written_ to be prod-capable                                      |
+| D14 | Safety                          | Local state is backed up before each destructive step; a failed run is reverted and retried                                                |
+| Q1  | Public form target              | **Writes straight into `pupils` + `pupil_enrollments`**, linking by ΑΜ; new pupils get `needs_review = 1`                                  |
+| Q2  | Orphan codes                    | Separate `orphan_code` column; `pupils.am` stays `INTEGER` and is NULL for orphans                                                         |
+| Q3  | API surface                     | **Rename everything to `Pupils.*`** (paths `/pupils/*`); the `Registrations` group is retired                                              |
+| Q4  | Totals counter                  | `total_registrations` → **`total_enrollments`**, counting enrollment rows                                                                  |
+| Q5  | Migration split                 | **0002 create + 0003 drop** (two files, verifiable in between)                                                                             |
+| Q6  | Re-registration link            | **`registration_url` moves to `pupils`** and becomes permanent — one fixed link per pupil, seeded from their 2025-2026 registration        |
+| Q7  | `RegistrationForm.solid.tsx`    | **Adapted in Phase 4** (mechanical: `Pupils.*` + `{ pupil, enrollment }` payload), behaviour unchanged                                     |
 
 ## 1. Consequences of dropping `registrations` (read this before Phase 1)
 
 `registrations` is not merely slimmed — it is removed, so every consumer moves
 to `pupils` / `pupil_enrollments`:
 
-| Consumer | Today | After |
-| --- | --- | --- |
-| `Registrations.get` (per year) | `SELECT * FROM registrations` | join of both new tables |
-| `Registrations.getById` / `update` / `delete` | registration row | enrollment row (+ pupil) |
-| `Registrations.post` (public form, **no auth**) | inserts one row | finds/creates pupil by ΑΜ, then inserts an enrollment |
-| `Registrations.getByReregistrationUrl` | `registration_url` | moves to `pupil_enrollments.registration_url` |
-| `Registrations.getYears` / `getTotalByYear` | distinct years | distinct years on `pupil_enrollments` |
-| `Registrations.getTotal` | `total_registrations` counter | counter over enrollments (or pupils — see Q4) |
-| `Registrations.email*` (4 routes) | email subscriptions | unchanged (separate table) |
-| Admin table + exports + PDF | whole registration row | joined row (pupil info + enrollment) |
-| `GlobalSearch`, `TotalsTable` | registration rows | joined rows |
+| Consumer                                        | Today                         | After                                                 |
+| ----------------------------------------------- | ----------------------------- | ----------------------------------------------------- |
+| `Registrations.get` (per year)                  | `SELECT * FROM registrations` | join of both new tables                               |
+| `Registrations.getById` / `update` / `delete`   | registration row              | enrollment row (+ pupil)                              |
+| `Registrations.post` (public form, **no auth**) | inserts one row               | finds/creates pupil by ΑΜ, then inserts an enrollment |
+| `Registrations.getByReregistrationUrl`          | `registration_url`            | moves to `pupil_enrollments.registration_url`         |
+| `Registrations.getYears` / `getTotalByYear`     | distinct years                | distinct years on `pupil_enrollments`                 |
+| `Registrations.getTotal`                        | `total_registrations` counter | counter over enrollments (or pupils — see Q4)         |
+| `Registrations.email*` (4 routes)               | email subscriptions           | unchanged (separate table)                            |
+| Admin table + exports + PDF                     | whole registration row        | joined row (pupil info + enrollment)                  |
+| `GlobalSearch`, `TotalsTable`                   | registration rows             | joined rows                                           |
 
 Three constraints follow:
 
@@ -77,24 +77,24 @@ and schema are identical either way; only the split point moves.
 
 These numbers drive the cleansing rules in Phase 3.
 
-| Finding | Value | Consequence |
-| --- | --- | --- |
-| `registrations` rows | 1514 | — |
-| Distinct `am` | 690 | 401 ΑΜ have 2+ rows |
-| Distinct `amka` | 639 | 365 rows empty, 3 rows `00000000000` |
-| ΑΜ shared by differing normalized names | **292 rows / 128 ΑΜ** | must be split or merged |
-| … of those, same person proven by cellphone | 103 ΑΜ | auto-merge candidate |
-| … same person proven by email | 99 ΑΜ | auto-merge candidate |
-| … same person proven by ΑΜΚΑ | 73 ΑΜ | auto-merge candidate |
-| True collisions (different people, same ΑΜ) | e.g. `111` = 3 people, `123` = 4 | split → `111`, `111-1`, `111-2` |
-| `am = '000'` | 62 rows (58 distinct names) | orphans → `000-1`… |
-| `am = '000 - Αναμονή'` / `'999 - Αναμονή'` | 1 + 1 | orphans |
-| `am = '΄1158'` (keraia prefix) | 1 | normalize → `1158` |
-| `am` with trailing/leading spaces | e.g. `'1287   '`, `'761 '` | trim |
-| Only 6 of 62 `000` rows recoverable via ΑΜΚΑ | 6 | the rest go to human review |
-| ΑΜ width by year | 3-digit only in 2023-24; 4-digit grows to 104/200 by 2026-27 | 3- and 4-digit are both valid |
-| `class_year` spellings | 26 variants (`Α' Ετος` / `Α΄ έτος` / `Α'  Έτος Διλώματος`, `undefined`) | normalize, flag `undefined` |
-| Same ΑΜ, same year, multiple rows | normal (one row per instrument/class) | e.g. ΑΜ 919 = 16 rows |
+| Finding                                      | Value                                                                   | Consequence                          |
+| -------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------ |
+| `registrations` rows                         | 1514                                                                    | —                                    |
+| Distinct `am`                                | 690                                                                     | 401 ΑΜ have 2+ rows                  |
+| Distinct `amka`                              | 639                                                                     | 365 rows empty, 3 rows `00000000000` |
+| ΑΜ shared by differing normalized names      | **292 rows / 128 ΑΜ**                                                   | must be split or merged              |
+| … of those, same person proven by cellphone  | 103 ΑΜ                                                                  | auto-merge candidate                 |
+| … same person proven by email                | 99 ΑΜ                                                                   | auto-merge candidate                 |
+| … same person proven by ΑΜΚΑ                 | 73 ΑΜ                                                                   | auto-merge candidate                 |
+| True collisions (different people, same ΑΜ)  | e.g. `111` = 3 people, `123` = 4                                        | split → `111`, `111-1`, `111-2`      |
+| `am = '000'`                                 | 62 rows (58 distinct names)                                             | orphans → `000-1`…                   |
+| `am = '000 - Αναμονή'` / `'999 - Αναμονή'`   | 1 + 1                                                                   | orphans                              |
+| `am = '΄1158'` (keraia prefix)               | 1                                                                       | normalize → `1158`                   |
+| `am` with trailing/leading spaces            | e.g. `'1287   '`, `'761 '`                                              | trim                                 |
+| Only 6 of 62 `000` rows recoverable via ΑΜΚΑ | 6                                                                       | the rest go to human review          |
+| ΑΜ width by year                             | 3-digit only in 2023-24; 4-digit grows to 104/200 by 2026-27            | 3- and 4-digit are both valid        |
+| `class_year` spellings                       | 26 variants (`Α' Ετος` / `Α΄ έτος` / `Α'  Έτος Διλώματος`, `undefined`) | normalize, flag `undefined`          |
+| Same ΑΜ, same year, multiple rows            | normal (one row per instrument/class)                                   | e.g. ΑΜ 919 = 16 rows                |
 
 ---
 
@@ -172,6 +172,7 @@ the backfill and maintained by `Pupils.enroll` / `Pupils.deleteEnrollments`.
 ## 4. Phase plan
 
 ### Phase 1 — Schema migrations (deliverable b) — ✅ DONE (local, 2026-09-10)
+
 1. ✅ `migrations/0002_pupils.sql` — `pupils` (with `registration_url`, `orphan_code`,
    `needs_review`), `pupil_enrollments`, `total_enrollments`, 9 indexes.
 2. ⏳ `migrations/0003_drop_registrations.sql` — written but **not applied** until
@@ -179,55 +180,72 @@ the backfill and maintained by `Pupils.enroll` / `Pupils.deleteEnrollments`.
 3. ✅ Applied locally: `bunx wrangler d1 migrations apply DB --local`
    → `d1_migrations` id 3 = `0002_pupils.sql`.
 4. ✅ Verified:
-   - tables `pupils`, `pupil_enrollments`, `total_enrollments` + 9 indexes exist;
-   - legacy `registrations` still holds **1514** rows (nothing touched);
-   - two orphan rows (`am` NULL, `registration_url` '') both accepted;
-   - duplicate real ΑΜ rejected (`UNIQUE constraint failed: pupils.am`);
-   - duplicate non-empty `registration_url` rejected;
-   - test rows deleted — `pupils` is empty again.
+    - tables `pupils`, `pupil_enrollments`, `total_enrollments` + 9 indexes exist;
+    - legacy `registrations` still holds **1514** rows (nothing touched);
+    - two orphan rows (`am` NULL, `registration_url` '') both accepted;
+    - duplicate real ΑΜ rejected (`UNIQUE constraint failed: pupils.am`);
+    - duplicate non-empty `registration_url` rejected;
+    - test rows deleted — `pupils` is empty again.
 5. ⚠️ `bun run db:reset` replays the snapshot and **does not** re-run migrations —
    re-apply 0002/0003 after any reset.
 
 ### Phase 2 — Shared normalization module — ✅ DONE (2026-09-10)
+
 1. ✅ `lib/pupils/normalize.ts` (296 lines, pure functions, no DB/env):
-   - `stripDiacritics` / `collapseWhitespace` / `normalizeText` (display) and
-     `normalizeKey` (comparison: accents + case + spacing + final sigma);
-   - `parseAm` → `{ am, kind: valid|orphan|invalid, digits, reason, raw }`,
-     handling `'1287   '`, `'761 '`, `'΄1158'`, `'000'`, `'000 - Αναμονή'`,
-     `'999 - Αναμονή'`, and flagging 7/9-digit values as `too_long` instead of
-     guessing;
-   - `normalizeAmka` ('' and `00000000000` → unknown), `normalizePhone`
-     (country-code + placeholder aware), `normalizeEmail`;
-   - `personNameKey` + `personIdentityKeys` (ΑΜΚΑ → cellphone → email, landline
-     only as a last resort because families share landlines);
-   - `canonicalClassYear` + `isMissingClassYear` + `needsClassYearReview`
-     (all 26 observed spellings → the 18 canonical years).
+    - `stripDiacritics` / `collapseWhitespace` / `normalizeText` (display) and
+      `normalizeKey` (comparison: accents + case + spacing + final sigma);
+    - `parseAm` → `{ am, kind: valid|orphan|invalid, digits, reason, raw }`,
+      handling `'1287   '`, `'761 '`, `'΄1158'`, `'000'`, `'000 - Αναμονή'`,
+      `'999 - Αναμονή'`, and flagging 7/9-digit values as `too_long` instead of
+      guessing;
+    - `normalizeAmka` ('' and `00000000000` → unknown), `normalizePhone`
+      (country-code + placeholder aware), `normalizeEmail`;
+    - `personNameKey` + `personIdentityKeys` (ΑΜΚΑ → cellphone → email, landline
+      only as a last resort because families share landlines);
+    - `canonicalClassYear` + `isMissingClassYear` + `needsClassYearReview`
+      (all 26 observed spellings → the 18 canonical years).
 2. ✅ `tests/unit/pupils.normalize.test.ts` — **20 tests, 91 assertions, all
    passing**, fixtures taken verbatim from the live data.
 3. ✅ `bun run typecheck` green.
 4. Bugs the tests caught before the backfill existed:
-   - `stripDiacritics` was folding the final sigma, which made it unusable for
-     display text ('Ψύλλιας' → 'Ψυλλιασ') — moved to `normalizeKey`;
-   - the class-year prefix fallback matched `'undefined'` to `'Υπό Κατάταξη'`
-     (`'undefined'.startsWith('υπο καταταξη')`) — now word-boundary guarded and
-     missing values are excluded;
-   - `needsClassYearReview('undefined')` wrongly flagged a missing value.
+    - `stripDiacritics` was folding the final sigma, which made it unusable for
+      display text ('Ψύλλιας' → 'Ψυλλιασ') — moved to `normalizeKey`;
+    - the class-year prefix fallback matched `'undefined'` to `'Υπό Κατάταξη'`
+      (`'undefined'.startsWith('υπο καταταξη')`) — now word-boundary guarded and
+      missing values are excluded;
+    - `needsClassYearReview('undefined')` wrongly flagged a missing value.
 
 ### Phase 3 — Cleansing + import script (deliverable a) — ✅ DONE (local, 2026-09-10)
-`scripts/migratePupils.ts` (idempotent, dry-run by default, `bun run pupils:migrate`):
+
+`scripts/migratePupils.ts` (idempotent, dry-run by default, `bun run pupils:migrate`).
+
+**Reworked 2026-09-12** (so the prod path actually runs — see Phase 9):
+the file is now the CLI only (~380 lines). The cleansing rules moved to
+`scripts/lib/pupilsBackfill.ts` (pure functions, no I/O) and the database access
+to `scripts/lib/d1.ts` (local miniflare SQLite, or the D1 REST API for
+`--db preview|prod`). Two consequences worth knowing:
+
+- writes are **parameterised** (`INSERT … VALUES (?, ?, …)` + bound values)
+  instead of hand-escaped SQL literals, so Greek text, quotes and newlines can no
+  longer corrupt a statement — and the statement count per HTTP request is
+  chunked/batched rather than one `wrangler` process per statement;
+- the equivalent-output claim was verified, not assumed: the reworked script and
+  the original were run against two copies of the same 1514-row legacy database
+  and produced **identical** reports, identical `pupils` rows (745), identical
+  `pupil_enrollments` rows (1514) and an identical `total_enrollments` counter.
 
 ✅ Clean replay from the pre-migration backup → migration 0002 → `--apply`.
 Results on the 1514 legacy rows:
 
-| Result | Value |
-| --- | --- |
-| Pupils created | **745** (683 with a valid ΑΜ, 62 review rows) |
-| Enrollment rows | **1514** (exactly one per legacy row — no loss) |
-| Orphans re-united with a real pupil | 17 (via ΑΜΚΑ → cellphone → email) |
-| Name variants merged (same person) | 14 |
-| Suffix splits (same ΑΜ, different person) | 17 |
-| `total_enrollments` | 1514 |
-| Second `--apply` | "Nothing to do" — idempotent |
+| Result                                    | Value                                           |
+| ----------------------------------------- | ----------------------------------------------- |
+| Pupils created                            | **745** (683 with a valid ΑΜ, 62 review rows)   |
+| Enrollment rows                           | **1514** (exactly one per legacy row — no loss) |
+| Orphans re-united with a real pupil       | 17 (via ΑΜΚΑ → cellphone → email)               |
+| Name variants merged (same person)        | 14                                              |
+| Suffix splits (same ΑΜ, different person) | 17                                              |
+| `total_enrollments`                       | 1514                                            |
+| Second `--apply`                          | "Nothing to do" — idempotent                    |
 
 Review queue: **45** true orphans (no usable ΑΜ → `000-Ο1`…) + **17** splits
 (`111-Σ1`, `999-Σ1`…) = **62 rows** for the secretaries, all `needs_review = 1`
@@ -247,6 +265,7 @@ CLI: `--apply`, `--db local|prod`, `--yes-prod`, `--verbose`, `--report <file>`,
 npm aliases: `bun run pupils:migrate`, `bun run pupils:migrate:apply`.
 
 Bugs caught while rehearsing (each would have corrupted the import):
+
 1. `pickLatest` iterated `ClusterRow` wrappers but indexed them as raw rows, so
    every field read as `undefined` → 745 pupils with empty names/URLs.
 2. Split codes (`999-1`) collided with orphan codes (`999-1` from
@@ -258,6 +277,7 @@ Bugs caught while rehearsing (each would have corrupted the import):
    and via `sqlite3 < batch.sql`).
 
 ### Phase 3b — Backups / revert (D14)
+
 - Before each destructive step, copy the live local D1 file and the snapshot into
   `dbSnapshots/backups/` (gitignored).
 - Current backups already taken:
@@ -267,23 +287,29 @@ Bugs caught while rehearsing (each would have corrupted the import):
   `bun run db:reset` + re-apply migrations), then retry the failed step.
 
 ### Phase 4 — Server API (`lib/api/routes/pupils.ts`) — ✅ DONE (2026-09-10)
+
 The `Registrations` group is retired (Q3). New surface (paths under `/pupils`):
 
-| Key | Path | Auth | Replaces |
-| --- | --- | --- | --- |
-| `Pupils.search` | `POST /pupils/search` | yes | new — the Μαθητολόγιο search |
-| `Pupils.get` | `POST /pupils/[id:number]` | yes | new — pupil + enrollments by music type |
-| `Pupils.update` | `PUT /pupils` | yes | `Registrations.update` (pupil half) |
-| `Pupils.post` | `POST /pupils` | **no** | `Registrations.post` (public form; Q1) |
-| `Pupils.enroll` | `POST /pupils/enroll` | yes | admin "add historical registration" |
-| `Pupils.getEnrollmentsByYear` | `GET /pupils/enrollments/[year:number]` | yes | `Registrations.get` |
-| `Pupils.getEnrollmentById` | `POST /pupils/enrollments/[id:number]` | yes | `Registrations.getById` |
-| `Pupils.updateEnrollment` | `PUT /pupils/enrollments` | yes | `Registrations.update` (enrollment half) |
-| `Pupils.deleteEnrollments` | `DELETE /pupils/enrollments` | yes | `Registrations.delete` |
-| `Pupils.getYears` | `GET /pupils/years` | yes | `Registrations.getYears` |
-| `Pupils.getTotalByYear` | `GET /pupils/totalByYear` | yes | `Registrations.getTotalByYear` |
-| `Pupils.getTotal` | `GET /pupils/total` | yes | `Registrations.getTotal` |
+| Key                             | Path                                      | Auth   | Replaces                                                                                                                                                                |
+| ------------------------------- | ----------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Pupils.search`                 | `POST /pupils/search`                     | yes    | new — the Μαθητολόγιο search                                                                                                                                            |
+| `Pupils.get`                    | `POST /pupils/[id:number]`                | yes    | new — pupil + enrollments by music type                                                                                                                                 |
+| `Pupils.update`                 | `PUT /pupils`                             | yes    | `Registrations.update` (pupil half)                                                                                                                                     |
+| `Pupils.post`                   | `POST /pupils`                            | **no** | `Registrations.post` (public form; Q1)                                                                                                                                  |
+| `Pupils.enroll`                 | `POST /pupils/enroll`                     | yes    | admin "add historical registration"                                                                                                                                     |
+| `Pupils.getEnrollmentsByYear`   | `GET /pupils/enrollments/[year:string]`   | yes    | `Registrations.get`                                                                                                                                                     |
+| `Pupils.getEnrollmentById`      | `POST /pupils/enrollments/[id:number]`    | yes    | `Registrations.getById`                                                                                                                                                 |
+| `Pupils.updateEnrollment`       | `PUT /pupils/enrollments`                 | yes    | `Registrations.update` (enrollment half)                                                                                                                                |
+| `Pupils.deleteEnrollments`      | `DELETE /pupils/enrollments`              | yes    | `Registrations.delete`                                                                                                                                                  |
+| `Pupils.getYears`               | `GET /pupils/years`                       | yes    | `Registrations.getYears`                                                                                                                                                |
+| `Pupils.getTotalByYear`         | `GET /pupils/totalByYear`                 | yes    | `Registrations.getTotalByYear`                                                                                                                                          |
+| `Pupils.getTotal`               | `GET /pupils/total`                       | yes    | `Registrations.getTotal`                                                                                                                                                |
 | `Pupils.getByReregistrationUrl` | `GET /pupils/reregistration/[url:string]` | **no** | `Registrations.getByReregistrationUrl` — returns the pupil (by their permanent `registration_url`) plus their latest enrollment per music type, so the form can prefill |
+
+`Pupils.getEnrollmentsByYear` takes the school-year START year (`"2025"` →
+`2025-2026`) or the literal `ALL_YEARS` token (`"all"`, see `lib/pupils/years.ts`),
+which lists every enrollment with no year constraint — the admin table's year
+picker offers both (`Όλα τα έτη` is the first option).
 
 The four email-subscription routes move unchanged to a new
 `EmailSubscriptions.*` group (paths `/email-subscriptions/*`) — they are about
@@ -295,6 +321,7 @@ newsletter opt-in, not pupils.
 table, Excel/PDF exports and the PDF worker keep working unchanged.
 
 Steps:
+
 1. Write the group; register it in `lib/api/routes/index.ts` (2 lines; types derive).
 2. Zod schemas in `lib/api/schemas.ts` + `types/entities.ts` (`Pupils`,
    `PupilEnrollments`); all messages Greek.
@@ -312,6 +339,7 @@ Steps:
 6. ✅ `bun run typecheck` green; `lib/pupils/normalize.ts` unit tests still 20/20.
 
 Bugs found while writing these tests:
+
 1. `birth_date = 0` (5 pupils) failed `positiveInt` → every pupil-facing
    response schema 500'd. Relaxed to `z.number().int()` for pupils (0 = unknown).
 2. `z_Pupils.omit(...).partial({...})` does NOT make fields optional — the
@@ -327,6 +355,7 @@ Note: `getEnrollmentsByYear` returns the joined row with `am` as a STRING
 worker keep the exact legacy contract.
 
 ### Phase 5 — Admin UI (`Μαθητολόγιο`) — ✅ DONE (2026-09-10)
+
 1. ✅ `src/components/admin/PupilsPage.solid.tsx` (~600 lines) — search-first:
    the page opens on a large centred search field; selecting a pupil moves the
    bar to the top and reveals the record below. The query is debounced 250 ms,
@@ -351,16 +380,17 @@ worker keep the exact legacy contract.
    add enrollment).
 
 ### Phase 5b — `/admin/registrations` column scope — ✅ DONE (owner request)
+
 The table lists **enrollments** (one row per pupil / year / class / instrument),
 so every enrollment field stays. Only the **pupil** fields were trimmed: the
 record's address, phones, email, ΑΜΚΑ, birth date and URL are not repeated here
 (the Μαθητολόγιο record view shows them).
 
-| Kept | Source |
-| --- | --- |
-| `am`, `last_name`, `first_name`, `fathers_name` | pupil identity |
-| `class_year`, `class_id`, `teacher_id`, `instrument_id`, `date`, `payment_amount`, `total_payment`, `payment_date`, `pass` | enrollment |
-| `id` | hidden first column (`Row` reads the id from index 0) |
+| Kept                                                                                                                       | Source                                                |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `am`, `last_name`, `first_name`, `fathers_name`                                                                            | pupil identity                                        |
+| `class_year`, `class_id`, `teacher_id`, `instrument_id`, `date`, `payment_amount`, `total_payment`, `payment_date`, `pass` | enrollment                                            |
+| `id`                                                                                                                       | hidden first column (`Row` reads the id from index 0) |
 
 `registration_year` is **not** shown: the page is scoped to a single school year
 by the picker at the bottom, so every row would repeat the same value. It stays
@@ -380,6 +410,7 @@ selection is still meaningful.
   edit modal).
 
 ### Phase 5c — pre-existing test-suite flake fixed — ✅ DONE
+
 `tests/api/payments.test.ts` failed ~30% of runs, and the failure was becoming
 permanent. Two independent causes:
 
@@ -395,6 +426,7 @@ snapshot value before/after the file (directly in the local dev DB — the API c
 only increase `sold`). Suite is now stable across repeated runs (3× 123/123).
 
 ### Phase 6 — drop `registrations` — ✅ DONE (local, 2026-09-10)
+
 1. ✅ Backed up the pre-drop DB: `dbSnapshots/backups/local-d1-pre-drop.*.sqlite`.
 2. ✅ Applied `migrations/0003_drop_registrations.sql` locally →
    `registrations` and `total_registrations` are gone. Remaining tables:
@@ -422,6 +454,7 @@ only increase `sold`). Suite is now stable across repeated runs (3× 123/123).
    `bunx tsc --noEmit` clean in that repo.
 
 ### Phase 7 — registration form: returning vs new student — ✅ DONE (owner spec)
+
 The public form now has a three-step flow instead of dropping straight into the
 full form:
 
@@ -440,6 +473,7 @@ visitor down the new-student path. Returns the same `{ pupil, enrollments }`
 shape as the re-registration link, so prefill is one code path.
 
 Form details:
+
 - lookup validation mirrors the old form's rules (ΑΜ must parse, ΑΜΚΑ is 11
   digits) with Greek messages;
 - the prefilled enrolment fields reset (`class_year`, `teacher_id`,
@@ -459,6 +493,7 @@ their enrollments, `pupils.test.*` subscriptions) and re-derives the
 `total_enrollments` counter. Dry-run by default; local only.
 
 ### Phase 8 — Verification + docs
+
 1. `bun run typecheck`; targeted `bun test api/pupils.test.ts api/registrations.test.ts`.
 2. Update `AGENTS.md`, `.github/copilot-instructions.md`,
    `docs/architecture/ARCHITECTURE.md` (ER diagram + admin routes).
@@ -466,24 +501,132 @@ their enrollments, `pupils.test.*` subscriptions) and re-derives the
    apply 0002, dry-run script, review report, `--apply`, verify counts, **then**
    apply 0003.
 
+### Phase 9 — Production cutover (2026-09-12) — ✅ DONE
+
+Executed against `byzantini-db` (the D13 "production untouched" rule was lifted by
+the owner for this run; the database is not live yet). Full command sequence and
+tooling reference: **`docs/D1_PORT_RUNBOOK.md`**.
+
+Order (this order matters — see the trap below):
+
+1. ✅ **Turso → D1 data port.** `scripts/exportTurso.ts` exported 21 Turso tables
+   (20 ported, `query_logs` excluded), 5,119 rows, then `--apply --db prod`
+   replaced the target rows table by table. The pre-port drift was real:
+   `registrations` −52 rows, `email_subscriptions` −13, plus content differences
+   in `announcements`, `sys_users` and `total_registrations`. After the apply all
+   20 tables verified `✓ identical` (row count **and** SHA-256 digest).
+2. ✅ **`migrations/0002_pupils.sql` applied ALONE** with
+   `bunx wrangler d1 execute byzantini-db --remote --file migrations/0002_pupils.sql`.
+3. ✅ **Backfill.** Dry run on the refreshed 1,566-row table, then
+   `bun scripts/migratePupils.ts --db prod --yes-prod --apply`.
+4. ✅ **Verified** (see the table below).
+5. ✅ **`0003_drop_registrations.sql` applied** via
+   `bunx wrangler d1 migrations apply byzantini-db --remote` — which also re-ran
+   0002 as a no-op. `registrations` and `total_registrations` are gone.
+
+#### ⚠ The trap that broke `--db prod`
+
+`wrangler d1 migrations apply` runs **every** pending migration. Production had
+**both** 0002 and 0003 pending, so the obvious command would have run
+`0003_drop_registrations.sql` too — dropping `registrations` _before_ the backfill
+could read it, i.e. total loss of the source data. `migratePupils.ts` now detects
+a target without the new tables and prints the safe three-step recipe instead
+(create with `d1 execute --file` → backfill → only then `migrations apply`).
+
+#### Results
+
+| Measurement                               | Value                                                  |
+| ----------------------------------------- | ------------------------------------------------------ |
+| Legacy rows read                          | 1,566                                                  |
+| Pupils created                            | **753** (685 with a valid ΑΜ, 68 review rows)          |
+| Enrollment rows created                   | **1,566** — exactly one per legacy row                 |
+| Orphans re-united with a real pupil       | 18                                                     |
+| Name variants merged (same person)        | 17                                                     |
+| Suffix splits (same ΑΜ, different person) | 18                                                     |
+| Review queue                              | 50 true orphans (`000-Οn`) + 18 splits (`nnn-Σn`) = 68 |
+| `total_enrollments`                       | 1,566 (= the real enrollment count)                    |
+| Second run                                | "Nothing to do" — idempotent                           |
+
+Integrity, measured on production after the apply: 0 enrollments without a pupil,
+0 nameless pupils, 0 pupils without enrollments, 0 duplicate ΑΜs / URLs / orphan
+codes, and **exact row conservation** — the multiset of
+(year, class, teacher, instrument, date, amounts, payment date, pass, count)
+grouped from `registrations` equals the one from `pupil_enrollments` in **both**
+directions (`EXCEPT` returns 0 rows each way). Spot checks: ΑΜ 919 keeps all 16
+enrollments, 111 split into `111`, `111-Σ1`, `111-Σ2`.
+
+Backups taken before each destructive step (gitignored):
+`dbSnapshots/backups/d1-prod-pre-port.*.sql` and
+`dbSnapshots/backups/d1-prod-post-backfill-pre-drop.*.sql`; the Turso bundle
+(`dbSnapshots/turso-export/<stamp>/`) preserves all 1,566 legacy rows.
+
+### Phase 10 — Re-port from the cleaned register (2026-10-12) — ✅ DONE
+
+The owner cleaned `registrations` in Turso (unique ΑΜ per person, the unusable ones
+annotated) and the whole port was re-run for **local, preview and prod** with
+`bun run port --all --yes-prod`. Measured: 1,702 legacy rows → **781 pupils**
+(689 with a valid ΑΜ, 92 review rows) / **1,702 enrollments**, 25 orphan rows
+re-united, 18 name merges, **2** suffix splits (was 18), row conservation 0
+missing / 0 unexpected, every table digest-identical on all three targets.
+
+Two cleansing rules were added in that round; both live in the pure rules and are
+covered by tests:
+
+1. **A secretary's note is never an ΑΜ.** `parseAm` used to extract the first
+   number it found, so an annotated value like `ΛΑΘΟΣ 1085` became the pupil's
+   ΑΜ 1085 — a real-looking registry number, and `needs_review = 0`, i.e. hidden
+   from the review list (23 of the 28 annotated rows were affected, and one of
+   them silently collided with a real ΑΜ). Now any value containing a **letter**
+   is `invalid` (`reason: 'note'`): the digits are dropped, the pupil is flagged
+   for review, and the raw text is kept in `review_note`. Decoration around a
+   number (`΄1158`, `(1158)`, spaces) still parses as before, and `Αναμονή` is
+   still the waiting placeholder.
+2. **An ΑΜΚΑ is either empty or exactly 11 digits.** The API's `z_Amka` accepts
+   nothing else, so a 10-digit value made **every listing containing that pupil
+   fail response validation — a 500 in the admin Μαθητολόγιο**. The backfill now
+   clears a non-conforming ΑΜΚΑ, flags the pupil (`amka_invalid`, visible in
+   `review_note` as a digit count — never the value) and the port verifies the
+   invariant on every target. The underlying typo still needs fixing in Turso
+   (ΑΜ 1206 in this round).
+
+Marked rows are not discarded: each still produces its enrollment row. A marked
+row whose ΑΜΚΑ/phone/email matches a known pupil is attached to that pupil (the
+bad ΑΜ was the symptom, the identity match is the cure); the rest stay in the
+review queue as `000-Οn`.
+
+A third rule was added later the same day, after the register showed one mobile
+number on **18 unrelated cards** (18 names, 18 surnames, 18 ΑΜ, a consecutive ΑΜ
+block):
+
+3. **A mobile shared by too many cards gets a review note.** `flagSharedCellphones`
+   (threshold: 4 pupils) appends «κοινόχρηστο κινητό: ο αριθμός εμφανίζεται σε N
+   καρτέλες — ελέγξτε αν είναι σωστός» to `review_note` and sets `needs_review`.
+   Nothing is merged, moved or cleared — the number may be the school's or a
+   parent's, so the secretaries decide. Two or three siblings on one parent's
+   mobile stay unflagged (the register has 18 such pairs). The note carries the
+   count, never the number.
+
 ---
 
 ## 5. Risks
 
-| Risk | Mitigation |
-| --- | --- |
-| Prod data loss | 0002 is additive; 0003 is applied only after the backfill is verified on prod counts |
-| Wrong merges (two people, one ΑΜ) | phone/email/ΑΜΚΑ proof required; otherwise split to `-N` and flag `needs_review` |
-| Wrong splits (one person, two spellings) | accent/case folding + ΑΜΚΑ/phone/email clustering |
-| Script run after the strip | script detects missing columns/tables and refuses with a clear message |
-| `db:reset` silently drops migrations | re-apply 0002/0003 after reset (documented + script prints a reminder) |
-| Test suite dirties local D1 | run `bun run db:reset` + re-apply migrations before the real rehearsal |
-| PDF/Excel contract break | `Registrations.*` returns the joined row, so the wire shape is unchanged |
-| `query_logs` spam from the backfill | bulk writes go through `wrangler d1 execute --file`, bypassing the app logger |
+| Risk                                     | Mitigation                                                                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Prod data loss                           | 0002 is additive; 0003 is applied only after the backfill is verified on prod counts                                   |
+| Wrong merges (two people, one ΑΜ)        | phone/email/ΑΜΚΑ proof required; otherwise split to `-N` and flag `needs_review`                                       |
+| Wrong splits (one person, two spellings) | accent/case folding + ΑΜΚΑ/phone/email clustering                                                                      |
+| Script run after the strip               | script detects missing columns/tables and refuses with a clear message                                                 |
+| `d1 migrations apply` run too early      | it would run 0003 and drop `registrations`; the script refuses and prints the safe order (Phase 9, D1_PORT_RUNBOOK §3) |
+| `db:reset` silently drops migrations     | re-apply 0002/0003 after reset (documented + script prints a reminder)                                                 |
+| Test suite dirties local D1              | run `bun run db:reset` + re-apply migrations before the real rehearsal                                                 |
+| PDF/Excel contract break                 | `Pupils.*` returns the joined row, so the wire shape is unchanged                                                      |
+| `query_logs` spam from the backfill      | bulk writes go through the D1 REST API, bypassing the app logger                                                       |
 
 ## 6. Non-goals (this task)
 
 - Any `wrangler deploy` / remote command — production stays untouched (D13).
+  _(Lifted for the Phase 9 cutover on 2026-09-12, at the owner's request; the site
+  itself is still not deployed from this work.)_
 - A printable pupil record PDF (the PDF worker accepts only `type: "registration"`;
   that repo is separate).
 - Touching `teachers.registration_number` / `registrations_number` — unrelated
@@ -492,3 +635,9 @@ their enrollments, `pupils.test.*` subscriptions) and re-derives the
 ## 7. Status
 
 No open questions. Everything is decided (D1–D14, Q1–Q7); see §0.
+
+Local dev, preview and production all match the target schema (pupils +
+pupil_enrollments, `registrations` dropped). To refresh the local dev database
+from production: `bun run replicate:db` (then restart the dev server), or
+`bun run db:reset` + `bunx wrangler d1 migrations apply DB --local` for the
+snapshot.

@@ -30,6 +30,8 @@
 		"turso:verify": "bun scripts/exportTurso.ts --verify",
 		"turso:apply:prod": "bun scripts/exportTurso.ts --apply --db prod --yes-prod",
 		"turso:apply:preview": "bun scripts/exportTurso.ts --apply --db preview",
+		"pupils:report": "bun scripts/pupilIssuesReport.ts",
+		"pupils:report:prod": "bun scripts/pupilIssuesReport.ts --db prod",
 		"dev:clean": "bun scripts/cleanDevTestData.ts --apply",
 		"worker-secrets": "bun scripts/workerSecrets.ts",
 		"cf": "bun scripts/cf.ts",

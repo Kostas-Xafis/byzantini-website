@@ -119,9 +119,28 @@
   `bun run db:reset` (then re-apply migrations — the snapshot does not carry
   them), `bun run typecheck`, `bun run check`.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
-  suite writes to the local dev DB; `bun run pupils:migrate` (dry run) /
-  `pupils:migrate:apply` is the `registrations` → `pupils` + `pupil_enrollments`
-  backfill.
+  suite writes to the local dev DB.
+- **Rebuild a D1 database from Turso (preferred): `bun run port --db local` /
+  `port:preview` / `port:prod --yes-prod` / `port:all --yes-prod` /
+  `port:verify`** — extract → wipe → migrate → load → regenerate the pupil
+  register → verify, in one command, per target. `--dry-run` writes nothing,
+  `--from latest` reuses a bundle; it is safely re-runnable and has no
+  migration-ordering trap. Runbook: `docs/D1_PORT_RUNBOOK.md`.
+- Secretary-facing pupil reports: `bun run pupils:report` (or `:prod`) writes
+  `reports/mathitologio-ektremotites.{md,pdf}` + `…-parartima.{md,pdf}` — cards
+  without/unusable ΑΜ, shared ΑΜ/ΑΜΚΑ, duplicate cards — from a read-only database
+  read, printed to PDF by headless Chrome. `reports/` is gitignored (names, ΑΜΚΑ,
+  phones are personal data).
+- Low-level tooling: `bun run turso:export` (bundle + schema check),
+  `turso:verify` (drift: row count + SHA-256 digest), `turso:apply:prod`
+  (full-replace load), and `bun run pupils:migrate` (`--apply`) for the
+  target-side `registrations` → `pupils` + `pupil_enrollments` backfill. Never
+  run `d1 migrations apply` before that backfill has run on a database that
+  still holds `registrations`: it also runs `0003_drop_registrations.sql` and
+  drops the table the backfill reads. Shared transport for all of them:
+  `scripts/lib/d1.ts` (address targets by the `DB` binding, never the database
+  name); shared bundle/pupil engines: `scripts/lib/portBundle.ts`,
+  `scripts/lib/pupilsRun.ts`. Turso is read-only in all of this tooling.
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker

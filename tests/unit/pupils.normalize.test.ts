@@ -103,6 +103,25 @@ test("parseAm keeps the raw value for the report", () => {
 	expect(parseAm(" 1287  ").raw).toBe(" 1287  ");
 });
 
+test("parseAm treats a secretary's note as unusable, never mining a number out of it", () => {
+	// The secretaries mark the rows they could not resolve. Taking the digits out
+	// of 'ΛΑΘΟΣ 1085' would hand the pupil a real-looking ΑΜ and hide the row from
+	// the review list, so a value containing letters is never a registry number.
+	for (const value of ["ΛΑΘΟΣ 1085", "ΛΑΘΟΣ 1085-1277", "ΔΕΝ ΕΧΕΙ ΑΜΚΑ", "ΔΕΝ ΕΧΕΙ 3", "λάθος 425", "βλ. 1234"]) {
+		expect(parseAm(value), value).toMatchObject({ am: null, kind: "invalid", digits: "" });
+	}
+	// A note that carries a number is reported as one (its digits dropped); a note
+	// with no digit at all is the ordinary non-numeric case. Both are unusable.
+	expect(parseAm("ΛΑΘΟΣ 1085")).toMatchObject({ reason: "note" });
+	expect(parseAm("ΔΕΝ ΕΧΕΙ ΑΜΚΑ")).toMatchObject({ reason: "non_numeric" });
+	// The raw text survives for the report / review note.
+	expect(parseAm("ΛΑΘΟΣ 1085").raw).toBe("ΛΑΘΟΣ 1085");
+	// Only letter-bearing values are notes — decoration around a number still parses.
+	expect(parseAm("(1158)")).toMatchObject({ am: 1158, kind: "valid" });
+	// 'Αναμονή' is still the waiting placeholder, not a note.
+	expect(parseAm("Αναμονή 999")).toMatchObject({ am: null, kind: "orphan", reason: "waiting" });
+});
+
 // ---------------------------------------------------------------------------
 // ΑΜΚΑ / phones / email
 // ---------------------------------------------------------------------------
@@ -140,12 +159,8 @@ test("normalizeEmail lowercases and rejects junk", () => {
 // ---------------------------------------------------------------------------
 
 test("personNameKey ignores spelling differences", () => {
-	expect(personNameKey({ last_name: "Ψύλλιας", first_name: "Σταύρος" })).toBe(
-		personNameKey({ last_name: "Ψυλλιας", first_name: "Σταυρος" }),
-	);
-	expect(personNameKey({ last_name: "Δαλιάνης", first_name: "Νικόλαος" })).not.toBe(
-		personNameKey({ last_name: "Δαλιάνης", first_name: "Χρήστος" }),
-	);
+	expect(personNameKey({ last_name: "Ψύλλιας", first_name: "Σταύρος" })).toBe(personNameKey({ last_name: "Ψυλλιας", first_name: "Σταυρος" }));
+	expect(personNameKey({ last_name: "Δαλιάνης", first_name: "Νικόλαος" })).not.toBe(personNameKey({ last_name: "Δαλιάνης", first_name: "Χρήστος" }));
 	expect(personNameKey({})).toBe("");
 });
 

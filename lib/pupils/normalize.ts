@@ -121,12 +121,15 @@ export interface ParsedAm {
 	/** Normalized digits, even for orphans/invalids ('000' → '000'). */
 	digits: string;
 	/** Machine-readable reason, useful for the backfill report. */
-	reason: "ok" | "zero" | "waiting" | "non_numeric" | "too_long" | "empty";
+	reason: "ok" | "zero" | "waiting" | "non_numeric" | "too_long" | "empty" | "note";
 	/** The raw value as it appeared, for the report. */
 	raw: string;
 }
 
 const WAITING_RE = /αναμον/i;
+
+/** Any letter makes the value a note rather than a registry number (see parseAm). */
+const LETTER_RE = /\p{L}/u;
 
 /**
  * Parses the ΑΜ exactly as the legacy data presents it:
@@ -139,9 +142,19 @@ const WAITING_RE = /αναμον/i;
  *   '999 - Αναμονή'→ orphan
  *   '3592307'      → invalid      (7 digits — too long, needs review)
  *   'abc'          → invalid
+ *   'ΛΑΘΟΣ 1085'   → invalid      (a secretary's NOTE, see below)
+ *   'ΔΕΝ ΕΧΕΙ ΑΜΚΑ'→ invalid
  *
  * Digits are extracted from anywhere in the value, so the keraia and any other
  * decoration cannot change the number itself.
+ *
+ * A value that contains LETTERS, however, is a note rather than a registry
+ * number — the secretaries mark rows they could not resolve ('ΛΑΘΟΣ …',
+ * 'ΔΕΝ ΕΧΕΙ …'). Those must never be mined for a number: taking the 1085 out of
+ * 'ΛΑΘΟΣ 1085' would hand the pupil a real-looking ΑΜ, and silently hide the row
+ * from the review list. They stay invalid (with the raw text kept for the
+ * report/review note) and their `digits` are dropped so the orphan code lands in
+ * the ordinary 000-Ο<n> family instead of mimicking an ΑΜ.
  */
 export function parseAm(value: string | number | null | undefined): ParsedAm {
 	const raw = value === null || value === undefined ? "" : String(value);
@@ -158,6 +171,9 @@ export function parseAm(value: string | number | null | undefined): ParsedAm {
 
 	if (WAITING_RE.test(trimmed)) {
 		return { am: null, kind: "orphan", digits, reason: "waiting", raw };
+	}
+	if (LETTER_RE.test(trimmed)) {
+		return { am: null, kind: "invalid", digits: "", reason: "note", raw };
 	}
 	if (numeric === NEW_PUPIL_AM) {
 		return { am: null, kind: "orphan", digits, reason: "zero", raw };
