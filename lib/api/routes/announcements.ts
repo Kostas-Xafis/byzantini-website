@@ -17,7 +17,7 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  *
  * Route keys mirror the old `AnnouncementsRoutes` so components keep working:
  * get, getImages, getForPage, getById, getImagesById, getByTitle, post,
- * update, delete, postImage, imagesDelete, imagesDeleteByName.
+ * update, delete, postImage, imagesDelete.
  */
 
 const bucketPrefix = "anakoinoseis/images/";
@@ -119,7 +119,6 @@ const positiveInt = (message = "Μη έγκυρος θετικός ακέραι�
 const postReq = z_Announcements.omit({ id: true, views: true }).extend({ links: z.string() });
 const updateReq = z_Announcements.omit({ views: true });
 const idListReq = z.array(z.number().int().min(0, "Μη έγκυρο id"));
-const nameListReq = z.array(z.string());
 
 // `getForPage` selects only id/title/date/content/views + main_image/total_images
 // (no `links`), and `main_image` is nullable when no image is flagged as main.
@@ -283,34 +282,6 @@ export const announcementsRoutes = {
 				await asyncQueue(deletionJobs, {
 					maxJobs: 10,
 				});
-				return "Images deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή των εικόνων"),
-	),
-	// NOTE: the old announcements.server.ts never assigned a `func` to
-	// imagesDeleteByName (the route was declared client-side only), so it had no
-	// implementation. It is ported here mirroring `imagesDelete` but deleting by
-	// image name for the given announcement.
-	imagesDeleteByName: new APIServer(
-		{ method: "DELETE", path: "/announcements/images/name/[announcement_id:number]", schema: nameListReq },
-		[authenticateMiddleware],
-		({ params, body, request }) =>
-			handlerResult(async () => {
-				const names = body as string[];
-				const { announcement_id } = params;
-				const deletionJobs = [];
-				for (const name of names) {
-					deletionJobs.push(
-						() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/" + name),
-						() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/thumb_" + name),
-					);
-				}
-				await asyncQueue(deletionJobs, {
-					maxJobs: 10,
-				});
-				await executeQuery(`DELETE FROM announcement_images WHERE announcement_id = ? AND name IN (${questionMarks(names)})`, [
-					announcement_id,
-					...names,
-				]);
 				return "Images deleted successfully";
 			}, "Σφάλμα κατά την διαγραφή των εικόνων"),
 	),

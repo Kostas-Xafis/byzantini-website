@@ -10,8 +10,7 @@ SMS go out through **Bird** (see [SMS campaigns](#sms-campaigns-bird)).
 ```
 src/index.ts        Worker entry (transactional email endpoint) — deployed as byzantini-website-emails
 src/observability.ts  Lite per-request telemetry (Analytics Engine + structured logs)
-src/mailserver.ts   Old Bun/Cloud Run service (kept for reference; not used by the Worker)
-src/mailersend.ts   mailService: MailerSend SDK + {{placeholder}} substitution
+src/mailersend.ts   mailService (the campaign CLI's send path): MailerSend SDK + {{placeholder}} substitution
 src/sms/            Bird SMS transport: REST client, delivery stats, segment arithmetic, phone normalisation
 src/campaign/*      Campaign runner + statistics (recipients from Cloudflare D1, email or SMS)
 src/cli.ts          Campaign CLI (bun run campaign) — run, or --stats to report
