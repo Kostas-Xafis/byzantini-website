@@ -22,6 +22,7 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { array, number, object, string } from "valibot";
 import { Env } from "../../lib/env/env.ts";
+import { rawAPI } from "../rawAPI.ts";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
 // ---------------------------------------------------------------------------
@@ -127,14 +128,10 @@ function pupilsTest() {
 		// the harness pre-validates against the route contract…
 		await expect(useTestAPI("Pupils.search", { RequestObject: { query: longQuery } })).rejects.toThrow("Πολύ μεγάλο ερώτημα");
 
-		// …and the server rejects it too, independently of the client
-		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
-		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/search`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json", Origin: base },
-			body: JSON.stringify({ query: longQuery }),
-		});
-		expect(res.status).toBe(400);
+		// …and an anonymous caller is turned away (401) before its body is even validated
+		// (server-side validation on its own is covered by #24 and tests/api/dispatch.test.ts)
+		const res = await rawAPI("POST", "/pupils/search", { query: longQuery });
+		expect(res.status).toBe(401);
 	});
 
 	// ------------------------------------------------------------------
@@ -607,6 +604,11 @@ function pupilsTest() {
 
 	test("--pupils-- #24 lookup rejects a malformed ΑΜΚΑ", async () => {
 		await expect(useTestAPI("Pupils.getByAm", { RequestObject: { am: 706, amka: "123" } }, false)).rejects.toThrow("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
+
+		// …and the server rejects it too, independently of the client
+		const res = await rawAPI("POST", "/pupils/lookup", { am: 706, amka: "123" });
+		expect(res.status).toBe(400);
+		expect(JSON.stringify((await res.json()).details)).toContain("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
 	});
 }
 

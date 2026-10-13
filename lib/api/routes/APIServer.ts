@@ -1,6 +1,7 @@
 import { z, treeifyError } from "astro/zod";
 import { runtimeEnv } from "@env/runtime";
 import type { Transaction } from "@lib/db";
+import { APIError } from "./APIError";
 import { ServerCookies } from "./cookies";
 import { APIRoute, type APIRouteOptions, type HTTPMethod, type RouteParams } from "./APIRoute";
 
@@ -17,7 +18,20 @@ import { APIRoute, type APIRouteOptions, type HTTPMethod, type RouteParams } fro
  *
  * Response envelope (kept minimal): success `{ data }` | `{ message }`,
  * errors `{ error, details? }` with 4xx/5xx status — `useAPI` unwraps it.
+ *
+ * Errors: handlers throw `APIError` for expected failures (its message and
+ * status reach the caller); anything else is logged with `console.error` and
+ * answered with a generic 500, so raw D1/SQL/stack text never leaves the
+ * server. Every response from `handle` is JSON, including unknown paths (404)
+ * and known paths called with another method (405 + `Allow`).
  */
+
+/** Public message of an unexpected (500) failure when the route gives no message of its own. */
+export const SERVER_ERROR_MESSAGE = "Σφάλμα διακομιστή";
+/** Body that is not valid JSON/multipart or fails the route schema (`details` carries the issues). */
+export const INVALID_BODY_MESSAGE = "Invalid request body";
+export const ROUTE_NOT_FOUND_MESSAGE = "Η διαδρομή δεν βρέθηκε";
+export const METHOD_NOT_ALLOWED_MESSAGE = "Η μέθοδος δεν επιτρέπεται για αυτή τη διαδρομή";
 
 export interface RouteContext<P extends string, O extends z.ZodTypeAny | undefined> {
 	params: RouteParams<P>;
@@ -34,16 +48,19 @@ type Handler<P extends string, O extends z.ZodTypeAny | undefined> = (
 	context: RouteContext<P, O>,
 ) => Promise<HandlerResponse> | HandlerResponse;
 
+/**
+ * Runs before the body is read and validated (auth, rate limits), so an
+ * anonymous caller gets a 401, never a validation report. Return a Response to
+ * short-circuit, or throw an `APIError`.
+ */
 export type MiddlewareFunction = ({
 	route,
 	request,
 	cookies,
-	body,
 }: {
 	route: APIServer;
 	request: Request;
 	cookies: ServerCookies;
-	body?: unknown;
 }) => void | Response | Promise<void | Response>;
 
 /** A server-only API route that adds a typed handler + middleware to APIRoute. */
@@ -81,62 +98,89 @@ export class APIServer<
 	}
 
 	static async handle(request: Request, pathPrefix = "/api"): Promise<Response> {
-		const cookies = new ServerCookies(request);
-
+		const method = request.method.toUpperCase() as HTTPMethod;
 		const pathname = new URL(request.url).pathname;
 		const path = pathname.replace(new RegExp(`^${pathPrefix}`), "") || "/";
-		const match = this.findRoute(request.method as HTTPMethod, path) as {
+		const match = this.findRoute(method, path) as {
 			route: APIServer;
 			params: Record<string, string>;
 		} | null;
-		if (!match) return this.redirect("/404", HTTP.FOUND);
+		if (!match) {
+			const allowed = this.allowedMethods(path);
+			if (allowed.length === 0) return this.jsonError(ROUTE_NOT_FOUND_MESSAGE, HTTP.NOT_FOUND);
+			const response = this.jsonError(METHOD_NOT_ALLOWED_MESSAGE, HTTP.METHOD_NOT_ALLOWED);
+			response.headers.set("Allow", allowed.join(", "));
+			return response;
+		}
 
-		// Body parsing — ALWAYS (handlers may read the raw body even without a schema)
-		let body: unknown = undefined;
-		const schema = match.route.schema as z.ZodTypeAny | undefined;
+		const { route, params } = match;
+		const context = `${method} ${path}`;
+		const cookies = new ServerCookies(request);
 		try {
-			if (match.route.rawBlob) {
-				body = await request.blob();
-			} else if (match.route.multipart) {
-				body = await request.formData().then((fd) => this.formDataToObject(fd));
-			} else {
-				const text = await request.clone().text();
-				body = text ? JSON.parse(text) : undefined;
+			// Middleware first: an anonymous or rate-limited caller is turned away before its body is read.
+			for (const middleware of route.middleware) {
+				const result = await middleware({ route, request, cookies });
+				if (result instanceof Response) return this.validateResponse(cookies.apply(result), route.responseSchema, context);
 			}
-		} catch {
-			return this.jsonError("Invalid request body", HTTP.BAD_REQUEST);
-		}
-		if (schema) {
-			const result = await schema.safeParseAsync(body);
-			if (!result.success) {
-				return new Response(JSON.stringify({ error: "Invalid request body", details: treeifyError(result.error) }), {
-					status: HTTP.BAD_REQUEST,
-					headers: { "Content-Type": "application/json" },
-				});
-			}
-			body = result.data;
-		}
 
-		for (const middleware of match.route.middleware) {
-			const result = await middleware({
-				route: match.route,
+			// Body parsing — ALWAYS (handlers may read the raw body even without a schema)
+			let body: unknown = undefined;
+			try {
+				if (route.rawBlob) {
+					body = await request.blob();
+				} else if (route.multipart) {
+					body = await request.formData().then((fd) => this.formDataToObject(fd));
+				} else {
+					const text = await request.clone().text();
+					body = text ? JSON.parse(text) : undefined;
+				}
+			} catch {
+				return this.jsonError(INVALID_BODY_MESSAGE, HTTP.BAD_REQUEST);
+			}
+			const schema = route.schema as z.ZodTypeAny | undefined;
+			if (schema) {
+				const result = await schema.safeParseAsync(body);
+				if (!result.success) return this.json({ error: INVALID_BODY_MESSAGE, details: treeifyError(result.error) }, HTTP.BAD_REQUEST);
+				body = result.data;
+			}
+
+			const response = await route.handler({
+				params,
+				body,
 				request,
 				cookies,
-				body,
-			});
-			if (result instanceof Response) return this.validateResponse(cookies.apply(result), match.route.responseSchema);
+				env: runtimeEnv,
+			} as never);
+			return await this.validateResponse(cookies.apply(response), route.responseSchema, context);
+		} catch (error) {
+			// Handlers without `handlerResult`, middleware and body/response parsing end up here.
+			return cookies.apply(this.errorResponse(error, SERVER_ERROR_MESSAGE, context));
 		}
+	}
 
-		let response = await match.route.handler({
-			params: match.params,
-			body,
-			request,
-			cookies,
-			env: runtimeEnv,
-		} as never);
+	/** The methods registered for `concretePath` — the `Allow` header of a 405. */
+	static allowedMethods(concretePath: string): HTTPMethod[] {
+		const methods = this.getRoutes()
+			.filter((route) => this.pathMatchesPattern(concretePath, route.path))
+			.map((route) => route.method);
+		return [...new Set(methods)];
+	}
 
-		response = cookies.apply(response);
-		return this.validateResponse(response, match.route.responseSchema);
+	/**
+	 * The error envelope for anything thrown while serving a request:
+	 * - `APIError` → its status and public message (+ `details`);
+	 * - a Zod error → 400 with the treeified issues;
+	 * - anything else → logged with `console.error`, answered with `publicMessage` and a 500.
+	 */
+	static errorResponse(error: unknown, publicMessage = SERVER_ERROR_MESSAGE, context?: string): Response {
+		if (error instanceof APIError) {
+			return this.json({ error: error.message, ...(error.details !== undefined && { details: error.details }) }, error.status);
+		}
+		if (error instanceof z.core.$ZodError) {
+			return this.json({ error: INVALID_BODY_MESSAGE, details: treeifyError(error) }, HTTP.BAD_REQUEST);
+		}
+		console.error(`[api] ${context ?? publicMessage}:`, error);
+		return this.jsonError(publicMessage, HTTP.INTERNAL_SERVER_ERROR);
 	}
 
 	/**
@@ -173,13 +217,14 @@ export class APIServer<
 		return obj;
 	}
 
-	private static async validateResponse(response: Response, schema: z.ZodTypeAny | undefined): Promise<Response> {
+	/** A response that breaks its schema is a server bug: logged, and answered with the generic 500. */
+	private static async validateResponse(response: Response, schema: z.ZodTypeAny | undefined, context: string): Promise<Response> {
 		if (!schema || !response.ok) return response;
 		let body: unknown;
 		try {
 			body = await response.clone().json();
-		} catch {
-			return this.invalidResponse("Response body must be valid JSON");
+		} catch (error) {
+			return this.errorResponse(new Error("Response body must be valid JSON", { cause: error }), SERVER_ERROR_MESSAGE, context);
 		}
 		// The success envelope is `{ data }` — validate + TRANSFORM the inner payload
 		// against responseSchema, then re-emit the parsed data (the wire payload
@@ -187,16 +232,12 @@ export class APIServer<
 		const wrapped = body && typeof body === "object" && "data" in (body as any);
 		const payload = wrapped ? (body as any).data : body;
 		const result = await schema.safeParseAsync(payload);
-		if (!result.success) return this.invalidResponse("Response body does not match its schema", result.error);
+		if (!result.success) {
+			console.error(`[api] ${context}: response does not match its schema`, JSON.stringify(treeifyError(result.error)));
+			return this.jsonError(SERVER_ERROR_MESSAGE, HTTP.INTERNAL_SERVER_ERROR);
+		}
 		const serialized = JSON.stringify(wrapped ? { data: result.data } : result.data);
 		return new Response(serialized, { status: response.status, headers: response.headers });
-	}
-
-	private static invalidResponse(message: string, error?: z.ZodError): Response {
-		return new Response(JSON.stringify({ error: message, ...(error && { details: treeifyError(error) }) }), {
-			status: HTTP.INTERNAL_SERVER_ERROR,
-			headers: { "Content-Type": "application/json" },
-		});
 	}
 
 	static response(status: number, body?: string, headers?: Record<string, string>): Response {
@@ -244,6 +285,7 @@ export const HTTP = {
 	METHOD_NOT_ALLOWED: 405,
 	CONFLICT: 409,
 	GONE: 410,
+	UNSUPPORTED_MEDIA_TYPE: 415,
 	UNPROCESSABLE_ENTITY: 422,
 	TOO_MANY_REQUESTS: 429,
 	INTERNAL_SERVER_ERROR: 500,
@@ -259,7 +301,10 @@ export type HTTPStatus = (typeof HTTP)[keyof typeof HTTP];
  * Handler-result helper mirroring the old `execTryCatch` semantics:
  * - `fn.length === 1` → runs inside the D1 transaction shim (executeTransaction);
  * - string result → `{ message }`; other results → `{ data }`;
- * - throws → 500 `{ error }` (logs the original error).
+ * - throws → `APIServer.errorResponse`: an `APIError` keeps its status and
+ *   message; anything else is logged and answered with a 500 carrying
+ *   `errorMessage` (the route's Greek "Σφάλμα κατά …") or the generic
+ *   `SERVER_ERROR_MESSAGE` — never the raw error text.
  */
 export async function handlerResult<T>(fn: ((t: Transaction) => Promise<T | string>) | (() => Promise<T | string>), errorMessage?: string): Promise<Response> {
 	try {
@@ -272,8 +317,7 @@ export async function handlerResult<T>(fn: ((t: Transaction) => Promise<T | stri
 		}
 		if (typeof response === "string") return APIServer.jsonMessage(response);
 		return APIServer.jsonData(response);
-	} catch (error: any) {
-		console.log(error);
-		return APIServer.jsonError((errorMessage ? errorMessage + " " : "") + (error instanceof Error ? error.message : error), HTTP.INTERNAL_SERVER_ERROR);
+	} catch (error) {
+		return APIServer.errorResponse(error, errorMessage ?? SERVER_ERROR_MESSAGE);
 	}
 }
