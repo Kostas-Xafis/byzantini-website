@@ -1,12 +1,15 @@
 import { expect } from "bun:test";
 import { parse, type BaseSchema } from "valibot";
-import { Env } from "../lib/env/env";
+import { getEnv } from "../lib/env/env";
 import { APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../lib/routes/index.client";
 import { objToFormData } from "../lib/utilities/forms";
 import { convertToUrlFromArgs } from "../lib/utilities/url";
 import { assertOwnProp } from "../lib/utils.server";
+import type { TestEnvTypes } from "../types/env";
 
-const { VITE_URL = "http://localhost:4321/" } = Env.testEnv;
+/** `getEnv()` under `bun test`: `process.env` with tests/.env.test loaded (no runtime env outside workerd). */
+export const testEnv = getEnv() as TestEnvTypes;
+const { VITE_URL = "http://localhost:4321/" } = testEnv;
 let session_id = "";
 let collectingId = false;
 async function setSessionId() {
@@ -16,7 +19,7 @@ async function setSessionId() {
 	if (session_id !== "") return;
 	collectingId = true;
 	try {
-		const { TEST_EMAIL, TEST_PASSWORD } = Env.env;
+		const { TEST_EMAIL, TEST_PASSWORD } = testEnv;
 		if (TEST_EMAIL == null || TEST_PASSWORD == null) throw new Error("TEST_MAIL and TEST_PASSWORD must be set in the environment");
 		const response = await useTestAPI(
 			"Authentication.userLogin",

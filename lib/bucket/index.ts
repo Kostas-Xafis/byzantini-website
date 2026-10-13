@@ -1,6 +1,4 @@
-import type { R2Bucket } from "@cloudflare/workers-types";
-import type { APIContext } from "astro";
-import { MIMETypeMap } from "../utils.server";
+import type { R2Bucket, R2Object } from "@cloudflare/workers-types";
 import { runtimeEnv } from "@env/runtime";
 
 /**
@@ -15,40 +13,59 @@ import { runtimeEnv } from "@env/runtime";
  *
  * The retired dev HTTP store (`bun run bucket:serve`, scripts/bucketServer.ts)
  * is gone: the binding exists in dev exactly like D1's does.
+ *
+ * Every method is context-free: the binding comes from the runtime env, so
+ * callers pass only keys and data.
  */
 
 export class Bucket {
-	static getS3Bucket(_ctx: APIContext): R2Bucket {
-		return runtimeEnv?.S3_BUCKET as any as R2Bucket;
+	/** R2 binding accessor (throws outside the Workers runtime or when wrangler.jsonc lacks the binding). */
+	static getS3Bucket(): R2Bucket {
+		const bucket = runtimeEnv?.S3_BUCKET as R2Bucket | undefined;
+		if (!bucket) throw new Error("R2 binding 'S3_BUCKET' is not available");
+		return bucket;
 	}
 
-	static async list(context: APIContext) {
-		const list = await Bucket.getS3Bucket(context).list();
-		return list.objects.map(({ key }) => key);
+	/** Every key in the bucket. R2 returns at most 1000 keys per call, so this follows the cursor until the listing ends. */
+	static async list() {
+		const S3 = Bucket.getS3Bucket();
+		const keys: string[] = [];
+		let cursor: string | undefined;
+		do {
+			const page = await S3.list({ cursor });
+			for (const { key } of page.objects) keys.push(key);
+			cursor = page.truncated ? page.cursor : undefined;
+		} while (cursor);
+		return keys;
 	}
 
-	static get(context: APIContext, filename: string) {
-		return Bucket.getS3Bucket(context).get(filename);
+	static get(filename: string) {
+		return Bucket.getS3Bucket().get(filename);
 	}
 
-	static put(context: APIContext, file: ArrayBuffer | string, filename: string, filetype: string) {
-		const S3 = Bucket.getS3Bucket(context);
-		return S3.put(filename, file, { httpMetadata: { contentType: filetype } });
+	static put(file: ArrayBuffer | string, filename: string, filetype: string) {
+		return Bucket.getS3Bucket().put(filename, file, { httpMetadata: { contentType: filetype } });
 	}
 
-	static delete(context: APIContext, filename: string) {
-		return Bucket.getS3Bucket(context).delete(filename);
+	static delete(filename: string) {
+		return Bucket.getS3Bucket().delete(filename);
 	}
 
-	static async move(context: APIContext, srcFile: string, destFile: string) {
-		const fileType = srcFile.split(".").at(-1);
-		if (!fileType) throw Error("Invalid filetype");
-		const MIMEType = MIMETypeMap[fileType] || "application/octet-stream";
+	/**
+	 * Renames `srcFile` to `destFile`: writes the copy first and deletes the source only once the copy is stored, so a
+	 * failed write never loses the file. The copy keeps the source's `httpMetadata` (content type as uploaded, caching)
+	 * and `customMetadata`. Resolves to the new object, or `null` when the source does not exist; moving a key onto
+	 * itself is a no-op (copy-then-delete would delete the only copy).
+	 */
+	static async move(srcFile: string, destFile: string): Promise<R2Object | null> {
+		const S3 = Bucket.getS3Bucket();
+		if (srcFile === destFile) return S3.head(srcFile);
 
-		const S3 = Bucket.getS3Bucket(context);
 		const file = await S3.get(srcFile);
 		if (!file) return null;
 
-		return Promise.all([S3.put(destFile, await file.arrayBuffer(), { httpMetadata: { contentType: MIMEType } }), S3.delete(srcFile)]);
+		const moved = await S3.put(destFile, await file.arrayBuffer(), { httpMetadata: file.httpMetadata, customMetadata: file.customMetadata });
+		await S3.delete(srcFile);
+		return moved;
 	}
 }

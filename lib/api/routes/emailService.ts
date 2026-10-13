@@ -13,13 +13,12 @@
  * same message as the old guard) and the worker's response is intentionally
  * not inspected (same semantics as the old `fetch` call).
  *
- * Token source: the merged `Env.env` (dev: `.env`; production: the CF secret,
- * which wins in the merge) with the raw runtime env (`ctx.env`) as fallback —
- * the binding itself always comes from `env` (service bindings exist only in
- * the workerd runtime env).
+ * Token source: `getEnv()` (dev: `.env`; production: the CF secret, which wins
+ * in the merge). The binding itself always comes from `env` (service bindings
+ * exist only in the workerd runtime env).
  */
 
-import { Env } from "@env/env";
+import { getEnv } from "@env/env";
 
 export interface AutomatedEmailPayload {
 	to: string;
@@ -30,7 +29,7 @@ export interface AutomatedEmailPayload {
 
 export function sendAutomatedEmail(env: Record<string, any> | undefined, payload: AutomatedEmailPayload): Promise<Response> {
 	const service = (env ?? {})["EMAIL_SERVICE"] as Fetcher | undefined;
-	const authToken = (Env.env.AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN ?? (env ?? {})["AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN"]) as string | undefined;
+	const authToken = getEnv().AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN;
 	if (!service || !authToken) throw new Error("Unauthorized access to the email service");
 	return service.fetch("https://email-service.internal/", {
 		method: "POST",

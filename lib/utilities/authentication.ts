@@ -1,5 +1,5 @@
 import type { SysUsers } from "@_types/entities";
-import { Env } from "@env/env";
+import { getEnv } from "@env/env";
 import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import type { APIContext } from "astro";
@@ -20,7 +20,7 @@ async function sha256Hex(input: string): Promise<string> {
 export async function generateShaKey(key: string, salt?: string) {
 	salt = salt || R.hex();
 	// Matches the old `createHash("sha256")` → update(key + SECRET) → update(salt) chain.
-	return (await sha256Hex(key + Env.env.SECRET + salt)) + ":" + salt;
+	return (await sha256Hex(key + getEnv().SECRET + salt)) + ":" + salt;
 }
 
 // This class is used to authenticate a user by his session id

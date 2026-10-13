@@ -1,4 +1,3 @@
-import type { APIContext } from "astro";
 import { z } from "astro/zod";
 import { Bucket } from "@lib/bucket";
 import { sqliteGenerateBackup } from "./schema";
@@ -72,7 +71,7 @@ export const settingsBackupRoutes = {
 		[authenticateMiddleware],
 		({ request }) =>
 			handlerResult(async () => {
-				const files = await Bucket.list(request as unknown as APIContext);
+				const files = await Bucket.list();
 				return { files };
 			}, "Σφάλμα κατά την λήψη λίστας αρχείων bucket"),
 	),
@@ -87,7 +86,7 @@ export const settingsBackupRoutes = {
 				let file: Awaited<ReturnType<typeof Bucket.get>> | null = null;
 				let key = rawKey;
 				for (const candidate of keyCandidates) {
-					file = await Bucket.get(request as unknown as APIContext, candidate);
+					file = await Bucket.get(candidate);
 					if (file) {
 						key = candidate;
 						break;
