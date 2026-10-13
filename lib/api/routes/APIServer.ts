@@ -2,12 +2,12 @@ import { z, treeifyError } from "astro/zod";
 import { runtimeEnv } from "@env/runtime";
 import type { Transaction } from "@lib/db";
 import { ServerCookies } from "./cookies";
-import { APIClient, type APIClientOptions, type HTTPMethod, type RouteParams } from "./APIClient";
+import { APIRoute, type APIRouteOptions, type HTTPMethod, type RouteParams } from "./APIRoute";
 
 /**
  * Server-side typed API route (ported from Isokratis, adapted):
  *
- * - handler + middleware on top of APIClient;
+ * - handler + middleware on top of APIRoute (the route contract + registry);
  * - Zod request validation (JSON or multipart-with-coercion);
  * - typed JSON responses with proper HTTP statuses;
  * - cookies passed as a ServerCookies instance and applied automatically;
@@ -46,20 +46,20 @@ export type MiddlewareFunction = ({
 	body?: unknown;
 }) => void | Response | Promise<void | Response>;
 
-/** A server-only API route that adds a typed handler + middleware to APIClient. */
+/** A server-only API route that adds a typed handler + middleware to APIRoute. */
 export class APIServer<
 	M extends HTTPMethod = HTTPMethod,
 	P extends string = string,
 	O extends z.ZodTypeAny | undefined = undefined,
 	R extends z.ZodTypeAny | undefined = undefined,
-> extends APIClient<M, P, O, R> {
+> extends APIRoute<M, P, O, R> {
 	readonly handler: Handler<P, O>;
 	readonly middleware: MiddlewareFunction[] = [];
 
-	constructor(route: APIClientOptions<M, P, O, R>, handler?: Handler<P, O>);
-	constructor(route: APIClientOptions<M, P, O, R>, middleware: MiddlewareFunction[], handler: Handler<P, O>);
+	constructor(route: APIRouteOptions<M, P, O, R>, handler?: Handler<P, O>);
+	constructor(route: APIRouteOptions<M, P, O, R>, middleware: MiddlewareFunction[], handler: Handler<P, O>);
 	constructor(
-		route: APIClientOptions<M, P, O, R>,
+		route: APIRouteOptions<M, P, O, R>,
 		middlewareOrHandler?: MiddlewareFunction[] | Handler<P, O>,
 		handler?: Handler<P, O>,
 	) {
