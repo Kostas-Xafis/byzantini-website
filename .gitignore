@@ -49,7 +49,6 @@ dist/
 .codex/
 .aider*
 .continue/
-/services
 /contacts/*.vcf
 worker-*.d.ts
 
