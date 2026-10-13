@@ -1,7 +1,10 @@
 import { customEvent } from "@_types/custom-events";
 import type { Instruments, Registrations } from "@_types/entities";
-import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
+import { APIRequestError, validationMessages } from "@hooks/apiCall";
+import type { APIResourceStore } from "@hooks/createAPIResource.solid";
+import { useAPIClient, type APIClient } from "@hooks/useAPIClient.solid";
 import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
+import { API } from "@routes/index.client";
 import { AnimTimeline } from "@utilities/dom";
 import { ExtendedFormData } from "@utilities/forms";
 import { sleep } from "@utilities/sleep";
@@ -165,7 +168,7 @@ const genericInputs: Record<
 	},
 };
 
-const inputsByMusicType = (musicType: MusicType, store: APIStore, regData: Registrations): InputProps[] => {
+const inputsByMusicType = (musicType: MusicType, store: APIResourceStore, regData: Registrations): InputProps[] => {
 	const musicToIdx = {
 		[MusicType.Byzantine]: 0,
 		[MusicType.Traditional]: 1,
@@ -184,8 +187,8 @@ const inputsByMusicType = (musicType: MusicType, store: APIStore, regData: Regis
 		const tcs = store[API.Teachers.getClasses];
 		const tis = store[API.Teachers.getInstruments];
 		const teachers = (store[API.Teachers.getPublic] || [])
-			// Filter By Music type — the store may hold a failed-fetch error (or
-			// undefined) instead of an array; never let `.find` throw on a UI page.
+			// Filter By Music type — the store slot stays undefined until (or unless)
+			// the fetch succeeds; never let `.find` throw on a UI page.
 			.filter((t) => {
 				if (!Array.isArray(tcs)) return false;
 				return tcs.find((tc) => {
@@ -296,7 +299,7 @@ function musicTypeFromURL(): MusicType {
 	return MusicType.None;
 }
 
-async function loadRegistrationId(apiHook: ReturnType<typeof useAPI>) {
+async function loadRegistrationId(apiHook: APIClient) {
 	let urlParams = new URLSearchParams(window.location.search);
 	if (urlParams.has("regid")) {
 		const reg_url = urlParams.get("regid") as string;
@@ -304,7 +307,7 @@ async function loadRegistrationId(apiHook: ReturnType<typeof useAPI>) {
 			const res = await apiHook(API.Pupils.getByReregistrationUrl, {
 				UrlArgs: { url: reg_url },
 			});
-			if (!res.data) return;
+			if (!("data" in res) || !res.data) return;
 			// The pupil's permanent registration_url resolves to the pupil plus
 			// their history. The form edits a flat row, so merge the identity
 			// fields with the most recent enrollment.
@@ -326,19 +329,20 @@ async function loadRegistrationId(apiHook: ReturnType<typeof useAPI>) {
 }
 
 /**
- * Turns a failed request into a message for the family filling the form:
- * invalid fields (zod), a rejected request (4xx), a server failure (5xx / non-JSON) or no connection.
+ * Turns a failed request into a message for the family filling the form: invalid fields (the server's
+ * per-field validation messages), a rejected request (4xx), a server failure (5xx / a response that is
+ * not the API's JSON) or no connection (fetch itself failed — not an APIRequestError).
  */
 function describeError(err: unknown): string {
-	const e = err as { issues?: { message: string }[]; status?: number; message?: string; name?: string };
-	if (Array.isArray(e?.issues) && e.issues.length) return [...new Set(e.issues.map((i) => i.message))].join(" · ");
-	if (typeof e?.status === "number" && e.status < 500) {
-		return e.message && e.message !== "Invalid request body" ? e.message : "Ορισμένα στοιχεία δεν είναι έγκυρα. Ελέγξτε τα πεδία της φόρμας.";
+	if (!(err instanceof APIRequestError)) {
+		return "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο και δοκιμάστε ξανά.";
 	}
-	if (typeof e?.status === "number" || e?.name === "SyntaxError") {
-		return "Παρουσιάστηκε σφάλμα στον διακομιστή. Δοκιμάστε ξανά σε λίγο ή επικοινωνήστε με τη Γραμματεία της Σχολής.";
+	if (err.envelope && err.status < 500) {
+		const issues = validationMessages(err.details);
+		if (issues.length) return issues.join(" · ");
+		return err.message && err.message !== "Invalid request body" ? err.message : "Ορισμένα στοιχεία δεν είναι έγκυρα. Ελέγξτε τα πεδία της φόρμας.";
 	}
-	return "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο και δοκιμάστε ξανά.";
+	return "Παρουσιάστηκε σφάλμα στον διακομιστή. Δοκιμάστε ξανά σε λίγο ή επικοινωνήστε με τη Γραμματεία της Σχολής.";
 }
 
 /** Required inputs the user left empty (a select's empty option has the value "undefined"). */
@@ -348,9 +352,9 @@ function emptyRequiredFields(form: HTMLFormElement) {
 }
 
 export function RegistrationForm() {
-	const [store, setStore] = createStore<APIStore>({});
+	const [store, setStore] = createStore<APIResourceStore>({});
 	const [registrationData, setRegistrationData] = createStore<Registrations>({} as any);
-	const apiHook = useAPI(setStore);
+	const apiHook = useAPIClient(setStore);
 	const [musicType, setMusicType] = createSignal<MusicType>(musicTypeFromURL());
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	/**
@@ -370,11 +374,14 @@ export function RegistrationForm() {
 	// Set once the pupil is found by ΑΜ + ΑΜΚΑ: those two are then locked so the identification cannot be undone by editing them.
 	const [identified, setIdentified] = createSignal(false);
 
-	useHydrate(() => {
-		apiHook(API.Teachers.getPublic);
-		apiHook(API.Teachers.getClasses);
-		apiHook(API.Teachers.getInstruments);
-		apiHook(API.Instruments.get);
+	// The lists the form is built from. A failed load is kept so that submitting can explain it instead of doing nothing.
+	const [loadError, setLoadError] = createSignal<unknown>();
+	onMount(() => {
+		const load = (request: Promise<unknown>) => request.catch((err) => setLoadError(() => err));
+		load(apiHook(API.Teachers.getPublic));
+		load(apiHook(API.Teachers.getClasses));
+		load(apiHook(API.Teachers.getInstruments));
+		load(apiHook(API.Instruments.get));
 	});
 
 	// Trigger the fade-in effect whenever the music type changes
@@ -425,7 +432,7 @@ export function RegistrationForm() {
 		setLookupBusy(true);
 		try {
 			const res = await apiHook(API.Pupils.getByAm, { RequestObject: { am, amka } });
-			if (!res.data) {
+			if (!("data" in res) || !res.data) {
 				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
 				return;
 			}
@@ -447,7 +454,7 @@ export function RegistrationForm() {
 			setStep("form");
 		} catch (err) {
 			// Only a 404 means "no such pupil" — anything else must not push the family onto the new-student path.
-			if ((err as { status?: number })?.status === 404) {
+			if (err instanceof APIRequestError && err.status === 404) {
 				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
 			} else {
 				setLookupError(describeError(err));
@@ -487,7 +494,14 @@ export function RegistrationForm() {
 	const onSubmit = async function (e: Event) {
 		e.preventDefault();
 		const teachers = store[API.Teachers.getPublic];
-		if (!teachers) return;
+		if (!teachers) {
+			// Still loading — or the lists failed to load, which the family must be told about.
+			if (loadError()) {
+				setSubmitError(describeError(loadError()));
+				shakeForm();
+			}
+			return;
+		}
 
 		const form = e.target as HTMLFormElement;
 		setSubmitError("");
@@ -545,7 +559,7 @@ export function RegistrationForm() {
 			}
 			setSpinner(true);
 			const res = await apiHook(API.Pupils.post, { RequestObject: { ...data, class_id: data.class_id as 0 | 1 | 2 } });
-			if (res.data) {
+			if ("data" in res && res.data) {
 				PopupShow();
 				setRegistrationData((prevReg) => {
 					return {
@@ -556,8 +570,8 @@ export function RegistrationForm() {
 				});
 			}
 		} catch (err) {
-			// Our own checks throw plain Errors with a Greek message; request failures get described.
-			const isLocalCheck = err instanceof Error && err.name === "Error" && !("status" in err) && !("issues" in err);
+			// Our own checks throw plain Errors with a Greek message; request failures (APIRequestError, fetch's TypeError) get described.
+			const isLocalCheck = err instanceof Error && err.name === "Error";
 			setSubmitError(isLocalCheck ? err.message : describeError(err));
 			shakeForm();
 		} finally {

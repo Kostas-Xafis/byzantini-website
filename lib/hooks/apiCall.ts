@@ -1,83 +1,32 @@
+import { buildAPIRequest, readAPIResponse, type APICallResult } from "@lib/api/transport";
 import { APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
-import { objToFormData } from "@utilities/forms";
-import { convertToUrlFromArgs, getOriginFromContext } from "@utilities/url";
+import { getOriginFromContext } from "@utilities/url";
+
+export { APIRequestError, validationMessages, type APICallResult, type ValidationTree } from "@lib/api/transport";
 
 /**
- * Type-level assertion that `req` carries the `RequestObject`/`UrlArgs` properties.
+ * Framework-free, typed browser transport for the internal API — the one client transport.
  *
- * The `APIArgs` machinery removes nullish members from the arg object, so the
- * properties are not statically guaranteed. This is duplicated from
- * `lib/utils.server.ts` on purpose: importing that module here would pull
- * server-side code (env, db) into the client bundle.
- */
-function assertRequestArgs<T extends APIEndpointNames>(req: APIArgs[T]): asserts req is APIArgs[T] & Record<"RequestObject" | "UrlArgs", unknown> {}
-
-/**
- * Successful transport result, discriminated by the route contract.
- * Message endpoints (no data payload) resolve to `{ message }`.
- */
-export type APICallResult<T> = { data: T } | { message: string };
-
-/**
- * Framework-free, typed transport for the internal API.
- *
- * This is the fetch half of the legacy `useAPI` hook (`lib/hooks/useAPI.solid.ts`),
- * extracted with all state management removed: it does not write to any store,
- * does not cache, and does not require a reactive scope. Call it from anywhere
- * on the client (Solid components, plain event handlers, scripts).
+ * It does not write to any store, does not cache, and does not require a reactive scope: call it from
+ * anywhere on the client (Solid components, plain event handlers, Astro `<script>`s). For a cached or
+ * reactive variant see `useAPIClient` / `createAPIResource`.
  *
  * Behavior:
- * - Converts the payload to `FormData` for `multipart` endpoints.
- * - Resolves `{ data }` or `{ message }` according to the server envelope
- *   (`{ data } | { message } | { error }`, see `APIServer.handle`).
- * - Throws on network errors and on server `error` responses; errors are the
- *   caller's responsibility (e.g. `createAPIResource` surfaces them via
- *   `resource.error`).
+ * - Converts the payload to `FormData` for `multipart` endpoints and never mutates the caller's request.
+ * - Resolves `{ data }` or `{ message }` according to the server envelope (see `APIServer.handle`).
+ * - Throws `APIRequestError` (`status`, and `details` for validation failures) when the server answers
+ *   with a non-2xx status or an `{ error }` envelope; a network failure rejects with fetch's own error
+ *   (no `status`), so the two stay distinguishable.
  *
- * NOTE: request validation is intentionally server-side only. The Zod contracts
- * live on the `APIServer` instances (`route.schema`) and the client registry
- * (`APIEndpoints`) only carries metadata + opaque schema references — there is
- * no client-side validator to run here.
+ * Request validation is server-side only (the Zod contracts live on the `APIServer` instances):
+ * invalid input comes back as a 400 whose `details` maps fields to messages.
  *
  * @param endpoint A typed endpoint key (e.g. `API.Teachers.get`).
  * @param req      Optional `{ RequestObject?, UrlArgs? }` payload; omit for plain GETs.
  */
 export const apiCall = async <T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T]): Promise<APICallResult<APIResponse[T]>> => {
 	// Client-only usage, so the origin always comes from the window location.
-	const origin = getOriginFromContext();
-	const Route = APIEndpoints[endpoint];
-
-	let fetcher: Promise<Response>;
-	if (req === undefined) {
-		fetcher = fetch(`${origin}/api${Route.path}`, { method: Route.method });
-	} else {
-		assertRequestArgs(req);
-
-		// Work on a local copy so the caller's request object is never mutated.
-		let RequestObject = req.RequestObject;
-		if (Route.multipart && RequestObject) {
-			RequestObject = objToFormData(RequestObject as any) as any;
-		}
-
-		const IsBlob = RequestObject instanceof Blob;
-		const body = (IsBlob || Route.multipart ? RequestObject : (RequestObject && JSON.stringify(RequestObject)) || null) as any;
-		fetcher = fetch(`${origin}/api${convertToUrlFromArgs(Route.path, req.UrlArgs)}`, {
-			method: Route.method,
-			headers: Route.multipart
-				? {}
-				: {
-						"Content-Type": (IsBlob && (RequestObject as Blob).type) || "application/json",
-					},
-			body,
-		});
-	}
-
-	const response = (await (await fetcher).json()) as { data?: APIResponse[T]; message?: string; error?: unknown };
-	if (response && typeof response === "object" && "error" in response) {
-		throw new Error(typeof response.error === "string" ? response.error : JSON.stringify(response.error));
-	}
-	if (response && typeof response === "object" && "message" in response) {
-		return { message: response.message as string };
-	}
-	return { data: (response as { data: APIResponse[T] }).data };
+	const { path, init } = buildAPIRequest(APIEndpoints[endpoint], req);
+	const response = await fetch(`${getOriginFromContext()}/api${path}`, init);
+	return readAPIResponse<APIResponse[T]>(response);
 };
