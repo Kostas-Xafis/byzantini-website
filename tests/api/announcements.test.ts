@@ -5,7 +5,7 @@ import { array, number, object } from "valibot";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { MIMETypeMap } from "@lib/utils.server.ts";
-import { v_AnnouncementImages, v_Announcements } from "@_types/entities";
+import { v_AnnouncementImages, v_Announcements } from "../entitySchemas";
 import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers.ts";
 
 function announcementsTest() {

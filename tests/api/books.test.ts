@@ -1,4 +1,4 @@
-import { v_Books } from "@_types/entities";
+import { v_Books } from "../entitySchemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { test } from "bun:test";

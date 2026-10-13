@@ -1,7 +1,8 @@
 import { array, length, number, object, pick } from "valibot";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { type Payoffs, v_Payoffs } from "@_types/entities";
+import type { Payoffs } from "@_types/entities";
+import { v_Payoffs } from "../entitySchemas";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 import { test } from "bun:test";
 

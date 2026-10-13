@@ -43,8 +43,7 @@
 		"astro-seo": "^1.1.0",
 		"fast-xml-parser": "^4.5.4",
 		"solid-js": "^1.9.13",
-		"tailwindcss": "^4.3.3",
-		"valibot": "^0.13.1"
+		"tailwindcss": "^4.3.3"
 	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.10",
@@ -58,6 +57,7 @@
 		"print-js": "^1.6.0",
 		"ts-morph": "^24.0.0",
 		"typescript": "6.0.3",
+		"valibot": "^0.13.1",
 		"wrangler": "^4.127.1",
 		"xlsx": "^0.18.5"
 	}

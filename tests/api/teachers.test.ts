@@ -1,4 +1,4 @@
-import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers } from "@_types/entities";
+import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers } from "../entitySchemas";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { expect, test } from "bun:test";

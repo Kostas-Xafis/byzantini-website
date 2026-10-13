@@ -1,4 +1,5 @@
-import { v_SysUsers, type SysUsers } from "@_types/entities";
+import type { SysUsers } from "@_types/entities";
+import { v_SysUsers } from "../entitySchemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { expect, test } from "bun:test";
