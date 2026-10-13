@@ -2,6 +2,7 @@ import { z } from "astro/zod";
 import type { Books, Payments, Wholesalers } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_Wholesalers } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -30,7 +31,7 @@ export const wholesalersRoutes = {
 			handlerResult(async () => {
 				const [id] = body as number[];
 				const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", [id]);
-				if (!wholesaler) throw Error("Wholesaler not found");
+				if (!wholesaler) throw APIError.notFound("Ο χονδρέμπορος δεν βρέθηκε");
 				return wholesaler;
 			}),
 	),
@@ -52,7 +53,7 @@ export const wholesalersRoutes = {
 			handlerResult(async (T) => {
 				const wholesaler_id = body as number[];
 				const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;
-				if (!wholesaler) throw Error("Wholesaler not found");
+				if (!wholesaler) throw APIError.notFound("Ο χονδρέμπορος δεν βρέθηκε");
 				await T.executeQuery(`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`, wholesaler_id);
 				await T.executeQuery("DELETE FROM school_payoffs WHERE wholesaler_id=?", wholesaler_id);
 				const bookList = await T.executeQuery<Books>("SELECT * FROM books WHERE wholesaler_id=?", wholesaler_id);

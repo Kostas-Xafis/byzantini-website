@@ -2,6 +2,7 @@ import { z } from "astro/zod";
 import type { Books, Payments } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_Books } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -30,7 +31,7 @@ export const booksRoutes = {
 			handlerResult(async () => {
 				const [id] = body as number[];
 				const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", [id]);
-				if (!book) throw Error("Book not found");
+				if (!book) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
 				return book;
 			}, "Σφάλμα κατά την ανάκτηση του βιβλίου"),
 	),
@@ -58,7 +59,8 @@ export const booksRoutes = {
 			handlerResult(async (T) => {
 				const reqBook = body;
 				const [book] = await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [reqBook.id]);
-				if (book.quantity > reqBook.quantity) throw Error("Cannot reduce quantity");
+				if (!book) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
+				if (book.quantity > reqBook.quantity) throw APIError.conflict("Η ποσότητα του βιβλίου δεν μπορεί να μειωθεί");
 				const newAddedAmount = book.wholesale_price * (reqBook.quantity - book.quantity);
 				await Promise.all([
 					T.executeQuery(`UPDATE books SET quantity = ? WHERE id = ?`, reqBook),
@@ -76,7 +78,7 @@ export const booksRoutes = {
 			handlerResult(async (T) => {
 				const ids = body as number[];
 				const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids)})`, ids);
-				if (books.length === 0) throw Error("Book not found");
+				if (books.length === 0) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
 
 				if (ids.length === 1) await T.executeQuery(`DELETE FROM books WHERE id = ?`, ids);
 				else await T.executeQuery(`DELETE FROM books WHERE id IN (${questionMarks(ids)})`, ids);

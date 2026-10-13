@@ -4,7 +4,8 @@ import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } f
 import { Bucket } from "@lib/bucket";
 import { ImageMIMEType, executeQuery } from "@lib/utils.server";
 import { z_BlobUpload, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
-import { APIServer, handlerResult } from "./APIServer";
+import { APIError } from "./APIError";
+import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -60,7 +61,7 @@ export const teachersRoutes = {
 	getById: new APIServer({ method: "POST", path: "/teachers/id", schema: z_IdArray, responseSchema: z_Teachers }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async () => {
 			const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", body as number[]);
-			if (!teacher) throw Error("Teacher not found");
+			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 			return teacher;
 		}, "Δάσκαλος δεν βρέθηκε"),
 	),
@@ -69,7 +70,7 @@ export const teachersRoutes = {
 		({ params }) =>
 			handlerResult(() => {
 				const class_id = ["byz", "par", "eur"].findIndex((v) => v === params.class_type);
-				if (class_id === -1) throw Error("Invalid class type");
+				if (class_id === -1) throw APIError.badRequest("Μη έγκυρος τύπος μουσικής");
 				return executeQuery<PublicTeacher>(
 					`SELECT ${publicTeacherColumns.replace(/(\w+)/g, "t.$1")} FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC`,
 					[class_id],
@@ -173,7 +174,7 @@ export const teachersRoutes = {
 			handlerResult(async () => {
 				const id = Number(params.id);
 				const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
-				if (!teacher) throw Error("Teacher not found");
+				if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
 				const blob = body as Blob;
 				const filetype = blob.type;
@@ -194,14 +195,14 @@ export const teachersRoutes = {
 					await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 					return "Image uploaded successfully";
 				}
-				throw Error("Μη υποστηριζόμενος τύπος αρχείου");
+				throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
 			}, "Σφάλμα κατά την αποθήκευση του αρχείου"),
 	),
 	fileRename: new APIServer({ method: "PUT", path: "/teachers/file/rename/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
 		handlerResult(async (T) => {
 			const id = Number(params.id);
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
-			if (!teacher) throw Error("Teacher not found");
+			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
 			const oldNameCV = teacher.cv && teacher.cv.split(".")[0];
 			const oldNameImg = teacher.picture && teacher.picture.split(".")[0];
@@ -223,7 +224,7 @@ export const teachersRoutes = {
 	fileDelete: new APIServer({ method: "PUT", path: "/teachers/file", schema: fileDeleteReq }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
-			if (!teacher) throw Error("Teacher not found");
+			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 			if (body.type === "cv") {
 				if (teacher.cv) await Bucket.delete(request as unknown as APIContext, bucketCVPrefix + teacher.cv);
 				await T.executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
@@ -233,7 +234,7 @@ export const teachersRoutes = {
 				await T.executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
 				return "Image deleted successfully";
 			}
-			throw Error("Μη υποστηριζόμενος τύπος αρχείου");
+			throw APIError.badRequest("Μη υποστηριζόμενος τύπος αρχείου");
 		}, "Σφάλμα κατά την διαγραφή του αρχείου"),
 	),
 	delete: new APIServer({ method: "DELETE", path: "/teachers", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>

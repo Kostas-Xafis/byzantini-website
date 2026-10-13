@@ -8,6 +8,7 @@ import { asyncQueue } from "@utilities/AsyncQueue";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -164,7 +165,7 @@ export const announcementsRoutes = {
 		handlerResult(async () => {
 			const [id] = body as number[];
 			const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", [id]);
-			if (!announcement) throw Error("Announcement not found");
+			if (!announcement) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
 			return announcement;
 		}),
 	),
@@ -175,7 +176,7 @@ export const announcementsRoutes = {
 			handlerResult(async () => {
 				const id = Number(params.id);
 				const images = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
-				if (!images || !images.length) throw Error("Images not found");
+				if (!images || !images.length) throw APIError.notFound("Οι εικόνες δεν βρέθηκαν");
 				return images;
 			}),
 	),
@@ -187,10 +188,10 @@ export const announcementsRoutes = {
 			const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE REPLACE(title, ',', '') = ? LIMIT 1", [
 				safeDecode(params.title),
 			]);
+			if (!announcement) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
 			const images = await T.executeQuery<AnnouncementImages>("SELECT name, is_main FROM announcement_images WHERE announcement_id = ?", [
 				announcement.id,
 			]);
-			if (!announcement) throw Error("Announcement not found");
 			await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 			return { ...announcement, images };
 		}, "Ανακοίνωση δεν βρέθηκε"),
@@ -209,7 +210,9 @@ export const announcementsRoutes = {
 	),
 	update: new APIServer({ method: "PUT", path: "/announcements", schema: updateReq }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
-			const [{ title: oldTitle }] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
+			const [existing] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
+			if (!existing) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
+			const oldTitle = existing.title;
 			body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 			body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
 			await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
@@ -221,7 +224,7 @@ export const announcementsRoutes = {
 		handlerResult(async (T) => {
 			const ids = body as number[];
 			const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
-			if (!announcements || !announcements.length) throw Error("announcements not found");
+			if (!announcements || !announcements.length) throw APIError.notFound("Οι ανακοινώσεις δεν βρέθηκαν");
 			await T.executeQuery(`DELETE FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
 			const images = await T.executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id IN (???)", ids);
 			await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id IN (???)`, ids);
@@ -269,7 +272,7 @@ export const announcementsRoutes = {
 			handlerResult(async () => {
 				const ids = body as number[];
 				const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE id IN (???)`, ids);
-				if (!images || !images.length) throw Error("images not found");
+				if (!images || !images.length) throw APIError.notFound("Οι εικόνες δεν βρέθηκαν");
 				await executeQuery(`DELETE FROM announcement_images WHERE id IN (???)`, ids);
 
 				const { announcement_id } = params;

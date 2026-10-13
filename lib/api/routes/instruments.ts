@@ -2,6 +2,7 @@ import { z } from "astro/zod";
 import type { Instruments } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_Instruments } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -41,7 +42,7 @@ export const instrumentsRoutes = {
 			handlerResult(async () => {
 				const [id] = body as number[];
 				const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", [id]);
-				if (!instrument) throw Error("Instrument not found");
+				if (!instrument) throw APIError.notFound("Το μουσικό όργανο δεν βρέθηκε");
 				return instrument;
 			}),
 	),

@@ -147,11 +147,11 @@ function pupilsTest() {
 		expect(json.data.enrollments[0]!.pupil_id).toBe(pupilId!);
 	});
 
-	test("--pupils-- #9 get fails for an unknown id", async () => {
+	test("--pupils-- #9 get answers 404 for an unknown id", async () => {
 		const res = await useTestAPI("Pupils.get", { UrlArgs: { id: 999999 } });
-		expect(res.status).toBe(500);
+		expect(res.status).toBe(404);
 		const json = await res.json();
-		expect(typeof json.error).toBe("string");
+		expect(json.error).toBe("Ο μαθητής δεν βρέθηκε");
 	});
 
 	test("--pupils-- #10 years / totals report enrollment figures", async () => {

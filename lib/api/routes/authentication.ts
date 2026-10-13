@@ -4,6 +4,7 @@ import { z_LoginCredentials } from "@lib/api/schemas";
 import { createSessionId, forgetSession, generateShaKey, isSessionValid } from "@utilities/authentication";
 import { google } from "@utilities/Google";
 import { decodeIdToken, generateCodeVerifier, generateState, type OAuth2Tokens } from "arctic";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE, SESSION_COOKIE_OPTIONS } from "./cookies";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -135,7 +136,7 @@ export const authenticationRoutes = {
 			handlerResult(async (T) => {
 				const { link } = params;
 				if (!(await findRegisterLink(T, link))) {
-					throw new Error("Invalid Link");
+					throw APIError.gone("Ο σύνδεσμος εγγραφής δεν είναι έγκυρος ή έχει λήξει");
 				}
 
 				const state = generateState();

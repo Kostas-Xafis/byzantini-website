@@ -4,7 +4,8 @@ import type { Locations } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
 import { executeQuery, questionMarks, ImageMIMEType } from "@lib/utils.server";
 import { z_BlobUpload, z_Locations, z_LocationsResponse } from "@lib/api/schemas";
-import { APIServer, handlerResult } from "./APIServer";
+import { APIError } from "./APIError";
+import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -48,7 +49,7 @@ export const locationsRoutes = {
 			handlerResult(async () => {
 				const [id] = body as number[];
 				const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
-				if (!location) throw Error("Location not found");
+				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 				return location;
 			}),
 	),
@@ -88,7 +89,7 @@ export const locationsRoutes = {
 		({ params, body: rawBody, request }) =>
 			handlerResult(async (T) => {
 				const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
-				if (!location) throw Error("Location not found");
+				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 
 				const blob = rawBody as Blob;
 				const filetype = blob.type;
@@ -100,7 +101,7 @@ export const locationsRoutes = {
 					await T.executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [filename, Number(params.id)]);
 					return "Image uploaded successfully";
 				}
-				throw Error("Invalid filetype");
+				throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
 			}, "Σφάλμα κατά το ανέβασμα της εικόνας"),
 	),
 	fileDelete: new APIServer(
@@ -109,7 +110,7 @@ export const locationsRoutes = {
 		({ params, request }) =>
 			handlerResult(async (T) => {
 				const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
-				if (!location) throw Error("Location not found");
+				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 
 				if (location.image) await Bucket.delete(request as unknown as APIContext, bucketPrefix + location.image);
 				await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [Number(params.id)]);

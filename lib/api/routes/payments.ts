@@ -2,6 +2,7 @@ import { z } from "astro/zod";
 import type { Books, Payments } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_Payments } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -35,7 +36,7 @@ export const paymentsRoutes = {
 			handlerResult(async () => {
 				const ids = body as number[];
 				const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
-				if (!payments) throw Error("Payment not found");
+				if (!payments) throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
 				return payments;
 			}),
 	),
@@ -52,12 +53,13 @@ export const paymentsRoutes = {
 			handlerResult(async (T) => {
 				const { book_id, student_name, book_amount } = body;
 
+				if (book_amount <= 0) throw APIError.badRequest("Χρειάζεται τουλάχιστον 1 βιβλίο για να πραγματοποιηθεί η αγορά");
+
 				const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
-				if (!book) throw new Error("Το βιβλίο δεν βρέθηκε");
-				if (book.quantity - book.sold <= 0) throw new Error("Το βιβλίο δεν είναι διαθέσιμο");
-				if (book_amount > book.quantity - book.sold) throw new Error("Δεν υπάρχουν αρκετά βιβλία");
-				if (book_amount <= 0) throw new Error("Χρειάζεται τουλάχιστον 1 βιβλίο για να πραγματοποιηθεί η αγορά");
+				if (!book) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
+				if (book.quantity - book.sold <= 0) throw APIError.conflict("Το βιβλίο δεν είναι διαθέσιμο");
+				if (book_amount > book.quantity - book.sold) throw APIError.conflict("Δεν υπάρχουν αρκετά βιβλία");
 
 				const res = await T.executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
 					book_id,
@@ -82,7 +84,7 @@ export const paymentsRoutes = {
 				//check if payment exists
 				const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
 				if (payment.length === 0) {
-					throw Error("Payment not found");
+					throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
 				}
 				await executeQuery("UPDATE payments SET amount = ? WHERE id = ?", [amount, id]);
 				return "Updated payment successfully";
@@ -96,7 +98,7 @@ export const paymentsRoutes = {
 				const ids = body as number[];
 				//check if payment exists
 				const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
-				if (payments.length === 0) throw Error("Payment not found");
+				if (payments.length === 0) throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
 				await T.executeQuery(
 					`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`,
 					[Date.now(), ...ids],
@@ -114,7 +116,7 @@ export const paymentsRoutes = {
 
 				//check if payment exists
 				const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);
-				if (payments.length === 0) throw Error("Payments not found");
+				if (payments.length === 0) throw APIError.notFound("Οι πληρωμές δεν βρέθηκαν");
 				await T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Deleted payment successfully";
 			}, "Σφάλμα κατά την διαγραφή της πληρωμής"),

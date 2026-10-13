@@ -6,6 +6,7 @@ import { ALL_YEARS, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { sendAutomatedEmail } from "./emailService";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -332,7 +333,7 @@ export const pupilsRoutes = {
 		handlerResult(async () => {
 			const id = Number(params.id);
 			const [pupil] = await executeQuery<Pupils>("SELECT * FROM pupils WHERE id = ?", [id]);
-			if (!pupil) throw Error("Ο μαθητής δεν βρέθηκε");
+			if (!pupil) throw APIError.notFound("Ο μαθητής δεν βρέθηκε");
 			const enrollments = await executeQuery<PupilEnrollments>(
 				`SELECT * FROM pupil_enrollments WHERE pupil_id = ? ORDER BY registration_year DESC, class_id ASC, instrument_id ASC`,
 				[id],
@@ -591,7 +592,7 @@ export const pupilsRoutes = {
 			handlerResult(async () => {
 				const id = Number(params.id);
 				const [row] = await executeQuery<Record<string, unknown>>(`${JOINED_SELECT} WHERE e.id = ?`, [id]);
-				if (!row) throw Error("Η εγγραφή δεν βρέθηκε");
+				if (!row) throw APIError.notFound("Η εγγραφή δεν βρέθηκε");
 				const { enrollment, pupil } = splitJoined(row);
 				return toJoined(enrollment, pupil);
 			}, "Σφάλμα κατά την ανάκτηση της εγγραφής"),

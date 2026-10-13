@@ -3,6 +3,7 @@ import { z } from "astro/zod";
 import { Bucket } from "@lib/bucket";
 import { sqliteGenerateBackup } from "./schema";
 import { APIServer, handlerResult } from "./APIServer";
+import { APIError } from "./APIError";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -96,7 +97,7 @@ export const settingsBackupRoutes = {
 
 				const bytes = await toUint8Array(file);
 				if (!bytes) {
-					throw Error(`Bucket file not found: ${rawKey}`);
+					throw APIError.notFound(`Το αρχείο δεν βρέθηκε: ${rawKey}`);
 				}
 
 				const dataBase64 = bytesToBase64(bytes);
