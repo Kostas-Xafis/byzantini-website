@@ -1,7 +1,7 @@
 ---
 import type { Instruments } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
-import { API, useAPI } from "@hooks/useAPI.astro";
+import { API, useAPI } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { teacherTitleByGender } from "@utilities/text";

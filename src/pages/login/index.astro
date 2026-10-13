@@ -69,7 +69,7 @@ export const prerender = true;
 	</style>
 </SigninLayout>
 <script>
-	import { useAPI } from "@hooks/useAPI.astro";
+	import { apiCall } from "@hooks/apiCall";
 	import { ADMIN_HOME, readRedirectTarget, rememberRedirectTarget } from "@utilities/redirect";
 
 	// The URL the admin was intercepted on (`?redirect_url=`, set by the
@@ -86,8 +86,8 @@ export const prerender = true;
 			email: inputs.email.value,
 			password: inputs.password.value,
 		};
-		const res = await useAPI("Authentication.userLogin", { RequestObject: data });
-		if (res.data && res.data.isValid) {
+		const res = await apiCall("Authentication.userLogin", { RequestObject: data });
+		if ("data" in res && res.data && res.data.isValid) {
 			const { email, avatar_url } = res.data;
 			localStorage.setItem(
 				"sys_user",
@@ -116,8 +116,8 @@ export const prerender = true;
 			// Google returns to /oauth2callback, which never sees this page's query
 			// string — park the requested URL so the callback can restore it.
 			rememberRedirectTarget(redirectTarget);
-			const res = await useAPI("Authentication.getGoogleOAuthState", {});
-			if (res.data && res.data.OAuthUrl) {
+			const res = await apiCall("Authentication.getGoogleOAuthState", {});
+			if ("data" in res && res.data && res.data.OAuthUrl) {
 				window.location.href = res.data.OAuthUrl;
 			}
 		} catch (error) {

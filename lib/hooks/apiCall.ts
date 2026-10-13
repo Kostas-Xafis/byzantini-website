@@ -9,7 +9,8 @@ export { APIRequestError, validationMessages, type APICallResult, type Validatio
  *
  * It does not write to any store, does not cache, and does not require a reactive scope: call it from
  * anywhere on the client (Solid components, plain event handlers, Astro `<script>`s). For a cached or
- * reactive variant see `useAPIClient` / `createAPIResource`.
+ * reactive variant see `useAPIClient` / `createAPIResource`. Server code (Astro frontmatter) uses
+ * `useAPI` from `@hooks/useAPI.server`, which dispatches in-process instead.
  *
  * Behavior:
  * - Converts the payload to `FormData` for `multipart` endpoints and never mutates the caller's request.
@@ -18,8 +19,9 @@ export { APIRequestError, validationMessages, type APICallResult, type Validatio
  *   with a non-2xx status or an `{ error }` envelope; a network failure rejects with fetch's own error
  *   (no `status`), so the two stay distinguishable.
  *
- * Request validation is server-side only (the Zod contracts live on the `APIServer` instances):
- * invalid input comes back as a 400 whose `details` maps fields to messages.
+ * Request validation is server-side only: the browser bundle carries the generated route contract
+ * (`lib/api/contract.ts` — method, path, multipart), never the Zod schemas. Invalid input comes back
+ * as a 400 whose `details` maps fields to messages.
  *
  * @param endpoint A typed endpoint key (e.g. `API.Teachers.get`).
  * @param req      Optional `{ RequestObject?, UrlArgs? }` payload; omit for plain GETs.

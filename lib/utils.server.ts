@@ -8,9 +8,6 @@ export function isProduction() {
 	return MODE === "production" && PROD === true;
 }
 
-// This is a cheat to use whenever I know better than the type checker if an object has a property or not
-export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> {}
-
 export const MIMETypeMap: Record<string, string> = {
 	jpeg: "image/jpeg",
 	png: "image/png",
