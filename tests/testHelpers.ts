@@ -1,10 +1,10 @@
 import { expect } from "bun:test";
 import { parse, type BaseSchema } from "valibot";
 import { getEnv } from "../lib/env/env";
-import { APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../lib/routes/index.client";
+import { getRoute, type APIArgs, type APIEndpointNames, type APIResponse } from "../lib/api/routes";
+import { assertOwnProp } from "../lib/utilities/assert";
 import { objToFormData } from "../lib/utilities/forms";
 import { convertToUrlFromArgs } from "../lib/utilities/url";
-import { assertOwnProp } from "../lib/utils.server";
 import type { TestEnvTypes } from "../types/env";
 
 /** `getEnv()` under `bun test`: `process.env` with tests/.env.test loaded (no runtime env outside workerd). */
@@ -49,7 +49,8 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 		if (getSessionId) {
 			await setSessionId();
 		}
-		const Route = APIEndpoints[endpoint];
+		// The server registry, not the browser contract: requests are validated against the route's Zod schema.
+		const Route = getRoute(endpoint);
 		let fetcher: any = undefined;
 		if (req === undefined) {
 			const url = VITE_URL + "/api" + Route.path;
@@ -57,8 +58,8 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
-			if (Route.validation) {
-				const result = Route.validation.safeParse(req.RequestObject);
+			if (Route.schema) {
+				const result = Route.schema.safeParse(req.RequestObject);
 				if (!result.success) {
 					throw new Error((result.error.issues as any[]).map((i: any) => i.message).join("; ") || "Μη έγκυρο αίτημα");
 				}

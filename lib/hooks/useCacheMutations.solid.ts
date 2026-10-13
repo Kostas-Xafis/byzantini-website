@@ -82,7 +82,7 @@ export function useCacheMutations(args: { setStore: SetStoreFunction<APIResource
 			// Single-id requests go through URL args (`id: [id]` stringifies to
 			// the bare id, same quirk as the legacy hook); bulk requests use the body.
 			const req = (
-				isSingle ? (src.hasUrlParams ? { UrlArgs: { id: ids } } : { RequestObject: ids }) : { RequestObject: ids }
+				isSingle ? (src.path.includes("[") ? { UrlArgs: { id: ids } } : { RequestObject: ids }) : { RequestObject: ids }
 			) as APIArgs[APIEndpointNames];
 
 			apiCall(mut.srcEndpoint, req as any).then((res) => {

@@ -5,10 +5,10 @@ import { executeQuery } from "@lib/utils.server";
 import type { APIContext } from "astro";
 
 /**
- * sha256 hex digest via Web Crypto. `node:crypto` cannot be imported from the
- * shared route registry because Vite externalizes it in the browser (the admin
- * island imports `@routes/index.client` → every route group). Web Crypto gives
- * byte-identical output and is available in browsers, workerd and Node ≥ 16.
+ * sha256 hex digest via Web Crypto — byte-identical to the old `node:crypto`
+ * chain, and available everywhere this server-only module runs (workerd, Bun).
+ * (It was introduced while the route registry still leaked into the browser
+ * bundle; the browser now only sees the generated contract `lib/api/contract.ts`.)
  */
 async function sha256Hex(input: string): Promise<string> {
 	const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));

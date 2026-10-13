@@ -29,7 +29,7 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 	</div>
 </SigninLayout>
 <script>
-	import { useAPI } from "@hooks/useAPI.astro";
+	import { apiCall } from "@hooks/apiCall";
 
 	let tid: number | null = null;
 	document.getElementById("subForm")?.addEventListener("submit", async (e) => {
@@ -44,10 +44,10 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 			if (data.email === "") {
 				throw new Error("Το πεδίο διεύθυνσης email είναι υποχρεωτικό.");
 			}
-			const res = await useAPI("EmailSubscriptions.emailSubscribe", {
+			const res = await apiCall("EmailSubscriptions.emailSubscribe", {
 				RequestObject: data,
 			});
-			if (res.data && res.data.subscribed) {
+			if ("data" in res && res.data && res.data.subscribed) {
 				document.getElementById("popup")?.dispatchEvent(new CustomEvent("show"));
 			}
 		} catch (err) {

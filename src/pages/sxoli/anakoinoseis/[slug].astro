@@ -3,7 +3,7 @@ import type { AnnouncementImages, Announcements } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
 import Spinner from "@components/other/Spinner.astro";
 import Layout from "@layouts/Layout.astro";
-import { API, useAPI } from "@lib/hooks/useAPI.astro";
+import { API, useAPI } from "@hooks/useAPI.server";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { unescapeNewlines } from "@utilities/text";
 export const prerender = false;
