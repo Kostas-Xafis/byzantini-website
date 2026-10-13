@@ -137,6 +137,7 @@ Notes:
 
 ```bash
 bun install
+bun run services:install   # the two workers in services/ keep their own lockfiles
 ```
 
 ## Run Locally 🚀

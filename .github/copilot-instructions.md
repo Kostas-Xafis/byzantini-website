@@ -103,6 +103,10 @@
   no `SITE_URL` HTTP fetch). The campaign CLI (`bun run campaign`) reads
   recipients from Cloudflare D1 via spawned `wrangler d1 execute --remote`
   (`src/db.ts` — uses the existing `wrangler login`, no API token/server).
+- Aux workers live in this repo under `services/` (own `package.json`/`bun.lock`,
+  not workspaces; `bun run services:install|typecheck|test`). The emailWorker's
+  campaign opt-outs are a gitignored `campaign-blocklist.json` — never commit
+  real contact data.
 - Aux workers: run wrangler from inside the `services/*` folder with
   `--config wrangler.jsonc` and WITHOUT `--bun` (the Bun runtime wedges
   wrangler dev; `--config` avoids the repo's `.wrangler/deploy` conflict).

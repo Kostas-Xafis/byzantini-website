@@ -59,7 +59,7 @@ Core loop:
 
 | Task | Command | Notes |
 | --- | --- | --- |
-| Install | `bun install` | real lockfile is `bun.lock` |
+| Install | `bun install` · `bun run services:install` | real lockfile is `bun.lock`; the workers keep their own `bun.lock` (not workspaces) |
 | Dev server | `bun run dev` | Astro dev, port **4321** |
 | Dev server (alt) | `bun run start` | alias for `dev` |
 | Build | `bun run build` | production build |
@@ -67,7 +67,8 @@ Core loop:
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
 | Full gate | `bun run check` | typecheck + tests |
-| Tests | `bun run test` | full suite; needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
+| Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the emailWorker's offline campaign suite (never sends) |
+| Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -84,8 +85,11 @@ SQLite at `.wrangler/state/v3/d1`):
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
 
-Aux services (separate Cloudflare Workers in `services/`; each has its own
-`package.json`/`wrangler.jsonc` — run wrangler from inside the folder with
+Aux services (separate Cloudflare Workers in `services/`, **part of this
+repository** since 2026-10 — the old `Byz-PdfWorker` / `Automated-Mails-Byz`
+repos are retired; pdfWorker kept its history, emailWorker came in as a
+snapshot). Each has its own `package.json`/`bun.lock`/`wrangler.jsonc` and
+deploys on its own — run wrangler from inside the folder with
 `--config wrangler.jsonc` and **without** the `--bun` flag — the Bun runtime
 wedges wrangler dev). **Both are reached via service bindings** declared in the
 site's `wrangler.jsonc` (`EMAIL_SERVICE`, `PDF_SERVICE` — top level AND under

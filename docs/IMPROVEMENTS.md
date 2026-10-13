@@ -288,8 +288,8 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 - **Data-layer quirks:** circular import `db.ts ↔ utils.server.ts` (dodged with a dynamic import); `executeQuery` strips `\n`
   without replacement; `query_logs` only records writes inside "transactions"; implicit `fn.length === 1` transaction heuristic.
 - **Services:** `observability.ts` near-identical in both workers; site↔worker payload types not shared; emailWorker
-  tsconfig only includes `src/index.ts`. `services/` is gitignored and each worker is its own repo → document that site and
-  workers must be deployed together (B3 needs both).
+  tsconfig only includes `src/index.ts`. The workers now live in this repo (`services/`) but still deploy separately →
+  document that site and workers must be deployed together (B3 needs both).
 - **Dependencies:** `ts-morph` unused; `valibot` (see A7); package name still `"astro-test"` (`@libsql/client` already removed);
   `astro.config.mjs` `port: 3000` is not a valid key; `xlsx`/`print-js`/`pdfjs-dist` are dev deps for types while runtime copies come from CDNs.
 - **Gallery/carousel** not keyboard-operable (`div`/`<i>` click targets; global `keydown` moves a hidden carousel).
