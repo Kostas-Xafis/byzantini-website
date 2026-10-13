@@ -61,7 +61,6 @@ Core loop:
 | --- | --- | --- |
 | Install | `bun install` · `bun run services:install` | real lockfile is `bun.lock`; the workers keep their own `bun.lock` (not workspaces) |
 | Dev server | `bun run dev` | Astro dev, port **4321** |
-| Dev server (alt) | `bun run start` | alias for `dev` |
 | Build | `bun run build` | production build |
 | Types | `bun run types` | regenerate `worker-configuration.d.ts` after `wrangler.jsonc` changes |
 | Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |

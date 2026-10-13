@@ -1,10 +1,11 @@
 import type { APIContext } from "astro";
 
-// Sitemap of the static public pages. The Astro sitemap integration also
-// emits dist/sitemap-0.xml, but Cloudflare Pages `_routes.json` includes
-// "/*" (all requests hit the worker), so those static files are never served.
-// This route guarantees a working sitemap in every environment (dev, Pages
-// preview, production). Keep this list in sync with the site's public pages.
+// Sitemap of the static public pages, served as a route so it works in dev too.
+// Keep this list in sync with the site's public pages.
+// Caveat: the @astrojs/sitemap integration (astro.config.mjs) also emits a
+// static dist/client/sitemap-0.xml, and Workers Static Assets are matched
+// before the worker, so in a deployed build that static file shadows this
+// route. Picking one mechanism is tracked as P7 in docs/IMPROVEMENTS.md.
 export const prerender = false;
 
 const PUBLIC_PAGES = [
