@@ -1,12 +1,10 @@
 /**
- * Zod schemas — Phase 4 ports of the valibot `v_*` schemas in
- * `types/entities.ts` (kept alongside until the old route system is retired).
+ * Zod schemas — the single source of entity shapes: the entity types in
+ * `types/entities.ts` are derived from them (`z.infer`).
  *
  * Greek validation messages preserved.
  */
 import { z } from "astro/zod";
-
-export type Insert = { insertId: number };
 
 const looseBoolean = (message = "Μη έγκυρο loose boolean") =>
 	z.union([z.boolean(), z.literal(0), z.literal(1)], { message }).transform((v) => v === true || v === 1);
@@ -54,6 +52,8 @@ export const z_SysUsers = z.object({
 export const z_SysUserRegisterLink = z.object({
 	link: z.string().min(1, "Μη έγκυρος σύνδεσμος"),
 	exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης"),
+	/** The invited email — the account created from the link must use it (migration 0004). */
+	email: z.email("Μη έγκυρο email").nullable(),
 });
 
 export const z_LoginCredentials = z.object({
@@ -103,13 +103,6 @@ export const z_PublicTeacher = z_Teachers.pick({
 export const z_TeacherLocations = z.object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
 	location_id: positiveInt("Μη έγκυρο location_id"),
-});
-
-export const z_TeacherClasses = z.object({
-	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
-	class_id: positiveInt("Μη έγκυρο class_id"),
-	priority: z.number().int().min(1, "Μη έγκυρη προτεραιότητα"),
-	registration_number: z.string("Μη έγκυρος αριθμός έγκρισης").nullable().optional(), //Αριθμός Έγκρισης
 });
 
 export const z_ClassType = z.object({
@@ -343,39 +336,6 @@ export const z_AnnouncementImageUpload = z.object({
 	fileData: z_BlobUpload,
 	fileType: z.string("Μη έγκυρος τύπος αρχείου"),
 });
-
-/** Standard upload payload (teacher picture/cv, location image, pdf). */
-export const z_FileUpload = z.object({
-	name: z.string("Μη έγκυρο όνομα").optional(),
-	fileType: z.string("Μη έγκυρος τύπος αρχείου"),
-	fileData: z.instanceof(Blob, { error: "Μη έγκυρο αρχείο" }),
-});
-
-/** Re-export entity interfaces for convenience (same shapes as before). */
-export type {
-	AnnouncementImages,
-	Announcements,
-	Books,
-	ClassType,
-	EmailSubscriptions,
-	Instruments,
-	JoinedEnrollments,
-	Locations,
-	Payments,
-	Payoffs,
-	PupilEnrollments,
-	PupilSearchResult,
-	Pupils,
-	QueryLogs,
-	PupilRegistrationForm,
-	SysUserRegisterLink,
-	SysUsers,
-	TeacherClasses,
-	TeacherInstruments,
-	TeacherLocations,
-	Teachers,
-	Wholesalers,
-} from "@_types/entities";
 
 /**
  * Response (DB row) schemas — outputs match the entity interfaces exactly
