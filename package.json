@@ -17,8 +17,6 @@
 		"db:reset": "rm -rf .wrangler/state/v3/d1 && bunx wrangler d1 execute DB --local --file dbSnapshots/dev-snapshot.sql",
 		"db:logs": "bunx wrangler d1 execute DB --local --command \"SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs ORDER BY date DESC LIMIT 100\"",
 		"types": "bunx wrangler types",
-		"pupils:report": "bun scripts/pupilIssuesReport.ts",
-		"pupils:report:prod": "bun scripts/pupilIssuesReport.ts --db prod",
 		"dev:clean": "bun scripts/cleanDevTestData.ts --apply",
 		"worker-secrets": "bun scripts/workerSecrets.ts",
 		"cf": "bun scripts/cf.ts",

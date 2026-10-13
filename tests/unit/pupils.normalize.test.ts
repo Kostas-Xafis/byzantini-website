@@ -3,25 +3,12 @@
  *
  * Every fixture below is a real value taken from the 1514-row local snapshot
  * (see docs/PUPILS_MIGRATION.md §2), so these tests double as a specification
- * of how the backfill will read the legacy data.
+ * of how the pupil routes parse the ΑΜ and compare names/phones.
  *
  * Pure functions — no dev server, no DB, no env file required.
  */
 import { expect, test } from "bun:test";
-import {
-	canonicalClassYear,
-	collapseWhitespace,
-	needsClassYearReview,
-	normalizeAmka,
-	normalizeEmail,
-	normalizeKey,
-	normalizePhone,
-	normalizeText,
-	parseAm,
-	personIdentityKeys,
-	personNameKey,
-	stripDiacritics,
-} from "@lib/pupils/normalize";
+import { collapseWhitespace, normalizeKey, normalizePhone, normalizeText, parseAm, stripDiacritics } from "@lib/pupils/normalize";
 
 // ---------------------------------------------------------------------------
 // Text
@@ -98,7 +85,7 @@ test("parseAm flags implausible ΑΜ values instead of guessing", () => {
 	expect(parseAm(null)).toMatchObject({ am: null, kind: "invalid", reason: "empty" });
 });
 
-test("parseAm keeps the raw value for the report", () => {
+test("parseAm keeps the raw value for the review note", () => {
 	expect(parseAm("000 - Αναμονή").raw).toBe("000 - Αναμονή");
 	expect(parseAm(" 1287  ").raw).toBe(" 1287  ");
 });
@@ -123,16 +110,8 @@ test("parseAm treats a secretary's note as unusable, never mining a number out o
 });
 
 // ---------------------------------------------------------------------------
-// ΑΜΚΑ / phones / email
+// Phones
 // ---------------------------------------------------------------------------
-
-test("normalizeAmka treats blanks and the fake all-zero value as unknown", () => {
-	expect(normalizeAmka("")).toBe("");
-	expect(normalizeAmka(null)).toBe("");
-	expect(normalizeAmka("00000000000")).toBe("");
-	expect(normalizeAmka("01076702305")).toBe("01076702305");
-	expect(normalizeAmka(" 01076702305 ")).toBe("01076702305");
-});
 
 test("normalizePhone strips formatting and the Greek country code", () => {
 	expect(normalizePhone("6973490962")).toBe("6973490962");
@@ -146,90 +125,4 @@ test("normalizePhone ignores the legacy placeholder and short values", () => {
 	expect(normalizePhone("")).toBe("");
 	expect(normalizePhone(null)).toBe("");
 	expect(normalizePhone("12345")).toBe("");
-});
-
-test("normalizeEmail lowercases and rejects junk", () => {
-	expect(normalizeEmail("  GXophakes@Gmail.com ")).toBe("gxophakes@gmail.com");
-	expect(normalizeEmail("")).toBe("");
-	expect(normalizeEmail("-")).toBe("");
-});
-
-// ---------------------------------------------------------------------------
-// Person identity
-// ---------------------------------------------------------------------------
-
-test("personNameKey ignores spelling differences", () => {
-	expect(personNameKey({ last_name: "Ψύλλιας", first_name: "Σταύρος" })).toBe(personNameKey({ last_name: "Ψυλλιας", first_name: "Σταυρος" }));
-	expect(personNameKey({ last_name: "Δαλιάνης", first_name: "Νικόλαος" })).not.toBe(personNameKey({ last_name: "Δαλιάνης", first_name: "Χρήστος" }));
-	expect(personNameKey({})).toBe("");
-});
-
-test("personIdentityKeys prefers ΑΜΚΑ, then cellphone, then email", () => {
-	const keys = personIdentityKeys({
-		amka: "01076702305",
-		cellphone: "6973490962",
-		telephone: "2106131194",
-		email: "a@b.gr",
-	});
-	expect(keys.map((k) => k.type)).toEqual(["amka", "cellphone", "email"]);
-});
-
-test("personIdentityKeys falls back to landline only without a cellphone", () => {
-	// families share landlines, so telephone is only used when nothing else exists
-	expect(personIdentityKeys({ telephone: "2106131194" }).map((k) => k.type)).toEqual(["telephone"]);
-	expect(personIdentityKeys({ cellphone: "6973490962", telephone: "2106131194" }).map((k) => k.type)).toEqual(["cellphone"]);
-});
-
-test("personIdentityKeys skips unusable values", () => {
-	expect(personIdentityKeys({ amka: "00000000000", telephone: "-", email: "-" })).toEqual([]);
-});
-
-// ---------------------------------------------------------------------------
-// Class year
-// ---------------------------------------------------------------------------
-
-test("canonicalClassYear maps every spelling observed in the data", () => {
-	const cases: Array<[string, string]> = [
-		["Α' Ετος", "Α' Ετος"],
-		["Α΄ έτος", "Α' Ετος"],
-		["Β' Ετος", "Β' Ετος"],
-		["Γ' Ετος", "Γ' Ετος"],
-		["Δ' Ετος", "Δ' Ετος"],
-		["Δ΄ έτος", "Δ' Ετος"],
-		["Ε' Ετος", "Ε' Ετος"],
-		["Α' Προκαταρκτική", "Α' Προκαταρκτική"],
-		["Α΄ Προκαταρκτική", "Α' Προκαταρκτική"],
-		["Προκαταρκτική", "Α' Προκαταρκτική"],
-		["Α' Κατωτέρα", "Α' Κατωτέρα"],
-		["Β' Κατωτέρα", "Β' Κατωτέρα"],
-		["Α' Μέση", "Α' Μέση"],
-		["Α΄ Μέση", "Α' Μέση"],
-		["Β' Μέση", "Β' Μέση"],
-		["Γ' Μέση", "Γ' Μέση"],
-		["Α' Ανωτέρα", "Α' Ανωτέρα"],
-		["Β' Ανωτέρα", "Β' Ανωτέρα"],
-		["Β΄ Ανωτέρα", "Β' Ανωτέρα"],
-		["Α' Διπλώματος", "Α' Διπλώματος"],
-		["Β' Διπλώματος", "Β' Διπλώματος"],
-		["Α' Ετος Διπλώματος", "Α' Ετος Διπλώματος"],
-		["Α'  Έτος Διπλώματος", "Α' Ετος Διπλώματος"],
-		["Β' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
-		["Υπό Κατάταξη", "Υπό Κατάταξη"],
-	];
-	for (const [input, expected] of cases) {
-		expect(canonicalClassYear(input), `canonicalClassYear(${JSON.stringify(input)})`).toBe(expected);
-	}
-});
-
-test("canonicalClassYear returns empty for missing values", () => {
-	expect(canonicalClassYear("undefined")).toBe("");
-	expect(canonicalClassYear("")).toBe("");
-	expect(canonicalClassYear(null)).toBe("");
-});
-
-test("needsClassYearReview only flags real values that did not map", () => {
-	expect(needsClassYearReview("undefined")).toBe(false);
-	expect(needsClassYearReview("")).toBe(false);
-	expect(needsClassYearReview("Α' Ετος")).toBe(false);
-	expect(needsClassYearReview("Ξ' Αγνώστου")).toBe(true);
 });

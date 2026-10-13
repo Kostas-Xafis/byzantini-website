@@ -120,13 +120,8 @@
   them), `bun run typecheck`, `bun run check`.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
   suite writes to the local dev DB.
-- Secretary-facing pupil reports: `bun run pupils:report` (or `:prod`) writes
-  `reports/mathitologio-ektremotites.{md,pdf}` + `…-parartima.{md,pdf}` — cards
-  without/unusable ΑΜ, shared ΑΜ/ΑΜΚΑ, duplicate cards — from a read-only database
-  read, printed to PDF by headless Chrome. `reports/` is gitignored (names, ΑΜΚΑ,
-  phones are personal data).
-- Shared D1 transport for scripts: `scripts/lib/d1.ts` (address targets by
-  the `DB` binding, never the database name).
+- Pupils that still need attention are reviewed in the admin Μαθητολόγιο page
+  (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»).
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker

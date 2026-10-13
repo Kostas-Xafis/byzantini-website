@@ -83,8 +83,6 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql`; **does not re-run migrations** — follow with `bunx wrangler d1 migrations apply DB --local` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
-| Pupil issues report | `bun run pupils:report` / `pupils:report:prod` | `scripts/pupilIssuesReport.ts`: reads a target **read-only** and writes the secretary-facing «Μαθητολόγιο — εκκρεμότητες» pair — `reports/mathitologio-ektremotites.{md,pdf}` (summary) and `…-parartima.{md,pdf}` (detailed lists): cards without ΑΜ, unusable ΑΜ, one ΑΜ on two people, duplicate cards (same ΑΜΚΑ / same mobile+name / same name only), one ΑΜΚΑ on different people. PDFs are printed from the same content by headless Chrome (`--no-pdf` for Markdown only, `--date`/`--out` to override). **`reports/` is gitignored — the documents contain names, ΑΜΚΑ and phones** |
-| Shared D1 transport | `scripts/lib/d1.ts` | used by the pupil issues report: local miniflare SQLite or the D1 REST API (single `query` / parameterised `batch`), credentials from `CLOUDFLARE_API_TOKEN` or the wrangler session, database ids read from `wrangler.jsonc`. **Address a target by its binding `DB`, never by database name** — `-e preview` binds `DB` to `byzantini-db-preview` |
 
 Aux services (separate Cloudflare Workers in `services/`; each has its own
 `package.json`/`wrangler.jsonc` — run wrangler from inside the folder with
@@ -176,7 +174,8 @@ The person data that used to live on `registrations` is split into two tables
   music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student" with
   `ΑΜ = 000`) → the form. The identification happens ONCE; switching department
   afterwards must not send the user back through it.
-- `bun run pupils:report` lists what the secretaries still have to resolve;
+- The secretaries resolve the remaining review cases in the admin
+  Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»);
   `bun run dev:clean` removes the fixtures the API suite writes to the local
   dev DB.
 

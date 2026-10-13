@@ -97,7 +97,7 @@ services/                          aux workers (SEPARATE git repos, ignored by m
   pdfWorker/  byzantini-website-pdf-gen   emailWorker/  byzantini-website-emails
 email/                             STALE duplicate of the emailWorker stack (gitignored; safe to delete)
 tests/                             tests/api/*.test.ts (10 files) + testHelpers.ts
-scripts/                           cf, replicate, googleReviews, workerSecrets, cleanDevTestData, pupilIssuesReport
+scripts/                           cf, replicate, googleReviews, workerSecrets, cleanDevTestData
 public/                            fonts, fa (Font Awesome), images, robots.txt, llms.txt
 docs/                              migration invariants, deploy, pupil register, pre-merge review
 types/                             entities, env, helpers (TS6-safe IsAny), global, custom-events
