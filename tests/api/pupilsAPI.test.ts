@@ -21,8 +21,7 @@ import { afterAll, expect, test } from "bun:test";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { array, number, object, string } from "valibot";
-import { Env } from "../../lib/env/env.ts";
-import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
+import { expectBody, getJson, testEnv, useTestAPI } from "../testHelpers.ts";
 
 // ---------------------------------------------------------------------------
 // Enrollment bookkeeping: record every id that exists before the run, delete
@@ -128,7 +127,7 @@ function pupilsTest() {
 		await expect(useTestAPI("Pupils.search", { RequestObject: { query: longQuery } })).rejects.toThrow("Πολύ μεγάλο ερώτημα");
 
 		// …and the server rejects it too, independently of the client
-		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
+		const base = testEnv.VITE_URL ?? "http://localhost:4321/";
 		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/search`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Origin: base },
@@ -575,7 +574,7 @@ function pupilsTest() {
 	});
 
 	test("--pupils-- #21 authenticated routes reject anonymous callers", async () => {
-		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
+		const base = testEnv.VITE_URL ?? "http://localhost:4321/";
 		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/total`);
 		expect(res.status).toBe(401);
 	});

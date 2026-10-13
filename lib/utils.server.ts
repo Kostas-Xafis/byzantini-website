@@ -1,10 +1,10 @@
 import type { Insert } from "@_types/entities";
-import { Env } from "@env/env";
+import { getEnv } from "@env/env";
 import { dbExec, logQuery, type QueryArguments, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
 
 export function isProduction() {
-	const { MODE, PROD } = Env.env;
+	const { MODE, PROD } = getEnv();
 	return MODE === "production" && PROD === true;
 }
 
