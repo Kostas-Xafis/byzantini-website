@@ -267,9 +267,8 @@ export const announcementsRoutes = {
 				if (!images || !images.length) throw Error("images not found");
 				await executeQuery(`DELETE FROM announcement_images WHERE id IN (???)`, ids);
 
-				const { announcement_id } = params;
 				const deletionJobs = [];
-				for (const { name } of images) {
+				for (const { name, announcement_id } of images) {
 					deletionJobs.push(
 						() => Bucket.delete(bucketPrefix + announcement_id + "/" + name),
 						() => Bucket.delete(bucketPrefix + announcement_id + "/thumb_" + name),

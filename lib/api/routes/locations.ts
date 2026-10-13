@@ -126,7 +126,7 @@ export const locationsRoutes = {
 					ids,
 				);
 				for (const file of files) {
-					if (file.image) await Bucket.delete(file.image);
+					if (file.image) await Bucket.delete(bucketPrefix + file.image);
 				}
 				await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Locations deleted successfully";
