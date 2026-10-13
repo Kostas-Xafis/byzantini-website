@@ -1,5 +1,5 @@
 import { customEvent } from "@_types/custom-events";
-import type { Instruments, Registrations } from "@_types/entities";
+import type { Instruments, PupilRegistrationForm } from "@_types/entities";
 import { API, useAPI, useHydrate, type APIStore } from "@hooks/useAPI.solid";
 import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
 import { AnimTimeline } from "@utilities/dom";
@@ -15,16 +15,12 @@ const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
 	keyof Omit<
-		Registrations,
-		| "id"
+		PupilRegistrationForm,
 		| "date"
 		| "class_id"
 		| "class_year"
 		| "teacher_id"
 		| "instrument_id"
-		| "payment_date"
-		| "payment_amount"
-		| "total_payment"
 		| "registration_url"
 		| "pass"
 	>,
@@ -165,7 +161,7 @@ const genericInputs: Record<
 	},
 };
 
-const inputsByMusicType = (musicType: MusicType, store: APIStore, regData: Registrations): InputProps[] => {
+const inputsByMusicType = (musicType: MusicType, store: APIStore, regData: PupilRegistrationForm): InputProps[] => {
 	const musicToIdx = {
 		[MusicType.Byzantine]: 0,
 		[MusicType.Traditional]: 1,
@@ -320,7 +316,7 @@ async function loadRegistrationId(apiHook: ReturnType<typeof useAPI>) {
 				class_id: latest?.class_id ?? 0,
 				teacher_id: -1,
 				instrument_id: -1,
-			} as unknown as Registrations;
+			} as unknown as PupilRegistrationForm;
 		} catch (err) {}
 	}
 }
@@ -349,7 +345,7 @@ function emptyRequiredFields(form: HTMLFormElement) {
 
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIStore>({});
-	const [registrationData, setRegistrationData] = createStore<Registrations>({} as any);
+	const [registrationData, setRegistrationData] = createStore<PupilRegistrationForm>({} as any);
 	const apiHook = useAPI(setStore);
 	const [musicType, setMusicType] = createSignal<MusicType>(musicTypeFromURL());
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
@@ -501,8 +497,8 @@ export function RegistrationForm() {
 			shakeForm();
 			return;
 		}
-		const formData = new ExtendedFormData<Registrations>(form);
-		const data: Omit<Registrations, "id" | "payment_amount" | "total_payment"> = {
+		const formData = new ExtendedFormData<PupilRegistrationForm>(form);
+		const data: PupilRegistrationForm = {
 			last_name: formData.string("last_name"),
 			first_name: formData.string("first_name"),
 			am: formData.string("am"),
@@ -591,7 +587,7 @@ export function RegistrationForm() {
 	const onFormInputsChange = async (e: Event) => {
 		const el = e.target as HTMLSelectElement;
 		console.log("[onFormInputsChange] triggered and with value: ", el.value);
-		let mutation: Partial<Registrations>;
+		let mutation: Partial<PupilRegistrationForm>;
 		if (el.name === "class_year") {
 			document.querySelector("[name='teacher_id']")?.dispatchEvent(customEvent("enable_input", !(el.value === "Υπό Κατάταξη")));
 			mutation = { class_year: el.value };
@@ -676,7 +672,7 @@ export function RegistrationForm() {
 											<Input
 												{...input}
 												prefix={PREFIX}
-												value={registrationData[input.name as keyof Registrations] as any}
+												value={registrationData[input.name as keyof PupilRegistrationForm] as any}
 												disabled={input.disabled || locked}
 												blurDisabled={locked ? false : input.blurDisabled}
 											/>

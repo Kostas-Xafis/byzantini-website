@@ -1,5 +1,5 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
-import { z_JoinedEnrollments, z_PupilSearchResponse, z_PupilWithEnrollments, z_Registrations } from "@lib/api/schemas";
+import { z_JoinedEnrollments, z_PupilRegistrationForm, z_PupilSearchResponse, z_PupilWithEnrollments } from "@lib/api/schemas";
 import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
 import { classYearsByMusicType, MusicTypeArr } from "@lib/classYears";
 import { ALL_YEARS, schoolYearOf } from "@lib/pupils/years";
@@ -127,8 +127,7 @@ const z_PublicSchoolYear = z
 		const [start, end] = value.split("-").map(Number);
 		return end === start + 1 && Math.abs(start - new Date().getFullYear()) <= 1;
 	}, "Μη έγκυρο σχολικό έτος");
-const z_PupilPost = z_Registrations
-	.omit({ id: true, payment_date: true, payment_amount: true, total_payment: true })
+const z_PupilPost = z_PupilRegistrationForm
 	.extend({
 		// Ignored by the handler (the server issues the link) — kept so older clients still validate.
 		registration_url: z.string("Μη έγκυρο registration_url").optional(),

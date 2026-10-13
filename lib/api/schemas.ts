@@ -146,8 +146,12 @@ export const z_TeacherInstruments = z.object({
 	instrument_id: positiveInt("Μη έγκυρο instrument_id"),
 });
 
-export const z_Registrations = z.object({
-	id: positiveInt("Μη έγκυρο id"),
+/**
+ * The public registration form's payload (`Pupils.post`): the pupil's identity
+ * plus the enrollment applied for. Ids, payment fields and the registration link
+ * are assigned server-side. (Was `z_Registrations`, after the table dropped in 0003.)
+ */
+export const z_PupilRegistrationForm = z.object({
 	am: z.string("Μη έγκυρο ΑΜ"),
 	amka: z.union([z.string().length(11), z.literal("")], { message: "Μη έγκυρο ΑΜΚΑ" }),
 	first_name: z.string("Μη έγκυρο όνομα"),
@@ -167,9 +171,6 @@ export const z_Registrations = z.object({
 	teacher_id: z.number().int().min(-1, "Μη έγκυρος καθηγητής"),
 	instrument_id: positiveInt("Μη έγκυρο μουσικό όργανο"),
 	date: positiveInt("Μη έγκυρη ημερομηνία"),
-	payment_amount: positiveInt("Μη έγκυρο ποσό πληρωμής").optional(),
-	total_payment: positiveInt("Μη έγκυρο συνολικό ποσό πληρωμής").optional(),
-	payment_date: positiveInt("Μη έγκυρη ημερομηνία πληρωμής").nullable().optional(),
 	registration_url: z.string("Μη έγκυρο registration_url").optional(),
 	pass: looseBoolean("Μη έγκυρο προαγωγή"),
 });
@@ -366,7 +367,7 @@ export type {
 	PupilSearchResult,
 	Pupils,
 	QueryLogs,
-	Registrations,
+	PupilRegistrationForm,
 	SysUserRegisterLink,
 	SysUsers,
 	TeacherClasses,

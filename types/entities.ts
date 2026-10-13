@@ -1,3 +1,6 @@
+import type { z } from "astro/zod";
+import type { z_PupilRegistrationForm } from "@lib/api/schemas";
+
 export type Insert = { insertId: number };
 
 export interface Books {
@@ -111,33 +114,8 @@ export interface TeacherInstruments {
 	instrument_id: number;
 }
 
-export interface Registrations {
-	id: number;
-	am: string;
-	amka: string;
-	first_name: string;
-	last_name: string;
-	fathers_name: string;
-	birth_date: number;
-	telephone: string;
-	cellphone: string;
-	email: string;
-	road: string;
-	number: number;
-	tk: number;
-	region: string;
-	registration_year: string;
-	class_year: string;
-	class_id: number;
-	teacher_id: number;
-	instrument_id: number;
-	date: number;
-	payment_amount: number;
-	total_payment: number;
-	payment_date?: number | null;
-	registration_url?: string | undefined;
-	pass: boolean;
-}
+/** The public registration form's payload (`Pupils.post`) — see `z_PupilRegistrationForm`. */
+export type PupilRegistrationForm = z.infer<typeof z_PupilRegistrationForm>;
 
 // The old `StudentRecord` / `StudentClass` sketch that used to live here was
 // implemented for real as `Pupils` / `PupilEnrollments` below (migration
