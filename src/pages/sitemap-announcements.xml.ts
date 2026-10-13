@@ -34,7 +34,7 @@ export async function GET(ctx: APIContext) {
 		console.error("sitemap-announcements: db query failed", error);
 		try {
 			// Secondary source: the admin-maintained bucket copy.
-			const bucketSitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
+			const bucketSitemap = await Bucket.get("sitemap-announcements.xml");
 			if (bucketSitemap) {
 				return new Response(await bucketSitemap.arrayBuffer(), { headers: XML_HEADERS });
 			}

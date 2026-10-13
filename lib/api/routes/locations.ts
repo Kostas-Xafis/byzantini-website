@@ -1,4 +1,3 @@
-import type { APIContext } from "astro";
 import { z } from "astro/zod";
 import type { Locations } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
@@ -96,7 +95,7 @@ export const locationsRoutes = {
 					const fileBuffer = await blob.arrayBuffer();
 					const filename = location.name + "." + filetype.split("/")[1];
 					const link = bucketPrefix + filename;
-					await Bucket.put(request as unknown as APIContext, fileBuffer, link, filetype);
+					await Bucket.put(fileBuffer, link, filetype);
 					await T.executeQuery(`UPDATE locations SET image = ? WHERE id = ?`, [filename, Number(params.id)]);
 					return "Image uploaded successfully";
 				}
@@ -111,7 +110,7 @@ export const locationsRoutes = {
 				const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
 				if (!location) throw Error("Location not found");
 
-				if (location.image) await Bucket.delete(request as unknown as APIContext, bucketPrefix + location.image);
+				if (location.image) await Bucket.delete(bucketPrefix + location.image);
 				await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [Number(params.id)]);
 				return "Image deleted successfully";
 			}, "Σφάλμα κατά την διαγραφή της εικόνας"),
@@ -127,7 +126,7 @@ export const locationsRoutes = {
 					ids,
 				);
 				for (const file of files) {
-					if (file.image) await Bucket.delete(request as unknown as APIContext, file.image);
+					if (file.image) await Bucket.delete(file.image);
 				}
 				await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Locations deleted successfully";

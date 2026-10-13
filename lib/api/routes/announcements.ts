@@ -1,5 +1,4 @@
 import { z } from "astro/zod";
-import type { APIContext } from "astro";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import type { SitemapItem } from "@_types/global";
 import { Bucket } from "@lib/bucket";
@@ -29,12 +28,11 @@ const xmlopts: X2jOptions = {
 	},
 };
 
-/** Context needed by the sitemap helpers (request stands in for APIContext). */
+/** Context needed by the sitemap helpers (the request gives the site origin). */
 type SitemapCtx = { request: Request };
-const asAPIContext = (request: Request) => request as unknown as APIContext;
 
-async function getSitemapXml({ request }: SitemapCtx) {
-	const sitemap = await Bucket.get(asAPIContext(request), "sitemap-announcements.xml");
+async function getSitemapXml() {
+	const sitemap = await Bucket.get("sitemap-announcements.xml");
 	// Self-initialize: with an empty (dev/local) bucket the file may be missing;
 	// in production the file always exists, so this path stays untouched.
 	if (!sitemap) return { urlset: {} };
@@ -61,7 +59,7 @@ const safeDecode = (value: string) => {
 };
 
 async function insertAnnouncementToSitemap({ request }: SitemapCtx, announcement: Omit<Announcements, "id" | "views">) {
-	const jsonSitemap = await getSitemapXml({ request });
+	const jsonSitemap = await getSitemapXml();
 	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
 	const newUrl = {
 		loc: `${new URL(request.url).origin}/sxoli/anakoinoseis/${urlTitle(announcement.title)}`,
@@ -72,11 +70,11 @@ async function insertAnnouncementToSitemap({ request }: SitemapCtx, announcement
 	urls.push(newUrl);
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	return Bucket.put(asAPIContext(request), jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+	return Bucket.put(jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
 async function updateAnnouncementFromSitemap({ request }: SitemapCtx, title: string, newTitle: string) {
-	const jsonSitemap = await getSitemapXml({ request });
+	const jsonSitemap = await getSitemapXml();
 	title = urlTitle(title);
 	newTitle = urlTitle(newTitle);
 
@@ -96,17 +94,17 @@ async function updateAnnouncementFromSitemap({ request }: SitemapCtx, title: str
 	url.loc = `${new URL(request.url).origin}/sxoli/anakoinoseis/${newTitle}`;
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	return Bucket.put(asAPIContext(request), jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+	return Bucket.put(jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
-async function removeAnnouncementFromSitemap({ request }: SitemapCtx, titles: string[]) {
-	const jsonSitemap = await getSitemapXml({ request });
+async function removeAnnouncementFromSitemap(titles: string[]) {
+	const jsonSitemap = await getSitemapXml();
 	titles = titles.map(urlTitle);
 
 	let urls = ((jsonSitemap.urlset?.url || []) as SitemapItem[]).filter((url) => !titles.some((title) => url.loc.endsWith(title)));
 
 	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	return Bucket.put(asAPIContext(request), jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
+	return Bucket.put(jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
 }
 
 // ---- Local types & group-specific request/response schemas ----
@@ -229,17 +227,14 @@ export const announcementsRoutes = {
 			const deletionJobs = [];
 			for (const { name, announcement_id } of images) {
 				deletionJobs.push(
-					() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/" + name),
-					() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/thumb_" + name),
+					() => Bucket.delete(bucketPrefix + announcement_id + "/" + name),
+					() => Bucket.delete(bucketPrefix + announcement_id + "/thumb_" + name),
 				);
 			}
 			await asyncQueue(deletionJobs, {
 				maxJobs: 10,
 			});
-			await removeAnnouncementFromSitemap(
-				{ request },
-				announcements.map(({ title }) => title),
-			);
+			await removeAnnouncementFromSitemap(announcements.map(({ title }) => title));
 			return "Announcement/s deleted successfully";
 		}, "Σφάλμα κατά την διαγραφή των ανακοινώσεων"),
 	),
@@ -253,12 +248,12 @@ export const announcementsRoutes = {
 				const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
 				const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;
 				const fileBytes = await fileData.arrayBuffer();
-				await Bucket.put(asAPIContext(request), fileBytes, bucketFileName, fileType);
+				await Bucket.put(fileBytes, bucketFileName, fileType);
 				// Thumbnail is generated in-process via the Cloudflare Images binding
 				// (retired the external dockerized image-compression service).
 				const thumb = await compressImageForThumb(fileBytes, fileType);
 				const thumbFileName = bucketPrefix + `${announcement_id}/thumb_` + fileName;
-				await Bucket.put(asAPIContext(request), thumb.bytes, thumbFileName, thumb.contentType);
+				await Bucket.put(thumb.bytes, thumbFileName, thumb.contentType);
 				return { insertId };
 			}, "Σφάλμα κατά την προσθήκη της εικόνας"),
 	),
@@ -276,8 +271,8 @@ export const announcementsRoutes = {
 				const deletionJobs = [];
 				for (const { name } of images) {
 					deletionJobs.push(
-						() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/" + name),
-						() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/thumb_" + name),
+						() => Bucket.delete(bucketPrefix + announcement_id + "/" + name),
+						() => Bucket.delete(bucketPrefix + announcement_id + "/thumb_" + name),
 					);
 				}
 				await asyncQueue(deletionJobs, {
@@ -300,8 +295,8 @@ export const announcementsRoutes = {
 				const deletionJobs = [];
 				for (const name of names) {
 					deletionJobs.push(
-						() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/" + name),
-						() => Bucket.delete(asAPIContext(request), bucketPrefix + announcement_id + "/thumb_" + name),
+						() => Bucket.delete(bucketPrefix + announcement_id + "/" + name),
+						() => Bucket.delete(bucketPrefix + announcement_id + "/thumb_" + name),
 					);
 				}
 				await asyncQueue(deletionJobs, {
