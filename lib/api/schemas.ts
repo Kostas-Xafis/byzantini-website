@@ -181,7 +181,7 @@ export const z_EmailSubscriptions = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// Pupil register (Μαθητολόγιο) — see docs/PUPILS_MIGRATION.md
+// Pupil register (Μαθητολόγιο) — see AGENTS.md, "Pupil register"
 // ---------------------------------------------------------------------------
 
 /** ΑΜΚΑ is either a full 11-digit number or '' (not collected in early years). */

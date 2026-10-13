@@ -35,7 +35,7 @@
 ## Pupil register (Μαθητολόγιο)
 - Person data lives in `pupils` (identity, keyed by ΑΜ) + `pupil_enrollments`
   (one row per pupil / year / music type / instrument); the legacy
-  `registrations` table was dropped. See `docs/PUPILS_MIGRATION.md`.
+  `registrations` table was dropped.
 - `pupils.am` is an INTEGER and NULL for review cases (`orphan_code` `000-Ο1`…,
   `split_from_am` `111-Σ1`…); `registration_url` on the pupil is permanent.
 - Routes are `Pupils.*`; enrollment listings return the JOINED row
@@ -51,7 +51,7 @@
 - SQL supports `???` placeholder expansion (`questionMarks` in `lib/db.ts`).
 - **D1 has no interactive transactions** — `executeTransaction` runs
   statements immediately (no rollback); refactor rollback-sensitive flows to
-  `db.batch(...)` — see `docs/MIGRATION_SPEC.md`.
+  `db.batch(...)`.
 - Schema changes go through `migrations/` (`wrangler d1 migrations apply
   DB --local`), never ad-hoc DDL.
 - Query logging is built-in (`query_logs` writes from `lib/db.ts`); avoid
@@ -133,5 +133,7 @@
 - Extend existing route groups/utilities instead of introducing a new
   transport or API plumbing layer.
 
-> The Pages → Workers and Turso → D1 migration is complete and merged; the port
-> tooling was removed. `docs/MIGRATION_SPEC.md` keeps the do-not-re-research facts.
+> The Pages → Workers and Turso → D1 migration is complete (history in git only).
+> Platform gotchas that still apply (error 1042, D1 batch-only atomicity, adapter
+> v14 env, build wiping `dist/server/`) are in `AGENTS.md`; open improvements are
+> tracked in `docs/IMPROVEMENTS.md`.

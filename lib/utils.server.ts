@@ -60,7 +60,7 @@ export const executeQuery = async <T = undefined>(query: string, args: QueryArgu
  * D1 note: there are NO interactive transactions — statements execute
  * immediately (autocommit). Use this for flows where the statements are
  * independently safe; switch rollback-sensitive flows to `db.batch()` (see
- * docs/MIGRATION_SPEC.md, Phase 3/4 notes).
+ * AGENTS.md, "Platform gotchas").
  */
 export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>): Promise<T> => {
 	const tx = {

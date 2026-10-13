@@ -3,7 +3,7 @@
  *
  * Used by the pupil routes (lib/api/routes/pupils.ts) to parse the ΑΜ and to
  * compare names/phones when the public form identifies a pupil. The rules come
- * from what the legacy register actually held (docs/PUPILS_MIGRATION.md §2):
+ * from what the legacy register actually held:
  *
  *   ΑΜ            '706', '1287   ', '761 ', '΄1158', '000', '000 - Αναμονή',
  *                 '999 - Αναμονή', '3592307', 'ΛΑΘΟΣ 1085'

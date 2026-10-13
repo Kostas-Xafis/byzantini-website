@@ -270,7 +270,7 @@ export interface Registrations {
 
 // The old `StudentRecord` / `StudentClass` sketch that used to live here was
 // implemented for real as `Pupils` / `PupilEnrollments` below (migration
-// 0002_pupils.sql, docs/PUPILS_MIGRATION.md).
+// 0002_pupils.sql).
 
 /**
  * Pupil register (Μαθητολόγιο) — replaces the person half of `registrations`.

@@ -7,8 +7,7 @@
  * Deploys use the adapter-generated worker config:
  *   wrangler deploy --config dist/server/wrangler.json
  * (build produces dist/server/entry.mjs + dist/client; the generated config
- * carries bindings once real resource ids are pinned in wrangler.jsonc —
- * see docs/PHASE6_DEPLOY.md).
+ * carries the bindings pinned in wrangler.jsonc).
  */
 import { rm } from "node:fs/promises";
 
@@ -39,7 +38,7 @@ async function build(): Promise<number> {
 /**
  * Post-build: derive the preview deploy config from the adapter-generated
  * dist/server/wrangler.json (the build wipes dist/server, so this must run
- * AFTER the build — see why in docs/MIGRATION_SPEC.md).
+ * AFTER the build — see AGENTS.md, "Platform gotchas").
  */
 function generatePreviewDeployConfig(): boolean {
 	try {

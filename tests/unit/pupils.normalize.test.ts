@@ -1,9 +1,9 @@
 /**
  * Unit tests for lib/pupils/normalize.ts.
  *
- * Every fixture below is a real value taken from the 1514-row local snapshot
- * (see docs/PUPILS_MIGRATION.md §2), so these tests double as a specification
- * of how the pupil routes parse the ΑΜ and compare names/phones.
+ * Every fixture below is a real value taken from the legacy register, so these
+ * tests double as a specification of how the pupil routes parse the ΑΜ and
+ * compare names/phones.
  *
  * Pure functions — no dev server, no DB, no env file required.
  */

@@ -18,10 +18,10 @@ database, R2 storage, the Cloudflare Images binding (announcement thumbnails,
 bindings**: `byzantini-website-emails` (`services/emailWorker`) and
 `byzantini-website-pdf-gen` (`services/pdfWorker`).
 
-> The Pages → Workers and Turso → D1 migration is complete and merged into
-> `main`; the port tooling was removed afterwards (recover it from git history
-> if ever needed). `docs/MIGRATION_SPEC.md` keeps the do-not-re-research facts
-> (D1 transactions, worker self-fetch error 1042, ...).
+> The Pages → Workers and Turso → D1 migration is complete; its plans, runbooks
+> and tooling live in git history only. The facts it established that still
+> matter are under **Platform gotchas** below. Open improvements are tracked in
+> `docs/IMPROVEMENTS.md`.
 
 ## Stack (do not change without a good reason)
 
@@ -40,7 +40,7 @@ bindings**: `byzantini-website-emails` (`services/emailWorker`) and
   does.
 - Deploy: `@astrojs/cloudflare` adapter → `dist/server/entry.mjs` + `dist/client/`;
   config in `wrangler.jsonc`; manual deploys via `bun run cf deploy`
-  (`docs/PHASE6_DEPLOY.md`; CI/Pages integration is retired).
+  (CI/Pages integration is retired).
 - Env: server-side runtime values via `cloudflare:workers` env (bindings + CF
   secrets/vars in prod) merged with `import.meta.env`; **dev values live in
   Vite-native `.env`** (gitignored — Bun/Vite auto-load it, `Env.env` merges
@@ -100,7 +100,9 @@ Shared-secret bootstrap/rotation: `bun run worker-secrets` (`scripts/workerSecre
 
 Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
 `bun run cf deploy` (build + `wrangler deploy --config dist/server/wrangler.json`)
-or `bun run cf deploy:preview`; see `docs/PHASE6_DEPLOY.md`.
+or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
+`byzantini-website-production` / `byzantini-website-preview` (the bare
+`byzantini-website` has no worker); target those for `wrangler secret`/`tail`.
 
 ## API architecture (project-critical, preserve the pattern)
 
@@ -118,7 +120,7 @@ or `bun run cf deploy:preview`; see `docs/PHASE6_DEPLOY.md`.
 - Middleware: `authenticateMiddleware` (session cookie, `lib/api/routes/middleware`) —
   attach per route via the middleware array.
 - Server-side `useAPI` (`lib/hooks/useAPI.astro.ts`) dispatches **in-process**
-  (no self-fetch — see docs/MIGRATION_SPEC.md, error 1042); the Solid version
+  (no self-fetch — Cloudflare error 1042, see Platform gotchas); the Solid version
   (`lib/hooks/useAPI.solid.ts`) fetches from the browser. Response envelope:
   `{ data } | { message } | { error }` with proper HTTP statuses.
 - Validation uses **Zod** (`astro/zod`) — schemas in `lib/api/schemas.ts`.
@@ -139,17 +141,43 @@ or `bun run cf deploy:preview`; see `docs/PHASE6_DEPLOY.md`.
   the canonical example.
 - **D1 has no interactive transactions**: `executeTransaction` executes
   statements immediately (no rollback). Rollback-sensitive flows must be
-  refactored to `db.batch(...)` or made idempotent — see `docs/MIGRATION_SPEC.md`.
+  refactored to `db.batch(...)` or made idempotent (D1 sessions expose no
+  commit/rollback either — never emulate rollback).
 - Prefer SQL parameterization; never interpolate user input into SQL strings.
 - Schema changes go through `migrations/NNNN_*.sql` +
   `wrangler d1 migrations apply DB --local` (never ad-hoc DDL in route code).
+
+## Platform gotchas (verified — do not re-research)
+
+- **Cloudflare error 1042**: a Worker that `fetch`es its own origin fails on the
+  real edge (works in miniflare). Server-side code must dispatch API calls
+  in-process (`lib/hooks/useAPI.astro.ts` → `APIServer.handle`), never
+  `fetch(origin + "/api/...")`.
+- **D1 has no transactions** (no interactive transactions, sessions have no
+  commit/rollback): atomic multi-statement flows use `db.batch([...])`.
+- **`@astrojs/cloudflare` v14**: no `locals.runtime.env` (`Runtime` is
+  `{ cfContext }`); server env comes from `cloudflare:workers` through the
+  guarded bridge `lib/env/runtime.ts` (guarded because `bun test` runs outside
+  workerd). The build emits `dist/server/entry.mjs` + `dist/server/wrangler.json`
+  and **wipes `dist/server/`**, so derived deploy configs (preview) must be
+  generated after the build (`scripts/cf.ts` does).
+- **Wrangler persistence is config-relative**: with `--config dist/server/wrangler.json`
+  local state lands in `dist/server/.wrangler` unless `--persist-to .wrangler/state`
+  is passed (`scripts/cf.ts` passes it).
+- **Astro `security.checkOrigin`** rejects form/multipart POSTs without an
+  `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
+- Running `bun run build` while `bun run dev` is up repoints
+  `.wrangler/deploy/config.json` at `dist/server`; restart the dev server after.
+- `bun run astro-check` reports 4 pre-existing errors (Links shareImage alt,
+  spoudastiria `LocationRow.priority`, anakoinoseis `key` prop and `Element.src`).
+- Reference architecture: `~/Projects/Isokratis` (read-only — never edit it).
 
 ## Pupil register (Μαθητολόγιο)
 
 The person data that used to live on `registrations` is split into two tables
 (migration `0002_pupils.sql`); the legacy `registrations` table was dropped in
-`0003_drop_registrations.sql`. Full plan + data-cleansing rules:
-`docs/PUPILS_MIGRATION.md`.
+`0003_drop_registrations.sql`. Name/phone/ΑΜ normalisation lives in
+`lib/pupils/normalize.ts` (unit-tested in `tests/unit/`).
 
 - `pupils` — identity, one row per person, keyed by ΑΜ (Αριθμός Μητρώου, an
   INTEGER). `am` is NULL for the two review cases: true orphans (no ΑΜ at all →

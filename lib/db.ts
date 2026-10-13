@@ -13,8 +13,8 @@ import type { D1Database } from "@cloudflare/workers-types";
  *   route code keeps working unchanged.
  * - D1 has NO interactive transactions: atomic multi-statement flows must use
  *   `db.batch()`. The `Transaction` shim below executes statements immediately
- *   (no rollback) — audit rollback-sensitive flows when porting to D1
- *   (see docs/MIGRATION_SPEC.md).
+ *   (no rollback) — rollback-sensitive flows need `db.batch()` (AGENTS.md,
+ *   "Platform gotchas").
  */
 
 export type ExecReturn<T> = { insertId: "0"; rows: T[] };

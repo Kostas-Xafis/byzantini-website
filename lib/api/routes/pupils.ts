@@ -14,7 +14,7 @@ import { rateLimitMiddleware } from "./middleware/rateLimit";
 /**
  * Pupils — the Μαθητολόγιο domain. Replaces the `Registrations` group: the
  * legacy `registrations` table is split into `pupils` (identity) and
- * `pupil_enrollments` (history), see docs/PUPILS_MIGRATION.md.
+ * `pupil_enrollments` (history), see AGENTS.md, "Pupil register".
  *
  * class_type ids: 0 = Βυζαντινή Μουσική, 1 = Παραδοσιακή Μουσική,
  * 2 = Ευρωπαϊκή Μουσική — the UI's three music-type tabs.

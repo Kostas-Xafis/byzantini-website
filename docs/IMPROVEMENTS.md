@@ -1,25 +1,26 @@
-# Pre-merge review — `Workers` → `main`
+# Improvement backlog
 
-_Reviewed 2026-10-10 on `Workers` @ `e0c4e39` (68 commits, 209 files, +17k / −7.7k vs `main`)._
+The running list of known problems and planned upgrades. It started as the review of the `Workers` branch
+before it was merged into `main` (2026-10-10, `Workers` @ `e0c4e39`); the blockers were the merge gate, and
+everything that was not fixed before the merge stays tracked here.
 
-**Scope.** Whole codebase as it would land on `main`: architecture, frontend/UX, security/reliability,
-performance/SEO/ops, tests. **Out of scope:** the Turso → D1 data port and pupil-migration tooling
-(`scripts/portD1.ts`, `exportTurso.ts`, `migratePupils.ts`, `scripts/lib/*`, their docs) — being handled separately.
+**Scope.** Whole codebase: architecture, frontend/UX, security/reliability, performance/SEO/ops, tests.
 
-**Method.** Four parallel code reviews (one per area), then I re-verified every BLOCKER against the
+**Method (original review).** Four parallel code reviews (one per area), then I re-verified every BLOCKER against the
 code, and checked the public site live on `bun run dev` (desktop 800/1024/1366 px, mobile 375 px).
 The admin panel was reviewed from code only (not logged in live). Items marked **[live]** were
 reproduced in the running app; **[verify]** needs a deployed environment to confirm.
 
-**Status** (as of `3c559a1`, 2026-10-10): ✅ Done · 🟡 Partly done (what is left is noted) · ⬜ Open · ⏸ Deferred.
-Every ID below carries its status; update it in the same commit that changes it.
+**Status** (as of 2026-10-13, after the merge): ✅ Done · 🟡 Partly done (what is left is noted) · ⬜ Open · ⏸ Deferred.
+Every ID below carries its status; update it in the same commit that changes it. File/line references are from
+the original review and may have drifted.
 
-**Severity.** **BLOCKER** = fix before merging · **SHOULD** = fix soon after / before go-live polish ·
-**LATER** = worthwhile cleanup.
+**Severity.** **BLOCKER** = was required before the merge (the open ones are the most urgent) · **SHOULD** = fix
+soon · **LATER** = worthwhile cleanup.
 
 ---
 
-## TL;DR — the merge gate
+## TL;DR — blockers
 
 | # | Blocker | Area | Status |
 |---|---|---|---|
@@ -35,8 +36,8 @@ Every ID below carries its status; update it in the same commit that changes it.
 | B10 | Admin "select all" + delete wipes enrollments on **all pages** behind an empty, green confirmation | UX / data | ✅ Done |
 | B11 | Multi-statement write flows (payments, books, payoffs, teachers, pupils) are non-atomic on D1 | Data integrity | ⏸ Deferred |
 
-B1–B2 are mechanical (an hour). B3–B7 are the ones that would hurt real people. B11 may overlap with
-your ongoing D1 work — included because it lives in route code, not the port tooling.
+Still open from this list: **B3** (verify email delivery on a real deploy), **B7** (password hashing,
+`session_id` in JSON bodies, DB backup routes) and **B11** (atomic writes).
 
 ---
 
@@ -183,7 +184,6 @@ your ongoing D1 work — included because it lives in route code, not the port t
 
 **Status:** ⏸ Deferred — owner decision
 - `executeTransaction` (`lib/utils.server.ts:65–88`) runs each statement immediately; there are **zero** `db.batch()` call sites.
-  `MIGRATION_PLAN.md:120–122` lists this audit as Open.
 - Affected: `books.*` (books + school_payoffs + totals, partly in `Promise.all`), `payments.*` (check-then-write → overselling;
   `Payments.complete` re-subtracts already-completed ids), `payoffs.*`, `pupils.post` (4–5 writes; orphan code = `count+1` → duplicates
   under concurrency), `teachers.update`/`delete` (delete-then-reinsert classes/locations/instruments), `announcements.delete`/`postImage`
@@ -205,7 +205,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 | A6 | Bucket bugs: `Locations.delete` omits `bucketPrefix` → images orphaned (`locations.ts:130`); `Bucket.move` does put+delete in `Promise.all`; `Bucket.list` reads only the first 1000; unused `APIContext` param faked in 14 places. | `lib/bucket/index.ts:25–52` | Put-then-delete, paginate with cursor, drop the param. | ⬜ Open |
 | A7 | Entity shapes defined 3×: 23 dead valibot `v_*` schemas in `types/entities.ts` (the only reason `valibot` is a runtime dep), hand-written interfaces duplicating `lib/api/schemas.ts`, `z_Registrations` still the base for `Pupils.post` after the table was dropped. | `types/entities.ts`, `lib/api/schemas.ts` | Delete `v_*` + valibot, `z.infer` types, rename to a pupil-form schema. | ⬜ Open |
 | A8 | Schema backup is lossy: `JSON.stringify` values into SQL (double quotes = identifiers in SQLite), starts with `PRAGMA journal_mode=WAL`; `Schema.get` has no callers. | `lib/api/routes/schema.ts` | Proper SQL literals or point admins to `wrangler d1 export`; delete the duplicate group. | ⬜ Open |
-| A9 | Stale docs contradict the code: README architecture (paired `*.client/server.ts`, valibot, `execTryCatch`, `Registrations.*`), scripts `preview`/`build-preview`/`start` that don't exist (also in CLAUDE.md), `QUICKSTART.md` entirely Docker/Turso-era, `notes.txt`, `bucketServer.ts` references, sitemap comments about Pages `_routes.json`. | `README.md`, `QUICKSTART.md`, `notes.txt`, `MIGRATION_*.md` | Rewrite README from AGENTS.md; delete QUICKSTART/notes. | ⬜ Open |
+| A9 | Stale docs contradict the code: README architecture (paired `*.client/server.ts`, valibot, `execTryCatch`, `Registrations.*`), scripts `preview`/`build-preview`/`start` that don't exist (also in CLAUDE.md), `QUICKSTART.md` entirely Docker/Turso-era, `notes.txt`, `bucketServer.ts` references, sitemap comments about Pages `_routes.json`. | `README.md`, `notes.txt` | Rewrite README from AGENTS.md; delete notes. | 🟡 Partly done — after the merge: `QUICKSTART.md`, the migration/phase plans and the architecture docs deleted; port tooling and `TURSO_*` dropped from README. Left: README architecture rewrite, `notes.txt` |
 | A10 | Dead leftovers: `services/emailWorker/src/mailserver.ts` (Cloud Run `Bun.serve`), Cloud Run detection in `mailersend.ts:70–83`, `contacts/to_vcf.ts` (broken import), `silentImport` (`eval`, unused — also triggers a build warning), empty `lib/middleware/`, no-op loop `lib/api/routes/index.ts:80–83`, `Announcements.imagesDeleteByName`, unused zod schemas. | various | Delete. | ⬜ Open |
 
 ## SHOULD — Frontend, design system & UX
@@ -236,7 +236,7 @@ your ongoing D1 work — included because it lives in route code, not the port t
 | S7 | OAuth: `email_verified` not checked; `code`/`state` unencoded in the callback URL; logout revokes the `sid` from the body, not the cookie; `authentication.ts:189` duplicates the `:185` check (dead). | `authentication.ts`, `oauth2callback.astro:14` | — | 🟡 Partly done — `94e84ae`: `email_verified` checked, logout uses the cookie. Left: callback URL encoding, duplicate state check |
 | S8 | Email worker logs full recipient addresses (minors/parents) despite `maskEmail` existing. | `services/emailWorker/src/index.ts:269` | Use `maskEmail`. | ⬜ Open |
 | S9 | `wrangler.jsonc:14` `assets.directory: "./dist"` — works only thanks to the adapter's `.wrangler/deploy/config.json` redirect. Deploying with the root config would publish `dist/server/.dev.vars` (real dev secrets) as a static file. | `wrangler.jsonc:14` | `./dist/client`. | ⬜ Open |
-| S10 | Google Maps embed key committed in 2023 (`fc084d9`, `7ecfc33`). Browser-visible by design — confirm it's HTTP-referrer-restricted. `tests/.env.testforce` (local, gitignored) still holds Turso + R2-S3 credentials — rotate after cutover. | history / local | — | ⬜ Open |
+| S10 | Google Maps embed key committed in 2023 (`fc084d9`, `7ecfc33`). Browser-visible by design — confirm it's HTTP-referrer-restricted. `tests/.env.testforce` (local, gitignored) still holds Turso + R2-S3 credentials — the cutover is done, so rotate/delete them. | history / local | — | ⬜ Open |
 
 _Checked and fine:_ every admin route has `authenticateMiddleware`; all SQL is parameterised (`???` expansion is count-only;
 `Pupils.update` columns come from Zod keys); OAuth state + PKCE are correct; post-login redirect validation is sound;
@@ -256,7 +256,7 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 | P8 | Duplicate URLs: SSR pages answer with and without trailing slash, each self-canonical; internal links use no-slash, sitemap uses slash. | `Links.astro:26`, `astro.config.mjs` | Set `trailingSlash`, normalise canonical + links. | ⬜ Open |
 | P9 | No CI: `.github/` has only `copilot-instructions.md`. Nothing runs typecheck/build — which is how B1/B2 reached HEAD. | — | Minimal GitHub Action: `bun install`, `typecheck`, `build`, unit tests. | ⬜ Open |
 | P10 | Preview is built as production (`CLOUDFLARE_ENV=production`, `.env.production` inlined, analytics beacon fires, prod email/PDF workers). Preview config lives in 3 places (`wrangler.jsonc env.preview`, `wrangler.preview.jsonc` — missing `services`/`images` and claiming to be the deploy config — and IDs in `scripts/cf.ts:50–54`). | `scripts/cf.ts`, `wrangler.preview.jsonc` | Build preview with `CLOUDFLARE_ENV=preview`; one source of truth. | ⬜ Open |
-| P11 | `docs/PHASE6_DEPLOY.md` stale (lists retired `AUTOMATED_EMAILS_SERVICE_URL`, omits `PDF_SERVICE_AUTH_TOKEN`, `GOOGLE_MAPS_KEY`, `VITE_OWNER_EMAIL`, email `ENVIRONMENT`; outdated binding caveat). No `routes`/`custom_domains`; rollback plan is "`wrangler rollback --help` familiarity". | `docs/PHASE6_DEPLOY.md`, `wrangler.jsonc` | Custom domain in config; runbook: `wrangler versions/rollback`, D1 Time Travel bookmark before every remote migration, DNS fallback while Pages stays alive. | ⬜ Open |
+| P11 | No deploy/rollback runbook (the stale `docs/PHASE6_DEPLOY.md` was deleted after the merge; the deploy commands and worker names are in AGENTS.md). No `routes`/`custom_domains` in config; no written rollback plan. | `AGENTS.md`, `wrangler.jsonc` | Custom domain in config; short runbook: `wrangler versions/rollback`, D1 Time Travel bookmark before every remote migration. | ⬜ Open |
 | P12 | No alerting: site `observability` is just `{enabled: true}`, errors go to `console.log`. | `wrangler.jsonc`, `APIServer.ts:276` | Workers Logs alert / Logpush / Sentry (Toucan); `head_sampling_rate: 1`. | ⬜ Open |
 | P13 | `robots.txt` is `Allow: /` only; the catch-all does an R2 GET for every bot probe; announcement OG image uses the small `thumb_`; duplicate head tags in Admin/Signin layouts; 155 KB global CSS on every page. | various | `Disallow: /admin /api/ /login /unsubscribe`; prefix allowlist; main image for OG; dedupe. | ⬜ Open |
 | P14 | **Dev footgun [live]:** running `bun run build` while `bun run dev` is up rewrites `.wrangler/deploy/config.json` to point at `dist/server`, after which the dev server 404s every SSR page and `/api/*` until restarted. | — | Document it, or have `build` write a separate deploy-config path. | ⬜ Open |
@@ -290,7 +290,7 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 - **Services:** `observability.ts` near-identical in both workers; site↔worker payload types not shared; emailWorker
   tsconfig only includes `src/index.ts`. `services/` is gitignored and each worker is its own repo → document that site and
   workers must be deployed together (B3 needs both).
-- **Dependencies:** `ts-morph` unused; `valibot` (see A7); `@libsql/client` until cutover; package name still `"astro-test"`;
+- **Dependencies:** `ts-morph` unused; `valibot` (see A7); package name still `"astro-test"` (`@libsql/client` already removed);
   `astro.config.mjs` `port: 3000` is not a valid key; `xlsx`/`print-js`/`pdfjs-dist` are dev deps for types while runtime copies come from CDNs.
 - **Gallery/carousel** not keyboard-operable (`div`/`<i>` click targets; global `keydown` moves a hidden carousel).
 - **Misc a11y:** h1→h3 jump on landing; duplicated logo alt on subscribe pages; focus outline removed on inputs;
@@ -303,9 +303,9 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 
 ## Suggested order of work
 
-1. **Unbreak the gate (½ day):** B1, B2, then add the CI workflow (P9) so it can't regress.
-2. **Stop the data exposure (1–2 days):** B4, B5, B6, B7, S1 — each with a test (T1).
-3. **Make the core flows trustworthy:** B3 (emails, verify with `wrangler tail` on preview), B11 (batch the money/counter flows),
-   B9 + B10 (registration form + bulk delete).
-4. **First impression:** B8 navbar, F9 copy pass (5 minutes, very visible), F4 font-family fix.
-5. **Then:** A1 client/server split (unlocks most of P1), P2/P3 caching, P5/P6 assets, S2/S3 headers, docs (A9, P11).
+1. **Make the core flows trustworthy:** B3 (emails — verify with `wrangler tail` on one real send), B11 (batch the
+   money/counter flows), the rest of B7 (PBKDF2, no `session_id` in JSON, owner-only backup routes).
+2. **Safety net:** P9 CI workflow (typecheck + build + unit tests), T1 table-driven 401 test.
+3. **Security hardening:** S1 JSON-LD escaping, S2/S3 bucket route + security headers, S6/S8/S9.
+4. **First impression:** F9 copy pass (5 minutes, very visible), F4 font-family fix, F5 remaining `vw` sizes.
+5. **Then:** A1 client/server split (unlocks most of P1), P2/P3 caching, P5/P6 assets, docs (A9, P11).
