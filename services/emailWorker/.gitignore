@@ -1,0 +1,31 @@
+node_modules/
+.wrangler/
+out/
+campaign-state/
+.bun-cache/
+.tmp/
+*.txt
+!text_templates/
+!text_templates/**
+# Compiled SMS bodies (React Email -> plain text) are reviewed copy read at send
+# time, exactly like text_templates/, so they must survive the blanket *.txt rule.
+!sms_templates/
+!sms_templates/**
+*.env*
+*.json
+*secrets*
+test*
+# ...but the campaign test suite IS committed. Negate the rule narrowly rather
+# than deleting it: `test*` also hides stray artifacts like test*.csv, and the
+# suppression exports below prove those can carry recipient PII.
+!tests/
+!tests/**
+html_templates/_legacy
+# MailerSend suppression exports contain recipient PII — never commit
+*_suppression_*.csv
+.dev.vars*
+worker-configuration.d.ts
+
+
+.viz
+.scratch

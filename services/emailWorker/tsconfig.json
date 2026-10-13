@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		// Cloudflare Workers project — TS only typechecks (wrangler bundles).
+		"target": "es2022",
+		"lib": ["es2022"],
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"noEmit": true,
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"types": ["@cloudflare/workers-types"]
+	},
+	// Only the Worker entry — the CLI/campaign code runs on Bun and is
+	// typechecked with tsconfig.cli.json (typecheck:cli).
+	"include": ["src/index.ts"]
+}

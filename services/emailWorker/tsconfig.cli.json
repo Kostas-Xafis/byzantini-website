@@ -1,0 +1,27 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"jsx": "react-jsx",
+		"types": ["@types/bun", "@types/react"],
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+		"noEmit": true,
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"verbatimModuleSyntax": true,
+		"strict": true,
+		"allowImportingTsExtensions": true,
+		"skipLibCheck": true
+	},
+	// CLI + campaign + templates code (Bun/React). The Worker entry
+	// (src/index.ts) and its Worker-only modules (src/observability.ts) are
+	// checked with tsconfig.json instead — they use @cloudflare/workers-types
+	// globals (AnalyticsEngineDataset) that this config does not load.
+	"exclude": ["src/index.ts", "src/observability.ts", "node_modules"]
+}

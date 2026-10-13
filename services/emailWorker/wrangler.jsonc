@@ -1,0 +1,44 @@
+{
+	// Cloudflare Worker for transactional emails (replaces the dockerized/Cloud Run
+	// mail server — Phase 8 email port). Deployed as `byzantini-website-emails`.
+	// MailerSend is called directly via its REST API (the `mailersend` npm package
+	// uses gaxios/node http and does not run on workerd).
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "byzantini-website-emails",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-31",
+
+	// R2 bucket (production, byzantini-bucket) — `POST /html-templates`
+	// (templates:build publish) writes built templates to html_templates/<name>,
+	// and every send reads its template back from the same keys. The website
+	// calls the worker through the EMAIL_SERVICE service binding.
+	"r2_buckets": [{ "binding": "BUCKET", "bucket_name": "byzantini-bucket" }],
+
+	// No vars any more — SITE_URL is gone: per-send template reads come from
+	// the BUCKET binding above, not from the website's HTTP file proxy.
+
+	// Lite request telemetry: one Analytics Engine data point per request
+	// (outcome, endpoint, template, duration, status, count) plus a structured
+	// JSON log line. Metadata only — recipients, subjects and rendered HTML are
+	// personal data and are never written here. The dataset is created
+	// automatically on the first write after deploy; query it with the WAE SQL
+	// API (see README § Observability).
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS",
+			"dataset": "byzantini_email_worker_requests"
+		}
+	],
+
+	// Volume is low (transactional sends + occasional template publishes), so
+	// sample everything and keep the per-invocation logs alongside our own
+	// structured lines.
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		}
+	}
+}
