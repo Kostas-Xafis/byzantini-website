@@ -31,8 +31,8 @@
   `wrangler.jsonc` — no HTTP anywhere between workers); the only shared
   resource is the **same R2 bucket** (`byzantini-bucket`, site binding `S3_BUCKET`, email-worker binding `BUCKET`).
   The only remaining cross-service HTTP is CLI→worker (`templates:build` → `POST /html-templates`).
-- Migration from a Docker/Cloud Run + Turso legacy is documented in `MIGRATION_PLAN.md` + `docs/` (phases 1–8
-  mostly done; Phase 7 custom-domain cutover still pending).
+- Migrated from a Docker/Cloud Run + Pages + Turso legacy (complete; the port tooling and phase plans were
+  removed afterwards and live in git history). `docs/MIGRATION_SPEC.md` keeps the invariants.
 
 ## 2 · System context
 
@@ -97,9 +97,9 @@ services/                          aux workers (SEPARATE git repos, ignored by m
   pdfWorker/  byzantini-website-pdf-gen   emailWorker/  byzantini-website-emails
 email/                             STALE duplicate of the emailWorker stack (gitignored; safe to delete)
 tests/                             tests/api/*.test.ts (10 files) + testHelpers.ts
-scripts/                           cf, replicate, googleReviews, exportTurso (leftover)
+scripts/                           cf, replicate, googleReviews, workerSecrets, cleanDevTestData, pupilIssuesReport
 public/                            fonts, fa (Font Awesome), images, robots.txt, llms.txt
-docs/ + MIGRATION_PLAN.md          migration specs + phase plans
+docs/                              migration invariants, deploy, pupil register, pre-merge review
 types/                             entities, env, helpers (TS6-safe IsAny), global, custom-events
 ```
 
@@ -408,7 +408,6 @@ Deploy (manual, real credentials — never in routine work): `bun run build` →
 | `OWNER_EMAIL` / `VITE_OWNER_EMAIL` | `.env(.production)` | owner gate (`lib/env/ownerEmail.ts`, hardcoded fallback) |
 | `VITE_URL` | `.env` | origin (tests, oauth) |
 | `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY` | `.env` (dev) / CF secrets (prod) | password pepper · Google OAuth login · review collector |
-| `TURSO_DB_URL` `TURSO_DB_TOKEN` | `.env` | legacy DB export (`scripts/exportTurso.ts`) — kept until the final cutover |
 | `MAILERSEND_API_KEY`, `SERVICE_AUTH_TOKEN`, `DRY_RUN` | emailWorker `.dev.vars` / `.env.*` | sending, auth, dry-run |
 | `SERVICE_AUTH_TOKEN` | pdfWorker `.dev.vars` / secret | shared token for PDF_SERVICE binding calls |
 | `TEST_EMAIL` `TEST_PASSWORD` `VITE_URL` | `tests/.env.test` | API test suite login |
@@ -444,7 +443,7 @@ Dead / leftover (cleanup candidates, all verified):
 - `email/` root duplicate of the email worker stack (incl. legacy Docker + mail_log + suppression CSV).
 - `contacts/to_vcf.ts` broken (imports removed `createDbConnection`); `SelectedRowContext.solid.tsx`
   never imported; `public/fonts/DidactGothic-Regular.ttf` unreferenced (Google Fonts used);
-  `scripts/exportTurso.ts` unwired one-off; `Schema.get` endpoint + `Announcements.imagesDeleteByName`
+  `Schema.get` endpoint + `Announcements.imagesDeleteByName`
   (admittedly unimplemented) + `*` `getTotal` endpoints + `Registrations.getSubscriptionToken` have no
   real callers.
 - **Duplicate send logic** in emailWorker (`src/index.ts` REST vs `src/mailersend.ts` npm-SDK — one for

@@ -15,7 +15,7 @@
 5. **Greek UI text is preserved** — never translate or "improve" existing labels; new UI strings are Greek.
 6. `bun run typecheck` must pass before any phase is declared done. `bun run check` = typecheck + tests.
 
-## Target architecture (phase by phase — see `MIGRATION_PLAN.md`)
+## Target architecture (phase by phase — complete; the plan lives in git history)
 
 - **Phase 1 (DONE-BASE)**: Astro 7.2.9, `@astrojs/cloudflare` 14.2.x, `@astrojs/solid-js` 7.0.x,
   Tailwind 4 via `@tailwindcss/vite`, `tailwindcss` 4.3.x, `wrangler` 4.127.x, TS 6.0.3

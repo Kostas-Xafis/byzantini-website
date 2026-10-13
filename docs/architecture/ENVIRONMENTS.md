@@ -75,7 +75,6 @@ All worker↔worker traffic is bindings, but the local CLI still reaches Cloudfl
 | `db:query:prod`, `db:replicate`, `replicate:*` | prod D1/R2 (your login) | read-only pulls into local snapshots/mirror |
 | `worker-secrets` | deployed workers (`production` + `preview` envs by default) | secret rotation + local file mirroring |
 | `deploy` | Cloudflare | the only way code ships |
-| `exportTurso` | legacy Turso DB (`TURSO_DB_*` in `.env`, kept until final cutover) | one-off data export |
 | `bun run test` | the LOCAL dev server + local email worker | full API suite; sysusers suite logs invites as dry-runs |
 
 ## 3 · Preview worker (`env.preview`)

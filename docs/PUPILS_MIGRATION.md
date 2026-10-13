@@ -1,5 +1,12 @@
 # Μαθητολόγιο — pupils table + admin register page (scaffold)
 
+> **Historical record.** The backfill ran in production (2026-09-12) and the
+> port/backfill tooling it mentions (`scripts/migratePupils.ts`,
+> `scripts/exportTurso.ts`, `scripts/portD1.ts`, `scripts/lib/pupilsBackfill.ts`,
+> `docs/D1_PORT_RUNBOOK.md`) was removed after the merge into `main` — recover
+> it from git history if ever needed. The data-cleansing rules below remain the
+> specification of `lib/pupils/normalize.ts`.
+
 Status: **plan / scaffold only** — no code written yet.
 Branch: `Workers` · Local D1 snapshot: 1514 registrations, school years 2023-24 … 2026-27.
 

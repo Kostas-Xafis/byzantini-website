@@ -119,8 +119,6 @@ GOOGLE_CLIENT_SECRET=         # Google OAuth (runtime)
 GOOGLE_MAPS_KEY=              # google:reviews script only
 PDF_SERVICE_AUTH_TOKEN=       # shared with the pdfWorker's SERVICE_AUTH_TOKEN (bearer on PDF_SERVICE calls)
 AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=   # shared with the emailWorker's SERVICE_AUTH_TOKEN (send body)
-TURSO_DB_URL=                 # kept until the final cutover (scripts/exportTurso.ts)
-TURSO_DB_TOKEN=
 
 VITE_OWNER_EMAIL=             # owner gate (inlined client + server)
 VITE_URL=                     # local origin

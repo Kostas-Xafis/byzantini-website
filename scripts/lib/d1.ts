@@ -1,9 +1,8 @@
 /**
  * scripts/lib/d1.ts — shared D1 transport for the CLI tooling.
  *
- * Both `scripts/exportTurso.ts` (Turso → D1 port) and `scripts/migratePupils.ts`
- * (pupil-register backfill) need to read and write the SAME database through two
- * very different doors:
+ * CLI tooling (today `scripts/pupilIssuesReport.ts`) reaches the SAME database
+ * through two very different doors:
  *
  *   local  — the miniflare SQLite file under `.wrangler/state/v3/d1`, opened
  *            directly with `bun:sqlite` (fast, transactional, no credentials);

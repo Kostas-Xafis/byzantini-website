@@ -12,8 +12,9 @@
  *   amka          '' (not collected in earlier years), '00000000000' (fake)
  *   phones        '6973490962', '+30 697 349 0962', '-'
  *
- * Everything here is deterministic and side-effect free so the backfill script
- * (scripts/migratePupils.ts) can be unit-tested exhaustively.
+ * Everything here is deterministic and side-effect free so it can be unit-tested
+ * exhaustively. It drove the one-time pupil-register backfill (removed after the
+ * port) and still normalises what the public form and admin routes write.
  */
 
 /** ΑΜ must be 1–4 digits to be a plausible registry number. */

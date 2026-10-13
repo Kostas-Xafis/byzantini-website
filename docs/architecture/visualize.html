@@ -171,9 +171,9 @@ function tab(id, title) { TABS.push({ id, title, body: "" }); return TABS[TABS.l
   SVC[["services/  pdfWorker + emailWorker<br/>(own package.json + wrangler.jsonc)"]]:::svc
   EMAIL[["email/  (dev source of email stack)<br/>render, templates, campaign CLI"]]:::svc
   T[["tests/  tests/api/*.test.ts"]]:::cfg
-  SCR[scripts/ bucketServer, cf, replicate,<br/>googleReviews, exportTurso]:::cfg
+  SCR[scripts/ cf, replicate, googleReviews,<br/>workerSecrets, pupilIssuesReport]:::cfg
   TYPES[types/ entities, env, helpers,<br/>global, custom-events]:::cfg
-  DOC[docs/ MIGRATION_SPEC, PHASE4_SPEC,<br/>PHASE6_DEPLOY, PHASE8_PLAN]:::cfg
+  DOC[docs/ MIGRATION_SPEC, PHASE6_DEPLOY,<br/>PUPILS_MIGRATION, PRE_MERGE_REVIEW]:::cfg
 
   classDef cfg fill:#1c2f52,stroke:#3d5f9e,color:#dce9fb
   classDef fe fill:#123f33,stroke:#2f7a63,color:#d9f4ec
@@ -742,7 +742,6 @@ function tab(id, title) { TABS.push({ id, title, body: "" }); return TABS[TABS.l
 		["GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET", ".dev.vars", "Google OAuth login (arctic PKCE)"],
 		["GOOGLE_MAPS_KEY", ".dev.vars", "googleReviews.ts Places-API collector"],
 		["SECRET", ".dev.vars", "Session/auth secret (legacy naming)"],
-		["TURSO_DB_URL / TURSO_DB_TOKEN", ".dev.vars", "Legacy Turso DB (exportTurso.ts cutover leftover)"],
 		["CONTACT_INFO, *_SNAPSHOT_LOCATION, DEV_BUCKET_LOCATION, LATEST_MIGRATION_FILE, FORCE_TEST, PROJECT_ABSOLUTE_PATH", ".dev.vars", "Local tooling: snapshots, bucket store location, build helpers"],
 		["MAILERSEND_API_KEY", "emailWorker .dev.vars / secret", "Transactional + campaign sending (MailerSend)"],
 		["SERVICE_AUTH_TOKEN", "emailWorker .dev.vars / secret", "Worker-side half of AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN"],

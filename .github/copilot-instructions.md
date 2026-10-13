@@ -61,7 +61,7 @@
 - Server-side env comes from `cloudflare:workers` (`lib/env/runtime.ts`
   bridge + `Env.env`, which merges `import.meta.env` with the runtime env).
   **Site dev values live in `.env`** (gitignored, auto-loaded by Bun/Vite:
-  SECRET, GOOGLE_*, tokens, TURSO_*); production runtime
+  SECRET, GOOGLE_*, tokens); production runtime
   secrets are Cloudflare secrets. The site has **no `.dev.vars`**; the
   pure-wrangler services keep theirs (wrangler dev reads secrets only from
   `.dev.vars`). Non-prefixed `.env.production` keys are never inlined.
@@ -120,27 +120,13 @@
   them), `bun run typecheck`, `bun run check`.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
   suite writes to the local dev DB.
-- **Rebuild a D1 database from Turso (preferred): `bun run port --db local` /
-  `port:preview` / `port:prod --yes-prod` / `port:all --yes-prod` /
-  `port:verify`** — extract → wipe → migrate → load → regenerate the pupil
-  register → verify, in one command, per target. `--dry-run` writes nothing,
-  `--from latest` reuses a bundle; it is safely re-runnable and has no
-  migration-ordering trap. Runbook: `docs/D1_PORT_RUNBOOK.md`.
 - Secretary-facing pupil reports: `bun run pupils:report` (or `:prod`) writes
   `reports/mathitologio-ektremotites.{md,pdf}` + `…-parartima.{md,pdf}` — cards
   without/unusable ΑΜ, shared ΑΜ/ΑΜΚΑ, duplicate cards — from a read-only database
   read, printed to PDF by headless Chrome. `reports/` is gitignored (names, ΑΜΚΑ,
   phones are personal data).
-- Low-level tooling: `bun run turso:export` (bundle + schema check),
-  `turso:verify` (drift: row count + SHA-256 digest), `turso:apply:prod`
-  (full-replace load), and `bun run pupils:migrate` (`--apply`) for the
-  target-side `registrations` → `pupils` + `pupil_enrollments` backfill. Never
-  run `d1 migrations apply` before that backfill has run on a database that
-  still holds `registrations`: it also runs `0003_drop_registrations.sql` and
-  drops the table the backfill reads. Shared transport for all of them:
-  `scripts/lib/d1.ts` (address targets by the `DB` binding, never the database
-  name); shared bundle/pupil engines: `scripts/lib/portBundle.ts`,
-  `scripts/lib/pupilsRun.ts`. Turso is read-only in all of this tooling.
+- Shared D1 transport for scripts: `scripts/lib/d1.ts` (address targets by
+  the `DB` binding, never the database name).
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker
@@ -152,5 +138,5 @@
 - Extend existing route groups/utilities instead of introducing a new
   transport or API plumbing layer.
 
-> Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md`
-> and `MIGRATION_PLAN.md` for the plan and do-not-re-research facts.
+> The Pages → Workers and Turso → D1 migration is complete and merged; the port
+> tooling was removed. `docs/MIGRATION_SPEC.md` keeps the do-not-re-research facts.

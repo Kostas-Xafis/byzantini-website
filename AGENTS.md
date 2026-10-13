@@ -18,8 +18,10 @@ database, R2 storage, the Cloudflare Images binding (announcement thumbnails,
 bindings**: `byzantini-website-emails` (`services/emailWorker`) and
 `byzantini-website-pdf-gen` (`services/pdfWorker`).
 
-> Migration in progress on branch `Workers` — see `docs/MIGRATION_SPEC.md` and
-> `MIGRATION_PLAN.md` for the plan and the do-not-re-research facts.
+> The Pages → Workers and Turso → D1 migration is complete and merged into
+> `main`; the port tooling was removed afterwards (recover it from git history
+> if ever needed). `docs/MIGRATION_SPEC.md` keeps the do-not-re-research facts
+> (D1 transactions, worker self-fetch error 1042, ...).
 
 ## Stack (do not change without a good reason)
 
@@ -37,8 +39,8 @@ bindings**: `byzantini-website-emails` (`services/emailWorker`) and
   `scripts/bucketServer.ts`) is gone; the R2 binding works in dev like D1's
   does.
 - Deploy: `@astrojs/cloudflare` adapter → `dist/server/entry.mjs` + `dist/client/`;
-  config in `wrangler.jsonc`; manual deploys via `wrangler deploy`
-  (deploy plumbing lands in Phase 6; CI/Pages integration is retired).
+  config in `wrangler.jsonc`; manual deploys via `bun run cf deploy`
+  (`docs/PHASE6_DEPLOY.md`; CI/Pages integration is retired).
 - Env: server-side runtime values via `cloudflare:workers` env (bindings + CF
   secrets/vars in prod) merged with `import.meta.env`; **dev values live in
   Vite-native `.env`** (gitignored — Bun/Vite auto-load it, `Env.env` merges
@@ -75,18 +77,14 @@ SQLite at `.wrangler/state/v3/d1`):
 | Task | Command | Notes |
 | --- | --- | --- |
 | Query dev DB | `bun run db:query -- "SELECT 1"` | `wrangler d1 execute DB --local` |
-| Query remote DB | `bun run db:query:prod -- "..."` | requires the remote database (Phase 6) |
+| Query remote DB | `bun run db:query:prod -- "..."` | production D1 |
 | Recent query logs | `bun run db:logs` | |
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
 | Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql`; **does not re-run migrations** — follow with `bunx wrangler d1 migrations apply DB --local` |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
-| **Rebuild D1 from Turso (the one command)** | `bun run port --db local` · `port:preview` · `port:prod --yes-prod` · `port:all --yes-prod` · `port:verify` | `scripts/portD1.ts`: extract → wipe → migrate → load → **regenerate the pupil register** → verify, per target. Reuses `--from latest`/`<stamp>`; `--dry-run` writes nothing at all, `--verify-only` compares without writing, remote targets get a pre-wipe `wrangler d1 export` backup. Safely re-runnable. Runbook: `docs/D1_PORT_RUNBOOK.md` |
-| Turso → D1 data port (low-level) | `bun run turso:export` / `turso:verify` / `turso:apply:prod` | `scripts/exportTurso.ts`: exports Turso to a verified bundle under `dbSnapshots/turso-export/<stamp>/`, `--verify` reports drift (row count + SHA-256 digest), `--apply` replaces the target rows through parameterised D1 REST batches; `query_logs` is excluded. `--wipe` (apply-only; `--dry-run` to plan) drops **every** target table incl. `d1_migrations`, replays `wrangler d1 migrations apply`, then loads — it does **not** rebuild the pupil register, so it refuses a target that holds pupils unless `--allow-pupil-loss`. `--exclude` also filters a `--from` bundle |
-| Pupil backfill (target-side) | `bun run pupils:migrate` / `pupils:migrate:apply` / `pupils:migrate:prod` | the one-time `registrations` → `pupils` + `pupil_enrollments` migration for a target that still holds `registrations`; dry-run by default, `--db prod --yes-prod` for production; see `docs/PUPILS_MIGRATION.md`. **Never `d1 migrations apply` before it has run — that also runs 0003 and drops `registrations`** (the script prints the safe order). The `port` flow above has no such ordering trap: it plans the register from the bundle before anything is written |
 | Pupil issues report | `bun run pupils:report` / `pupils:report:prod` | `scripts/pupilIssuesReport.ts`: reads a target **read-only** and writes the secretary-facing «Μαθητολόγιο — εκκρεμότητες» pair — `reports/mathitologio-ektremotites.{md,pdf}` (summary) and `…-parartima.{md,pdf}` (detailed lists): cards without ΑΜ, unusable ΑΜ, one ΑΜ on two people, duplicate cards (same ΑΜΚΑ / same mobile+name / same name only), one ΑΜΚΑ on different people. PDFs are printed from the same content by headless Chrome (`--no-pdf` for Markdown only, `--date`/`--out` to override). **`reports/` is gitignored — the documents contain names, ΑΜΚΑ and phones** |
-| Shared D1 transport | `scripts/lib/d1.ts` | used by all of the above: local miniflare SQLite or the D1 REST API (single `query` / parameterised `batch`), credentials from `CLOUDFLARE_API_TOKEN` or the wrangler session, database ids read from `wrangler.jsonc`. **Address a target by its binding `DB`, never by database name** — `-e preview` binds `DB` to `byzantini-db-preview` |
-| Port implementation libs | `scripts/lib/portBundle.ts` · `scripts/lib/pupilsRun.ts` | the bundle/digest/schema/wipe/migrate/load/compare primitives and the pupil-register run — one implementation behind `portD1.ts`, `exportTurso.ts` and `migratePupils.ts`. The Turso connection is **read-only by construction** (a guard rejects any non-read statement) |
+| Shared D1 transport | `scripts/lib/d1.ts` | used by the pupil issues report: local miniflare SQLite or the D1 REST API (single `query` / parameterised `batch`), credentials from `CLOUDFLARE_API_TOKEN` or the wrangler session, database ids read from `wrangler.jsonc`. **Address a target by its binding `DB`, never by database name** — `-e preview` binds `DB` to `byzantini-db-preview` |
 
 Aux services (separate Cloudflare Workers in `services/`; each has its own
 `package.json`/`wrangler.jsonc` — run wrangler from inside the folder with
@@ -103,8 +101,8 @@ exercise its feature). No service URLs anywhere:
 Shared-secret bootstrap/rotation: `bun run worker-secrets` (`scripts/workerSecrets.ts`) — sets the two matching site↔worker pairs on the deployed workers (defaults: pdfWorker/emailWorker + site envs `production`,`preview`; `--help` for flags) and **mirrors the values into the local env files** (site `.env`/`.env.production`, the services' `.dev.vars`, emailWorker `.env.development`/`.env.production`), so dev, `wrangler dev` and `templates:build` pick the new tokens automatically. Requires `wrangler login`; values are generated locally, never passed as argv and never printed.
 
 Deploy (manual, requires Cloudflare credentials — do NOT run casually, not in tests):
-`bun run build` then `wrangler deploy --config dist/server/wrangler.json`
-(precise deploy command confirmed in Phase 6; old `deploy:test`/`logs:test` are gone).
+`bun run cf deploy` (build + `wrangler deploy --config dist/server/wrangler.json`)
+or `bun run cf deploy:preview`; see `docs/PHASE6_DEPLOY.md`.
 
 ## API architecture (project-critical, preserve the pattern)
 
@@ -178,10 +176,7 @@ The person data that used to live on `registrations` is split into two tables
   music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student" with
   `ΑΜ = 000`) → the form. The identification happens ONCE; switching department
   afterwards must not send the user back through it.
-- Rebuild tooling: `bun run port --db local|preview|prod` (one command;
-  `--db prod` needs `--yes-prod`) rebuilds the whole database from Turso,
-  including this register. The target-side backfill remains available as
-  `bun run pupils:migrate` (dry run) / `pupils:migrate:apply`.
+- `bun run pupils:report` lists what the secretaries still have to resolve;
   `bun run dev:clean` removes the fixtures the API suite writes to the local
   dev DB.
 
@@ -192,8 +187,7 @@ The person data that used to live on `registrations` is split into two tables
   globals. The merged view = `import.meta.env` + the runtime env (bindings,
   vars/secrets). **Site dev values live in `.env`** (gitignored, auto-loaded by
   Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
-  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`,
-  `TURSO_DB_URL/TOKEN` (kept until the final cutover).
+  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`.
   Production runtime secrets stay **Cloudflare secrets** (`wrangler secret
   put`, never in files). The site has **no `.dev.vars`**; pure-wrangler
   services (pdfWorker/emailWorker dev) still keep theirs.
