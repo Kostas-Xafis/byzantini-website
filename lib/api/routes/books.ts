@@ -1,7 +1,7 @@
 import { z } from "astro/zod";
 import type { Books, Payments } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { z_Books } from "@lib/api/schemas";
+import { z_Books, z_IdArray } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -25,11 +25,11 @@ export const booksRoutes = {
 			),
 	),
 	getById: new APIServer(
-		{ method: "POST", path: "/books/id", responseSchema: z_Books },
+		{ method: "POST", path: "/books/id", schema: z_IdArray, responseSchema: z_Books },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const [id] = body as number[];
+				const [id] = body;
 				const [book] = await executeQuery<Books>("SELECT * FROM books WHERE id = ?", [id]);
 				if (!book) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
 				return book;
@@ -72,11 +72,11 @@ export const booksRoutes = {
 			}, "Σφάλμα κατά την ενημέρωση της ποσότητας του βιβλίου"),
 	),
 	delete: new APIServer(
-		{ method: "DELETE", path: "/books" },
+		{ method: "DELETE", path: "/books", schema: z_IdArray },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async (T) => {
-				const ids = body as number[];
+				const ids = body;
 				const books = await T.executeQuery<Books>(`SELECT * FROM books WHERE id IN (${questionMarks(ids)})`, ids);
 				if (books.length === 0) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
 

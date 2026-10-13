@@ -1,5 +1,5 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
-import { z_JoinedEnrollments, z_PupilSearchResponse, z_PupilWithEnrollments, z_Registrations } from "@lib/api/schemas";
+import { z_IdArray, z_JoinedEnrollments, z_PupilSearchResponse, z_PupilWithEnrollments, z_Registrations } from "@lib/api/schemas";
 import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
 import { classYearsByMusicType, MusicTypeArr } from "@lib/classYears";
 import { ALL_YEARS, schoolYearOf } from "@lib/pupils/years";
@@ -59,8 +59,6 @@ function successfulRegistrationTemplate(classId: number, classYear: string): str
 }
 
 // ---- Request schemas (group-local, as in the other route groups) ----
-
-const z_IdArray = z.array(z.number().int().min(0, "Μη έγκυρο id"));
 
 const z_Search = z.object({
 	query: z.string("Μη έγκυρο ερώτημα αναζήτησης").max(120, "Πολύ μεγάλο ερώτημα"),
@@ -331,7 +329,7 @@ export const pupilsRoutes = {
 	// ---------------------------------------------------------------------
 	get: new APIServer({ method: "POST", path: "/pupils/[id:number]", responseSchema: z_PupilWithEnrollments }, [authenticateMiddleware], ({ params }) =>
 		handlerResult(async () => {
-			const id = Number(params.id);
+			const { id } = params;
 			const [pupil] = await executeQuery<Pupils>("SELECT * FROM pupils WHERE id = ?", [id]);
 			if (!pupil) throw APIError.notFound("Ο μαθητής δεν βρέθηκε");
 			const enrollments = await executeQuery<PupilEnrollments>(
@@ -347,7 +345,7 @@ export const pupilsRoutes = {
 	// ---------------------------------------------------------------------
 	update: new APIServer({ method: "PUT", path: "/pupils", schema: z_PupilUpdate }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
-			const { id, ...fields } = body as z.infer<typeof z_PupilUpdate>;
+			const { id, ...fields } = body;
 			const columns = Object.keys(fields);
 			if (columns.length === 0) return "Δεν υπάρχουν αλλαγές";
 			const values = columns.map((column) => (fields as Record<string, unknown>)[column]);
@@ -552,7 +550,7 @@ export const pupilsRoutes = {
 
 	deleteEnrollments: new APIServer({ method: "DELETE", path: "/pupils/enrollments", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
-			const ids = body as number[];
+			const ids = body;
 			if (ids.length === 1) await T.executeQuery(`DELETE FROM pupil_enrollments WHERE id = ?`, ids);
 			else await T.executeQuery(`DELETE FROM pupil_enrollments WHERE id IN (${questionMarks(ids)})`, ids);
 			await T.executeQuery("UPDATE total_enrollments SET amount = amount - ?", [ids.length]);
@@ -590,7 +588,7 @@ export const pupilsRoutes = {
 		[authenticateMiddleware],
 		({ params }) =>
 			handlerResult(async () => {
-				const id = Number(params.id);
+				const { id } = params;
 				const [row] = await executeQuery<Record<string, unknown>>(`${JOINED_SELECT} WHERE e.id = ?`, [id]);
 				if (!row) throw APIError.notFound("Η εγγραφή δεν βρέθηκε");
 				const { enrollment, pupil } = splitJoined(row);

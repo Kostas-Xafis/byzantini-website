@@ -3,7 +3,7 @@ import { z } from "astro/zod";
 import type { Locations } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
 import { executeQuery, questionMarks, ImageMIMEType } from "@lib/utils.server";
-import { z_BlobUpload, z_Locations, z_LocationsResponse } from "@lib/api/schemas";
+import { z_BlobUpload, z_IdArray, z_Locations, z_LocationsResponse } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -43,11 +43,11 @@ export const locationsRoutes = {
 			),
 	),
 	getById: new APIServer(
-		{ method: "POST", path: "/locations/id", responseSchema: z_LocationsResponse },
+		{ method: "POST", path: "/locations/id", schema: z_IdArray, responseSchema: z_LocationsResponse },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const [id] = body as number[];
+				const [id] = body;
 				const [location] = await executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [id]);
 				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 				return location;
@@ -91,7 +91,7 @@ export const locationsRoutes = {
 				const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
 				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 
-				const blob = rawBody as Blob;
+				const blob = rawBody;
 				const filetype = blob.type;
 				if (ImageMIMEType.includes(filetype)) {
 					const fileBuffer = await blob.arrayBuffer();
@@ -118,11 +118,11 @@ export const locationsRoutes = {
 			}, "Σφάλμα κατά την διαγραφή της εικόνας"),
 	),
 	delete: new APIServer(
-		{ method: "DELETE", path: "/locations" },
+		{ method: "DELETE", path: "/locations", schema: z_IdArray },
 		[authenticateMiddleware],
 		({ body, request }) =>
 			handlerResult(async (T) => {
-				const ids = body as number[];
+				const ids = body;
 				const files = await T.executeQuery<Pick<Locations, "image">>(
 					`SELECT image FROM locations WHERE id IN (${questionMarks(ids)})`,
 					ids,

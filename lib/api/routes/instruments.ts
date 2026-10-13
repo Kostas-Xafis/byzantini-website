@@ -1,7 +1,7 @@
 import { z } from "astro/zod";
 import type { Instruments } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { z_Instruments } from "@lib/api/schemas";
+import { z_IdArray, z_Instruments } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -12,7 +12,6 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  */
 
 const postReq = z_Instruments.omit({ id: true });
-const idListReq = z.array(z.number().int());
 
 export const instrumentsRoutes = {
 	// GET /instruments — authentication: false
@@ -37,10 +36,10 @@ export const instrumentsRoutes = {
 	),
 	// POST /instruments/id — authentication: false
 	getById: new APIServer(
-		{ method: "POST", path: "/instruments/id", schema: idListReq, responseSchema: z_Instruments },
+		{ method: "POST", path: "/instruments/id", schema: z_IdArray, responseSchema: z_Instruments },
 		({ body }) =>
 			handlerResult(async () => {
-				const [id] = body as number[];
+				const [id] = body;
 				const [instrument] = await executeQuery<Instruments>("SELECT * FROM instruments WHERE id = ? LIMIT 1", [id]);
 				if (!instrument) throw APIError.notFound("Το μουσικό όργανο δεν βρέθηκε");
 				return instrument;
@@ -48,11 +47,11 @@ export const instrumentsRoutes = {
 	),
 	// DELETE /instruments — authentication: true
 	delete: new APIServer(
-		{ method: "DELETE", path: "/instruments", schema: idListReq },
+		{ method: "DELETE", path: "/instruments", schema: z_IdArray },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async (T) => {
-				const ids = body as number[];
+				const ids = body;
 				await T.executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Teacher/s deleted successfully";
 			}, "Σφάλμα κατά την διαγραφή του μουσικού οργάνου"),

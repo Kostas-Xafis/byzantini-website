@@ -1,7 +1,7 @@
 import { z } from "astro/zod";
 import type { Books, Payments } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { z_Payments } from "@lib/api/schemas";
+import { z_IdArray, z_Payments } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -15,7 +15,6 @@ import { authenticateMiddleware } from "./middleware/authenticate";
 
 const postReq = z_Payments.omit({ id: true, amount: true, date: true });
 const updatePaymentReq = z_Payments.pick({ id: true, amount: true });
-const idsReq = z.array(z.number().int().min(0, "Μη έγκυρο id"));
 
 const insertResponse = z.object({ insertId: z.number().int().min(0, "Μη έγκυρο insertId") });
 
@@ -30,11 +29,11 @@ export const paymentsRoutes = {
 			),
 	),
 	getById: new APIServer(
-		{ method: "POST", path: "/payments/id", schema: idsReq, responseSchema: z.array(z_Payments) },
+		{ method: "POST", path: "/payments/id", schema: z_IdArray, responseSchema: z.array(z_Payments) },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const ids = body as number[];
+				const ids = body;
 				const payments = await executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 				if (!payments) throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
 				return payments;
@@ -91,11 +90,11 @@ export const paymentsRoutes = {
 			}, "Σφάλμα κατά την ενημέρωση της πληρωμής"),
 	),
 	complete: new APIServer(
-		{ method: "POST", path: "/payments/complete", schema: idsReq },
+		{ method: "POST", path: "/payments/complete", schema: z_IdArray },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async (T) => {
-				const ids = body as number[];
+				const ids = body;
 				//check if payment exists
 				const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
 				if (payments.length === 0) throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
@@ -108,11 +107,11 @@ export const paymentsRoutes = {
 			}, "Σφάλμα κατά την ολοκλήρωση της πληρωμής"),
 	),
 	delete: new APIServer(
-		{ method: "DELETE", path: "/payments", schema: idsReq },
+		{ method: "DELETE", path: "/payments", schema: z_IdArray },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async (T) => {
-				const ids = body as number[];
+				const ids = body;
 
 				//check if payment exists
 				const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);

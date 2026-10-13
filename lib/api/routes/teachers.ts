@@ -3,7 +3,7 @@ import type { APIContext } from "astro";
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
 import { ImageMIMEType, executeQuery } from "@lib/utils.server";
-import { z_BlobUpload, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
+import { z_BlobUpload, z_IdArray, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -42,8 +42,6 @@ const fileDeleteReq = z.object({
 	type: z.union([z.literal("cv"), z.literal("picture")], { message: "Μη έγκυρος τύπος" }),
 });
 
-const z_IdArray = z.array(positiveInt());
-
 // Columns safe to serve without a session (mirror of z_PublicTeacher): never ΑΜΚΑ, phone or email.
 const publicTeacherColumns = "id, fullname, picture, cv, linktree, gender, title, visible, online";
 type PublicTeacher = Omit<Teachers, "amka" | "email" | "telephone">;
@@ -60,10 +58,11 @@ export const teachersRoutes = {
 	),
 	getById: new APIServer({ method: "POST", path: "/teachers/id", schema: z_IdArray, responseSchema: z_Teachers }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async () => {
-			const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", body as number[]);
+			const [id] = body;
+			const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", [id]);
 			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 			return teacher;
-		}, "Δάσκαλος δεν βρέθηκε"),
+		}, "Σφάλμα κατά την ανάκτηση του δασκάλου"),
 	),
 	getByPriorityClasses: new APIServer(
 		{ method: "GET", path: "/teachers/priority/[class_type:string]", responseSchema: z.array(z_PublicTeacher) },
@@ -88,7 +87,7 @@ export const teachersRoutes = {
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(
-				() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", body as number[]),
+				() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id IN (???)", body),
 				"Σφάλμα κατά την ανάκτηση των μαθημάτων του δασκάλου",
 			),
 	),
@@ -98,7 +97,7 @@ export const teachersRoutes = {
 	getLocationsById: new APIServer(
 		{ method: "POST", path: "/teachers/locationsById", schema: z_IdArray, responseSchema: z.array(z_TeacherLocations) },
 		[authenticateMiddleware],
-		({ body }) => handlerResult(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id = ?", body as number[])),
+		({ body }) => handlerResult(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id IN (???)", body)),
 	),
 	getInstruments: new APIServer({ method: "GET", path: "/teachers/instruments", responseSchema: z.array(z_TeacherInstruments) }, () =>
 		handlerResult(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments")),
@@ -106,7 +105,7 @@ export const teachersRoutes = {
 	getInstrumentsById: new APIServer(
 		{ method: "POST", path: "/teachers/instrumentsById", schema: z_IdArray, responseSchema: z.array(z_TeacherInstruments) },
 		[authenticateMiddleware],
-		({ body }) => handlerResult(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id = ?", body as number[])),
+		({ body }) => handlerResult(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id IN (???)", body)),
 	),
 	post: new APIServer(
 		{ method: "POST", path: "/teachers", schema: postReq, responseSchema: z.object({ insertId: z.number() }) },
@@ -172,11 +171,11 @@ export const teachersRoutes = {
 		[authenticateMiddleware],
 		({ params, body, request }) =>
 			handlerResult(async () => {
-				const id = Number(params.id);
+				const { id } = params;
 				const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 				if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
-				const blob = body as Blob;
+				const blob = body;
 				const filetype = blob.type;
 				const data = await blob.arrayBuffer();
 
@@ -200,7 +199,7 @@ export const teachersRoutes = {
 	),
 	fileRename: new APIServer({ method: "PUT", path: "/teachers/file/rename/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
 		handlerResult(async (T) => {
-			const id = Number(params.id);
+			const { id } = params;
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
@@ -239,7 +238,7 @@ export const teachersRoutes = {
 	),
 	delete: new APIServer({ method: "DELETE", path: "/teachers", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
-			const ids = body as number[];
+			const ids = body;
 
 			await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (???)`, ids);
 			await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (???)`, ids);

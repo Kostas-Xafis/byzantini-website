@@ -9,19 +9,12 @@ import type { z } from "astro/zod";
  */
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
-type StringTypeToType<S extends string> = S extends "string"
-	? string
-	: S extends "number"
-		? number
-		: S extends "bigint"
-			? bigint
-			: S extends "boolean"
-				? boolean
-				: S extends "undefined"
-					? undefined
-					: S extends "null"
-						? null
-						: unknown;
+/**
+ * Path params arrive percent-decoded; `[name:number]` is coerced to a finite
+ * number (a segment that is not a decimal number does not match the route).
+ * Every other annotation is a plain string.
+ */
+type StringTypeToType<S extends string> = S extends "number" ? number : string;
 
 export type RouteParams<S extends string> = S extends `${infer _Start}[${infer Param}:${infer Type}]${infer Rest}`
 	? { [K in Param]: StringTypeToType<Type> } & RouteParams<Rest>
@@ -41,7 +34,7 @@ export interface APIRouteOptions<
 	responseSchema?: R;
 	/** Multipart form-data request (values are coerced server-side). */
 	multipart?: boolean;
-	/** Multipart file upload: the request body IS the raw file (no form parsing). */
+	/** File upload: the request body IS the raw file (no form parsing). Pair it with `schema: z_BlobUpload` so the handler gets a typed Blob. */
 	rawBlob?: boolean;
 }
 
@@ -56,7 +49,19 @@ export interface RegisteredRoute {
 
 export interface RouteMatch {
 	route: RegisteredRoute;
-	params: Record<string, string>;
+	params: Record<string, string | number>;
+}
+
+/** A `[name:number]` segment: an optionally signed decimal (no hex, exponent, blanks or Infinity). */
+const NUMERIC_SEGMENT = /^-?\d+(?:\.\d+)?$/;
+
+/** `decodeURIComponent` that keeps a malformed escape (a lone `%`) as written. */
+function safeDecode(segment: string): string {
+	try {
+		return decodeURIComponent(segment);
+	} catch {
+		return segment;
+	}
 }
 
 /** A typed API route contract. Subclasses own independent route registries. */
@@ -89,37 +94,51 @@ export class APIRoute<
 		return this.routes;
 	}
 
+	/** The route for `method` + `concretePath` (static routes win over parametrised ones), with its decoded params. */
 	static findRoute(method: HTTPMethod, concretePath: string): RouteMatch | null {
 		let bestMatch: RouteMatch | null = null;
 		for (const route of this.getRoutes()) {
-			if (route.method !== method || !this.pathMatchesPattern(concretePath, route.path)) continue;
-			const match = { route, params: this.pathParamsToObject(concretePath, route.path) };
+			if (route.method !== method) continue;
+			const params = this.matchPath(concretePath, route.path);
+			if (!params) continue;
+			const match = { route, params };
 			if (!route.path.includes("[")) return match;
 			bestMatch ??= match;
 		}
 		return bestMatch;
 	}
 
-	static pathMatchesPattern(concretePath: string, patternPath: string): boolean {
+	/**
+	 * Matches `concretePath` (as received, percent-encoded) against a route
+	 * pattern and returns its params, or null when it does not match. The path
+	 * is split on `/` BEFORE decoding, so an encoded `%2F` stays inside its
+	 * param. Each param is decoded once; `[name:number]` must be a decimal
+	 * number and is returned as one, otherwise the route does not match (the
+	 * caller ends with a 404, never a handler run with NaN).
+	 */
+	static matchPath(concretePath: string, patternPath: string): Record<string, string | number> | null {
 		const concrete = concretePath.split("/").filter(Boolean);
 		const pattern = patternPath.split("/").filter(Boolean);
-		return (
-			concrete.length === pattern.length &&
-			pattern.every((segment, index) => (segment.startsWith("[") && segment.endsWith("]")) || segment === concrete[index])
-		);
+		if (concrete.length !== pattern.length) return null;
+		const params: Record<string, string | number> = {};
+		for (const [index, segment] of pattern.entries()) {
+			if (!segment.startsWith("[") || !segment.endsWith("]")) {
+				if (segment !== concrete[index]) return null;
+				continue;
+			}
+			const [name, type] = segment.slice(1, -1).split(":");
+			const value = safeDecode(concrete[index]);
+			if (type === "number") {
+				if (!NUMERIC_SEGMENT.test(value)) return null;
+				params[name] = Number(value);
+			} else {
+				params[name] = value;
+			}
+		}
+		return params;
 	}
 
-	static pathParamsToObject(concretePath: string, patternPath: string): Record<string, string> {
-		const pathSegments = concretePath.split("/").filter(Boolean);
-		const patternSegments = patternPath.split("/").filter(Boolean);
-		return Object.fromEntries(
-			patternSegments.flatMap((segment, index) => {
-				if (!segment.startsWith("[") || !segment.endsWith("]")) return [];
-				return [[segment.slice(1, -1).split(":")[0], pathSegments[index]]];
-			}),
-		);
-	}
-
+	/** Builds a concrete path from a pattern, encoding each param (the inverse of `matchPath`). */
 	static fillParams(pattern: string, params: Record<string, unknown>): string {
 		let result = pattern;
 		for (const [key, value] of Object.entries(params)) {

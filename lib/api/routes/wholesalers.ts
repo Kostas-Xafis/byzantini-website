@@ -1,7 +1,7 @@
 import { z } from "astro/zod";
 import type { Books, Payments, Wholesalers } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { z_Wholesalers } from "@lib/api/schemas";
+import { z_IdArray, z_Wholesalers } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -25,11 +25,11 @@ export const wholesalersRoutes = {
 			),
 	),
 	getById: new APIServer(
-		{ method: "POST", path: "/wholesalers/id", responseSchema: z_Wholesalers },
+		{ method: "POST", path: "/wholesalers/id", schema: z_IdArray, responseSchema: z_Wholesalers },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const [id] = body as number[];
+				const [id] = body;
 				const [wholesaler] = await executeQuery<Wholesalers>("SELECT * FROM wholesalers WHERE id = ?", [id]);
 				if (!wholesaler) throw APIError.notFound("Ο χονδρέμπορος δεν βρέθηκε");
 				return wholesaler;
@@ -47,11 +47,11 @@ export const wholesalersRoutes = {
 			}, "Σφάλμα κατά την προσθήκη του χονδρεμπόρου"),
 	),
 	delete: new APIServer(
-		{ method: "DELETE", path: "/wholesalers" },
+		{ method: "DELETE", path: "/wholesalers", schema: z_IdArray.max(1, "Διαγράφεται ένας χονδρέμπορος κάθε φορά") },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async (T) => {
-				const wholesaler_id = body as number[];
+				const wholesaler_id = body;
 				const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;
 				if (!wholesaler) throw APIError.notFound("Ο χονδρέμπορος δεν βρέθηκε");
 				await T.executeQuery(`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`, wholesaler_id);

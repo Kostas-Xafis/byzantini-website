@@ -34,8 +34,14 @@ export const ROUTE_NOT_FOUND_MESSAGE = "Η διαδρομή δεν βρέθηκ�
 export const METHOD_NOT_ALLOWED_MESSAGE = "Η μέθοδος δεν επιτρέπεται για αυτή τη διαδρομή";
 
 export interface RouteContext<P extends string, O extends z.ZodTypeAny | undefined> {
+	/** Decoded path params; `[name:number]` is already a number (see `APIRoute.matchPath`). */
 	params: RouteParams<P>;
-	body: O extends z.ZodObject ? z.infer<O> : never;
+	/**
+	 * The body as parsed by the route's `schema` (any Zod type: object, array,
+	 * `z_BlobUpload` for `rawBlob` uploads, …). Without a schema it is `unknown`:
+	 * a handler that reads the body must declare a schema for it.
+	 */
+	body: O extends z.ZodTypeAny ? z.output<O> : unknown;
 	request: Request;
 	cookies: ServerCookies;
 	/** Env (bindings, vars, secrets) — from `cloudflare:workers`. */
@@ -103,7 +109,7 @@ export class APIServer<
 		const path = pathname.replace(new RegExp(`^${pathPrefix}`), "") || "/";
 		const match = this.findRoute(method, path) as {
 			route: APIServer;
-			params: Record<string, string>;
+			params: Record<string, string | number>;
 		} | null;
 		if (!match) {
 			const allowed = this.allowedMethods(path);
@@ -123,7 +129,7 @@ export class APIServer<
 				if (result instanceof Response) return this.validateResponse(cookies.apply(result), route.responseSchema, context);
 			}
 
-			// Body parsing — ALWAYS (handlers may read the raw body even without a schema)
+			// Body parsing — ALWAYS (a schemaless handler still receives it, typed `unknown`)
 			let body: unknown = undefined;
 			try {
 				if (route.rawBlob) {
@@ -161,7 +167,7 @@ export class APIServer<
 	/** The methods registered for `concretePath` — the `Allow` header of a 405. */
 	static allowedMethods(concretePath: string): HTTPMethod[] {
 		const methods = this.getRoutes()
-			.filter((route) => this.pathMatchesPattern(concretePath, route.path))
+			.filter((route) => this.matchPath(concretePath, route.path) !== null)
 			.map((route) => route.method);
 		return [...new Set(methods)];
 	}

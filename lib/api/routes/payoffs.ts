@@ -1,7 +1,7 @@
 import { z } from "astro/zod";
 import type { Payoffs, Wholesalers } from "@_types/entities";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { z_Payoffs } from "@lib/api/schemas";
+import { z_IdArray, z_Payoffs } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
@@ -13,16 +13,13 @@ import { authenticateMiddleware } from "./middleware/authenticate";
 
 type PayoffGetResponse = Pick<Payoffs, "wholesaler_id" | "amount"> & Pick<Wholesalers, "id">;
 
-/** Body for the "list of ids" routes — the old client typed these as `number[]`. */
-const idsReq = z.array(z.number().int());
-
 const updateAmountReq = z_Payoffs.pick({ id: true, amount: true });
 
 export const payoffsRoutes = {
 	get: new APIServer({ method: "GET", path: "/payoffs", responseSchema: z.array(z_Payoffs) }, [authenticateMiddleware], () =>
 		handlerResult(() => executeQuery<PayoffGetResponse>("SELECT * FROM school_payoffs WHERE amount > 0"), "Σφάλμα κατά την ανάκτηση των πληρωμών"),
 	),
-	getById: new APIServer({ method: "POST", path: "/payoffs/id", schema: idsReq, responseSchema: z.array(z_Payoffs) }, [authenticateMiddleware], ({ body }) =>
+	getById: new APIServer({ method: "POST", path: "/payoffs/id", schema: z_IdArray, responseSchema: z.array(z_Payoffs) }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async () => {
 			const ids = body;
 			const payoff = await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)})`, ids);
@@ -49,7 +46,7 @@ export const payoffsRoutes = {
 			return "Updated payoff amount successfully";
 		}, "Σφάλμα κατά την ενημέρωση του ποσού της πληρωμής"),
 	),
-	complete: new APIServer({ method: "DELETE", path: "/payoffs", schema: idsReq }, [authenticateMiddleware], ({ body }) =>
+	complete: new APIServer({ method: "DELETE", path: "/payoffs", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const ids = body;
 			const payoffs = await T.executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)}) `, ids);
