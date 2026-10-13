@@ -1,7 +1,8 @@
 import type { APIContext } from "astro";
 import { z } from "astro/zod";
 import { Bucket } from "@lib/bucket";
-import { sqliteGenerateBackup } from "./schema";
+import { dbExec } from "@lib/db";
+import { dumpDatabase } from "@lib/sqlDump";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -63,7 +64,8 @@ export const settingsBackupRoutes = {
 		[authenticateMiddleware],
 		() =>
 			handlerResult(async () => {
-				const sql = await sqliteGenerateBackup();
+				// Restorable SQL in the `wrangler d1 export` format (see lib/sqlDump.ts).
+				const sql = await dumpDatabase(async (query) => (await dbExec<Record<string, unknown>>(query)).rows);
 				return { sql };
 			}, "Σφάλμα κατά την λήψη αντιγράφου βάσης"),
 	),
