@@ -2,6 +2,7 @@ import { customEvent } from "@_types/custom-events";
 import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { classYearsForClassId, MusicTypeArr } from "@lib/classYears";
+import { currentSchoolYear } from "@lib/pupils/years";
 import { API, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack } from "solid-js";
@@ -106,7 +107,9 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			type: "text",
 			required: true,
 			iconClasses: "fa-solid fa-calendar-days",
-			placeholder: "2026-2027",
+			placeholder: currentSchoolYear(),
+			// Most enrollments added by the secretariat are for the current school year; still editable for past ones.
+			value: defaults.registration_year || currentSchoolYear(),
 		},
 		class_id: {
 			label: "Μουσική",

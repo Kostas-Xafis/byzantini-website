@@ -2,7 +2,7 @@ import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } 
 import { z_IdArray, z_JoinedEnrollments, z_PupilRegistrationForm, z_PupilSearchResponse, z_PupilWithEnrollments } from "@lib/api/schemas";
 import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
 import { classYearsByMusicType, MusicTypeArr } from "@lib/classYears";
-import { ALL_YEARS, schoolYearOf } from "@lib/pupils/years";
+import { ALL_YEARS, currentSchoolYearStart, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
@@ -46,8 +46,8 @@ const successfulRegistrationTemplates = {
 
 function successfulRegistrationTemplate(classId: number, classYear: string): string {
 	if (classId === CLASS_TYPE_BYZANTINE) {
-		if (classYear === "Ε' Ετος") return successfulRegistrationTemplates.byzantineE;
-		if (classYear === "Β' Ετος Διπλώματος") return successfulRegistrationTemplates.byzantineBDiploma;
+		if (classYear === "Ε' Έτος") return successfulRegistrationTemplates.byzantineE;
+		if (classYear === "Β' Έτος Διπλώματος") return successfulRegistrationTemplates.byzantineBDiploma;
 		return successfulRegistrationTemplates.byzantineDefault;
 	}
 	if (classId === CLASS_TYPE_TRADITIONAL || classId === CLASS_TYPE_EUROPEAN) {
@@ -118,13 +118,18 @@ const z_EnrollmentUpdate = z_EnrollmentInput.extend({ id: z.number().int().min(1
 /** Public registration-form payload: pupil identity + one enrollment. */
 const tooLong = (max: number) => `Πολύ μεγάλο κείμενο (έως ${max} χαρακτήρες)`;
 const requiredText = (message: string, max: number) => z.string(message).trim().min(1, message).max(max, tooLong(max));
-/** "2026-2027": two consecutive years, the start year within a year of today (current, previous or next school year). */
+/**
+ * "2026-2027": two consecutive years, the start year within one of the current school year
+ * (`currentSchoolYearStart`, which the form also submits — it rolls over on 1 July). The ±1 tolerance keeps a
+ * form opened just before the rollover (or a skewed client clock) valid. Accepted on every date: registrations
+ * outside the official window (`REGISTRATION_WINDOW`) are still taken and reviewed by the secretariat.
+ */
 const z_PublicSchoolYear = z
 	.string("Μη έγκυρο σχολικό έτος")
 	.regex(/^\d{4}-\d{4}$/, "Μη έγκυρο σχολικό έτος")
 	.refine((value) => {
 		const [start, end] = value.split("-").map(Number);
-		return end === start + 1 && Math.abs(start - new Date().getFullYear()) <= 1;
+		return end === start + 1 && Math.abs(start - currentSchoolYearStart()) <= 1;
 	}, "Μη έγκυρο σχολικό έτος");
 const z_PupilPost = z_PupilRegistrationForm
 	.extend({

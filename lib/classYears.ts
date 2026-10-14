@@ -17,7 +17,7 @@ export const MusicTypeArr: MusicType[] = [MusicType.Byzantine, MusicType.Traditi
 
 export const classYearsByMusicType: Record<MusicType, string[]> = {
 	[MusicType.None]: [""],
-	[MusicType.Byzantine]: ["Υπό Κατάταξη", "Α' Ετος", "Β' Ετος", "Γ' Ετος", "Δ' Ετος", "Ε' Ετος", "Α' Ετος Διπλώματος", "Β' Ετος Διπλώματος"],
+	[MusicType.Byzantine]: ["Υπό Κατάταξη", "Α' Έτος", "Β' Έτος", "Γ' Έτος", "Δ' Έτος", "Ε' Έτος", "Α' Έτος Διπλώματος", "Β' Έτος Διπλώματος"],
 	[MusicType.Traditional]: [
 		"Υπό Κατάταξη",
 		"Α' Προκαταρκτική",

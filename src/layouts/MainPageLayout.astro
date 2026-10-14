@@ -17,10 +17,9 @@ const { description } = Astro.props;
 			/* @layer base: see Layout.astro — keeps `text-*` utilities above these element defaults. */
 			@layer properties, theme, base, components, utilities;
 			@layer base {
-				html {
-					font-family:
-						"Gothic Didact" system-ui,
-						sans-serif;
+				/* :root, not html — Tailwind's preflight `html { font-family }` is in the same layer and would win the tie. */
+				:root {
+					font-family: "Didact Gothic", system-ui, sans-serif;
 					height: 100dvh;
 				}
 				p,
