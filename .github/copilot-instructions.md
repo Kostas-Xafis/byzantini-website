@@ -132,8 +132,8 @@
 ## Workflows and conventions
 - Core commands: `bun run dev`, `bun run build`,
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
-  `bun run db:reset` (then re-apply migrations — the snapshot does not carry
-  them), `bun run typecheck`, `bun run check`.
+  `bun run db:reset` (rebuilds from the snapshot and applies pending
+  migrations), `bun run typecheck`, `bun run check`.
 - `bun run typecheck` runs the TypeScript 7 native compiler (`typescript7`
   alias, called by path); `typescript` stays 6.0.3 for `astro check` and
   editors (TS 7 has no classic JS API). Keep tsconfigs TS 7-valid.

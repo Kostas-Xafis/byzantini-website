@@ -67,8 +67,7 @@ bun run types                     # generate worker-configuration.d.ts from wran
 Local database (a miniflare SQLite file under `.wrangler/state/v3/d1`):
 
 ```bash
-bun run db:reset                                  # rebuild from dbSnapshots/dev-snapshot.sql
-bunx wrangler d1 migrations apply DB --local      # db:reset does not run migrations
+bun run db:reset          # rebuild from dbSnapshots/dev-snapshot.sql, then apply pending migrations
 ```
 
 `bun run replicate:all` instead mirrors production D1 + R2 into the local stores (needs `wrangler login`;

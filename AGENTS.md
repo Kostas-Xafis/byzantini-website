@@ -83,7 +83,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Query remote DB | `bun run db:query:prod -- "..."` | production D1 |
 | Recent query logs | `bun run db:logs` | |
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
-| Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql`; **does not re-run migrations** — follow with `bunx wrangler d1 migrations apply DB --local` |
+| Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
 

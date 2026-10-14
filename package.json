@@ -17,7 +17,7 @@
 		"db:query": "bunx wrangler d1 execute DB --local --command",
 		"db:query:prod": "bunx wrangler d1 execute DB --remote --command",
 		"db:replicate": "bunx wrangler d1 export DB --remote --output dbSnapshots/prod-export.sql",
-		"db:reset": "rm -rf .wrangler/state/v3/d1 && bunx wrangler d1 execute DB --local --file dbSnapshots/dev-snapshot.sql",
+		"db:reset": "rm -rf .wrangler/state/v3/d1 && bunx wrangler d1 execute DB --local --file dbSnapshots/dev-snapshot.sql && bunx wrangler d1 migrations apply DB --local",
 		"db:logs": "bunx wrangler d1 execute DB --local --command \"SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs ORDER BY date DESC LIMIT 100\"",
 		"types": "bunx wrangler types",
 		"dev:clean": "bun scripts/cleanDevTestData.ts --apply",
