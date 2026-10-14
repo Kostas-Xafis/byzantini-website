@@ -239,8 +239,13 @@ const JOINED_SELECT = `SELECT e.id AS id, e.pupil_id AS pupil_id, e.registration
 	p.email AS email, p.amka AS amka, p.registration_url AS registration_url, p.needs_review AS needs_review
 	FROM pupil_enrollments e JOIN pupils p ON p.id = e.pupil_id`;
 
+/**
+ * One JOINED_SELECT row viewed as its enrollment and its pupil. The row's `id` is the ENROLLMENT id
+ * (`e.id AS id`), so the pupil view takes its id from `pupil_id` — reading `pupil.id` off the raw row
+ * handed the enrollment id to the admin editor, which then updated whichever pupil had that id.
+ */
 function splitJoined(row: Record<string, unknown>): { enrollment: EnrollmentRow; pupil: PupilRow } {
-	return { enrollment: row as unknown as EnrollmentRow, pupil: row as unknown as PupilRow };
+	return { enrollment: row as unknown as EnrollmentRow, pupil: { ...row, id: row.pupil_id } as unknown as PupilRow };
 }
 
 /** Accent/case-insensitive haystack for one pupil search row. */
@@ -350,8 +355,27 @@ export const pupilsRoutes = {
 	update: new APIServer({ method: "PUT", path: "/pupils", schema: z_PupilUpdate }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const { id, ...fields } = body;
+			const [pupil] = await executeQuery<{ id: number }>("SELECT id FROM pupils WHERE id = ?", [id]);
+			if (!pupil) throw APIError.notFound("Ο μαθητής δεν βρέθηκε");
 			const columns = Object.keys(fields);
 			if (columns.length === 0) return "Δεν υπάρχουν αλλαγές";
+			// The unique indexes (am, registration_url) would otherwise surface as a raw 500.
+			if (fields.am != null) {
+				const [holder] = await executeQuery<Pick<Pupils, "id" | "last_name" | "first_name">>(
+					"SELECT id, last_name, first_name FROM pupils WHERE am = ? AND id <> ?",
+					[fields.am, id],
+				);
+				if (holder) {
+					throw APIError.conflict(`Ο ΑΜ ${fields.am} ανήκει ήδη σε άλλον μαθητή: ${holder.last_name} ${holder.first_name} (id ${holder.id})`);
+				}
+			}
+			if (fields.registration_url) {
+				const [holder] = await executeQuery<{ id: number }>("SELECT id FROM pupils WHERE registration_url = ? AND id <> ?", [
+					fields.registration_url,
+					id,
+				]);
+				if (holder) throw APIError.conflict(`Ο σύνδεσμος εγγραφής χρησιμοποιείται ήδη από άλλον μαθητή (id ${holder.id})`);
+			}
 			const values = columns.map((column) => (fields as Record<string, unknown>)[column]);
 			await T.executeQuery(
 				`UPDATE pupils SET ${columns.map((column) => `${column} = ?`).join(", ")}, updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000 WHERE id = ?`,

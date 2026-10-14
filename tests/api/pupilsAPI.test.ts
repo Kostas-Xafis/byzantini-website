@@ -243,6 +243,28 @@ function pupilsTest() {
 		expect(json.data.pupil_id).toBe(rows.data[0]!.pupil_id);
 	});
 
+	// The joined row's `id` is the enrollment id; `pupil_id` must lead back to THAT row's pupil. It used
+	// to carry the enrollment id too (#11/#12 only compared the listing with itself), so the admin editor
+	// updated whichever pupil had the enrollment's id.
+	test("--pupils-- #12b every joined row's pupil_id resolves to that row's pupil", async () => {
+		const res = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "all" } });
+		const rows = (await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(res)).data;
+		// Only rows whose ids differ can tell the two apart.
+		const sample = rows.filter((row) => row.id !== row.pupil_id).slice(0, 8);
+		expect(sample.length).toBeGreaterThan(0);
+		for (const row of sample) {
+			const check = await useTestAPI("Pupils.get", { UrlArgs: { id: row.pupil_id } });
+			const { pupil, enrollments } = (await getJson<APIResponse["Pupils.get"]>(check)).data;
+			expect(pupil.id).toBe(row.pupil_id);
+			expect([pupil.last_name, pupil.first_name, pupil.fathers_name]).toEqual([row.last_name, row.first_name, row.fathers_name]);
+			expect(pupil.am === null ? pupil.orphan_code : String(pupil.am)).toBe(row.am);
+			expect(enrollments.map((e) => e.id)).toContain(row.id);
+		}
+
+		const single = await useTestAPI("Pupils.getEnrollmentById", { UrlArgs: { id: sample[0]!.id } });
+		expect((await getJson<APIResponse["Pupils.getEnrollmentById"]>(single)).data.pupil_id).toBe(sample[0]!.pupil_id);
+	});
+
 	// ------------------------------------------------------------------
 	// Writes
 	// ------------------------------------------------------------------
@@ -255,6 +277,61 @@ function pupilsTest() {
 		const check = await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } });
 		const pupil = await getJson<APIResponse["Pupils.get"]>(check);
 		expect(pupil.data.pupil.cellphone).toBe(cellphone);
+	});
+
+	// What the «Ενημέρωση Εγγραφής» modal sends (controls/Registrations/onModify.ts): the identity fields
+	// of a listing row, keyed by the row's pupil_id, with the ΑΜ unchanged.
+	test("--pupils-- #13b the registrations editor's identity save updates the row's own pupil", async () => {
+		const res = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "all" } });
+		const rows = (await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(res)).data;
+		const row = rows.find((r) => r.pupil_id === pupilId && r.id !== r.pupil_id);
+		expect(row, "no enrollment of the fixture pupil in the listing").toBeDefined();
+
+		// The pupil that shares its id with the enrollment must not be touched.
+		const bystanderRes = await useTestAPI("Pupils.get", { UrlArgs: { id: row!.id } });
+		const bystanderBefore = bystanderRes.status === 200 ? (await bystanderRes.json()).data.pupil : null;
+
+		const save = await useTestAPI("Pupils.update", {
+			RequestObject: {
+				id: row!.pupil_id,
+				am: Number(row!.am) || null,
+				last_name: row!.last_name,
+				first_name: row!.first_name,
+				fathers_name: row!.fathers_name,
+			},
+		});
+		expectBody(await getJson<APIResponse["Pupils.update"]>(save), "Επιτυχής ενημέρωση μαθητή");
+
+		const after = (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } }))).data.pupil;
+		expect(String(after.am)).toBe(row!.am);
+		expect(after.last_name).toBe(row!.last_name);
+		if (bystanderBefore) {
+			const bystanderAfter = (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: row!.id } }))).data.pupil;
+			expect(bystanderAfter).toEqual(bystanderBefore);
+		}
+	});
+
+	test("--pupils-- #13c update refuses an ΑΜ that belongs to another pupil (409, nothing written)", async () => {
+		const res = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "all" } });
+		const rows = (await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(res)).data;
+		const other = rows.find((r) => r.pupil_id !== pupilId && /^\d+$/.test(r.am));
+		expect(other).toBeDefined();
+
+		const conflict = await useTestAPI("Pupils.update", { RequestObject: { id: pupilId!, am: Number(other!.am), last_name: "Δεν-γράφεται" } });
+		expect(conflict.status).toBe(409);
+		const json = await conflict.json();
+		expect(json.error).toContain(`Ο ΑΜ ${other!.am} ανήκει ήδη σε άλλον μαθητή`);
+		expect(json.error).toContain(`id ${other!.pupil_id}`);
+
+		const after = (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } }))).data.pupil;
+		expect(after.am).toBe(706);
+		expect(after.last_name).not.toBe("Δεν-γράφεται");
+	});
+
+	test("--pupils-- #13d update answers 404 for an unknown pupil instead of a silent no-op", async () => {
+		const res = await useTestAPI("Pupils.update", { RequestObject: { id: 999999, last_name: "Κανείς" } });
+		expect(res.status).toBe(404);
+		expect((await res.json()).error).toBe("Ο μαθητής δεν βρέθηκε");
 	});
 
 	test("--pupils-- #14 enroll appends a history row", async () => {
