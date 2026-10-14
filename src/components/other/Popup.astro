@@ -12,33 +12,59 @@ export interface Props {
 const { title, content, okButton = "Εντάξει", cancelButton } = Astro.props;
 ---
 
-<div id="popup" class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]">
-	<div class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600">
-		{typeof title === "string" ? <h2 class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">{title}</h2> : title}
-		{typeof content === "string" ? <p class="text-2xl font-didact ">{content}</p> : content}
+<div id="popup" class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]" role="presentation">
+	<div
+		id="popupPanel"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="popup-title"
+		aria-describedby="popup-content"
+		tabindex="-1"
+		class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600 focus-visible:outline-hidden">
+		{
+			typeof title === "string" ? (
+				<h2 id="popup-title" class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">
+					{title}
+				</h2>
+			) : (
+				<div id="popup-title" class="contents">
+					{title}
+				</div>
+			)
+		}
+		<div id="popup-content" class="contents">
+			{typeof content === "string" ? <p class="text-2xl font-didact ">{content}</p> : content}
+		</div>
 		{
 			cancelButton ? (
 				<div class="grid grid-cols-2 gap-x-4">
 					{typeof okButton === "string" ? (
-						<button class="text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400">
+						<button
+							type="button"
+							data-popup-ok
+							data-popup-close
+							class="text-2xl px-6 py-1 shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400">
 							{okButton}
 						</button>
 					) : (
 						okButton
 					)}
-					{cancelButton ? (
-						typeof cancelButton === "string" ? (
-							<button class="text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-red-300 hover:bg-red-400 focus:bg-red-400">
-								{cancelButton}
-							</button>
-						) : (
-							cancelButton
-						)
-					) : null}
+					{typeof cancelButton === "string" ? (
+						<button
+							type="button"
+							data-popup-close
+							class="text-2xl px-6 py-1 shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-red-300 hover:bg-red-400 focus:bg-red-400">
+							{cancelButton}
+						</button>
+					) : (
+						cancelButton
+					)}
 				</div>
 			) : typeof okButton === "string" ? (
 				<button
-					onclick="document.getElementById('popup')?.dispatchEvent(new CustomEvent('hide'))"
+					type="button"
+					data-popup-ok
+					data-popup-close
 					class="px-8 py-2 text-2xl shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-green-300 hover:bg-green-400 focus:bg-green-400">
 					{okButton}
 				</button>
@@ -50,24 +76,49 @@ const { title, content, okButton = "Εντάξει", cancelButton } = Astro.prop
 </div>
 <script>
 	import { AnimTimeline } from "@utilities/dom.ts";
+	import { onBackdropClick, prefersReducedMotion, trapFocus } from "@utilities/focusTrap.ts";
+
 	const popup = document.getElementById("popup");
+	const panel = document.getElementById("popupPanel");
 
-	popup?.addEventListener("show", () => {
-		const atl = new AnimTimeline();
-		atl.step(() => (popup.style.display = "grid"))
-			.step(() => popup.classList.remove("hide"))
-			.start();
-	});
+	if (popup && panel) {
+		let release: (() => void) | undefined;
+		let visible = false;
+		const hide = () => popup.dispatchEvent(new CustomEvent("hide"));
 
-	popup?.addEventListener("hide", () => {
-		const atl = new AnimTimeline();
-		atl.step(() => popup.classList.add("hide"))
-			.step({
-				time: 300,
-				anim: () => (popup.style.display = "none"),
-			})
-			.start();
-	});
+		popup.addEventListener("show", () => {
+			if (visible) return;
+			visible = true;
+			const atl = new AnimTimeline();
+			atl.step(() => (popup.style.display = "grid"))
+				.step(() => {
+					popup.classList.remove("hide");
+					release = trapFocus(panel, {
+						onEscape: hide,
+						initialFocus: panel.querySelector<HTMLElement>("[data-popup-ok]") ?? "first",
+					});
+				})
+				.start();
+		});
+
+		popup.addEventListener("hide", () => {
+			if (!visible) return;
+			visible = false;
+			release?.();
+			release = undefined;
+			const atl = new AnimTimeline();
+			atl.step(() => popup.classList.add("hide"))
+				.step({
+					// AnimTimeline skips timed steps with time 0, hence 1 ms.
+					time: prefersReducedMotion() ? 1 : 300,
+					anim: () => (popup.style.display = "none"),
+				})
+				.start();
+		});
+
+		panel.querySelectorAll("[data-popup-close]").forEach((btn) => btn.addEventListener("click", hide));
+		onBackdropClick(popup, hide);
+	}
 </script>
 <style>
 	#popup {
@@ -83,5 +134,11 @@ const { title, content, okButton = "Εντάξει", cancelButton } = Astro.prop
 
 	#popup:is(.hide) {
 		opacity: 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		#popup {
+			transition: none;
+		}
 	}
 </style>
