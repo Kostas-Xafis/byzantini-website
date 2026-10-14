@@ -170,7 +170,7 @@ function describe(prev: FeeCatalogInput | null, next: FeeCatalogInput, teacherNa
 }
 
 const inputClass =
-	"w-full rounded-md border border-red-900/30 bg-white dark:bg-dark dark:text-red-50 px-2 py-1.5 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 aria-[invalid=true]:border-red-600";
+	"w-full rounded-md border border-red-900/40 dark:border-red-300/40 bg-white dark:bg-dark dark:text-red-50 px-2 py-1.5 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 aria-[invalid=true]:border-red-600";
 const buttonClass =
 	"w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
 const ghostButtonClass =
@@ -360,7 +360,7 @@ export default function FeeCatalogEditor() {
 		</div>
 	);
 
-	const fieldset = "grid gap-3 rounded-lg border border-red-900/20 p-4 min-w-0";
+	const fieldset = "grid gap-3 rounded-lg border-2 border-red-900/40 dark:border-red-300/40 p-4 min-w-0";
 	const legend = "px-2 font-bold";
 
 	const ruleEditor = (row: RuleRow, index: () => number) => {
@@ -370,7 +370,9 @@ export default function FeeCatalogEditor() {
 		const rank = () => feeRuleRank({ class_years: row.mode === "all" ? null : [""], teacher_id: row.teacher === "" ? null : 1 });
 		const setField = <K extends keyof RuleRow>(field: K, value: RuleRow[K]) => edit(() => setForm("rules", index(), field, value as never));
 		return (
-			<fieldset class="grid gap-3 rounded-md border border-red-900/20 p-3 min-w-0" aria-invalid={err() ? "true" : "false"}>
+			<fieldset
+				class="grid gap-3 rounded-md border-2 border-red-900/25 dark:border-red-300/25 bg-red-50/70 dark:bg-white/[0.04] p-3 min-w-0"
+				aria-invalid={err() ? "true" : "false"}>
 				<legend class="px-1 text-sm font-bold">
 					Κανόνας {index() + 1}{" "}
 					<span class="ml-1 rounded-full bg-red-100 dark:bg-red-950 px-2 py-0.5 text-xs font-normal" title="Προτεραιότητα του κανόνα">
@@ -578,7 +580,7 @@ export default function FeeCatalogEditor() {
 
 	return (
 		<section
-			class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4"
+			class="rounded-xl border-2 border-red-900/30 dark:border-red-300/30 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4"
 			aria-labelledby="fee-catalog-title">
 			<div class="grid gap-1">
 				<h2 id="fee-catalog-title" class="font-anaktoria text-2xl">
@@ -722,7 +724,7 @@ export default function FeeCatalogEditor() {
 									const lines = () => describe(previous() ?? null, version, teacherName);
 									return (
 										<li>
-											<details class="rounded-md border border-red-900/20 p-2">
+											<details class="rounded-md border border-red-900/40 dark:border-red-300/40 p-2">
 												<summary class="cursor-pointer text-sm">
 													<span class="font-bold">#{version.id}</span> · {formatDate(version.created_at)} ·{" "}
 													{version.created_by ?? "άγνωστος"}
