@@ -92,9 +92,11 @@ Use `db.batch` for the resulting UPDATEs where practical (D1 has no transactions
 ## 4. Existing 2026-2027 enrollments
 
 `scripts/feesBackfill.ts` (`bun run fees:backfill`, **dry run by default**, `--apply` to write, `--remote`
-for production via `wrangler d1 execute`): pins the 2026-2027 catalog on that year's enrollments, fills
-`fee_base`/`evaluation_fee`, recalculates; an enrollment whose existing `total_payment > 0` differs from the
-computed amount keeps its value with `fee_manual = 1`. Prints a per-pupil report. Older years are untouched.
+for production via `wrangler d1 execute`, `--remote --env preview` for the preview database): pins the
+2026-2027 catalog on that year's enrollments, fills `fee_base`/`evaluation_fee` and applies the **standard
+fees to all of them** (`fee_manual = 0`). A different hand-typed amount is not kept (owner decision): the
+per-pupil report lists it («ήταν X € → Y €») and the secretariat sets «Ειδική τιμή» where it really was one.
+Already-paid amounts are untouched. Older years are untouched.
 
 ## 5. Admin UI
 

@@ -3,10 +3,11 @@
  * feesBackfill.ts — automatic fees for the existing enrollments of a school year (docs/FEES.md §4).
  *
  * Pins the year's ACTIVE catalog on its enrollments that have none, fills `fee_base` / `evaluation_fee` and
- * recalculates `total_payment` per pupil (lib/fees, the same function the API uses). An enrollment whose
- * existing `total_payment > 0` differs from the computed amount keeps its value and becomes «Ειδική τιμή»
- * (`fee_manual = 1`). Enrollments that already have a catalog are recalculated as the API would. Other
- * school years are never touched. Prints a per-pupil report.
+ * recalculates `total_payment` per pupil (lib/fees, the same function the API uses). Newly priced
+ * enrollments always get the standard catalog fee — a different hand-typed amount is NOT kept as «Ειδική
+ * τιμή»; the report lists it («ήταν X €») so the secretariat decides which were real special fees.
+ * Enrollments that already have a catalog are recalculated as the API would (a «Ειδική τιμή» set since is
+ * kept). Other school years are never touched. Prints a per-pupil report.
  *
  * Talks to D1 only through `wrangler d1 execute` (local by default; `--remote` = production `byzantini-db`,
  * `--remote --env preview` = `byzantini-db-preview`).
@@ -118,7 +119,7 @@ for (const row of catalogRows) catalogs.set(row.id, z_FeeCatalogData.parse(JSON.
 const byPupil = new Map<number, Row[]>();
 for (const row of rows) byPupil.set(row.pupil_id, [...(byPupil.get(row.pupil_id) ?? []), row]);
 
-const stats = { enrollments: rows.length, pupils: byPupil.size, pinned: 0, filled: 0, unchanged: 0, manual: 0, recalculated: 0, alreadyManual: 0 };
+const stats = { enrollments: rows.length, pupils: byPupil.size, pinned: 0, filled: 0, unchanged: 0, differed: 0, recalculated: 0, alreadyManual: 0 };
 const updates: string[] = [];
 const report: string[] = [];
 
@@ -139,10 +140,10 @@ for (const pupilRows of byPupil.values()) {
 			const base = feeBase(row, catalog);
 			const evalFee = evaluationFee(row, catalog);
 			const computed = fee!.total_payment;
-			const keep = row.total_payment > 0 && row.total_payment !== computed;
-			if (keep) {
-				stats.manual++;
-				lines.push(`    ${label}: ${row.total_payment} € κρατείται → «Ειδική τιμή» (κατάλογος: ${computed} €)`);
+			if (row.total_payment > 0 && row.total_payment !== computed) {
+				// A different hand-typed amount: replaced by the standard fee; listed for the secretariat.
+				stats.differed++;
+				lines.push(`    ${label}: ήταν ${row.total_payment} € → ${computed} € (διαφορετικό ποσό — ελέγξτε αν ήταν ειδική τιμή)`);
 			} else if (row.total_payment === computed) {
 				stats.unchanged++;
 				lines.push(`    ${label}: ${computed} € (ίδιο)`);
@@ -151,7 +152,7 @@ for (const pupilRows of byPupil.values()) {
 				lines.push(`    ${label}: ${row.total_payment} → ${computed} €`);
 			}
 			updates.push(
-				`UPDATE pupil_enrollments SET fee_catalog_id = ${activeRow.id}, fee_base = ${sqlValue(base)}, evaluation_fee = ${evalFee}, fee_manual = ${keep ? 1 : 0}, total_payment = ${keep ? row.total_payment : computed} WHERE id = ${row.id};`,
+				`UPDATE pupil_enrollments SET fee_catalog_id = ${activeRow.id}, fee_base = ${sqlValue(base)}, evaluation_fee = ${evalFee}, fee_manual = 0, total_payment = ${computed} WHERE id = ${row.id};`,
 			);
 		} else if (row.fee_manual) {
 			stats.alreadyManual++;
@@ -179,13 +180,13 @@ const summary: [string, string | number][] = [
 	[`κατάλογος #${activeRow.id} ορίστηκε σε`, stats.pinned],
 	["  νέο ποσό", stats.filled],
 	["  ίδιο ποσό", stats.unchanged],
-	["  «Ειδική τιμή» (κρατείται)", stats.manual],
+	["  διαφορετικό ποσό (αντικαταστάθηκε)", stats.differed],
 	["επανυπολογισμός", stats.recalculated],
 	["ήδη «Ειδική τιμή»", stats.alreadyManual],
 	["UPDATE εντολές", updates.length],
 ];
 console.log("Σύνοψη:");
-for (const [label, value] of summary) console.log(`  ${label.padEnd(32)}: ${value}`);
+for (const [label, value] of summary) console.log(`  ${label.padEnd(36)}: ${value}`);
 
 if (!apply) {
 	console.log("\nDRY RUN — τίποτα δεν γράφτηκε. Ξανατρέξτε με --apply.");
