@@ -15,7 +15,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { createAlert, pushAlert, updateAlert } from "./Alert.solid";
+import { createAlert, pushAlert, toast } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
@@ -133,6 +133,7 @@ export default function AnnouncementsTable() {
 	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>) {
 		const photos = fileHandler.getNewFiles();
 		if (photos.length === 0) return;
+		let failed = 0;
 		const uploadQueue = photos.map((fileProxy) => {
 			assertNotNull(fileProxy);
 			return async function () {
@@ -153,21 +154,23 @@ export default function AnnouncementsTable() {
 					});
 				} catch (e) {
 					console.error(e);
+					failed++;
 					pushAlert(createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`));
 				}
 			};
 		});
 		if (photos.length !== 0) {
-			const photosLength = photos.length;
-			const alert = pushAlert(createAlert("success", "Ανέβασμα φωτογραφιών: 0 / ", photosLength));
+			const total = photos.length;
+			const progress = toast.progress({ title: "Ανέβασμα φωτογραφιών", done: 0, total });
 			await asyncQueue(uploadQueue, {
 				maxJobs: 4,
 				verbose: true,
-				progressCallback: (i) => {
-					alert.message = `Ανέβασμα φωτογραφιών: ${i} / ${photosLength}`;
-					updateAlert(alert);
-				},
+				onProgress: ({ done }) => progress.update({ done, total }),
 			});
+			// Failed photos already got their own error toast.
+			if (failed === 0) progress.success(total === 1 ? "Η φωτογραφία ανέβηκε." : `Ανέβηκαν και οι ${total} φωτογραφίες.`);
+			else if (failed < total) progress.warning(`Ανέβηκαν ${total - failed} από ${total} φωτογραφίες.`);
+			else progress.dismiss();
 		}
 	}
 
@@ -199,7 +202,7 @@ export default function AnnouncementsTable() {
 		const metadata = { is_main: true };
 		const submit = async function (f: ExtendedFormData<Announcements>) {
 			if (!isSafeURLPath(f.string("title"))) {
-				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
+				toast.warning("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό", { title: "Μη έγκυρος τίτλος" });
 				throw new Error("Invalid title");
 			}
 			const data: Omit<Announcements, "id" | "views"> & { links: string } = {
@@ -259,7 +262,7 @@ export default function AnnouncementsTable() {
 		if (!announcements || !images || selectedItems.length !== 1) return modifyModal;
 		const submit = async function (f: ExtendedFormData<Announcements>) {
 			if (!isSafeURLPath(f.string("title"))) {
-				alert("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό");
+				toast.warning("Οι ειδικοί χαρακτήρες που επιτρέπονται είναι: .'$_.+!*()- και το κενό", { title: "Μη έγκυρος τίτλος" });
 				throw new Error("Invalid title");
 			}
 			const announcement_id = selectedItems[0];

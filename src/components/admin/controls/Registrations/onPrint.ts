@@ -2,7 +2,7 @@ import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities"
 import { PDF } from "@lib/pdf.client";
 import { API, type APIResponse } from "@routes/index.client";
 import { createMemo } from "solid-js";
-import { createAlert, pushAlert } from "../../Alert.solid";
+import { toast, type ProgressHandle } from "../../Alert.solid";
 import { ActionEnum, ActionIcon } from "../../table/TableControlTypes";
 
 export const onPrint = function (store: Partial<APIResponse>, selectedItems: number[]) {
@@ -24,16 +24,19 @@ export const onPrint = function (store: Partial<APIResponse>, selectedItems: num
 				return { student, teacher, instrument };
 			});
 			let pdfArr: PDF[] = [];
+			let progress: ProgressHandle | undefined;
 			try {
 				for (const item of items) {
 					const pdf = new PDF();
 					pdf.setTemplateData(item.student, item.teacher?.fullname || "", item.instrument?.name || "");
 					pdfArr.push(pdf);
 				}
+				progress = toast.progress({ title: "Εκτύπωση", label: "Προετοιμασία " + pdfArr.length + " PDF για εκτύπωση…" });
 				await PDF.printBulk(pdfArr);
-				pushAlert(createAlert("success", "Επιτυχής εκτύπωση των " + pdfArr.length + " PDF"));
+				progress.success("Επιτυχής εκτύπωση των " + pdfArr.length + " PDF");
 			} catch (error: any) {
-				pushAlert(createAlert("error", "Σφάλμα κατά την εκτύπωση των PDF: ", error));
+				if (progress) progress.error(error, { title: "Σφάλμα κατά την εκτύπωση των PDF" });
+				else toast.error(error, { title: "Σφάλμα κατά την εκτύπωση των PDF" });
 			}
 		};
 		let bulk = selectedItems.length > 1;

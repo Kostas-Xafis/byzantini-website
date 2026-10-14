@@ -10,7 +10,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { createAlert, pushAlert } from "./Alert.solid";
+import { createAlert, pushAlert, toast } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { useTableSearch } from "./table/useTableSearch.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
@@ -163,7 +163,7 @@ export default function PaymentsTable() {
 				amount: form.number("amount"),
 			};
 			if (data.amount > payment.amount || data.amount === 0 || !data.amount) {
-				alert("Καταχώρηση μη επιτρεπτού ποσού!");
+				toast.warning("Καταχώρηση μη επιτρεπτού ποσού!");
 				throw new Error("Invalid amount");
 			}
 			const res = await apiHook(API.Payments.updatePayment, { RequestObject: data });
@@ -230,7 +230,7 @@ export default function PaymentsTable() {
 		}
 		const submit = async function () {
 			let data = selectedItems.map((id) => payments.find((p) => p.id === id) as Payments);
-			if (data.filter((p) => p.payment_date === 0).length) return alert("Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!");
+			if (data.filter((p) => p.payment_date === 0).length) return void toast.warning("Δεν μπορείτε να διαγράψετε πληρωμές που δεν έχουν πληρωθεί!");
 			const res = await apiHook(API.Payments.delete, {
 				RequestObject: data.map((p) => p.id),
 			});

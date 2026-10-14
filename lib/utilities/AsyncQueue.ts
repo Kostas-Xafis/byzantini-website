@@ -1,71 +1,90 @@
 import { isAsyncFunction } from "./functionValidation";
-import { sleep } from "./sleep";
 
-export async function asyncQueue<T>(
-	jobs: (() => Promise<T>)[],
-	args: {
-		maxJobs?: number;
-		verbose?: boolean;
-		progressCallback?: (prog: number) => any;
-		progressOnThrow?: boolean;
-	},
-): Promise<T[]> {
-	let { maxJobs = 1, verbose = false, progressCallback = null, progressOnThrow = false } = args;
-	let totalJobs = jobs.length;
-	let jobsCompleted = 0;
-	let queue: any[];
-	let results: T[] = [];
+export type AsyncQueueProgress = {
+	/** Jobs finished so far (failed ones included). */
+	done: number;
+	total: number;
+	/** Jobs that threw (only counted with `progressOnThrow`). */
+	failed: number;
+};
 
-	// If the number of jobs is less than the maxJobs, then we can just execute them all at once
-	if (maxJobs < jobs.length) {
-		queue = Array.from(jobs.splice(0, maxJobs - 1));
-	} else {
-		queue = Array.from(jobs);
-		maxJobs = jobs.length;
-		jobs = []; // empty the jobs array
-	}
+export type AsyncQueueOptions = {
+	/** Concurrency limit (default 1). */
+	maxJobs?: number;
+	verbose?: boolean;
+	/** Legacy hook: called with the completed count after every job (awaited when it is an `async function`). */
+	progressCallback?: ((prog: number) => any) | null;
+	/** Swallow job errors (the job counts as done, its result is skipped) instead of rejecting. */
+	progressOnThrow?: boolean;
+	/** Called after every finished job. */
+	onProgress?: (progress: AsyncQueueProgress) => void;
+	/** Aborting stops scheduling further jobs and rejects at once with the signal's reason (in-flight jobs are left to settle). */
+	signal?: AbortSignal;
+};
 
-	if (verbose) {
-		console.log(`Starting ${totalJobs} jobs with ${maxJobs} max jobs`);
-	}
+const abortReason = (signal: AbortSignal) => signal.reason ?? new DOMException("The operation was aborted.", "AbortError");
 
-	while (true) {
-		if (jobsCompleted === totalJobs) break;
-		while (queue.length === 0 && jobsCompleted !== totalJobs) await sleep(25); // wait for a job to be added to the queue if any are left
-		if (jobsCompleted < totalJobs) {
-			(async () => {
-				let job = queue.shift() as () => Promise<T>; // dequeue the job
-				if (!job) return;
+/**
+ * Runs `jobs` with at most `maxJobs` in flight and resolves with their results in completion order.
+ * Without `progressOnThrow` the first failing job rejects the queue and stops scheduling the rest.
+ */
+export async function asyncQueue<T>(jobs: (() => Promise<T>)[], args: AsyncQueueOptions = {}): Promise<T[]> {
+	const { maxJobs = 1, verbose = false, progressCallback = null, progressOnThrow = false, onProgress, signal } = args;
+	const total = jobs.length;
+	const workers = Math.max(1, Math.min(maxJobs, total));
+	const results: T[] = [];
+	let next = 0;
+	let done = 0;
+	let failed = 0;
+	let stopped = false;
 
-				// Execute the job and store the result
-				if (progressOnThrow) {
-					try {
-						results.push(await job());
-					} catch (e) {
-					} finally {
-						jobsCompleted++;
-					}
-				} else {
-					results.push(await job());
-					jobsCompleted++;
+	if (signal?.aborted) throw abortReason(signal);
+	if (verbose) console.log(`Starting ${total} jobs with ${workers} max jobs`);
+
+	const worker = async () => {
+		while (!stopped && next < total) {
+			if (signal?.aborted) return;
+			const job = jobs[next++];
+			try {
+				results.push(await job());
+			} catch (e) {
+				if (!progressOnThrow) {
+					stopped = true;
+					throw e;
 				}
+				failed++;
+			}
+			done++;
+			if (stopped || signal?.aborted) return;
 
-				// Logging progress
-				if (progressCallback) {
-					isAsyncFunction(progressCallback) ? await progressCallback(jobsCompleted) : progressCallback(jobsCompleted);
-				}
-				if (verbose && (jobsCompleted % maxJobs === 0 || jobsCompleted === totalJobs)) {
-					console.log(`Completed ${jobsCompleted}/${totalJobs} in queue`);
-				}
-
-				while (queue.length === maxJobs) await sleep(25); // respect the maxJobs limit
-				if (jobsCompleted !== totalJobs && jobs.length !== 0) {
-					let newJob = jobs.shift() as () => Promise<T>;
-					queue.push(newJob);
-				}
-			})();
+			if (progressCallback) {
+				isAsyncFunction(progressCallback) ? await progressCallback(done) : progressCallback(done);
+			}
+			onProgress?.({ done, total, failed });
+			if (verbose && (done % workers === 0 || done === total)) {
+				console.log(`Completed ${done}/${total} in queue`);
+			}
 		}
+	};
+
+	const run = Promise.all(Array.from({ length: total === 0 ? 0 : workers }, worker));
+	if (!signal) {
+		await run;
+		return results;
 	}
-	while (jobsCompleted < totalJobs) await sleep(100);
+
+	let onAbort!: () => void;
+	const aborted = new Promise<never>((_, reject) => {
+		onAbort = () => {
+			stopped = true;
+			reject(abortReason(signal));
+		};
+		signal.addEventListener("abort", onAbort, { once: true });
+	});
+	try {
+		await Promise.race([run, aborted]);
+	} finally {
+		signal.removeEventListener("abort", onAbort);
+	}
 	return results;
 }
