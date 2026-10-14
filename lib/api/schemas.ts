@@ -431,3 +431,13 @@ export const z_TeacherClassesResponse = z.object({
 		.transform((v) => v ?? undefined)
 		.optional(),
 });
+
+/** A row id. */
+export const z_Id = z.number("Μη έγκυρο id").int("Μη έγκυρο id").min(0, "Μη έγκυρο id");
+
+/**
+ * Body of the id-list routes (`[id, …]`; the get-by-id routes read the first).
+ * Never empty: an empty list would reach SQL as `IN ()` (a silent no-op or a
+ * misleading "not found"), so it is rejected with a 400 instead.
+ */
+export const z_IdArray = z.array(z_Id, "Μη έγκυρη λίστα id").min(1, "Δεν επιλέχθηκε καμία εγγραφή");

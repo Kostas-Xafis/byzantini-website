@@ -11,7 +11,7 @@
 import type { z } from "astro/zod";
 import type { APIEndpoints } from "./contract";
 import type { routeGroups } from "./routes";
-import type { HTTPMethod, RouteParams } from "./routes/APIClient";
+import type { HTTPMethod, RouteParams } from "./routes/APIRoute";
 
 type RouteGroups = typeof routeGroups;
 type GroupName = keyof RouteGroups;

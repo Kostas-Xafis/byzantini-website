@@ -1,11 +1,12 @@
 import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
 import { isOwnerEmail } from "@env/ownerEmail";
-import { z_LoginCredentials, z_SysUsers } from "@lib/api/schemas";
+import { z_IdArray, z_LoginCredentials, z_SysUsers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import type { Transaction } from "@lib/db";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { createSessionId, generateShaKey } from "@utilities/authentication";
 import { z } from "astro/zod";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE, SESSION_COOKIE_OPTIONS } from "./cookies";
 import { sendAutomatedEmail } from "./emailService";
@@ -18,13 +19,10 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  * Route keys (get, getById, getBySid, delete, registerSysUser,
  * createRegisterLink, validateRegisterLink) match the old client file exactly.
  *
- * NOTE: `getById`/`delete` read a JSON array body (`number[]`); the new system
- * only parses `body` when a schema is present, so a `z_IdArray` schema is added
- * (the old `validation: undefined` did not stop the handler from reading the
- * raw body). The Greek texts/messages are preserved byte-for-byte.
+ * NOTE: `getById`/`delete` read a JSON array body (`number[]`), validated by
+ * the shared `z_IdArray` (at least one id). The Greek texts/messages are
+ * preserved byte-for-byte.
  */
-
-const z_IdArray = z.array(z.number().int().min(0, "Μη έγκυρο id"));
 
 /** Invite-email contract for `createRegisterLink` (was `v_SysUserInviteEmail`). */
 const z_SysUserInviteEmail = z.object({
@@ -66,10 +64,10 @@ export const sysusersRoutes = {
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const [id] = body as number[];
+				const [id] = body;
 				const [user] = await executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE id = ? LIMIT 1", [id]);
 
-				if (!user) throw Error("User not found");
+				if (!user) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
 				return user;
 			}),
 	),
@@ -87,9 +85,10 @@ export const sysusersRoutes = {
 		handlerResult(async (T) => {
 			const session_id = cookies.get(COOKIE.sessionId);
 			const [self] = await T.executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
-			if (!self) throw new Error("User not found");
+			if (!self) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
 
-			let ids = [...new Set((body as number[]).map(Number).filter((id) => Number.isInteger(id) && id > 0))];
+			let ids = [...new Set(body.filter((id) => id > 0))];
+			if (ids.length === 0) throw APIError.badRequest("Δεν επιλέχθηκε καμία εγγραφή");
 
 			if (ids.includes(self.id)) {
 				ids = ids.filter((userId) => userId !== self.id);
@@ -98,7 +97,7 @@ export const sysusersRoutes = {
 			}
 
 			if (!isOwnerEmail(self.email)) {
-				throw new Error("Δεν έχετε δικαίωμα διαγραφής άλλων διαχειριστών");
+				throw APIError.forbidden("Δεν έχετε δικαίωμα διαγραφής άλλων διαχειριστών");
 			}
 
 			if (ids.length === 1) await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [ids[0]]);
@@ -112,9 +111,9 @@ export const sysusersRoutes = {
 			handlerResult(async (T) => {
 				const { email, password } = body;
 				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
-				if (existingUser) throw new Error("Ο χρήστης υπάρχει ήδη");
+				if (existingUser) throw APIError.conflict("Ο χρήστης υπάρχει ήδη");
 				// The link must have been issued for this email; it is used up here.
-				if (!(await consumeRegisterLink(T, params.link, email))) throw new Error("Invalid Link");
+				if (!(await consumeRegisterLink(T, params.link, email))) throw APIError.gone("Ο σύνδεσμος εγγραφής δεν είναι έγκυρος ή έχει λήξει");
 
 				const key = await generateShaKey(password);
 
@@ -131,7 +130,7 @@ export const sysusersRoutes = {
 			handlerResult(async (T) => {
 				const { email } = body;
 				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
-				if (existingUser) throw new Error("Ο χρήστης υπάρχει ήδη");
+				if (existingUser) throw APIError.conflict("Ο χρήστης υπάρχει ήδη");
 
 				const link = R.link(64);
 				// 24 hours expiration

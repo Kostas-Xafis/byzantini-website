@@ -2,6 +2,7 @@ import { z } from "astro/zod";
 import type { QueryLogs } from "@_types/entities";
 import { executeQuery } from "@lib/utils.server";
 import { z_QueryLogs } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware, ownerOnlyMiddleware } from "./middleware/authenticate";
 
@@ -31,7 +32,7 @@ export const queryLogsRoutes = {
 				const { startDate = null, endDate = null, limit } = body;
 
 				if (startDate !== null && endDate !== null && startDate >= endDate) {
-					throw new Error("Η ημερομηνία έναρξης πρέπει να είναι πριν από την ημερομηνία λήξης");
+					throw APIError.badRequest("Η ημερομηνία έναρξης πρέπει να είναι πριν από την ημερομηνία λήξης");
 				}
 
 				const conditions: string[] = [];

@@ -6,7 +6,8 @@ import { compressImageForThumb } from "@lib/images";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements } from "@lib/api/schemas";
+import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements, z_IdArray } from "@lib/api/schemas";
+import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
@@ -47,16 +48,6 @@ function jsonToXml(json: any) {
 // Announcement URLs drop commas (the platform router rejects %2C), matching
 // the site's links, the [slug] lookup and the sitemap route.
 const urlTitle = (title: string) => title.replaceAll(",", "").replaceAll(" ", "%20");
-
-// Path params arrive percent-encoded (`convertToUrlFromArgs` does not encode and
-// the fetch layer does), so decode before comparing against DB titles.
-const safeDecode = (value: string) => {
-	try {
-		return decodeURIComponent(value);
-	} catch {
-		return value;
-	}
-};
 
 async function insertAnnouncementToSitemap({ request }: SitemapCtx, announcement: Omit<Announcements, "id" | "views">) {
 	const jsonSitemap = await getSitemapXml();
@@ -116,7 +107,6 @@ const positiveInt = (message = "Μη έγκυρος θετικός ακέραι�
 // message on that single field), so re-declare it here for parity.
 const postReq = z_Announcements.omit({ id: true, views: true }).extend({ links: z.string() });
 const updateReq = z_Announcements.omit({ views: true });
-const idListReq = z.array(z.number().int().min(0, "Μη έγκυρο id"));
 const nameListReq = z.array(z.string());
 
 // `getForPage` selects only id/title/date/content/views + main_image/total_images
@@ -158,11 +148,11 @@ export const announcementsRoutes = {
 			"Σφάλμα κατά την ανάκτηση των ανακοινώσεων",
 		),
 	),
-	getById: new APIServer({ method: "POST", path: "/announcements/id", schema: idListReq, responseSchema: z_Announcements }, ({ body }) =>
+	getById: new APIServer({ method: "POST", path: "/announcements/id", schema: z_IdArray, responseSchema: z_Announcements }, ({ body }) =>
 		handlerResult(async () => {
-			const [id] = body as number[];
+			const [id] = body;
 			const [announcement] = await executeQuery<Announcements>("SELECT * FROM announcements WHERE id = ?", [id]);
-			if (!announcement) throw Error("Announcement not found");
+			if (!announcement) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
 			return announcement;
 		}),
 	),
@@ -171,9 +161,9 @@ export const announcementsRoutes = {
 		[authenticateMiddleware],
 		({ params }) =>
 			handlerResult(async () => {
-				const id = Number(params.id);
+				const { id } = params;
 				const images = await executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id = ?", [id]);
-				if (!images || !images.length) throw Error("Images not found");
+				if (!images || !images.length) throw APIError.notFound("Οι εικόνες δεν βρέθηκαν");
 				return images;
 			}),
 	),
@@ -183,12 +173,12 @@ export const announcementsRoutes = {
 			// commas (the platform router rejects %2C), so lookups receive the
 			// comma-stripped title ("… μουσικής, 25 Ιουνίου" → "… μουσικής 25 Ιουνίου").
 			const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE REPLACE(title, ',', '') = ? LIMIT 1", [
-				safeDecode(params.title),
+				params.title,
 			]);
+			if (!announcement) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
 			const images = await T.executeQuery<AnnouncementImages>("SELECT name, is_main FROM announcement_images WHERE announcement_id = ?", [
 				announcement.id,
 			]);
-			if (!announcement) throw Error("Announcement not found");
 			await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 			return { ...announcement, images };
 		}, "Ανακοίνωση δεν βρέθηκε"),
@@ -207,7 +197,9 @@ export const announcementsRoutes = {
 	),
 	update: new APIServer({ method: "PUT", path: "/announcements", schema: updateReq }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
-			const [{ title: oldTitle }] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
+			const [existing] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
+			if (!existing) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
+			const oldTitle = existing.title;
 			body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 			body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
 			await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
@@ -215,11 +207,11 @@ export const announcementsRoutes = {
 			return "Announcement updated successfully";
 		}, "Σφάλμα κατά την ενημέρωση της ανακοίνωσης"),
 	),
-	delete: new APIServer({ method: "DELETE", path: "/announcements", schema: idListReq }, [authenticateMiddleware], ({ body, request }) =>
+	delete: new APIServer({ method: "DELETE", path: "/announcements", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
-			const ids = body as number[];
+			const ids = body;
 			const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
-			if (!announcements || !announcements.length) throw Error("announcements not found");
+			if (!announcements || !announcements.length) throw APIError.notFound("Οι ανακοινώσεις δεν βρέθηκαν");
 			await T.executeQuery(`DELETE FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
 			const images = await T.executeQuery<AnnouncementImages>("SELECT * FROM announcement_images WHERE announcement_id IN (???)", ids);
 			await T.executeQuery(`DELETE FROM announcement_images WHERE announcement_id IN (???)`, ids);
@@ -258,13 +250,13 @@ export const announcementsRoutes = {
 			}, "Σφάλμα κατά την προσθήκη της εικόνας"),
 	),
 	imagesDelete: new APIServer(
-		{ method: "DELETE", path: "/announcements/images/id/[announcement_id:number]", schema: idListReq },
+		{ method: "DELETE", path: "/announcements/images/id/[announcement_id:number]", schema: z_IdArray },
 		[authenticateMiddleware],
 		({ params, body, request }) =>
 			handlerResult(async () => {
-				const ids = body as number[];
+				const ids = body;
 				const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE id IN (???)`, ids);
-				if (!images || !images.length) throw Error("images not found");
+				if (!images || !images.length) throw APIError.notFound("Οι εικόνες δεν βρέθηκαν");
 				await executeQuery(`DELETE FROM announcement_images WHERE id IN (???)`, ids);
 
 				const deletionJobs = [];
