@@ -3,3 +3,4 @@
 .dev.vars*
 worker-configuration.d.ts
 .wrangler
+/tests/__output__

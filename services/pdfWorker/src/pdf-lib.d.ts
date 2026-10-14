@@ -18,8 +18,8 @@ declare module "pdf-lib" {
 	}
 
 	export class PDFDocument {
-		static create(): Promise<PDFDocument>;
-		static load(bytes: ArrayBuffer | Uint8Array): Promise<PDFDocument>;
+		static create(options?: { updateMetadata?: boolean }): Promise<PDFDocument>;
+		static load(bytes: ArrayBuffer | Uint8Array, options?: { updateMetadata?: boolean }): Promise<PDFDocument>;
 		registerFontkit(fontkit: unknown): void;
 		embedFont(bytes: ArrayBuffer | Uint8Array): Promise<PDFFont>;
 		getPages(): PDFPage[];

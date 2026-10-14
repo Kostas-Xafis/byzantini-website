@@ -28,7 +28,7 @@
 		"services": "(cd services/pdfWorker && bunx wrangler dev --config wrangler.jsonc) & (cd services/emailWorker && bunx wrangler dev --config wrangler.jsonc) & wait",
 		"services:install": "(cd services/pdfWorker && bun install) && (cd services/emailWorker && bun install)",
 		"services:typecheck": "(cd services/pdfWorker && bun run typecheck) && (cd services/emailWorker && bun run typecheck && bun run typecheck:cli)",
-		"services:test": "cd services/emailWorker && bun run test",
+		"services:test": "(cd services/pdfWorker && bun run test) && (cd services/emailWorker && bun run test)",
 		"build": "CLOUDFLARE_ENV=production astro build",
 		"bun-build": "CLOUDFLARE_ENV=production bunx --bun astro build",
 		"replicate:all": "bun scripts/replicate.ts",

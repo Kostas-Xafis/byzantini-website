@@ -69,8 +69,8 @@ Core loop:
 | Unit tests | `bun test tests/unit` | no dev server needed |
 | API contract | `bun run api:contract` · `--check` | regenerate / verify `lib/api/contract.ts` |
 | Bundle guard | `bun run check:bundle` | after `bun run build`: no server code in `dist/client` |
-| Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the emailWorker's offline campaign suite (never sends) |
-| Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
+| Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the pdfWorker's golden-PDF suite and the emailWorker's offline campaign suite (never sends) |
+| Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite; the pdf suite needs the PDF worker started **before** the dev server); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
@@ -378,6 +378,19 @@ The person data that used to live on `registrations` is split into two tables
   endpoint.
 - `TEST_EMAIL` / `TEST_PASSWORD` come from the test env files — never hardcode
   them.
+- **PDF golden hashes**: the PDF worker's output is a pure function of the
+  request (no metadata timestamps; the printed school year comes from
+  `registration_year`), so each dummy fixture in
+  `services/pdfWorker/tests/fixtures/registrations.ts` has one exact SHA-256 in
+  `fixtures/golden.json`. `services/pdfWorker/tests/pdf.test.ts` checks it
+  in-process (no wrangler); `tests/api/pdf.test.ts` checks the same hashes
+  through `/api/pdf` → `PDF_SERVICE` → the local worker. Both also assert the
+  PDF is filled (parseable, page count, embedded DidactGothic, size floor), so
+  a blank or truncated PDF fails. After an **intended** change to the PDF
+  layout, templates, font or pdf-lib version: `cd services/pdfWorker && bun run
+  test:update-golden`, inspect `tests/__output__/*.pdf` (gitignored), then
+  commit the new `golden.json`. Never update the golden to silence a failure
+  you have not looked at.
 
 ## Adding a new API endpoint (checklist)
 

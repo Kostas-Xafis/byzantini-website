@@ -25,5 +25,7 @@
 			"pdf-lib": ["./src/pdf-lib.d.ts"],
 			"@pdf-lib/fontkit": ["./src/pdf-lib.d.ts"]
 		}
-	}
+	},
+	// The worker source only (same as emailWorker): tests/ run under `bun test` with Bun's types.
+	"include": ["src"]
 }

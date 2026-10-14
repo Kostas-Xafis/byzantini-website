@@ -30,6 +30,7 @@ export const pdfRoutes = {
 		if (!service || !authToken) return APIServer.jsonError("Unauthorized access to the PDF service", HTTP.INTERNAL_SERVER_ERROR);
 
 		let upstream: Response;
+		let pdf: ArrayBuffer;
 		try {
 			upstream = await service.fetch("https://pdf-service.internal/", {
 				method: "POST",
@@ -39,17 +40,25 @@ export const pdfRoutes = {
 				},
 				body: JSON.stringify(body),
 			});
+			// Buffered (not streamed through): a worker killed mid-response (e.g. "exceeded CPU time
+			// limit") must become an error here, not a 200 with an empty body saved as a blank .pdf.
+			pdf = await upstream.arrayBuffer();
 		} catch (e) {
-			// PDF worker not running / unreachable (e.g. missing local dev session).
+			// PDF worker not running / unreachable (e.g. missing local dev session) or aborted.
 			console.error("PDF service call failed:", e);
-			return APIServer.jsonError("PDF service unavailable", HTTP.BAD_GATEWAY);
+			return APIServer.jsonError("Η υπηρεσία δημιουργίας PDF δεν είναι διαθέσιμη", HTTP.BAD_GATEWAY);
 		}
 
-		// Pass the worker's response through as-is (PDF bytes or its text error).
-		return new Response(upstream.body, {
-			status: upstream.status,
+		const isPdf = upstream.ok && pdf.byteLength > 0 && (upstream.headers.get("Content-Type") ?? "").startsWith("application/pdf");
+		if (!isPdf) {
+			const detail = upstream.ok ? `empty or non-PDF body (${pdf.byteLength} bytes)` : new TextDecoder().decode(pdf).slice(0, 200);
+			console.error(`PDF service answered ${upstream.status}: ${detail}`, { requestId: upstream.headers.get("X-Request-Id") });
+			return APIServer.jsonError("Αποτυχία δημιουργίας του PDF", HTTP.BAD_GATEWAY);
+		}
+
+		return new Response(pdf, {
 			headers: {
-				"Content-Type": upstream.headers.get("Content-Type") ?? "application/octet-stream",
+				"Content-Type": "application/pdf",
 				"Cache-Control": "no-store",
 			},
 		});

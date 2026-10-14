@@ -13,7 +13,16 @@
 	// (served internally through the ASSETS binding — no dependency on the site).
 	"assets": {
 		"directory": "./assets",
-		"binding": "ASSETS"
+		"binding": "ASSETS",
+	},
+
+	// Filling a template with pdf-lib + fontkit costs ~60–110 ms of CPU per PDF (more on a cold
+	// isolate, and a bulk print fills several in one request) — far above the Workers Free 10 ms
+	// limit, which Cloudflare enforces once overruns become consistent ("Worker exceeded CPU time
+	// limit" → empty response at the site). The account is on Workers Paid; pin the limit
+	// explicitly (Paid default) so the requirement lives in config.
+	"limits": {
+		"cpu_ms": 30000,
 	},
 
 	// Lite request telemetry: one Analytics Engine data point per request
@@ -25,8 +34,8 @@
 	"analytics_engine_datasets": [
 		{
 			"binding": "ANALYTICS",
-			"dataset": "byzantini_pdf_worker_requests"
-		}
+			"dataset": "byzantini_pdf_worker_requests",
+		},
 	],
 
 	// Auth is the SERVICE_AUTH_TOKEN secret (`wrangler secret put
@@ -40,7 +49,7 @@
 		"head_sampling_rate": 1,
 		"logs": {
 			"enabled": true,
-			"invocation_logs": true
-		}
-	}
+			"invocation_logs": true,
+		},
+	},
 }

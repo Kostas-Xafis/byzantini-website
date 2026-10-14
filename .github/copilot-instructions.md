@@ -151,7 +151,13 @@
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker
-  running locally on 8788).
+  running locally on 8788; for the pdf suite, the PDF worker on 8787 started
+  before the dev server).
+- PDF output is checked against golden SHA-256 hashes
+  (`services/pdfWorker/tests/fixtures/golden.json`, dummy fixtures only) by the
+  worker suite and `tests/api/pdf.test.ts`. Regenerate only after an intended
+  layout/template/font/pdf-lib change (`bun run test:update-golden` in
+  `services/pdfWorker`), after inspecting `tests/__output__/`.
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,
