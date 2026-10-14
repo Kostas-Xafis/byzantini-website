@@ -34,8 +34,7 @@ const PARTIALLY_PAID_LABEL = "Μερική πληρωμή";
 
 /**
  * Mirrors the row's colour-coded payment state as text for people who cannot
- * rely on colour: hover title, the select button's accessible name and the
- * generated "✓"/"◐" glyph (see the style block at the bottom).
+ * rely on colour: the hover title and the select button's accessible name.
  */
 const setPaymentCue = (row: HTMLElement, label: string | null) => {
 	if (label) {
@@ -332,27 +331,6 @@ export default function RegistrationsTable() {
 				{`
 				#tableContainer {
 					--gradient-left-offset: 0px;
-				}
-				/* Text cue for the payment colour: a glyph in the row's right padding (alt text after the slash is read aloud). */
-				.row[data-paid]::after,
-				.row[data-partially-paid]::after {
-					position: absolute;
-					top: 50%;
-					right: 0.4rem;
-					transform: translateY(-50%);
-					font-size: 0.95rem;
-					line-height: 1;
-					color: rgb(23, 23, 23);
-				}
-				html.dark .row[data-paid]::after,
-				html.dark .row[data-partially-paid]::after {
-					color: rgb(245, 245, 245);
-				}
-				.row[data-paid]::after {
-					content: "✓" / "${PAID_LABEL}";
-				}
-				.row[data-partially-paid]::after {
-					content: "◐" / "${PARTIALLY_PAID_LABEL}";
 				}
 				/* Paid rows */
 				.row[data-paid]:nth-of-type(odd)::before {
