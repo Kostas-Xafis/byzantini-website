@@ -241,7 +241,12 @@ export default function PupilsPage() {
 	 * `?q=<query>` for the search. The typed query is component state, so without
 	 * this it is lost the moment the page remounts (reload, or a detour to another
 	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
+	 *
+	 * Opening a record from the list PUSHES a history entry (`pushOnNextSync`), so the
+	 * browser's Back closes the record (see the popstate listener) instead of leaving the
+	 * page; everything else replaces. The router's `history.state` (`_depth`) is preserved.
 	 */
+	let pushOnNextSync = false;
 	const syncUrl = (id: number | null) => {
 		const text = untrack(() => query()).trim();
 		const params = new URLSearchParams(window.location.search);
@@ -250,7 +255,16 @@ export default function PupilsPage() {
 		if (text) params.set("q", text);
 		else params.delete("q");
 		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
-		if (next !== `${window.location.pathname}${window.location.search}`) window.history.replaceState({}, "", next);
+		if (next === `${window.location.pathname}${window.location.search}`) return;
+		const state = window.history.state as { _depth?: number; pupilRecord?: number } | null;
+		if (pushOnNextSync && id !== null) {
+			pushOnNextSync = false;
+			window.history.pushState({ ...state, _depth: (state?._depth ?? window.history.length - 1) + 1, pupilRecord: id }, "", next);
+		} else {
+			// `pupilRecord` marks only an entry this page pushed (a deep link has none): keep it while it still
+			// describes the same record, drop it otherwise.
+			window.history.replaceState({ ...state, pupilRecord: state?.pupilRecord === id ? id : undefined }, "", next);
+		}
 	};
 
 	const runSearch = async (nextPage = 0) => {
@@ -298,6 +312,7 @@ export default function PupilsPage() {
 
 	/** Open a record from the result list (or a deep link). */
 	const openPupil = (id: number) => {
+		pushOnNextSync = true;
 		scrollToTop();
 		void loadPupil(id);
 	};
@@ -311,10 +326,34 @@ export default function PupilsPage() {
 
 	/** Back to the result list without touching the query. */
 	const backToSearch = () => {
+		// The record was opened from the list (its own history entry): step back through it, so the
+		// browser's Back/Forward stay in line; the popstate listener closes the record.
+		if ((window.history.state as { pupilRecord?: number } | null)?.pupilRecord === selectedId()) {
+			window.history.back();
+			return;
+		}
 		closeRecord();
 		scrollToTop();
 		searchInput?.focus();
 	};
+
+	// Browser Back/Forward: follow `?pupil=` — close the record when it is gone, (re)open it when it differs.
+	const onPopState = () => {
+		const raw = new URLSearchParams(window.location.search).get("pupil");
+		const id = raw && /^\d+$/.test(raw) ? Number(raw) : null;
+		if (id === selectedId()) return;
+		pushOnNextSync = false;
+		if (id === null) {
+			closeRecord();
+			scrollToTop();
+			searchInput?.focus();
+		} else {
+			scrollToTop();
+			void loadPupil(id);
+		}
+	};
+	window.addEventListener("popstate", onPopState);
+	onCleanup(() => window.removeEventListener("popstate", onPopState));
 
 	/**
 	 * Any search the user drives (typing, Enter, the review filter, clearing)
