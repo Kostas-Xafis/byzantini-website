@@ -341,6 +341,12 @@ The person data that used to live on `registrations` is split into two tables
   currently fails the astro prettier plugin's parser (`< />` empty tag) — do
   NOT run `bun run format` repo-wide as part of a change; instead format only
   the files you touch (`bunx prettier --write <files>`).
+- **Always do a format pass before committing**: run prettier on the files
+  the commit changes, e.g.
+  `bunx prettier --write $(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' '*.astro' '*.mjs' '*.css' '*.json')`,
+  then re-stage them. Markdown docs are not prettier-formatted — leave them
+  out. Skip a file only if prettier can't parse it (e.g.
+  `src/pages/kathigites/index.astro`) and say so.
 - Do not touch `dist/`, `.astro/`, `.cache/`, `.wrangler/` — generated.
 - User-facing text is Greek — preserve existing Greek labels and wording; add
   Greek for new UI strings, do not translate existing ones.
@@ -382,6 +388,7 @@ The person data that used to live on `registrations` is split into two tables
 - DO: run `bun run typecheck` before declaring a change done; run targeted
   tests for API changes.
 - DO: keep diffs minimal and focused; don't reformat unrelated files.
+- DO: run a prettier format pass on the changed files before every commit.
 - DON'T: run any `wrangler deploy`/`d1 ... --remote` command as part
   of routine work or to "verify" a change (deploys require real credentials).
 - DON'T: use `npm`/`npx`/`yarn`; use `bun`/`bunx`.

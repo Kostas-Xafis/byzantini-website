@@ -134,6 +134,8 @@
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
   `bun run db:reset` (rebuilds from the snapshot and applies pending
   migrations), `bun run typecheck`, `bun run check`.
+- Before every commit, run a prettier format pass on the changed files only
+  (`bunx prettier --write <files>`); never format the whole repo.
 - `bun run typecheck` runs the TypeScript 7 native compiler (`typescript7`
   alias, called by path); `typescript` stays 6.0.3 for `astro check` and
   editors (TS 7 has no classic JS API). Keep tsconfigs TS 7-valid.
