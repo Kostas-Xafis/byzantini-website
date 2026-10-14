@@ -4,7 +4,7 @@ import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { API } from "@routes/index.client";
 import { useSearchParams } from "@solidjs/router";
-import { For, Show, createEffect, createSignal, onMount, untrack } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { type SearchSetter } from "./SearchTable.solid";
@@ -26,6 +26,26 @@ import {
 } from "./controls/Registrations/all";
 import { PREFIX } from "./controls/Registrations/helpers";
 import { toggleCheckbox } from "./table/Row.solid";
+
+const PAID_LABEL = "Πληρωμένη";
+const PARTIALLY_PAID_LABEL = "Μερική πληρωμή";
+
+/**
+ * Mirrors the row's colour-coded payment state as text for people who cannot
+ * rely on colour: hover title, the select button's accessible name and the
+ * generated "✓"/"◐" glyph (see the style block at the bottom).
+ */
+const setPaymentCue = (row: HTMLElement, label: string | null) => {
+	if (label) {
+		row.setAttribute("title", label);
+	} else {
+		row.removeAttribute("title");
+	}
+	const selectBtn = row.querySelector<HTMLElement>(".cb button");
+	if (!selectBtn) return;
+	const base = (selectBtn.dataset.baseLabel ??= selectBtn.getAttribute("aria-label") ?? "Επιλογή εγγραφής");
+	selectBtn.setAttribute("aria-label", label ? `${base} (${label})` : base);
+};
 
 const schoolYearLabel = (registrationYear: string) => {
 	const [start, end] = registrationYear.split("-");
@@ -134,7 +154,7 @@ export default function RegistrationsTable() {
 	});
 
 	onMount(() => {
-		document.addEventListener("hydrate", (e) => {
+		const onHydrate = (e: Event) => {
 			e.stopPropagation();
 			untrack(() => {
 				let registrations = store[API.Pupils.getEnrollmentsByYear];
@@ -152,26 +172,41 @@ export default function RegistrationsTable() {
 					const { row, registration } = resultArray[i];
 					row.removeAttribute("data-paid");
 					row.removeAttribute("data-partially-paid");
+					setPaymentCue(row, null);
 					const payment_status = registration.total_payment - registration.payment_amount;
 					if (registration.payment_amount === 0 && registration.total_payment === 0) continue;
 					if (payment_status <= 0) {
 						row.setAttribute("data-paid", "");
+						setPaymentCue(row, PAID_LABEL);
 					} else if (payment_status > 0 || (registration.payment_amount > registration.total_payment && registration.total_payment === 0)) {
 						row.setAttribute("data-partially-paid", "");
+						setPaymentCue(row, PARTIALLY_PAID_LABEL);
 					}
 				}
 				for (let i = 0; i < selectedItems.length; i++) {
 					toggleCheckbox(selectedItems[i], true);
 				}
 			});
+		};
+		document.addEventListener("hydrate", onHydrate);
+		onCleanup(() => document.removeEventListener("hydrate", onHydrate));
+
+		let disposed = false;
+		let removeScrollListener: (() => void) | undefined;
+		onCleanup(() => {
+			disposed = true;
+			removeScrollListener?.();
 		});
 		onElementMount("#tableContainer", (el) => {
+			if (disposed) return;
 			el.style.setProperty("--gradient-left-offset", "0px");
 			let prevOffset = 0;
-			el.addEventListener("scroll", (e) => {
+			const onScroll = () => {
 				if (el.scrollLeft === prevOffset) return;
 				el.style.setProperty("--gradient-left-offset", el.scrollLeft + "px");
-			});
+			};
+			el.addEventListener("scroll", onScroll);
+			removeScrollListener = () => el.removeEventListener("scroll", onScroll);
 		});
 	});
 
@@ -214,7 +249,7 @@ export default function RegistrationsTable() {
 										<div class="pb-2 flex items-center gap-x-4">
 											<select
 												aria-label="Σχολική χρονιά"
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-hidden dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
+												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
 												onChange={(e) => {
 													const value = e.currentTarget.value;
 													if (value === "") return;
@@ -254,6 +289,27 @@ export default function RegistrationsTable() {
 				{`
 				#tableContainer {
 					--gradient-left-offset: 0px;
+				}
+				/* Text cue for the payment colour: a glyph in the row's right padding (alt text after the slash is read aloud). */
+				.row[data-paid]::after,
+				.row[data-partially-paid]::after {
+					position: absolute;
+					top: 50%;
+					right: 0.4rem;
+					transform: translateY(-50%);
+					font-size: 0.95rem;
+					line-height: 1;
+					color: rgb(23, 23, 23);
+				}
+				html.dark .row[data-paid]::after,
+				html.dark .row[data-partially-paid]::after {
+					color: rgb(245, 245, 245);
+				}
+				.row[data-paid]::after {
+					content: "✓" / "${PAID_LABEL}";
+				}
+				.row[data-partially-paid]::after {
+					content: "◐" / "${PARTIALLY_PAID_LABEL}";
 				}
 				/* Paid rows */
 				.row[data-paid]:nth-of-type(odd)::before {

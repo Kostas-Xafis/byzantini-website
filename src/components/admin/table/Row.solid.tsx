@@ -163,9 +163,17 @@ export default function Row(props: Props) {
 						class={
 							"group/checkbox relative items-center justify-items-center" + (header ? " mcb" : " cb") // mcb = main checkbox, cb = checkbox
 						}>
-						<button>
-							<i class={"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
-							<i class={"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
+						<button
+							type="button"
+							aria-label={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
+							title={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
+							class="rounded focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300">
+							<i
+								aria-hidden="true"
+								class={"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
+							<i
+								aria-hidden="true"
+								class={"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
 						</button>
 					</div>
 				)}

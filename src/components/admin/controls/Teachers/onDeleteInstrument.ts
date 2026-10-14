@@ -39,6 +39,7 @@ export const onDeleteInstrument = function (hydrate: CacheMutationsReturnType, s
 			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Οργάνου",
+			label: "Διαγραφή οργάνου",
 			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE_BOX,
 		};

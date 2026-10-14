@@ -70,6 +70,7 @@ export const onAdd = function (hydrate: CacheMutationsReturnType, store: Partial
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Καθηγητή",
+			label: "Προσθήκη καθηγητή",
 			...addModal,
 		};
 	});

@@ -31,6 +31,7 @@ export const onDelete = function (hydrate: CacheMutationsReturnType, store: Part
 			onSubmit: submit,
 			submitText: "Διαγραφή",
 			headerText: "Διαγραφή Καθηγητών",
+			label: "Διαγραφή καθηγητών",
 			...deleteModal,
 		};
 	});

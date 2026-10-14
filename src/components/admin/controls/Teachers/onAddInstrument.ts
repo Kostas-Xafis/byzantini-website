@@ -61,6 +61,7 @@ export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiH
 			onSubmit: submit,
 			submitText: "Προσθήκη",
 			headerText: "Εισαγωγή Οργάνου",
+			label: "Προσθήκη οργάνου",
 			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_BOX,
 		};

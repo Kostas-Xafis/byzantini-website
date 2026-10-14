@@ -1,6 +1,7 @@
+import type { CustomEvents } from "@_types/custom-events";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 export type FileInputProps = {
@@ -44,14 +45,16 @@ export default function FileInput(props: FileInputProps) {
 		setFile(null);
 	};
 
-	document.addEventListener("modal_close", (e) => {
+	const onModalClose = (e: CustomEvents["modal_close"]) => {
 		const modalPrefix = e.detail.prefix;
 		if (modalPrefix !== prefix) return;
 		if (prefix.includes("ADD")) {
 			fileHandler.removeFile(0);
 			setFile(null);
 		}
-	});
+	};
+	onMount(() => document.addEventListener("modal_close", onModalClose));
+	onCleanup(() => document.removeEventListener("modal_close", onModalClose));
 
 	const fname = createMemo(() => file()?.getName() || "");
 
@@ -69,7 +72,7 @@ export default function FileInput(props: FileInputProps) {
 					)}
 					<div class="flex flex-col h-max pb-2 items-center w-full bg-[rgb(255,255,255,0.55)] dark:bg-[rgb(26,26,26,0.7)] text-red-950 dark:text-red-50 backdrop-blur-[3px]">
 						<p>{((fname() || "").length > 20 ? fname().slice(0, 12) + " ... " + fname().slice(-7) : fname()) || ""}</p>
-						<CloseButton onClick={() => onFileRemove()} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
+						<CloseButton label="Αφαίρεση αρχείου" onClick={() => onFileRemove()} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
 					</div>
 				</div>
 				<div
