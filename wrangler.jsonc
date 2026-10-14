@@ -62,6 +62,9 @@
 
 	"env": {
 		"production": {
+			// The custom domain lives in config so a deploy keeps it (it was attached in the dashboard, and an
+			// upload without `routes` would detach it). Named environments do not inherit `routes`.
+			"routes": [{ "pattern": "musicschool-metamorfosi.gr", "custom_domain": true }],
 			"d1_databases": [
 				{ "binding": "DB", "database_name": "byzantini-db", "database_id": "20e4783b-f1b4-4362-ba76-7694c91cacce", "migrations_dir": "migrations" }
 			],
