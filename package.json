@@ -59,7 +59,6 @@
 		"print-js": "^1.6.0",
 		"ts-morph": "^24.0.0",
 		"typescript": "6.0.3",
-		"valibot": "^0.13.1",
 		"wrangler": "^4.127.1",
 		"xlsx": "^0.18.5"
 	}

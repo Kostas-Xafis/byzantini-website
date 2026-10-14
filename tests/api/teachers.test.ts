@@ -1,11 +1,9 @@
-import { v_TeacherClasses, v_TeacherInstruments, v_TeacherLocations, v_Teachers } from "../entitySchemas";
+import { z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { expect, test } from "bun:test";
-import { array, number, object, omit } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, fetchBucketFile, getJson, testEnv, useTestAPI } from "../testHelpers.ts";
-
-const v_PublicTeacher = omit(v_Teachers, ["amka", "telephone", "email"]);
 
 const areBuffersEqual = (first: ArrayBuffer, second: ArrayBuffer) => {
 	const firstView = new Uint8Array(first);
@@ -42,7 +40,7 @@ function teachersTest() {
 		});
 
 		const json = await getJson<APIResponse["Teachers.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newTeacherId = json.data.insertId;
 	});
@@ -61,7 +59,7 @@ function teachersTest() {
 			RequestObject: [newTeacherId as number],
 		});
 		const teacherJson = await getJson<APIResponse["Teachers.getById"]>(teacherRes);
-		expectBody(teacherJson, v_Teachers);
+		expectBody(teacherJson, z_Teachers);
 
 		if (!teacherJson.data || teacherJson.data.cv == null) {
 			throw new Error("Teacher CV was not saved after upload");
@@ -89,7 +87,7 @@ function teachersTest() {
 			RequestObject: [newTeacherId as number],
 		});
 		const beforeDeleteJson = await getJson<APIResponse["Teachers.getById"]>(beforeDeleteRes);
-		expectBody(beforeDeleteJson, v_Teachers);
+		expectBody(beforeDeleteJson, z_Teachers);
 		if (!beforeDeleteJson.data || beforeDeleteJson.data.cv == null) {
 			throw new Error("Expected teacher CV to exist before deletion");
 		}
@@ -106,7 +104,7 @@ function teachersTest() {
 			RequestObject: [newTeacherId as number],
 		});
 		const afterDeleteJson = await getJson<APIResponse["Teachers.getById"]>(afterDeleteRes);
-		expectBody(afterDeleteJson, v_Teachers);
+		expectBody(afterDeleteJson, z_Teachers);
 		if (!afterDeleteJson.data || afterDeleteJson.data.cv != null) {
 			throw new Error("Teacher CV was not cleared after deletion");
 		}
@@ -122,7 +120,7 @@ function teachersTest() {
 		});
 
 		const json = await getJson<APIResponse["Teachers.getById"]>(res);
-		expectBody(json, v_Teachers);
+		expectBody(json, z_Teachers);
 	});
 	test("--teachers-- #6", async () => {
 		const updatedTeacher = {
@@ -154,7 +152,7 @@ function teachersClassesTest() {
 		const res = await useTestAPI("Teachers.getClasses");
 
 		const json = await getJson<APIResponse["Teachers.getClasses"]>(res);
-		expectBody(json, array(v_TeacherClasses));
+		expectBody(json, z.array(z_TeacherClassesResponse));
 	});
 	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getClassesById", {
@@ -162,7 +160,7 @@ function teachersClassesTest() {
 		});
 
 		const json = await getJson<APIResponse["Teachers.getClassesById"]>(res);
-		expectBody(json, array(v_TeacherClasses));
+		expectBody(json, z.array(z_TeacherClassesResponse));
 	});
 }
 
@@ -171,7 +169,7 @@ function teachersLocationsTest() {
 		const res = await useTestAPI("Teachers.getLocations");
 
 		const json = await getJson<APIResponse["Teachers.getLocations"]>(res);
-		expectBody(json, array(v_TeacherLocations));
+		expectBody(json, z.array(z_TeacherLocations));
 	});
 	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getLocationsById", {
@@ -179,7 +177,7 @@ function teachersLocationsTest() {
 		});
 
 		const json = await getJson<APIResponse["Teachers.getLocationsById"]>(res);
-		expectBody(json, array(v_TeacherLocations));
+		expectBody(json, z.array(z_TeacherLocations));
 	});
 }
 
@@ -188,7 +186,7 @@ function teachersInstrumentsTest() {
 		const res = await useTestAPI("Teachers.getInstruments");
 
 		const json = await getJson<APIResponse["Teachers.getInstruments"]>(res);
-		expectBody(json, array(v_TeacherInstruments));
+		expectBody(json, z.array(z_TeacherInstruments));
 	});
 	test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.getInstrumentsById", {
@@ -196,7 +194,7 @@ function teachersInstrumentsTest() {
 		});
 
 		const json = await getJson<APIResponse["Teachers.getInstrumentsById"]>(res);
-		expectBody(json, array(v_TeacherInstruments));
+		expectBody(json, z.array(z_TeacherInstruments));
 	});
 }
 
@@ -210,7 +208,7 @@ test("--teachers--", async () => {
 		const res = await useTestAPI("Teachers.get");
 
 		const json = await getJson<APIResponse["Teachers.get"]>(res);
-		expectBody(json, array(v_Teachers));
+		expectBody(json, z.array(z_Teachers));
 	} catch (err) {
 		console.error({ err });
 	}
@@ -220,7 +218,7 @@ test("--teachers--", async () => {
 	const res = await useTestAPI("Teachers.getByFullnames");
 
 	const json = await getJson<APIResponse["Teachers.getByFullnames"]>(res);
-	expectBody(json, array(v_Teachers));
+	expectBody(json, z.array(z_Teachers));
 });
 
 test("--teachers--", async () => {
@@ -229,7 +227,7 @@ test("--teachers--", async () => {
 	});
 
 	const json = await getJson<APIResponse["Teachers.getByPriorityClasses"]>(res);
-	expectBody(json, array(v_PublicTeacher));
+	expectBody(json, z.array(z_PublicTeacher));
 });
 
 // Public teacher routes must never leak ΑΜΚΑ, phone or email; the full rows are admin-only.
@@ -244,7 +242,7 @@ test("--teachers-- public routes omit private fields", async () => {
 		const res = await fetch(anonymousBase + path);
 		expect(res.status).toBe(200);
 		const json = (await res.json()) as { data: Record<string, unknown>[] };
-		expectBody(json, array(v_PublicTeacher));
+		expectBody(json, z.array(z_PublicTeacher));
 		for (const row of json.data) {
 			for (const field of privateTeacherFields) expect(row).not.toHaveProperty(field);
 		}

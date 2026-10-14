@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import { parse, type BaseSchema } from "valibot";
+import type { z } from "astro/zod";
 import { getEnv } from "../lib/env/env";
 import { getRoute, type APIArgs, type APIEndpointNames, type APIResponse } from "../lib/api/routes";
 import { assertOwnProp } from "../lib/utilities/assert";
@@ -90,7 +90,7 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 };
 
 /** Phase 4 envelope: `{ data }` | `{ message }` | `{ error }`. */
-export function expectBody(body: any, expected?: string | BaseSchema<any, any>, isError = false) {
+export function expectBody(body: any, expected?: string | z.ZodType, isError = false) {
 	if (isError) {
 		expect(typeof body.error).toBe("string");
 		if (typeof expected === "string") expect(body.error).toBe(expected);
@@ -102,11 +102,8 @@ export function expectBody(body: any, expected?: string | BaseSchema<any, any>, 
 	}
 	expect(body.data).toBeDefined();
 	if (expected) {
-		try {
-			expect(parse(expected, body.data)).toBeObject();
-		} catch (err: any) {
-			throw new Error(err);
-		}
+		const result = expected.safeParse(body.data);
+		if (!result.success) throw new Error(`Response shape mismatch: ${JSON.stringify(result.error.issues)}`);
 	}
 }
 

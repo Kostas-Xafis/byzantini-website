@@ -344,8 +344,9 @@ The person data that used to live on `registrations` is split into two tables
 - Test files: `tests/api/*.test.ts` (need the dev server) and
   `tests/unit/*.test.ts` (no server); helpers in `tests/testHelpers.ts`
   (`useTestAPI(...)`, `testEnv`) and `tests/rawAPI.ts` (anonymous raw requests
-  for 401/404/405/malformed-input tests). Response-shape assertions still use
-  valibot (a devDependency, tests only) — new tests may use zod.
+  for 401/404/405/malformed-input tests). Response-shape assertions are zod:
+  `expectBody(json, schema)` takes the schemas from `lib/api/schemas.ts`
+  (test-local `z.object(...)` only for narrower shapes).
 - Tests require `tests/.env.test` (`VITE_URL`, `TEST_EMAIL`, `TEST_PASSWORD`)
   and a running dev API server; run `bun run test` after touching an API
   endpoint.

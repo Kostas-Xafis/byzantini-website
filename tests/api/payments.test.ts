@@ -1,11 +1,11 @@
-import { v_Books, v_Payments } from "../entitySchemas";
+import { z_Books, z_Payments } from "@lib/api/schemas";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { Database } from "bun:sqlite";
-import { array, number, object } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
 
 /**
@@ -41,8 +41,7 @@ function withLocalDb<T>(fn: (db: Database) => T): T | null {
 }
 
 /** Puts the book back to full stock so repeated runs stay idempotent. */
-const resetBookStock = () =>
-	withLocalDb((db) => db.run("UPDATE books SET sold = 0 WHERE id = ?", [BOOK_ID]));
+const resetBookStock = () => withLocalDb((db) => db.run("UPDATE books SET sold = 0 WHERE id = ?", [BOOK_ID]));
 
 function paymentsTest() {
 	const payment = {
@@ -65,7 +64,7 @@ function paymentsTest() {
 		});
 
 		const json = await getJson<APIResponse["Payments.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newPaymentId = json.data.insertId;
 		// Fail loudly here rather than letting every later test cascade.
@@ -77,14 +76,14 @@ function paymentsTest() {
 		});
 
 		const json = await getJson<APIResponse["Payments.getById"]>(res);
-		expectBody(json, array(v_Payments));
+		expectBody(json, z.array(z_Payments));
 	});
 	test("--payments-- #3", async () => {
 		let res = await useTestAPI("Books.getById", {
 			RequestObject: [payment.book_id as number],
 		});
 		let json: any = await getJson<APIResponse["Books.getById"]>(res);
-		expectBody(json, v_Books);
+		expectBody(json, z_Books);
 
 		const updatedPayment = {
 			id: newPaymentId as number,
@@ -128,7 +127,7 @@ function paymentsTest() {
 		// the book itself is still a valid, in-stock book
 		const res = await useTestAPI("Books.getById", { RequestObject: [BOOK_ID] });
 		const json = await getJson<APIResponse["Books.getById"]>(res);
-		expectBody(json, v_Books);
+		expectBody(json, z_Books);
 		expect(json.data.quantity - json.data.sold).toBeGreaterThan(0);
 	});
 }
@@ -139,12 +138,12 @@ test("--payments--", async () => {
 	const res = await useTestAPI("Payments.get");
 
 	const json = await getJson<APIResponse["Payments.get"]>(res);
-	expectBody(json, array(v_Payments));
+	expectBody(json, z.array(z_Payments));
 });
 
 test("--payments--", async () => {
 	const res = await useTestAPI("Payments.getTotal");
 
 	const json = await getJson<APIResponse["Payments.getTotal"]>(res);
-	expectBody(json, object({ total: number() }));
+	expectBody(json, z.object({ total: z.number() }));
 });

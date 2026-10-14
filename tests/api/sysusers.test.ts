@@ -1,12 +1,12 @@
 import type { SysUsers } from "@_types/entities";
-import { v_SysUsers } from "../entitySchemas";
+import { z_SysUsers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { expect, test } from "bun:test";
-import { array, literal, number, object, pick, string } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
-const sysUsersSimple = pick(v_SysUsers, ["id", "email"]);
+const sysUsersSimple = z_SysUsers.pick({ id: true, email: true });
 
 function sysUsersTest() {
 	const sysUser = {
@@ -22,7 +22,7 @@ function sysUsersTest() {
 		});
 
 		const json = await getJson<APIResponse["SysUsers.createRegisterLink"]>(res);
-		expectBody(json, object({ link: string() }));
+		expectBody(json, z.object({ link: z.string() }));
 
 		newSysUserLink = json.data.link;
 	});
@@ -32,7 +32,7 @@ function sysUsersTest() {
 		});
 
 		const json = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(res);
-		expectBody(json, object({ isValid: literal(true) }));
+		expectBody(json, z.object({ isValid: z.literal(true) }));
 	});
 	test("--sysusers-- #2b invite rejects a different email", async () => {
 		const res = await useTestAPI("SysUsers.registerSysUser", {
@@ -49,7 +49,7 @@ function sysUsersTest() {
 		});
 
 		const json = await getJson<APIResponse["SysUsers.registerSysUser"]>(res);
-		expectBody(json, object({ session_id: string(), id: number() }));
+		expectBody(json, z.object({ session_id: z.string(), id: z.number() }));
 
 		newSysUserId = json.data.id;
 	});
@@ -63,7 +63,7 @@ function sysUsersTest() {
 
 		const check = await useTestAPI("SysUsers.validateRegisterLink", { UrlArgs: { link: newSysUserLink as string } });
 		const checkJson = await getJson<APIResponse["SysUsers.validateRegisterLink"]>(check);
-		expectBody(checkJson, object({ isValid: literal(false) }));
+		expectBody(checkJson, z.object({ isValid: z.literal(false) }));
 	});
 	test("--sysusers-- #4", async () => {
 		const res = await useTestAPI("SysUsers.getById", {
@@ -89,7 +89,7 @@ test("GET /sys", async () => {
 	const res = await useTestAPI("SysUsers.get");
 
 	const json = await getJson<APIResponse["SysUsers.get"]>(res);
-	expectBody(json, array(sysUsersSimple));
+	expectBody(json, z.array(sysUsersSimple));
 });
 
 test("GET /sys/sid", async () => {
