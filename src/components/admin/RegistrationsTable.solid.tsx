@@ -20,11 +20,14 @@ import {
 	onDownloadExcelMemo,
 	onDownloadPDFMemo,
 	onModifyMemo,
+	onPaymentMemo,
 	onPrintMemo,
 	reshapeData,
 	searchColumns,
 } from "./controls/Registrations/all";
 import { PREFIX } from "./controls/Registrations/helpers";
+import type { JoinedEnrollments } from "@_types/entities";
+import { EVALUATION_BADGE } from "@lib/classYears";
 import { toggleCheckbox } from "./table/Row.solid";
 
 const PAID_LABEL = "Πληρωμένη";
@@ -45,6 +48,46 @@ const setPaymentCue = (row: HTMLElement, label: string | null) => {
 	if (!selectBtn) return;
 	const base = (selectBtn.dataset.baseLabel ??= selectBtn.getAttribute("aria-label") ?? "Επιλογή εγγραφής");
 	selectBtn.setAttribute("aria-label", label ? `${base} (${label})` : base);
+};
+
+const FEE_DECOR = "data-fee-decor";
+const CLASS_YEAR_CELL = columnIndexOf("class_year");
+const TOTAL_PAYMENT_CELL = columnIndexOf("total_payment");
+
+/**
+ * The table cells are plain text (shared `Row`), so the fee cues are added on hydrate, like the payment cue:
+ * a «Κατάταξη» badge on a placed evaluation row and the «Ειδική τιμή» marker on a manual total. Idempotent —
+ * hydrate runs on every render, sort and page change.
+ */
+const setFeeCues = (row: HTMLElement, registration: JoinedEnrollments) => {
+	row.querySelectorAll(`[${FEE_DECOR}]`).forEach((el) => el.remove());
+	const cells = row.querySelectorAll<HTMLElement>(":scope > .cell");
+	const classYearCell = cells[CLASS_YEAR_CELL];
+	if (classYearCell && registration.evaluation && registration.class_year) {
+		const badge = document.createElement("span");
+		badge.setAttribute(FEE_DECOR, "");
+		badge.title = "Εγγράφηκε με κατατακτήριες εξετάσεις";
+		badge.className =
+			"ml-1 inline-block whitespace-nowrap rounded-full bg-violet-100 px-1.5 text-xs font-semibold text-violet-900 dark:bg-violet-900/50 dark:text-violet-100";
+		badge.textContent = EVALUATION_BADGE;
+		classYearCell.appendChild(badge);
+	}
+	const totalCell = cells[TOTAL_PAYMENT_CELL];
+	if (totalCell && registration.fee_manual) {
+		const marker = document.createElement("span");
+		marker.setAttribute(FEE_DECOR, "");
+		marker.title = "Ειδική τιμή: ορίστηκε χειροκίνητα";
+		marker.className = "ml-1 inline-block text-sm text-sky-800 dark:text-sky-200";
+		const icon = document.createElement("i");
+		icon.className = "fa-solid fa-hand-holding-dollar";
+		icon.setAttribute("aria-hidden", "true");
+		const text = document.createElement("span");
+		text.className = "sr-only";
+		text.textContent = "Ειδική τιμή";
+		marker.appendChild(icon);
+		marker.appendChild(text);
+		totalCell.appendChild(marker);
+	}
 };
 
 const schoolYearLabel = (registrationYear: string) => {
@@ -132,6 +175,7 @@ export default function RegistrationsTable() {
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
 
 	const onModify = onModifyMemo(setRegistrationHydrate, store, selectedItems, apiHook);
+	const onPayment = onPaymentMemo(setRegistrationHydrate, store, selectedItems, apiHook);
 	const onDelete = onDeleteMemo(setRegistrationHydrate, store, selectedItems, apiHook);
 	const onDownloadPDF = onDownloadPDFMemo(store, selectedItems);
 
@@ -170,6 +214,7 @@ export default function RegistrationsTable() {
 				}
 				for (let i = 0; i < resultArray.length; i++) {
 					const { row, registration } = resultArray[i];
+					setFeeCues(row, registration);
 					row.removeAttribute("data-paid");
 					row.removeAttribute("data-partially-paid");
 					setPaymentCue(row, null);
@@ -223,7 +268,7 @@ export default function RegistrationsTable() {
 							position: "top",
 							prefix: PREFIX,
 							controlGroups: [
-								{ controls: [onModify, onDelete] },
+								{ controls: [onModify, onPayment, onDelete] },
 								{ controls: [onDownloadExcel, onDownloadPDF, onPrint] },
 								{
 									type: "search",

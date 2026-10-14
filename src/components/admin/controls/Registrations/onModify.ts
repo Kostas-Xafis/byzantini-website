@@ -7,7 +7,8 @@ import { InputFields, type Props as InputProps } from "../../../input/Input.soli
 import { createAlert, pushAlert } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";
 import type { Action } from "../../table/TableControls.solid";
-import { RegistrationsInputs, type EnrollmentEditFields, type APIHook } from "./helpers";
+import { readPlacementFields } from "./EnrollmentFeeFields.solid";
+import { pupilYearIds, RegistrationsInputs, storedPaymentFields, type EnrollmentEditFields, type APIHook } from "./helpers";
 
 export const onModify = function (hydrate: CacheMutationsReturnType, store: Partial<APIResponse>, selectedItems: number[], apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
@@ -23,10 +24,8 @@ export const onModify = function (hydrate: CacheMutationsReturnType, store: Part
 		const registration = JSON.parse(JSON.stringify(registrations.find((r) => r.id === selectedItems[0]) as any)) as JoinedEnrollments;
 		const submit = async function (form: ExtendedFormData<EnrollmentEditFields>) {
 			const class_id = form.number("class_id");
-			const class_year = form.string("class_year");
-			if (class_year === "undefined" || class_year === "") {
-				throw new Error("Παρακαλώ επιλέξτε έτος φοίτησης");
-			}
+			// Evaluation and class year come from the «Κατάταξη» field (validated there).
+			const placement = readPlacementFields(form);
 			// The editor writes to two tables: the pupil (identity only — ΑΜ,
 			// επώνυμο, όνομα, πατρώνυμο) and this enrollment (class, teacher,
 			// instrument, payments). The pupil's contact/address fields are not
@@ -48,22 +47,19 @@ export const onModify = function (hydrate: CacheMutationsReturnType, store: Part
 					id: registration.id,
 					pupil_id: registration.pupil_id,
 					registration_year: form.string("registration_year"),
-					class_year,
+					class_year: placement.class_year,
+					evaluation: placement.evaluation,
 					class_id: class_id as 0 | 1 | 2,
 					teacher_id: form.number("teacher_id", 0),
 					instrument_id: (class_id && form.number("instrument_id")) || 0,
 					date: form.date("date").getTime(),
-					payment_amount: form.number("payment_amount", 0),
-					total_payment: form.number("total_payment", 0),
-					payment_date: form.date("payment_date")?.getTime() || null,
+					// Fees and payments belong to the «Δίδακτρα & Πληρωμή» modal: resend the stored values.
+					...storedPaymentFields(registration),
 					pass: form.multiSelect("pass", "boolean", { single: true }),
 				},
 			});
-			hydrate({
-				action: ActionEnum.MODIFY,
-				id: registration.id,
-				isMultiple: false,
-			});
+			// The save recalculates the fees of the pupil's whole year (discount order): refresh those rows too.
+			for (const id of pupilYearIds(registrations, registration)) hydrate({ action: ActionEnum.MODIFY, id, isMultiple: false });
 			pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
 		};
 

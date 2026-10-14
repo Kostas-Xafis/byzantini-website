@@ -3,6 +3,7 @@ import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { isDashboardDarkMode, toggleDashboardTheme } from "@utilities/theme";
 import { Show, createSignal, onMount } from "solid-js";
+import FeeCatalogEditor from "./FeeCatalogEditor.solid";
 import { toast } from "./toast";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
@@ -249,6 +250,8 @@ export default function SettingsPage() {
 						</Show>
 					</div>
 				</section>
+
+				<FeeCatalogEditor />
 
 				{isDevelopmentMode && (
 					<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">

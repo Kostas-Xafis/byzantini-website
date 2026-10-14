@@ -3,7 +3,8 @@ import type { PDFRequest } from "../services/pdfWorker/src/types";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { dynamicImport, loadScript } from "@utilities/scripts";
 import { sleep } from "@utilities/sleep";
-import { looseStringEquals } from "@utilities/string";
+import { classYearLabel } from "@lib/classYears";
+import { APIRequestError, readAPIResponse } from "@lib/api/transport";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 
@@ -25,20 +26,46 @@ export class PDF {
 	private student: JoinedEnrollments = {} as JoinedEnrollments;
 	private teachersName: string = "";
 	private instrument: string = "";
+	private awaitingPlacement = false;
 	constructor() {}
 
 	public setTemplateData(student: JoinedEnrollments, teachersName: string, instrument?: string): PDF {
-		this.student = student;
+		// The PDF worker prints `class_year` as is: an evaluation row awaiting placement ('') prints «Υπό Κατάταξη».
+		this.student = { ...student, class_year: classYearLabel(student.class_year, student.evaluation) };
+		this.awaitingPlacement = !!student.evaluation && !student.class_year;
 		this.teachersName = teachersName;
 		this.instrument = instrument || "";
 		return this;
 	}
 
 	public getFileName(): string {
-		if (looseStringEquals(this.student.class_year, "Υπό Κατάταξη")) {
+		if (this.awaitingPlacement) {
 			return `Υπό κατάταξη/${this.student.first_name}_${this.student.last_name}.pdf`;
 		}
 		return `${this.teachersName}/${this.student.first_name}_${this.student.last_name}.pdf`;
+	}
+
+	/**
+	 * Posts a request to the PDF route and returns the PDF. Anything else (an error envelope, an empty
+	 * body from a worker killed mid-response) throws `APIRequestError`, so it reaches the caller's toast
+	 * instead of being saved as a blank .pdf.
+	 */
+	private static async fetchPDF(body: PDFRequest): Promise<Blob> {
+		const response = await fetch(PDF.PDFEndpoint, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+		const isPdf = response.ok && (response.headers.get("Content-Type") ?? "").startsWith("application/pdf");
+		if (!isPdf) {
+			await readAPIResponse(response);
+			throw new APIRequestError(response.status, "Αποτυχία δημιουργίας του PDF.", { envelope: false });
+		}
+		const blob = await response.blob();
+		if (blob.size === 0) throw new APIRequestError(response.status, "Αποτυχία δημιουργίας του PDF.", { envelope: false });
+		return blob;
 	}
 
 	private static loadPrintJS() {
@@ -56,15 +83,7 @@ export class PDF {
 				instrument: this.instrument,
 			},
 		});
-		const imgBlob = await (
-			await fetch(PDF.PDFEndpoint, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(body),
-			})
-		).blob();
+		const imgBlob = await PDF.fetchPDF(body);
 		const fileURL = URL.createObjectURL(imgBlob);
 		const printWindow = window.open(fileURL, "_blank");
 		printWindow?.print();
@@ -88,15 +107,7 @@ export class PDF {
 				instrument: pdf.instrument,
 			})),
 		});
-		const imgBlob = await (
-			await fetch(PDF.PDFEndpoint, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(body),
-			})
-		).blob();
+		const imgBlob = await PDF.fetchPDF(body);
 		const fileURL = URL.createObjectURL(imgBlob);
 		const printWindow = window.open(fileURL, "_blank");
 		printWindow?.print();
@@ -114,15 +125,7 @@ export class PDF {
 				instrument: this.instrument,
 			},
 		});
-		const imgBlob = await (
-			await fetch(PDF.PDFEndpoint, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(body),
-			})
-		).blob();
+		const imgBlob = await PDF.fetchPDF(body);
 
 		let a = document.createElement("a");
 		a.href = URL.createObjectURL(imgBlob);
@@ -151,16 +154,7 @@ export class PDF {
 			});
 			while (expoTime <= 8000) {
 				try {
-					let resp = await fetch(PDF.PDFEndpoint, {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-						},
-						body: JSON.stringify(body),
-					});
-					if (resp.status >= 400) throw new Error("Server Error");
-
-					const imgBlob = await resp.blob();
+					const imgBlob = await PDF.fetchPDF(body);
 					let fileName = pdf.getFileName();
 					if (!namesArr.includes(fileName)) {
 						namesArr.push(fileName);

@@ -141,6 +141,11 @@
   editors (TS 7 has no classic JS API). Keep tsconfigs TS 7-valid.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
   suite writes to the local dev DB.
+- Fees (docs/FEES.md): «Υπό Κατάταξη» is the enrollment `evaluation` status, not
+  a class year; prices come from the versioned `fee_catalogs` (`FeeCatalog.*`),
+  computed by the pure `lib/fees` and recalculated per pupil-year after every
+  enrollment write. `bun run fees:backfill` (dry run by default, `--apply`)
+  fills the 2026-2027 fees.
 - Pupils that still need attention are reviewed in the admin Μαθητολόγιο page
   (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»).
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes

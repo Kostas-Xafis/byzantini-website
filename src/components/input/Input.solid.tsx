@@ -3,7 +3,7 @@ import type { AnyRecord, DOMElement } from "@_types/global";
 import type { PartialBy } from "@_types/helpers";
 import type { FileProxy } from "@lib/fileHandling.client";
 import { AnimTimeline } from "@utilities/dom";
-import { Index, Show, createSignal, onMount } from "solid-js";
+import { Index, Show, createSignal, onMount, type JSX } from "solid-js";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";
@@ -90,6 +90,8 @@ type InputProps = {
 	type:
 		| null
 		| "checkbox"
+		/** Renders `render()` across the whole form row — for composite fields the generic inputs cannot express. */
+		| "custom"
 		| "date"
 		| "email"
 		| "file"
@@ -136,6 +138,8 @@ type InputProps = {
 	fileExtension?: string;
 	metadata?: AnyRecord;
 	filePreview?: (file: FileProxy<AnyRecord>) => Promise<DOMElement>;
+	/** Content of a `type: "custom"` input; it renders (and names) its own form controls. */
+	render?: () => JSX.Element;
 };
 
 export type Props = PartialBy<InputProps, "prefix">;
@@ -166,6 +170,7 @@ export default function Input(props: InputProps) {
 		isExtended,
 	} = props;
 	if (type === null || type === "hidden") return <></>;
+	if (type === "custom") return <>{props.render?.()}</>;
 
 	let [isShown, setIsShown] = createSignal(show);
 

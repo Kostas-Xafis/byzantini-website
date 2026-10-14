@@ -4,6 +4,7 @@ import { useNavigate } from "@solidjs/router";
 import { API } from "@routes/index.client";
 import { apiCall, type APICallResult } from "@hooks/apiCall";
 import { looseStringIncludes } from "@utilities/string";
+import { classYearLabel } from "@lib/classYears";
 import type { Announcements, Books, JoinedEnrollments, Locations, Payoffs, Payments, Teachers } from "@_types/entities";
 import Dialog from "../other/Dialog.solid";
 
@@ -127,7 +128,7 @@ export default function GlobalSearch() {
 			sources.registrations
 				.filter((r) =>
 					matches(
-						`${r.last_name} ${r.first_name} ${r.fathers_name} ${r.am} ${r.amka} ${r.email} ${r.telephone} ${r.cellphone} ${r.road} ${r.region} ${r.class_year} ${String(r.id)}`,
+						`${r.last_name} ${r.first_name} ${r.fathers_name} ${r.am} ${r.amka} ${r.email} ${r.telephone} ${r.cellphone} ${r.road} ${r.region} ${classYearLabel(r.class_year, r.evaluation)} ${String(r.id)}`,
 					),
 				)
 				.map((r) => ({

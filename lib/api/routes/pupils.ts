@@ -1,7 +1,17 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
 import { z_IdArray, z_JoinedEnrollments, z_PupilRegistrationForm, z_PupilSearchResponse, z_PupilWithEnrollments } from "@lib/api/schemas";
 import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
-import { classYearsByMusicType, MusicTypeArr } from "@lib/classYears";
+import { classYearsByMusicType, isEvaluationClassYear, MusicTypeArr } from "@lib/classYears";
+import { computeYearFees, orderForFees } from "@lib/fees";
+import {
+	getActiveCatalog,
+	loadCatalogs,
+	loadPupilYear,
+	pupilYearsOf,
+	recalculatePupilYears,
+	type FeeEnrollmentRow,
+	type PupilYear,
+} from "@lib/fees/recalculate.server";
 import { ALL_YEARS, currentSchoolYearStart, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
@@ -111,6 +121,20 @@ const z_EnrollmentInput = z.object({
 	total_payment: z.number().int().min(0, "Μη έγκυρο συνολικό ποσό πληρωμής").optional(),
 	payment_date: z.number().int().min(0).nullable().optional(),
 	pass: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => v === true || v === 1),
+	/**
+	 * «Υπό Κατάταξη» (docs/FEES.md §1). Omitted: kept as stored on update, 0 on enroll. A `class_year` of
+	 * «Υπό Κατάταξη» (older clients) is read as `evaluation: true, class_year: ''`.
+	 */
+	evaluation: z
+		.union([z.boolean(), z.literal(0), z.literal(1)])
+		.transform((v) => v === true || v === 1)
+		.optional(),
+	/**
+	 * «Ειδική τιμή»: `true` keeps `total_payment` as sent, `false` restores the catalog price («Επαναφορά τιμής
+	 * καταλόγου»). Omitted: a `total_payment` that differs from the computed price (and, on update, from the
+	 * stored one) becomes a manual price. Only meaningful on enrollments with a pinned catalog.
+	 */
+	fee_manual: z.boolean("Μη έγκυρη ειδική τιμή").optional(),
 });
 
 const z_EnrollmentUpdate = z_EnrollmentInput.extend({ id: z.number().int().min(1, "Μη έγκυρο id") });
@@ -158,6 +182,91 @@ const z_PupilPost = z_PupilRegistrationForm
 
 const z_InsertResponse = z.object({ insertId: z.number().int().min(0, "Μη έγκυρο insertId") });
 
+/** Fee preview of a pupil-year, optionally with one enrollment as it is being edited (or added). */
+const z_FeePreview = z.object({
+	pupil_id: z.number().int().min(1, "Μη έγκυρο pupil_id"),
+	registration_year: z.string().min(1, "Μη έγκυρο έτος εγγραφής"),
+	draft: z
+		.object({
+			/** The enrollment being edited; omitted for a new one. */
+			id: z.number().int().min(1, "Μη έγκυρο id").optional(),
+			class_id: z.union([z.literal(0), z.literal(1), z.literal(2)], { message: "Μη έγκυρη μουσική" }),
+			class_year: z.string("Μη έγκυρο έτος τάξης"),
+			teacher_id: z.number().int().min(-1, "Μη έγκυρος καθηγητής"),
+			evaluation: z.union([z.boolean(), z.literal(0), z.literal(1)]).transform((v) => v === true || v === 1),
+		})
+		.optional(),
+});
+
+const z_FeePreviewRow = z.object({
+	/** Enrollment id; 0 for a new (not yet saved) draft. */
+	id: z.number().int().min(0),
+	class_id: z.number().int(),
+	class_year: z.string(),
+	evaluation: z.boolean(),
+	fee_catalog_id: z.number().int().nullable(),
+	fee_manual: z.boolean(),
+	/** 0-based position in the discount order (Byz → Trad → Eur, then id). */
+	position: z.number().int().min(0),
+	/** 1 for the first enrollment, else the pinned catalog's multi_enrollment_factor (null when unpinned). */
+	factor: z.number().nullable(),
+	fee_base: z.number().int().nullable(),
+	evaluation_fee: z.number().int(),
+	/** The catalog price (round(fee_base × factor) + evaluation_fee); null when no catalog is pinned. */
+	catalog_total: z.number().int().nullable(),
+	/** What the row owes: the manual / stored total when manual or unpinned, else `catalog_total`. */
+	total_payment: z.number().int(),
+});
+const z_FeePreviewResponse = z.object({
+	/** The active catalog of the school year (what a new enrollment would pin), or null. */
+	active_catalog_id: z.number().int().nullable(),
+	rows: z.array(z_FeePreviewRow),
+});
+
+/** Maps the public form's / older clients' «Υπό Κατάταξη» class year onto the evaluation status. */
+function evaluationOf(classYear: string, evaluation: boolean | undefined, fallback: boolean): { evaluation: boolean; class_year: string } {
+	if (isEvaluationClassYear(classYear)) return { evaluation: true, class_year: "" };
+	return { evaluation: evaluation ?? fallback, class_year: classYear };
+}
+
+/** Stand-in id of a not-yet-saved enrollment in a fee preview: sorts after every real one. */
+const DRAFT_ID = Number.MAX_SAFE_INTEGER;
+
+type EnrollmentDraft = { id: number } & Partial<Pick<FeeEnrollmentRow, "class_id" | "class_year" | "teacher_id">> & { evaluation?: boolean };
+
+/**
+ * The catalog price enrollment `draft.id` would get in `pair`'s year with the `draft` fields applied (an
+ * enrollment moving in from another school year included); undefined when it has no usable pinned catalog.
+ */
+async function computedTotal(pair: PupilYear, draft: EnrollmentDraft): Promise<number | undefined> {
+	let rows = await loadPupilYear(pair);
+	let target = rows.find((row) => row.id === draft.id);
+	if (!target) {
+		[target] = await executeQuery<FeeEnrollmentRow>(
+			"SELECT id, pupil_id, registration_year, class_id, class_year, teacher_id, evaluation, fee_catalog_id, fee_manual, fee_base, evaluation_fee, total_payment FROM pupil_enrollments WHERE id = ?",
+			[draft.id],
+		);
+		if (!target) return undefined;
+	}
+	const { id, evaluation, ...fields } = draft;
+	const edited = { ...target, ...fields, ...(evaluation === undefined ? {} : { evaluation: evaluation ? 1 : 0 }), fee_manual: 0 };
+	rows = [...rows.filter((row) => row.id !== id), edited];
+	const catalogs = await loadCatalogs(rows.map((row) => row.fee_catalog_id));
+	return computeYearFees(rows, catalogs).find((fee) => fee.id === id)?.total_payment;
+}
+
+/**
+ * Recalculates after a write that already happened: a failure is logged, not thrown, so a retried request
+ * cannot duplicate the enrollment (the next write of that pupil-year recalculates again).
+ */
+async function recalculateAfterInsert(pairs: PupilYear[]) {
+	try {
+		await recalculatePupilYears(pairs);
+	} catch (error) {
+		console.error("[fees] recalculation failed:", error);
+	}
+}
+
 /**
  * Returning-student lookup used by the public registration form: the pupil is
  * identified by ΑΜ **and** ΑΜΚΑ (both must match, so a bare ΑΜ cannot be used to
@@ -188,7 +297,7 @@ function canUpdatePupil(pupil: PupilProof, body: Pick<Pupils, "amka" | "last_nam
 }
 
 type PupilRow = Pupils & { needs_review: 0 | 1 | boolean };
-type EnrollmentRow = PupilEnrollments & { pass: 0 | 1 | boolean; payment_date: number | null };
+type EnrollmentRow = PupilEnrollments & { pass: 0 | 1 | boolean; evaluation: 0 | 1 | boolean; fee_manual: 0 | 1 | boolean; payment_date: number | null };
 
 /**
  * The wire shape the admin table / exports / PDF worker expect: the legacy
@@ -226,13 +335,19 @@ function toJoined(enrollment: EnrollmentRow, pupil: PupilRow): JoinedEnrollments
 		total_payment: enrollment.total_payment,
 		payment_date: enrollment.payment_date ?? undefined,
 		pass: enrollment.pass ? true : false,
+		evaluation: enrollment.evaluation ? true : false,
+		fee_catalog_id: enrollment.fee_catalog_id ?? null,
+		fee_base: enrollment.fee_base ?? null,
+		evaluation_fee: enrollment.evaluation_fee ?? 0,
+		fee_manual: enrollment.fee_manual ? true : false,
 	};
 }
 
 const JOINED_SELECT = `SELECT e.id AS id, e.pupil_id AS pupil_id, e.registration_year AS registration_year,
 	e.class_year AS class_year, e.class_id AS class_id, e.teacher_id AS teacher_id, e.instrument_id AS instrument_id,
 	e.date AS date, e.payment_amount AS payment_amount, e.total_payment AS total_payment, e.payment_date AS payment_date,
-	e.pass AS pass,
+	e.pass AS pass, e.evaluation AS evaluation, e.fee_catalog_id AS fee_catalog_id, e.fee_base AS fee_base,
+	e.evaluation_fee AS evaluation_fee, e.fee_manual AS fee_manual,
 	p.am AS am, p.orphan_code AS orphan_code, p.split_from_am AS split_from_am, p.last_name AS last_name,
 	p.first_name AS first_name, p.fathers_name AS fathers_name, p.birth_date AS birth_date, p.road AS road,
 	p.number AS number, p.tk AS tk, p.region AS region, p.telephone AS telephone, p.cellphone AS cellphone,
@@ -410,6 +525,10 @@ export const pupilsRoutes = {
 			return handlerResult(async (T) => {
 				const now = Date.now();
 				const year = body.registration_year;
+				// «Υπό Κατάταξη» is a status: the form still offers it as a class year (docs/FEES.md §1).
+				const { evaluation, class_year } = evaluationOf(body.class_year, undefined, false);
+				// The catalog active NOW is pinned on the enrollment (a later catalog edit never changes it).
+				const catalog = await getActiveCatalog(year);
 
 				// 1. Find or create the pupil.
 				let pupil: Pupils | undefined;
@@ -470,12 +589,12 @@ export const pupilsRoutes = {
 
 				// 2. Append the enrollment.
 				const { insertId } = await T.executeQuery(
-					`INSERT INTO pupil_enrollments (pupil_id, registration_year, class_id, class_year, teacher_id, instrument_id, date, payment_amount, total_payment, payment_date, pass, source, created_at) VALUES (???)`,
+					`INSERT INTO pupil_enrollments (pupil_id, registration_year, class_id, class_year, teacher_id, instrument_id, date, payment_amount, total_payment, payment_date, pass, source, created_at, evaluation, fee_catalog_id, fee_manual) VALUES (???)`,
 					{
 						pupil_id: pupilId,
 						registration_year: year,
 						class_id: body.class_id,
-						class_year: body.class_year,
+						class_year,
 						teacher_id: body.teacher_id,
 						instrument_id: body.instrument_id,
 						date: now,
@@ -486,9 +605,14 @@ export const pupilsRoutes = {
 						pass: 0,
 						source: "form",
 						created_at: now,
+						evaluation: evaluation ? 1 : 0,
+						fee_catalog_id: catalog?.id ?? null,
+						fee_manual: 0,
 					},
 				);
 				await T.executeQuery("UPDATE total_enrollments SET amount = amount + 1");
+				// 2b. Fees of the pupil's whole year (a second enrollment may re-order the discount).
+				await recalculateAfterInsert([{ pupil_id: pupilId, registration_year: year }]);
 
 				// 3. Newsletter opt-in (unchanged behaviour).
 				let subscription = await T.executeQuery<EmailSubscriptions>("SELECT * FROM email_subscriptions WHERE email=?", [body.email]);
@@ -509,6 +633,7 @@ export const pupilsRoutes = {
 				sendAutomatedEmail(env, {
 					to: subscription[0].email,
 					subject: "Επιτυχής εγγραφή",
+					// «Υπό Κατάταξη» falls through to the department's default template.
 					htmlTemplateName: successfulRegistrationTemplate(body.class_id, body.class_year),
 					templateData: {
 						token: subscription[0].unsubscribe_token,
@@ -531,13 +656,18 @@ export const pupilsRoutes = {
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async (T) => {
+				const { evaluation, class_year } = evaluationOf(body.class_year, body.evaluation, false);
+				// The active catalog of the enrollment's year is pinned now and never re-pinned (docs/FEES.md §3).
+				const catalog = await getActiveCatalog(body.registration_year);
+				const manualTotal =
+					catalog && body.total_payment !== undefined && (body.fee_manual === true || (body.fee_manual === undefined && body.total_payment > 0));
 				const { insertId } = await T.executeQuery(
-					`INSERT INTO pupil_enrollments (pupil_id, registration_year, class_id, class_year, teacher_id, instrument_id, date, payment_amount, total_payment, payment_date, pass, source, created_at) VALUES (???)`,
+					`INSERT INTO pupil_enrollments (pupil_id, registration_year, class_id, class_year, teacher_id, instrument_id, date, payment_amount, total_payment, payment_date, pass, source, created_at, evaluation, fee_catalog_id, fee_manual) VALUES (???)`,
 					{
 						pupil_id: body.pupil_id,
 						registration_year: body.registration_year,
 						class_id: body.class_id,
-						class_year: body.class_year,
+						class_year,
 						teacher_id: body.teacher_id,
 						instrument_id: body.instrument_id,
 						date: body.date,
@@ -547,31 +677,79 @@ export const pupilsRoutes = {
 						pass: body.pass ? 1 : 0,
 						source: "admin",
 						created_at: Date.now(),
+						evaluation: evaluation ? 1 : 0,
+						fee_catalog_id: catalog?.id ?? null,
+						// Provisionally manual when a price was typed; settled against the computed price below.
+						fee_manual: manualTotal ? 1 : 0,
 					},
 				);
 				await T.executeQuery("UPDATE total_enrollments SET amount = amount + 1");
+				const pair = { pupil_id: body.pupil_id, registration_year: body.registration_year };
+				// A typed price equal to the catalog price is not a manual price.
+				if (manualTotal && body.fee_manual === undefined) {
+					const computed = await computedTotal(pair, { id: insertId });
+					if (computed === body.total_payment) await T.executeQuery("UPDATE pupil_enrollments SET fee_manual = 0 WHERE id = ?", [insertId]);
+				}
+				await recalculateAfterInsert([pair]);
 				return { insertId };
 			}, "Σφάλμα κατά την προσθήκη της εγγραφής"),
 	),
 
+	/**
+	 * Edits an enrollment and recalculates the fees of its pupil-year (both years on a school-year move). The
+	 * pinned catalog is never changed. Manual price rules (enrollments with a pinned catalog):
+	 * `fee_manual: false` → catalog price; `fee_manual: true` → `total_payment` as sent; omitted → a
+	 * `total_payment` different from both the stored and the computed price becomes manual (an already
+	 * manual row stays manual unless the sent total equals the computed price).
+	 */
 	updateEnrollment: new APIServer({ method: "PUT", path: "/pupils/enrollments", schema: z_EnrollmentUpdate }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
+			const [existing] = await executeQuery<FeeEnrollmentRow>(
+				"SELECT id, pupil_id, registration_year, evaluation, fee_catalog_id, fee_manual, total_payment FROM pupil_enrollments WHERE id = ?",
+				[body.id],
+			);
+			if (!existing) throw APIError.notFound("Η εγγραφή δεν βρέθηκε");
+			const { evaluation, class_year } = evaluationOf(body.class_year, body.evaluation, !!existing.evaluation);
+
+			let manual = false;
+			let total = body.total_payment ?? 0;
+			if (existing.fee_catalog_id != null) {
+				total = body.total_payment ?? existing.total_payment;
+				if (body.fee_manual !== undefined) manual = body.fee_manual;
+				else if (body.total_payment === undefined) manual = !!existing.fee_manual;
+				else {
+					const computed = await computedTotal(
+						{ pupil_id: existing.pupil_id, registration_year: body.registration_year },
+						{ id: body.id, class_id: body.class_id, class_year, teacher_id: body.teacher_id, evaluation },
+					);
+					manual = existing.fee_manual
+						? body.total_payment !== computed
+						: body.total_payment !== existing.total_payment && body.total_payment !== computed;
+				}
+			}
+
 			await T.executeQuery(
-				`UPDATE pupil_enrollments SET registration_year=?, class_id=?, class_year=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=?, pass=? WHERE id=?`,
+				`UPDATE pupil_enrollments SET registration_year=?, class_id=?, class_year=?, teacher_id=?, instrument_id=?, date=?, payment_amount=?, total_payment=?, payment_date=?, pass=?, evaluation=?, fee_manual=? WHERE id=?`,
 				[
 					body.registration_year,
 					body.class_id,
-					body.class_year,
+					class_year,
 					body.teacher_id,
 					body.instrument_id,
 					body.date,
 					body.payment_amount ?? 0,
-					body.total_payment ?? 0,
+					total,
 					body.payment_date ?? null,
 					body.pass ? 1 : 0,
+					evaluation ? 1 : 0,
+					manual ? 1 : 0,
 					body.id,
 				],
 			);
+			await recalculatePupilYears([
+				{ pupil_id: existing.pupil_id, registration_year: existing.registration_year },
+				{ pupil_id: existing.pupil_id, registration_year: body.registration_year },
+			]);
 			return "Επιτυχής ενημέρωση εγγραφής";
 		}, "Σφάλμα κατά την ενημέρωση της εγγραφής"),
 	),
@@ -579,11 +757,88 @@ export const pupilsRoutes = {
 	deleteEnrollments: new APIServer({ method: "DELETE", path: "/pupils/enrollments", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const ids = body;
+			// The pupil-years whose discount order changes once these rows are gone.
+			const affected = await pupilYearsOf(ids);
 			if (ids.length === 1) await T.executeQuery(`DELETE FROM pupil_enrollments WHERE id = ?`, ids);
 			else await T.executeQuery(`DELETE FROM pupil_enrollments WHERE id IN (${questionMarks(ids)})`, ids);
 			await T.executeQuery("UPDATE total_enrollments SET amount = amount - ?", [ids.length]);
+			await recalculatePupilYears(affected);
 			return "Επιτυχής διαγραφή εγγραφών";
 		}, "Σφάλμα κατά τη διαγραφή των εγγραφών"),
+	),
+
+	/**
+	 * Fee breakdown of a pupil-year, as stored or — with `draft` — as it would be after saving that enrollment
+	 * (an edit when `draft.id` is set, otherwise a new enrollment pinning the year's active catalog). Read-only.
+	 */
+	previewFees: new APIServer(
+		{ method: "POST", path: "/pupils/fees/preview", schema: z_FeePreview, responseSchema: z_FeePreviewResponse },
+		[authenticateMiddleware],
+		({ body }) =>
+			handlerResult(async () => {
+				const pair = { pupil_id: body.pupil_id, registration_year: body.registration_year };
+				const active = await getActiveCatalog(body.registration_year);
+				let rows = await loadPupilYear(pair);
+				if (body.draft) {
+					const { id, ...fields } = body.draft;
+					const { evaluation, class_year } = evaluationOf(fields.class_year, fields.evaluation, false);
+					const draftFields = { ...fields, class_year, evaluation: evaluation ? 1 : 0 };
+					if (id !== undefined) {
+						// The edited row — possibly moving in from another school year (it keeps its pinned catalog).
+						const [stored] = rows.some((row) => row.id === id)
+							? rows.filter((row) => row.id === id)
+							: await executeQuery<FeeEnrollmentRow>(
+									"SELECT id, pupil_id, registration_year, class_id, class_year, teacher_id, evaluation, fee_catalog_id, fee_manual, fee_base, evaluation_fee, total_payment FROM pupil_enrollments WHERE id = ? AND pupil_id = ?",
+									[id, body.pupil_id],
+								);
+						if (!stored) throw APIError.notFound("Η εγγραφή δεν βρέθηκε");
+						rows = [...rows.filter((row) => row.id !== id), { ...stored, ...draftFields }];
+					} else {
+						rows = [
+							...rows,
+							{
+								...pair,
+								...draftFields,
+								id: DRAFT_ID,
+								fee_catalog_id: active?.id ?? null,
+								fee_manual: 0,
+								fee_base: null,
+								evaluation_fee: 0,
+								total_payment: 0,
+							},
+						];
+					}
+				}
+				const catalogs = await loadCatalogs(rows.map((row) => row.fee_catalog_id));
+				// Every pinned row priced from its catalog, manual ones included (what «Επαναφορά» would give).
+				const priced = new Map(
+					computeYearFees(
+						rows.map((row) => ({ ...row, fee_manual: 0 })),
+						catalogs,
+					).map((fee) => [fee.id, fee]),
+				);
+				return {
+					active_catalog_id: active?.id ?? null,
+					rows: orderForFees(rows).map((row, position) => {
+						const fee = priced.get(row.id);
+						const manual = !!row.fee_manual;
+						return {
+							id: row.id === DRAFT_ID ? 0 : row.id,
+							class_id: row.class_id,
+							class_year: row.class_year,
+							evaluation: !!row.evaluation,
+							fee_catalog_id: row.fee_catalog_id ?? null,
+							fee_manual: manual,
+							position,
+							factor: fee?.factor ?? null,
+							fee_base: fee ? fee.fee_base : (row.fee_base ?? null),
+							evaluation_fee: fee ? fee.evaluation_fee : row.evaluation_fee,
+							catalog_total: fee?.total_payment ?? null,
+							total_payment: fee && !manual ? fee.total_payment : row.total_payment,
+						};
+					}),
+				};
+			}, "Σφάλμα κατά τον υπολογισμό των διδάκτρων"),
 	),
 
 	// ---------------------------------------------------------------------

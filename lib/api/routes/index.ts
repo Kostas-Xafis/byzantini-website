@@ -2,6 +2,7 @@ import { announcementsRoutes } from "./announcements";
 import { authenticationRoutes } from "./authentication";
 import { booksRoutes } from "./books";
 import { emailSubscriptionsRoutes } from "./emailSubscriptions";
+import { feeCatalogRoutes } from "./feeCatalog";
 import { instrumentsRoutes } from "./instruments";
 import { locationsRoutes } from "./locations";
 import { paymentsRoutes } from "./payments";
@@ -40,6 +41,7 @@ export const routeGroups = {
 	QueryLogs: queryLogsRoutes,
 	Pupils: pupilsRoutes,
 	EmailSubscriptions: emailSubscriptionsRoutes,
+	FeeCatalog: feeCatalogRoutes,
 	PDF: pdfRoutes,
 	Announcements: announcementsRoutes,
 	SettingsBackup: settingsBackupRoutes,

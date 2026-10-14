@@ -222,7 +222,19 @@ export const z_PupilEnrollments = z.object({
 	payment_date: positiveInt("Μη έγκυρη ημερομηνία πληρωμής").nullable().optional(),
 	pass: looseBoolean("Μη έγκυρη προαγωγή"),
 	source: z.string("Μη έγκυρη πηγή εγγραφής"),
-	created_at: positiveInt("Μη έγκυρη ημερομηνία δημιουργίας"),
+	created_at:
+		positiveInt(
+			"Μη έγκυρη ημερομηνία δημιουργίας",
+		) /** «Υπό Κατάταξη»: took (or awaits) the evaluation exam — permanent; class_year is '' until placement (docs/FEES.md §1). */,
+	evaluation: looseBoolean("Μη έγκυρη κατάταξη"),
+	/** Catalog version pinned at registration; null = no automatic fees (docs/FEES.md §3). */
+	fee_catalog_id: z.number().int().min(1).nullable(),
+	/** Class price from the pinned catalog before the discount; null while unknown (Traditional awaiting placement). */
+	fee_base: z.number().int().min(0).nullable(),
+	/** Evaluation fee from the pinned catalog (0 unless evaluation). */
+	evaluation_fee: positiveInt("Μη έγκυρο τέλος κατάταξης"),
+	/** «Ειδική τιμή»: total_payment was set by hand; recalculation never touches it. */
+	fee_manual: looseBoolean("Μη έγκυρη ειδική τιμή"),
 });
 
 /**
@@ -262,6 +274,16 @@ export const z_JoinedEnrollments = z.object({
 	total_payment: positiveInt("Μη έγκυρο συνολικό ποσό πληρωμής"),
 	payment_date: positiveInt("Μη έγκυρη ημερομηνία πληρωμής").nullable().optional(),
 	pass: looseBoolean("Μη έγκυρη προαγωγή"),
+	/** «Υπό Κατάταξη»: took (or awaits) the evaluation exam — permanent; class_year is '' until placement (docs/FEES.md §1). */
+	evaluation: looseBoolean("Μη έγκυρη κατάταξη"),
+	/** Catalog version pinned at registration; null = no automatic fees (docs/FEES.md §3). */
+	fee_catalog_id: z.number().int().min(1).nullable(),
+	/** Class price from the pinned catalog before the discount; null while unknown (Traditional awaiting placement). */
+	fee_base: z.number().int().min(0).nullable(),
+	/** Evaluation fee from the pinned catalog (0 unless evaluation). */
+	evaluation_fee: positiveInt("Μη έγκυρο τέλος κατάταξης"),
+	/** «Ειδική τιμή»: total_payment was set by hand; recalculation never touches it. */
+	fee_manual: looseBoolean("Μη έγκυρη ειδική τιμή"),
 });
 
 /** Μαθητολόγιο search result — one row per pupil, with history summary. */

@@ -28,6 +28,7 @@ const ACTION_LABELS: Record<ActionEnum, string> = {
 	[ActionEnum.DOWNLOAD_PDF]: "Λήψη PDF",
 	[ActionEnum.DOWNLOAD_EXCEL]: "Λήψη Excel",
 	[ActionEnum.PRINT]: "Εκτύπωση",
+	[ActionEnum.PAYMENT]: "Δίδακτρα & Πληρωμή",
 	[ActionEnum.NONE]: "Ενέργεια",
 };
 

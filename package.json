@@ -21,6 +21,7 @@
 		"db:logs": "bunx wrangler d1 execute DB --local --command \"SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs ORDER BY date DESC LIMIT 100\"",
 		"types": "bunx wrangler types",
 		"dev:clean": "bun scripts/cleanDevTestData.ts --apply",
+		"fees:backfill": "bun scripts/feesBackfill.ts",
 		"worker-secrets": "bun scripts/workerSecrets.ts",
 		"cf": "bun scripts/cf.ts",
 		"dev": "bunx --bun astro dev",

@@ -86,6 +86,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
+| Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this
 repository** since 2026-10 — the old `Byz-PdfWorker` / `Automated-Mails-Byz`
@@ -236,6 +237,15 @@ The person data that used to live on `registrations` is split into two tables
   music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student" with
   `ΑΜ = 000`) → the form. The identification happens ONCE; switching department
   afterwards must not send the user back through it.
+- **Fees (Δίδακτρα, docs/FEES.md)**: «Υπό Κατάταξη» is the `evaluation`
+  status (`class_year = ''` until placement; display via `classYearLabel`
+  in `lib/classYears.ts`), not a class year. Prices come from the versioned
+  `fee_catalogs` (routes `FeeCatalog.*`); each enrollment pins the catalog
+  active at registration (`fee_catalog_id`). The pure calculation is
+  `lib/fees` (client-safe); `lib/fees/recalculate.server.ts` recalculates a
+  pupil-year after every enrollment write (`Pupils.post/enroll/
+  updateEnrollment/deleteEnrollments`) — never write `total_payment` of a
+  pinned enrollment by hand except as a manual price (`fee_manual`).
 - The secretaries resolve the remaining review cases in the admin
   Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»);
   `bun run dev:clean` removes the fixtures the API suite writes to the local
@@ -251,6 +261,9 @@ The person data that used to live on `registrations` is split into two tables
   `EMAIL_SERVICE`, ...) come from `runtimeEnv` / the handler `env`. **Site dev values live in `.env`** (gitignored, auto-loaded by
   Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
   `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`.
+  The public-route rate limiter (`lib/api/routes/middleware/rateLimit.ts`) skips
+  loopback clients, so local dev and `bun run test` are never throttled; set
+  `RATE_LIMIT_LOCAL=1` in `.env` only when testing the limiter itself.
   Production runtime secrets stay **Cloudflare secrets** (`wrangler secret
   put`, never in files). The site has **no `.dev.vars`**; pure-wrangler
   services (pdfWorker/emailWorker dev) still keep theirs.

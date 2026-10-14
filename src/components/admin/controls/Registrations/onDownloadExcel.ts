@@ -1,4 +1,5 @@
 import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
+import { classYearLabel } from "@lib/classYears";
 import { loadXLSX } from "@lib/pdf.client";
 import { API, type APIResponse } from "@lib/routes/index.client";
 import { createMemo } from "solid-js";
@@ -79,6 +80,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 						"Έτος Φοίτησης",
 						"Διδάσκων Καθηγητής",
 						"Όργανο",
+						"Κατάταξη",
 					],
 				].concat(
 					items.map((item) => {
@@ -90,9 +92,10 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 							item.student.amka,
 							"" + new Date(item.student.birth_date).getFullYear(),
 							`${item.student.road} ${item.student.number}, ${item.student.region}, ${item.student.tk}`,
-							item.student.class_year,
+							classYearLabel(item.student.class_year, item.student.evaluation),
 							item.teacher?.fullname || "-",
 							item.instrument?.name || "",
+							item.student.evaluation ? "Ναι" : "",
 						];
 					}),
 				),
@@ -112,7 +115,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 						s.student.amka,
 						"" + new Date(s.student.birth_date).getFullYear(),
 						`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
-						s.student.class_year,
+						classYearLabel(s.student.class_year, s.student.evaluation),
 						s.teacher?.fullname || "-",
 						"",
 					];
@@ -127,7 +130,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 						s.student.amka,
 						"" + new Date(s.student.birth_date).getFullYear(),
 						`${s.student.road} ${s.student.number}, ${s.student.region}, ${s.student.tk}`,
-						s.student.class_year,
+						classYearLabel(s.student.class_year, s.student.evaluation),
 						s.teacher?.fullname || "-",
 						s.instrument?.name || "",
 					];
@@ -182,7 +185,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 								"" + new Date(item.student.birth_date).getFullYear(),
 								`${item.student.road} ${item.student.number}, ${item.student.region}, ${item.student.tk}`,
 								new Date(item.student.date).toLocaleDateString("el-GR"),
-								item.student.class_year,
+								classYearLabel(item.student.class_year, item.student.evaluation),
 								item.teacher?.fullname || "-",
 								item.student.email,
 								item.student.telephone + "-" + item.student.cellphone,
