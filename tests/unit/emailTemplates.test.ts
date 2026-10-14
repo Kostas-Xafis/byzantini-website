@@ -63,24 +63,18 @@ test("every registration template name is declared in the worker's registry", ()
 });
 
 test("every registration template name exists as a built file", () => {
-	const missing = [...siteTemplates.entries()].filter(
-		([, name]) => !existsSync(path.join(builtTemplatesDir, name)),
-	);
+	const missing = [...siteTemplates.entries()].filter(([, name]) => !existsSync(path.join(builtTemplatesDir, name)));
 	expect(missing.map(([key, name]) => `${key} → html_templates/${name}`)).toEqual([]);
 });
 
 test("every registration template that is published locally is published under a real name", () => {
 	if (!existsSync(publishedTemplatesDir)) return; // nothing mirrored in this checkout
-	const missing = [...siteTemplates.entries()].filter(
-		([, name]) => !existsSync(path.join(publishedTemplatesDir, name)),
-	);
+	const missing = [...siteTemplates.entries()].filter(([, name]) => !existsSync(path.join(publishedTemplatesDir, name)));
 	expect(missing.map(([key, name]) => `${key} → bucket/latest/html_templates/${name}`)).toEqual([]);
 });
 
 test("the Β' Ετος Διπλώματος variant resolves to the byzantine file, not the plain one", () => {
 	// The exact regression this file exists for.
-	expect(siteTemplates.get("byzantineBDiploma")).toBe(
-		"epitixis/epitixis_eggrafi_byzantine_b_diploma.html",
-	);
+	expect(siteTemplates.get("byzantineBDiploma")).toBe("epitixis/epitixis_eggrafi_byzantine_b_diploma.html");
 	expect(siteTemplates.get("byzantineE")).toBe("epitixis/epitixis_eggrafi_byzantine_e.html");
 });

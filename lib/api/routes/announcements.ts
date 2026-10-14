@@ -171,9 +171,7 @@ export const announcementsRoutes = {
 			// Titles are matched by their comma-less form: announcement URLs drop
 			// commas (the platform router rejects %2C), so lookups receive the
 			// comma-stripped title ("… μουσικής, 25 Ιουνίου" → "… μουσικής 25 Ιουνίου").
-			const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE REPLACE(title, ',', '') = ? LIMIT 1", [
-				params.title,
-			]);
+			const [announcement] = await T.executeQuery<Announcements>("SELECT * FROM announcements WHERE REPLACE(title, ',', '') = ? LIMIT 1", [params.title]);
 			if (!announcement) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
 			const images = await T.executeQuery<AnnouncementImages>("SELECT name, is_main FROM announcement_images WHERE announcement_id = ?", [
 				announcement.id,

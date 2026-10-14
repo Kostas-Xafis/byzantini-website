@@ -32,14 +32,8 @@ const quantityReq = z_Locations.omit({ image: true });
  */
 
 export const locationsRoutes = {
-	get: new APIServer(
-		{ method: "GET", path: "/locations", responseSchema: z.array(z_LocationsResponse) },
-		[],
-		() =>
-			handlerResult(
-				() => executeQuery<Locations>("SELECT * FROM locations"),
-				"Σφάλμα κατά την ανάκτηση των σπουδαστηρίων",
-			),
+	get: new APIServer({ method: "GET", path: "/locations", responseSchema: z.array(z_LocationsResponse) }, [], () =>
+		handlerResult(() => executeQuery<Locations>("SELECT * FROM locations"), "Σφάλμα κατά την ανάκτηση των σπουδαστηρίων"),
 	),
 	getById: new APIServer(
 		{ method: "POST", path: "/locations/id", schema: z_IdArray, responseSchema: z_LocationsResponse },
@@ -52,11 +46,8 @@ export const locationsRoutes = {
 				return location;
 			}),
 	),
-	getByPriority: new APIServer(
-		{ method: "GET", path: "/locations/priority", responseSchema: z.array(z_LocationsResponse) },
-		[],
-		() =>
-			handlerResult(() => executeQuery<Locations>("SELECT * FROM locations ORDER BY priority ASC")),
+	getByPriority: new APIServer({ method: "GET", path: "/locations/priority", responseSchema: z.array(z_LocationsResponse) }, [], () =>
+		handlerResult(() => executeQuery<Locations>("SELECT * FROM locations ORDER BY priority ASC")),
 	),
 	post: new APIServer(
 		{ method: "POST", path: "/locations", schema: postReq, responseSchema: z.object({ insertId: z.number() }) },
@@ -70,17 +61,14 @@ export const locationsRoutes = {
 				return { insertId };
 			}, "Σφάλμα κατά την προσθήκη του σπουδαστηρίου"),
 	),
-	update: new APIServer(
-		{ method: "PUT", path: "/locations", schema: quantityReq },
-		[authenticateMiddleware],
-		({ body }) =>
-			handlerResult(async (T) => {
-				await T.executeQuery(
-					`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`,
-					body,
-				);
-				return "Location updated successfully";
-			}, "Σφάλμα κατά την ενημέρωση του σπουδαστηρίου"),
+	update: new APIServer({ method: "PUT", path: "/locations", schema: quantityReq }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async (T) => {
+			await T.executeQuery(
+				`UPDATE locations SET name=?, address=?, areacode=?, municipality=?, manager=?, email=?, telephones=?, priority=?, map=?, link=?, youtube=?, partner=? WHERE id=?`,
+				body,
+			);
+			return "Location updated successfully";
+		}, "Σφάλμα κατά την ενημέρωση του σπουδαστηρίου"),
 	),
 	fileUpload: new APIServer(
 		{ method: "PUT", path: "/locations/file/[id:number]", rawBlob: true, schema: z_BlobUpload },
@@ -103,34 +91,25 @@ export const locationsRoutes = {
 				throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
 			}, "Σφάλμα κατά το ανέβασμα της εικόνας"),
 	),
-	fileDelete: new APIServer(
-		{ method: "DELETE", path: "/locations/file/[id:number]" },
-		[authenticateMiddleware],
-		({ params, request }) =>
-			handlerResult(async (T) => {
-				const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
-				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
+	fileDelete: new APIServer({ method: "DELETE", path: "/locations/file/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
+		handlerResult(async (T) => {
+			const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
+			if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 
-				if (location.image) await Bucket.delete(bucketPrefix + location.image);
-				await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [Number(params.id)]);
-				return "Image deleted successfully";
-			}, "Σφάλμα κατά τη διαγραφή της εικόνας"),
+			if (location.image) await Bucket.delete(bucketPrefix + location.image);
+			await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [Number(params.id)]);
+			return "Image deleted successfully";
+		}, "Σφάλμα κατά τη διαγραφή της εικόνας"),
 	),
-	delete: new APIServer(
-		{ method: "DELETE", path: "/locations", schema: z_IdArray },
-		[authenticateMiddleware],
-		({ body, request }) =>
-			handlerResult(async (T) => {
-				const ids = body;
-				const files = await T.executeQuery<Pick<Locations, "image">>(
-					`SELECT image FROM locations WHERE id IN (${questionMarks(ids)})`,
-					ids,
-				);
-				for (const file of files) {
-					if (file.image) await Bucket.delete(bucketPrefix + file.image);
-				}
-				await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(ids)})`, ids);
-				return "Locations deleted successfully";
-			}, "Σφάλμα κατά τη διαγραφή των σπουδαστηρίων"),
+	delete: new APIServer({ method: "DELETE", path: "/locations", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
+		handlerResult(async (T) => {
+			const ids = body;
+			const files = await T.executeQuery<Pick<Locations, "image">>(`SELECT image FROM locations WHERE id IN (${questionMarks(ids)})`, ids);
+			for (const file of files) {
+				if (file.image) await Bucket.delete(bucketPrefix + file.image);
+			}
+			await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(ids)})`, ids);
+			return "Locations deleted successfully";
+		}, "Σφάλμα κατά τη διαγραφή των σπουδαστηρίων"),
 	),
 };

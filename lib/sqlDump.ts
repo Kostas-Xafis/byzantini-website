@@ -65,7 +65,8 @@ export function insertStatement(table: string, row: Record<string, unknown>): st
 }
 
 /** Every schema object with SQL (autoindexes have none), in creation order. */
-const SCHEMA_QUERY = "SELECT type, name, tbl_name, sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*' ORDER BY rowid";
+const SCHEMA_QUERY =
+	"SELECT type, name, tbl_name, sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*' ORDER BY rowid";
 
 /** Reserved names (`sqlite_sequence`, `sqlite_stat1`, …): SQLite creates and owns them. */
 const isInternal = (name: string) => name.startsWith("sqlite_");

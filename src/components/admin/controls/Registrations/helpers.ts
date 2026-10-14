@@ -32,7 +32,11 @@ export type EnrollmentEditFields = Omit<
 	| "region"
 >;
 
-export const RegistrationsInputs = (student: JoinedEnrollments, teachers: Teachers[], instruments: Instruments[]): Record<keyof EnrollmentEditFields, InputProps> => {
+export const RegistrationsInputs = (
+	student: JoinedEnrollments,
+	teachers: Teachers[],
+	instruments: Instruments[],
+): Record<keyof EnrollmentEditFields, InputProps> => {
 	let sortTeachers = teachers
 		.map((t) => t)
 		.sort((a, b) => {

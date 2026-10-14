@@ -22,12 +22,7 @@ export type RouteParams<S extends string> = S extends `${infer _Start}[${infer P
 		? { [K in Param]: string } & RouteParams<Rest>
 		: {};
 
-export interface APIRouteOptions<
-	M extends HTTPMethod,
-	P extends string,
-	O extends z.ZodTypeAny | undefined,
-	R extends z.ZodTypeAny | undefined,
-> {
+export interface APIRouteOptions<M extends HTTPMethod, P extends string, O extends z.ZodTypeAny | undefined, R extends z.ZodTypeAny | undefined> {
 	method: M;
 	path: P;
 	schema?: O;

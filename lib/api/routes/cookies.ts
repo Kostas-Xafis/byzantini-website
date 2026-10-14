@@ -88,14 +88,7 @@ export class ServerCookies {
 }
 
 function buildSetCookie(name: string, value: string, options?: CookieOptions): string {
-	const {
-		expires = COOKIE_EXPIRES,
-		path = "/",
-		sameSite = "Strict",
-		secure = false,
-		httpOnly = false,
-		maxAge,
-	} = options ?? {};
+	const { expires = COOKIE_EXPIRES, path = "/", sameSite = "Strict", secure = false, httpOnly = false, maxAge } = options ?? {};
 
 	const parts: string[] = [`${name}=${value}`];
 	if (maxAge !== undefined) {

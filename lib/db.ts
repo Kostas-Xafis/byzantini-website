@@ -47,7 +47,9 @@ export async function dbExec<T = undefined>(query: string, args: QueryArguments 
 	const sql = query.replace("???", questionMarks(argsArr.length));
 	// D1 bind() rejects `undefined` — map to SQL NULL.
 	const bindArgs = argsArr.map((v) => (v === undefined ? null : v));
-	const stmt = getDb().prepare(sql).bind(...bindArgs);
+	const stmt = getDb()
+		.prepare(sql)
+		.bind(...bindArgs);
 	const trimmed = query.trim();
 
 	// SELECT-like statements (and writes with RETURNING) return rows; everything else returns last row id.

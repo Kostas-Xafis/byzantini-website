@@ -50,9 +50,7 @@ export interface RouteContext<P extends string, O extends z.ZodTypeAny | undefin
 
 type HandlerResponse = Response;
 
-type Handler<P extends string, O extends z.ZodTypeAny | undefined> = (
-	context: RouteContext<P, O>,
-) => Promise<HandlerResponse> | HandlerResponse;
+type Handler<P extends string, O extends z.ZodTypeAny | undefined> = (context: RouteContext<P, O>) => Promise<HandlerResponse> | HandlerResponse;
 
 /**
  * Runs before the body is read and validated (auth, rate limits), so an
@@ -81,11 +79,7 @@ export class APIServer<
 
 	constructor(route: APIRouteOptions<M, P, O, R>, handler?: Handler<P, O>);
 	constructor(route: APIRouteOptions<M, P, O, R>, middleware: MiddlewareFunction[], handler: Handler<P, O>);
-	constructor(
-		route: APIRouteOptions<M, P, O, R>,
-		middlewareOrHandler?: MiddlewareFunction[] | Handler<P, O>,
-		handler?: Handler<P, O>,
-	) {
+	constructor(route: APIRouteOptions<M, P, O, R>, middlewareOrHandler?: MiddlewareFunction[] | Handler<P, O>, handler?: Handler<P, O>) {
 		super({
 			method: route.method,
 			path: route.path,

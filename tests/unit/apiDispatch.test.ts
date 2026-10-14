@@ -48,12 +48,8 @@ new APIServer({ method: "GET", path: "/__unit/fail/db-no-message" }, () =>
 new APIServer({ method: "GET", path: "/__unit/fail/naked" }, () => {
 	throw new Error("D1_ERROR: thrown outside handlerResult");
 });
-new APIServer({ method: "GET", path: "/__unit/fail/zod" }, () =>
-	handlerResult(async () => z.object({ id: z.number("Μη έγκυρο id") }).parse({ id: "x" })),
-);
-new APIServer({ method: "GET", path: "/__unit/fail/response", responseSchema: z.object({ id: z.number() }) }, () =>
-	APIServer.jsonData({ id: "not a number" }),
-);
+new APIServer({ method: "GET", path: "/__unit/fail/zod" }, () => handlerResult(async () => z.object({ id: z.number("Μη έγκυρο id") }).parse({ id: "x" })));
+new APIServer({ method: "GET", path: "/__unit/fail/response", responseSchema: z.object({ id: z.number() }) }, () => APIServer.jsonData({ id: "not a number" }));
 
 const call = (method: string, path: string, body?: unknown) =>
 	APIServer.handle(

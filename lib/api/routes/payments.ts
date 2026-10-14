@@ -19,14 +19,8 @@ const updatePaymentReq = z_Payments.pick({ id: true, amount: true });
 const insertResponse = z.object({ insertId: z.number().int().min(0, "Μη έγκυρο insertId") });
 
 export const paymentsRoutes = {
-	get: new APIServer(
-		{ method: "GET", path: "/payments", responseSchema: z.array(z_Payments) },
-		[authenticateMiddleware],
-		() =>
-			handlerResult(
-				() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"),
-				"Σφάλμα κατά την ανάκτηση των πληρωμών",
-			),
+	get: new APIServer({ method: "GET", path: "/payments", responseSchema: z.array(z_Payments) }, [authenticateMiddleware], () =>
+		handlerResult(() => executeQuery<Payments>("SELECT * FROM payments ORDER BY date DESC"), "Σφάλμα κατά την ανάκτηση των πληρωμών"),
 	),
 	getById: new APIServer(
 		{ method: "POST", path: "/payments/id", schema: z_IdArray, responseSchema: z.array(z_Payments) },
@@ -39,85 +33,72 @@ export const paymentsRoutes = {
 				return payments;
 			}),
 	),
-	getTotal: new APIServer(
-		{ method: "GET", path: "/payments/total", responseSchema: z.object({ total: z.number() }) },
-		[authenticateMiddleware],
-		() =>
-			handlerResult(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_payments"))[0]),
+	getTotal: new APIServer({ method: "GET", path: "/payments/total", responseSchema: z.object({ total: z.number() }) }, [authenticateMiddleware], () =>
+		handlerResult(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_payments"))[0]),
 	),
-	post: new APIServer(
-		{ method: "POST", path: "/payments", schema: postReq, responseSchema: insertResponse },
-		[authenticateMiddleware],
-		({ body }) =>
-			handlerResult(async (T) => {
-				const { book_id, student_name, book_amount } = body;
+	post: new APIServer({ method: "POST", path: "/payments", schema: postReq, responseSchema: insertResponse }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async (T) => {
+			const { book_id, student_name, book_amount } = body;
 
-				if (book_amount <= 0) throw APIError.badRequest("Χρειάζεται τουλάχιστον 1 βιβλίο για να πραγματοποιηθεί η αγορά");
+			if (book_amount <= 0) throw APIError.badRequest("Χρειάζεται τουλάχιστον 1 βιβλίο για να πραγματοποιηθεί η αγορά");
 
-				const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
+			const book = (await T.executeQuery<Books>("SELECT * FROM books WHERE id = ? LIMIT 1", [book_id]))[0];
 
-				if (!book) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
-				if (book.quantity - book.sold <= 0) throw APIError.conflict("Το βιβλίο δεν είναι διαθέσιμο");
-				if (book_amount > book.quantity - book.sold) throw APIError.conflict("Δεν υπάρχουν αρκετά βιβλία");
+			if (!book) throw APIError.notFound("Το βιβλίο δεν βρέθηκε");
+			if (book.quantity - book.sold <= 0) throw APIError.conflict("Το βιβλίο δεν είναι διαθέσιμο");
+			if (book_amount > book.quantity - book.sold) throw APIError.conflict("Δεν υπάρχουν αρκετά βιβλία");
 
-				const res = await T.executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
-					book_id,
-					student_name,
-					book.price * book_amount,
-					book_amount,
-					Date.now(),
-				]);
+			const res = await T.executeQuery(`INSERT INTO payments (book_id, student_name, amount, book_amount, date) VALUES (${questionMarks(5)})`, [
+				book_id,
+				student_name,
+				book.price * book_amount,
+				book_amount,
+				Date.now(),
+			]);
 
-				await T.executeQuery("UPDATE books SET sold = sold + ? WHERE id = ?", [book_amount, book_id]);
-				await T.executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]);
+			await T.executeQuery("UPDATE books SET sold = sold + ? WHERE id = ?", [book_amount, book_id]);
+			await T.executeQuery("UPDATE total_payments SET amount = amount + ?", [book.price * book_amount]);
 
-				return res;
-			}, "Σφάλμα κατά την προσθήκη της πληρωμής"),
+			return res;
+		}, "Σφάλμα κατά την προσθήκη της πληρωμής"),
 	),
-	updatePayment: new APIServer(
-		{ method: "PUT", path: "/payments", schema: updatePaymentReq },
-		[authenticateMiddleware],
-		({ body }) =>
-			handlerResult(async () => {
-				const { id, amount } = body;
-				//check if payment exists
-				const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
-				if (payment.length === 0) {
-					throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
-				}
-				await executeQuery("UPDATE payments SET amount = ? WHERE id = ?", [amount, id]);
-				return "Updated payment successfully";
-			}, "Σφάλμα κατά την ενημέρωση της πληρωμής"),
+	updatePayment: new APIServer({ method: "PUT", path: "/payments", schema: updatePaymentReq }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async () => {
+			const { id, amount } = body;
+			//check if payment exists
+			const payment = await executeQuery<Payments>("SELECT * FROM payments WHERE id = ? LIMIT 1", [id]);
+			if (payment.length === 0) {
+				throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
+			}
+			await executeQuery("UPDATE payments SET amount = ? WHERE id = ?", [amount, id]);
+			return "Updated payment successfully";
+		}, "Σφάλμα κατά την ενημέρωση της πληρωμής"),
 	),
-	complete: new APIServer(
-		{ method: "POST", path: "/payments/complete", schema: z_IdArray },
-		[authenticateMiddleware],
-		({ body }) =>
-			handlerResult(async (T) => {
-				const ids = body;
-				//check if payment exists
-				const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
-				if (payments.length === 0) throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
-				await T.executeQuery(
-					`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`,
-					[Date.now(), ...ids],
-				);
-				await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids)}))`, [...ids]);
-				return "Completed payment successfully";
-			}, "Σφάλμα κατά την ολοκλήρωση της πληρωμής"),
+	complete: new APIServer({ method: "POST", path: "/payments/complete", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async (T) => {
+			const ids = body;
+			//check if payment exists
+			const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date = 0`, ids);
+			if (payments.length === 0) throw APIError.notFound("Η πληρωμή δεν βρέθηκε");
+			await T.executeQuery(
+				`UPDATE payments as p SET payment_date = ?, amount = (SELECT price FROM books WHERE books.id=p.book_id)*book_amount WHERE id IN (${questionMarks(ids)})`,
+				[Date.now(), ...ids],
+			);
+			await T.executeQuery(`UPDATE total_payments SET amount = amount - (SELECT SUM(amount) FROM payments WHERE id IN (${questionMarks(ids)}))`, [
+				...ids,
+			]);
+			return "Completed payment successfully";
+		}, "Σφάλμα κατά την ολοκλήρωση της πληρωμής"),
 	),
-	delete: new APIServer(
-		{ method: "DELETE", path: "/payments", schema: z_IdArray },
-		[authenticateMiddleware],
-		({ body }) =>
-			handlerResult(async (T) => {
-				const ids = body;
+	delete: new APIServer({ method: "DELETE", path: "/payments", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async (T) => {
+			const ids = body;
 
-				//check if payment exists
-				const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);
-				if (payments.length === 0) throw APIError.notFound("Οι πληρωμές δεν βρέθηκαν");
-				await T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
-				return "Deleted payment successfully";
-			}, "Σφάλμα κατά τη διαγραφή της πληρωμής"),
+			//check if payment exists
+			const payments = await T.executeQuery<Payments>(`SELECT * FROM payments WHERE id IN (${questionMarks(ids)}) AND payment_date != 0`, ids);
+			if (payments.length === 0) throw APIError.notFound("Οι πληρωμές δεν βρέθηκαν");
+			await T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
+			return "Deleted payment successfully";
+		}, "Σφάλμα κατά τη διαγραφή της πληρωμής"),
 	),
 };

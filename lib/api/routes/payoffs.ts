@@ -19,13 +19,16 @@ export const payoffsRoutes = {
 	get: new APIServer({ method: "GET", path: "/payoffs", responseSchema: z.array(z_Payoffs) }, [authenticateMiddleware], () =>
 		handlerResult(() => executeQuery<PayoffGetResponse>("SELECT * FROM school_payoffs WHERE amount > 0"), "Σφάλμα κατά την ανάκτηση των πληρωμών"),
 	),
-	getById: new APIServer({ method: "POST", path: "/payoffs/id", schema: z_IdArray, responseSchema: z.array(z_Payoffs) }, [authenticateMiddleware], ({ body }) =>
-		handlerResult(async () => {
-			const ids = body;
-			const payoff = await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)})`, ids);
-			if (!payoff) throw APIError.notFound("Η οφειλή δεν βρέθηκε");
-			return payoff;
-		}),
+	getById: new APIServer(
+		{ method: "POST", path: "/payoffs/id", schema: z_IdArray, responseSchema: z.array(z_Payoffs) },
+		[authenticateMiddleware],
+		({ body }) =>
+			handlerResult(async () => {
+				const ids = body;
+				const payoff = await executeQuery<Payoffs>(`SELECT * FROM school_payoffs WHERE id IN (${questionMarks(ids)})`, ids);
+				if (!payoff) throw APIError.notFound("Η οφειλή δεν βρέθηκε");
+				return payoff;
+			}),
 	),
 	getTotal: new APIServer({ method: "GET", path: "/payoffs/total", responseSchema: z.object({ total: z.number() }) }, [authenticateMiddleware], () =>
 		handlerResult(async () => (await executeQuery<{ total: number }>("SELECT amount AS total FROM total_school_payoffs"))[0]),

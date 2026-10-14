@@ -17,16 +17,7 @@ import Spinner from "../other/Spinner.solid";
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
-	keyof Omit<
-		PupilRegistrationForm,
-		| "date"
-		| "class_id"
-		| "class_year"
-		| "teacher_id"
-		| "instrument_id"
-		| "registration_url"
-		| "pass"
-	>,
+	keyof Omit<PupilRegistrationForm, "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id" | "registration_url" | "pass">,
 	InputProps
 > = {
 	am: {

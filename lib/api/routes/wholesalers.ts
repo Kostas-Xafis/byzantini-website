@@ -15,14 +15,8 @@ import { authenticateMiddleware } from "./middleware/authenticate";
 const postReq = z_Wholesalers.omit({ id: true });
 
 export const wholesalersRoutes = {
-	get: new APIServer(
-		{ method: "GET", path: "/wholesalers", responseSchema: z.array(z_Wholesalers) },
-		[authenticateMiddleware],
-		() =>
-			handlerResult(
-				() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"),
-				"Σφάλμα κατά την ανάκτηση των χονδρεμπόρων",
-			),
+	get: new APIServer({ method: "GET", path: "/wholesalers", responseSchema: z.array(z_Wholesalers) }, [authenticateMiddleware], () =>
+		handlerResult(() => executeQuery<Wholesalers>("SELECT * FROM wholesalers"), "Σφάλμα κατά την ανάκτηση των χονδρεμπόρων"),
 	),
 	getById: new APIServer(
 		{ method: "POST", path: "/wholesalers/id", schema: z_IdArray, responseSchema: z_Wholesalers },
@@ -54,7 +48,10 @@ export const wholesalersRoutes = {
 				const wholesaler_id = body;
 				const wholesaler = (await T.executeQuery<Wholesalers>(`SELECT * FROM wholesalers WHERE id=?`, wholesaler_id))[0] || null;
 				if (!wholesaler) throw APIError.notFound("Ο χονδρέμπορος δεν βρέθηκε");
-				await T.executeQuery(`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`, wholesaler_id);
+				await T.executeQuery(
+					`UPDATE total_school_payoffs SET amount = amount - (SELECT SUM(amount) FROM school_payoffs WHERE wholesaler_id=?)`,
+					wholesaler_id,
+				);
 				await T.executeQuery("DELETE FROM school_payoffs WHERE wholesaler_id=?", wholesaler_id);
 				const bookList = await T.executeQuery<Books>("SELECT * FROM books WHERE wholesaler_id=?", wholesaler_id);
 

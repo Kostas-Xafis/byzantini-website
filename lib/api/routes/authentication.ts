@@ -20,7 +20,6 @@ import { consumeRegisterLink, findRegisterLink } from "./sysusers";
  * getGoogleOAuthStateForSignup, oauthCallback.
  */
 
-
 const z_UserLoginRes = z.union([
 	z.object({
 		isValid: z.literal(true),
@@ -51,7 +50,7 @@ const z_OAuthStateRes = z.object({
 });
 
 /** OAuth needs the request origin for the redirect URI; build a minimal context for `google()`. */
-const oauthOrigin = (request: Request) => ({ url: new URL(request.url) } as any);
+const oauthOrigin = (request: Request) => ({ url: new URL(request.url) }) as any;
 
 export const authenticationRoutes = {
 	authenticateSession: new APIServer(
@@ -68,66 +67,55 @@ export const authenticationRoutes = {
 		{ method: "POST", path: "/auth/login", schema: z_LoginCredentials, responseSchema: z_UserLoginRes },
 		[rateLimitMiddleware("login")],
 		({ body, cookies }) =>
-			handlerResult(
-				async (T) => {
-					const credentials = body;
-					const [sysUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [
-						credentials.email,
-					]);
-					if (!sysUser) return { isValid: false };
-
-					const [hash, salt] = sysUser.password.split(":");
-					const key = (await generateShaKey(credentials.password, salt)).split(":")[0];
-					const isValid = key === hash;
-					if (!isValid) return { isValid };
-
-					const { session_exp_date, session_id } = createSessionId();
-					await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
-						session_id,
-						session_exp_date,
-						credentials.email,
-					]);
-					cookies.set(COOKIE.sessionId, session_id, SESSION_COOKIE_OPTIONS);
-					return { isValid, session_id, email: credentials.email, avatar_url: null };
-				},
-				"Σφάλμα κατά την είσοδο",
-			),
-	),
-	userLogout: new APIServer(
-		{ method: "POST", path: "/auth/logout" },
-		[authenticateMiddleware],
-		({ cookies }) =>
 			handlerResult(async (T) => {
-				// The session cookie is HttpOnly — the server reads it; the page cannot.
-				const sid = cookies.get(COOKIE.sessionId);
-				await T.executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
-				forgetSession(sid);
-				cookies.delete(COOKIE.sessionId);
-				return "Logged out";
-			}),
+				const credentials = body;
+				const [sysUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? LIMIT 1", [credentials.email]);
+				if (!sysUser) return { isValid: false };
+
+				const [hash, salt] = sysUser.password.split(":");
+				const key = (await generateShaKey(credentials.password, salt)).split(":")[0];
+				const isValid = key === hash;
+				if (!isValid) return { isValid };
+
+				const { session_exp_date, session_id } = createSessionId();
+				await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ?", [
+					session_id,
+					session_exp_date,
+					credentials.email,
+				]);
+				cookies.set(COOKIE.sessionId, session_id, SESSION_COOKIE_OPTIONS);
+				return { isValid, session_id, email: credentials.email, avatar_url: null };
+			}, "Σφάλμα κατά την είσοδο"),
 	),
-	getGoogleOAuthState: new APIServer(
-		{ method: "GET", path: "/auth/google", responseSchema: z_OAuthStateRes },
-		[],
-		({ request, cookies }) =>
-			handlerResult(async () => {
-				const state = generateState();
-				const codeVerifier = generateCodeVerifier();
-				const url = google(oauthOrigin(request)).createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
-				cookies.set("google_oauth_state" as any, state, {
-					path: "/",
-					httpOnly: true,
-					maxAge: 60 * 10, // 10 minutes
-					sameSite: "Lax",
-				});
-				cookies.set("google_code_verifier" as any, codeVerifier, {
-					path: "/",
-					httpOnly: true,
-					maxAge: 60 * 10, // 10 minutes
-					sameSite: "Lax",
-				});
-				return { OAuthUrl: url.toString() };
-			}),
+	userLogout: new APIServer({ method: "POST", path: "/auth/logout" }, [authenticateMiddleware], ({ cookies }) =>
+		handlerResult(async (T) => {
+			// The session cookie is HttpOnly — the server reads it; the page cannot.
+			const sid = cookies.get(COOKIE.sessionId);
+			await T.executeQuery("UPDATE sys_users SET session_id = NULL, session_exp_date = NULL WHERE session_id = ?", [sid]);
+			forgetSession(sid);
+			cookies.delete(COOKIE.sessionId);
+			return "Logged out";
+		}),
+	),
+	getGoogleOAuthState: new APIServer({ method: "GET", path: "/auth/google", responseSchema: z_OAuthStateRes }, [], ({ request, cookies }) =>
+		handlerResult(async () => {
+			const state = generateState();
+			const codeVerifier = generateCodeVerifier();
+			const url = google(oauthOrigin(request)).createAuthorizationURL(state, codeVerifier, ["openid", "profile", "email"]);
+			cookies.set("google_oauth_state" as any, state, {
+				path: "/",
+				httpOnly: true,
+				maxAge: 60 * 10, // 10 minutes
+				sameSite: "Lax",
+			});
+			cookies.set("google_code_verifier" as any, codeVerifier, {
+				path: "/",
+				httpOnly: true,
+				maxAge: 60 * 10, // 10 minutes
+				sameSite: "Lax",
+			});
+			return { OAuthUrl: url.toString() };
+		}),
 	),
 	getGoogleOAuthStateForSignup: new APIServer(
 		{ method: "GET", path: "/auth/google/signup/[link:string]", responseSchema: z_OAuthStateRes },
@@ -165,78 +153,76 @@ export const authenticationRoutes = {
 				return { OAuthUrl: url.toString() };
 			}),
 	),
-	oauthCallback: new APIServer(
-		{ method: "GET", path: "/auth/google/callback", responseSchema: z_OAuthCallbackRes },
-		[],
-		({ request, cookies }) =>
-			handlerResult(
-				async (T) => {
-					const url = new URL(request.url);
-					const code = url.searchParams.get("code");
-					const state = url.searchParams.get("state");
-					const storedState = cookies.get("google_oauth_state" as any);
-					const codeVerifier = cookies.get("google_code_verifier" as any);
-					const signupLink = cookies.get("google_signup_link" as any);
+	oauthCallback: new APIServer({ method: "GET", path: "/auth/google/callback", responseSchema: z_OAuthCallbackRes }, [], ({ request, cookies }) =>
+		handlerResult(async (T) => {
+			const url = new URL(request.url);
+			const code = url.searchParams.get("code");
+			const state = url.searchParams.get("state");
+			const storedState = cookies.get("google_oauth_state" as any);
+			const codeVerifier = cookies.get("google_code_verifier" as any);
+			const signupLink = cookies.get("google_signup_link" as any);
 
-					if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
-						return { error: "Invalid request", isValid: false };
-					}
+			if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
+				return { error: "Invalid request", isValid: false };
+			}
 
-					if (state !== storedState) {
-						return { error: "State mismatch", isValid: false };
-					}
+			if (state !== storedState) {
+				return { error: "State mismatch", isValid: false };
+			}
 
-					let tokens: OAuth2Tokens;
-					try {
-						tokens = await google(oauthOrigin(request)).validateAuthorizationCode(code, codeVerifier);
-					} catch (e) {
-						// Invalid code or client credentials
-						return { error: "Invalid authorization code", isValid: false };
-					}
-					const claims = decodeIdToken(tokens.idToken()) as { sub: string; name?: string; email?: string; email_verified?: boolean; picture?: string };
-					const googleEmail = claims.email;
-					const avatarUrl = claims.picture || null;
+			let tokens: OAuth2Tokens;
+			try {
+				tokens = await google(oauthOrigin(request)).validateAuthorizationCode(code, codeVerifier);
+			} catch (e) {
+				// Invalid code or client credentials
+				return { error: "Invalid authorization code", isValid: false };
+			}
+			const claims = decodeIdToken(tokens.idToken()) as { sub: string; name?: string; email?: string; email_verified?: boolean; picture?: string };
+			const googleEmail = claims.email;
+			const avatarUrl = claims.picture || null;
 
-					if (!googleEmail || claims.email_verified === false) {
-						return { error: "No verified email found in Google account", isValid: false };
-					}
+			if (!googleEmail || claims.email_verified === false) {
+				return { error: "No verified email found in Google account", isValid: false };
+			}
 
-					// Check if user exists with this email
-					const [existingUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [googleEmail]);
+			// Check if user exists with this email
+			const [existingUser] = await T.executeQuery<SysUsers>("SELECT * FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [googleEmail]);
 
-					if (!existingUser && signupLink) {
-						// The invite must be for this Google account's email; it is used up here.
-						if (!(await consumeRegisterLink(T, signupLink, googleEmail))) {
-							return { error: "Invalid Link", isValid: false };
-						}
+			if (!existingUser && signupLink) {
+				// The invite must be for this Google account's email; it is used up here.
+				if (!(await consumeRegisterLink(T, signupLink, googleEmail))) {
+					return { error: "Invalid Link", isValid: false };
+				}
 
-						const randomPassword = `${claims.sub}:${Date.now()}`;
-						const key = await generateShaKey(randomPassword);
-						await T.executeQuery("INSERT INTO sys_users (email, password, session_id, session_exp_date) VALUES (???)", {
-							email: googleEmail,
-							password: key,
-							...createSessionId(),
-						});
-					}
+				const randomPassword = `${claims.sub}:${Date.now()}`;
+				const key = await generateShaKey(randomPassword);
+				await T.executeQuery("INSERT INTO sys_users (email, password, session_id, session_exp_date) VALUES (???)", {
+					email: googleEmail,
+					password: key,
+					...createSessionId(),
+				});
+			}
 
-					if (!existingUser && !signupLink) {
-						return { error: "No user found with this email", isValid: false };
-					}
+			if (!existingUser && !signupLink) {
+				return { error: "No user found with this email", isValid: false };
+			}
 
-					// Create session for the user
-					const { session_exp_date, session_id } = createSessionId();
-					await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ? COLLATE NOCASE", [session_id, session_exp_date, googleEmail]);
+			// Create session for the user
+			const { session_exp_date, session_id } = createSessionId();
+			await T.executeQuery("UPDATE sys_users SET session_id = ?, session_exp_date = ? WHERE email = ? COLLATE NOCASE", [
+				session_id,
+				session_exp_date,
+				googleEmail,
+			]);
 
-					// Clear OAuth cookies
-					cookies.delete("google_oauth_state" as any, "/");
-					cookies.delete("google_code_verifier" as any, "/");
-					cookies.delete("google_signup_link" as any, "/");
+			// Clear OAuth cookies
+			cookies.delete("google_oauth_state" as any, "/");
+			cookies.delete("google_code_verifier" as any, "/");
+			cookies.delete("google_signup_link" as any, "/");
 
-					cookies.set(COOKIE.sessionId, session_id, SESSION_COOKIE_OPTIONS);
+			cookies.set(COOKIE.sessionId, session_id, SESSION_COOKIE_OPTIONS);
 
-					return { isValid: true, session_id, email: googleEmail, avatar_url: avatarUrl };
-				},
-				"Σφάλμα κατά την είσοδο με Google",
-			),
+			return { isValid: true, session_id, email: googleEmail, avatar_url: avatarUrl };
+		}, "Σφάλμα κατά την είσοδο με Google"),
 	),
 };

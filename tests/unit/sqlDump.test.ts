@@ -61,7 +61,7 @@ test("quoteIdentifier / insertStatement", () => {
 	expect(quoteIdentifier("pupils")).toBe('"pupils"');
 	expect(quoteIdentifier('odd "name"')).toBe('"odd ""name"""');
 	expect(insertStatement("class_type", { id: 0, name: "Βυζαντινή Μουσική" })).toBe(`INSERT INTO "class_type" ("id","name") VALUES(0,'Βυζαντινή Μουσική');`);
-	expect(insertStatement("t", { "order": null, "a b": "x" })).toBe(`INSERT INTO "t" ("order","a b") VALUES(NULL,'x');`);
+	expect(insertStatement("t", { order: null, "a b": "x" })).toBe(`INSERT INTO "t" ("order","a b") VALUES(NULL,'x');`);
 });
 
 const SCHEMA = `
@@ -103,9 +103,11 @@ const d1Like =
 	};
 
 const userTables = (db: Database) =>
-	(db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT GLOB 'sqlite_*' AND name NOT GLOB '_cf_*' ORDER BY name").all() as { name: string }[]).map(
-		(t) => t.name,
-	);
+	(
+		db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT GLOB 'sqlite_*' AND name NOT GLOB '_cf_*' ORDER BY name").all() as {
+			name: string;
+		}[]
+	).map((t) => t.name);
 const schemaOf = (db: Database) =>
 	db.query("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT GLOB 'sqlite_stat*' AND tbl_name NOT GLOB '_cf_*' ORDER BY type, name").all();
 /** Every row with every value AND its storage class, so 1 vs 1.0 vs '1' would differ. */

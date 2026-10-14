@@ -381,7 +381,6 @@ export const z_LocationsResponse = z.object({
 // `z_RegistrationsResponse` was removed with the `Registrations` route group:
 // enrollment reads now return the joined row (`z_JoinedEnrollments`).
 
-
 export const z_TeacherClassesResponse = z.object({
 	teacher_id: positiveInt("Μη έγκυρο teacher_id"),
 	class_id: positiveInt("Μη έγκυρο class_id"),
