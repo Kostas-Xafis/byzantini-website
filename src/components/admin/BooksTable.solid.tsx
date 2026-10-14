@@ -151,8 +151,8 @@ export default function BooksTable() {
 				quantity: form.number("quantity"),
 				sold: form.number("sold"),
 			};
-			if (data.wholesale_price > data.price) return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από την λιανική");
-			if (data.quantity < data.sold) return alert("Οι πωλήσεις δεν μπορούν να είναι περισσοτερες από την ποσότητα των βιβλίων");
+			if (data.wholesale_price > data.price) return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από τη λιανική");
+			if (data.quantity < data.sold) return alert("Οι πωλήσεις δεν μπορούν να είναι περισσότερες από την ποσότητα των βιβλίων");
 			const res = await apiHook(API.Books.post, {
 				RequestObject: data,
 			});
@@ -240,7 +240,7 @@ export default function BooksTable() {
 				action: ActionEnum.ADD,
 				id: res.data.insertId,
 			});
-			pushAlert(createAlert("success", "Επιτυχής προσθήκη χονδρέμπορου: " + (name || "")));
+			pushAlert(createAlert("success", "Επιτυχής προσθήκη χονδρεμπόρου: " + (name || "")));
 		};
 		return {
 			inputs: {
@@ -253,7 +253,7 @@ export default function BooksTable() {
 			},
 			onSubmit: submit,
 			submitText: "Προσθήκη",
-			headerText: "Εισαγωγή Χονδρέμπορου",
+			headerText: "Εισαγωγή Χονδρεμπόρου",
 			type: ActionEnum.ADD,
 			icon: ActionIcon.ADD_USER,
 		};
@@ -271,7 +271,7 @@ export default function BooksTable() {
 				ids: data,
 			});
 			let name = wholesalers.find((w) => w.id === data[0])?.name;
-			pushAlert(createAlert("success", "Επιτυχής διαγραφή χονδρέμπορου: " + (name || "")));
+			pushAlert(createAlert("success", "Επιτυχής διαγραφή χονδρεμπόρου: " + (name || "")));
 		};
 		return {
 			inputs: {
@@ -286,7 +286,7 @@ export default function BooksTable() {
 			},
 			onSubmit: submit,
 			submitText: "Διαγραφή",
-			headerText: "Διαγραφή Χονδρέμπορου",
+			headerText: "Διαγραφή Χονδρεμπόρου",
 			type: ActionEnum.DELETE,
 			icon: ActionIcon.DELETE_USER,
 		};

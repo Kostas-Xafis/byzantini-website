@@ -119,7 +119,7 @@ export default function QueryLogsTable() {
 			if ("data" in res) setStore(API.QueryLogs.getByFilters, res.data);
 			setActiveView("filtered");
 		} catch (error) {
-			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση"));
+			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά τη φόρτωση"));
 		}
 	};
 
@@ -131,7 +131,7 @@ export default function QueryLogsTable() {
 			if ("data" in res) setStore(API.QueryLogs.get, res.data);
 			setActiveView("default");
 		} catch (error) {
-			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά την φόρτωση"));
+			pushAlert(createAlert("error", error instanceof Error ? error.message : "Σφάλμα κατά τη φόρτωση"));
 		}
 	};
 

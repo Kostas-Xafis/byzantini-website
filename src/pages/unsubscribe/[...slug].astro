@@ -46,7 +46,7 @@ if (restoredUrl.pathname.endsWith("/success")) {
 							<button
 								type="submit"
 								class="px-6 py-3 text-xl font-medium text-white rounded-lg shadow-lg shadow-gray-400 dark:shadow-gray-700 transition-colors duration-300 bg-red-500 hover:bg-red-600 focus:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500 dark:focus:bg-red-500">
-								Ναι, απεγγραφείτε
+								Ναι, απεγγραφή
 							</button>
 						</form>
 						<a
@@ -59,12 +59,12 @@ if (restoredUrl.pathname.endsWith("/success")) {
 			) : state === "success" ? (
 				<div class="text-center">
 					<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Επιτυχής απεγγραφή</h2>
-					<p class="text-xl font-didact text-red-950 dark:text-red-50">Έχετε απεγγραφεί από την λίστα αλληλογραφίας της Σχολής.</p>
+					<p class="text-xl font-didact text-red-950 dark:text-red-50">Έχετε απεγγραφεί από τη λίστα αλληλογραφίας της Σχολής.</p>
 				</div>
 			) : (
 				<div class="text-center">
 					<h2 class="text-3xl font-didact text-red-950 dark:text-red-50">Αποτυχία απεγγραφής</h2>
-					<p class="text-xl font-didact text-red-950 dark:text-red-50">Δεν ήταν δυνατή η απεγγραφή σας από την λίστα αλληλογραφίας της Σχολής.</p>
+					<p class="text-xl font-didact text-red-950 dark:text-red-50">Δεν ήταν δυνατή η απεγγραφή σας από τη λίστα αλληλογραφίας της Σχολής.</p>
 				</div>
 			)
 		}

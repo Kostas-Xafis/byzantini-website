@@ -53,7 +53,7 @@ export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiH
 					iconClasses: "fas fa-guitar",
 					multiselectList: [
 						{ label: "Όργανο", value: 2, selected: true },
-						{ label: "Μαθήμα", value: 1, selected: false },
+						{ label: "Μάθημα", value: 1, selected: false },
 					],
 					multiselectOnce: true,
 				} as InputProps,

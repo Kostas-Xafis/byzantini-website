@@ -118,6 +118,6 @@ export const paymentsRoutes = {
 				if (payments.length === 0) throw APIError.notFound("Οι πληρωμές δεν βρέθηκαν");
 				await T.executeQuery(`DELETE FROM payments WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Deleted payment successfully";
-			}, "Σφάλμα κατά την διαγραφή της πληρωμής"),
+			}, "Σφάλμα κατά τη διαγραφή της πληρωμής"),
 	),
 };

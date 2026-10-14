@@ -67,7 +67,7 @@ export const settingsBackupRoutes = {
 				// Restorable SQL in the `wrangler d1 export` format (see lib/sqlDump.ts).
 				const sql = await dumpDatabase(async (query) => (await dbExec<Record<string, unknown>>(query)).rows);
 				return { sql };
-			}, "Σφάλμα κατά την λήψη αντιγράφου βάσης"),
+			}, "Σφάλμα κατά τη λήψη αντιγράφου βάσης"),
 	),
 	getFiles: new APIServer(
 		{ method: "GET", path: "/settings/backup/files", responseSchema: z.object({ files: z.array(z.string()) }) },
@@ -76,7 +76,7 @@ export const settingsBackupRoutes = {
 			handlerResult(async () => {
 				const files = await Bucket.list();
 				return { files };
-			}, "Σφάλμα κατά την λήψη λίστας αρχείων bucket"),
+			}, "Σφάλμα κατά τη λήψη λίστας αρχείων bucket"),
 	),
 	getFile: new APIServer(
 		{ method: "POST", path: "/settings/backup/file", schema: getFileReq, responseSchema: z.object({ key: z.string(), dataBase64: z.string() }) },
@@ -103,6 +103,6 @@ export const settingsBackupRoutes = {
 
 				const dataBase64 = bytesToBase64(bytes);
 				return { key, dataBase64 };
-			}, "Σφάλμα κατά την λήψη αρχείου bucket"),
+			}, "Σφάλμα κατά τη λήψη αρχείου bucket"),
 	),
 };

@@ -61,7 +61,7 @@ const AnnouncementsInputs = (): Omit<Record<keyof Announcements | "images" | "ma
 		links: {
 			type: "textarea",
 			name: "links",
-			label: "Συνδέσμοι Youtube",
+			label: "Σύνδεσμοι YouTube",
 			iconClasses: "fa-brands fa-youtube",
 			placeholder: "https://youtube.com/watch?v=...\nhttps://youtu.be/...\n.\n.\n.",
 		},
@@ -346,7 +346,7 @@ export default function AnnouncementsTable() {
 				pushAlert(createAlert("success", "Η ανακοίνωση διαγράφηκε επιτυχώς"));
 				return;
 			}
-			pushAlert(createAlert("success", `Διαγραφθηκαν επιτυχώς ${data.length} ανακοινώσεις`));
+			pushAlert(createAlert("success", `Διαγράφηκαν επιτυχώς ${data.length} ανακοινώσεις`));
 		};
 		return {
 			inputs: {},

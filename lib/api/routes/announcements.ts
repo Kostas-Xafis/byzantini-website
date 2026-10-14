@@ -180,7 +180,7 @@ export const announcementsRoutes = {
 			]);
 			await T.executeQuery("UPDATE announcements SET views = views + 1 WHERE id = ?", [announcement.id]);
 			return { ...announcement, images };
-		}, "Ανακοίνωση δεν βρέθηκε"),
+		}, "Η ανακοίνωση δεν βρέθηκε"),
 	),
 	post: new APIServer(
 		{ method: "POST", path: "/announcements", schema: postReq, responseSchema: insertResponse },
@@ -227,7 +227,7 @@ export const announcementsRoutes = {
 			});
 			await removeAnnouncementFromSitemap(announcements.map(({ title }) => title));
 			return "Announcement/s deleted successfully";
-		}, "Σφάλμα κατά την διαγραφή των ανακοινώσεων"),
+		}, "Σφάλμα κατά τη διαγραφή των ανακοινώσεων"),
 	),
 	postImage: new APIServer(
 		{ method: "POST", path: "/announcements/images", multipart: true, schema: z_AnnouncementImageUpload, responseSchema: insertResponse },
@@ -269,6 +269,6 @@ export const announcementsRoutes = {
 					maxJobs: 10,
 				});
 				return "Images deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή των εικόνων"),
+			}, "Σφάλμα κατά τη διαγραφή των εικόνων"),
 	),
 };

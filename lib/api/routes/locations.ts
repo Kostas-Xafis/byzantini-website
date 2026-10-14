@@ -114,7 +114,7 @@ export const locationsRoutes = {
 				if (location.image) await Bucket.delete(bucketPrefix + location.image);
 				await T.executeQuery(`UPDATE locations SET image = NULL WHERE id = ?`, [Number(params.id)]);
 				return "Image deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή της εικόνας"),
+			}, "Σφάλμα κατά τη διαγραφή της εικόνας"),
 	),
 	delete: new APIServer(
 		{ method: "DELETE", path: "/locations", schema: z_IdArray },
@@ -131,6 +131,6 @@ export const locationsRoutes = {
 				}
 				await T.executeQuery(`DELETE FROM locations WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Locations deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή των σπουδαστηρίων"),
+			}, "Σφάλμα κατά τη διαγραφή των σπουδαστηρίων"),
 	),
 };

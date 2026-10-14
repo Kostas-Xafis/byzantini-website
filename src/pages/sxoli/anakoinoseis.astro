@@ -118,7 +118,7 @@ const excerpt = (content: string, max = 220) => {
 									</span>
 									<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
 										<i class="fa-solid fa-eye" aria-hidden="true" />
-										{a.views} {a.views > 1 ? "προβολές" : "προβολή"}
+										{a.views} {a.views === 1 ? "προβολή" : "προβολές"}
 									</span>
 								</div>
 								<h2 class="font-anaktoria text-2xl sm:text-3xl font-bold text-red-900 leading-snug line-clamp-2">{a.title}</h2>

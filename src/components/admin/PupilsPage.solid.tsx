@@ -170,13 +170,13 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 		total_payment: { label: "Σύνολο Πληρωμής", name: "total_payment", type: "number", iconClasses: "fa-solid fa-euro-sign" },
 		payment_date: { label: "Ημερομηνία Πληρωμής", name: "payment_date", type: "date", iconClasses: "fa-regular fa-calendar-days" },
 		pass: {
-			label: "Προάχθει",
+			label: "Προήχθη",
 			name: "pass",
 			type: "multiselect",
 			iconClasses: "fa-solid fa-check",
 			multiselectOnce: true,
 			multiselectList: [
-				{ value: 1, label: "Ναί", selected: !!defaults.pass },
+				{ value: 1, label: "Ναι", selected: !!defaults.pass },
 				{ value: 0, label: "Όχι", selected: !defaults.pass },
 			],
 		},
@@ -794,7 +794,7 @@ export default function PupilsPage() {
 																				Πληρωμή
 																			</th>
 																			<th scope="col" class="px-2 py-1.5 text-center font-semibold">
-																				Προάχθει
+																				Προήχθη
 																			</th>
 																		</tr>
 																	</thead>
@@ -818,7 +818,7 @@ export default function PupilsPage() {
 																									? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100"
 																									: "bg-gray-200 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200")
 																							}>
-																							{row.pass ? "Ναί" : "Όχι"}
+																							{row.pass ? "Ναι" : "Όχι"}
 																						</span>
 																					</td>
 																				</tr>

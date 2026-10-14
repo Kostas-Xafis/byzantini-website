@@ -103,7 +103,7 @@ export const sysusersRoutes = {
 			if (ids.length === 1) await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [ids[0]]);
 			else await T.executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(ids)})`, ids);
 			return "User/s deleted successfully";
-		}, "Σφάλμα κατά την διαγραφή των διαχειριστών"),
+		}, "Σφάλμα κατά τη διαγραφή των διαχειριστών"),
 	),
 	registerSysUser: new APIServer(
 		{ method: "POST", path: "/sys/register/[link:string]", schema: z_LoginCredentials, responseSchema: z_RegisterSysUserResponse },
@@ -147,7 +147,7 @@ export const sysusersRoutes = {
 				});
 
 				return { link };
-			}, "Σφάλμα κατά την δημιουργία του συνδέσμου εγγραφής"),
+			}, "Σφάλμα κατά τη δημιουργία του συνδέσμου εγγραφής"),
 	),
 	validateRegisterLink: new APIServer(
 		{

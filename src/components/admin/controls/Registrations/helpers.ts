@@ -158,13 +158,13 @@ export const RegistrationsInputs = (student: JoinedEnrollments, teachers: Teache
 			iconClasses: "fa-regular fa-calendar-days",
 		},
 		pass: {
-			label: "Προάχθει",
+			label: "Προήχθη",
 			name: "pass",
 			type: "multiselect",
 			iconClasses: "fa-solid fa-check",
 			multiselectOnce: true,
 			multiselectList: [
-				{ value: 1, label: "Ναί", selected: !!student?.pass },
+				{ value: 1, label: "Ναι", selected: !!student?.pass },
 				{ value: 0, label: "Όχι", selected: !student?.pass },
 			],
 		},

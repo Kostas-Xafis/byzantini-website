@@ -165,7 +165,7 @@ export const z_PupilRegistrationForm = z.object({
 	instrument_id: positiveInt("Μη έγκυρο μουσικό όργανο"),
 	date: positiveInt("Μη έγκυρη ημερομηνία"),
 	registration_url: z.string("Μη έγκυρο registration_url").optional(),
-	pass: looseBoolean("Μη έγκυρο προαγωγή"),
+	pass: looseBoolean("Μη έγκυρη προαγωγή"),
 });
 
 export const z_EmailSubscriptions = z.object({

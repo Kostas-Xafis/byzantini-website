@@ -41,7 +41,7 @@ const genericInputs: Record<
 		tooltip: {
 			message: [
 				"Για νέες εγγραφές: Ο αριθμός μητρώου είναι 000. ",
-				"Για επανεγγραφές: Αναζητήστε τον αριθμό μητρώο στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής.",
+				"Για επανεγγραφές: Αναζητήστε τον αριθμό μητρώου στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής.",
 			],
 			position: isPhone ? "top" : "left",
 		},
@@ -67,7 +67,7 @@ const genericInputs: Record<
 		required: true,
 		iconClasses: "fa-solid fa-user",
 		tooltip: {
-			message: ["Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (πχ Παπαδόπουλος Αντώνης)."],
+			message: ["Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (π.χ. Παπαδόπουλος Αντώνης)."],
 			position: isPhone ? "top" : "left",
 		},
 	},
@@ -248,7 +248,7 @@ const inputsByMusicType = (musicType: MusicType, store: APIResourceStore, regDat
 		valueLiteral: true,
 		value: regData.class_year || "",
 		tooltip: {
-			message: ["Εαν δεν γνωρίζετε το έτος φοίτησης σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
+			message: ["Εάν δεν γνωρίζετε το έτος φοίτησής σας, συμβουλευτείτε τη Γραμματεία της Σχολής"],
 			position: isPhone ? "top" : "left",
 		},
 	};

@@ -79,7 +79,7 @@ export const columns: Partial<ColumnType<JoinedEnrollments>> = {
 	payment_amount: { type: "number", name: "Ποσό Πληρωμής", size: 8 },
 	total_payment: { type: "number", name: "Σύνολο Πληρωμής", size: 8 },
 	payment_date: { type: "date", name: "Ημερομηνία Πληρωμής", size: 12 },
-	pass: { type: "boolean", name: "Προάχθει", size: 8 },
+	pass: { type: "boolean", name: "Προήχθη", size: 8 },
 };
 
 // Σχολικό Έτος is not in the table (the year picker at the bottom already scopes
@@ -96,7 +96,7 @@ export const searchColumns: SearchColumn[] = [
 	{ columnName: "instrument_id", name: "Όργανο", type: "string" },
 	{ columnName: "date", name: "Ημερομηνία Εγγραφής", type: "date" },
 	{ columnName: "payment_date", name: "Ημερομηνία Πληρωμής", type: "date" },
-	{ columnName: "pass", name: "Προάχθει", type: "boolean" },
+	{ columnName: "pass", name: "Προήχθη", type: "boolean" },
 ];
 
 // Column types in row order (matches `columns` / `columnOrder` above) so the

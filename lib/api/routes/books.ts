@@ -93,6 +93,6 @@ export const booksRoutes = {
 				await T.executeQuery<Payments>(`DELETE FROM payments WHERE book_id IN (${questionMarks(ids)})`, ids);
 
 				return "Book deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή του βιβλίου"),
+			}, "Σφάλμα κατά τη διαγραφή του βιβλίου"),
 	),
 };

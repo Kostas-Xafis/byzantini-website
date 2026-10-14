@@ -76,6 +76,6 @@ export const wholesalersRoutes = {
 				}
 				await T.executeQuery(`DELETE FROM wholesalers WHERE id=?`, wholesaler_id);
 				return "Deleted wholesalers successfully";
-			}, "Σφάλμα κατά την διαγραφή του χονδρεμπόρου"),
+			}, "Σφάλμα κατά τη διαγραφή του χονδρεμπόρου"),
 	),
 };

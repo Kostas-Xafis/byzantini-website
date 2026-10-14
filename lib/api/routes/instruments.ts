@@ -54,6 +54,6 @@ export const instrumentsRoutes = {
 				const ids = body;
 				await T.executeQuery(`DELETE FROM instruments WHERE id IN (${questionMarks(ids)})`, ids);
 				return "Teacher/s deleted successfully";
-			}, "Σφάλμα κατά την διαγραφή του μουσικού οργάνου"),
+			}, "Σφάλμα κατά τη διαγραφή του μουσικού οργάνου"),
 	),
 };

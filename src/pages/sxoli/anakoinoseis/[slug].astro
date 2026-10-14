@@ -152,7 +152,7 @@ const videoSchemas = links
 			<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
 				<i class="fa-solid fa-eye" aria-hidden="true"></i>
 				{announcement.views}
-				{announcement.views > 1 ? "προβολές" : "προβολή"}
+				{announcement.views === 1 ? "προβολή" : "προβολές"}
 			</span>
 			{
 				isRecent(announcement.date) && (

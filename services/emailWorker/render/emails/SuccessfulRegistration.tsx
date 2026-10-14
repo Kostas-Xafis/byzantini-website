@@ -95,7 +95,7 @@ export function SuccessfulRegistration({ level = "default", classYear, classType
 					φωνητική κ.λπ.{" "}
 					<b>
 						Παρακαλούμε, ενημερωθείτε από τη Γραμματεία για τον προσδιορισμό της συνδρομής σας, πριν έλθετε για την ολοκλήρωση
-						της εγγραφή σας.
+						της εγγραφής σας.
 					</b>
 				</li>
 			</ul>
@@ -181,7 +181,7 @@ export function SuccessfulRegistration({ level = "default", classYear, classType
 
 			{type === "traditional" && (
 				<>
-					<MailText style={{ fontWeight: 700 }}>Πληροφορίες για τη Παραδοσιακή και Ευρωπαϊκή Μουσική:</MailText>
+					<MailText style={{ fontWeight: 700 }}>Πληροφορίες για την Παραδοσιακή και Ευρωπαϊκή Μουσική:</MailText>
 					<MailText style={{ paddingLeft: 24, margin: "4px 0" }}>
 						Τηλ.:{" "}
 						{SCHOOL_CONTACT.phones.traditional.map((number, index) => (

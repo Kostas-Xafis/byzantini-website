@@ -37,7 +37,7 @@ export const campaigns: Record<string, CampaignConfig> = {
 	"renew-2026-fix": {
 		id: "renew-2026-fix",
 		title: "Υπενθύμιση Εγγραφών 2026-27 (σπουδαστές 2025-26)",
-		subject: "ΔΙΌΡΘΩΣΗ - Έναρξη Εγγραφών - Μαθημάτων 2026-27",
+		subject: "ΔΙΟΡΘΩΣΗ - Έναρξη Εγγραφών - Μαθημάτων 2026-27",
 		htmlTemplateName: "2026/upenthimisi_eggrafis.html",
 		sms: {
 			templateName: "2026/upenthimisi_eggrafis.sms.txt",

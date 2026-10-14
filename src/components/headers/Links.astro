@@ -21,7 +21,7 @@ const hasBrandIcons = !Astro.url.pathname.includes("login");
 // `<title>` uses titleTemplate (suffix added only on non-home pages); OG/Twitter
 // reuse the same composed title for consistency.
 const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
-const pageDescription = description || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως Του Σωτήρος, Δήμου Μεταμορφώσεως";
+const pageDescription = description || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως του Σωτήρος, Δήμου Μεταμορφώσεως";
 // Canonical is the clean URL: no query strings (?regid=…) and no fragments.
 const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_URL).href;
 

@@ -213,7 +213,7 @@ export const teachersRoutes = {
 				await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
 			}
 			return "Files renamed successfully";
-		}, "Σφάλμα κατά την μετονομασία των αρχείων"),
+		}, "Σφάλμα κατά τη μετονομασία των αρχείων"),
 	),
 	fileDelete: new APIServer({ method: "PUT", path: "/teachers/file", schema: fileDeleteReq }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
@@ -229,7 +229,7 @@ export const teachersRoutes = {
 				return "Image deleted successfully";
 			}
 			throw APIError.badRequest("Μη υποστηριζόμενος τύπος αρχείου");
-		}, "Σφάλμα κατά την διαγραφή του αρχείου"),
+		}, "Σφάλμα κατά τη διαγραφή του αρχείου"),
 	),
 	delete: new APIServer({ method: "DELETE", path: "/teachers", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
@@ -246,6 +246,6 @@ export const teachersRoutes = {
 			}
 			await T.executeQuery(`DELETE FROM teachers WHERE id IN (???)`, ids);
 			return "Teacher/s deleted successfully";
-		}, "Σφάλμα κατά την διαγραφή του δασκάλου/δασκάλων"),
+		}, "Σφάλμα κατά τη διαγραφή του δασκάλου/δασκάλων"),
 	),
 };

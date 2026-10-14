@@ -554,7 +554,7 @@ export const pupilsRoutes = {
 			else await T.executeQuery(`DELETE FROM pupil_enrollments WHERE id IN (${questionMarks(ids)})`, ids);
 			await T.executeQuery("UPDATE total_enrollments SET amount = amount - ?", [ids.length]);
 			return "Επιτυχής διαγραφή εγγραφών";
-		}, "Σφάλμα κατά την διαγραφή των εγγραφών"),
+		}, "Σφάλμα κατά τη διαγραφή των εγγραφών"),
 	),
 
 	// ---------------------------------------------------------------------

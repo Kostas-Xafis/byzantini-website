@@ -39,7 +39,7 @@ export const onDownloadPDF = function (store: Partial<APIResponse>, selectedItem
 					});
 				});
 			} catch (error: any) {
-				pushAlert(createAlert("error", "Σφάλμα κατά την λήψη των PDF: ", error));
+				pushAlert(createAlert("error", "Σφάλμα κατά τη λήψη των PDF: ", error));
 			}
 		};
 		let bulk = selectedItems.length > 1;

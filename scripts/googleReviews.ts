@@ -407,7 +407,7 @@ async function main(): Promise<void> {
 	// 5) Σύνοψη.
 	console.log(`✔ Place: ${meta.name} (${meta.address})`);
 	console.log(`✔ Αξιολόγηση: ★${meta.rating} — ${meta.ratingCount} κριτικές στο Google`);
-	console.log(`✔ Έλαβαν κείμενο από το API αυτή τη φορά: ${fetched.length} (χωρίς κείμενο: ${ratingOnly})`);
+	console.log(`✔ Κριτικές με κείμενο από το API αυτή τη φορά: ${fetched.length} (χωρίς κείμενο: ${ratingOnly})`);
 	console.log(`✔ Νέες στο αρχείο: ${freshCount} · Σύνολο στο αρχείο: ${archive.reviews.length}`);
 	console.log(`✔ Αρχεία: ${outDir}/reviews.json, reviews.csv, reviews.md`);
 	if (fetched.length < meta.ratingCount && fetched.length > 0) {

@@ -76,7 +76,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 						"ΑΜΚΑ",
 						"Έτος Γέννησης",
 						"Διεύθυνση",
-						"Έτος Φόιτησης",
+						"Έτος Φοίτησης",
 						"Διδάσκων Καθηγητής",
 						"Όργανο",
 					],
@@ -102,7 +102,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 			const byzStudents = items.filter((i) => i.student.class_id === 0);
 			const parStudents = items.filter((i) => i.student.class_id === 1);
 			const wsStudentsBookForMinistry = xlsx.utils.aoa_to_sheet([
-				["Αριθμός Μητρώου", "Επώνυμο", "Όνομα", "Όνομα Πατρός", "ΑΜΚΑ", "Έτος Γέννησης", "Διεύθυνση", "Έτος Φόιτησης", "Διδάσκων Καθηγητής", "Όργανο"],
+				["Αριθμός Μητρώου", "Επώνυμο", "Όνομα", "Όνομα Πατρός", "ΑΜΚΑ", "Έτος Γέννησης", "Διεύθυνση", "Έτος Φοίτησης", "Διδάσκων Καθηγητής", "Όργανο"],
 				...byzStudents.map((s) => {
 					return [
 						s.student.am,
@@ -166,7 +166,7 @@ export const onDownloadExcel = function (store: Partial<APIResponse>, selectedIt
 							"Έτος Γέννησης",
 							"Διεύθυνση",
 							"Ημερομηνία Εγγραφής",
-							"Έτος Φόιτησης",
+							"Έτος Φοίτησης",
 							"Διδάσκων Καθηγητής",
 							"Email",
 							"Τηλέφωνα",
