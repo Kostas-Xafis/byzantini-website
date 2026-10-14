@@ -1,7 +1,6 @@
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
 import type { DefaultMailData } from "../types/templates";
 import { appendFile } from "fs/promises";
-import { existsSync } from "fs";
 import { removeKey } from "./utils";
 
 import path from "node:path";
@@ -9,17 +8,13 @@ import path from "node:path";
 const templates_dir = path.resolve(import.meta.dir, "../html_templates/") + "/";
 const text_templates_dir = path.resolve(import.meta.dir, "../text_templates/") + "/";
 
-const getHTMLTemplate = async (data: DefaultMailData, prod = false) => {
+/** HTML templates are the locally built files (`bun run templates:build`) — the CLI never fetches them from the site. */
+const getHTMLTemplate = async (data: DefaultMailData) => {
 	try {
-		let templateBuffer;
-		if (prod) {
-			templateBuffer = await fetch(`https://musicschool-metamorfosi.gr/html_templates/${data.htmlTemplateName}`).then(res => res.arrayBuffer());
-		} else {
-			templateBuffer = await fetch(`file://${templates_dir}${data.htmlTemplateName}`).then(res => res.arrayBuffer());
-		}
+		const templateBuffer = await fetch(`file://${templates_dir}${data.htmlTemplateName}`).then(res => res.arrayBuffer());
 		return new TextDecoder().decode(templateBuffer);
 	} catch (e) {
-		throw new Error(`Could not fetch the provided name of the HTML template (${data.htmlTemplateName}) from ${prod ? "production server" : "local file system"}.`);
+		throw new Error(`Could not fetch the provided name of the HTML template (${data.htmlTemplateName}) from local file system.`);
 	}
 };
 
@@ -51,7 +46,7 @@ export { applyToTemplate };
 
 /** Renders the final email HTML for the given data (local template source) — used for previews. */
 export async function renderMailHtml(mailData: DefaultMailData) {
-	return applyToTemplate(await getHTMLTemplate(mailData, false), mailData.templateData);
+	return applyToTemplate(await getHTMLTemplate(mailData), mailData.templateData);
 }
 
 export const mailService = async <T extends DefaultMailData = DefaultMailData>(
@@ -72,10 +67,6 @@ export const mailService = async <T extends DefaultMailData = DefaultMailData>(
 		throw new Error("No HTML template name provided");
 	}
 
-	// Cloud Run does not have /.dockerenv; K_SERVICE is its canonical marker.
-	// This decides the template source (site vs local file), so it must be right.
-	const inProduction = existsSync("/.dockerenv") || Boolean(process.env.K_SERVICE);
-
 	try {
 		let tempData = JSON.parse(JSON.stringify(mailData));
 		// Only strip attachment payload fields when attachments are present — otherwise
@@ -84,22 +75,17 @@ export const mailService = async <T extends DefaultMailData = DefaultMailData>(
 			removeKey(tempData, "attachments.content");
 			removeKey(tempData, "attachments.disposition");
 		}
-		// Logging is best-effort and must never block a send. Containers log to
-		// stdout (visible in the Cloud Run console); local runs keep the file trail.
+		// Logging is best-effort and must never block a send (local file trail).
 		// Never log the authToken — it is a shared secret.
 		const { authToken: _authToken, ...logData } = tempData;
 		const logBody = `Sending email: ${JSON.stringify(logData, null, 2)}`;
-		if (inProduction) {
-			console.log(`[mail] ${logBody}`);
-		} else {
-			try {
-				await appendFile("mail_log.txt", `${logBody}\n`);
-			} catch (e) {
-				console.warn(`Could not write mail_log.txt: ${e}`);
-			}
+		try {
+			await appendFile("mail_log.txt", `${logBody}\n`);
+		} catch (e) {
+			console.warn(`Could not write mail_log.txt: ${e}`);
 		}
 
-		let htmlTemplate = applyToTemplate(await getHTMLTemplate(mailData as T, inProduction), (mailData as T).templateData);
+		let htmlTemplate = applyToTemplate(await getHTMLTemplate(mailData as T), (mailData as T).templateData);
 		if (opts?.htmlPrefix) htmlTemplate = opts.htmlPrefix + htmlTemplate;
 		const mailerSend = new MailerSend({
 			apiKey: MAILERSEND_API_KEY,

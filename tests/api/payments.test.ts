@@ -1,4 +1,4 @@
-import { v_Books, v_Payments } from "@_types/entities";
+import { v_Books, v_Payments } from "../entitySchemas";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { afterAll, beforeAll, expect, test } from "bun:test";

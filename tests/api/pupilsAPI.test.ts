@@ -13,7 +13,7 @@
  * behind on `pupils`/`pupil_enrollments` (this used to add a 2027 enrollment to
  * a real pupil on every run).
  */
-import { v_PupilEnrollments, v_Pupils } from "@_types/entities";
+import { v_PupilEnrollments, v_Pupils } from "../entitySchemas";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { Database } from "bun:sqlite";

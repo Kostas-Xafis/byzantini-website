@@ -1,4 +1,4 @@
-import type { Registrations } from "@_types/entities";
+import type { JoinedEnrollments } from "@_types/entities";
 import type { PDFRequest } from "../services/pdfWorker/src/types";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { dynamicImport, loadScript } from "@utilities/scripts";
@@ -22,12 +22,12 @@ export class PDF {
 	 * worker is no longer reachable straight from the browser.
 	 */
 	private static PDFEndpoint = "/api/pdf";
-	private student: Registrations = {} as Registrations;
+	private student: JoinedEnrollments = {} as JoinedEnrollments;
 	private teachersName: string = "";
 	private instrument: string = "";
 	constructor() {}
 
-	public setTemplateData(student: Registrations, teachersName: string, instrument?: string): PDF {
+	public setTemplateData(student: JoinedEnrollments, teachersName: string, instrument?: string): PDF {
 		this.student = student;
 		this.teachersName = teachersName;
 		this.instrument = instrument || "";

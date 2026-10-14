@@ -1,4 +1,5 @@
-import { v_Instruments, type Instruments } from "@_types/entities";
+import type { Instruments } from "@_types/entities";
+import { v_Instruments } from "../entitySchemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { test } from "bun:test";

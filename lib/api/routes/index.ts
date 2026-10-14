@@ -9,7 +9,6 @@ import { payoffsRoutes } from "./payoffs";
 import { pdfRoutes } from "./pdf";
 import { pupilsRoutes } from "./pupils";
 import { queryLogsRoutes } from "./queryLogs";
-import { schemaRoutes } from "./schema";
 import { settingsBackupRoutes } from "./settingsBackup";
 import { sysusersRoutes } from "./sysusers";
 import { teachersRoutes } from "./teachers";
@@ -43,7 +42,6 @@ export const routeGroups = {
 	EmailSubscriptions: emailSubscriptionsRoutes,
 	PDF: pdfRoutes,
 	Announcements: announcementsRoutes,
-	Schema: schemaRoutes,
 	SettingsBackup: settingsBackupRoutes,
 	Authentication: authenticationRoutes,
 } as const;

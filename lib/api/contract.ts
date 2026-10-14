@@ -98,8 +98,6 @@ export const APIEndpoints = {
 	"Announcements.delete": { method: "DELETE", path: "/announcements", multipart: false, rawBlob: false },
 	"Announcements.postImage": { method: "POST", path: "/announcements/images", multipart: true, rawBlob: false },
 	"Announcements.imagesDelete": { method: "DELETE", path: "/announcements/images/id/[announcement_id:number]", multipart: false, rawBlob: false },
-	"Announcements.imagesDeleteByName": { method: "DELETE", path: "/announcements/images/name/[announcement_id:number]", multipart: false, rawBlob: false },
-	"Schema.get": { method: "GET", path: '/schema/backup/[type:"mysql" | "sqlite"]', multipart: false, rawBlob: false },
 	"SettingsBackup.getDatabase": { method: "GET", path: "/settings/backup/database", multipart: false, rawBlob: false },
 	"SettingsBackup.getFiles": { method: "GET", path: "/settings/backup/files", multipart: false, rawBlob: false },
 	"SettingsBackup.getFile": { method: "POST", path: "/settings/backup/file", multipart: false, rawBlob: false },

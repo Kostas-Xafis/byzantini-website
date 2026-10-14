@@ -83,28 +83,3 @@ export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>): Pro
 		}
 	})();
 };
-
-
-// Use case: import a module for use only in development.
-// Any other use case will 99% probably crash the build process.
-// Cursed function
-
-/**
- * Asynchronously imports a module only in non-production environments.
- *
- * @example ```ts
- * const os = await silentImport<typeof import('os')>('os');
- * ```
- * @param {string} importStr - The string representing the module to import.
- * @returns {Promise<ImportType>} - A promise that resolves to the imported module or an empty object in production or on error.
- */
-export const silentImport = <ImportType>(importStr: string) => {
-	if (isProduction()) {
-		return Promise.resolve({}) as Promise<ImportType>;
-	}
-	try {
-		return eval(`import("${importStr}")`) as Promise<ImportType>;
-	} catch (err) {
-		return Promise.resolve({}) as Promise<ImportType>;
-	}
-};
