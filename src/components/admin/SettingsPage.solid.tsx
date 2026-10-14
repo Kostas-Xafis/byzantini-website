@@ -185,7 +185,7 @@ export default function SettingsPage() {
 	};
 
 	return (
-		<div class="w-full min-h-screen p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
+		<div class="w-full h-full min-h-0 overflow-y-auto p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
 			<div class="max-w-3xl grid gap-6">
 				<h1 class="font-anaktoria text-4xl">Ρυθμίσεις</h1>
 				<p class="text-sm sm:text-base dark:text-gray-300">Διαχείριση εμφάνισης και αντιγράφων ασφαλείας του πίνακα διαχείρισης.</p>
