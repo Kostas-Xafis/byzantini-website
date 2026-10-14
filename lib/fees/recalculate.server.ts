@@ -5,7 +5,7 @@
  */
 import { getDb, logQuery } from "@lib/db";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { computeYearFees, z_FeeCatalogData, type FeeCatalog, type FeeCatalogData, type FeeEnrollment, type FeeResult } from "./index";
+import { computeYearFees, type FeeCatalog, type FeeCatalogInput, type FeeEnrollment, type FeeResult, type FeeRule } from "./index";
 
 export type PupilYear = { pupil_id: number; registration_year: string };
 
@@ -18,46 +18,58 @@ export type FeeEnrollmentRow = FeeEnrollment & {
 	total_payment: number;
 };
 
-type CatalogRow = { id: number; school_year: string; data: string; created_at: number; created_by: string | null };
+type CatalogRow = { id: number; school_year: string; evaluation_fee: number; multi_enrollment_factor: number; created_at: number; created_by: string | null };
+type RuleRow = { id: number; catalog_id: number; class_id: number; class_years: string | null; teacher_id: number | null; price: number };
 
-/** Parses a `fee_catalogs` row; an invalid JSON payload is logged and treated as missing. */
-export function parseCatalogRow(row: CatalogRow): FeeCatalog | null {
+const CATALOG_COLUMNS = "id, school_year, evaluation_fee, multi_enrollment_factor, created_at, created_by";
+
+/** A `fee_catalog_rules` row as a `FeeRule`; an unreadable `class_years` payload is logged and the rule dropped. */
+function parseRuleRow(row: RuleRow): FeeRule | null {
 	try {
-		const data = z_FeeCatalogData.safeParse(JSON.parse(row.data));
-		if (!data.success) {
-			console.error(`[fees] fee_catalogs #${row.id} has an invalid payload`);
-			return null;
-		}
-		return { id: row.id, school_year: row.school_year, data: data.data, created_at: row.created_at, created_by: row.created_by };
+		const class_years = row.class_years === null ? null : (JSON.parse(row.class_years) as unknown);
+		if (class_years !== null && !(Array.isArray(class_years) && class_years.every((year) => typeof year === "string"))) throw new Error("class_years");
+		return { class_id: row.class_id as FeeRule["class_id"], class_years, teacher_id: row.teacher_id ?? null, price: row.price };
 	} catch {
-		console.error(`[fees] fee_catalogs #${row.id} is not valid JSON`);
+		console.error(`[fees] fee_catalog_rules #${row.id} has an invalid class_years payload`);
 		return null;
 	}
 }
 
+/** Catalog rows + their rules (in rule id order) as `FeeCatalog`s, in the order of `rows`. */
+async function withRules(rows: CatalogRow[]): Promise<FeeCatalog[]> {
+	if (rows.length === 0) return [];
+	const ids = rows.map((row) => row.id);
+	const ruleRows = await executeQuery<RuleRow>(`SELECT * FROM fee_catalog_rules WHERE catalog_id IN (${questionMarks(ids)}) ORDER BY id`, ids);
+	const rules = new Map<number, FeeRule[]>(ids.map((id) => [id, []]));
+	for (const row of ruleRows) {
+		const rule = parseRuleRow(row);
+		if (rule) rules.get(row.catalog_id)?.push(rule);
+	}
+	return rows.map((row) => ({ ...row, rules: rules.get(row.id) ?? [] }));
+}
+
 /** The active catalog of a school year: its newest version, or null when the year has none. */
 export async function getActiveCatalog(schoolYear: string): Promise<FeeCatalog | null> {
-	const [row] = await executeQuery<CatalogRow>("SELECT * FROM fee_catalogs WHERE school_year = ? ORDER BY id DESC LIMIT 1", [schoolYear]);
-	return row ? parseCatalogRow(row) : null;
+	const rows = await executeQuery<CatalogRow>(`SELECT ${CATALOG_COLUMNS} FROM fee_catalogs WHERE school_year = ? ORDER BY id DESC LIMIT 1`, [schoolYear]);
+	return (await withRules(rows))[0] ?? null;
 }
 
 /** Every version of a school year's catalog, newest first. */
 export async function getCatalogVersions(schoolYear: string): Promise<FeeCatalog[]> {
-	const rows = await executeQuery<CatalogRow>("SELECT * FROM fee_catalogs WHERE school_year = ? ORDER BY id DESC", [schoolYear]);
-	return rows.map(parseCatalogRow).filter((catalog): catalog is FeeCatalog => catalog !== null);
+	return withRules(await executeQuery<CatalogRow>(`SELECT ${CATALOG_COLUMNS} FROM fee_catalogs WHERE school_year = ? ORDER BY id DESC`, [schoolYear]));
 }
 
-/** Catalog payloads by id. */
-export async function loadCatalogs(ids: Iterable<number | null>): Promise<Map<number, FeeCatalogData>> {
+/** One catalog version by id. */
+export async function getCatalog(id: number): Promise<FeeCatalog | null> {
+	return (await withRules(await executeQuery<CatalogRow>(`SELECT ${CATALOG_COLUMNS} FROM fee_catalogs WHERE id = ?`, [id])))[0] ?? null;
+}
+
+/** Catalogs (settings + rules) by id, for the calculation. */
+export async function loadCatalogs(ids: Iterable<number | null>): Promise<Map<number, FeeCatalogInput>> {
 	const unique = [...new Set([...ids].filter((id): id is number => typeof id === "number"))];
-	const catalogs = new Map<number, FeeCatalogData>();
-	if (unique.length === 0) return catalogs;
-	const rows = await executeQuery<CatalogRow>(`SELECT * FROM fee_catalogs WHERE id IN (${questionMarks(unique)})`, unique);
-	for (const row of rows) {
-		const catalog = parseCatalogRow(row);
-		if (catalog) catalogs.set(catalog.id, catalog.data);
-	}
-	return catalogs;
+	if (unique.length === 0) return new Map();
+	const rows = await executeQuery<CatalogRow>(`SELECT ${CATALOG_COLUMNS} FROM fee_catalogs WHERE id IN (${questionMarks(unique)})`, unique);
+	return new Map((await withRules(rows)).map((catalog) => [catalog.id, catalog]));
 }
 
 const ENROLLMENT_FEE_COLUMNS =

@@ -22,7 +22,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { computeYearFees, evaluationFee, feeBase, orderForFees, z_FeeCatalogData, type FeeCatalogData } from "../lib/fees";
+import { computeYearFees, evaluationFee, feeBase, orderForFees, z_FeeCatalogInput, type FeeCatalogInput } from "../lib/fees";
 import { classYearLabel } from "../lib/classYears";
 
 const args = process.argv.slice(2);
@@ -97,7 +97,7 @@ console.log(`Βάση     : ${remote ? (ENV ? `απομακρυσμένη, πε�
 console.log(`Έτος     : ${YEAR}`);
 console.log(`Λειτουργία: ${apply ? "ΕΓΓΡΑΦΗ (--apply)" : "DRY RUN"}\n`);
 
-const [activeRow] = await query<{ id: number; data: string }>(`SELECT id, data FROM fee_catalogs WHERE school_year = '${YEAR}' ORDER BY id DESC LIMIT 1`);
+const [activeRow] = await query<{ id: number }>(`SELECT id FROM fee_catalogs WHERE school_year = '${YEAR}' ORDER BY id DESC LIMIT 1`);
 if (!activeRow) {
 	console.error(`Δεν υπάρχει κατάλογος διδάκτρων για το ${YEAR}.`);
 	process.exit(1);
@@ -112,9 +112,25 @@ const rows = await query<Row>(
 
 // Catalogs: the active one (pinned on unpinned rows) + any already pinned.
 const catalogIds = [...new Set([activeRow.id, ...rows.map((r) => r.fee_catalog_id).filter((id): id is number => id !== null)])];
-const catalogRows = await query<{ id: number; data: string }>(`SELECT id, data FROM fee_catalogs WHERE id IN (${catalogIds.join(", ")})`);
-const catalogs = new Map<number, FeeCatalogData>();
-for (const row of catalogRows) catalogs.set(row.id, z_FeeCatalogData.parse(JSON.parse(row.data)));
+// Settings + rules (migration 0007; the legacy `data` JSON column is never read).
+const catalogRows = await query<{ id: number; evaluation_fee: number; multi_enrollment_factor: number }>(
+	`SELECT id, evaluation_fee, multi_enrollment_factor FROM fee_catalogs WHERE id IN (${catalogIds.join(", ")})`,
+);
+const ruleRows = await query<{ catalog_id: number; class_id: number; class_years: string | null; teacher_id: number | null; price: number }>(
+	`SELECT catalog_id, class_id, class_years, teacher_id, price FROM fee_catalog_rules WHERE catalog_id IN (${catalogIds.join(", ")}) ORDER BY id`,
+);
+const catalogs = new Map<number, FeeCatalogInput>();
+for (const row of catalogRows) {
+	const rules = ruleRows
+		.filter((rule) => rule.catalog_id === row.id)
+		.map((rule) => ({
+			class_id: rule.class_id,
+			class_years: rule.class_years === null ? null : JSON.parse(rule.class_years),
+			teacher_id: rule.teacher_id,
+			price: rule.price,
+		}));
+	catalogs.set(row.id, z_FeeCatalogInput.parse({ evaluation_fee: row.evaluation_fee, multi_enrollment_factor: row.multi_enrollment_factor, rules }));
+}
 
 const byPupil = new Map<number, Row[]>();
 for (const row of rows) byPupil.set(row.pupil_id, [...(byPupil.get(row.pupil_id) ?? []), row]);

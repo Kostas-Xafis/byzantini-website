@@ -7,9 +7,9 @@
  * with catalogs this suite creates for that year. afterAll deletes the pupils, their enrollments and
  * subscriptions, and the catalog versions it created.
  *
- * Requires: `bun run dev` on :4321 and `tests/.env.test`. Uses 3 public registrations (rate limit 10/min).
+ * Requires: `bun run dev` on :4321 and `tests/.env.test`. Uses 5 public registrations (rate limit 10/min).
  */
-import type { FeeCatalogData } from "@lib/fees";
+import type { FeeCatalogInput, FeeRule } from "@lib/fees";
 import { currentSchoolYearStart, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
@@ -54,7 +54,10 @@ afterAll(() => {
 		}
 		if (emails.length) db.run(`DELETE FROM email_subscriptions WHERE email IN (${marks(emails)})`, emails);
 		const catalogs = (db.query("SELECT id FROM fee_catalogs").all() as { id: number }[]).map((r) => r.id).filter((id) => !catalogIdsBefore.has(id));
-		if (catalogs.length) db.run(`DELETE FROM fee_catalogs WHERE id IN (${marks(catalogs)})`, catalogs);
+		if (catalogs.length) {
+			db.run(`DELETE FROM fee_catalog_rules WHERE catalog_id IN (${marks(catalogs)})`, catalogs);
+			db.run(`DELETE FROM fee_catalogs WHERE id IN (${marks(catalogs)})`, catalogs);
+		}
 		db.run("UPDATE total_enrollments SET amount = (SELECT COUNT(*) FROM pupil_enrollments)");
 	});
 });
@@ -136,14 +139,14 @@ async function update(row: Enrollment, changes: Record<string, unknown>) {
 	expect((await getJson(res)).message).toBe("Επιτυχής ενημέρωση εγγραφής");
 }
 
-async function createCatalog(data: FeeCatalogData) {
-	const res = await useTestAPI("FeeCatalog.create", { RequestObject: { school_year: YEAR, data } });
+async function createCatalog(data: FeeCatalogInput) {
+	const res = await useTestAPI("FeeCatalog.create", { RequestObject: { school_year: YEAR, ...data } });
 	return (await getJson<APIResponse["FeeCatalog.create"]>(res)).data as APIResponse["FeeCatalog.create"];
 }
 
 // ---------------------------------------------------------------------------
 describe("fees", () => {
-	let seed: FeeCatalogData;
+	let seed: FeeCatalogInput;
 	let affiliatedTeacher = 0;
 	let v1 = 0;
 
@@ -151,13 +154,23 @@ describe("fees", () => {
 		const res = await useTestAPI("FeeCatalog.getActive", { UrlArgs: { school_year: SEED_YEAR } });
 		const json = await getJson<APIResponse["FeeCatalog.getActive"]>(res);
 		expect(json.data).not.toBeNull();
-		seed = json.data.data;
-		expect(seed.evaluation_fee).toBe(80);
-		expect(seed.byzantine.default).toBe(20);
-		expect(Object.values(seed.byzantine.teachers)).toEqual([50, 50]);
-		expect(seed.traditional["Γ' Μέση"]).toBe(50);
-		expect(seed.traditional["Α' Ανωτέρα"]).toBe(100);
-		affiliatedTeacher = Number(Object.keys(seed.byzantine.teachers)[0]);
+		const { evaluation_fee, multi_enrollment_factor, rules } = json.data;
+		seed = { evaluation_fee, multi_enrollment_factor, rules };
+		expect(evaluation_fee).toBe(80);
+		expect(multi_enrollment_factor).toBe(0.5);
+		const byz = rules.filter((r: FeeRule) => r.class_id === 0);
+		expect(byz.find((r: FeeRule) => r.teacher_id === null)).toMatchObject({ class_years: null, price: 20 });
+		const teachers = byz.filter((r: FeeRule) => r.teacher_id !== null);
+		expect(teachers.map((r: FeeRule) => r.price)).toEqual([50, 50]);
+		const trad = rules.filter((r: FeeRule) => r.class_id === 1);
+		expect(trad.map((r: FeeRule) => [r.price, r.class_years?.length])).toEqual([
+			[50, 6],
+			[100, 4],
+		]);
+		expect(trad[0].class_years).toContain("Γ' Μέση");
+		expect(trad[1].class_years).toContain("Α' Ανωτέρα");
+		expect(rules.find((r: FeeRule) => r.class_id === 2)).toMatchObject({ class_years: null, teacher_id: null, price: 50 });
+		affiliatedTeacher = teachers[0].teacher_id!;
 	});
 
 	test("--fees-- #2 create a catalog version, read it back as active and in the versions", async () => {
@@ -167,7 +180,7 @@ describe("fees", () => {
 		const created = await createCatalog(seed);
 		v1 = created.id;
 		expect(created.school_year).toBe(YEAR);
-		expect(created.data).toEqual(seed);
+		expect({ evaluation_fee: created.evaluation_fee, multi_enrollment_factor: created.multi_enrollment_factor, rules: created.rules }).toEqual(seed);
 		expect(typeof created.created_by).toBe("string");
 
 		const active = await getJson<APIResponse["FeeCatalog.getActive"]>(await useTestAPI("FeeCatalog.getActive", { UrlArgs: { school_year: YEAR } }));
@@ -180,11 +193,15 @@ describe("fees", () => {
 	});
 
 	test("--fees-- #3 create rejects an invalid catalog and an unknown teacher", async () => {
+		await expect(useTestAPI("FeeCatalog.create", { RequestObject: { school_year: YEAR, ...seed, multi_enrollment_factor: 2 } })).rejects.toThrow();
+		// Ambiguous: a second European all-years price.
 		await expect(
-			useTestAPI("FeeCatalog.create", { RequestObject: { school_year: YEAR, data: { ...seed, multi_enrollment_factor: 2 } } }),
-		).rejects.toThrow();
+			useTestAPI("FeeCatalog.create", {
+				RequestObject: { school_year: YEAR, ...seed, rules: [...seed.rules, { class_id: 2, class_years: null, teacher_id: null, price: 60 }] },
+			}),
+		).rejects.toThrow("Διπλή τιμή για όλα τα έτη");
 		const res = await useTestAPI("FeeCatalog.create", {
-			RequestObject: { school_year: YEAR, data: { ...seed, byzantine: { default: 20, teachers: { "999999": 50 } } } },
+			RequestObject: { school_year: YEAR, ...seed, rules: [...seed.rules, { class_id: 0, class_years: ["Α' Έτος"], teacher_id: 999999, price: 50 }] },
 		});
 		expect(res.status).toBe(400);
 		expect((await res.json()).error).toContain("Άγνωστος καθηγητής");
@@ -287,11 +304,16 @@ describe("fees", () => {
 
 	test("--fees-- #10 a catalog edit after registration does not change existing enrollments", async () => {
 		const before = await yearOf(pupilA);
+		// A pupil whose only enrollment (Traditional Α' Ανωτέρα, full price) is pinned to v1.
+		const solo = await register({ class_id: 1, class_year: "Α' Ανωτέρα", instrument_id: 1 });
+		expect((await yearOf(solo.pupilId)).get(solo.insertId)).toMatchObject({ fee_catalog_id: v1, fee_base: 100, total_payment: 100 });
 		const v2 = await createCatalog({
 			...seed,
-			byzantine: { default: 40, teachers: {} },
-			traditional: Object.fromEntries(Object.keys(seed.traditional).map((k) => [k, 200])),
-			european: { default: 90 },
+			rules: [
+				{ class_id: 0, class_years: null, teacher_id: null, price: 40 },
+				...seed.rules.filter((r) => r.class_id === 1).map((r) => ({ ...r, price: 200 })),
+				{ class_id: 2, class_years: null, teacher_id: null, price: 90 },
+			],
 		});
 		expect(v2.id).toBeGreaterThan(v1);
 		const versions = await getJson<APIResponse["FeeCatalog.getVersions"]>(await useTestAPI("FeeCatalog.getVersions", { UrlArgs: { school_year: YEAR } }));
@@ -309,6 +331,17 @@ describe("fees", () => {
 		after = await yearOf(pupilA);
 		expect(after.get(eur2)).toMatchObject({ fee_catalog_id: v2.id, fee_base: 90, total_payment: 45 });
 		for (const [id, row] of before) expect(after.get(id)!.total_payment).toBe(row.total_payment);
+
+		// Re-ordering across versions: a Byzantine enrollment under v2 goes first, so the v1 Traditional is now
+		// discounted — still with v1's price and v1's factor (100 × 0.5), never v2's (200).
+		const byzSolo = await enroll(solo.pupilId, { class_id: 0, class_year: "Α' Έτος" });
+		const soloYear = await yearOf(solo.pupilId);
+		expect(soloYear.get(byzSolo)).toMatchObject({ fee_catalog_id: v2.id, fee_base: 40, total_payment: 40 });
+		expect(soloYear.get(solo.insertId)).toMatchObject({ fee_catalog_id: v1, fee_base: 100, total_payment: 50 });
+
+		// The old version is untouched: its rules read back exactly as before.
+		const old = versions.data.find((v: { id: number }) => v.id === v1)!;
+		expect(old.rules).toEqual(seed.rules);
 	});
 
 	test("--fees-- #11 deleting an enrollment re-promotes the next one to full price", async () => {
@@ -327,5 +360,28 @@ describe("fees", () => {
 		const other = await enroll(pupilB, { class_id: 2, class_year: "Α' Μέση", total_payment: 10 });
 		year = await yearOf(pupilB);
 		expect(year.get(other)).toMatchObject({ fee_manual: true, total_payment: 10 });
+	});
+
+	test("--fees-- #13 rule precedence: teacher > class years > base, and an all-years price prices a pending placement", async () => {
+		const v3 = await createCatalog({
+			evaluation_fee: 80,
+			multi_enrollment_factor: 0.5,
+			rules: [
+				{ class_id: 0, class_years: null, teacher_id: null, price: 20 },
+				{ class_id: 1, class_years: null, teacher_id: null, price: 60 },
+				{ class_id: 1, class_years: ["Α' Ανωτέρα", "Β' Ανωτέρα"], teacher_id: null, price: 100 },
+				{ class_id: 1, class_years: null, teacher_id: affiliatedTeacher, price: 75 },
+				{ class_id: 2, class_years: null, teacher_id: null, price: 50 },
+			],
+		});
+		const reg = await register({ class_id: 2, class_year: "Α' Μέση" });
+		const pending = await enroll(reg.pupilId, { class_id: 1, class_year: "", evaluation: true });
+		const upper = await enroll(reg.pupilId, { class_id: 1, class_year: "Α' Ανωτέρα" });
+		const teacher = await enroll(reg.pupilId, { class_id: 1, class_year: "Α' Ανωτέρα", teacher_id: affiliatedTeacher });
+		const year = await yearOf(reg.pupilId);
+		expect(year.get(pending)).toMatchObject({ fee_catalog_id: v3.id, fee_base: 60, evaluation_fee: 80, total_payment: 140 }); // Traditional goes first: 60 + 80
+		expect(year.get(upper)).toMatchObject({ fee_base: 100, total_payment: 50 });
+		expect(year.get(teacher)).toMatchObject({ fee_base: 75, total_payment: 38 }); // 37.5 → 38
+		expect(year.get(reg.insertId)).toMatchObject({ fee_base: 50, total_payment: 25 });
 	});
 });

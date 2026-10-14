@@ -1,6 +1,7 @@
 import type { SysUsers } from "@_types/entities";
-import { z_FeeCatalog, z_FeeCatalogData, z_SchoolYear } from "@lib/fees";
-import { getActiveCatalog, getCatalogVersions, parseCatalogRow } from "@lib/fees/recalculate.server";
+import { getDb, logQuery } from "@lib/db";
+import { z_FeeCatalog, z_FeeCatalogInput, z_SchoolYear } from "@lib/fees";
+import { getActiveCatalog, getCatalog, getCatalogVersions } from "@lib/fees/recalculate.server";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
 import { APIError } from "./APIError";
@@ -16,10 +17,15 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  * changes existing enrollments.
  */
 
-const z_CatalogCreate = z.object({
-	school_year: z_SchoolYear,
-	data: z_FeeCatalogData,
-});
+/** `{ school_year, evaluation_fee, multi_enrollment_factor, rules }` — rules validated for ambiguity. */
+const z_CatalogCreate = z_FeeCatalogInput.extend({ school_year: z_SchoolYear });
+
+// `data` is the legacy JSON column of migration 0006 (NOT NULL, never read since 0007): new versions store '{}'.
+const INSERT_CATALOG =
+	"INSERT INTO fee_catalogs (school_year, data, evaluation_fee, multi_enrollment_factor, created_at, created_by) VALUES (?, '{}', ?, ?, ?, ?) RETURNING id";
+// Inside the batch (one implicit transaction) the newest catalog row is the one just inserted.
+const INSERT_RULE =
+	"INSERT INTO fee_catalog_rules (catalog_id, class_id, class_years, teacher_id, price) VALUES ((SELECT MAX(id) FROM fee_catalogs), ?, ?, ?, ?)";
 
 export const feeCatalogRoutes = {
 	/** School years that have a catalog, newest first. */
@@ -49,8 +55,8 @@ export const feeCatalogRoutes = {
 		{ method: "POST", path: "/fee-catalogs", schema: z_CatalogCreate, responseSchema: z_FeeCatalog },
 		[authenticateMiddleware],
 		({ body, cookies }) =>
-			handlerResult(async (T) => {
-				const teacherIds = Object.keys(body.data.byzantine.teachers).map(Number);
+			handlerResult(async () => {
+				const teacherIds = [...new Set(body.rules.map((rule) => rule.teacher_id).filter((id): id is number => id !== null))];
 				if (teacherIds.length > 0) {
 					const found = await executeQuery<{ id: number }>(`SELECT id FROM teachers WHERE id IN (${questionMarks(teacherIds)})`, teacherIds);
 					const known = new Set(found.map((row) => row.id));
@@ -60,14 +66,23 @@ export const feeCatalogRoutes = {
 				const [user] = await executeQuery<Pick<SysUsers, "email">>("SELECT email FROM sys_users WHERE session_id = ? LIMIT 1", [
 					cookies.get(COOKIE.sessionId),
 				]);
-				const { insertId } = await T.executeQuery("INSERT INTO fee_catalogs (school_year, data, created_at, created_by) VALUES (?, ?, ?, ?)", [
-					body.school_year,
-					JSON.stringify(body.data),
-					Date.now(),
-					user?.email ?? null,
+				// The catalog and its rules in one batch: a version is never stored without its rules.
+				const catalogArgs = [body.school_year, body.evaluation_fee, body.multi_enrollment_factor, Date.now(), user?.email ?? null];
+				const ruleArgs = body.rules.map((rule) => [
+					rule.class_id,
+					rule.class_years ? JSON.stringify(rule.class_years) : null,
+					rule.teacher_id,
+					rule.price,
 				]);
-				const [row] = await executeQuery<Parameters<typeof parseCatalogRow>[0]>("SELECT * FROM fee_catalogs WHERE id = ?", [insertId]);
-				const catalog = row && parseCatalogRow(row);
+				const db = getDb();
+				const [inserted] = await db.batch<{ id: number }>([
+					db.prepare(INSERT_CATALOG).bind(...catalogArgs),
+					...ruleArgs.map((args) => db.prepare(INSERT_RULE).bind(...args)),
+				]);
+				await logQuery(INSERT_CATALOG, catalogArgs);
+				for (const args of ruleArgs) await logQuery(INSERT_RULE, args);
+				const id = inserted?.results?.[0]?.id;
+				const catalog = id ? await getCatalog(id) : null;
 				if (!catalog) throw new Error("fee catalog insert could not be read back");
 				return catalog;
 			}, "Σφάλμα κατά την αποθήκευση του καταλόγου διδάκτρων"),

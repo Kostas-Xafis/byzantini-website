@@ -1,11 +1,11 @@
 /**
- * Automatic yearly fees (docs/FEES.md) — the price catalog shape and the pure calculation.
+ * Automatic yearly fees (docs/FEES.md) — the price catalog (settings + rules) and the pure calculation.
  *
  * Client-safe: no DB, no env, no server imports. The server (`lib/fees/recalculate.server.ts`) loads the
  * enrollments and catalogs and writes the result; the admin UI may run the same functions for a live
  * breakdown.
  */
-import { MusicType, placementClassYearsByMusicType } from "@lib/classYears";
+import { placementClassYearsForClassId } from "@lib/classYears";
 import { z } from "astro/zod";
 
 /** class_id values (the music-type tabs). */
@@ -16,31 +16,78 @@ export const CLASS_EUROPEAN = 2;
 /** Department order of the multi-enrollment discount: Βυζαντινή → Παραδοσιακή → Ευρωπαϊκή (FEES.md §3, step 1). */
 export const FEE_DEPARTMENT_ORDER: readonly number[] = [CLASS_BYZANTINE, CLASS_TRADITIONAL, CLASS_EUROPEAN];
 
-/** The class years a Traditional catalog prices (every Traditional class year except «Υπό Κατάταξη»). */
-export const TRADITIONAL_FEE_CLASS_YEARS: readonly string[] = placementClassYearsByMusicType[MusicType.Traditional];
-
 const price = (message: string) => z.number(message).int(message).min(0, message);
 
-/** The catalog JSON stored in `fee_catalogs.data`. */
-export const z_FeeCatalogData = z.object({
-	/** Flat, per enrollment with `evaluation = 1`, never discounted. */
+/** A catalog's settings. */
+export const z_FeeCatalogSettings = z.object({
+	/** ONE amount for every department; per enrollment with `evaluation = 1`, never discounted. */
 	evaluation_fee: price("Μη έγκυρο τέλος κατάταξης"),
-	byzantine: z.object({
-		default: price("Μη έγκυρη τιμή Βυζαντινής μουσικής"),
-		/** Non-affiliated teachers: teacher id (as a string key) → price. */
-		teachers: z.record(z.string().regex(/^\d+$/, "Μη έγκυρος καθηγητής"), price("Μη έγκυρη τιμή καθηγητή")),
-	}),
-	/** Traditional price per class year. */
-	traditional: z.record(z.string(), price("Μη έγκυρη τιμή Παραδοσιακής μουσικής")).superRefine((value, ctx) => {
-		for (const key of Object.keys(value)) {
-			if (!TRADITIONAL_FEE_CLASS_YEARS.includes(key)) ctx.addIssue({ code: "custom", path: [key], message: `Άγνωστο έτος φοίτησης: ${key}` });
-		}
-	}),
-	european: z.object({ default: price("Μη έγκυρη τιμή Ευρωπαϊκής μουσικής") }),
 	/** Applied to every enrollment after the first of the pupil's year (0.5 = half price). */
 	multi_enrollment_factor: z.number("Μη έγκυρος συντελεστής έκπτωσης").min(0, "Μη έγκυρος συντελεστής έκπτωσης").max(1, "Μη έγκυρος συντελεστής έκπτωσης"),
 });
-export type FeeCatalogData = z.infer<typeof z_FeeCatalogData>;
+export type FeeCatalogSettings = z.infer<typeof z_FeeCatalogSettings>;
+
+/**
+ * One price rule (docs/FEES.md §2). `class_years`: null = every class year of the department, otherwise a
+ * non-empty set of the department's placement class years (the editor offers ranges; storage is the set).
+ * `teacher_id`: null = any teacher.
+ */
+export const z_FeeRule = z
+	.object({
+		class_id: z.union([z.literal(CLASS_BYZANTINE), z.literal(CLASS_TRADITIONAL), z.literal(CLASS_EUROPEAN)], { message: "Μη έγκυρο τμήμα" }),
+		class_years: z.array(z.string("Μη έγκυρο έτος φοίτησης")).min(1, "Επιλέξτε τουλάχιστον ένα έτος φοίτησης").nullable(),
+		teacher_id: z.number("Μη έγκυρος καθηγητής").int("Μη έγκυρος καθηγητής").min(1, "Μη έγκυρος καθηγητής").nullable(),
+		price: price("Μη έγκυρη τιμή"),
+	})
+	.superRefine((rule, ctx) => {
+		if (!rule.class_years) return;
+		const allowed = placementClassYearsForClassId(rule.class_id);
+		const seen = new Set<string>();
+		rule.class_years.forEach((year, index) => {
+			if (!allowed.includes(year)) ctx.addIssue({ code: "custom", path: ["class_years", index], message: `Άγνωστο έτος φοίτησης για το τμήμα: ${year}` });
+			else if (seen.has(year)) ctx.addIssue({ code: "custom", path: ["class_years", index], message: `Διπλό έτος φοίτησης: ${year}` });
+			seen.add(year);
+		});
+	});
+export type FeeRule = z.infer<typeof z_FeeRule>;
+
+/** Precedence rank of a rule (lower wins): teacher + class years > teacher > class years > department base. */
+export const feeRuleRank = (rule: Pick<FeeRule, "class_years" | "teacher_id">): number =>
+	rule.teacher_id !== null ? (rule.class_years ? 0 : 1) : rule.class_years ? 2 : 3;
+
+/**
+ * Ambiguity check: within the same department + teacher (or no teacher), no class year may be covered by two
+ * rules and there is at most one all-years rule. Returns one message per conflict, keyed by rule index.
+ */
+export function feeRuleConflicts(rules: readonly FeeRule[]): { index: number; message: string }[] {
+	const conflicts: { index: number; message: string }[] = [];
+	const groups = new Map<string, { allYears?: number; years: Map<string, number> }>();
+	rules.forEach((rule, index) => {
+		const key = `${rule.class_id}|${rule.teacher_id ?? ""}`;
+		const group = groups.get(key) ?? { years: new Map<string, number>() };
+		groups.set(key, group);
+		if (rule.class_years === null) {
+			if (group.allYears !== undefined) conflicts.push({ index, message: `Διπλή τιμή για όλα τα έτη (ίδια με τον κανόνα ${group.allYears + 1})` });
+			else group.allYears = index;
+			return;
+		}
+		for (const year of new Set(rule.class_years)) {
+			const other = group.years.get(year);
+			if (other !== undefined) conflicts.push({ index, message: `Το έτος «${year}» καλύπτεται ήδη από τον κανόνα ${other + 1}` });
+			else group.years.set(year, index);
+		}
+	});
+	return conflicts;
+}
+
+/** A catalog's rules, validated per rule and for ambiguity. */
+export const z_FeeRules = z.array(z_FeeRule).superRefine((rules, ctx) => {
+	for (const { index, message } of feeRuleConflicts(rules)) ctx.addIssue({ code: "custom", path: [index], message });
+});
+
+/** A catalog version as created / priced: settings + rules. */
+export const z_FeeCatalogInput = z_FeeCatalogSettings.extend({ rules: z_FeeRules });
+export type FeeCatalogInput = z.infer<typeof z_FeeCatalogInput>;
 
 /** "2026-2027": two consecutive years. */
 export const z_SchoolYear = z
@@ -51,11 +98,11 @@ export const z_SchoolYear = z
 		return end === start + 1;
 	}, "Μη έγκυρο σχολικό έτος");
 
-/** One `fee_catalogs` row, with its JSON parsed. */
-export const z_FeeCatalog = z.object({
+/** One catalog version as the API returns it (`fee_catalogs` row + its `fee_catalog_rules`). */
+export const z_FeeCatalog = z_FeeCatalogSettings.extend({
 	id: z.number().int().min(1),
 	school_year: z.string(),
-	data: z_FeeCatalogData,
+	rules: z.array(z_FeeRule),
 	created_at: z.number().int().min(0),
 	created_by: z.string().nullable(),
 });
@@ -91,25 +138,24 @@ export type FeeResult = {
 export const roundFee = (value: number): number => Math.floor(Number(value.toFixed(6)) + 0.5);
 
 /**
- * The class price of an enrollment from a catalog (FEES.md §3, step 3): Byzantine — the non-affiliated
- * teacher's price or the default; Traditional — the price of the class year (null if empty/unknown);
- * European — the flat default. Unknown departments: null.
+ * The class price of an enrollment from a catalog (FEES.md §3, step 3): the matching rule of its department
+ * with the highest precedence — teacher + class years > teacher (all years) > class years > department base.
+ * An enrollment awaiting placement (`class_year` '') only matches all-years rules. null when nothing matches
+ * (e.g. Traditional awaiting placement without an all-years price).
  */
-export function feeBase(enrollment: Pick<FeeEnrollment, "class_id" | "class_year" | "teacher_id">, catalog: FeeCatalogData): number | null {
-	switch (enrollment.class_id) {
-		case CLASS_BYZANTINE:
-			return catalog.byzantine.teachers[String(enrollment.teacher_id)] ?? catalog.byzantine.default;
-		case CLASS_TRADITIONAL:
-			return enrollment.class_year ? (catalog.traditional[enrollment.class_year] ?? null) : null;
-		case CLASS_EUROPEAN:
-			return catalog.european.default;
-		default:
-			return null;
+export function feeBase(enrollment: Pick<FeeEnrollment, "class_id" | "class_year" | "teacher_id">, catalog: Pick<FeeCatalogInput, "rules">): number | null {
+	let best: FeeRule | undefined;
+	for (const rule of catalog.rules) {
+		if (rule.class_id !== enrollment.class_id) continue;
+		if (rule.teacher_id !== null && rule.teacher_id !== enrollment.teacher_id) continue;
+		if (rule.class_years !== null && !(enrollment.class_year && rule.class_years.includes(enrollment.class_year))) continue;
+		if (!best || feeRuleRank(rule) < feeRuleRank(best)) best = rule;
 	}
+	return best ? best.price : null;
 }
 
 /** The evaluation fee of an enrollment: the catalog's flat fee when it took the evaluation exam, else 0. */
-export const evaluationFee = (enrollment: Pick<FeeEnrollment, "evaluation">, catalog: FeeCatalogData): number =>
+export const evaluationFee = (enrollment: Pick<FeeEnrollment, "evaluation">, catalog: FeeCatalogSettings): number =>
 	enrollment.evaluation ? catalog.evaluation_fee : 0;
 
 const departmentRank = (classId: number) => {
@@ -131,10 +177,10 @@ export function orderForFees<T extends Pick<FeeEnrollment, "id" | "class_id">>(e
  */
 export function computeYearFees(
 	enrollments: readonly FeeEnrollment[],
-	catalogsById: ReadonlyMap<number, FeeCatalogData> | Readonly<Record<number, FeeCatalogData>>,
+	catalogsById: ReadonlyMap<number, FeeCatalogInput> | Readonly<Record<number, FeeCatalogInput>>,
 ): FeeResult[] {
-	const lookup = (id: number): FeeCatalogData | undefined =>
-		catalogsById instanceof Map ? catalogsById.get(id) : (catalogsById as Readonly<Record<number, FeeCatalogData>>)[id];
+	const lookup = (id: number): FeeCatalogInput | undefined =>
+		catalogsById instanceof Map ? catalogsById.get(id) : (catalogsById as Readonly<Record<number, FeeCatalogInput>>)[id];
 	const results: FeeResult[] = [];
 	orderForFees(enrollments).forEach((enrollment, position) => {
 		if (enrollment.fee_catalog_id == null || enrollment.fee_manual) return;

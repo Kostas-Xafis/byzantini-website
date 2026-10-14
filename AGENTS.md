@@ -240,7 +240,9 @@ The person data that used to live on `registrations` is split into two tables
 - **Fees (Δίδακτρα, docs/FEES.md)**: «Υπό Κατάταξη» is the `evaluation`
   status (`class_year = ''` until placement; display via `classYearLabel`
   in `lib/classYears.ts`), not a class year. Prices come from the versioned
-  `fee_catalogs` (routes `FeeCatalog.*`); each enrollment pins the catalog
+  `fee_catalogs` (settings) + `fee_catalog_rules` (price rules with
+  precedence, migration 0007; `fee_catalogs.data` is legacy, never read) —
+  routes `FeeCatalog.*`; each enrollment pins the catalog
   active at registration (`fee_catalog_id`). The pure calculation is
   `lib/fees` (client-safe); `lib/fees/recalculate.server.ts` recalculates a
   pupil-year after every enrollment write (`Pupils.post/enroll/

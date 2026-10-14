@@ -142,7 +142,8 @@
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
   suite writes to the local dev DB.
 - Fees (docs/FEES.md): «Υπό Κατάταξη» is the enrollment `evaluation` status, not
-  a class year; prices come from the versioned `fee_catalogs` (`FeeCatalog.*`),
+  a class year; prices come from versioned catalogs = settings + price rules
+  (`fee_catalogs` + `fee_catalog_rules`, `FeeCatalog.*`),
   computed by the pure `lib/fees` and recalculated per pupil-year after every
   enrollment write. `bun run fees:backfill` (dry run by default, `--apply`)
   fills the 2026-2027 fees.
