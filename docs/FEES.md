@@ -106,10 +106,8 @@ Already-paid amounts are untouched. Older years are untouched.
 - **Edit enrollment** (registrations modal + Μαθητολόγιο): the registration details only, with the «Υπό
   Κατάταξη» checkbox (evaluation) and a class year select without that option (empty allowed while
   evaluation is set). It resends the stored payment fields so it never clobbers them.
-- **«Δίδακτρα & Πληρωμή»** (one enrollment — € control in the registrations table, € button per Μαθητολόγιο
-  history row): read-only summary, fee breakdown (class price, discount, evaluation fee, catalog price),
-  editable total → «Ειδική τιμή», «Επαναφορά τιμής καταλόγου», paid amount/date, balance, «Εξόφληση».
-- **«Δίδακτρα μαθητή»** (one pupil-year — «Δίδακτρα» button under the Μαθητολόγιο «Στοιχεία Μαθητή» card):
+- **«Δίδακτρα μαθητή»** (one pupil-year — «Δίδακτρα» button under the Μαθητολόγιο «Στοιχεία Μαθητή» card; the
+  only place fees and payments are edited):
   school-year select (opens on the current year), the year's enrollments in discount order with per-row
   payment/price actions, totals «Δίδακτρα τμημάτων» / «Τέλη κατάταξης» / «Γενικό σύνολο» / «Πληρώθηκαν» /
   «Υπόλοιπο», and «Εξόφληση όλων» via `Pupils.settleYear` (`POST /pupils/fees/settle`

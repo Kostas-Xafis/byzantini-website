@@ -20,7 +20,6 @@ import {
 	onDownloadExcelMemo,
 	onDownloadPDFMemo,
 	onModifyMemo,
-	onPaymentMemo,
 	onPrintMemo,
 	reshapeData,
 	searchColumns,
@@ -175,7 +174,6 @@ export default function RegistrationsTable() {
 	const [shapedData, dataLength] = reshapeData(store, searchQuery);
 
 	const onModify = onModifyMemo(setRegistrationHydrate, store, selectedItems, apiHook);
-	const onPayment = onPaymentMemo(setRegistrationHydrate, store, selectedItems, apiHook);
 	const onDelete = onDeleteMemo(setRegistrationHydrate, store, selectedItems, apiHook);
 	const onDownloadPDF = onDownloadPDFMemo(store, selectedItems);
 
@@ -268,7 +266,7 @@ export default function RegistrationsTable() {
 							position: "top",
 							prefix: PREFIX,
 							controlGroups: [
-								{ controls: [onModify, onPayment, onDelete] },
+								{ controls: [onModify, onDelete] },
 								{ controls: [onDownloadExcel, onDownloadPDF, onPrint] },
 								{
 									type: "search",

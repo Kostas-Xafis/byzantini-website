@@ -6,7 +6,6 @@ export const enum ActionEnum {
 	DOWNLOAD_PDF = "PDF",
 	DOWNLOAD_EXCEL = "EXCEL",
 	PRINT = "PRINT",
-	PAYMENT = "PAYMENT",
 	NONE = "",
 }
 
@@ -23,7 +22,6 @@ export const enum ActionIcon {
 	DOWNLOAD_ZIP = "fa-regular fa-file-zipper",
 	DOWNLOAD_EXCEL = "fa-solid fa-table",
 	PRINT = "fa-solid fa-print",
-	PAYMENT = "fa-solid fa-euro-sign",
 }
 
 export type EmptyAction = {

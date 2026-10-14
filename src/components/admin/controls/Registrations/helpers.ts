@@ -126,7 +126,7 @@ export const RegistrationsInputs = (
 			type: "date",
 			iconClasses: "fa-regular fa-calendar-day",
 		},
-		// Fees and payments live in the «Δίδακτρα & Πληρωμή» modal (onPayment); the editor resends the stored values.
+		// Fees and payments live in the «Δίδακτρα μαθητή» dialog (Μαθητολόγιο); the editor resends the stored values.
 		payment_amount: { label: "Ποσό Πληρωμής", name: "payment_amount", type: "hidden" },
 		total_payment: { label: "Σύνολο Πληρωμής", name: "total_payment", type: "hidden" },
 		payment_date: { label: "Ημερομηνία Πληρωμής", name: "payment_date", type: "hidden" },

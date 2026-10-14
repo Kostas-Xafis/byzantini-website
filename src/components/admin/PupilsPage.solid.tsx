@@ -9,17 +9,9 @@ import { createComponent, createEffect, createMemo, createSignal, For, on, onCle
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { createAlert, pushAlert, toast } from "./Alert.solid";
-import {
-	EnrollmentPlacementFields,
-	EvaluationBadge,
-	FeeManualMarker,
-	paymentUpdateBody,
-	readPaymentFields,
-	readPlacementFields,
-} from "./controls/Registrations/EnrollmentFeeFields.solid";
+import { createAlert, pushAlert } from "./Alert.solid";
+import { EnrollmentPlacementFields, EvaluationBadge, FeeManualMarker, readPlacementFields } from "./controls/Registrations/EnrollmentFeeFields.solid";
 import { storedPaymentFields } from "./controls/Registrations/helpers";
-import { paymentInputs, paymentSavedMessage } from "./controls/Registrations/onPayment";
 import PupilFeesDialog from "./PupilFeesDialog.solid";
 import Modal, { setGlobalOpen } from "./table/Modal.solid";
 import { ActionEnum, ActionIcon } from "./table/TableControlTypes";
@@ -110,7 +102,7 @@ function setSelectOptions(select: HTMLSelectElement | null | undefined, options:
  * belongs to the music type being enrolled in, which is not necessarily the tab
  * the modal was opened from. The class year and «Υπό Κατάταξη» live in the
  * «Κατάταξη» field (`EnrollmentPlacementFields`), which follows `class_id` on its
- * own. Fees and payments have their own «Δίδακτρα & Πληρωμή» modal.
+ * own. Fees and payments live in the «Δίδακτρα μαθητή» dialog.
  *
  * `defaults.id` set = editing that enrollment.
  */
@@ -478,7 +470,7 @@ export default function PupilsPage() {
 			onSubmit: async (form: ExtendedFormData<PupilEnrollments>) => {
 				const classId = form.number("class_id", 0);
 				const placement = readPlacementFields(form);
-				// No total: the server prices it from the catalog; payments go through «Δίδακτρα & Πληρωμή».
+				// No total: the server prices it from the catalog; payments go through «Δίδακτρα μαθητή».
 				await apiHook(API.Pupils.enroll, {
 					RequestObject: {
 						pupil_id: data.pupil.id,
@@ -527,7 +519,7 @@ export default function PupilsPage() {
 						teacher_id: form.number("teacher_id", -1),
 						instrument_id: classId ? form.number("instrument_id", 0) : 0,
 						date: enrollment.date,
-						// Fees and payments belong to the «Δίδακτρα & Πληρωμή» modal: resend the stored values.
+						// Fees and payments belong to the «Δίδακτρα μαθητή» dialog: resend the stored values.
 						...storedPaymentFields(enrollment),
 						pass: form.multiSelect("pass", "boolean", { single: true }),
 					},
@@ -544,36 +536,6 @@ export default function PupilsPage() {
 	const openEnrollmentEditor = (enrollment: PupilEnrollments) => {
 		setEditingEnrollment(enrollment);
 		setGlobalOpen(ENROLLMENT_PREFIX + ActionEnum.MODIFY, true);
-	};
-
-	// ---- «Δίδακτρα & Πληρωμή» of one history row ----
-	const [payingEnrollment, setPayingEnrollment] = createSignal<PupilEnrollments | null>(null);
-	const paymentAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
-		const data = record();
-		const enrollment = payingEnrollment();
-		if (!data || !enrollment) return emptyAction(ActionEnum.PAYMENT, ActionIcon.PAYMENT);
-		return {
-			type: ActionEnum.PAYMENT,
-			icon: ActionIcon.PAYMENT,
-			headerText: "Δίδακτρα & Πληρωμή",
-			submitText: "Αποθήκευση",
-			inputs: paymentInputs({
-				enrollment,
-				summary: { name: `${data.pupil.last_name} ${data.pupil.first_name}`, am: amLabel(data.pupil), teacher: teacherName(enrollment.teacher_id) },
-			}),
-			onSubmit: async (form: ExtendedFormData<PupilEnrollments>) => {
-				const payment = readPaymentFields(form);
-				await apiHook(API.Pupils.updateEnrollment, { RequestObject: paymentUpdateBody(enrollment, payment) });
-				toast.success(paymentSavedMessage(payment.settle));
-				await loadPupil(data.pupil.id);
-			},
-		};
-	});
-	const [paymentStore, setPaymentStore] = createStore<{ action: Action }>({ action: paymentAction() as Action });
-	createEffect(() => setPaymentStore({ action: paymentAction() as Action }));
-	const openPayment = (enrollment: PupilEnrollments) => {
-		setPayingEnrollment(enrollment);
-		setGlobalOpen(ENROLLMENT_PREFIX + ActionEnum.PAYMENT, true);
 	};
 
 	/** Enrollments still awaiting placement (evaluation without a class year), newest first. */
@@ -991,14 +953,6 @@ export default function PupilsPage() {
 																					<td class="whitespace-nowrap px-2 py-1.5 text-center">
 																						<button
 																							type="button"
-																							onClick={() => openPayment(row)}
-																							aria-label={`Δίδακτρα & πληρωμή εγγραφής ${row.registration_year}`}
-																							title="Δίδακτρα & Πληρωμή"
-																							class="inline-grid h-8 w-8 place-items-center rounded-md text-red-900 transition-colors hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:text-red-200 dark:hover:bg-red-900/35">
-																							<i class={ActionIcon.PAYMENT + " text-base"} aria-hidden="true"></i>
-																						</button>
-																						<button
-																							type="button"
 																							onClick={() => openEnrollmentEditor(row)}
 																							aria-label={`Επεξεργασία εγγραφής ${row.registration_year}`}
 																							title="Επεξεργασία εγγραφής"
@@ -1043,9 +997,6 @@ export default function PupilsPage() {
 			{/* per-row enrollment editor (opened from the history rows / the awaiting-placement list) */}
 			<Show when={"inputs" in editEnrollmentAction()}>
 				<Modal prefix={ENROLLMENT_PREFIX} actionStore={editEnrollmentStore} />
-			</Show>
-			<Show when={"inputs" in paymentAction()}>
-				<Modal prefix={ENROLLMENT_PREFIX} actionStore={paymentStore} />
 			</Show>
 
 			{/* ---- pinned bottom: pagination (list only) ---- */}

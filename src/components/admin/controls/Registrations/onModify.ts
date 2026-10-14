@@ -53,7 +53,7 @@ export const onModify = function (hydrate: CacheMutationsReturnType, store: Part
 					teacher_id: form.number("teacher_id", 0),
 					instrument_id: (class_id && form.number("instrument_id")) || 0,
 					date: form.date("date").getTime(),
-					// Fees and payments belong to the «Δίδακτρα & Πληρωμή» modal: resend the stored values.
+					// Fees and payments belong to the «Δίδακτρα μαθητή» dialog (Μαθητολόγιο): resend the stored values.
 					...storedPaymentFields(registration),
 					pass: form.multiSelect("pass", "boolean", { single: true }),
 				},
