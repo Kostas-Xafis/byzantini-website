@@ -7,7 +7,7 @@ import type { Props as InputProps } from "../../../input/Input.solid";
 import { toast } from "../../Alert.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "../../table/TableControlTypes";
 import type { Action } from "../../table/TableControls.solid";
-import { EnrollmentPaymentFields, readPaymentFields } from "./EnrollmentFeeFields.solid";
+import { EnrollmentPaymentFields, paymentUpdateBody, readPaymentFields } from "./EnrollmentFeeFields.solid";
 import { pupilYearIds, type APIHook } from "./helpers";
 
 /** Inputs of the «Δίδακτρα & Πληρωμή» modal: one composite field. */
@@ -42,24 +42,7 @@ export const onPayment = function (hydrate: CacheMutationsReturnType, store: Par
 
 		const submit = async function (form: ExtendedFormData<any>) {
 			const payment = readPaymentFields(form);
-			await apiHook(API.Pupils.updateEnrollment, {
-				RequestObject: {
-					id: registration.id,
-					pupil_id: registration.pupil_id,
-					registration_year: registration.registration_year,
-					class_id: registration.class_id as 0 | 1 | 2,
-					class_year: registration.class_year,
-					evaluation: registration.evaluation,
-					teacher_id: registration.teacher_id,
-					instrument_id: registration.instrument_id,
-					date: registration.date,
-					pass: registration.pass,
-					total_payment: payment.total_payment,
-					fee_manual: payment.fee_manual,
-					payment_amount: payment.payment_amount,
-					payment_date: payment.payment_date,
-				},
-			});
+			await apiHook(API.Pupils.updateEnrollment, { RequestObject: paymentUpdateBody(registration, payment) });
 			// Refresh the row (paid colouring / ✓ cue) and its pupil-year (the fees are recalculated together).
 			for (const id of pupilYearIds(registrations, registration)) hydrate({ action: ActionEnum.MODIFY, id, isMultiple: false });
 			toast.success(paymentSavedMessage(payment.settle));

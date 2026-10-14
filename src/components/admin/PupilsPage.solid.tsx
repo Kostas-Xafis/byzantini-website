@@ -14,11 +14,13 @@ import {
 	EnrollmentPlacementFields,
 	EvaluationBadge,
 	FeeManualMarker,
+	paymentUpdateBody,
 	readPaymentFields,
 	readPlacementFields,
 } from "./controls/Registrations/EnrollmentFeeFields.solid";
 import { storedPaymentFields } from "./controls/Registrations/helpers";
 import { paymentInputs, paymentSavedMessage } from "./controls/Registrations/onPayment";
+import PupilFeesDialog from "./PupilFeesDialog.solid";
 import Modal, { setGlobalOpen } from "./table/Modal.solid";
 import { ActionEnum, ActionIcon } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
@@ -214,6 +216,8 @@ export default function PupilsPage() {
 	const [record, setRecord] = createSignal<APIResponse["Pupils.get"] | null>(null);
 	const [loadingRecord, setLoadingRecord] = createSignal(false);
 	const [activeMusic, setActiveMusic] = createSignal<number | null>(null);
+	// «Δίδακτρα μαθητή» dialog
+	const [feesOpen, setFeesOpen] = createSignal(false);
 
 	// reference data for the enroll form
 	const [teachers, setTeachers] = createSignal<Teachers[]>([]);
@@ -307,6 +311,7 @@ export default function PupilsPage() {
 	};
 
 	const closeRecord = () => {
+		setFeesOpen(false);
 		setSelectedId(null);
 		setRecord(null);
 		setActiveMusic(null);
@@ -558,24 +563,7 @@ export default function PupilsPage() {
 			}),
 			onSubmit: async (form: ExtendedFormData<PupilEnrollments>) => {
 				const payment = readPaymentFields(form);
-				await apiHook(API.Pupils.updateEnrollment, {
-					RequestObject: {
-						id: enrollment.id,
-						pupil_id: data.pupil.id,
-						registration_year: enrollment.registration_year,
-						class_id: enrollment.class_id as 0 | 1 | 2,
-						class_year: enrollment.class_year,
-						evaluation: enrollment.evaluation,
-						teacher_id: enrollment.teacher_id,
-						instrument_id: enrollment.instrument_id,
-						date: enrollment.date,
-						pass: enrollment.pass,
-						total_payment: payment.total_payment,
-						fee_manual: payment.fee_manual,
-						payment_amount: payment.payment_amount,
-						payment_date: payment.payment_date,
-					},
-				});
+				await apiHook(API.Pupils.updateEnrollment, { RequestObject: paymentUpdateBody(enrollment, payment) });
 				toast.success(paymentSavedMessage(payment.settle));
 				await loadPupil(data.pupil.id);
 			},
@@ -823,50 +811,63 @@ export default function PupilsPage() {
 								</Show>
 
 								<div class="grid grid-cols-[minmax(260px,1fr)_2fr] gap-4 max-lg:grid-cols-1">
-									{/* ---- left: personal information ---- */}
-									<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
-										<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
-										<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
-											<dt>ΑΜ:</dt>
-											<dd class="font-semibold">{amLabel(data().pupil)}</dd>
-											<dt>ΑΜΚΑ:</dt>
-											<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
-											<dt>Πατρώνυμο:</dt>
-											<dd>{data().pupil.fathers_name || "-"}</dd>
-											<dt>Γέννηση:</dt>
-											<dd>{formatDate(data().pupil.birth_date)}</dd>
-											<dt>Διεύθυνση:</dt>
-											<dd>
-												{data().pupil.road} {data().pupil.number}
-												<Show when={data().pupil.region}>
+									{/* ---- left: personal information + the pupil's fees ---- */}
+									<div class="grid h-max gap-y-3">
+										<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+											<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
+											<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
+												<dt>Επώνυμο:</dt>
+												<dd>{data().pupil.last_name || "-"}</dd>
+												<dt>Όνομα:</dt>
+												<dd>{data().pupil.first_name || "-"}</dd>
+												<dt>ΑΜ:</dt>
+												<dd class="font-semibold">{amLabel(data().pupil)}</dd>
+												<dt>ΑΜΚΑ:</dt>
+												<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
+												<dt>Πατρώνυμο:</dt>
+												<dd>{data().pupil.fathers_name || "-"}</dd>
+												<dt>Γέννηση:</dt>
+												<dd>{formatDate(data().pupil.birth_date)}</dd>
+												<dt>Διεύθυνση:</dt>
+												<dd>
+													{data().pupil.road} {data().pupil.number}
+													<Show when={data().pupil.region}>
+														<br />
+														{data().pupil.tk} {data().pupil.region}
+													</Show>
+												</dd>
+												<dt>Τηλέφωνα:</dt>
+												<dd>
+													{data().pupil.telephone || "-"}
 													<br />
-													{data().pupil.tk} {data().pupil.region}
-												</Show>
-											</dd>
-											<dt>Τηλέφωνα:</dt>
-											<dd>
-												{data().pupil.telephone || "-"}
-												<br />
-												{data().pupil.cellphone || "-"}
-											</dd>
-											<dt>Email:</dt>
-											<dd class="break-all">{data().pupil.email || "-"}</dd>
-											<dt class="pt-1">Σύνδεσμος:</dt>
-											<dd>
-												<Show when={data().pupil.registration_url} fallback="-">
-													<a
-														href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
-														target="_blank"
-														rel="noreferrer"
-														title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-														aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-														class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
-														<i class="fa-solid fa-up-right-from-square text-base" aria-hidden="true"></i>
-													</a>
-												</Show>
-											</dd>
-										</dl>
-									</section>
+													{data().pupil.cellphone || "-"}
+												</dd>
+												<dt>Email:</dt>
+												<dd class="break-all">{data().pupil.email || "-"}</dd>
+												<dt class="pt-1">Σύνδεσμος:</dt>
+												<dd>
+													<Show when={data().pupil.registration_url} fallback="-">
+														<a
+															href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
+															target="_blank"
+															rel="noreferrer"
+															title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
+															aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
+															class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
+															<i class="fa-solid fa-up-right-from-square text-base" aria-hidden="true"></i>
+														</a>
+													</Show>
+												</dd>
+											</dl>
+										</section>
+										<button
+											type="button"
+											onClick={() => setFeesOpen(true)}
+											class="flex w-full items-center justify-center gap-x-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 font-didact text-lg font-semibold text-red-900 shadow-md shadow-gray-300 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:bg-dark dark:text-red-100 dark:shadow-gray-700 dark:hover:bg-red-900/35">
+											<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
+											Δίδακτρα
+										</button>
+									</div>
 
 									{/* ---- right: music types + history ---- */}
 									<section class="grid h-max gap-y-4 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
@@ -1023,6 +1024,21 @@ export default function PupilsPage() {
 					</Show>
 				</Show>
 			</div>
+
+			{/* «Δίδακτρα μαθητή»: the pupil's fees and payments per school year */}
+			<Show when={record()}>
+				{(data) => (
+					<PupilFeesDialog
+						open={feesOpen()}
+						onClose={() => setFeesOpen(false)}
+						onSaved={() => loadPupil(data().pupil.id)}
+						pupil={{ id: data().pupil.id, name: `${data().pupil.last_name} ${data().pupil.first_name}`, am: amLabel(data().pupil) }}
+						enrollments={data().enrollments}
+						teachers={teachers()}
+						instruments={instruments()}
+					/>
+				)}
+			</Show>
 
 			{/* per-row enrollment editor (opened from the history rows / the awaiting-placement list) */}
 			<Show when={"inputs" in editEnrollmentAction()}>

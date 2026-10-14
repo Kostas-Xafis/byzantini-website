@@ -15,12 +15,12 @@ import { Index, Show, createEffect, createMemo, createSignal, on, onCleanup, onM
  *   the payment fields with the remaining balance, and «Εξόφληση». Read back with `readPaymentFields`.
  */
 
-type PreviewRow = APIResponse["Pupils.previewFees"]["rows"][number];
+export type PreviewRow = APIResponse["Pupils.previewFees"]["rows"][number];
 
-const euro = (value: number) => `${value} €`;
+export const euro = (value: number) => `${value} €`;
 
 /** «-50% (2η εγγραφή)» for a discounted position, '—' for the first enrollment. */
-const discountLabel = (row: PreviewRow) => {
+export const discountLabel = (row: Pick<PreviewRow, "factor" | "position">) => {
 	if (row.factor === null || row.factor >= 1) return "—";
 	return `-${Math.round((1 - row.factor) * 100)}% (${row.position + 1}η εγγραφή)`;
 };
@@ -190,16 +190,50 @@ const DEPARTMENTS = ["Βυζαντινή Μουσική", "Παραδοσιακ�
 
 const pad = (n: number) => String(n).padStart(2, "0");
 /** Timestamp → the `yyyy-mm-dd` value of a date input (local day). */
-const toDateValue = (value: number | null | undefined) => {
+export const toDateValue = (value: number | null | undefined) => {
 	if (!value) return "";
 	const d = new Date(value);
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 /** `yyyy-mm-dd` → local-midnight timestamp (the same day the admin date pickers store), null when empty. */
-const fromDateValue = (value: string) => {
+export const fromDateValue = (value: string) => {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
 	return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getTime() : null;
 };
+
+/** Today's local-midnight timestamp (the payment date «Εξόφληση» records). */
+export const todayTimestamp = () => fromDateValue(toDateValue(Date.now()))!;
+
+/** «Εξόφληση» of one enrollment: asks only when it would overwrite a different, non-zero paid amount. */
+export const confirmSettle = (paid: number, total: number) =>
+	!(paid > 0 && paid !== total) || window.confirm(`Το καταβληθέν ποσό (${euro(paid)}) θα αντικατασταθεί με ${euro(total)}. Συνέχεια;`);
+
+/** A stored enrollment as `Pupils.updateEnrollment` needs it (joined or history row). */
+export type StoredEnrollment = PaymentEnrollment & { teacher_id: number; instrument_id: number; date: number; pass: boolean };
+
+/**
+ * `Pupils.updateEnrollment` body of a fees / payment save: the registration details resent exactly as stored,
+ * with the new total («Ειδική τιμή») and payment.
+ */
+export const paymentUpdateBody = (
+	enrollment: StoredEnrollment,
+	payment: { total_payment: number; fee_manual?: boolean; payment_amount: number; payment_date: number | null },
+) => ({
+	id: enrollment.id,
+	pupil_id: enrollment.pupil_id,
+	registration_year: enrollment.registration_year,
+	class_id: enrollment.class_id as 0 | 1 | 2,
+	class_year: enrollment.class_year,
+	evaluation: enrollment.evaluation,
+	teacher_id: enrollment.teacher_id,
+	instrument_id: enrollment.instrument_id,
+	date: enrollment.date,
+	pass: enrollment.pass,
+	total_payment: payment.total_payment,
+	fee_manual: payment.fee_manual,
+	payment_amount: payment.payment_amount,
+	payment_date: payment.payment_date,
+});
 
 /** Reads the payment modal's fields. `settle` is true when the save came from «Εξόφληση». */
 export function readPaymentFields(form: ExtendedFormData<any>) {
@@ -278,7 +312,7 @@ export function EnrollmentPaymentFields(props: EnrollmentPaymentFieldsProps) {
 	/** «Εξόφληση»: paid = total, date = today, then save the form in one click. */
 	const settle = () => {
 		const amount = total();
-		if (paid() > 0 && paid() !== amount && !window.confirm(`Το καταβληθέν ποσό (${euro(paid())}) θα αντικατασταθεί με ${euro(amount)}. Συνέχεια;`)) return;
+		if (!confirmSettle(paid(), amount)) return;
 		const today = toDateValue(Date.now());
 		setPaid(amount);
 		paidInput.value = String(amount);

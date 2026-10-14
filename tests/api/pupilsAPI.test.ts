@@ -374,6 +374,32 @@ function pupilsTest() {
 		expectBody(json, "Επιτυχής ενημέρωση εγγραφής");
 	});
 
+	test("--pupils-- #15b settleYear pays off every owing enrollment of the pupil-year", async () => {
+		expect(enrollmentId).not.toBeNull();
+		const paymentDate = new Date(2026, 9, 14).getTime();
+		const res = await useTestAPI("Pupils.settleYear", {
+			RequestObject: { pupil_id: pupilId!, registration_year: "2026-2027", payment_date: paymentDate },
+		});
+		const json = await getJson<APIResponse["Pupils.settleYear"]>(res);
+		expectBody(json, z.object({ updated: z.array(z.number()) }));
+		const check = await getJson<APIResponse["Pupils.getEnrollmentById"]>(await useTestAPI("Pupils.getEnrollmentById", { UrlArgs: { id: enrollmentId! } }));
+		expect(check.data.payment_amount).toBe(check.data.total_payment);
+		if (check.data.total_payment > 0) {
+			expect(json.data.updated).toContain(enrollmentId!);
+			expect(check.data.payment_date).toBe(paymentDate);
+		}
+		// Nothing left to settle: a second call changes nothing.
+		const again = await getJson<APIResponse["Pupils.settleYear"]>(
+			await useTestAPI("Pupils.settleYear", { RequestObject: { pupil_id: pupilId!, registration_year: "2026-2027", payment_date: paymentDate } }),
+		);
+		expect(again.data.updated).toEqual([]);
+	});
+
+	test("--pupils-- #15c settleYear requires a session", async () => {
+		const anonymous = await rawAPI("POST", "/pupils/fees/settle", { pupil_id: 1, registration_year: "2026-2027", payment_date: 0 });
+		expect(anonymous.status).toBe(401);
+	});
+
 	test("--pupils-- #16 deleteEnrollments removes the created row", async () => {
 		expect(enrollmentId).not.toBeNull();
 		const res = await useTestAPI("Pupils.deleteEnrollments", { RequestObject: [enrollmentId!] });

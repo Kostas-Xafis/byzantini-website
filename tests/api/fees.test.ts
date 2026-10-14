@@ -152,7 +152,7 @@ describe("fees", () => {
 		const json = await getJson<APIResponse["FeeCatalog.getActive"]>(res);
 		expect(json.data).not.toBeNull();
 		seed = json.data.data;
-		expect(seed.evaluation_fee).toBe(100);
+		expect(seed.evaluation_fee).toBe(80);
 		expect(seed.byzantine.default).toBe(20);
 		expect(Object.values(seed.byzantine.teachers)).toEqual([50, 50]);
 		expect(seed.traditional["Γ' Μέση"]).toBe(50);
@@ -230,13 +230,13 @@ describe("fees", () => {
 		const reg = await register({ class_id: 1, class_year: "Υπό Κατάταξη" });
 		evalRow = reg.insertId;
 		const row = (await yearOf(reg.pupilId)).get(evalRow)!;
-		expect(row).toMatchObject({ evaluation: true, class_year: "", fee_base: null, evaluation_fee: 100, total_payment: 100, fee_catalog_id: v1 });
+		expect(row).toMatchObject({ evaluation: true, class_year: "", fee_base: null, evaluation_fee: 80, total_payment: 80, fee_catalog_id: v1 });
 
-		// A Byzantine evaluation enrollment of the same pupil: Byzantine goes first, so 100 + its full base.
+		// A Byzantine evaluation enrollment of the same pupil: Byzantine goes first, so 80 + its full base.
 		const byzEval = await enroll(reg.pupilId, { class_id: 0, class_year: "", evaluation: true });
 		const year = await yearOf(reg.pupilId);
-		expect(year.get(byzEval)).toMatchObject({ evaluation: true, fee_base: 20, evaluation_fee: 100, total_payment: 120 });
-		expect(year.get(evalRow)!.total_payment).toBe(100 + 0); // Traditional, still unplaced, now second
+		expect(year.get(byzEval)).toMatchObject({ evaluation: true, fee_base: 20, evaluation_fee: 80, total_payment: 100 });
+		expect(year.get(evalRow)!.total_payment).toBe(80 + 0); // Traditional, still unplaced, now second
 	});
 
 	test("--fees-- #7 placement keeps evaluation and fills the Traditional base", async () => {
@@ -245,8 +245,8 @@ describe("fees", () => {
 		// The editor sends back the stored total: an unchanged total stays automatic.
 		await update(row, { class_year: "Α' Ανωτέρα" });
 		const placed = (await yearOf(pupil)).get(evalRow)!;
-		expect(placed).toMatchObject({ evaluation: true, class_year: "Α' Ανωτέρα", fee_base: 100, evaluation_fee: 100, fee_manual: false });
-		expect(placed.total_payment).toBe(150); // 100 × 0.5 (Byzantine is first) + 100
+		expect(placed).toMatchObject({ evaluation: true, class_year: "Α' Ανωτέρα", fee_base: 100, evaluation_fee: 80, fee_manual: false });
+		expect(placed.total_payment).toBe(130); // 100 × 0.5 (Byzantine is first) + 80
 	});
 
 	test("--fees-- #8 a manual price survives recalculation and «επαναφορά» restores the catalog price", async () => {
@@ -281,7 +281,7 @@ describe("fees", () => {
 			}),
 		);
 		const draft = preview.data.rows.find((r: { id: number }) => r.id === 0)!;
-		expect(draft).toMatchObject({ fee_catalog_id: v1, fee_base: 50, evaluation_fee: 100, factor: 0.5, catalog_total: 125, total_payment: 125 });
+		expect(draft).toMatchObject({ fee_catalog_id: v1, fee_base: 50, evaluation_fee: 80, factor: 0.5, catalog_total: 105, total_payment: 105 });
 		expect((await yearOf(pupilA)).size).toBe(3);
 	});
 

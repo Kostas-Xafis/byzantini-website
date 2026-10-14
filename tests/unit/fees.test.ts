@@ -19,7 +19,7 @@ const CHAVIARLIS = 111;
 
 /** The 2026-2027 seed catalog (migration 0006). */
 const catalog: FeeCatalogData = {
-	evaluation_fee: 100,
+	evaluation_fee: 80,
 	byzantine: { default: 20, teachers: { [TAPRANTZIS]: 50, [CHAVIARLIS]: 50 } },
 	traditional: {
 		"Α' Προκαταρκτική": 50,
@@ -158,23 +158,23 @@ describe("computeYearFees", () => {
 		const waiting = enrollment({ class_id: 1, class_year: "", evaluation: 1 });
 		const eur = enrollment({ class_id: 2 });
 		const fees = byId(computeYearFees([waiting, eur], catalogs));
-		expect(fees.get(waiting.id)).toMatchObject({ fee_base: null, evaluation_fee: 100, factor: 1, total_payment: 100 });
+		expect(fees.get(waiting.id)).toMatchObject({ fee_base: null, evaluation_fee: 80, factor: 1, total_payment: 80 });
 		expect(fees.get(eur.id)!.total_payment).toBe(25);
 	});
 
 	test("placement keeps the evaluation fee and adds the class price", () => {
 		const placed = enrollment({ class_id: 1, class_year: "Α' Ανωτέρα", evaluation: true });
-		expect(computeYearFees([placed], catalogs)[0]).toMatchObject({ fee_base: 100, evaluation_fee: 100, total_payment: 200 });
+		expect(computeYearFees([placed], catalogs)[0]).toMatchObject({ fee_base: 100, evaluation_fee: 80, total_payment: 180 });
 	});
 
 	test("the evaluation fee is never halved", () => {
 		const byz = enrollment({ class_id: 0, teacher_id: 7 });
 		const evalTrad = enrollment({ class_id: 1, class_year: "Γ' Μέση", evaluation: 1 });
 		const fees = byId(computeYearFees([byz, evalTrad], catalogs));
-		expect(fees.get(evalTrad.id)).toMatchObject({ fee_base: 50, evaluation_fee: 100, factor: 0.5, total_payment: 125 });
+		expect(fees.get(evalTrad.id)).toMatchObject({ fee_base: 50, evaluation_fee: 80, factor: 0.5, total_payment: 105 });
 		const evalByz = enrollment({ class_id: 0, class_year: "", evaluation: 1 });
 		const fees2 = byId(computeYearFees([byz, evalByz], catalogs));
-		expect(fees2.get(evalByz.id)!.total_payment).toBe(110); // 20 × 0.5 + 100
+		expect(fees2.get(evalByz.id)!.total_payment).toBe(90); // 20 × 0.5 + 80
 	});
 
 	test("manual rows keep their total (no result) but occupy a position", () => {

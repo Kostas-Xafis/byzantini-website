@@ -34,7 +34,7 @@ INSERT INTO fee_catalogs (school_year, data, created_at, created_by)
 SELECT
 	'2026-2027',
 	json_object(
-		'evaluation_fee', 100,
+		'evaluation_fee', 80,
 		'byzantine', json_object(
 			'default', 20,
 			-- json(): a subquery drops the JSON subtype, which would store the map as a quoted string.

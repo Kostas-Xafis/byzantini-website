@@ -217,6 +217,13 @@ const z_FeePreviewRow = z.object({
 	/** What the row owes: the manual / stored total when manual or unpinned, else `catalog_total`. */
 	total_payment: z.number().int(),
 });
+/** «Εξόφληση όλων» of a pupil-year. */
+const z_SettleYear = z.object({
+	pupil_id: z.number().int().min(1, "Μη έγκυρο pupil_id"),
+	registration_year: z.string().regex(/^\d{4}-\d{4}$/, "Μη έγκυρο σχολικό έτος"),
+	payment_date: z.number().int().min(0, "Μη έγκυρη ημερομηνία πληρωμής"),
+});
+const z_SettleYearResponse = z.object({ updated: z.array(z.number().int()) });
 const z_FeePreviewResponse = z.object({
 	/** The active catalog of the school year (what a new enrollment would pin), or null. */
 	active_catalog_id: z.number().int().nullable(),
@@ -839,6 +846,29 @@ export const pupilsRoutes = {
 					}),
 				};
 			}, "Σφάλμα κατά τον υπολογισμό των διδάκτρων"),
+	),
+
+	/**
+	 * «Εξόφληση όλων»: every enrollment of a pupil-year with a balance gets `payment_amount = total_payment` and
+	 * the given payment date — one UPDATE statement, so it applies to all of them or none. Fees are untouched.
+	 */
+	settleYear: new APIServer(
+		{ method: "POST", path: "/pupils/fees/settle", schema: z_SettleYear, responseSchema: z_SettleYearResponse },
+		[authenticateMiddleware],
+		({ body }) =>
+			handlerResult(async () => {
+				const owing = await executeQuery<{ id: number }>(
+					"SELECT id FROM pupil_enrollments WHERE pupil_id = ? AND registration_year = ? AND total_payment > payment_amount",
+					[body.pupil_id, body.registration_year],
+				);
+				if (owing.length === 0) return { updated: [] };
+				const ids = owing.map((row) => row.id);
+				await executeQuery(`UPDATE pupil_enrollments SET payment_amount = total_payment, payment_date = ? WHERE id IN (${questionMarks(ids)})`, [
+					body.payment_date,
+					...ids,
+				]);
+				return { updated: ids };
+			}, "Σφάλμα κατά την εξόφληση των εγγραφών"),
 	),
 
 	// ---------------------------------------------------------------------

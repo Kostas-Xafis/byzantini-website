@@ -76,6 +76,7 @@ export const APIEndpoints = {
 	"Pupils.updateEnrollment": { method: "PUT", path: "/pupils/enrollments", multipart: false, rawBlob: false },
 	"Pupils.deleteEnrollments": { method: "DELETE", path: "/pupils/enrollments", multipart: false, rawBlob: false },
 	"Pupils.previewFees": { method: "POST", path: "/pupils/fees/preview", multipart: false, rawBlob: false },
+	"Pupils.settleYear": { method: "POST", path: "/pupils/fees/settle", multipart: false, rawBlob: false },
 	"Pupils.getEnrollmentsByYear": { method: "GET", path: "/pupils/enrollments/[year:string]", multipart: false, rawBlob: false },
 	"Pupils.getEnrollmentById": { method: "POST", path: "/pupils/enrollments/[id:number]", multipart: false, rawBlob: false },
 	"Pupils.getYears": { method: "GET", path: "/pupils/years", multipart: false, rawBlob: false },

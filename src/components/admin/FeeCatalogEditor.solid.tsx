@@ -8,7 +8,7 @@ import { toast } from "./toast";
 
 /** FEES.md §2 seed values — the template of last resort. */
 const SEED: FeeCatalogData = {
-	evaluation_fee: 100,
+	evaluation_fee: 80,
 	byzantine: { default: 20, teachers: {} },
 	traditional: Object.fromEntries(
 		TRADITIONAL_FEE_CLASS_YEARS.map((year) => [year, ["Α' Ανωτέρα", "Β' Ανωτέρα", "Α' Διπλώματος", "Β' Διπλώματος"].includes(year) ? 100 : 50]),
