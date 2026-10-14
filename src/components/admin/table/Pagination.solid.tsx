@@ -53,28 +53,38 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 				onClick={onClickPagination}>
 				<button
 					data-active={pagination.page - 1 >= 0}
-					class="group/pgBtn transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 dark:data-[active=true]:hover:shadow-gray-700 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
+					disabled={!(pagination.page - 1 >= 0)}
+					aria-disabled={!(pagination.page - 1 >= 0)}
+					aria-label="Προηγούμενη σελίδα"
+					title="Προηγούμενη σελίδα"
+					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 dark:data-[active=true]:hover:shadow-gray-700 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
 					data-pageTurn="-1"
 					type="button">
-					<i class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-gray-300 dark:group-data-[active=false]/pgBtn:text-gray-500"></i>
+					<i
+						aria-hidden="true"
+						class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-gray-300 dark:group-data-[active=false]/pgBtn:text-gray-500"></i>
 				</button>
 				{maxPage() > 1 && pagination.page - 1 >= 0 && (
 					<button
-						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white"
+						aria-label={`Σελίδα ${pagination.page}`}
+						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
 						data-pageTurn="-1"
 						type="button">
 						{pagination.page}
 					</button>
 				)}
 				<button
-					class="relative transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-red-950 dark:before:bg-red-700 before:z-[10]"
+					aria-label={`Σελίδα ${pagination.page + 1}`}
+					aria-current="page"
+					class="relative focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-red-950 dark:before:bg-red-700 before:z-[10]"
 					data-pageTurn="0"
 					type="button">
 					{pagination.page + 1}
 				</button>
 				{maxPage() >= 2 && pagination.page + 1 < maxPage() && (
 					<button
-						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white"
+						aria-label={`Σελίδα ${pagination.page + 2}`}
+						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
 						data-pageTurn="1"
 						type="button">
 						{pagination.page + 2}
@@ -82,10 +92,16 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 				)}
 				<button
 					data-active={pagination.page + 1 < maxPage()}
-					class="group/pgBtn transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 dark:data-[active=true]:hover:shadow-gray-700 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
+					disabled={!(pagination.page + 1 < maxPage())}
+					aria-disabled={!(pagination.page + 1 < maxPage())}
+					aria-label="Επόμενη σελίδα"
+					title="Επόμενη σελίδα"
+					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 dark:data-[active=true]:hover:shadow-gray-700 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
 					data-pageTurn="1"
 					type="button">
-					<i class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-gray-300 dark:group-data-[active=false]/pgBtn:text-gray-500"></i>
+					<i
+						aria-hidden="true"
+						class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-gray-300 dark:group-data-[active=false]/pgBtn:text-gray-500"></i>
 				</button>
 			</div>
 		</Show>

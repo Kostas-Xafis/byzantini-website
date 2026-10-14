@@ -1,7 +1,8 @@
 import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
-import { classYearsForClassId } from "@lib/classYears";
 import type { APIClient } from "@hooks/useAPIClient.solid";
+import { createComponent } from "solid-js";
 import { type Props as InputProps } from "../../../input/Input.solid";
+import { EnrollmentPlacementFields } from "./EnrollmentFeeFields.solid";
 
 export const PREFIX = "registrations";
 
@@ -44,11 +45,6 @@ export const RegistrationsInputs = (
 			if (a.fullname > b.fullname) return 1;
 			return 0;
 		});
-	const classYearList = [...classYearsForClassId(student.class_id)];
-	// Keep legacy/custom values selectable so they are not lost on update
-	if (student.class_year && !classYearList.includes(student.class_year)) {
-		classYearList.push(student.class_year);
-	}
 	return {
 		id: {
 			name: "id",
@@ -92,25 +88,8 @@ export const RegistrationsInputs = (
 			name: "class_id",
 			type: "select",
 			selectList: ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
+			// The class-year list of «Κατάταξη & Δίδακτρα» follows this select (EnrollmentFeeFields listens to the form).
 			iconClasses: "fa-solid fa-graduation-cap",
-			// Keep the class year options in sync with the selected music type
-			onchange: (e) => {
-				const classIdSelect = e.currentTarget as HTMLSelectElement;
-				const classYearSelect = document.querySelector<HTMLSelectElement>("[name='class_year']");
-				if (!classYearSelect) return;
-				const currentValue = classYearSelect.value;
-				classYearSelect.replaceChildren();
-				const placeholder = document.createElement("option");
-				placeholder.value = "undefined";
-				classYearSelect.appendChild(placeholder);
-				for (const year of classYearsForClassId(Number(classIdSelect.value))) {
-					const option = document.createElement("option");
-					option.value = year;
-					option.textContent = year;
-					option.selected = year === currentValue;
-					classYearSelect.appendChild(option);
-				}
-			},
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -128,39 +107,29 @@ export const RegistrationsInputs = (
 			valueList: instruments.map((i) => i.id),
 			iconClasses: "fa-solid fa-guitar",
 		},
-		class_year: {
-			label: "Τάξη",
-			name: "class_year",
-			type: "select",
-			selectList: classYearList,
-			valueLiteral: true,
-			value: student.class_year,
-			iconClasses: "fa-solid fa-graduation-cap",
+		// «Κατάταξη»: the evaluation checkbox and the class-year select (renders the class_year control).
+		evaluation: {
+			label: "Κατάταξη",
+			name: "evaluation",
+			type: "custom",
+			render: () =>
+				createComponent(EnrollmentPlacementFields, {
+					classId: student.class_id,
+					classYear: student.class_year,
+					evaluation: !!student.evaluation,
+				}),
 		},
+		class_year: { label: "Έτος Φοίτησης", name: "class_year", type: "hidden" },
 		date: {
 			label: "Ημερομηνία Εγγραφής",
 			name: "date",
 			type: "date",
 			iconClasses: "fa-regular fa-calendar-day",
 		},
-		payment_amount: {
-			label: "Ποσό Πληρωμής",
-			name: "payment_amount",
-			type: "number",
-			iconClasses: "fa-solid fa-money-bill",
-		},
-		total_payment: {
-			label: "Σύνολο Πληρωμής",
-			name: "total_payment",
-			type: "number",
-			iconClasses: "fa-solid fa-money-bill",
-		},
-		payment_date: {
-			label: "Ημερομηνία Πληρωμής",
-			name: "payment_date",
-			type: "date",
-			iconClasses: "fa-regular fa-calendar-days",
-		},
+		// Fees and payments live in the «Δίδακτρα μαθητή» dialog (Μαθητολόγιο); the editor resends the stored values.
+		payment_amount: { label: "Ποσό Πληρωμής", name: "payment_amount", type: "hidden" },
+		total_payment: { label: "Σύνολο Πληρωμής", name: "total_payment", type: "hidden" },
+		payment_date: { label: "Ημερομηνία Πληρωμής", name: "payment_date", type: "hidden" },
 		pass: {
 			label: "Προήχθη",
 			name: "pass",
@@ -172,6 +141,11 @@ export const RegistrationsInputs = (
 				{ value: 0, label: "Όχι", selected: !student?.pass },
 			],
 		},
+		// Server bookkeeping / the payment modal's fields.
+		fee_manual: { label: "Ειδική τιμή", name: "fee_manual", type: "hidden" },
+		fee_catalog_id: { label: "Κατάλογος", name: "fee_catalog_id", type: "hidden" },
+		fee_base: { label: "Τιμή τμήματος", name: "fee_base", type: "hidden" },
+		evaluation_fee: { label: "Τέλος κατάταξης", name: "evaluation_fee", type: "hidden" },
 		registration_url: {
 			label: "URL Εγγραφής",
 			name: "registration_url",
@@ -179,4 +153,25 @@ export const RegistrationsInputs = (
 			iconClasses: "fa-solid fa-link",
 		},
 	};
+};
+
+/** Stored payment values an enrollment editor resends unchanged (`Pupils.updateEnrollment` needs the full row). */
+export const storedPaymentFields = (enrollment: {
+	payment_amount: number;
+	total_payment: number;
+	payment_date?: number | null;
+	fee_catalog_id: number | null;
+	fee_manual: boolean;
+}) => ({
+	payment_amount: enrollment.payment_amount ?? 0,
+	total_payment: enrollment.total_payment ?? 0,
+	payment_date: enrollment.payment_date ?? null,
+	// Explicit, so a resent total never flips «Ειδική τιμή»: a catalog price is recalculated, a manual one kept.
+	fee_manual: enrollment.fee_catalog_id !== null ? !!enrollment.fee_manual : undefined,
+});
+
+/** The ids of an enrollment's pupil-year in the cached listing — a save recalculates all of their fees. */
+export const pupilYearIds = (rows: JoinedEnrollments[], enrollment: Pick<JoinedEnrollments, "id" | "pupil_id" | "registration_year">) => {
+	const ids = rows.filter((row) => row.pupil_id === enrollment.pupil_id && row.registration_year === enrollment.registration_year).map((row) => row.id);
+	return ids.includes(enrollment.id) ? ids : [...ids, enrollment.id];
 };

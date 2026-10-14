@@ -4,7 +4,7 @@ import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { API } from "@routes/index.client";
 import { useSearchParams } from "@solidjs/router";
-import { For, Show, createEffect, createSignal, onMount, untrack } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { type SearchSetter } from "./SearchTable.solid";
@@ -25,7 +25,68 @@ import {
 	searchColumns,
 } from "./controls/Registrations/all";
 import { PREFIX } from "./controls/Registrations/helpers";
+import type { JoinedEnrollments } from "@_types/entities";
+import { EVALUATION_BADGE } from "@lib/classYears";
 import { toggleCheckbox } from "./table/Row.solid";
+
+const PAID_LABEL = "Πληρωμένη";
+const PARTIALLY_PAID_LABEL = "Μερική πληρωμή";
+
+/**
+ * Mirrors the row's colour-coded payment state as text for people who cannot
+ * rely on colour: the hover title and the select button's accessible name.
+ */
+const setPaymentCue = (row: HTMLElement, label: string | null) => {
+	if (label) {
+		row.setAttribute("title", label);
+	} else {
+		row.removeAttribute("title");
+	}
+	const selectBtn = row.querySelector<HTMLElement>(".cb button");
+	if (!selectBtn) return;
+	const base = (selectBtn.dataset.baseLabel ??= selectBtn.getAttribute("aria-label") ?? "Επιλογή εγγραφής");
+	selectBtn.setAttribute("aria-label", label ? `${base} (${label})` : base);
+};
+
+const FEE_DECOR = "data-fee-decor";
+const CLASS_YEAR_CELL = columnIndexOf("class_year");
+const TOTAL_PAYMENT_CELL = columnIndexOf("total_payment");
+
+/**
+ * The table cells are plain text (shared `Row`), so the fee cues are added on hydrate, like the payment cue:
+ * a «Κατάταξη» badge on a placed evaluation row and the «Ειδική τιμή» marker on a manual total. Idempotent —
+ * hydrate runs on every render, sort and page change.
+ */
+const setFeeCues = (row: HTMLElement, registration: JoinedEnrollments) => {
+	row.querySelectorAll(`[${FEE_DECOR}]`).forEach((el) => el.remove());
+	const cells = row.querySelectorAll<HTMLElement>(":scope > .cell");
+	const classYearCell = cells[CLASS_YEAR_CELL];
+	if (classYearCell && registration.evaluation && registration.class_year) {
+		const badge = document.createElement("span");
+		badge.setAttribute(FEE_DECOR, "");
+		badge.title = "Εγγράφηκε με κατατακτήριες εξετάσεις";
+		badge.className =
+			"ml-1 inline-block whitespace-nowrap rounded-full bg-violet-100 px-1.5 text-xs font-semibold text-violet-900 dark:bg-violet-900/50 dark:text-violet-100";
+		badge.textContent = EVALUATION_BADGE;
+		classYearCell.appendChild(badge);
+	}
+	const totalCell = cells[TOTAL_PAYMENT_CELL];
+	if (totalCell && registration.fee_manual) {
+		const marker = document.createElement("span");
+		marker.setAttribute(FEE_DECOR, "");
+		marker.title = "Ειδική τιμή: ορίστηκε χειροκίνητα";
+		marker.className = "ml-1 inline-block text-sm text-sky-800 dark:text-sky-200";
+		const icon = document.createElement("i");
+		icon.className = "fa-solid fa-hand-holding-dollar";
+		icon.setAttribute("aria-hidden", "true");
+		const text = document.createElement("span");
+		text.className = "sr-only";
+		text.textContent = "Ειδική τιμή";
+		marker.appendChild(icon);
+		marker.appendChild(text);
+		totalCell.appendChild(marker);
+	}
+};
 
 const schoolYearLabel = (registrationYear: string) => {
 	const [start, end] = registrationYear.split("-");
@@ -134,7 +195,7 @@ export default function RegistrationsTable() {
 	});
 
 	onMount(() => {
-		document.addEventListener("hydrate", (e) => {
+		const onHydrate = (e: Event) => {
 			e.stopPropagation();
 			untrack(() => {
 				let registrations = store[API.Pupils.getEnrollmentsByYear];
@@ -150,28 +211,44 @@ export default function RegistrationsTable() {
 				}
 				for (let i = 0; i < resultArray.length; i++) {
 					const { row, registration } = resultArray[i];
+					setFeeCues(row, registration);
 					row.removeAttribute("data-paid");
 					row.removeAttribute("data-partially-paid");
+					setPaymentCue(row, null);
 					const payment_status = registration.total_payment - registration.payment_amount;
 					if (registration.payment_amount === 0 && registration.total_payment === 0) continue;
 					if (payment_status <= 0) {
 						row.setAttribute("data-paid", "");
+						setPaymentCue(row, PAID_LABEL);
 					} else if (payment_status > 0 || (registration.payment_amount > registration.total_payment && registration.total_payment === 0)) {
 						row.setAttribute("data-partially-paid", "");
+						setPaymentCue(row, PARTIALLY_PAID_LABEL);
 					}
 				}
 				for (let i = 0; i < selectedItems.length; i++) {
 					toggleCheckbox(selectedItems[i], true);
 				}
 			});
+		};
+		document.addEventListener("hydrate", onHydrate);
+		onCleanup(() => document.removeEventListener("hydrate", onHydrate));
+
+		let disposed = false;
+		let removeScrollListener: (() => void) | undefined;
+		onCleanup(() => {
+			disposed = true;
+			removeScrollListener?.();
 		});
 		onElementMount("#tableContainer", (el) => {
+			if (disposed) return;
 			el.style.setProperty("--gradient-left-offset", "0px");
 			let prevOffset = 0;
-			el.addEventListener("scroll", (e) => {
+			const onScroll = () => {
 				if (el.scrollLeft === prevOffset) return;
 				el.style.setProperty("--gradient-left-offset", el.scrollLeft + "px");
-			});
+			};
+			el.addEventListener("scroll", onScroll);
+			removeScrollListener = () => el.removeEventListener("scroll", onScroll);
 		});
 	});
 
@@ -214,7 +291,7 @@ export default function RegistrationsTable() {
 										<div class="pb-2 flex items-center gap-x-4">
 											<select
 												aria-label="Σχολική χρονιά"
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-hidden dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
+												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
 												onChange={(e) => {
 													const value = e.currentTarget.value;
 													if (value === "") return;

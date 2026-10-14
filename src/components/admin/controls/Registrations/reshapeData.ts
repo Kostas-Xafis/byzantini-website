@@ -1,6 +1,7 @@
 import { createMemo, createSignal } from "solid-js";
 import { API, type APIResponse } from "@lib/routes/index.client";
 import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
+import { classYearLabel } from "@lib/classYears";
 import { ALL_COLUMNS, cellMatches, rowMatchesAny } from "../../table/searchMatch";
 import type { SearchColumn, SearchSetter } from "../../SearchTable.solid";
 import { toggleCheckboxes } from "../../table/Row.solid";
@@ -52,7 +53,8 @@ const enrollmentsToTable = (enrollments: JoinedEnrollments[], teachers: Teachers
 			enrollment.last_name,
 			enrollment.first_name,
 			enrollment.fathers_name,
-			enrollment.class_year,
+			// «Υπό Κατάταξη» while awaiting placement; the «Κατάταξη» badge of placed rows is added by RegistrationsTable.
+			classYearLabel(enrollment.class_year, enrollment.evaluation),
 			classNames[enrollment.class_id],
 			teachers.find((teacher) => teacher.id === enrollment.teacher_id)?.fullname,
 			instruments.find((instrument) => instrument.id === enrollment.instrument_id)?.name,

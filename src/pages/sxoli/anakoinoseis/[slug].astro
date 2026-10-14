@@ -291,6 +291,7 @@ const videoSchemas = links
 								</div>
 								<button
 									type="button"
+									aria-label={`Προβολή φωτογραφίας ${i + 1} από ${announcement.images.length}`}
 									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-xs border-2 border-red-900 transition-shadow hover:shadow-lg !shadow-slate-800 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
 									<img
 										data-src={imgThumbSrc + image.name}
@@ -310,12 +311,25 @@ const videoSchemas = links
 
 	<div
 		id="imageCarouselContainer"
+		role="presentation"
 		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" + " hidden"}>
 		<div
-			class="relative grid grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px]">
+			id="imageCarouselPanel"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="imageCarouselTitle"
+			tabindex="-1"
+			class="relative grid grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px] focus-visible:outline-hidden">
+			<h2 id="imageCarouselTitle" class="sr-only">Φωτογραφίες: {announcement.title}</h2>
+			<p id="imageCarouselStatus" class="sr-only" aria-live="polite"></p>
 			<div class="absolute top-2 right-3 flex flex-row justify-end">
-				<button id="carouselClose" type="button" class="rounded-xl text-2xl">
-					<i class="fa-solid fa-xmark text-white hover:text-red-100"></i>
+				<button
+					id="carouselClose"
+					type="button"
+					aria-label="Κλείσιμο"
+					title="Κλείσιμο"
+					class="rounded-xl text-2xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
+					<i class="fa-solid fa-xmark text-white hover:text-red-100" aria-hidden="true"></i>
 				</button>
 			</div>
 			<div id="imageCarousel" data-index="0" class="max-h-[calc(95dvh_-_24px)] grid grid-rows-[calc(95dvh_-_79px),76px] justify-items-center gap-y-2">
@@ -333,25 +347,33 @@ const videoSchemas = links
 					</div>
 				</div>
 				<div id="thumbContainer" class="flex flex-row gap-x-4 items-center self-center">
-					<i
+					<button
+						type="button"
 						data-direction="left"
-						class="pr-8 fa-solid fa-chevron-left font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
-					></i>
+						aria-label="Προηγούμενη εικόνα"
+						title="Προηγούμενη εικόνα"
+						class="mr-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:mr-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
+						<i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+					</button>
 					{
 						announcement.images
 							.slice(0, 5)
 							.map((image) => (
 								<img
 									class="w-[60px] aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
-									alt={announcement.title}
+									alt=""
 									src={imgThumbSrc + image.name}
 								/>
 							))
 					}
-					<i
+					<button
+						type="button"
 						data-direction="right"
-						class="pl-8 fa-solid fa-chevron-right font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:px-2 max-3xs:text-xs cursor-pointer"
-					></i>
+						aria-label="Επόμενη εικόνα"
+						title="Επόμενη εικόνα"
+						class="ml-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:ml-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
+						<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+					</button>
 				</div>
 			</div>
 		</div>
@@ -368,6 +390,7 @@ const videoSchemas = links
 
 	<script>
 		import { onElementMount } from "@utilities/dom";
+		import { onBackdropClick, trapFocus } from "@utilities/focusTrap";
 		import { sleep } from "@utilities/sleep";
 
 		onElementMount("#announcementSection", async (section) => {
@@ -554,36 +577,62 @@ const videoSchemas = links
 				updateThumbs();
 			}
 
-			document.querySelector("i[data-direction='left']")?.addEventListener("click", () => {
-				carouselShift("left");
+			const carouselContainer = document.querySelector("#imageCarouselContainer") as HTMLElement;
+			const carouselPanel = document.querySelector("#imageCarouselPanel") as HTMLElement;
+			const carouselStatus = document.querySelector("#imageCarouselStatus") as HTMLElement;
+			const isOpen = () => !carouselContainer.classList.contains("hidden");
+			let releaseTrap: (() => void) | undefined;
+
+			// Keeps data-index and the screen-reader announcement in sync with the current image.
+			const syncIndex = () => {
 				carousel.dataset.index = currIndex.toString();
-			});
-			document.querySelector("i[data-direction='right']")?.addEventListener("click", () => {
-				carouselShift("right");
-				carousel.dataset.index = currIndex.toString();
-			});
+				carouselStatus.textContent = `Εικόνα ${currIndex + 1} από ${totalLength}`;
+			};
+			const shift = (direction: "left" | "right") => {
+				carouselShift(direction);
+				syncIndex();
+			};
+
+			carouselPanel.querySelector("button[data-direction='left']")?.addEventListener("click", () => shift("left"));
+			carouselPanel.querySelector("button[data-direction='right']")?.addEventListener("click", () => shift("right"));
 			thumbCarouselImgs.forEach((thumb, i) => {
 				thumb.addEventListener("click", () => {
 					const index = totalLength <= 5 ? i : (currIndex + i - 2 + totalLength) % totalLength;
 					carouselGoto(index);
-					carousel.dataset.index = currIndex.toString();
+					syncIndex();
 				});
 			});
 
-			const carouselContainer = document.querySelector("#imageCarouselContainer") as HTMLElement;
+			const closeCarousel = () => {
+				if (!isOpen()) return;
+				carouselContainer.classList.add("hidden");
+				releaseTrap?.(); // unlocks scrolling and returns focus to the gallery image that opened it
+				releaseTrap = undefined;
+			};
+
 			document.addEventListener("open_carousel", (e) => {
 				carouselGoto(Number((e as CustomEvent).detail.index ?? 0));
-				carousel.dataset.index = currIndex.toString();
+				syncIndex();
+				if (isOpen()) return;
 				carouselContainer.classList.remove("hidden");
+				releaseTrap = trapFocus(carouselPanel, {
+					onEscape: closeCarousel,
+					initialFocus: "button[data-direction='right']",
+				});
 			});
-			document.addEventListener("close_carousel", () => {
-				carouselContainer.classList.add("hidden");
-			});
+			document.addEventListener("close_carousel", closeCarousel);
+			// Arrow keys only while the carousel is open (Escape is handled by the focus trap).
 			document.addEventListener("keydown", (e) => {
-				if (e.key === "ArrowLeft") carouselShift("left");
-				else if (e.key === "ArrowRight") carouselShift("right");
-				else if (e.key === "Escape") carouselContainer.classList.add("hidden");
+				if (!isOpen() || e.altKey || e.ctrlKey || e.metaKey) return;
+				if (e.key === "ArrowLeft") {
+					e.preventDefault();
+					shift("left");
+				} else if (e.key === "ArrowRight") {
+					e.preventDefault();
+					shift("right");
+				}
 			});
+			onBackdropClick(carouselContainer, closeCarousel);
 
 			onElementMount("#carouselClose", (el) => {
 				el.addEventListener("click", () => {

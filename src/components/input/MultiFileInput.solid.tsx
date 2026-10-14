@@ -1,4 +1,5 @@
-import { For, createSignal, onMount } from "solid-js";
+import type { CustomEvents } from "@_types/custom-events";
+import { For, createSignal, onCleanup, onMount } from "solid-js";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import { CloseButton } from "../admin/table/CloseButton.solid";
@@ -91,14 +92,16 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 		});
 	});
 
-	document.addEventListener("modal_close", (e) => {
+	const onModalClose = (e: CustomEvents["modal_close"]) => {
 		const modalPrefix = e.detail.prefix;
 		if (modalPrefix !== prefix) return;
 		if (prefix.includes("ADD")) {
 			fileHandler.removeFile(0);
 			setFileList([]);
 		}
-	});
+	};
+	onMount(() => document.addEventListener("modal_close", onModalClose));
+	onCleanup(() => document.removeEventListener("modal_close", onModalClose));
 
 	return (
 		<>
@@ -138,7 +141,10 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 									<p>
 										{(file.getName().length > 20 ? file.getName().slice(0, 12) + " ... " + file.getName().slice(-7) : file.getName()) || ""}
 									</p>
-									<CloseButton onClick={() => onFileRemove(index())} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
+									<CloseButton
+										label="Αφαίρεση αρχείου"
+										onClick={() => onFileRemove(index())}
+										classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
 								</div>
 							</div>
 						)}

@@ -385,6 +385,7 @@ const placesSchema = {
 
 <script>
 	import { AnimTimeline, onElementMount } from "@utilities/dom";
+	import { trapFocus } from "@utilities/focusTrap";
 
 	type LocationRow = Location & {
 		id: number;
@@ -427,6 +428,7 @@ const placesSchema = {
 		const panel = document.querySelector("#locationModalPanel") as HTMLElement;
 		const modalClose = document.querySelector("#locationModalClose") as HTMLButtonElement;
 		let lastTrigger: HTMLElement | null = null;
+		let releaseTrap: (() => void) | undefined;
 
 		// Meta-πληροφορίες κατηγοριών για την ένδειξη της τρέχουσας ομάδας.
 		const GROUP_META: Record<string, { title: string; icon: string }> = {
@@ -590,22 +592,23 @@ const placesSchema = {
 
 			modal.classList.remove("hidden");
 			main.setAttribute("inert", "");
-			document.body.style.overflow = "hidden";
 			void modal.offsetHeight;
 			modal.classList.add("open");
-			setTimeout(() => modalClose.focus(), 60);
+			// Shared dialog primitive: Esc, Tab cycling, body scroll lock, focus return to the card.
+			releaseTrap?.();
+			releaseTrap = trapFocus(panel, { onEscape: closeModal, initialFocus: modalClose, returnFocusTo: lastTrigger });
 		};
 
 		const closeModal = () => {
 			modal.classList.remove("open");
 			main.removeAttribute("inert");
-			document.body.style.overflow = "";
 			setTimeout(() => {
 				modal.classList.add("hidden");
 				const mapWrap = document.querySelector("#locationModalMapWrap") as HTMLElement;
 				mapWrap.innerHTML = "";
 			}, 260);
-			lastTrigger?.focus();
+			releaseTrap?.();
+			releaseTrap = undefined;
 		};
 
 		document.querySelectorAll<HTMLButtonElement>("button[data-open-location]").forEach((btn) => {
@@ -617,25 +620,6 @@ const placesSchema = {
 
 		modalClose.addEventListener("click", closeModal);
 		document.querySelector("#locationModalBackdrop")?.addEventListener("click", closeModal);
-		document.addEventListener("keydown", (e) => {
-			if (e.key === "Escape" && !modal.classList.contains("hidden")) closeModal();
-		});
-		// Απλό focus trap εντός του παραθύρου
-		panel.addEventListener("keydown", (e) => {
-			if (e.key !== "Tab") return;
-			const focusables = panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])');
-			if (!focusables.length) return;
-			const first = focusables[0];
-			const last = focusables[focusables.length - 1];
-			if (e.shiftKey && document.activeElement === first) {
-				e.preventDefault();
-				last.focus();
-			} else if (!e.shiftKey && document.activeElement === last) {
-				e.preventDefault();
-				first.focus();
-			}
-		});
-
 		// Άμεσο άνοιγμα από deep link (π.χ. από τη σελίδα Επικοινωνία): /spoudastiria#<όνομα>
 		if (window.location.hash) {
 			const name = decodeURI(window.location.hash.replace("#", ""));

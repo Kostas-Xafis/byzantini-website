@@ -1,5 +1,5 @@
 import AirDatepicker from "air-datepicker";
-import { onMount } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 import { setFocusFixed } from "@utilities/dom";
 import { sleep } from "@utilities/sleep";
 
@@ -35,6 +35,13 @@ type DateInputProps = {
 
 export default function DateInput(props: DateInputProps) {
 	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
+	let datepicker: AirDatepicker<HTMLInputElement> | undefined;
+	let disposed = false;
+	onCleanup(() => {
+		disposed = true;
+		datepicker?.destroy();
+		datepicker = undefined;
+	});
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
@@ -42,7 +49,7 @@ export default function DateInput(props: DateInputProps) {
 		// initialize datepicker
 		if (!disabled) {
 			let finalDate = new Date(hasValue ? (value as number) : Date.now());
-			new AirDatepicker(dateInput, {
+			datepicker = new AirDatepicker(dateInput, {
 				view: "days",
 				firstDay: 0,
 				dateFormat: "dd-mm-yyyy",
@@ -103,6 +110,7 @@ export default function DateInput(props: DateInputProps) {
 		function setAfterDatePicker(date?: Date, time = 200) {
 			// set value after datepicker is initialized because it resets the starting value
 			sleep(time).then(() => {
+				if (disposed) return;
 				dateInput.value = date ? formatDateToMarineTime(date) : "";
 			});
 		}

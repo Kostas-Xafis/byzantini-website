@@ -8,7 +8,7 @@
  *
  * That is exactly what happened: `byzantineBDiploma` pointed at
  * `epitixis/epitixis_eggrafi_b_diploma.html` (no `byzantine_`) while the built file
- * is `epitixis/epitixis_eggrafi_byzantine_b_diploma.html`, so every Β' Ετος
+ * is `epitixis/epitixis_eggrafi_byzantine_b_diploma.html`, so every Β' Έτος
  * Διπλώματος student of the Βυζαντινή department was skipped for months (fixed
  * 2026-09-15, regression from the pupils refactor).
  *
@@ -73,7 +73,7 @@ test("every registration template that is published locally is published under a
 	expect(missing.map(([key, name]) => `${key} → bucket/latest/html_templates/${name}`)).toEqual([]);
 });
 
-test("the Β' Ετος Διπλώματος variant resolves to the byzantine file, not the plain one", () => {
+test("the Β' Έτος Διπλώματος variant resolves to the byzantine file, not the plain one", () => {
 	// The exact regression this file exists for.
 	expect(siteTemplates.get("byzantineBDiploma")).toBe("epitixis/epitixis_eggrafi_byzantine_b_diploma.html");
 	expect(siteTemplates.get("byzantineE")).toBe("epitixis/epitixis_eggrafi_byzantine_e.html");

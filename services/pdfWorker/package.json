@@ -8,6 +8,8 @@
 		"deploy": "bunx wrangler deploy --config wrangler.jsonc",
 		"types": "bunx wrangler types --config wrangler.jsonc",
 		"typecheck": "node_modules/typescript7/bin/tsc --noEmit",
+		"test": "bun test tests/",
+		"test:update-golden": "UPDATE_GOLDEN=1 bun test tests/",
 		"tail": "bunx wrangler tail --config wrangler.jsonc"
 	},
 	"dependencies": {

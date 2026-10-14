@@ -1,13 +1,19 @@
 import { customEvent } from "@_types/custom-events";
 import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
-import { classYearsForClassId, MusicTypeArr } from "@lib/classYears";
+import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
+import { currentSchoolYear } from "@lib/pupils/years";
 import { API, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack } from "solid-js";
+import { createComponent, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack } from "solid-js";
+import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
 import { createAlert, pushAlert } from "./Alert.solid";
+import { EnrollmentPlacementFields, EvaluationBadge, FeeManualMarker, readPlacementFields } from "./controls/Registrations/EnrollmentFeeFields.solid";
+import { storedPaymentFields } from "./controls/Registrations/helpers";
+import PupilFeesDialog from "./PupilFeesDialog.solid";
+import Modal, { setGlobalOpen } from "./table/Modal.solid";
 import { ActionEnum, ActionIcon } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
 
@@ -32,6 +38,8 @@ import { TableControl, TableControlsGroup, type Action } from "./table/TableCont
  */
 
 const PREFIX = "pupils";
+/** Own modal prefix for the per-row enrollment editor (the pupil editor already uses PREFIX + MODIFY). */
+const ENROLLMENT_PREFIX = "pupils-enrollment";
 
 const MUSIC_TYPES = [
 	{ id: 0, label: "Βυζαντινή Μουσική" },
@@ -87,12 +95,16 @@ function setSelectOptions(select: HTMLSelectElement | null | undefined, options:
 }
 
 /**
- * Enroll form: one history row (a year, a music type, a class/instrument).
+ * Enroll / edit-enrollment form: one history row (a year, a music type, a class/instrument).
  *
  * The inputs are built once per modal open and `Input` freezes the props it is
- * given, so `class_id`'s change handler re-fills the department-dependent
- * selects: the class year and the instrument belong to the music type being
- * enrolled in, which is not necessarily the tab the modal was opened from.
+ * given, so `class_id`'s change handler re-fills the instrument select: it
+ * belongs to the music type being enrolled in, which is not necessarily the tab
+ * the modal was opened from. The class year and «Υπό Κατάταξη» live in the
+ * «Κατάταξη» field (`EnrollmentPlacementFields`), which follows `class_id` on its
+ * own. Fees and payments live in the «Δίδακτρα μαθητή» dialog.
+ *
+ * `defaults.id` set = editing that enrollment.
  */
 function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defaults: Partial<PupilEnrollments>): Record<string, InputProps> {
 	const defaultClassId = defaults.class_id ?? 0;
@@ -106,7 +118,9 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			type: "text",
 			required: true,
 			iconClasses: "fa-solid fa-calendar-days",
-			placeholder: "2026-2027",
+			placeholder: currentSchoolYear(),
+			// Most enrollments added by the secretariat are for the current school year; still editable for past ones.
+			value: defaults.registration_year || currentSchoolYear(),
 		},
 		class_id: {
 			label: "Μουσική",
@@ -122,13 +136,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 				const classSelect = event.currentTarget as HTMLSelectElement;
 				const classId = Number(classSelect.value);
 				const form = classSelect.form as HTMLFormElement;
-				// Both lists are rebuilt empty-selected: a year or an instrument of the
-				// previous department must not survive the switch.
-				const classYearSelect = form.querySelector("select[name='class_year']") as any as HTMLSelectElement;
-				setSelectOptions(
-					classYearSelect,
-					classYearsForClassId(classId).map((year) => ({ value: year, label: year })),
-				);
+				// Rebuilt empty-selected: an instrument of the previous department must not survive the switch.
 				const instrumentSelect = form?.querySelector("select[name='instrument_id']") as any as HTMLSelectElement;
 				setSelectOptions(
 					instrumentSelect,
@@ -138,16 +146,6 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 				instrumentSelect?.dispatchEvent(customEvent("enable_input", classId !== 0));
 			},
 		},
-		class_year: {
-			label: "Έτος Φοίτησης",
-			name: "class_year",
-			type: "select",
-			required: true,
-			iconClasses: "fa-solid fa-graduation-cap",
-			selectList: classYearsForClassId(defaultClassId),
-			valueLiteral: true,
-			listeners: true,
-		},
 		teacher_id: {
 			label: "Καθηγητής",
 			name: "teacher_id",
@@ -155,6 +153,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			iconClasses: "fa-solid fa-chalkboard-user",
 			selectList: teacherList.map((teacher) => teacher.fullname),
 			valueList: teacherList.map((teacher) => teacher.id),
+			value: defaults.teacher_id,
 		},
 		instrument_id: {
 			label: "Όργανο / Μάθημα",
@@ -165,10 +164,19 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			valueList: instrumentList.map((instrument) => instrument.id),
 			show: defaultClassId !== 0,
 			listeners: true,
+			value: defaults.instrument_id,
 		},
-		payment_amount: { label: "Ποσό Πληρωμής", name: "payment_amount", type: "number", iconClasses: "fa-solid fa-euro-sign" },
-		total_payment: { label: "Σύνολο Πληρωμής", name: "total_payment", type: "number", iconClasses: "fa-solid fa-euro-sign" },
-		payment_date: { label: "Ημερομηνία Πληρωμής", name: "payment_date", type: "date", iconClasses: "fa-regular fa-calendar-days" },
+		placement: {
+			label: "Κατάταξη",
+			name: "placement",
+			type: "custom",
+			render: () =>
+				createComponent(EnrollmentPlacementFields, {
+					classId: defaultClassId,
+					classYear: defaults.class_year ?? "",
+					evaluation: !!defaults.evaluation,
+				}),
+		},
 		pass: {
 			label: "Προήχθη",
 			name: "pass",
@@ -200,6 +208,8 @@ export default function PupilsPage() {
 	const [record, setRecord] = createSignal<APIResponse["Pupils.get"] | null>(null);
 	const [loadingRecord, setLoadingRecord] = createSignal(false);
 	const [activeMusic, setActiveMusic] = createSignal<number | null>(null);
+	// «Δίδακτρα μαθητή» dialog
+	const [feesOpen, setFeesOpen] = createSignal(false);
 
 	// reference data for the enroll form
 	const [teachers, setTeachers] = createSignal<Teachers[]>([]);
@@ -231,7 +241,12 @@ export default function PupilsPage() {
 	 * `?q=<query>` for the search. The typed query is component state, so without
 	 * this it is lost the moment the page remounts (reload, or a detour to another
 	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
+	 *
+	 * Opening a record from the list PUSHES a history entry (`pushOnNextSync`), so the
+	 * browser's Back closes the record (see the popstate listener) instead of leaving the
+	 * page; everything else replaces. The router's `history.state` (`_depth`) is preserved.
 	 */
+	let pushOnNextSync = false;
 	const syncUrl = (id: number | null) => {
 		const text = untrack(() => query()).trim();
 		const params = new URLSearchParams(window.location.search);
@@ -240,7 +255,16 @@ export default function PupilsPage() {
 		if (text) params.set("q", text);
 		else params.delete("q");
 		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
-		if (next !== `${window.location.pathname}${window.location.search}`) window.history.replaceState({}, "", next);
+		if (next === `${window.location.pathname}${window.location.search}`) return;
+		const state = window.history.state as { _depth?: number; pupilRecord?: number } | null;
+		if (pushOnNextSync && id !== null) {
+			pushOnNextSync = false;
+			window.history.pushState({ ...state, _depth: (state?._depth ?? window.history.length - 1) + 1, pupilRecord: id }, "", next);
+		} else {
+			// `pupilRecord` marks only an entry this page pushed (a deep link has none): keep it while it still
+			// describes the same record, drop it otherwise.
+			window.history.replaceState({ ...state, pupilRecord: state?.pupilRecord === id ? id : undefined }, "", next);
+		}
 	};
 
 	const runSearch = async (nextPage = 0) => {
@@ -288,11 +312,13 @@ export default function PupilsPage() {
 
 	/** Open a record from the result list (or a deep link). */
 	const openPupil = (id: number) => {
+		pushOnNextSync = true;
 		scrollToTop();
 		void loadPupil(id);
 	};
 
 	const closeRecord = () => {
+		setFeesOpen(false);
 		setSelectedId(null);
 		setRecord(null);
 		setActiveMusic(null);
@@ -300,10 +326,34 @@ export default function PupilsPage() {
 
 	/** Back to the result list without touching the query. */
 	const backToSearch = () => {
+		// The record was opened from the list (its own history entry): step back through it, so the
+		// browser's Back/Forward stay in line; the popstate listener closes the record.
+		if ((window.history.state as { pupilRecord?: number } | null)?.pupilRecord === selectedId()) {
+			window.history.back();
+			return;
+		}
 		closeRecord();
 		scrollToTop();
 		searchInput?.focus();
 	};
+
+	// Browser Back/Forward: follow `?pupil=` — close the record when it is gone, (re)open it when it differs.
+	const onPopState = () => {
+		const raw = new URLSearchParams(window.location.search).get("pupil");
+		const id = raw && /^\d+$/.test(raw) ? Number(raw) : null;
+		if (id === selectedId()) return;
+		pushOnNextSync = false;
+		if (id === null) {
+			closeRecord();
+			scrollToTop();
+			searchInput?.focus();
+		} else {
+			scrollToTop();
+			void loadPupil(id);
+		}
+	};
+	window.addEventListener("popstate", onPopState);
+	onCleanup(() => window.removeEventListener("popstate", onPopState));
 
 	/**
 	 * Any search the user drives (typing, Enter, the review filter, clearing)
@@ -449,10 +499,6 @@ export default function PupilsPage() {
 		const defaultClass = activeMusic() ?? availableMusicTypes(data.enrollments)[0] ?? 0;
 		const defaults: Partial<PupilEnrollments> = { class_id: defaultClass, registration_year: "" };
 		const inputs = new InputFields(enrollmentInputs(teachers(), instruments(), defaults));
-		// keep the class-year list in sync with the selected music type
-		inputs.fill((input) => {
-			if (input.name === "class_year") input.value = "";
-		});
 
 		return {
 			type: ActionEnum.ADD,
@@ -462,21 +508,18 @@ export default function PupilsPage() {
 			inputs: inputs.getInputs(),
 			onSubmit: async (form: ExtendedFormData<PupilEnrollments>) => {
 				const classId = form.number("class_id", 0);
-				const classYear = form.string("class_year", "");
-				if (!classYear || classYear === "undefined") throw new Error("Παρακαλώ επιλέξτε έτος φοίτησης");
-				const paymentDate = form.string("payment_date", "");
+				const placement = readPlacementFields(form);
+				// No total: the server prices it from the catalog; payments go through «Δίδακτρα μαθητή».
 				await apiHook(API.Pupils.enroll, {
 					RequestObject: {
 						pupil_id: data.pupil.id,
 						registration_year: form.string("registration_year"),
 						class_id: classId as 0 | 1 | 2,
-						class_year: classYear,
+						class_year: placement.class_year,
+						evaluation: placement.evaluation,
 						teacher_id: form.number("teacher_id", -1),
-						instrument_id: form.number("instrument_id", 0),
+						instrument_id: classId ? form.number("instrument_id", 0) : 0,
 						date: Date.now(),
-						payment_amount: form.number("payment_amount", 0),
-						total_payment: form.number("total_payment", 0),
-						payment_date: paymentDate ? form.date("payment_date").getTime() : null,
 						pass: form.multiSelect("pass", "boolean", { single: true }),
 					},
 				});
@@ -486,6 +529,60 @@ export default function PupilsPage() {
 			},
 		};
 	});
+
+	// ---- edit one history row (also how the review flow places «Υπό Κατάταξη» rows) ----
+	const [editingEnrollment, setEditingEnrollment] = createSignal<PupilEnrollments | null>(null);
+	const editEnrollmentAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
+		const data = record();
+		const enrollment = editingEnrollment();
+		if (!data || !enrollment) return emptyAction(ActionEnum.MODIFY, ActionIcon.MODIFY);
+		const inputs = enrollmentInputs(teachers(), instruments(), enrollment);
+		return {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+			label: "Επεξεργασία εγγραφής",
+			headerText: `Ενημέρωση Εγγραφής ${enrollment.registration_year}`,
+			submitText: "Ενημέρωση",
+			inputs,
+			onSubmit: async (form: ExtendedFormData<PupilEnrollments>) => {
+				const classId = form.number("class_id", 0);
+				const placement = readPlacementFields(form);
+				await apiHook(API.Pupils.updateEnrollment, {
+					RequestObject: {
+						id: enrollment.id,
+						pupil_id: data.pupil.id,
+						registration_year: form.string("registration_year"),
+						class_id: classId as 0 | 1 | 2,
+						class_year: placement.class_year,
+						evaluation: placement.evaluation,
+						teacher_id: form.number("teacher_id", -1),
+						instrument_id: classId ? form.number("instrument_id", 0) : 0,
+						date: enrollment.date,
+						// Fees and payments belong to the «Δίδακτρα μαθητή» dialog: resend the stored values.
+						...storedPaymentFields(enrollment),
+						pass: form.multiSelect("pass", "boolean", { single: true }),
+					},
+				});
+				pushAlert(createAlert("success", "Επιτυχής ενημέρωση εγγραφής"));
+				await loadPupil(data.pupil.id);
+				void runSearch(page());
+			},
+		};
+	});
+	// The modal reads its action from a store (like `TableControl`).
+	const [editEnrollmentStore, setEditEnrollmentStore] = createStore<{ action: Action }>({ action: editEnrollmentAction() as Action });
+	createEffect(() => setEditEnrollmentStore({ action: editEnrollmentAction() as Action }));
+	const openEnrollmentEditor = (enrollment: PupilEnrollments) => {
+		setEditingEnrollment(enrollment);
+		setGlobalOpen(ENROLLMENT_PREFIX + ActionEnum.MODIFY, true);
+	};
+
+	/** Enrollments still awaiting placement (evaluation without a class year), newest first. */
+	const awaitingPlacement = createMemo(() =>
+		(record()?.enrollments ?? [])
+			.filter((enrollment) => enrollment.evaluation && !enrollment.class_year)
+			.sort((a, b) => b.registration_year.localeCompare(a.registration_year)),
+	);
 
 	// ---- render -------------------------------------------------------------
 	// Shell: the admin content cell is already exactly one viewport tall
@@ -501,7 +598,7 @@ export default function PupilsPage() {
 				<Show when={selectedId() === null}>
 					<div class="grid justify-items-center gap-y-2 pt-[6vh] pb-2 text-center max-sm:pt-2">
 						<h1 class="font-anaktoria text-5xl max-sm:text-4xl">Μαθητολόγιο</h1>
-						<p class="max-w-2xl text-base text-gray-600 dark:text-gray-300">
+						<p class="max-w-2xl text-lg text-gray-600 dark:text-gray-300">
 							Αναζητήστε μαθητή με ΑΜ, ονοματεπώνυμο, ΑΜΚΑ, τηλέφωνο, email ή περιοχή.
 						</p>
 					</div>
@@ -520,7 +617,7 @@ export default function PupilsPage() {
 						spellcheck="false"
 						aria-label="Αναζήτηση μαθητή"
 						placeholder="Αναζήτηση…"
-						class="min-w-0 flex-1 bg-transparent font-didact text-lg max-sm:text-base text-red-950 dark:text-red-50 placeholder:text-gray-400 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
+						class="min-w-0 flex-1 bg-transparent font-didact text-xl max-sm:text-lg text-red-950 dark:text-red-50 placeholder:text-gray-400 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
 						value={query()}
 						onInput={(e) => setQuery(e.currentTarget.value)}
 						onKeyDown={(e) => {
@@ -549,15 +646,15 @@ export default function PupilsPage() {
 								startSearch(0);
 								searchInput?.focus();
 							}}>
-							<i class="fa-solid fa-xmark text-sm leading-none" aria-hidden="true"></i>
+							<i class="fa-solid fa-xmark text-base leading-none" aria-hidden="true"></i>
 						</button>
 					</Show>
 					<Show when={results()}>
-						<span class="whitespace-nowrap font-didact text-sm text-gray-600 dark:text-gray-300" aria-live="polite">
+						<span class="whitespace-nowrap font-didact text-base text-gray-600 dark:text-gray-300" aria-live="polite">
 							{countLabel(results()!.total, "μαθητής", "μαθητές")}
 						</span>
 					</Show>
-					<label class="flex cursor-pointer items-center gap-x-2 whitespace-nowrap font-didact text-sm text-gray-700 dark:text-gray-200">
+					<label class="flex cursor-pointer items-center gap-x-2 whitespace-nowrap font-didact text-base text-gray-700 dark:text-gray-200">
 						<input
 							type="checkbox"
 							class="size-4 cursor-pointer accent-red-900 dark:accent-red-500"
@@ -573,7 +670,7 @@ export default function PupilsPage() {
 						<button
 							type="button"
 							onClick={backToSearch}
-							class="rounded-md border border-red-900 px-3 py-1 font-didact text-sm transition-colors hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/35">
+							class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/35">
 							Πίσω στην αναζήτηση
 						</button>
 					</Show>
@@ -594,7 +691,7 @@ export default function PupilsPage() {
 							}>
 							<div class="grid gap-y-2">
 								<Show when={results() && results()!.rows.length === 0}>
-									<p class="py-10 text-center text-lg text-gray-600 dark:text-gray-300">
+									<p class="py-10 text-center text-xl text-gray-600 dark:text-gray-300">
 										<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
 											Δεν βρέθηκε μαθητής για «{query().trim()}».
 										</Show>
@@ -606,24 +703,24 @@ export default function PupilsPage() {
 											type="button"
 											onClick={() => openPupil(row.id)}
 											class="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-red-900/20 bg-white px-4 py-3 text-left shadow-sm shadow-gray-200 transition-colors hover:border-red-900/40 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-800/50 dark:bg-dark dark:shadow-gray-800 dark:hover:border-red-700/70 dark:hover:bg-red-900/25">
-											<span class="rounded-md bg-red-50 px-2 py-0.5 font-didact text-lg font-bold tabular-nums text-red-900 dark:bg-red-900/40 dark:text-red-100">
+											<span class="rounded-md bg-red-50 px-2 py-0.5 font-didact text-xl font-bold tabular-nums text-red-900 dark:bg-red-900/40 dark:text-red-100">
 												{amLabel(row)}
 											</span>
 											<span class="grid min-w-0">
-												<span class="truncate text-lg font-semibold">
+												<span class="truncate text-xl font-semibold">
 													{row.last_name} {row.first_name}
 													<Show when={row.fathers_name}>
 														{" "}
 														<span class="font-normal text-gray-500 dark:text-gray-400">({row.fathers_name})</span>
 													</Show>
 												</span>
-												<span class="truncate text-sm text-gray-600 dark:text-gray-300">{resultMeta(row)}</span>
+												<span class="truncate text-base text-gray-600 dark:text-gray-300">{resultMeta(row)}</span>
 											</span>
 											<span class="flex items-center gap-x-2">
 												<Show when={row.needs_review}>
 													<span
 														title="Χρειάζεται έλεγχο"
-														class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+														class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
 														έλεγχος
 													</span>
 												</Show>
@@ -658,9 +755,9 @@ export default function PupilsPage() {
 										<h1 class="font-anaktoria text-4xl leading-tight max-sm:text-3xl">
 											{data().pupil.last_name} {data().pupil.first_name}
 										</h1>
-										<p class="flex flex-wrap items-center gap-x-2 font-didact text-base text-gray-600 dark:text-gray-300">
+										<p class="flex flex-wrap items-center gap-x-2 font-didact text-lg text-gray-600 dark:text-gray-300">
 											<Show when={data().pupil.needs_review}>
-												<span class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+												<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
 													χρειάζεται έλεγχο
 												</span>
 											</Show>
@@ -673,57 +770,105 @@ export default function PupilsPage() {
 								</div>
 
 								<Show when={data().pupil.review_note}>
-									<p class="rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-sm dark:border-amber-600 dark:bg-amber-900/25">
+									<p class="rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-base dark:border-amber-600 dark:bg-amber-900/25">
 										<i class="fa-solid fa-triangle-exclamation mr-2 text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
 										{data().pupil.review_note}
 									</p>
 								</Show>
 
-								<div class="grid grid-cols-[minmax(260px,1fr)_2fr] gap-4 max-lg:grid-cols-1">
-									{/* ---- left: personal information ---- */}
-									<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
-										<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
-										<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
-											<dt>ΑΜ:</dt>
-											<dd class="font-semibold">{amLabel(data().pupil)}</dd>
-											<dt>ΑΜΚΑ:</dt>
-											<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
-											<dt>Πατρώνυμο:</dt>
-											<dd>{data().pupil.fathers_name || "-"}</dd>
-											<dt>Γέννηση:</dt>
-											<dd>{formatDate(data().pupil.birth_date)}</dd>
-											<dt>Διεύθυνση:</dt>
-											<dd>
-												{data().pupil.road} {data().pupil.number}
-												<Show when={data().pupil.region}>
-													<br />
-													{data().pupil.tk} {data().pupil.region}
-												</Show>
-											</dd>
-											<dt>Τηλέφωνα:</dt>
-											<dd>
-												{data().pupil.telephone || "-"}
-												<br />
-												{data().pupil.cellphone || "-"}
-											</dd>
-											<dt>Email:</dt>
-											<dd class="break-all">{data().pupil.email || "-"}</dd>
-											<dt class="pt-1">Σύνδεσμος:</dt>
-											<dd>
-												<Show when={data().pupil.registration_url} fallback="-">
-													<a
-														href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
-														target="_blank"
-														rel="noreferrer"
-														title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-														aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-														class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
-														<i class="fa-solid fa-up-right-from-square text-sm" aria-hidden="true"></i>
-													</a>
-												</Show>
-											</dd>
-										</dl>
+								{/* «Υπό Κατάταξη» rows awaiting a class year — one click opens the editor with the select empty. */}
+								<Show when={awaitingPlacement().length > 0}>
+									<section
+										aria-labelledby="awaiting-placement-title"
+										class="grid gap-y-2 rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 text-base dark:border-amber-600 dark:bg-amber-900/25">
+										<h2 id="awaiting-placement-title" class="font-semibold">
+											Εγγραφές που αναμένουν κατάταξη
+										</h2>
+										<ul class="grid gap-y-1">
+											<For each={awaitingPlacement()}>
+												{(enrollment) => (
+													<li class="flex flex-wrap items-center gap-x-3 gap-y-1">
+														<span class="tabular-nums">{enrollment.registration_year}</span>
+														<span>{musicLabel(enrollment.class_id)}</span>
+														<span class="text-gray-600 dark:text-gray-300">{teacherName(enrollment.teacher_id)}</span>
+														<button
+															type="button"
+															onClick={() => openEnrollmentEditor(enrollment)}
+															class="rounded-md border border-red-900 px-3 py-0.5 font-didact text-base transition-colors hover:bg-red-100 dark:border-red-700 dark:hover:bg-red-900/35">
+															Ορισμός έτους φοίτησης
+															<span class="sr-only">
+																{" "}
+																— {enrollment.registration_year}, {musicLabel(enrollment.class_id)}
+															</span>
+														</button>
+													</li>
+												)}
+											</For>
+										</ul>
+										<p class="text-gray-600 dark:text-gray-300">
+											Όταν τοποθετηθούν όλες, καθαρίστε τη «Σημείωση ελέγχου» από την επεξεργασία στοιχείων μαθητή.
+										</p>
 									</section>
+								</Show>
+
+								<div class="grid grid-cols-[minmax(260px,1fr)_2fr] gap-4 max-lg:grid-cols-1">
+									{/* ---- left: personal information + the pupil's fees ---- */}
+									<div class="grid h-max gap-y-3">
+										<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+											<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
+											<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
+												<dt>Επώνυμο:</dt>
+												<dd>{data().pupil.last_name || "-"}</dd>
+												<dt>Όνομα:</dt>
+												<dd>{data().pupil.first_name || "-"}</dd>
+												<dt>ΑΜ:</dt>
+												<dd class="font-semibold">{amLabel(data().pupil)}</dd>
+												<dt>ΑΜΚΑ:</dt>
+												<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
+												<dt>Πατρώνυμο:</dt>
+												<dd>{data().pupil.fathers_name || "-"}</dd>
+												<dt>Γέννηση:</dt>
+												<dd>{formatDate(data().pupil.birth_date)}</dd>
+												<dt>Διεύθυνση:</dt>
+												<dd>
+													{data().pupil.road} {data().pupil.number}
+													<Show when={data().pupil.region}>
+														<br />
+														{data().pupil.tk} {data().pupil.region}
+													</Show>
+												</dd>
+												<dt>Τηλέφωνα:</dt>
+												<dd>
+													{data().pupil.telephone || "-"}
+													<br />
+													{data().pupil.cellphone || "-"}
+												</dd>
+												<dt>Email:</dt>
+												<dd class="break-all">{data().pupil.email || "-"}</dd>
+												<dt class="pt-1">Σύνδεσμος:</dt>
+												<dd>
+													<Show when={data().pupil.registration_url} fallback="-">
+														<a
+															href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
+															target="_blank"
+															rel="noreferrer"
+															title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
+															aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
+															class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
+															<i class="fa-solid fa-up-right-from-square text-base" aria-hidden="true"></i>
+														</a>
+													</Show>
+												</dd>
+											</dl>
+										</section>
+										<button
+											type="button"
+											onClick={() => setFeesOpen(true)}
+											class="flex w-full items-center justify-center gap-x-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 font-didact text-lg font-semibold text-red-900 shadow-md shadow-gray-300 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:bg-dark dark:text-red-100 dark:shadow-gray-700 dark:hover:bg-red-900/35">
+											<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
+											Δίδακτρα
+										</button>
+									</div>
 
 									{/* ---- right: music types + history ---- */}
 									<section class="grid h-max gap-y-4 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
@@ -754,7 +899,7 @@ export default function PupilsPage() {
 															tabIndex={activeMusic() === classId ? 0 : -1}
 															onClick={() => setActiveMusic(classId)}
 															class={
-																"rounded-full px-4 py-1.5 font-didact text-sm font-semibold transition-colors " +
+																"rounded-full px-4 py-1.5 font-didact text-base font-semibold transition-colors " +
 																(activeMusic() === classId
 																	? "bg-red-900 text-red-50 dark:bg-red-800"
 																	: "border border-red-900 text-red-900 hover:bg-red-50 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/35")
@@ -772,13 +917,13 @@ export default function PupilsPage() {
 													{(group) => (
 														<div class="grid gap-y-1">
 															<p class="flex flex-wrap items-baseline gap-x-2">
-																<span class="font-anaktoria text-lg">{group.name}</span>
-																<span class="font-didact text-sm text-gray-500 dark:text-gray-400">
+																<span class="font-anaktoria text-xl">{group.name}</span>
+																<span class="font-didact text-base text-gray-500 dark:text-gray-400">
 																	{countLabel(group.rows.length, "εγγραφή", "εγγραφές")}
 																</span>
 															</p>
 															<div class="overflow-x-auto">
-																<table class="w-full border-collapse font-didact text-sm">
+																<table class="w-full border-collapse font-didact text-base">
 																	<thead>
 																		<tr class="bg-red-50 text-left dark:bg-red-900/25">
 																			<th scope="col" class="px-2 py-1.5 font-semibold">
@@ -796,6 +941,9 @@ export default function PupilsPage() {
 																			<th scope="col" class="px-2 py-1.5 text-center font-semibold">
 																				Προήχθη
 																			</th>
+																			<th scope="col" class="px-2 py-1.5 text-center font-semibold">
+																				<span class="sr-only">Ενέργειες</span>
+																			</th>
 																		</tr>
 																	</thead>
 																	<tbody>
@@ -805,21 +953,51 @@ export default function PupilsPage() {
 																					<td class="whitespace-nowrap px-2 py-1.5 tabular-nums">
 																						{row.registration_year}
 																					</td>
-																					<td class="whitespace-nowrap px-2 py-1.5">{row.class_year || "-"}</td>
+																					<td class="whitespace-nowrap px-2 py-1.5">
+																						<Show
+																							when={row.evaluation && !row.class_year}
+																							fallback={
+																								<>
+																									{classYearLabel(row.class_year, row.evaluation) || "-"}
+																									<Show when={row.evaluation}>
+																										<EvaluationBadge />
+																									</Show>
+																								</>
+																							}>
+																							<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+																								{EVALUATION_LABEL}
+																							</span>
+																						</Show>
+																					</td>
 																					<td class="px-2 py-1.5">{teacherName(row.teacher_id)}</td>
 																					<td class="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
 																						{row.payment_amount} / {row.total_payment} €
+																						<Show when={row.fee_manual}>
+																							<span class="ml-1">
+																								<FeeManualMarker compact />
+																							</span>
+																						</Show>
 																					</td>
 																					<td class="px-2 py-1.5 text-center">
 																						<span
 																							class={
-																								"rounded-full px-2 py-0.5 text-xs font-semibold " +
+																								"rounded-full px-2 py-0.5 text-sm font-semibold " +
 																								(row.pass
 																									? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100"
 																									: "bg-gray-200 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200")
 																							}>
 																							{row.pass ? "Ναι" : "Όχι"}
 																						</span>
+																					</td>
+																					<td class="whitespace-nowrap px-2 py-1.5 text-center">
+																						<button
+																							type="button"
+																							onClick={() => openEnrollmentEditor(row)}
+																							aria-label={`Επεξεργασία εγγραφής ${row.registration_year}`}
+																							title="Επεξεργασία εγγραφής"
+																							class="inline-grid h-8 w-8 place-items-center rounded-md text-red-900 transition-colors hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:text-red-200 dark:hover:bg-red-900/35">
+																							<i class={ActionIcon.MODIFY + " text-base"} aria-hidden="true"></i>
+																						</button>
 																					</td>
 																				</tr>
 																			)}
@@ -840,6 +1018,26 @@ export default function PupilsPage() {
 				</Show>
 			</div>
 
+			{/* «Δίδακτρα μαθητή»: the pupil's fees and payments per school year */}
+			<Show when={record()}>
+				{(data) => (
+					<PupilFeesDialog
+						open={feesOpen()}
+						onClose={() => setFeesOpen(false)}
+						onSaved={() => loadPupil(data().pupil.id)}
+						pupil={{ id: data().pupil.id, name: `${data().pupil.last_name} ${data().pupil.first_name}`, am: amLabel(data().pupil) }}
+						enrollments={data().enrollments}
+						teachers={teachers()}
+						instruments={instruments()}
+					/>
+				)}
+			</Show>
+
+			{/* per-row enrollment editor (opened from the history rows / the awaiting-placement list) */}
+			<Show when={"inputs" in editEnrollmentAction()}>
+				<Modal prefix={ENROLLMENT_PREFIX} actionStore={editEnrollmentStore} />
+			</Show>
+
 			{/* ---- pinned bottom: pagination (list only) ---- */}
 			<Show when={selectedId() === null && results() && results()!.total > PAGE_SIZE}>
 				<div class="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-center gap-x-4 pt-4">
@@ -847,17 +1045,17 @@ export default function PupilsPage() {
 						type="button"
 						disabled={page() === 0}
 						onClick={() => goToPage(page() - 1)}
-						class="rounded-md border border-red-900 px-3 py-1 font-didact text-sm transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
 						Προηγούμενη
 					</button>
-					<span class="font-didact text-sm text-gray-600 dark:text-gray-300">
+					<span class="font-didact text-base text-gray-600 dark:text-gray-300">
 						Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
 					</span>
 					<button
 						type="button"
 						disabled={(page() + 1) * PAGE_SIZE >= results()!.total}
 						onClick={() => goToPage(page() + 1)}
-						class="rounded-md border border-red-900 px-3 py-1 font-didact text-sm transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
 						Επόμενη
 					</button>
 				</div>

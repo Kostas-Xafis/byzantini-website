@@ -164,7 +164,9 @@ export class PDF {
 	}
 
 	public async fillTemplate(reg: PDFRegstration): Promise<void> {
-		this.doc = await PDFDocument.load(await PDF.getBuffer(this.env, reg.url));
+		// No metadata update: pdf-lib would stamp ModDate/Producer with the current time, and the output must be a
+		// pure function of the request (tests/pdf.test.ts compares it against golden SHA-256 hashes).
+		this.doc = await PDFDocument.load(await PDF.getBuffer(this.env, reg.url), { updateMetadata: false });
 
 		const p = this.doc.getPages()[0];
 		const c = TemplateCoords;
@@ -208,21 +210,14 @@ export class PDF {
 		let day = date.getDate() + "";
 		day = day.length === 1 ? "0" + day : day;
 
-		let year = date.getFullYear() % 100 + "";
+		let year = (date.getFullYear() % 100) + "";
 		year = year.length === 1 ? "0" + year : year;
 
 		p.drawText(day, { x: c.dateDD.x, y: c.dateDD.y, size: fontSize, font });
 		p.drawText(month, { x: c.dateMM.x, y: c.dateMM.y, size: fontSize, font });
 		p.drawText(year, { x: c.dateYYYY.x, y: c.dateYYYY.y, size: fontSize, font });
 
-		const currentDate = new Date();
-		const currentYear = currentDate.getFullYear();
-		const currentMonth = currentDate.getMonth(); // 0-based, so September is 8
-
-		// If we're in September or later, show current year and next year
-		// Otherwise, show previous year and current year
-		const year1 = currentMonth >= 8 ? currentYear : currentYear - 1;
-		const year2 = year1 + 1;
+		const [year1, year2] = schoolYearOf(s.registration_year);
 
 		p.drawText((year1 % 100).toString().padStart(2, "0"), { x: c.year1.x, y: c.year1.y, size: fontSize, font });
 		p.drawText((year2 % 100).toString().padStart(2, "0"), { x: c.year2.x, y: c.year2.y, size: fontSize, font });
@@ -241,7 +236,7 @@ export class PDF {
 
 	public async mergePDFs(pdfFiles: PDF[]): Promise<Uint8Array> {
 		// Create a new PDFDocument for the output
-		this.doc = await PDFDocument.create();
+		this.doc = await PDFDocument.create({ updateMetadata: false });
 
 		for (const pdfFile of pdfFiles) {
 			// Load each PDF file
@@ -282,6 +277,19 @@ export class PDF {
 		if (!asset.ok) throw new Error("Asset not found: " + path);
 		return asset.arrayBuffer();
 	}
+}
+
+/**
+ * The school year printed on the form («20__-20__»): the enrollment's own `registration_year`
+ * ("2026-2027"), so a reprint of an older enrollment shows its year and the output does not depend on
+ * the clock. Falls back to the current school year (September onwards → this year and the next).
+ */
+function schoolYearOf(registrationYear: unknown): [number, number] {
+	const match = /^(\d{4})-(\d{4})$/.exec(String(registrationYear ?? "").trim());
+	if (match) return [Number(match[1]), Number(match[2])];
+	const now = new Date();
+	const year1 = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+	return [year1, year1 + 1];
 }
 
 const pdfHeight = 841.89;

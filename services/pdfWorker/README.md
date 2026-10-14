@@ -40,6 +40,25 @@ The website's local dev (Astro) resolves its `PDF_SERVICE` binding to this
 `wrangler dev` session automatically (cross-command service bindings) — no URL
 to configure anywhere.
 
+## Tests
+
+```bash
+bun run test                 # in-process, no wrangler: request handling + golden PDFs
+bun run test:update-golden   # after an INTENDED layout/template/font/pdf-lib change
+```
+
+`tests/pdf.test.ts` calls the fetch handler directly with an `ASSETS` stub
+backed by `./assets` and compares every PDF generated from the dummy fixtures
+(`tests/fixtures/registrations.ts`) against its SHA-256 in
+`tests/fixtures/golden.json`. The output is a pure function of the request (no
+metadata timestamps; the printed school year comes from the enrollment's
+`registration_year`), so the hashes are exact. Each PDF is also checked
+structurally (parseable, page count, embedded DidactGothic, size floor) so a
+blank or truncated PDF fails even with a wrong golden. `test:update-golden`
+rewrites `golden.json` and writes the PDFs to `tests/__output__/` (gitignored):
+look at them before committing the new hashes. The site's
+`tests/api/pdf.test.ts` checks the same hashes end to end through `/api/pdf`.
+
 ## Deploy
 
 ```bash

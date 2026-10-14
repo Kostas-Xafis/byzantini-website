@@ -2,7 +2,7 @@ import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities"
 import { PDF } from "@lib/pdf.client";
 import { API, type APIResponse } from "@routes/index.client";
 import { createMemo } from "solid-js";
-import { createAlert, pushAlert, updateAlert } from "../../Alert.solid";
+import { toast, type ProgressHandle } from "../../Alert.solid";
 import { ActionEnum, ActionIcon } from "../../table/TableControlTypes";
 
 export const onDownloadPDF = function (store: Partial<APIResponse>, selectedItems: number[]) {
@@ -24,22 +24,30 @@ export const onDownloadPDF = function (store: Partial<APIResponse>, selectedItem
 				return { student, teacher, instrument };
 			});
 			let pdfArr: PDF[] = [];
+			let progress: ProgressHandle | undefined;
 			try {
 				for (const item of items) {
 					const pdf = new PDF();
 					pdf.setTemplateData(item.student, item.teacher?.fullname || "", item.instrument?.name || "");
 					pdfArr.push(pdf);
 				}
-				const alert = pushAlert(createAlert("success", "Λήψη των PDF: 0 από " + pdfArr.length));
-				await PDF.downloadBulk(pdfArr, (pg) => {
-					alert.message = "Λήψη των PDF: " + pg + " από " + pdfArr.length;
-					updateAlert(alert);
-					return new Promise((res, rej) => {
-						alert.onDidUpdate = res;
-					});
+				const total = pdfArr.length;
+				// A single PDF is downloaded directly (no per-file progress): indeterminate bar.
+				progress = toast.progress(
+					total > 1
+						? { title: "Λήψη των PDF", label: "Δημιουργία αρχείων…", done: 0, total }
+						: { title: "Λήψη του PDF", label: "Δημιουργία αρχείου…" },
+				);
+				const p = progress;
+				await PDF.downloadBulk(pdfArr, (done) => {
+					// After the last PDF, downloadBulk still zips them: switch to an indeterminate bar.
+					if (done >= total) p.update({ label: "Δημιουργία αρχείου .zip…", done: undefined, total: undefined });
+					else p.update({ done, total });
 				});
+				progress.success(total > 1 ? `Η λήψη ολοκληρώθηκε: ${total} PDF.` : "Η λήψη του PDF ολοκληρώθηκε.");
 			} catch (error: any) {
-				pushAlert(createAlert("error", "Σφάλμα κατά τη λήψη των PDF: ", error));
+				if (progress) progress.error(error, { title: "Σφάλμα κατά τη λήψη των PDF" });
+				else toast.error(error, { title: "Σφάλμα κατά τη λήψη των PDF" });
 			}
 		};
 		let bulk = selectedItems.length > 1;

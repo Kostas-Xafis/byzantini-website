@@ -261,7 +261,7 @@ const breadcrumbs = breadcrumbsSchema([
 				music.map(([str, type], ind) => (
 					<div id={type} data-show={ind === 0} data-type={type} class="group/btn relative">
 						<button
-							class="rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-3 max-sm:py-1.5 text-[1.05vw] max-sm:text-xs font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white group-data-[show=true]/btn:bg-red-50 group-data-[show=true]/btn:text-red-900 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-md"
+							class="rounded-full px-[clamp(0.75rem,1.1vw,1.5rem)] py-[clamp(0.375rem,0.5vw,0.75rem)] max-sm:px-3 max-sm:py-1.5 text-[clamp(0.875rem,1.05vw,1.25rem)] max-sm:text-xs font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white group-data-[show=true]/btn:bg-red-50 group-data-[show=true]/btn:text-red-900 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-md"
 							data-type={type}
 							aria-pressed={ind === 0 ? "true" : "false"}>
 							<span class="max-xs:hidden">{str}</span>

@@ -45,6 +45,12 @@ function generatePreviewDeployConfig(): boolean {
 		const fs = require("node:fs");
 		const source = JSON.parse(fs.readFileSync(deployConfig, "utf8"));
 		source.name = "byzantini-website-preview";
+		// The production build carries the custom domain (wrangler.jsonc env.production.routes); preview must
+		// never claim it — it would move musicschool-metamorfosi.gr off the production worker. Preview is
+		// reached on its workers.dev URL instead.
+		delete source.routes;
+		delete source.route;
+		source.workers_dev = true;
 		for (const d1 of source.d1_databases ?? []) {
 			d1.database_id = "7f9a62e7-e72c-4f3b-8e81-4f81ffa86c5d";
 			d1.database_name = "byzantini-db-preview";

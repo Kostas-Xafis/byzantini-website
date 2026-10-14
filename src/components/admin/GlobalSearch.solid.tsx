@@ -4,11 +4,13 @@ import { useNavigate } from "@solidjs/router";
 import { API } from "@routes/index.client";
 import { apiCall, type APICallResult } from "@hooks/apiCall";
 import { looseStringIncludes } from "@utilities/string";
+import { classYearLabel } from "@lib/classYears";
 import type { Announcements, Books, JoinedEnrollments, Locations, Payoffs, Payments, Teachers } from "@_types/entities";
+import Dialog from "../other/Dialog.solid";
 
 type PaletteEntry =
 	| { kind: "group"; key: string; label: string; icon: string }
-	| { kind: "result"; key: string; group: string; icon: string; title: string; subtitle?: string; href: string };
+	| { kind: "result"; key: string; group: string; groupLabel?: string; icon: string; title: string; subtitle?: string; href: string };
 
 type PaletteSources = {
 	year: number;
@@ -29,6 +31,9 @@ const getData = <T,>(res: APICallResult<T>): T | undefined => ("data" in res ? r
 
 const formatDate = (ms: number) => new Date(ms).toLocaleDateString("el-GR");
 
+const LISTBOX_ID = "global-search-results";
+const optionId = (i: number) => `global-search-option-${i}`;
+
 export default function GlobalSearch() {
 	const [state, setState] = createStore<{
 		open: boolean;
@@ -41,7 +46,6 @@ export default function GlobalSearch() {
 	const [active, setActive] = createSignal(0);
 	const navigate = useNavigate();
 
-	let inputRef: HTMLInputElement | undefined;
 	let loaded = false;
 
 	const close = () => {
@@ -51,8 +55,8 @@ export default function GlobalSearch() {
 	};
 
 	const open = () => {
+		// The Dialog moves focus into the search field and returns it to the opener on close.
 		setState("open", true);
-		setTimeout(() => inputRef?.focus(), 0);
 		if (loaded) return;
 		loaded = true;
 		void (async () => {
@@ -113,7 +117,7 @@ export default function GlobalSearch() {
 			const filtered = items.filter((i) => i.kind === "result");
 			if (!filtered.length) return;
 			out.push({ kind: "group", key, label, icon });
-			out.push(...filtered.slice(0, MAX_PER_GROUP));
+			out.push(...filtered.slice(0, MAX_PER_GROUP).map((i) => ({ ...i, groupLabel: label })));
 		};
 
 		const regIcon = "fa-solid fa-clipboard-list";
@@ -124,7 +128,7 @@ export default function GlobalSearch() {
 			sources.registrations
 				.filter((r) =>
 					matches(
-						`${r.last_name} ${r.first_name} ${r.fathers_name} ${r.am} ${r.amka} ${r.email} ${r.telephone} ${r.cellphone} ${r.road} ${r.region} ${r.class_year} ${String(r.id)}`,
+						`${r.last_name} ${r.first_name} ${r.fathers_name} ${r.am} ${r.amka} ${r.email} ${r.telephone} ${r.cellphone} ${r.road} ${r.region} ${classYearLabel(r.class_year, r.evaluation)} ${String(r.id)}`,
 					),
 				)
 				.map((r) => ({
@@ -278,7 +282,10 @@ export default function GlobalSearch() {
 			if (list[i].kind === "result") break;
 		}
 		setActive(i);
+		document.getElementById(optionId(i))?.scrollIntoView({ block: "nearest" });
 	};
+
+	const hasResults = () => results().some((r) => r.kind === "result");
 
 	const handleKeyDown = (e: KeyboardEvent) => {
 		if (e.key === "ArrowDown") {
@@ -291,9 +298,8 @@ export default function GlobalSearch() {
 			e.preventDefault();
 			const entry = results()[active()];
 			if (entry?.kind === "result") goto(entry);
-		} else if (e.key === "Escape") {
-			close();
 		}
+		// Escape is handled by the Dialog (closes and returns focus to the opener).
 	};
 
 	onMount(() => {
@@ -309,88 +315,105 @@ export default function GlobalSearch() {
 	});
 
 	return (
-		<Show when={state.open}>
-			<div class="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 px-4 pt-[12vh] backdrop-blur-sm" onClick={close}>
-				<div
-					class="w-full max-w-[640px] overflow-hidden rounded-xl border-2 border-red-900 bg-white shadow-2xl dark:border-red-800 dark:bg-dark"
-					onClick={(e) => e.stopPropagation()}>
-					<div class="flex items-center gap-x-3 border-b border-red-900/20 px-4 dark:border-red-800/40">
-						<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200" aria-hidden="true"></i>
-						<input
-							ref={inputRef}
-							class="w-full bg-transparent py-3 font-didact text-lg text-red-950 placeholder:text-red-900/40 focus-visible:outline-hidden dark:text-red-50 dark:placeholder:text-red-200/40"
-							type="text"
-							autocomplete="off"
-							spellcheck="false"
-							placeholder="Αναζήτηση σε όλη τη διαχείριση…"
-							aria-label="Αναζήτηση σε όλη τη διαχείριση"
-							value={query()}
-							onInput={(e) => {
-								setQuery(e.currentTarget.value);
-								const first = results().findIndex((r) => r.kind === "result");
-								setActive(Math.max(first, 0));
-							}}
-							onKeyDown={handleKeyDown}
-						/>
-						<kbd class="rounded border border-red-900/30 px-1.5 py-0.5 text-xs text-red-900/60 dark:border-red-700/50 dark:text-red-200/60">
-							Esc
-						</kbd>
-					</div>
-					<div class="max-h-[55vh] overflow-y-auto pb-2">
-						<Show
-							when={state.loading}
-							fallback={
-								<Show when={state.ready}>
-									<For each={results()}>
-										{(entry, i) =>
-											entry.kind === "group" ? (
-												<p class="flex items-center gap-x-2 px-4 pb-1 pt-3 text-xs font-bold uppercase tracking-[0.14em] text-red-900/70 dark:text-red-200/70">
-													<i class={`${entry.icon} text-sm`} aria-hidden="true"></i>
-													{entry.label}
-												</p>
-											) : (
-												<button
-													type="button"
-													class={
-														"flex w-full items-center gap-x-3 px-4 py-2 text-left transition-colors " +
-														(i() === active()
-															? "bg-red-900 text-white dark:bg-red-800"
-															: "hover:bg-red-100 dark:hover:bg-red-900/40")
-													}
-													onmouseenter={() => setActive(i())}
-													onClick={() => goto(entry)}>
-													<i
-														class={`${entry.icon} w-5 text-center ${i() === active() ? "text-white dark:text-red-50" : "text-red-900 dark:text-red-200"}`}
-														aria-hidden="true"></i>
-													<span class="min-w-0 flex-1">
-														<span class="block truncate font-bold font-didact">{entry.title}</span>
-														<Show when={entry.subtitle}>
-															<span class="block truncate text-sm opacity-70">{entry.subtitle}</span>
-														</Show>
-													</span>
-													<i class="fa-solid fa-arrow-right text-sm opacity-60" aria-hidden="true"></i>
-												</button>
-											)
-										}
-									</For>
-									<Show when={!results().length}>
-										<p class="px-4 py-6 text-center font-didact text-red-900/60 dark:text-red-200/60">
-											Δεν βρέθηκαν αποτελέσματα για «{query()}»
-										</p>
-									</Show>
-								</Show>
-							}>
-							<div class="flex items-center justify-center gap-3 py-6">
-								<span class="spinner h-6 w-6"></span>
-								<p class="font-didact text-red-900/70 dark:text-red-200/70">Φόρτωση δεδομένων…</p>
-							</div>
-						</Show>
-						<Show when={state.error}>
-							<p class="px-4 py-4 text-center font-didact text-red-900 dark:text-red-200">Αποτυχία φόρτωσης δεδομένων: {state.error}</p>
-						</Show>
-					</div>
-				</div>
+		<Dialog
+			open={state.open}
+			onClose={close}
+			label="Αναζήτηση σε όλη τη διαχείριση"
+			backdropClass="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 px-4 pt-[12vh] backdrop-blur-sm"
+			class="w-full max-w-[640px] overflow-hidden rounded-xl border-2 border-red-900 bg-white shadow-2xl dark:border-red-800 dark:bg-dark focus-visible:outline-hidden">
+			<div class="flex items-center gap-x-3 border-b border-red-900/20 px-4 dark:border-red-800/40">
+				<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200" aria-hidden="true"></i>
+				<input
+					class="w-full bg-transparent py-3 font-didact text-lg text-red-950 placeholder:text-red-900/40 focus-visible:outline-hidden dark:text-red-50 dark:placeholder:text-red-200/40"
+					type="text"
+					role="combobox"
+					aria-autocomplete="list"
+					aria-controls={LISTBOX_ID}
+					aria-expanded={hasResults()}
+					aria-activedescendant={hasResults() && results()[active()]?.kind === "result" ? optionId(active()) : undefined}
+					autocomplete="off"
+					spellcheck={false}
+					placeholder="Αναζήτηση σε όλη τη διαχείριση…"
+					aria-label="Αναζήτηση σε όλη τη διαχείριση"
+					value={query()}
+					onInput={(e) => {
+						setQuery(e.currentTarget.value);
+						const first = results().findIndex((r) => r.kind === "result");
+						setActive(Math.max(first, 0));
+					}}
+					onKeyDown={handleKeyDown}
+				/>
+				<kbd
+					aria-hidden="true"
+					class="rounded border border-red-900/30 px-1.5 py-0.5 text-xs text-red-900/60 dark:border-red-700/50 dark:text-red-200/60">
+					Esc
+				</kbd>
 			</div>
-		</Show>
+			<div class="max-h-[55vh] overflow-y-auto pb-2">
+				<Show
+					when={state.loading}
+					fallback={
+						<Show when={state.ready}>
+							<div id={LISTBOX_ID} role="listbox" aria-label="Αποτελέσματα αναζήτησης">
+								<For each={results()}>
+									{(entry, i) =>
+										entry.kind === "group" ? (
+											<p
+												role="presentation"
+												aria-hidden="true"
+												class="flex items-center gap-x-2 px-4 pb-1 pt-3 text-xs font-bold uppercase tracking-[0.14em] text-red-900/70 dark:text-red-200/70">
+												<i class={`${entry.icon} text-sm`} aria-hidden="true"></i>
+												{entry.label}
+											</p>
+										) : (
+											<div
+												id={optionId(i())}
+												role="option"
+												aria-selected={i() === active()}
+												class={
+													"flex w-full cursor-pointer items-center gap-x-3 px-4 py-2 text-left transition-colors " +
+													(i() === active() ? "bg-red-900 text-white dark:bg-red-800" : "hover:bg-red-100 dark:hover:bg-red-900/40")
+												}
+												onmouseenter={() => setActive(i())}
+												// Keep focus in the search field (combobox pattern).
+												onMouseDown={(e) => e.preventDefault()}
+												onClick={() => goto(entry)}>
+												<i
+													class={`${entry.icon} w-5 text-center ${i() === active() ? "text-white dark:text-red-50" : "text-red-900 dark:text-red-200"}`}
+													aria-hidden="true"></i>
+												<span class="min-w-0 flex-1">
+													<Show when={entry.groupLabel}>
+														<span class="sr-only">{entry.groupLabel}: </span>
+													</Show>
+													<span class="block truncate font-bold font-didact">{entry.title}</span>
+													<Show when={entry.subtitle}>
+														<span class="block truncate text-sm opacity-70">{entry.subtitle}</span>
+													</Show>
+												</span>
+												<i class="fa-solid fa-arrow-right text-sm opacity-60" aria-hidden="true"></i>
+											</div>
+										)
+									}
+								</For>
+							</div>
+							<Show when={!results().length}>
+								<p role="status" class="px-4 py-6 text-center font-didact text-red-900/60 dark:text-red-200/60">
+									Δεν βρέθηκαν αποτελέσματα για «{query()}»
+								</p>
+							</Show>
+						</Show>
+					}>
+					<div role="status" class="flex items-center justify-center gap-3 py-6">
+						<span class="spinner h-6 w-6" aria-hidden="true"></span>
+						<p class="font-didact text-red-900/70 dark:text-red-200/70">Φόρτωση δεδομένων…</p>
+					</div>
+				</Show>
+				<Show when={state.error}>
+					<p role="alert" class="px-4 py-4 text-center font-didact text-red-900 dark:text-red-200">
+						Αποτυχία φόρτωσης δεδομένων: {state.error}
+					</p>
+				</Show>
+			</div>
+		</Dialog>
 	);
 }

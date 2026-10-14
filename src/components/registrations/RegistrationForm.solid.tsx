@@ -4,11 +4,12 @@ import { APIRequestError, validationMessages } from "@hooks/apiCall";
 import type { APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient, type APIClient } from "@hooks/useAPIClient.solid";
 import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
+import { currentSchoolYear, currentSchoolYearShort, isRegistrationWindowOpen, REGISTRATION_WINDOW_LABEL } from "@lib/pupils/years";
 import { API } from "@routes/index.client";
 import { AnimTimeline } from "@utilities/dom";
 import { ExtendedFormData } from "@utilities/forms";
 import { sleep } from "@utilities/sleep";
-import { createEffect, createSignal, For, on, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Input, { type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
@@ -151,7 +152,8 @@ const genericInputs: Record<
 		iconClasses: "fa-solid fa-calendar-days",
 		disabled: true,
 		blurDisabled: false,
-		value: "2026-2027",
+		// The school year being registered for (rolls over on 1 July — see lib/pupils/years.ts).
+		value: currentSchoolYear(),
 	},
 };
 
@@ -247,7 +249,7 @@ const inputsByMusicType = (musicType: MusicType, store: APIResourceStore, regDat
 	return [classYearInput, teachersInput, instrumentsInput];
 };
 
-const DiplomaClasses = ["Β' Ετος Διπλώματος", "Β' Ανωτέρα"];
+const DiplomaClasses = ["Β' Έτος Διπλώματος", "Β' Ανωτέρα"];
 
 const heading: Record<MusicType, string> = {
 	[MusicType.None]: "",
@@ -273,17 +275,63 @@ function fadeInForm(type: MusicType) {
 		.start();
 }
 
-function musicTypeFromURL(): MusicType {
-	const music = ["byz", "par", "eur"] as MusicType[];
-	if (window.location.hash) {
-		const hash = window.location.hash.replace("#", "");
-		const type = decodeURI(hash) as MusicType;
-		window.location.hash = "";
-		if (music.includes(type)) {
-			return type;
-		}
+/**
+ * Three-step flow:
+ *  - "type"   — pick a music type
+ *  - "lookup" — ΑΜ + ΑΜΚΑ only, so a returning student can be identified and
+ *               the form prefilled (or the "new student" path chosen)
+ *  - "form"   — the full registration form
+ */
+type Step = "type" | "lookup" | "form";
+type Route = { step: Step; type: MusicType };
+/** Our slot in `history.state`: the step shown by that entry and its depth (0 = the picker, 1 = a department). */
+type HistoryEntry = Route & { depth: 0 | 1 };
+
+const HISTORY_KEY = "registrationStep";
+const DEPARTMENTS: MusicType[] = [MusicType.Byzantine, MusicType.Traditional, MusicType.European];
+const PICKER: Route = { step: "type", type: MusicType.None };
+
+/*
+ * Browser history of the steps. Every entry stays on /eggrafes; the step is kept in `history.state`
+ * (HISTORY_KEY) and, readable and linkable, in the hash:
+ *   (no hash)   → the department picker — always the page's base entry (depth 0)
+ *   "#byz"      → the identification step of that department (also the deep link other pages / emails use)
+ *   "#byz-form" → the form of that department
+ * Semantics:
+ *  - picker → department: pushState, so Back returns to the picker; Forward goes back to the department with
+ *    everything already entered (the form stays mounted, only hidden, until it is submitted).
+ *  - identification → form: replaceState. The identification happens ONCE, so it does not stay in the history:
+ *    Back from the form goes to the picker, never back through the ΑΜ + ΑΜΚΑ step (which would re-run it).
+ *  - switching department inside the form (the pill nav): replaceState — a tab switch, not a step.
+ *  - once identified (or "new student" chosen), every department goes straight to the form; before that, a
+ *    form entry reached by Back/Forward or a link shows the identification step instead (`resolveRoute`).
+ *  - after a successful submit (closing the success popup) the identification is reset — the next registration,
+ *    e.g. a sibling, starts again from the ΑΜ + ΑΜΚΑ step — and Back returns to the picker.
+ * There is at most one entry above the picker, so "back to the picker" is `history.back()` from depth 1.
+ */
+
+/** The route a hash names; `null` for a hash that is not one of ours. */
+function routeFromHash(hash: string): Route | null {
+	let raw: string;
+	try {
+		raw = decodeURIComponent(hash.replace(/^#/, ""));
+	} catch {
+		return null;
 	}
-	return MusicType.None;
+	if (!raw) return PICKER;
+	const [type, suffix, ...rest] = raw.split("-");
+	if (!DEPARTMENTS.includes(type as MusicType) || rest.length || (suffix !== undefined && suffix !== "form")) return null;
+	return { step: suffix === "form" ? "form" : "lookup", type: type as MusicType };
+}
+
+const hashOf = (route: Route) => (route.step === "type" ? "" : route.step === "form" ? `#${route.type}-form` : `#${route.type}`);
+const urlOf = (route: Route) => window.location.pathname + window.location.search + hashOf(route);
+const savedEntry = (state: unknown): HistoryEntry | undefined => (state as Record<string, HistoryEntry> | null)?.[HISTORY_KEY];
+/** Writes our entry into the history, keeping whatever else (e.g. the router) stored in the state. */
+function writeHistory(mode: "push" | "replace", entry: HistoryEntry) {
+	const state = { ...(mode === "replace" && history.state && typeof history.state === "object" ? history.state : {}), [HISTORY_KEY]: entry };
+	if (mode === "push") history.pushState(state, "", urlOf(entry));
+	else history.replaceState(state, "", urlOf(entry));
 }
 
 async function loadRegistrationId(apiHook: APIClient) {
@@ -338,20 +386,24 @@ function emptyRequiredFields(form: HTMLFormElement) {
 	return fields.filter((el) => !el.closest(".hidden") && (el.value.trim() === "" || el.value === "undefined"));
 }
 
+/** Shown outside the official registration period — informational only, the form stays open. */
+function OutOfWindowNotice(props: { schoolYear: string; class?: string }) {
+	return (
+		<p role="note" class={"rounded-md border border-amber-300 bg-amber-50 px-4 py-3 font-didact text-base text-amber-950 " + (props.class ?? "")}>
+			<i class="fa-solid fa-circle-info mr-2" aria-hidden="true"></i>Η επίσημη περίοδος εγγραφών για το σχολικό έτος {props.schoolYear} είναι από{" "}
+			{REGISTRATION_WINDOW_LABEL}. Αιτήσεις που υποβάλλονται εκτός αυτής της περιόδου γίνονται δεκτές και εξετάζονται από τη Γραμματεία της Σχολής.
+		</p>
+	);
+}
+
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIResourceStore>({});
 	const [registrationData, setRegistrationData] = createStore<PupilRegistrationForm>({} as any);
 	const apiHook = useAPIClient(setStore);
-	const [musicType, setMusicType] = createSignal<MusicType>(musicTypeFromURL());
+	// The department being registered for. It stays set while the picker is shown again (Back), so the
+	// hidden form keeps its data; it is cleared only when a registration is completed.
+	const [musicType, setMusicType] = createSignal<MusicType>(MusicType.None);
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
-	/**
-	 * Three-step flow:
-	 *  - "type"   — pick a music type
-	 *  - "lookup" — ΑΜ + ΑΜΚΑ only, so a returning student can be identified and
-	 *               the form prefilled (or the "new student" path chosen)
-	 *  - "form"   — the full registration form
-	 */
-	type Step = "type" | "lookup" | "form";
 	const [step, setStep] = createSignal<Step>("type");
 	const [lookupAm, setLookupAm] = createSignal("");
 	const [lookupAmka, setLookupAmka] = createSignal("");
@@ -360,6 +412,86 @@ export function RegistrationForm() {
 	const [submitError, setSubmitError] = createSignal("");
 	// Set once the pupil is found by ΑΜ + ΑΜΚΑ: those two are then locked so the identification cannot be undone by editing them.
 	const [identified, setIdentified] = createSignal(false);
+	// Set once the identification step is done — by ΑΜ + ΑΜΚΑ, "new student" or the permanent ?regid link. From
+	// then on the form is mounted (and keeps what was typed while hidden) and every department goes straight to it.
+	const [identityResolved, setIdentityResolved] = createSignal(false);
+	// Something was typed into the form that has not been submitted yet — guards against leaving the page.
+	const [dirty, setDirty] = createSignal(false);
+	// Display-only: the form stays open all year, it just says so outside the official period.
+	const windowOpen = isRegistrationWindowOpen();
+	const schoolYearShort = currentSchoolYearShort();
+
+	/** The step a route can actually show: identification happens once, so it is skipped (or required) accordingly. */
+	const resolveRoute = (route: Route): Route => {
+		if (route.step === "type" || !DEPARTMENTS.includes(route.type)) return PICKER;
+		return { step: identityResolved() ? "form" : "lookup", type: route.type };
+	};
+
+	/** Shows a route. A different department resets the fields that belong to the department (see onMusicTypeChange). */
+	const render = (route: Route) => {
+		if (route.step !== "type" && route.type !== musicType()) {
+			setMusicType(route.type);
+			setRegistrationData((prev) => ({ ...prev, class_year: "", instrument_id: -1, teacher_id: -1 }));
+		}
+		if (route.step === "lookup" && step() !== "lookup") setLookupError("");
+		setStep(route.step);
+	};
+
+	/** Navigates within the page (see the history semantics above `routeFromHash`). */
+	const goTo = (route: Route) => {
+		const target = resolveRoute(route);
+		const depth = savedEntry(history.state)?.depth ?? 0;
+		if (target.step === "type") {
+			// Back to the picker = Back in the history, so Forward can return to the department.
+			if (depth > 0) history.back();
+			render(target);
+			return;
+		}
+		writeHistory(depth > 0 ? "replace" : "push", { ...target, depth: 1 });
+		render(target);
+	};
+
+	onMount(() => {
+		const saved = savedEntry(history.state);
+		if (saved) {
+			// A reload (or a restored page) keeps its entry; the identification has to be done again, though.
+			const target = resolveRoute(saved);
+			writeHistory("replace", { ...target, depth: target.step === "type" ? 0 : saved.depth });
+			render(target);
+		} else {
+			// The page's first entry is always the picker; a deep link (#byz, #par, #eur) lands one step above it.
+			const linked = routeFromHash(window.location.hash) ?? PICKER;
+			writeHistory("replace", { ...PICKER, depth: 0 });
+			if (linked.step !== "type") goTo(linked);
+		}
+
+		const onPopState = (e: PopStateEvent) => {
+			const entry = savedEntry(e.state);
+			const route = entry ?? routeFromHash(window.location.hash);
+			if (!route) return; // a hash that is not ours
+			const target = resolveRoute(route);
+			if (!entry || target.step !== route.step || target.type !== route.type) {
+				writeHistory("replace", { ...target, depth: target.step === "type" ? 0 : (entry?.depth ?? 1) });
+			}
+			render(target);
+		};
+		window.addEventListener("popstate", onPopState);
+		onCleanup(() => window.removeEventListener("popstate", onPopState));
+	});
+
+	// Leaving the page (closing the tab, Back past /eggrafes, a link) with typed-in, unsubmitted data asks first.
+	createEffect(() => {
+		if (!dirty()) return;
+		const guard = (e: BeforeUnloadEvent) => {
+			e.preventDefault();
+			e.returnValue = "";
+		};
+		window.addEventListener("beforeunload", guard);
+		onCleanup(() => window.removeEventListener("beforeunload", guard));
+	});
+	const markDirty = (e: Event) => {
+		if (e.isTrusted) setDirty(true);
+	};
 
 	// The lists the form is built from. A failed load is kept so that submitting can explain it instead of doing nothing.
 	const [loadError, setLoadError] = createSignal<unknown>();
@@ -381,25 +513,17 @@ export function RegistrationForm() {
 		setRegistrationData((prev) => {
 			return { ...prev, ...regData };
 		});
-		setMusicType(MusicTypeArr[regData.class_id]);
 		// The permanent link already identifies the pupil — skip the lookup step.
-		setStep("form");
+		setIdentityResolved(true);
+		goTo({ step: "form", type: MusicTypeArr[regData.class_id] });
 	});
 
 	const onMusicTypeChange = (type: MusicType) => {
-		const switchingInsideForm = step() === "form";
-		setMusicType(type);
 		// The class year / teacher / instrument belong to the department being
-		// registered for, so they reset when the department changes.
-		setRegistrationData((prev) => {
-			return { ...prev, class_year: "", instrument_id: -1, teacher_id: -1 };
-		});
-		if (switchingInsideForm) return;
-		// First pick (from the type screen) lands on the returning/new-student
-		// choice; identifying the pupil happens ONCE, so switching department later
-		// must not send the user back through the lookup.
-		setStep("lookup");
-		setLookupError("");
+		// registered for, so they reset when the department changes (in `render`).
+		// The first pick lands on the returning/new-student choice; identifying the
+		// pupil happens ONCE, so any later pick goes straight to the form.
+		goTo({ step: "form", type });
 	};
 
 	/** Returning student: ΑΜ + ΑΜΚΑ must both match, then prefill from the record. */
@@ -438,7 +562,8 @@ export function RegistrationForm() {
 			}));
 			// Keep the department the family picked — they may be enrolling in a different one this year.
 			setIdentified(true);
-			setStep("form");
+			setIdentityResolved(true);
+			goTo({ step: "form", type: musicType() });
 		} catch (err) {
 			// Only a 404 means "no such pupil" — anything else must not push the family onto the new-student path.
 			if (err instanceof APIRequestError && err.status === 404) {
@@ -475,7 +600,8 @@ export function RegistrationForm() {
 		}));
 		setLookupError("");
 		setIdentified(false);
-		setStep("form");
+		setIdentityResolved(true);
+		goTo({ step: "form", type: musicType() });
 	};
 
 	const onSubmit = async function (e: Event) {
@@ -527,7 +653,7 @@ export function RegistrationForm() {
 		};
 		setRegistrationData(data);
 		try {
-			if (data.am.startsWith("0") && data.class_year !== "Υπό Κατάταξη" && data.class_year !== "Α' Προκαταρκτική" && data.class_year !== "Α' Ετος") {
+			if (data.am.startsWith("0") && data.class_year !== "Υπό Κατάταξη" && data.class_year !== "Α' Προκαταρκτική" && data.class_year !== "Α' Έτος") {
 				throw Error(
 					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζετε τον ΑΜ, θα τον βρείτε σε προσωπικό email, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής.",
 				);
@@ -547,6 +673,7 @@ export function RegistrationForm() {
 			setSpinner(true);
 			const res = await apiHook(API.Pupils.post, { RequestObject: { ...data, class_id: data.class_id as 0 | 1 | 2 } });
 			if ("data" in res && res.data) {
+				setDirty(false);
 				PopupShow();
 				setRegistrationData((prevReg) => {
 					return {
@@ -614,41 +741,45 @@ export function RegistrationForm() {
 
 	return (
 		<>
-			<Show
-				when={musicType() !== MusicType.None}
-				fallback={
-					// MAIN PAGE - USER HASN'T SELECTED A FORM YET
-					<div
-						id="registrationContainer"
-						class="w-full max-sm:w-[calc(100dvw - 4.25rem)] h-full max-sm:h-[calc(100dvh - 4.25rem)] place-items-center font-dicact">
-						<h1 class="sr-only">Εγγραφές στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής</h1>
-						<div id="firstSelect" class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
-							<For each={btns}>
-								{([str, type]) => (
-									<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
-										<div
-											id={type}
-											class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-opacity-80 group-hover/select:shadow-md group-focus-within/select:bg-opacity-80 group-focus-within/select:shadow-md">
-											<button
-												class="p-6 text-5xl max-sm:text-3xl max-3xs:text-2xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
-												onClick={() => onMusicTypeChange(type)}>
-												{str}
-											</button>
-										</div>
-										<img
-											src={`/${type}.jpg`}
-											alt=""
-											aria-hidden="true"
-											decoding="async"
-											class="absolute inset-0 h-full max-sm:w-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105 group-focus-within/select:scale-105"
-										/>
+			<Show when={step() === "type"}>
+				{/* MAIN PAGE - USER HASN'T SELECTED A FORM YET (or went Back to the picker) */}
+				<div
+					id="registrationPicker"
+					class="w-full max-sm:w-[calc(100dvw_-_4.25rem)] h-full max-sm:h-[calc(100dvh_-_4.25rem)] place-items-center font-didact">
+					<h1 class="sr-only">Εγγραφές στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής</h1>
+					<div id="firstSelect" class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
+						<For each={btns}>
+							{([str, type]) => (
+								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
+									<div
+										id={type}
+										class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-red-900/80 group-hover/select:shadow-md group-focus-within/select:bg-red-900/80 group-focus-within/select:shadow-md">
+										<button
+											class="p-6 max-lg:p-4 text-[clamp(1.75rem,3.1vw,3rem)] max-sm:text-3xl max-3xs:text-2xl font-bold drop-shadow-[-2px_1px_1px_rgba(15,15,15,1)] font-anaktoria text-white "
+											onClick={() => onMusicTypeChange(type)}>
+											{str}
+										</button>
 									</div>
-								)}
-							</For>
-						</div>
+									<img
+										src={`/${type}.jpg`}
+										alt=""
+										aria-hidden="true"
+										decoding="async"
+										class="absolute inset-0 h-full max-sm:w-full object-cover -z-50 blur-[2px] transition-transform duration-500 group-hover/select:scale-105 group-focus-within/select:scale-105"
+									/>
+								</div>
+							)}
+						</For>
 					</div>
-				}>
-				<div class="relative h-max pb-[6rem] max-lg:pb-[9.5rem]">
+				</div>
+			</Show>
+			<Show when={musicType() !== MusicType.None}>
+				{/* Bottom padding keeps the last fields and the submit button clear of the floating department pill. */}
+				<div
+					class={
+						"relative h-max pb-[calc(6rem+env(safe-area-inset-bottom))] max-lg:pb-[calc(9.5rem+env(safe-area-inset-bottom))]" +
+						(step() === "type" ? " hidden" : "")
+					}>
 					<img
 						id="registrationFormBg"
 						src={`/${musicType()}.jpg`}
@@ -658,58 +789,68 @@ export function RegistrationForm() {
 					/>
 					<div
 						id="registrationContainer"
-						class="relative z-10 w-full h-full flex flex-col grid-cols-1 py-10 gap-y-4 place-items-center font-dicact max-sm:gap-y-12">
-						<Show
-							when={step() === "lookup"}
-							fallback={
-								<form
-									id="registrationForm"
-									data-prefix={PREFIX}
-									class="group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm"
-									onSubmit={onSubmit}>
-									<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
-										{heading[musicType()]}
-									</h1>
-									{Object.values(genericInputs).map((input) => {
-										// After the ΑΜ + ΑΜΚΑ lookup those two are read-only (still submitted).
-										const locked = identified() && (input.name === "am" || input.name === "amka");
-										return (
-											<Input
-												{...input}
-												prefix={PREFIX}
-												value={registrationData[input.name as keyof PupilRegistrationForm] as any}
-												disabled={input.disabled || locked}
-												blurDisabled={locked ? false : input.blurDisabled}
-											/>
-										);
-									})}
-									<For each={inputsByMusicType(musicType(), store, registrationData)}>
-										{(input) => <Input {...input} prefix={PREFIX} onchange={onFormInputsChange} />}
-									</For>
-									<Show when={submitError()}>
-										<p
-											role="alert"
-											data-submit-error
-											class="col-span-full justify-self-center max-w-[60ch] rounded-md bg-red-100 px-4 py-3 font-didact text-base text-red-900">
-											<i class="fa-solid fa-circle-exclamation mr-2" aria-hidden="true"></i>
-											{submitError()}
-										</p>
-									</Show>
-									<Show
-										when={!spinner()}
-										fallback={
-											<div class="col-span-full w-max place-self-center p-2 px-6">
-												<Spinner />
-											</div>
-										}>
-										<button
-											class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
-											type="submit">
-											Εγγραφή
-										</button>
-									</Show>
-								</form>
-							}>
+						class="relative z-10 w-full h-full flex flex-col grid-cols-1 py-10 gap-y-4 place-items-center font-didact max-sm:gap-y-12">
+						{/* Mounted once the pupil is identified and then only hidden (Back to the picker keeps what was typed). */}
+						<Show when={identityResolved()}>
+							<form
+								id="registrationForm"
+								data-prefix={PREFIX}
+								class={
+									"group/form relative z-10 px-20 max-sm:px-0 py-10 grid grid-cols-2 auto-rows-auto max-sm:flex flex-col max-sm:items-center gap-20 max-sm:gap-10 max-sm:gap-x-4 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm" +
+									// A focused field is scrolled clear of the floating department pill.
+									" [&_:is(input,select,textarea,button)]:scroll-mb-28" +
+									(step() === "form" ? "" : " hidden")
+								}
+								onInput={markDirty}
+								onChange={markDirty}
+								onSubmit={onSubmit}>
+								<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
+									{heading[musicType()]}
+								</h1>
+								<Show when={!windowOpen}>
+									<OutOfWindowNotice schoolYear={schoolYearShort} class="col-span-full justify-self-center max-w-[60ch]" />
+								</Show>
+								{Object.values(genericInputs).map((input) => {
+									// After the ΑΜ + ΑΜΚΑ lookup those two are read-only (still submitted).
+									const locked = identified() && (input.name === "am" || input.name === "amka");
+									return (
+										<Input
+											{...input}
+											prefix={PREFIX}
+											value={registrationData[input.name as keyof PupilRegistrationForm] as any}
+											disabled={input.disabled || locked}
+											blurDisabled={locked ? false : input.blurDisabled}
+										/>
+									);
+								})}
+								<For each={inputsByMusicType(musicType(), store, registrationData)}>
+									{(input) => <Input {...input} prefix={PREFIX} onchange={onFormInputsChange} />}
+								</For>
+								<Show when={submitError()}>
+									<p
+										role="alert"
+										data-submit-error
+										class="col-span-full justify-self-center max-w-[60ch] rounded-md bg-red-100 px-4 py-3 font-didact text-base text-red-900">
+										<i class="fa-solid fa-circle-exclamation mr-2" aria-hidden="true"></i>
+										{submitError()}
+									</p>
+								</Show>
+								<Show
+									when={!spinner()}
+									fallback={
+										<div class="col-span-full w-max place-self-center p-2 px-6">
+											<Spinner />
+										</div>
+									}>
+									<button
+										class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
+										type="submit">
+										Εγγραφή
+									</button>
+								</Show>
+							</form>
+						</Show>
+						<Show when={step() === "lookup"}>
 							{/* ---- returning student: ΑΜ + ΑΜΚΑ only ---- */}
 							<div
 								id="registrationLookup"
@@ -722,6 +863,9 @@ export function RegistrationForm() {
 										Συμπληρώστε τον αριθμό μητρώου και τον ΑΜΚΑ σας για να ανακτήσουμε τα στοιχεία σας.
 									</p>
 								</div>
+								<Show when={!windowOpen}>
+									<OutOfWindowNotice schoolYear={schoolYearShort} />
+								</Show>
 
 								<form class="grid gap-y-5" onSubmit={onLookup}>
 									<label class="grid gap-y-1">
@@ -784,10 +928,7 @@ export function RegistrationForm() {
 
 								<button
 									type="button"
-									onClick={() => {
-										setStep("type");
-										setMusicType(MusicType.None);
-									}}
+									onClick={() => goTo(PICKER)}
 									class="w-max place-self-center font-didact text-sm text-red-900/70 underline underline-offset-2 hover:text-red-900">
 									Πίσω στην επιλογή μουσικής
 								</button>
@@ -806,7 +947,7 @@ export function RegistrationForm() {
 											type="button"
 											aria-pressed={type === musicType() ? "true" : "false"}
 											class={
-												"rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-3 max-sm:py-1.5 text-[1.05vw] max-sm:text-xs font-medium whitespace-nowrap transition-colors duration-300 ease-in-out " +
+												"rounded-full px-[clamp(0.75rem,1.1vw,1.5rem)] py-[clamp(0.375rem,0.5vw,0.75rem)] max-sm:px-3 max-sm:py-1.5 text-[clamp(0.875rem,1.05vw,1.25rem)] max-sm:text-xs font-medium whitespace-nowrap transition-colors duration-300 ease-in-out " +
 												(type === musicType()
 													? "bg-red-50 text-red-900 font-semibold shadow-md"
 													: "text-red-50 hover:bg-red-800 hover:text-white")
@@ -838,8 +979,14 @@ export function RegistrationForm() {
 								]
 				}
 				onClose={() => {
+					// The registration is done: the next one (another department, a sibling) starts from the
+					// picker and goes through the identification again.
+					setIdentityResolved(false);
+					setIdentified(false);
+					setLookupAm("");
+					setLookupAmka("");
 					setMusicType(MusicType.None);
-					setStep("type");
+					goTo(PICKER);
 				}}
 			/>
 			<style>
@@ -854,6 +1001,7 @@ export function RegistrationForm() {
 		opacity: 0.0001;
         animation: fadeIn 0.7s ease-in-out 0.3s forwards;
     }
+	#registrationPicker,
 	#registrationContainer:is(:not(.remove)),
 	#submitMessage:is(:not(.hidden)) {
 		opacity: 0.0001;

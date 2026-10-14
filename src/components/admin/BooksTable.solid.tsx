@@ -10,7 +10,7 @@ import type { Books, Wholesalers } from "@_types/entities";
 import type { ReplaceName } from "@_types/helpers";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
-import { createAlert, pushAlert } from "./Alert.solid";
+import { createAlert, pushAlert, toast } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { useTableSearch } from "./table/useTableSearch.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
@@ -151,8 +151,8 @@ export default function BooksTable() {
 				quantity: form.number("quantity"),
 				sold: form.number("sold"),
 			};
-			if (data.wholesale_price > data.price) return alert("Η χονδρική τιμή πρέπει να είναι μικρότερη από τη λιανική");
-			if (data.quantity < data.sold) return alert("Οι πωλήσεις δεν μπορούν να είναι περισσότερες από την ποσότητα των βιβλίων");
+			if (data.wholesale_price > data.price) return void toast.warning("Η χονδρική τιμή πρέπει να είναι μικρότερη από τη λιανική");
+			if (data.quantity < data.sold) return void toast.warning("Οι πωλήσεις δεν μπορούν να είναι περισσότερες από την ποσότητα των βιβλίων");
 			const res = await apiHook(API.Books.post, {
 				RequestObject: data,
 			});
