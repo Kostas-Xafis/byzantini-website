@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import fs from "fs";
 import path from "path";
-import { array, number, object } from "valibot";
+import { z } from "astro/zod";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { MIMETypeMap } from "@lib/utils.server.ts";
-import { v_AnnouncementImages, v_Announcements } from "../entitySchemas";
+import { z_AnnouncementImages, z_Announcements } from "@lib/api/schemas";
 import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers.ts";
 
 function announcementsTest() {
@@ -49,7 +49,7 @@ function announcementsTest() {
 		});
 
 		const json = await getJson<APIResponse["Announcements.postImage"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 		newImageIds.push(json.data.insertId);
 
 		for await (const image of images) {
@@ -67,7 +67,7 @@ function announcementsTest() {
 			});
 
 			const json = await getJson<APIResponse["Announcements.postImage"]>(res);
-			expectBody(json, object({ insertId: number() }));
+			expectBody(json, z.object({ insertId: z.number() }));
 			newImageIds.push(json.data.insertId);
 		}
 	};
@@ -76,7 +76,7 @@ function announcementsTest() {
 		const res = await useTestAPI("Announcements.post", { RequestObject: announcement });
 
 		const json = await getJson<APIResponse["Announcements.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newAnnouncementId = json.data.insertId;
 
@@ -92,7 +92,7 @@ function announcementsTest() {
 		});
 
 		const json = await getJson<APIResponse["Announcements.getById"]>(res);
-		expectBody(json, v_Announcements);
+		expectBody(json, z_Announcements);
 	});
 	test("--announcements-- #3", uploadImages, { timeout: 20000 });
 	test("--announcements-- #4", async () => {
@@ -100,7 +100,7 @@ function announcementsTest() {
 			UrlArgs: { id: newAnnouncementId as number },
 		});
 		const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
-		expectBody(json, array(v_AnnouncementImages));
+		expectBody(json, z.array(z_AnnouncementImages));
 		expect(json.data).toHaveLength(5);
 	});
 	test("--announcements-- #5", async () => {
@@ -122,7 +122,7 @@ function announcementsTest() {
 		});
 
 		const json = await getJson<APIResponse["Announcements.getImagesById"]>(res);
-		expectBody(json, array(v_AnnouncementImages));
+		expectBody(json, z.array(z_AnnouncementImages));
 		expect(json.data).toHaveLength(3);
 	});
 	test("--announcements-- #7", async () => {
@@ -166,5 +166,5 @@ test("--announcements--", async () => {
 	const res = await useTestAPI("Announcements.get");
 
 	const json = await getJson<APIResponse["Announcements.get"]>(res);
-	expectBody(json, array(v_Announcements));
+	expectBody(json, z.array(z_Announcements));
 });
