@@ -63,7 +63,7 @@ Core loop:
 | Dev server | `bun run dev` | Astro dev, port **4321** |
 | Build | `bun run build` | production build |
 | Types | `bun run types` | regenerate `worker-configuration.d.ts` after `wrangler.jsonc` changes |
-| Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
+| Typecheck | `bun run typecheck` | TypeScript 7 native `tsc --noEmit` (~2 s; fast gate for every change) · `bun run typecheck:ts6` runs the same check on TS 6 (~10 s) |
 | Astro check | `bun run astro-check` | `astro check` (slower, more rules; 15 pre-existing errors) |
 | Full gate | `bun run check` | contract drift check + typecheck + tests |
 | Unit tests | `bun test tests/unit` | no dev server needed |
@@ -309,15 +309,22 @@ The person data that used to live on `registrations` is split into two tables
 
 ## Coding conventions
 
-- TypeScript: TypeScript 6.0.3 (pin in `package.json`), config extends
-  `astro/tsconfigs/strict`, `noEmit`. Keep path aliases from `tsconfig.json`
+- TypeScript: **two pinned compilers**. `typescript` 6.0.3 stays the package
+  every tool imports (`@astrojs/check` → `bun run astro-check`, editors'
+  tsserver), because TS 7 ships no classic JS API. `typescript7`
+  (`npm:typescript@7.0.2`, the Go-native compiler) only runs the CLI checks:
+  `bun run typecheck` and the workers' `typecheck`/`typecheck:cli` call
+  `node_modules/typescript7/bin/tsc` **by path** (both packages declare a
+  `tsc` bin; `node_modules/.bin/tsc` is TS 6). Each worker has its own
+  `typescript7` devDependency. Config extends `astro/tsconfigs/strict`, `noEmit`;
+  keep it TS 7-valid (no `baseUrl`, relative `paths`). Keep path aliases from `tsconfig.json`
   (`@routes/*` → `lib/routes/*`, `@utilities/*`, `@hooks/*`, `@env/*`,
   `@bucket/*`, `@lib/*`, `@_types/*`, `@components/*`, `@layouts/*`,
   `@pages/*`). `baseUrl` is gone (deprecated in TS 6, non-functional in TS 7)
   — `paths` targets are relative (`./lib/...`). Prefer `@utilities/*`/`@lib/*`
   over relative imports inside `lib/`.
 
-### TypeScript 6 gotchas (do not "fix" these back)
+### TypeScript 6/7 gotchas (do not "fix" these back)
 
 - `types/helpers.ts` `IsAny` uses the function-variance form; the classic
   `0 extends 1 & T ? true : false` mis-evaluates when `T` is a generic

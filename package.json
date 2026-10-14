@@ -5,7 +5,8 @@
 	"packageManager": "bun@1.4.0",
 	"scripts": {
 		"test": "bun test --env-file='./tests/.env.test' --timeout=10000 ./tests/",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "node_modules/typescript7/bin/tsc --noEmit",
+		"typecheck:ts6": "tsc --noEmit",
 		"astro-check": "bunx --bun astro check",
 		"check": "bun run api:contract --check && bun run typecheck && bun run test",
 		"api:contract": "bun scripts/apiContract.ts",
@@ -59,6 +60,7 @@
 		"print-js": "^1.6.0",
 		"ts-morph": "^24.0.0",
 		"typescript": "6.0.3",
+		"typescript7": "npm:typescript@7.0.2",
 		"wrangler": "^4.127.1",
 		"xlsx": "^0.18.5"
 	}

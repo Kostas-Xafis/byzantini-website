@@ -296,7 +296,7 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 - **Misc a11y:** h1→h3 jump on landing; duplicated logo alt on subscribe pages; focus outline removed on inputs;
   `scroll-behavior: smooth` without `prefers-reduced-motion`; "Πατήστε εδώ" → "Νέα εγγραφή".
 - **Debug output:** `RegistrationForm.solid.tsx:541,556` logs every keystroke; `AsyncQueue.ts:29,58`, `env.ts:62`.
-- `tsconfig.json` has `extendedDiagnostics`/`diagnostics: true` → timing noise on every typecheck.
+- ~~`tsconfig.json` has `extendedDiagnostics`/`diagnostics: true` → timing noise on every typecheck.~~ ✅ Done with the TypeScript 7 switch.
 - `tests/.env.test` still carries the retired `AUTOMATED_EMAILS_SERVICE_URL`.
 
 ---

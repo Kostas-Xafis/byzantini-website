@@ -24,7 +24,7 @@ service bindings: PDF generation and transactional emails.
 | Images | Cloudflare Images binding (`IMAGES`) for announcement thumbnails |
 | Aux workers | `byzantini-website-pdf-gen` (`services/pdfWorker`), `byzantini-website-emails` (`services/emailWorker`) |
 | Deploy | `@astrojs/cloudflare` adapter → Workers, manual `bun run cf deploy` |
-| Language | TypeScript 6 (`astro/tsconfigs/strict`) |
+| Language | TypeScript 7 native compiler for `bun run typecheck`; TypeScript 6 for tooling that needs its JS API (`astro check`, editors) |
 
 ## Repository layout
 

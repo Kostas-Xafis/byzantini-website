@@ -8,8 +8,8 @@
 		"deploy": "bunx wrangler deploy --config wrangler.jsonc",
 		"types": "bunx wrangler types --config wrangler.jsonc",
 		"tail": "bunx wrangler tail --config wrangler.jsonc",
-		"typecheck": "bunx --bun tsc --noEmit",
-		"typecheck:cli": "bunx --bun tsc -p tsconfig.cli.json",
+		"typecheck": "node_modules/typescript7/bin/tsc --noEmit",
+		"typecheck:cli": "node_modules/typescript7/bin/tsc -p tsconfig.cli.json",
 		"campaign": "bun src/cli.ts",
 		"remove-suppressed": "bun scripts/removeSuppressed.ts",
 		"templates:build": "bun scripts/buildTemplates.ts",
@@ -30,6 +30,7 @@
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.5",
 		"typescript": "^6.0.3",
+		"typescript7": "npm:typescript@7.0.2",
 		"wrangler": "^4.127.1"
 	}
 }
