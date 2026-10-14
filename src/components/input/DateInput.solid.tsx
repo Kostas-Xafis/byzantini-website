@@ -37,15 +37,23 @@ export default function DateInput(props: DateInputProps) {
 	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
 	let datepicker: AirDatepicker<HTMLInputElement> | undefined;
 	let disposed = false;
+	// The component's own input (a ref, not a document lookup): the router renders a page before inserting it
+	// into the document, so `document.querySelector` from onMount found nothing on a navigation — the picker
+	// was built on `null`, and destroying that broken instance threw during the next navigation and hung it.
+	let dateInput!: HTMLInputElement;
 	onCleanup(() => {
 		disposed = true;
-		datepicker?.destroy();
+		try {
+			datepicker?.destroy();
+		} catch (error) {
+			// A teardown failure must never block a route change.
+			console.warn("DateInput: datepicker teardown failed", error);
+		}
 		datepicker = undefined;
 	});
 	// if date input has value, set it
 	onMount(() => {
 		const hasValue = value !== undefined && value !== null;
-		const dateInput = document.querySelector(`form[data-prefix='${props.prefix}'] input[name='${name}']`) as HTMLInputElement;
 		// initialize datepicker
 		if (!disabled) {
 			let finalDate = new Date(hasValue ? (value as number) : Date.now());
@@ -135,6 +143,7 @@ export default function DateInput(props: DateInputProps) {
 					(iconClasses || "")
 				}></i>
 			<input
+				ref={dateInput}
 				class={
 					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10" +
 					(disabled && blurDisabled ? " blur-[1px]" : "")
