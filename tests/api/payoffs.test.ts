@@ -1,11 +1,10 @@
-import { array, length, number, object, pick } from "valibot";
+import { z } from "astro/zod";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
-import { type Payoffs, v_Payoffs } from "@_types/entities";
+import type { Payoffs } from "@_types/entities";
+import { z_Payoffs } from "@lib/api/schemas";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 import { test } from "bun:test";
-
-const SimplePayoff = pick(v_Payoffs, ["id", "wholesaler_id", "amount"]);
 
 function payoffsTest() {
 	const wholesaler = {
@@ -33,7 +32,7 @@ function payoffsTest() {
 		});
 
 		const json = await getJson<APIResponse["Wholesalers.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newWholesalerId = json.data.insertId;
 	});
@@ -46,12 +45,12 @@ function payoffsTest() {
 		});
 
 		const json = await getJson<APIResponse["Books.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 	});
 	test("--payoffs-- #3", async () => {
 		const res = await useTestAPI("Payoffs.get");
 		const json = await getJson<APIResponse["Payoffs.get"]>(res);
-		expectBody(json, array(SimplePayoff));
+		expectBody(json, z.array(z_Payoffs));
 		newPayoff = json.data.find((p) => p.wholesaler_id === newWholesalerId) as Payoffs;
 	});
 	test("--payoffs-- #4", async () => {
@@ -63,13 +62,13 @@ function payoffsTest() {
 		});
 
 		const json = await getJson<APIResponse["Payoffs.getById"]>(res);
-		expectBody(json, array(SimplePayoff, [length(1)]));
+		expectBody(json, z.array(z_Payoffs).length(1));
 	});
 	test("--payoffs-- #5", async () => {
 		const res = await useTestAPI("Payoffs.getTotal");
 
 		const json = await getJson<APIResponse["Payoffs.getTotal"]>(res);
-		expectBody(json, object({ total: number() }));
+		expectBody(json, z.object({ total: z.number() }));
 	});
 	test("--payoffs-- #6", async () => {
 		if (!newPayoff) {
@@ -106,5 +105,5 @@ test("GET /payoffs", async () => {
 	const res = await useTestAPI("Payoffs.get");
 
 	const json = await getJson<APIResponse["Payoffs.get"]>(res);
-	expectBody(json, array(v_Payoffs));
+	expectBody(json, z.array(z_Payoffs));
 });

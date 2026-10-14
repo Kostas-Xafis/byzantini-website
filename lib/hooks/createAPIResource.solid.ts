@@ -4,9 +4,9 @@ import type { APIArgs, APIEndpointNames, APIResponse } from "@routes/index.clien
 import { apiCall } from "./apiCall";
 
 /**
- * Shared reactive cache, keyed by endpoint name — the same shape as the legacy
- * `APIStore` (`lib/hooks/useAPI.solid.ts`), so existing consumers can keep
- * reading `store[API.Teachers.get]` with per-key reactivity.
+ * Shared reactive cache, keyed by endpoint name, so consumers read
+ * `store[API.Teachers.get]` with per-key reactivity. Only successful data
+ * responses are ever written to it (never errors or message strings).
  */
 export type APIResourceStore = Partial<APIResponse>;
 
@@ -39,8 +39,8 @@ export type APIResourceResult<T extends APIEndpointNames> = ReturnType<typeof cr
  *   message-only endpoints).
  * - `resource.loading` / `resource.error` / `resource.state` behave exactly as
  *   documented for `createResource`.
- * - Errors are NOT written to the cache (unlike the legacy hook), they surface
- *   only through `resource.error`.
+ * - Errors are NOT written to the cache, they surface only through
+ *   `resource.error` (an `APIRequestError` when the server answered).
  *
  * @returns `[resource, { mutate, refetch }]` — the same tuple `createResource` returns.
  *

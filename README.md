@@ -1,340 +1,216 @@
 # Byzantini Website 🎼
 
-A full-stack music school platform built with Astro + Solid and deployed on Cloudflare Pages/Workers.
+The website and admin panel of the Byzantine music school of Metamorfosi (Greek-language UI): public pages,
+the online registration form, and an admin panel for the pupil register (Μαθητολόγιο), teachers, books,
+payments, announcements and settings.
 
-This repository contains:
-- The public website and admin interface
-- A typed internal API with route contracts and middleware
-- Database tooling for querying and snapshot replication
-- Utility services for PDF generation and image compression
+It runs as a single Cloudflare Worker (Astro SSR + static assets) backed by Cloudflare D1 (database),
+R2 (files) and the Images binding (thumbnails), plus two auxiliary Workers in `services/` reached through
+service bindings: PDF generation and transactional emails.
 
-## Tech Stack 🛠️
+> **Working on the code (human or AI)?** [`AGENTS.md`](AGENTS.md) is the canonical, detailed guide —
+> commands, conventions, platform gotchas and hard rules. This README is the overview.
+> Known problems and planned work are tracked in [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md).
 
-- Runtime: Bun
-- Typing: TypeScript 6 (`astro/tsconfigs/strict`, no `baseUrl`)
-- Frontend: Astro 5, SolidJS, Tailwind CSS
-- API: Astro catch-all route (`src/pages/api/[...slug].ts`) with typed endpoint metadata
-- Validation: Valibot
-- Database: libSQL/Turso (production) + local SQLite snapshot workflow
-- Storage: Cloudflare R2 in production, S3-compatible endpoint in development
-- Deploy target: Cloudflare Pages + Workers adapter (`@astrojs/cloudflare`)
+## Tech stack 🛠️
 
-## Project Structure
+| Area | Choice |
+| --- | --- |
+| Runtime & package manager | **Bun** (never npm/yarn/pnpm) |
+| Frontend | Astro 7 + SolidJS islands + Tailwind 4 |
+| API | One catch-all Astro route → typed `APIServer` route instances, Zod validation (`astro/zod`) |
+| Database | Cloudflare D1 (`DB` binding); schema in `migrations/` |
+| Storage | Cloudflare R2 (`S3_BUCKET` binding), emulated locally by miniflare in dev |
+| Images | Cloudflare Images binding (`IMAGES`) for announcement thumbnails |
+| Aux workers | `byzantini-website-pdf-gen` (`services/pdfWorker`), `byzantini-website-emails` (`services/emailWorker`) |
+| Deploy | `@astrojs/cloudflare` adapter → Workers, manual `bun run cf deploy` |
+| Language | TypeScript 7 native compiler for `bun run typecheck`; TypeScript 6 for tooling that needs its JS API (`astro check`, editors) |
+
+## Repository layout
 
 ```txt
 src/
-  pages/                 Astro pages (includes API catch-all route)
-  components/            UI components
-  layouts/               Page layouts
+  pages/               Astro pages; api/[...slug].ts is the single API entrypoint; [...slug].ts serves R2 files
+  components/          Astro + Solid (`*.solid.tsx`) components; admin/ is the admin panel
+  layouts/             Page layouts
 lib/
-  routes/                API contracts and server implementations
-  hooks/                 App hooks (including useAPI)
-  middleware/            API middleware (validation, auth pipeline)
-  db.ts                  DB connection + query preprocessing + logging
-  utils.server.ts        Wrappers (executeQuery, execTryCatch, etc.)
-  bucket/                Storage abstraction (R2/S3-compatible)
-  images.ts              Cloudflare Images binding helpers (thumbnails)
+  api/routes/          API route groups (one file per group), APIServer, middleware
+  api/schemas.ts       Zod request/response schemas
+  hooks/               API callers: server in-process caller, browser transport, Solid resources
+  routes/index.client.ts  Stable client import path for the API contract + types
+  db.ts, utils.server.ts  D1 access (executeQuery / executeTransaction, `???` expansion, query logs)
+  env/                 Runtime/env access (`cloudflare:workers` bridge), owner email
+  bucket/              R2 storage abstraction (`Bucket`)
+  pupils/              Pupil-register helpers (name/phone/ΑΜ normalisation, school years)
+migrations/            D1 schema migrations (wrangler d1 migrations)
 services/
-  pdfWorker/             Cloudflare Worker `byzantini-website-pdf-gen` (PDF rendering)
-  emailWorker/           Cloudflare Worker `byzantini-website-emails` (transactional emails)
-dbSnapshots/
-  dev-snapshot.sql       Local dev DB seed (used by `bun run db:reset`)
+  pdfWorker/           PDF generation worker (own package.json / wrangler.jsonc)
+  emailWorker/         Transactional email worker + campaign CLI (own package.json / wrangler.jsonc)
+scripts/               Deploy (cf.ts), data replication, worker secrets, dev cleanup
 tests/
-  api/                   API tests
-  testHelpers.ts         Test API helper
+  api/                 API tests (need the dev server)
+  unit/                Unit tests (no server)
+types/                 Shared TypeScript types
+docs/IMPROVEMENTS.md   Improvement backlog
 ```
 
-## Architecture Overview 🧭
+## Getting started 🚀
 
-### 1) Route Contracts + Implementations
-
-API endpoints are defined in pairs under `lib/routes/`:
-- `*.client.ts`: endpoint path, method, and validation contract
-- `*.server.ts`: server logic by attaching `route.func`
-
-Central assembly:
-- `lib/routes/index.client.ts`: builds `API` and `APIEndpoints`
-- `lib/routes/index.server.ts`: builds `APIRaw`, injects middleware, and exports `matchRoute(...)`
-
-### 2) Request Routing
-
-`src/pages/api/[...slug].ts` is the single API entrypoint.
-It:
-- Matches URL slug + HTTP method to a route via `matchRoute(...)`
-- Loads runtime env through `Env.setEnv(ctx)`
-- Executes route middleware (auth/validation)
-- Executes the final handler and wraps JSON responses
-
-### 3) Middleware + Validation
-
-Middleware is attached automatically from endpoint flags:
-- `authentication: true` -> auth middleware
-- `validation: schema` -> Valibot request validation
-- `multipart: true` -> multipart-aware parsing
-
-### 4) Database Access Pattern
-
-Use helpers from `lib/utils.server.ts`:
-- `executeQuery(...)` for queries
-- `executeTransaction(...)` for explicit transactions
-- `execTryCatch(...)` for consistent endpoint result wrapping
-
-DB access in `lib/db.ts` uses the Cloudflare D1 binding (`DB`):
-- Production: remote D1 (`byzantini-db`); development: local miniflare SQLite (`.wrangler/state/v3/d1`)
-- Supports `???` placeholder expansion for variable-length SQL args
-- Writes query logs into `query_logs`
-
-### 5) Client API Consumption
-
-Use `useAPI(...)` from `lib/hooks/useAPI.astro.ts`.
-Endpoint keys are strongly typed and follow the format:
-- `Authentication.userLogin`
-- `Registrations.someAction`
-
-## Prerequisites
-
-- Bun installed
-- Cloudflare account (for deployment, D1/R2/Images bindings)
-- Access to required environment variables
-
-## Environment Variables 🔐
-
-Environment files (all gitignored):
-- `.env` — **all local dev values** (client `VITE_*` and server-side values
-  alike: Bun/Vite auto-load it and `Env.env` merges it with the runtime env).
-  The site has **no `.dev.vars`** anymore.
-- `.env.production` — build-time values; only `VITE_*`/`PUBLIC_*` are inlined
-  into client code. `bun run worker-secrets` also mirrors the deployed token
-  pairs here (archival/recovery).
-- Production runtime secrets live as **Cloudflare secrets** (`wrangler secret
-  put`), never in these files. The pure-wrangler services keep their own
-  `.dev.vars` (that's where `wrangler dev` reads secrets from).
-
-Important variables (dev, in `.env`):
-
-```env
-SECRET=                       # password-hash pepper (runtime)
-GOOGLE_CLIENT_ID=             # Google OAuth (runtime)
-GOOGLE_CLIENT_SECRET=         # Google OAuth (runtime)
-GOOGLE_MAPS_KEY=              # google:reviews script only
-PDF_SERVICE_AUTH_TOKEN=       # shared with the pdfWorker's SERVICE_AUTH_TOKEN (bearer on PDF_SERVICE calls)
-AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN=   # shared with the emailWorker's SERVICE_AUTH_TOKEN (send body)
-
-VITE_OWNER_EMAIL=             # owner gate (inlined client + server)
-VITE_URL=                     # local origin
-```
-
-Notes:
-- In production builds, only variables prefixed with `VITE_` or `PUBLIC_` are
-  exposed to client code; non-prefixed keys are never inlined into the worker
-  bundle — production reads them from the Cloudflare secrets.
-- Runtime env is accessed through `Env.env` / `Env.setEnv(ctx)`.
-- The retired service URLs (`VITE_PDF_SERVICE_URL`, `AUTOMATED_EMAILS_SERVICE_URL`)
-  are gone — the workers are reached through the `PDF_SERVICE` / `EMAIL_SERVICE`
-  service bindings declared in `wrangler.jsonc`.
-
-## Install
+Prerequisites: Bun, and for anything touching real Cloudflare resources a `wrangler login`.
 
 ```bash
 bun install
-bun run services:install   # the two workers in services/ keep their own lockfiles
+bun run services:install          # the two workers keep their own lockfiles
+bun run types                     # generate worker-configuration.d.ts from wrangler.jsonc
 ```
 
-## Run Locally 🚀
-
-### Main app (development)
+Local database (a miniflare SQLite file under `.wrangler/state/v3/d1`):
 
 ```bash
-bun run dev
+bun run db:reset          # rebuild from dbSnapshots/dev-snapshot.sql, then apply pending migrations
 ```
 
-### Build + preview (Cloudflare Pages style)
+`bun run replicate:all` instead mirrors production D1 + R2 into the local stores (needs `wrangler login`;
+restart the dev server afterwards).
+
+Environment files are all gitignored:
+
+- `.env` — every local dev value, client (`VITE_*`/`PUBLIC_*`) and server alike. Server-side values:
+  `SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_MAPS_KEY`, `PDF_SERVICE_AUTH_TOKEN`,
+  `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`; client values include `VITE_OWNER_EMAIL` and `VITE_URL`.
+- `.env.production` — build-time client values (only `VITE_*`/`PUBLIC_*` are ever inlined into client code).
+- `services/*/.dev.vars` — the workers' local secrets (`wrangler dev` reads them).
+- `tests/.env.test` — `VITE_URL`, `TEST_EMAIL`, `TEST_PASSWORD` for the API tests.
+
+Production secrets are Cloudflare secrets (`wrangler secret put`), never files. `bun run worker-secrets`
+creates/rotates the two shared site↔worker tokens and mirrors them into the local env files.
+
+Run it:
 
 ```bash
-bun run build
-bun run preview
+bun run dev                       # Astro dev server on http://localhost:4321
 ```
 
-### Combined build + preview
+To exercise PDFs or emails locally, start the matching worker in another terminal from its folder
+(`bunx wrangler dev --config wrangler.jsonc`, no `--bun`): pdfWorker on :8787, emailWorker on :8788.
+`astro dev` resolves the `PDF_SERVICE` / `EMAIL_SERVICE` bindings to those sessions automatically. A local
+email-worker request never sends real mail (it renders, logs `[dry-run:…]` and returns 200).
 
-```bash
-bun run build-preview
+## Architecture 🧭
+
+### Request flow
+
+```txt
+browser ──▶ Worker (Astro SSR) ──▶ src/pages/api/[...slug].ts ──▶ APIServer.handle
+                │                                                   │ match route (decoded, typed params)
+                │ SSR pages call the API in-process                 │ middleware (auth, rate limit)
+                │ (lib/hooks/useAPI.server.ts, never a self-fetch)  │ Zod body validation
+                ▼                                                   ▼ handler → { data } | { message } | { error, details? }
+           D1 · R2 · Images · PDF_SERVICE · EMAIL_SERVICE
 ```
 
-## Scripts Reference 📜
+### API routes
 
-### App and deployment
+- Every endpoint is an `APIServer` instance in a group file `lib/api/routes/<group>.ts`
+  (`Books.get`, `Pupils.post`, …): `new APIServer({ method, path, schema?, responseSchema?, multipart?, rawBlob? }, [middleware], handler)`.
+  `APIRoute` (`APIRoute.ts`) holds the contract, the registry and path matching; `APIServer` adds the handler,
+  middleware and dispatch. `lib/api/routes/index.ts` imports every group and exposes the server registry.
+- Path params arrive decoded; `[id:number]` params are real numbers (a non-numeric segment doesn't match the route).
+  The handler's `body` is typed from the route's Zod schema (`z.output`).
+- **Errors.** Every `/api` response is JSON. Handlers throw `APIError` (`notFound`, `badRequest`, `forbidden`,
+  `conflict`, `gone`) for expected failures; its message is public, so it's Greek and never contains SQL. Anything
+  else is logged with `console.error` and the caller gets a generic 500. Unknown paths answer 404, wrong methods 405,
+  invalid bodies 400 with per-field `details`.
+- D1 has no transactions: `executeTransaction` runs statements immediately, so multi-step writes that must be atomic
+  use `db.batch(...)`.
 
-- `bun run dev`: Start the Astro dev server (port 4321)
-- `bun run start`: Alias for `dev`
-- `bun run build`: Production build (`CLOUDFLARE_ENV=production astro build`)
-- Deploy (manual): `bun run build`, then `wrangler deploy --config dist/server/wrangler.json`
-- `bun run types`: Regenerate `worker-configuration.d.ts` from `wrangler.jsonc`
-- `bun run typecheck` / `astro-check` / `check`: Static gates
+### Client and server stay separate
 
-### Tests
+The browser never loads the route registry (handlers, SQL, Zod schemas):
 
-- `bun run test`: Full API test suite (env from `tests/.env.test`; needs the dev
-  server; the sysusers suite also needs the emails worker
-  running locally — `wrangler dev` on 8788 — because `createRegisterLink`
-  sends the invite email)
+- `lib/api/contract.ts` is a **generated**, browser-safe map `endpoint → { method, path, multipart, rawBlob }`
+  (`bun run api:contract`). `typecheck`, a unit test and `bun run check` fail when it drifts from the registry.
+- `lib/api/types.ts` derives `APIEndpointNames` / `APIArgs` / `APIResponse` from the registry with type-only imports.
+- Browser code imports from `@routes/index.client` (`API`, `APIEndpoints`, types) and calls the API with
+  `apiCall` (`lib/hooks/apiCall.ts`), `useAPIClient` or `createAPIResource`. Failures throw `APIRequestError`
+  (HTTP `status`, per-field `details`); network failures stay a `TypeError`.
+- Astro frontmatter uses `useAPI(endpoint, req, Astro)` from `lib/hooks/useAPI.server.ts`, which dispatches
+  in-process (a Worker fetching its own origin fails on the edge with Cloudflare error 1042).
+- `bun run check:bundle` (after a build) fails if server-only code shows up in `dist/client`.
 
-### Database tooling (wrangler D1)
+### Data, env and storage
 
-- `bun run db:query -- "SELECT ..."`: Query the local dev D1
-- `bun run db:query:prod -- "..."`: Query the remote production D1
-- `bun run db:logs`: Recent `query_logs` rows
-- `bun run db:replicate`: Export remote D1 to `dbSnapshots/` (wrangler d1 export)
-- `bun run db:reset`: Wipe local D1 and rebuild from `dbSnapshots/dev-snapshot.sql`
+- **Database:** `executeQuery` / `executeTransaction` in `lib/utils.server.ts` (D1 binding, `???` placeholder
+  expansion, query logging). Schema changes are migrations in `migrations/`.
+- **Types:** entity types in `types/entities.ts` are derived from the Zod schemas in `lib/api/schemas.ts`.
+- **Env:** `getEnv()` (`lib/env/env.ts`) is the one accessor for vars and secrets: `import.meta.env` merged once with
+  the `cloudflare:workers` runtime env (runtime wins), values untouched. Bindings come from the runtime env.
+- **Storage:** `Bucket` (`lib/bucket/index.ts`) wraps the R2 binding — `list` (paginated), `get`, `put`, `delete`,
+  `move` (copy, then delete; keeps the content type).
+- **Backups:** the admin Settings page downloads a restorable SQL dump of D1 (`lib/sqlDump.ts`); for real backups
+  prefer `wrangler d1 export`.
 
-### Data replication (dev mirrors prod)
+### Aux workers
 
-- `bun run replicate:all` / `replicate:db` / `replicate:bucket`: pull remote D1 + R2 into the local dev stores (`scripts/replicate.ts`; `--bucket` also seeds the local R2 emulation)
+- **PDF** (`services/pdfWorker`): the browser posts to the site's `POST /api/pdf`, which proxies through the
+  `PDF_SERVICE` binding with a shared bearer token.
+- **Emails** (`services/emailWorker`): registration confirmations and admin invites go through the `EMAIL_SERVICE`
+  binding with a shared token. The worker also hosts the campaign CLI (`bun run campaign`, recipients from D1).
 
-### Aux workers (local)
+### Adding an endpoint
 
-Each `services/*` worker runs in its own terminal with its own config — from
-inside the folder: `bunx wrangler dev --config wrangler.jsonc` (pdfWorker
-:8787, emailWorker :8788). Astro dev resolves the site's `EMAIL_SERVICE` /
-`PDF_SERVICE` service bindings to those sessions automatically
-(cross-command service bindings); start them whenever you exercise PDF
-printing/downloads or admin invites/registration emails.
+1. Add `new APIServer(...)` to the right group in `lib/api/routes/<group>.ts` (reuse schemas from
+   `lib/api/schemas.ts`, Greek messages, `APIError` for expected failures).
+2. `bun run api:contract` to regenerate the client contract.
+3. Call it with `apiCall("Group.endpoint", { RequestObject, UrlArgs })` in the browser or `useAPI(...)` in frontmatter.
+4. Add tests under `tests/api/` and run `bun run test`.
 
-### Worker secrets (shared pairs)
+## Common commands
 
-- `bun run worker-secrets`: create/rotate the two shared site↔worker token
-  pairs on the deployed workers (`PDF_SERVICE_AUTH_TOKEN` ↔ pdfWorker
-  `SERVICE_AUTH_TOKEN`; `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` ↔ emailWorker
-  `SERVICE_AUTH_TOKEN`). Requires `wrangler login`; `--dry-run` first, see
-  `--help` for flags. Values are generated locally and never printed.
-- Every rotated value is automatically mirrored into the local env files
-  (site `.env`/`.env.production`, the services' `.dev.vars`, emailWorker
-  `.env.development`/`.env.production`), so `wrangler dev`, local dev and
-  `templates:build --prod/--dev` pick the new tokens up with no manual steps.
-  Use `--no-env-files` to skip the mirroring.
+| Task | Command |
+| --- | --- |
+| Dev server | `bun run dev` |
+| Typecheck (fast gate) | `bun run typecheck` |
+| Astro check (slower, also `.astro` files) | `bun run astro-check` |
+| Contract check + typecheck + tests | `bun run check` |
+| Tests (dev server must be running) | `bun run test` |
+| Unit tests only | `bun test tests/unit` |
+| Production build | `bun run build` |
+| Query the local D1 | `bun run db:query -- "SELECT 1"` |
+| Workers: typecheck / tests | `bun run services:typecheck` · `bun run services:test` |
+| Format files you touched | `bunx prettier --write <files>` (the repo is not fully formatted; don't format it wholesale) |
 
-## Testing Notes ✅
+The full table (database tooling, replication, secrets) is in [`AGENTS.md`](AGENTS.md).
 
-- Tests live in `tests/api/*.test.ts` and use `tests/testHelpers.ts` (`useTestAPI`, `expectBody`, `getJson`) against the dev API server at `VITE_URL` (from `tests/.env.test`).
-- `TEST_EMAIL` and `TEST_PASSWORD` are required.
+## Testing ✅
 
-## Data and Snapshot Workflow
-
-`scripts/replicate.ts` (also `bun run replicate:*`) mirrors production into dev:
-- DB: `wrangler d1 export` (remote) → `dbSnapshots/dev-snapshot.sql` → replays into the local D1 store
-- Bucket: downloads the production R2 objects into `bucket/latest/` (resumable
-  cache/mirror), snapshots to `bucket/YY-MM-DD/`, then **wipes and seeds the
-  local R2 emulation** (`.wrangler/state/v3/r2`) — restart the dev server
-  afterwards, like after a DB replication
-
-`bun run db:reset` rebuilds the local dev D1 from `dbSnapshots/dev-snapshot.sql`.
-
-## Storage and File Handling
-
-`lib/bucket/index.ts` exposes the `Bucket` abstraction:
-- Production: Cloudflare R2 via the `S3_BUCKET` binding
-- Development: the same binding, emulated locally by miniflare
-  (`.wrangler/state/v3/r2`) and seeded from production with
-  `bun run replicate:bucket` — no extra server
-
-Common operations:
-- `Bucket.list(...)`
-- `Bucket.get(...)`
-- `Bucket.put(...)`
-- `Bucket.delete(...)`
-- `Bucket.move(...)`
-
-## PDF and Image Services 📄🖼️
-
-### PDF worker
-
-- Cloudflare Worker **`byzantini-website-pdf-gen`** (`services/pdfWorker`,
-  `pdf-lib` + `@pdf-lib/fontkit`; templates + Greek font bundled as assets)
-- Client integration in `lib/pdf.client.ts` — posts to the site's own
-  `POST /api/pdf` route (`Pdf.generate`, session-cookie authenticated), which
-  proxies through the **`PDF_SERVICE` service binding**; the worker requires
-  `Authorization: Bearer <PDF_SERVICE_AUTH_TOKEN>` (matches the worker's
-  `SERVICE_AUTH_TOKEN` secret). No browser→worker URL, no session back-call.
-- Supports single and bulk PDF generation/printing/download
-- Deploy: `cd services/pdfWorker && bunx wrangler deploy --config wrangler.jsonc`
-
-### Email worker
-
-- Cloudflare Worker **`byzantini-website-emails`** (`services/emailWorker`,
-  MailerSend REST API — the `mailersend` npm package can't run on workerd)
-- Same `POST /` contract as the retired mail server: `{ authToken, to,
-  subject, htmlTemplateName, templateData }`; templates are read from the
-  worker's own `BUCKET` R2 binding (`html_templates/<name>`) — the same keys
-  its `POST /html-templates` publish writes
-- Called by the site (server-side) through the **`EMAIL_SERVICE`** service
-  binding (still sending `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN` in the body);
-  worker secrets: `MAILERSEND_API_KEY`, `SERVICE_AUTH_TOKEN`
-- The whole former `email/` stack lives here: campaign CLI (`bun run campaign`,
-  recipients from **Cloudflare D1** via `wrangler d1 execute` — uses the
-  wrangler login, no API token: `byzantini-db` / `byzantini-db-preview`),
-  React-email `render/`, html/text templates
-- Template publishing goes through the worker's R2 binding
-  (`POST /html-templates`; `templates:build --prod`) — no AWS SDK/S3 keys
-- Deploy: `cd services/emailWorker && bunx wrangler deploy --config wrangler.jsonc`
-
-### Image compression
-
-- Native Cloudflare Images binding (`IMAGES`, declared in `wrangler.jsonc`)
-- Helpers in `lib/images.ts` (`compressImageForThumb`)
-- `Announcements.postImage` generates `thumb_*` variants in-process — the
-  deleted `services/imageCompression` Docker/Cloud Run service is no longer called
+- `tests/api/*.test.ts` run against the dev server at `VITE_URL` (from `tests/.env.test`) through
+  `tests/testHelpers.ts`. They write fixtures to the local dev D1; `bun run dev:clean` removes them
+  (dry-run by default). The sysusers suite also needs the email worker running locally.
+- `tests/unit/*.test.ts` are plain Bun tests with no server.
 
 ## Deployment ☁️
 
-This project is configured for Cloudflare Pages/Workers:
-- Wrangler config in `wrangler.toml`
-- Main worker output at `dist/_worker.js/index.js`
-- R2 binding: `S3_BUCKET`
-- Compatibility flags include `nodejs_compat`
+Deploys are manual and need Cloudflare credentials:
 
-Typical release path:
-1. Set production env values/secrets in Cloudflare.
-2. Run `bun run build`.
-3. Deploy `dist` with Wrangler/Pages pipeline.
+```bash
+bun run cf deploy          # build + wrangler deploy (production)
+bun run cf deploy:preview  # preview environment
+```
 
-## Development Conventions
+The deployed site workers are `byzantini-website-production` and `byzantini-website-preview` (adapter-suffixed;
+target those for `wrangler secret` / `wrangler tail`). Each worker in `services/` deploys on its own from its
+folder with `bunx wrangler deploy --config wrangler.jsonc`. Remote D1 migrations:
+`bunx wrangler d1 migrations apply DB --remote`.
 
-- Use Bun commands (`bun run ...`, `bun test ...`) throughout.
-- Keep API contract/implementation split in `lib/routes`.
-- Reuse wrappers in `lib/utils.server.ts` for consistent response/error behavior.
-- Preserve TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`, `@hooks/*`, etc.).
-- Prefer extending existing route groups/utilities over adding parallel transport layers.
+## AI-assisted development 🤖
 
-## Adding a New API Endpoint (Quick Guide)
+- [`AGENTS.md`](AGENTS.md) is the canonical guide for AI coding agents; `CLAUDE.md` is a symlink to it.
+- `.github/copilot-instructions.md` is the GitHub Copilot mirror — keep it in sync with `AGENTS.md`.
 
-1. Add route contract in a `*.client.ts` route group with validation and flags.
-2. Clone/add implementation in corresponding `*.server.ts` and set `route.func`.
-3. Ensure route group is exported via `lib/routes/index.client.ts` and `lib/routes/index.server.ts`.
-4. Call from app using `useAPI("Group.endpointName", payload)`.
-5. Add/update tests under `tests/api` and run `bun run test`.
+## Security notes 🔒
 
-## Troubleshooting
-
-- Route not found: verify path/method in contract and endpoint registration in route indexes.
-- Validation failures: confirm request shape matches Valibot schema.
-- Unauthorized responses: confirm session cookie/token and `authentication` flag behavior.
-- DB connection errors: verify the D1 binding (`DB` in `wrangler.jsonc`) and local dev state (`.wrangler/state/v3/d1`).
-- Missing bucket access: verify the R2 binding in Cloudflare; in dev, run
-  `bun run replicate:bucket` to seed the local R2 emulation.
-
-## AI-Assisted Development 🤖
-
-- `AGENTS.md` (repo root) is the canonical guidance file for AI coding agents
-  (Codex, Cursor, Claude Code, Zed, Windsurf, GitHub Copilot, ...).
-- `CLAUDE.md` is a symlink to `AGENTS.md` for Claude Code compatibility.
-- `.github/copilot-instructions.md` is the GitHub Copilot mirror of the same
-  guidance — keep it in sync with `AGENTS.md`.
-- Fast verification gates: `bun run typecheck`, `bun run test` (or
-  `bun run check` for typecheck + tests). Note: the existing codebase is not
-  fully prettier-formatted, so format only the files you touch.
-
-## Security Notes 🔒
-
-- Keep `.dev.vars*` and credentials out of version control.
-- Do not store production secrets in source files.
-- Rotate any credentials that may have been committed historically.
+- Env files (`.env*`, `.dev.vars`, `tests/.env.test`) are gitignored and must never be committed or
+  pasted anywhere.
+- Never put real credentials or tokens in code, tests or docs.
+- If a credential was ever committed, rotate it.

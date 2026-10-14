@@ -1,8 +1,9 @@
 import type { APIContext } from "astro";
 
-// Sitemap index pointing at both sitemaps of the site. Served as a real
-// route (see sitemap-0.xml.ts for why) so it works in dev, Pages preview and
-// production. Submit this single URL in Google Search Console.
+// Sitemap index pointing at both sitemaps of the site, served as a route.
+// Submit this single URL in Google Search Console. In a deployed build the
+// static sitemap-index.xml emitted by @astrojs/sitemap shadows this route
+// (see sitemap-0.xml.ts and P7 in docs/IMPROVEMENTS.md).
 export const prerender = false;
 
 export async function GET(ctx: APIContext) {

@@ -13,16 +13,16 @@
  * behind on `pupils`/`pupil_enrollments` (this used to add a 2027 enrollment to
  * a real pupil on every run).
  */
-import { v_PupilEnrollments, v_Pupils } from "@_types/entities";
+import { z_PupilEnrollments, z_Pupils } from "@lib/api/schemas";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { Database } from "bun:sqlite";
 import { afterAll, expect, test } from "bun:test";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
-import { array, number, object, string } from "valibot";
-import { Env } from "../../lib/env/env.ts";
-import { expectBody, getJson, useTestAPI } from "../testHelpers.ts";
+import { z } from "astro/zod";
+import { rawAPI } from "../rawAPI.ts";
+import { expectBody, getJson, testEnv, useTestAPI } from "../testHelpers.ts";
 
 // ---------------------------------------------------------------------------
 // Enrollment bookkeeping: record every id that exists before the run, delete
@@ -127,14 +127,10 @@ function pupilsTest() {
 		// the harness pre-validates against the route contract…
 		await expect(useTestAPI("Pupils.search", { RequestObject: { query: longQuery } })).rejects.toThrow("Πολύ μεγάλο ερώτημα");
 
-		// …and the server rejects it too, independently of the client
-		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
-		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/search`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json", Origin: base },
-			body: JSON.stringify({ query: longQuery }),
-		});
-		expect(res.status).toBe(400);
+		// …and an anonymous caller is turned away (401) before its body is even validated
+		// (server-side validation on its own is covered by #24 and tests/api/dispatch.test.ts)
+		const res = await rawAPI("POST", "/pupils/search", { query: longQuery });
+		expect(res.status).toBe(401);
 	});
 
 	// ------------------------------------------------------------------
@@ -144,17 +140,17 @@ function pupilsTest() {
 		expect(pupilId).not.toBeNull();
 		const res = await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } });
 		const json = await getJson<APIResponse["Pupils.get"]>(res);
-		expectBody(json, object({ pupil: v_Pupils, enrollments: array(v_PupilEnrollments) }));
+		expectBody(json, z.object({ pupil: z_Pupils, enrollments: z.array(z_PupilEnrollments) }));
 		expect(json.data.pupil.am).toBe(706);
 		expect(json.data.enrollments.length).toBeGreaterThan(0);
 		expect(json.data.enrollments[0]!.pupil_id).toBe(pupilId!);
 	});
 
-	test("--pupils-- #9 get fails for an unknown id", async () => {
+	test("--pupils-- #9 get answers 404 for an unknown id", async () => {
 		const res = await useTestAPI("Pupils.get", { UrlArgs: { id: 999999 } });
-		expect(res.status).toBe(500);
+		expect(res.status).toBe(404);
 		const json = await res.json();
-		expect(typeof json.error).toBe("string");
+		expect(json.error).toBe("Ο μαθητής δεν βρέθηκε");
 	});
 
 	test("--pupils-- #10 years / totals report enrollment figures", async () => {
@@ -166,8 +162,8 @@ function pupilsTest() {
 		const years = await getJson<APIResponse["Pupils.getYears"]>(yearsRes);
 		const total = await getJson<APIResponse["Pupils.getTotal"]>(totalRes);
 		const byYear = await getJson<APIResponse["Pupils.getTotalByYear"]>(byYearRes);
-		expectBody(years, array(string()));
-		expectBody(total, object({ total: number() }));
+		expectBody(years, z.array(z.string()));
+		expectBody(total, z.object({ total: z.number() }));
 		expect(years.data).toContain("2025-2026");
 		expect(total.data.total).toBeGreaterThan(1000);
 		expect(typeof byYear.data[2025]).toBe("number");
@@ -276,7 +272,7 @@ function pupilsTest() {
 			},
 		});
 		const json = await getJson<APIResponse["Pupils.enroll"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 		enrollmentId = json.data.insertId;
 	});
 
@@ -351,7 +347,7 @@ function pupilsTest() {
 			false,
 		);
 		const json = await getJson<APIResponse["Pupils.post"]>(res);
-		expectBody(json, object({ insertId: number(), pupilId: number() }));
+		expectBody(json, z.object({ insertId: z.number(), pupilId: z.number() }));
 		expect(json.data.pupilId).toBeGreaterThan(0);
 		// this test's own pupil, removed by dev:clean
 		pupilId = json.data.pupilId;
@@ -562,8 +558,12 @@ function pupilsTest() {
 			pass: true,
 		};
 		// A class year from another department, a school year far away, an over-long name.
-		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, class_year: "Α' Μέση" } }, false)).rejects.toThrow("Μη έγκυρο έτος φοίτησης για το τμήμα");
-		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, registration_year: "2019-2020" } }, false)).rejects.toThrow("Μη έγκυρο σχολικό έτος");
+		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, class_year: "Α' Μέση" } }, false)).rejects.toThrow(
+			"Μη έγκυρο έτος φοίτησης για το τμήμα",
+		);
+		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, registration_year: "2019-2020" } }, false)).rejects.toThrow(
+			"Μη έγκυρο σχολικό έτος",
+		);
 		await expect(useTestAPI("Pupils.post", { RequestObject: { ...base, last_name: "Μ".repeat(81) } }, false)).rejects.toThrow("έως 80 χαρακτήρες");
 
 		// `pass` and `date` come from the server, not the form.
@@ -575,7 +575,7 @@ function pupilsTest() {
 	});
 
 	test("--pupils-- #21 authenticated routes reject anonymous callers", async () => {
-		const base = Env.testEnv.VITE_URL ?? "http://localhost:4321/";
+		const base = testEnv.VITE_URL ?? "http://localhost:4321/";
 		const res = await fetch(`${base.endsWith("/") ? base : base + "/"}api/pupils/total`);
 		expect(res.status).toBe(401);
 	});
@@ -593,7 +593,7 @@ function pupilsTest() {
 
 		const res = await useTestAPI("Pupils.getByAm", { RequestObject: { am, amka } }, false);
 		const json = await getJson<APIResponse["Pupils.getByAm"]>(res);
-		expectBody(json, object({ pupil: v_Pupils, enrollments: array(v_PupilEnrollments) }));
+		expectBody(json, z.object({ pupil: z_Pupils, enrollments: z.array(z_PupilEnrollments) }));
 		expect(json.data.pupil.am).toBe(am);
 		expect(json.data.pupil.amka).toBe(amka);
 	});
@@ -607,6 +607,11 @@ function pupilsTest() {
 
 	test("--pupils-- #24 lookup rejects a malformed ΑΜΚΑ", async () => {
 		await expect(useTestAPI("Pupils.getByAm", { RequestObject: { am: 706, amka: "123" } }, false)).rejects.toThrow("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
+
+		// …and the server rejects it too, independently of the client
+		const res = await rawAPI("POST", "/pupils/lookup", { am: 706, amka: "123" });
+		expect(res.status).toBe(400);
+		expect(JSON.stringify((await res.json()).details)).toContain("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
 	});
 }
 

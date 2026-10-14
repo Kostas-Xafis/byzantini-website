@@ -1,8 +1,8 @@
-import { v_Books, v_Wholesalers } from "@_types/entities";
+import { z_Books, z_Wholesalers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { test } from "bun:test";
-import { array, number, object } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 function wholesalersTest() {
@@ -32,7 +32,7 @@ function wholesalersTest() {
 		});
 
 		const json = await getJson<APIResponse["Wholesalers.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newWholesalerId = json.data.insertId;
 	});
@@ -42,7 +42,7 @@ function wholesalersTest() {
 		});
 
 		const json = await getJson<APIResponse["Wholesalers.getById"]>(res);
-		expectBody(json, v_Wholesalers);
+		expectBody(json, z_Wholesalers);
 	});
 	test("--wholesalers-- #3", async () => {
 		const res = await useTestAPI("Books.post", {
@@ -50,7 +50,7 @@ function wholesalersTest() {
 		});
 
 		const json = await getJson<APIResponse["Books.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newBookId = json.data.insertId;
 	});
@@ -60,7 +60,7 @@ function wholesalersTest() {
 		});
 
 		const json = await getJson<APIResponse["Books.getById"]>(res);
-		expectBody(json, v_Books);
+		expectBody(json, z_Books);
 	});
 	test("--wholesalers-- #5", async () => {
 		const res = await useTestAPI("Wholesalers.delete", {
@@ -78,5 +78,5 @@ test("--wholesalers--", async () => {
 	const res = await useTestAPI("Wholesalers.get");
 
 	const json = await getJson<APIResponse["Wholesalers.get"]>(res);
-	expectBody(json, array(v_Wholesalers));
+	expectBody(json, z.array(z_Wholesalers));
 });

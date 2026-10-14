@@ -1,8 +1,9 @@
-import { v_Instruments, type Instruments } from "@_types/entities";
+import type { Instruments } from "@_types/entities";
+import { z_Instruments } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { test } from "bun:test";
-import { array, number, object } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 function instrumentsTest() {
@@ -19,7 +20,7 @@ function instrumentsTest() {
 		});
 
 		const json = await getJson<APIResponse["Instruments.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newInstrumentId = json.data.insertId;
 	});
@@ -29,7 +30,7 @@ function instrumentsTest() {
 		});
 
 		const json = await getJson<APIResponse["Instruments.getById"]>(res);
-		expectBody(json, v_Instruments);
+		expectBody(json, z_Instruments);
 	});
 	test("--instruments-- #3", async () => {
 		const res = await useTestAPI("Instruments.delete", {
@@ -47,5 +48,5 @@ test("--instruments--", async () => {
 	const res = await useTestAPI("Instruments.get");
 
 	const json = await getJson<APIResponse["Instruments.get"]>(res);
-	expectBody(json, array(v_Instruments));
+	expectBody(json, z.array(z_Instruments));
 });

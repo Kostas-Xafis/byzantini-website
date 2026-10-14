@@ -6,8 +6,6 @@
 		"noErrorTruncation": true,
 		"strict": true,
 		"allowUnusedLabels": true,
-		"diagnostics": true,
-		"extendedDiagnostics": true,
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"alwaysStrict": true,

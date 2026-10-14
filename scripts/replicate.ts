@@ -3,9 +3,6 @@
  * Dev data replication — pulls the PRODUCTION data (remote D1 + R2 bucket)
  * into the local dev stores so `bun run dev` serves the most recent data.
  *
- * Replaces the old `getData/replicate.ts` + `lib/routes/replication.server.ts`
- * (Turso → `dbSnapshots/` + S3 prod → `bucket/<date>` → `bucket/latest`).
- *
  * What it does:
  *  1. DB:   `wrangler d1 export <prod> --remote` → `dbSnapshots/dev-snapshot.sql`
  *           → wipes `.wrangler/state/v3/d1` and replays the SQL locally

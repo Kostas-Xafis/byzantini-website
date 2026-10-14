@@ -1,8 +1,8 @@
-import { v_Books } from "@_types/entities";
+import { z_Books } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { test } from "bun:test";
-import { array, number, object } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 function booksTest() {
@@ -24,7 +24,7 @@ function booksTest() {
 		});
 
 		const json = await getJson<APIResponse["Books.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 
 		newBookId = json.data.insertId;
 	});
@@ -34,7 +34,7 @@ function booksTest() {
 		});
 
 		const json = await getJson<APIResponse["Books.getById"]>(res);
-		expectBody(json, v_Books);
+		expectBody(json, z_Books);
 	});
 	test("--books-- #3", async () => {
 		const updatedBook = {
@@ -64,5 +64,5 @@ test("--books--", async () => {
 	const res = await useTestAPI("Books.get");
 
 	const json = await getJson<APIResponse["Books.get"]>(res);
-	expectBody(json, array(v_Books));
+	expectBody(json, z.array(z_Books));
 });

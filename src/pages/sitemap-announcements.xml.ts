@@ -5,7 +5,7 @@ import type { APIContext } from "astro";
 
 // Announcements sitemap — same format as the admin-maintained
 // sitemap-announcements.xml, but generated from the database on request so it
-// works in every environment (dev, Pages preview, production). Falls back to
+// works in every environment (dev, preview, production). Falls back to
 // the admin-maintained bucket copy when the database is unreachable, and only
 // then to a valid empty urlset (never a 404).
 export const prerender = false;
@@ -34,7 +34,7 @@ export async function GET(ctx: APIContext) {
 		console.error("sitemap-announcements: db query failed", error);
 		try {
 			// Secondary source: the admin-maintained bucket copy.
-			const bucketSitemap = await Bucket.get(ctx, "sitemap-announcements.xml");
+			const bucketSitemap = await Bucket.get("sitemap-announcements.xml");
 			if (bucketSitemap) {
 				return new Response(await bucketSitemap.arrayBuffer(), { headers: XML_HEADERS });
 			}

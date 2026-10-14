@@ -16,17 +16,28 @@
   `xxxRoutes` object (`new APIServer({method, path, schema?, responseSchema?,
   multipart?, rawBlob?}, [authenticateMiddleware], handler)`); validation is
   Zod (`astro/zod`, `lib/api/schemas.ts`).
-- `lib/api/routes/index.ts` imports all groups and builds `API`/`APIEndpoints`
-  + `APIArgs`/`APIResponse`; `lib/routes/index.client.ts` re-exports them.
+- `lib/api/routes/index.ts` imports all groups (server-only registry; base
+  class `APIRoute`). The browser uses the **generated** contract
+  `lib/api/contract.ts` (`bun run api:contract` after adding/removing/re-pathing
+  a route) + type-only `lib/api/types.ts`, via `lib/routes/index.client.ts`.
+  Browser code must never import `@lib/api/routes`; `bun run check:bundle`
+  guards `dist/client`.
 - Entry: `src/pages/api/[...slug].ts` → `APIServer.handle(request, "/api")`;
-  envelope `{ data } | { message } | { error }` with real HTTP statuses.
-- `useAPI` from `lib/hooks/useAPI.astro.ts` (server: in-process dispatch) or
-  `lib/hooks/useAPI.solid.ts` (browser); keys look like `Authentication.userLogin`.
+  always JSON: `{ data } | { message } | { error, details? }`, 404 unknown
+  path, 405 wrong method, 400 invalid body.
+- Frontmatter: `useAPI(endpoint, req, Astro)` from `lib/hooks/useAPI.server.ts`
+  (in-process dispatch); browser: `apiCall` / `useAPIClient` /
+  `createAPIResource` (throw `APIRequestError` with `status`/`details`);
+  keys look like `Authentication.userLogin`.
 
 ## Middleware, validation, and responses
 - Use `handlerResult(...)` for handler returns/errors (`lib/api/routes/APIServer.ts`);
   it runs the 1-arg form inside the D1 transaction shim, maps a string result to
-  `{ message }` and anything else to `{ data }`.
+  `{ message }` and anything else to `{ data }`. Throw `APIError`
+  (`lib/api/routes/APIError.ts`, Greek public message) for expected failures;
+  any other error becomes a generic 500 (logged, never leaked).
+- `:number` path params arrive as numbers; schemaless routes get `body: unknown`;
+  id lists use `z_IdArray` (never empty). Middleware runs before body validation.
 - Middleware is attached per route via the `APIServer` middleware array
   (`authenticateMiddleware` from `lib/api/routes/middleware/authenticate.ts`).
 - Validation is Zod, declared on the route instance (`schema` for requests,
@@ -59,7 +70,8 @@
 
 ## Env, storage, and external services
 - Server-side env comes from `cloudflare:workers` (`lib/env/runtime.ts`
-  bridge + `Env.env`, which merges `import.meta.env` with the runtime env).
+  bridge); read vars/secrets with `getEnv()` (`lib/env/env.ts`: one memoised
+  merge of `import.meta.env` + runtime env, runtime wins, no coercion).
   **Site dev values live in `.env`** (gitignored, auto-loaded by Bun/Vite:
   SECRET, GOOGLE_*, tokens); production runtime
   secrets are Cloudflare secrets. The site has **no `.dev.vars`**; the
@@ -120,8 +132,11 @@
 ## Workflows and conventions
 - Core commands: `bun run dev`, `bun run build`,
   `bun run types`, `bun run test`, `bun run db:query -- "..."`,
-  `bun run db:reset` (then re-apply migrations — the snapshot does not carry
-  them), `bun run typecheck`, `bun run check`.
+  `bun run db:reset` (rebuilds from the snapshot and applies pending
+  migrations), `bun run typecheck`, `bun run check`.
+- `bun run typecheck` runs the TypeScript 7 native compiler (`typescript7`
+  alias, called by path); `typescript` stays 6.0.3 for `astro check` and
+  editors (TS 7 has no classic JS API). Keep tsconfigs TS 7-valid.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
   suite writes to the local dev DB.
 - Pupils that still need attention are reviewed in the admin Μαθητολόγιο page

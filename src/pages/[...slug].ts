@@ -12,7 +12,7 @@ export async function GET(ctx: APIContext) {
 		}
 	})();
 	try {
-		const file = await Bucket.get(ctx, url);
+		const file = await Bucket.get(url);
 		if (!file) return ctx.rewrite("/404");
 
 		return new Response(await file.arrayBuffer(), { status: 200 });

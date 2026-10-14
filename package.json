@@ -5,16 +5,19 @@
 	"packageManager": "bun@1.4.0",
 	"scripts": {
 		"test": "bun test --env-file='./tests/.env.test' --timeout=10000 ./tests/",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "node_modules/typescript7/bin/tsc --noEmit",
+		"typecheck:ts6": "tsc --noEmit",
 		"astro-check": "bunx --bun astro check",
-		"check": "bun run typecheck && bun run test",
+		"check": "bun run api:contract --check && bun run typecheck && bun run test",
+		"api:contract": "bun scripts/apiContract.ts",
+		"check:bundle": "bun scripts/checkClientBundle.ts",
 		"format": "prettier --write src lib types tests",
 		"format:check": "prettier --check src lib types tests",
 		"loc": "find lib src types tests services -path '*/node_modules' -prune -o -path '*/.git' -prune -o -path '*/.tmp' -prune -o -path '*/.bun-cache' -prune -o -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.astro' -o -name '*.mjs' -o -name '*.css' \\) -print0 | xargs -0 wc -l | tail -1",
 		"db:query": "bunx wrangler d1 execute DB --local --command",
 		"db:query:prod": "bunx wrangler d1 execute DB --remote --command",
 		"db:replicate": "bunx wrangler d1 export DB --remote --output dbSnapshots/prod-export.sql",
-		"db:reset": "rm -rf .wrangler/state/v3/d1 && bunx wrangler d1 execute DB --local --file dbSnapshots/dev-snapshot.sql",
+		"db:reset": "rm -rf .wrangler/state/v3/d1 && bunx wrangler d1 execute DB --local --file dbSnapshots/dev-snapshot.sql && bunx wrangler d1 migrations apply DB --local",
 		"db:logs": "bunx wrangler d1 execute DB --local --command \"SELECT query, args, DATE(date / 1000, 'unixepoch') as date, error FROM query_logs ORDER BY date DESC LIMIT 100\"",
 		"types": "bunx wrangler types",
 		"dev:clean": "bun scripts/cleanDevTestData.ts --apply",
@@ -43,8 +46,7 @@
 		"astro-seo": "^1.1.0",
 		"fast-xml-parser": "^4.5.4",
 		"solid-js": "^1.9.13",
-		"tailwindcss": "^4.3.3",
-		"valibot": "^0.13.1"
+		"tailwindcss": "^4.3.3"
 	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.10",
@@ -58,6 +60,7 @@
 		"print-js": "^1.6.0",
 		"ts-morph": "^24.0.0",
 		"typescript": "6.0.3",
+		"typescript7": "npm:typescript@7.0.2",
 		"wrangler": "^4.127.1",
 		"xlsx": "^0.18.5"
 	}

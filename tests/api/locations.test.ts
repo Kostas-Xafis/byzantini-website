@@ -1,8 +1,9 @@
-import { v_Locations, type Locations } from "@_types/entities";
+import type { Locations } from "@_types/entities";
+import { z_LocationsResponse } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { expect, test } from "bun:test";
-import { array, number, object } from "valibot";
+import { z } from "astro/zod";
 import { expectBody, getJson, useTestAPI } from "../testHelpers";
 
 function locationsTest() {
@@ -27,7 +28,7 @@ function locationsTest() {
 		});
 
 		const json = await getJson<APIResponse["Locations.post"]>(res);
-		expectBody(json, object({ insertId: number() }));
+		expectBody(json, z.object({ insertId: z.number() }));
 		newLocationId = json.data.insertId;
 	});
 	test("--locations-- #2", async () => {
@@ -46,7 +47,7 @@ function locationsTest() {
 		});
 
 		const json = await getJson<APIResponse["Locations.getById"]>(res);
-		expectBody(json, v_Locations);
+		expectBody(json, z_LocationsResponse);
 	});
 	test("--locations-- #4", async () => {
 		const updatedLocation = {
@@ -77,14 +78,14 @@ test("--locations--", async () => {
 	const res = await useTestAPI("Locations.get");
 
 	const json = await getJson<APIResponse["Locations.get"]>(res);
-	expectBody(json, array(v_Locations));
+	expectBody(json, z.array(z_LocationsResponse));
 });
 
 test("--locations--", async () => {
 	const res = await useTestAPI("Locations.getByPriority");
 
 	const json = await getJson<APIResponse["Locations.getByPriority"]>(res);
-	expectBody(json, array(v_Locations));
+	expectBody(json, z.array(z_LocationsResponse));
 	let isSorted = true;
 	for (let i = 1; i < json.data.length; i++) {
 		const location = json.data[i];

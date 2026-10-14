@@ -1,8 +1,9 @@
-import type { APIContext } from "astro";
 import { z } from "astro/zod";
 import { Bucket } from "@lib/bucket";
-import { sqliteGenerateBackup } from "./schema";
+import { dbExec } from "@lib/db";
+import { dumpDatabase } from "@lib/sqlDump";
 import { APIServer, handlerResult } from "./APIServer";
+import { APIError } from "./APIError";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -63,7 +64,8 @@ export const settingsBackupRoutes = {
 		[authenticateMiddleware],
 		() =>
 			handlerResult(async () => {
-				const sql = await sqliteGenerateBackup();
+				// Restorable SQL in the `wrangler d1 export` format (see lib/sqlDump.ts).
+				const sql = await dumpDatabase(async (query) => (await dbExec<Record<string, unknown>>(query)).rows);
 				return { sql };
 			}, "Σφάλμα κατά την λήψη αντιγράφου βάσης"),
 	),
@@ -72,7 +74,7 @@ export const settingsBackupRoutes = {
 		[authenticateMiddleware],
 		({ request }) =>
 			handlerResult(async () => {
-				const files = await Bucket.list(request as unknown as APIContext);
+				const files = await Bucket.list();
 				return { files };
 			}, "Σφάλμα κατά την λήψη λίστας αρχείων bucket"),
 	),
@@ -87,7 +89,7 @@ export const settingsBackupRoutes = {
 				let file: Awaited<ReturnType<typeof Bucket.get>> | null = null;
 				let key = rawKey;
 				for (const candidate of keyCandidates) {
-					file = await Bucket.get(request as unknown as APIContext, candidate);
+					file = await Bucket.get(candidate);
 					if (file) {
 						key = candidate;
 						break;
@@ -96,7 +98,7 @@ export const settingsBackupRoutes = {
 
 				const bytes = await toUint8Array(file);
 				if (!bytes) {
-					throw Error(`Bucket file not found: ${rawKey}`);
+					throw APIError.notFound(`Το αρχείο δεν βρέθηκε: ${rawKey}`);
 				}
 
 				const dataBase64 = bytesToBase64(bytes);

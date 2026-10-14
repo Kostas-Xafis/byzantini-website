@@ -1,12 +1,15 @@
 import { expect } from "bun:test";
-import { parse, type BaseSchema } from "valibot";
-import { Env } from "../lib/env/env";
-import { APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "../lib/routes/index.client";
+import type { z } from "astro/zod";
+import { getEnv } from "../lib/env/env";
+import { getRoute, type APIArgs, type APIEndpointNames, type APIResponse } from "../lib/api/routes";
+import { assertOwnProp } from "../lib/utilities/assert";
 import { objToFormData } from "../lib/utilities/forms";
 import { convertToUrlFromArgs } from "../lib/utilities/url";
-import { assertOwnProp } from "../lib/utils.server";
+import type { TestEnvTypes } from "../types/env";
 
-const { VITE_URL = "http://localhost:4321/" } = Env.testEnv;
+/** `getEnv()` under `bun test`: `process.env` with tests/.env.test loaded (no runtime env outside workerd). */
+export const testEnv = getEnv() as TestEnvTypes;
+const { VITE_URL = "http://localhost:4321/" } = testEnv;
 let session_id = "";
 let collectingId = false;
 async function setSessionId() {
@@ -16,7 +19,7 @@ async function setSessionId() {
 	if (session_id !== "") return;
 	collectingId = true;
 	try {
-		const { TEST_EMAIL, TEST_PASSWORD } = Env.env;
+		const { TEST_EMAIL, TEST_PASSWORD } = testEnv;
 		if (TEST_EMAIL == null || TEST_PASSWORD == null) throw new Error("TEST_MAIL and TEST_PASSWORD must be set in the environment");
 		const response = await useTestAPI(
 			"Authentication.userLogin",
@@ -46,7 +49,8 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 		if (getSessionId) {
 			await setSessionId();
 		}
-		const Route = APIEndpoints[endpoint];
+		// The server registry, not the browser contract: requests are validated against the route's Zod schema.
+		const Route = getRoute(endpoint);
 		let fetcher: any = undefined;
 		if (req === undefined) {
 			const url = VITE_URL + "/api" + Route.path;
@@ -54,8 +58,8 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 		} else {
 			assertOwnProp(req, "RequestObject");
 			assertOwnProp(req, "UrlArgs");
-			if (Route.validation) {
-				const result = Route.validation.safeParse(req.RequestObject);
+			if (Route.schema) {
+				const result = Route.schema.safeParse(req.RequestObject);
 				if (!result.success) {
 					throw new Error((result.error.issues as any[]).map((i: any) => i.message).join("; ") || "Μη έγκυρο αίτημα");
 				}
@@ -86,7 +90,7 @@ export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: 
 };
 
 /** Phase 4 envelope: `{ data }` | `{ message }` | `{ error }`. */
-export function expectBody(body: any, expected?: string | BaseSchema<any, any>, isError = false) {
+export function expectBody(body: any, expected?: string | z.ZodType, isError = false) {
 	if (isError) {
 		expect(typeof body.error).toBe("string");
 		if (typeof expected === "string") expect(body.error).toBe(expected);
@@ -98,11 +102,8 @@ export function expectBody(body: any, expected?: string | BaseSchema<any, any>, 
 	}
 	expect(body.data).toBeDefined();
 	if (expected) {
-		try {
-			expect(parse(expected, body.data)).toBeObject();
-		} catch (err: any) {
-			throw new Error(err);
-		}
+		const result = expected.safeParse(body.data);
+		if (!result.success) throw new Error(`Response shape mismatch: ${JSON.stringify(result.error.issues)}`);
 	}
 }
 

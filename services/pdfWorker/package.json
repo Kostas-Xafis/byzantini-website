@@ -7,7 +7,7 @@
 		"dev": "bunx wrangler dev --config wrangler.jsonc",
 		"deploy": "bunx wrangler deploy --config wrangler.jsonc",
 		"types": "bunx wrangler types --config wrangler.jsonc",
-		"typecheck": "bunx --bun tsc --noEmit",
+		"typecheck": "node_modules/typescript7/bin/tsc --noEmit",
 		"tail": "bunx wrangler tail --config wrangler.jsonc"
 	},
 	"dependencies": {
@@ -17,6 +17,7 @@
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20260702.1",
 		"typescript": "^6.0.3",
+		"typescript7": "npm:typescript@7.0.2",
 		"wrangler": "^4.127.1"
 	}
 }

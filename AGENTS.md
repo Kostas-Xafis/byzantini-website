@@ -43,7 +43,7 @@ bindings**: `byzantini-website-emails` (`services/emailWorker`) and
   (CI/Pages integration is retired).
 - Env: server-side runtime values via `cloudflare:workers` env (bindings + CF
   secrets/vars in prod) merged with `import.meta.env`; **dev values live in
-  Vite-native `.env`** (gitignored — Bun/Vite auto-load it, `Env.env` merges
+  Vite-native `.env`** (gitignored — Bun/Vite auto-load it, `getEnv()` merges
   both views). The site no longer uses `.dev.vars` (deleted 2026-09; pure-
   wrangler services still do — wrangler dev reads secrets only from their
   `.dev.vars`). `.env.production` holds prod mirrors; only `VITE_`/`PUBLIC_`
@@ -61,12 +61,14 @@ Core loop:
 | --- | --- | --- |
 | Install | `bun install` · `bun run services:install` | real lockfile is `bun.lock`; the workers keep their own `bun.lock` (not workspaces) |
 | Dev server | `bun run dev` | Astro dev, port **4321** |
-| Dev server (alt) | `bun run start` | alias for `dev` |
 | Build | `bun run build` | production build |
 | Types | `bun run types` | regenerate `worker-configuration.d.ts` after `wrangler.jsonc` changes |
-| Typecheck | `bun run typecheck` | `tsc --noEmit` (fast gate for every change) |
-| Astro check | `bun run astro-check` | `astro check` (slower, more rules; 4 pre-existing errors) |
-| Full gate | `bun run check` | typecheck + tests |
+| Typecheck | `bun run typecheck` | TypeScript 7 native `tsc --noEmit` (~2 s; fast gate for every change) · `bun run typecheck:ts6` runs the same check on TS 6 (~10 s) |
+| Astro check | `bun run astro-check` | `astro check` (slower, more rules; 15 pre-existing errors) |
+| Full gate | `bun run check` | contract drift check + typecheck + tests |
+| Unit tests | `bun test tests/unit` | no dev server needed |
+| API contract | `bun run api:contract` · `--check` | regenerate / verify `lib/api/contract.ts` |
+| Bundle guard | `bun run check:bundle` | after `bun run build`: no server code in `dist/client` |
 | Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the emailWorker's offline campaign suite (never sends) |
 | Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
@@ -81,7 +83,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Query remote DB | `bun run db:query:prod -- "..."` | production D1 |
 | Recent query logs | `bun run db:logs` | |
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
-| Reset dev DB | `bun run db:reset` | wipes local D1 and rebuilds from `dbSnapshots/dev-snapshot.sql`; **does not re-run migrations** — follow with `bunx wrangler d1 migrations apply DB --local` |
+| Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
 
@@ -114,22 +116,48 @@ or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
   `lib/api/routes/<group>.ts` — each exports a `xxxRoutes` object with the
   route keys (`Books.get`, `Authentication.userLogin`, ...) the app uses.
   Contracts live on the instance: `{ method, path, schema?, responseSchema?, multipart?, rawBlob? }`.
+  `APIRoute` (`lib/api/routes/APIRoute.ts`) is the base class (contract,
+  registry, path matching); `APIServer` adds handler, middleware and dispatch.
 - Central registry: `lib/api/routes/index.ts` imports every group (which
-  registers the routes) and builds the app-facing compat maps +
-  types: `API`, `APIEndpoints`, `APIEndpointNames`, `APIArgs`, `APIResponse`.
-  `lib/routes/index.client.ts` re-exports them (stable import path).
+  registers the routes) and exposes `routeGroups`, `routeEntries()`,
+  `getRoute(name)`. It is **server-only** — never import `@lib/api/routes`
+  from browser code.
+- **Client contract (generated):** `lib/api/contract.ts` = `APIEndpoints`
+  (`endpoint → { method, path, multipart, rawBlob }`), written by
+  `bun run api:contract` from the registry — **regenerate it after adding,
+  removing or re-pathing a route**. `lib/api/types.ts` derives
+  `APIEndpointNames`/`APIArgs`/`APIResponse` with `import type` only (never
+  add a value import there) and holds the compile-time drift check
+  (`ContractInSync`); `tests/unit/apiContract.test.ts` and `bun run check`
+  (`api:contract --check`) catch the rest. `lib/routes/index.client.ts` is the
+  stable browser import path (`API`, `APIEndpoints`, types).
 - `src/pages/api/[...slug].ts` is the single API entrypoint:
-  `APIServer.handle(request, "/api")` — dispatch, Zod validation (JSON or
-  multipart-with-coercion), auth middleware, typed responses.
-- Middleware: `authenticateMiddleware` (session cookie, `lib/api/routes/middleware`) —
-  attach per route via the middleware array.
-- Server-side `useAPI` (`lib/hooks/useAPI.astro.ts`) dispatches **in-process**
-  (no self-fetch — Cloudflare error 1042, see Platform gotchas); the Solid version
-  (`lib/hooks/useAPI.solid.ts`) fetches from the browser. Response envelope:
-  `{ data } | { message } | { error }` with proper HTTP statuses.
-- Validation uses **Zod** (`astro/zod`) — schemas in `lib/api/schemas.ts`.
-- Adding an endpoint: add to the group file (`new APIServer(...)`) — the maps
-  and types update automatically; add tests under `tests/api/`.
+  `APIServer.handle(request, "/api")` — route match, middleware (auth, rate
+  limit — runs **before** body validation, so anonymous callers get 401, not a
+  validation report), Zod validation (JSON or multipart-with-coercion),
+  handler, response validation, all inside one try/catch.
+- Path params arrive percent-decoded; `[name:number]` params are numbers (a
+  non-decimal segment does not match → 404). `body` is `z.output` of the
+  route's schema (`unknown` without one — declare a schema to read a body).
+- **Errors:** every `/api` response is a JSON envelope
+  `{ data } | { message } | { error, details? }`. Handlers throw `APIError`
+  (`lib/api/routes/APIError.ts`: `badRequest` 400, `forbidden` 403,
+  `notFound` 404, `conflict` 409, `gone` 410) for expected failures — its
+  message is public (Greek, no SQL). Anything else is `console.error`-logged
+  and the caller gets the route's `handlerResult` message or "Σφάλμα
+  διακομιστή" with 500. Unknown path → 404, wrong method → 405 (`Allow`),
+  invalid body → 400 with treeified `details` (the registration form maps them
+  to fields).
+- Callers: frontmatter uses `useAPI(endpoint, req, Astro)` from
+  `lib/hooks/useAPI.server.ts` — dispatches **in-process** (no self-fetch —
+  Cloudflare error 1042, see Platform gotchas). Browser code uses `apiCall`
+  (`lib/hooks/apiCall.ts`), `useAPIClient` or `createAPIResource`; they share
+  the codec in `lib/api/transport.ts` and throw `APIRequestError` (`status`,
+  `details`) — a network failure stays fetch's `TypeError`.
+- `bun run check:bundle` (after `bun run build`) fails if server-only markers
+  (SQL, `cloudflare:workers`, env names) reach `dist/client`.
+- Validation uses **Zod** (`astro/zod`) — schemas in `lib/api/schemas.ts`;
+  entity types in `types/entities.ts` are `z.infer`s of them (type-only).
 
 ## Database access rules
 
@@ -155,7 +183,7 @@ or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
 
 - **Cloudflare error 1042**: a Worker that `fetch`es its own origin fails on the
   real edge (works in miniflare). Server-side code must dispatch API calls
-  in-process (`lib/hooks/useAPI.astro.ts` → `APIServer.handle`), never
+  in-process (`lib/hooks/useAPI.server.ts` → `APIServer.handle`), never
   `fetch(origin + "/api/...")`.
 - **D1 has no transactions** (no interactive transactions, sessions have no
   commit/rollback): atomic multi-statement flows use `db.batch([...])`.
@@ -172,8 +200,10 @@ or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
   `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
 - Running `bun run build` while `bun run dev` is up repoints
   `.wrangler/deploy/config.json` at `dist/server`; restart the dev server after.
-- `bun run astro-check` reports 4 pre-existing errors (Links shareImage alt,
-  spoudastiria `LocationRow.priority`, anakoinoseis `key` prop and `Element.src`).
+- `bun run astro-check` reports 15 pre-existing errors (Links shareImage alt,
+  8 DOM-append errors in `AnnouncementsPreview.astro`, spoudastiria
+  `LocationRow.priority`, anakoinoseis `PageAnnouncement`/`key` prop/`Element.src`).
+  Compare the error list, not just the count, when you touch `.astro` files.
 - Reference architecture: `~/Projects/Isokratis` (read-only — never edit it).
 
 ## Pupil register (Μαθητολόγιο)
@@ -214,9 +244,11 @@ The person data that used to live on `registrations` is split into two tables
 ## Env, storage and external services
 
 - Server-side env comes from the `cloudflare:workers` env module
-  (`lib/env/runtime.ts` bridge, `Env.env` for the merged view) — never ad-hoc
-  globals. The merged view = `import.meta.env` + the runtime env (bindings,
-  vars/secrets). **Site dev values live in `.env`** (gitignored, auto-loaded by
+  (`lib/env/runtime.ts` bridge) — never ad-hoc globals. Vars and secrets are
+  read with `getEnv()` (`lib/env/env.ts`): `import.meta.env` merged **once**
+  (memoised, frozen) with the runtime env, runtime wins, values are **not
+  coerced** (strings stay strings). Bindings (`DB`, `S3_BUCKET`,
+  `EMAIL_SERVICE`, ...) come from `runtimeEnv` / the handler `env`. **Site dev values live in `.env`** (gitignored, auto-loaded by
   Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
   `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`.
   Production runtime secrets stay **Cloudflare secrets** (`wrangler secret
@@ -238,7 +270,10 @@ The person data that used to live on `registrations` is split into two tables
   (`.wrangler/state/v3/r2`). Dev data comes from `bun run replicate:bucket`,
   which wipes the local store and seeds it from production (D1-style) plus a
   `bucket/YY-MM-DD/` archive; restart the dev server after replicating.
-  Never access the binding directly in route code.
+  Never access the binding directly in route code. `Bucket` methods are
+  context-free (`Bucket.put(data, key, type)`); `list` paginates past 1000
+  keys; `move` copies first, deletes the source only after, keeps the source's
+  metadata and is a no-op onto the same key.
 - **Worker↔worker calls go through service bindings, never HTTP URLs**: the
   site's `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`)
   and `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
@@ -274,15 +309,22 @@ The person data that used to live on `registrations` is split into two tables
 
 ## Coding conventions
 
-- TypeScript: TypeScript 6.0.3 (pin in `package.json`), config extends
-  `astro/tsconfigs/strict`, `noEmit`. Keep path aliases from `tsconfig.json`
+- TypeScript: **two pinned compilers**. `typescript` 6.0.3 stays the package
+  every tool imports (`@astrojs/check` → `bun run astro-check`, editors'
+  tsserver), because TS 7 ships no classic JS API. `typescript7`
+  (`npm:typescript@7.0.2`, the Go-native compiler) only runs the CLI checks:
+  `bun run typecheck` and the workers' `typecheck`/`typecheck:cli` call
+  `node_modules/typescript7/bin/tsc` **by path** (both packages declare a
+  `tsc` bin; `node_modules/.bin/tsc` is TS 6). Each worker has its own
+  `typescript7` devDependency. Config extends `astro/tsconfigs/strict`, `noEmit`;
+  keep it TS 7-valid (no `baseUrl`, relative `paths`). Keep path aliases from `tsconfig.json`
   (`@routes/*` → `lib/routes/*`, `@utilities/*`, `@hooks/*`, `@env/*`,
   `@bucket/*`, `@lib/*`, `@_types/*`, `@components/*`, `@layouts/*`,
   `@pages/*`). `baseUrl` is gone (deprecated in TS 6, non-functional in TS 7)
   — `paths` targets are relative (`./lib/...`). Prefer `@utilities/*`/`@lib/*`
   over relative imports inside `lib/`.
 
-### TypeScript 6 gotchas (do not "fix" these back)
+### TypeScript 6/7 gotchas (do not "fix" these back)
 
 - `types/helpers.ts` `IsAny` uses the function-variance form; the classic
   `0 extends 1 & T ? true : false` mis-evaluates when `T` is a generic
@@ -306,8 +348,12 @@ The person data that used to live on `registrations` is split into two tables
 
 ## Tests
 
-- Test files: `tests/api/*.test.ts`; helpers in `tests/testHelpers.ts`
-  (`useTestAPI(...)`).
+- Test files: `tests/api/*.test.ts` (need the dev server) and
+  `tests/unit/*.test.ts` (no server); helpers in `tests/testHelpers.ts`
+  (`useTestAPI(...)`, `testEnv`) and `tests/rawAPI.ts` (anonymous raw requests
+  for 401/404/405/malformed-input tests). Response-shape assertions are zod:
+  `expectBody(json, schema)` takes the schemas from `lib/api/schemas.ts`
+  (test-local `z.object(...)` only for narrower shapes).
 - Tests require `tests/.env.test` (`VITE_URL`, `TEST_EMAIL`, `TEST_PASSWORD`)
   and a running dev API server; run `bun run test` after touching an API
   endpoint.
@@ -318,16 +364,21 @@ The person data that used to live on `registrations` is split into two tables
 
 1. Add the route to the group file in `lib/api/routes/<group>.ts`:
    `new APIServer({ method, path, schema?, responseSchema?, multipart?, rawBlob? }, [authenticateMiddleware?], handler)`
-   (zod schema — reuse/extend `lib/api/schemas.ts`; Greek messages).
-2. Export it from the group's `xxxRoutes` object — the registry, `API`/`APIEndpoints`
-   maps and `APIArgs`/`APIResponse` types update automatically.
-3. Call it from the app with `useAPI("Group.endpoint", payload)`.
-4. Add tests under `tests/api/` and run `bun run test`.
+   (zod schema — reuse/extend `lib/api/schemas.ts`; Greek messages; throw
+   `APIError` for expected failures).
+2. Export it from the group's `xxxRoutes` object — the registry and the
+   `APIArgs`/`APIResponse` types update automatically.
+3. Run `bun run api:contract` to regenerate the client contract
+   (`lib/api/contract.ts`) — `typecheck` fails until you do.
+4. Call it with `apiCall("Group.endpoint", payload)` in browser code or
+   `useAPI("Group.endpoint", payload, Astro)` (`useAPI.server.ts`) in frontmatter.
+5. Add tests under `tests/api/` and run `bun run test`.
 
 ## Do / Don't
 
 - DO: extend existing route groups and utilities instead of adding new
-  transport/API layers; use `handlerResult` for handler error handling.
+  transport/API layers; use `handlerResult` for handler error handling and
+  `APIError` for expected failures (never return raw DB error text).
 - DO: run `bun run typecheck` before declaring a change done; run targeted
   tests for API changes.
 - DO: keep diffs minimal and focused; don't reformat unrelated files.

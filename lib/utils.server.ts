@@ -1,15 +1,12 @@
 import type { Insert } from "@_types/entities";
-import { Env } from "@env/env";
+import { getEnv } from "@env/env";
 import { dbExec, logQuery, type QueryArguments, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
 
 export function isProduction() {
-	const { MODE, PROD } = Env.env;
+	const { MODE, PROD } = getEnv();
 	return MODE === "production" && PROD === true;
 }
-
-// This is a cheat to use whenever I know better than the type checker if an object has a property or not
-export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> {}
 
 export const MIMETypeMap: Record<string, string> = {
 	jpeg: "image/jpeg",
@@ -85,29 +82,4 @@ export const executeTransaction = <T>(func: (t: Transaction) => Promise<T>): Pro
 			}
 		}
 	})();
-};
-
-
-// Use case: import a module for use only in development.
-// Any other use case will 99% probably crash the build process.
-// Cursed function
-
-/**
- * Asynchronously imports a module only in non-production environments.
- *
- * @example ```ts
- * const os = await silentImport<typeof import('os')>('os');
- * ```
- * @param {string} importStr - The string representing the module to import.
- * @returns {Promise<ImportType>} - A promise that resolves to the imported module or an empty object in production or on error.
- */
-export const silentImport = <ImportType>(importStr: string) => {
-	if (isProduction()) {
-		return Promise.resolve({}) as Promise<ImportType>;
-	}
-	try {
-		return eval(`import("${importStr}")`) as Promise<ImportType>;
-	} catch (err) {
-		return Promise.resolve({}) as Promise<ImportType>;
-	}
 };

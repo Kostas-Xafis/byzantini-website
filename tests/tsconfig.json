@@ -1,12 +1,10 @@
 {
 	"extends": "astro/tsconfigs/strict",
-	"include": ["../.astro/types.d.ts", "../lib", "../getData", "../src", "../types", "./**/*.ts"],
+	"include": ["../.astro/types.d.ts", "../lib", "../src", "../types", "./**/*.ts"],
 	"compilerOptions": {
 		"noErrorTruncation": true,
 		"strict": true,
 		"allowUnusedLabels": true,
-		"diagnostics": true,
-		"extendedDiagnostics": true,
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"alwaysStrict": true,
@@ -16,19 +14,18 @@
 		"jsx": "preserve",
 		"jsxImportSource": "solid-js",
 		"types": ["@types/bun", "@cloudflare/workers-types"],
-		"baseUrl": "../",
 		"paths": {
-			"@bucket/*": ["lib/bucket/*"],
-			"@hooks/*": ["lib/hooks/*"],
-			"@utilities/*": ["lib/utilities/*"],
-			"@routes/*": ["lib/routes/*"],
-			"@env/*": ["lib/env/*"],
-			"@lib/*": ["lib/*"],
-			"@types/*": ["types/*"],
-			"@_types/*": ["types/*"],
-			"@components/*": ["src/components/*"],
-			"@layouts/*": ["src/layouts/*"],
-			"@pages/*": ["src/pages/*"]
+			"@bucket/*": ["../lib/bucket/*"],
+			"@hooks/*": ["../lib/hooks/*"],
+			"@utilities/*": ["../lib/utilities/*"],
+			"@routes/*": ["../lib/routes/*"],
+			"@env/*": ["../lib/env/*"],
+			"@lib/*": ["../lib/*"],
+			"@types/*": ["../types/*"],
+			"@_types/*": ["../types/*"],
+			"@components/*": ["../src/components/*"],
+			"@layouts/*": ["../src/layouts/*"],
+			"@pages/*": ["../src/pages/*"]
 		}
 	}
 }

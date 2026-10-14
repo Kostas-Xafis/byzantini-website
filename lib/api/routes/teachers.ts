@@ -1,19 +1,15 @@
 import { z } from "astro/zod";
-import type { APIContext } from "astro";
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
 import { ImageMIMEType, executeQuery } from "@lib/utils.server";
-import { z_BlobUpload, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
-import { APIServer, handlerResult } from "./APIServer";
+import { z_BlobUpload, z_IdArray, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
+import { APIError } from "./APIError";
+import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
  * Teachers — Phase 4 route group (contracts + handlers in one place).
  * Ported from lib/routes/teachers.client|server.ts.
- *
- * NOTE: `Bucket` calls take an `APIContext` that is only used by the (unused)
- * `getS3Bucket` accessor; the Phase-4 handlers have no Astro context, so the
- * request is passed as a stand-in (dev path never touches it).
  */
 
 const bucketPicturePrefix = "kathigites/picture/";
@@ -41,8 +37,6 @@ const fileDeleteReq = z.object({
 	type: z.union([z.literal("cv"), z.literal("picture")], { message: "Μη έγκυρος τύπος" }),
 });
 
-const z_IdArray = z.array(positiveInt());
-
 // Columns safe to serve without a session (mirror of z_PublicTeacher): never ΑΜΚΑ, phone or email.
 const publicTeacherColumns = "id, fullname, picture, cv, linktree, gender, title, visible, online";
 type PublicTeacher = Omit<Teachers, "amka" | "email" | "telephone">;
@@ -59,17 +53,18 @@ export const teachersRoutes = {
 	),
 	getById: new APIServer({ method: "POST", path: "/teachers/id", schema: z_IdArray, responseSchema: z_Teachers }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async () => {
-			const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", body as number[]);
-			if (!teacher) throw Error("Teacher not found");
+			const [id] = body;
+			const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id=?", [id]);
+			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 			return teacher;
-		}, "Δάσκαλος δεν βρέθηκε"),
+		}, "Σφάλμα κατά την ανάκτηση του δασκάλου"),
 	),
 	getByPriorityClasses: new APIServer(
 		{ method: "GET", path: "/teachers/priority/[class_type:string]", responseSchema: z.array(z_PublicTeacher) },
 		({ params }) =>
 			handlerResult(() => {
 				const class_id = ["byz", "par", "eur"].findIndex((v) => v === params.class_type);
-				if (class_id === -1) throw Error("Invalid class type");
+				if (class_id === -1) throw APIError.badRequest("Μη έγκυρος τύπος μουσικής");
 				return executeQuery<PublicTeacher>(
 					`SELECT ${publicTeacherColumns.replace(/(\w+)/g, "t.$1")} FROM teachers as t JOIN teacher_classes as tc ON t.id = tc.teacher_id WHERE tc.class_id=? AND visible=1 ORDER BY tc.priority ASC`,
 					[class_id],
@@ -87,7 +82,7 @@ export const teachersRoutes = {
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(
-				() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id = ?", body as number[]),
+				() => executeQuery<TeacherClasses>("SELECT * FROM teacher_classes WHERE teacher_id IN (???)", body),
 				"Σφάλμα κατά την ανάκτηση των μαθημάτων του δασκάλου",
 			),
 	),
@@ -97,7 +92,7 @@ export const teachersRoutes = {
 	getLocationsById: new APIServer(
 		{ method: "POST", path: "/teachers/locationsById", schema: z_IdArray, responseSchema: z.array(z_TeacherLocations) },
 		[authenticateMiddleware],
-		({ body }) => handlerResult(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id = ?", body as number[])),
+		({ body }) => handlerResult(() => executeQuery<TeacherLocations>("SELECT * FROM teacher_locations WHERE teacher_id IN (???)", body)),
 	),
 	getInstruments: new APIServer({ method: "GET", path: "/teachers/instruments", responseSchema: z.array(z_TeacherInstruments) }, () =>
 		handlerResult(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments")),
@@ -105,7 +100,7 @@ export const teachersRoutes = {
 	getInstrumentsById: new APIServer(
 		{ method: "POST", path: "/teachers/instrumentsById", schema: z_IdArray, responseSchema: z.array(z_TeacherInstruments) },
 		[authenticateMiddleware],
-		({ body }) => handlerResult(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id = ?", body as number[])),
+		({ body }) => handlerResult(() => executeQuery<TeacherInstruments>("SELECT * FROM teacher_instruments WHERE teacher_id IN (???)", body)),
 	),
 	post: new APIServer(
 		{ method: "POST", path: "/teachers", schema: postReq, responseSchema: z.object({ insertId: z.number() }) },
@@ -171,11 +166,11 @@ export const teachersRoutes = {
 		[authenticateMiddleware],
 		({ params, body, request }) =>
 			handlerResult(async () => {
-				const id = Number(params.id);
+				const { id } = params;
 				const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
-				if (!teacher) throw Error("Teacher not found");
+				if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
-				const blob = body as Blob;
+				const blob = body;
 				const filetype = blob.type;
 				const data = await blob.arrayBuffer();
 
@@ -184,37 +179,37 @@ export const teachersRoutes = {
 				if (filetype === "application/pdf") {
 					const link = bucketCVPrefix + filename;
 
-					await Bucket.put(request as unknown as APIContext, data, link, filetype);
+					await Bucket.put(data, link, filetype);
 					await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 					return "Pdf uploaded successfully";
 				} else if (ImageMIMEType.includes(filetype)) {
 					const link = bucketPicturePrefix + filename;
 
-					await Bucket.put(request as unknown as APIContext, data, link, filetype);
+					await Bucket.put(data, link, filetype);
 					await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
 					return "Image uploaded successfully";
 				}
-				throw Error("Μη υποστηριζόμενος τύπος αρχείου");
+				throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
 			}, "Σφάλμα κατά την αποθήκευση του αρχείου"),
 	),
 	fileRename: new APIServer({ method: "PUT", path: "/teachers/file/rename/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
 		handlerResult(async (T) => {
-			const id = Number(params.id);
+			const { id } = params;
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
-			if (!teacher) throw Error("Teacher not found");
+			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
 			const oldNameCV = teacher.cv && teacher.cv.split(".")[0];
 			const oldNameImg = teacher.picture && teacher.picture.split(".")[0];
 			const newName = teacher.fullname;
 			if (teacher.cv && oldNameCV !== newName) {
 				const newFileName = newName + "." + teacher.cv.split(".").at(-1);
-				await Bucket.move(request as unknown as APIContext, bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName);
+				await Bucket.move(bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName);
 				await T.executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [newFileName, id]);
 			}
 			if (teacher.picture && oldNameImg !== newName) {
 				const imageFileType = teacher.picture.split(".").at(-1) as string;
 				const newFileName = newName + "." + imageFileType;
-				await Bucket.move(request as unknown as APIContext, bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName);
+				await Bucket.move(bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName);
 				await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
 			}
 			return "Files renamed successfully";
@@ -223,22 +218,22 @@ export const teachersRoutes = {
 	fileDelete: new APIServer({ method: "PUT", path: "/teachers/file", schema: fileDeleteReq }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
-			if (!teacher) throw Error("Teacher not found");
+			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 			if (body.type === "cv") {
-				if (teacher.cv) await Bucket.delete(request as unknown as APIContext, bucketCVPrefix + teacher.cv);
+				if (teacher.cv) await Bucket.delete(bucketCVPrefix + teacher.cv);
 				await T.executeQuery(`UPDATE teachers SET cv = NULL WHERE id = ?`, [body.id]);
 				return "Pdf deleted successfully" as string;
 			} else if (body.type === "picture") {
-				if (teacher.picture) await Bucket.delete(request as unknown as APIContext, bucketPicturePrefix + teacher.picture);
+				if (teacher.picture) await Bucket.delete(bucketPicturePrefix + teacher.picture);
 				await T.executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
 				return "Image deleted successfully";
 			}
-			throw Error("Μη υποστηριζόμενος τύπος αρχείου");
+			throw APIError.badRequest("Μη υποστηριζόμενος τύπος αρχείου");
 		}, "Σφάλμα κατά την διαγραφή του αρχείου"),
 	),
 	delete: new APIServer({ method: "DELETE", path: "/teachers", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
 		handlerResult(async (T) => {
-			const ids = body as number[];
+			const ids = body;
 
 			await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (???)`, ids);
 			await T.executeQuery(`DELETE FROM teacher_locations WHERE teacher_id IN (???)`, ids);
@@ -246,8 +241,8 @@ export const teachersRoutes = {
 
 			const files = await T.executeQuery<Teachers>(`SELECT cv, picture FROM teachers WHERE id IN (???)`, ids);
 			for (const file of files) {
-				if (file.cv) await Bucket.delete(request as unknown as APIContext, bucketCVPrefix + file.cv);
-				if (file.picture) await Bucket.delete(request as unknown as APIContext, bucketPicturePrefix + file.picture);
+				if (file.cv) await Bucket.delete(bucketCVPrefix + file.cv);
+				if (file.picture) await Bucket.delete(bucketPicturePrefix + file.picture);
 			}
 			await T.executeQuery(`DELETE FROM teachers WHERE id IN (???)`, ids);
 			return "Teacher/s deleted successfully";
