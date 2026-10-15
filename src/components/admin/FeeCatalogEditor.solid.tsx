@@ -19,6 +19,7 @@ import { API } from "@routes/index.client";
 import { For, Show, createMemo, createSignal, createUniqueId, onMount } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { toast } from "./toast";
+import Icon from "@components/other/Icon.solid";
 
 /** FEES.md §2 seed (teacher rules are omitted: their ids are only known to the database) — the template of last resort. */
 const SEED: FeeCatalogInput = {
@@ -502,7 +503,7 @@ export default function FeeCatalogEditor() {
 					</p>
 				</Show>
 				<button type="button" class={ghostButtonClass} aria-label={`Αφαίρεση κανόνα ${index() + 1}`} onClick={() => removeRule(row.key)}>
-					<i class="fa-solid fa-trash mr-2" aria-hidden="true"></i>
+					<Icon name="trash" class="mr-2" />
 					Αφαίρεση κανόνα
 				</button>
 			</fieldset>
@@ -520,7 +521,7 @@ export default function FeeCatalogEditor() {
 				</Show>
 				<For each={form.rules}>{(row, index) => <Show when={row.class_id === classId}>{ruleEditor(row, index)}</Show>}</For>
 				<button type="button" class={ghostButtonClass} onClick={() => addRule(classId)}>
-					<i class="fa-solid fa-plus mr-2" aria-hidden="true"></i>
+					<Icon name="plus" class="mr-2" />
 					Προσθήκη κανόνα
 				</button>
 
@@ -695,8 +696,8 @@ export default function FeeCatalogEditor() {
 						<p
 							role="note"
 							class="rounded-lg border-2 border-amber-600 bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-50 p-3 text-sm font-bold">
-							<i class="fa-solid fa-triangle-exclamation mr-2" aria-hidden="true"></i>Η νέα έκδοση ισχύει ΜΟΝΟ για τις νέες εγγραφές. Οι
-							υπάρχουσες εγγραφές διατηρούν τις τιμές της έκδοσης με την οποία καταχωρήθηκαν.
+							<Icon name="warning" class="mr-2" />Η νέα έκδοση ισχύει ΜΟΝΟ για τις νέες εγγραφές. Οι υπάρχουσες εγγραφές διατηρούν τις τιμές της
+							έκδοσης με την οποία καταχωρήθηκαν.
 						</p>
 						<button type="submit" class={buttonClass} disabled={!canSave() || confirming()}>
 							Αποθήκευση νέας έκδοσης

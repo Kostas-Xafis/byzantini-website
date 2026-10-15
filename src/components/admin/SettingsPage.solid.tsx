@@ -7,6 +7,8 @@ import { useCurrentUser } from "./currentUser";
 import FeeCatalogEditor from "./FeeCatalogEditor.solid";
 import { PanelCard, PanelCollapsible, PanelPage, hintClass, primaryButtonClass, secondaryButtonClass } from "./Panel.solid";
 import { toast } from "./toast";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
 
@@ -21,10 +23,10 @@ const readLastBackup = () => {
 	}
 };
 
-const THEME_OPTIONS: { value: DashboardThemePreference; label: string; icon: string }[] = [
-	{ value: "light", label: "Φωτεινό", icon: "fa-solid fa-sun" },
-	{ value: "dark", label: "Σκοτεινό", icon: "fa-solid fa-moon" },
-	{ value: "system", label: "Συσκευής", icon: "fa-solid fa-circle-half-stroke" },
+const THEME_OPTIONS: { value: DashboardThemePreference; label: string; icon: IconName }[] = [
+	{ value: "light", label: "Φωτεινό", icon: "sun" },
+	{ value: "dark", label: "Σκοτεινό", icon: "moon" },
+	{ value: "system", label: "Συσκευής", icon: "contrast" },
 ];
 
 const getCurrentFormattedDate = () => {
@@ -210,7 +212,7 @@ export default function SettingsPage() {
 
 	return (
 		<PanelPage title="Ρυθμίσεις" subtitle="Εμφάνιση, αντίγραφα ασφαλείας και λοιπές ρυθμίσεις του πίνακα διαχείρισης.">
-			<PanelCard icon="fa-solid fa-palette" title="Εμφάνιση" description="Ισχύει μόνο για αυτή τη συσκευή.">
+			<PanelCard icon="palette" title="Εμφάνιση" description="Ισχύει μόνο για αυτή τη συσκευή.">
 				<div
 					role="radiogroup"
 					aria-label="Θέμα πίνακα διαχείρισης"
@@ -238,7 +240,7 @@ export default function SettingsPage() {
 										? "bg-brand text-brand-ink shadow-sm shadow-shade"
 										: "text-ink-muted hover:bg-accent-soft hover:text-accent-ink")
 								}>
-								<i class={option.icon} aria-hidden="true"></i>
+								<Icon name={option.icon} />
 								{option.label}
 							</button>
 						)}
@@ -247,7 +249,7 @@ export default function SettingsPage() {
 			</PanelCard>
 
 			<PanelCard
-				icon="fa-solid fa-cloud-arrow-down"
+				icon="cloud-download"
 				title="Αντίγραφο ασφαλείας"
 				description="Ένα αρχείο .zip με όλη τη βάση δεδομένων και όλα τα αρχεία (εικόνες, έγγραφα). Φυλάξτε το εκτός υπολογιστή.">
 				<div class="grid gap-3">
@@ -258,7 +260,7 @@ export default function SettingsPage() {
 							disabled={isDownloading()}
 							aria-busy={isDownloading()}
 							class={`${primaryButtonClass} px-5 py-2.5`}>
-							<i class={isDownloading() ? "fa-solid fa-circle-notch fa-spin" : "fa-solid fa-download"} aria-hidden="true"></i>
+							<Icon name={isDownloading() ? "spinner" : "download"} spin={isDownloading()} />
 							{isDownloading() ? "Λήψη σε εξέλιξη…" : "Λήψη αντιγράφου ασφαλείας"}
 						</button>
 						<Show when={isDownloading() && (downloadPct() ?? 0) < 95}>
@@ -301,7 +303,7 @@ export default function SettingsPage() {
 			<Show when={user()?.permissions.feeCatalog}>
 				<PanelCollapsible
 					id="settings-fee-catalog"
-					icon="fa-solid fa-euro-sign"
+					icon="euro"
 					title="Κατάλογος διδάκτρων"
 					description="Οι τιμές διδάκτρων ανά σχολικό έτος. Κάθε αποθήκευση δημιουργεί νέα έκδοση.">
 					<FeeCatalogEditor />
@@ -309,7 +311,7 @@ export default function SettingsPage() {
 			</Show>
 
 			{isDevelopmentMode && (
-				<PanelCollapsible id="settings-dev" icon="fa-solid fa-code" title="Για προγραμματιστές" description="Ορατό μόνο σε development.">
+				<PanelCollapsible id="settings-dev" icon="code" title="Για προγραμματιστές" description="Ορατό μόνο σε development.">
 					<p class={hintClass}>
 						Οι migrations εκτελούνται μέσω του CLI: <code>bunx wrangler d1 migrations apply DB --local</code>
 					</p>

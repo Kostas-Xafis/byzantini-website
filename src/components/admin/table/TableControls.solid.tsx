@@ -4,6 +4,7 @@ import { createStore } from "solid-js/store";
 import type { InputFields, Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
+import Icon from "@components/other/Icon.solid";
 
 export type Action = {
 	inputs: InputFields<Record<string, InputProps>> | Record<string, InputProps>;
@@ -64,7 +65,7 @@ export function TableControl(props: Props) {
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
 					class={"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-ink-muted opacity-35 cursor-not-allowed"}>
-					<i aria-hidden="true" class={"text-lg max-sm:text-base " + (tableAction.action.icon || ActionIcon.ADD)}></i>
+					<Icon name={tableAction.action.icon || ActionIcon.ADD} class="text-lg max-sm:text-base" />
 				</button>
 			}>
 			<>
@@ -76,13 +77,11 @@ export function TableControl(props: Props) {
 						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-ink"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
-					<i
-						aria-hidden="true"
+					<Icon
+						name={tableAction.action.icon || ActionIcon.ADD}
 						style={{ "backface-visibility": "hidden" }}
-						class={
-							"text-lg max-sm:text-base will-change-transform transition-transform duration-150 ease-[cubic-bezier(0,.85,.43,.64)] group-hover/ctrlBtn:scale-[1.096] origin-center " +
-							(tableAction.action.icon || ActionIcon.ADD)
-						}></i>
+						class="text-lg max-sm:text-base will-change-transform transition-transform duration-150 ease-[cubic-bezier(0,.85,.43,.64)] group-hover/ctrlBtn:scale-[1.096] origin-center"
+					/>
 				</button>
 				<Modal prefix={prefix} actionStore={tableAction as { action: Action }} />
 			</>

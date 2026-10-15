@@ -18,6 +18,7 @@ import SettingsPage from "./SettingsPage.solid";
 import SysUsersTable from "./SysUsersTable.solid.tsx";
 import TeachersTable from "./TeachersTable.solid.tsx";
 import TotalsTable from "./TotalsTable.solid.tsx";
+import Icon from "@components/other/Icon.solid";
 
 /**
  * A page only some roles may open (lib/auth/roles.ts). The nav already hides its link and the API refuses
@@ -32,7 +33,7 @@ const restricted = (permission: Permission, Page: Component) => () => {
 				fallback={
 					<div class="grid h-full place-items-center p-8 text-center text-ink">
 						<div class="grid gap-2">
-							<i class="fa-solid fa-lock text-3xl text-accent-ink" aria-hidden="true"></i>
+							<Icon name="lock" class="text-3xl text-accent-ink" />
 							<p class="text-lg font-bold">Δεν έχετε πρόσβαση σε αυτή τη σελίδα.</p>
 						</div>
 					</div>

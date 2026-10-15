@@ -4,6 +4,8 @@ import type { APIResponse } from "@routes/index.client";
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 import { PanelPage, cardClass, hintClass, inputClass, secondaryButtonClass } from "./Panel.solid";
 import { toast } from "./toast";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 
 /**
  * «Ιστορικό ενεργειών» (sysadmin and owner): who changed what, newest first, grouped by day. Filters by
@@ -14,20 +16,20 @@ type Row = APIResponse["Activity.list"]["rows"][number];
 
 const CATEGORIES = [...new Set(Object.values(ACTIVITY_GROUPS))];
 
-/** Font Awesome icon per category (the endpoint group of a row). */
-const GROUP_ICONS: Record<string, string> = {
-	Pupils: "fa-address-book",
-	Payments: "fa-hand-holding-dollar",
-	Payoffs: "fa-file-invoice-dollar",
-	Books: "fa-book",
-	Wholesalers: "fa-truck",
-	Teachers: "fa-chalkboard-user",
-	Instruments: "fa-guitar",
-	Locations: "fa-location-dot",
-	Announcements: "fa-bullhorn",
-	FeeCatalog: "fa-euro-sign",
-	SysUsers: "fa-users-gear",
-	Authentication: "fa-key",
+/** Icon per category (the endpoint group of a row). */
+const GROUP_ICONS: Record<string, IconName> = {
+	Pupils: "address-book",
+	Payments: "hand-coins",
+	Payoffs: "invoice",
+	Books: "book",
+	Wholesalers: "truck",
+	Teachers: "teacher",
+	Instruments: "guitar",
+	Locations: "map-pin",
+	Announcements: "megaphone",
+	FeeCatalog: "euro",
+	SysUsers: "users-gear",
+	Authentication: "key",
 };
 
 const dayLabel = (ms: number) => {
@@ -125,7 +127,7 @@ export default function ActivityPage() {
 					when={rows().length > 0}
 					fallback={
 						<div class={`${cardClass} grid place-items-center gap-2 p-10 text-center`}>
-							<i class="fa-solid fa-clock-rotate-left text-3xl text-accent-ink/60" aria-hidden="true"></i>
+							<Icon name="history" class="text-3xl text-accent-ink/60" />
 							<p class={hintClass}>Δεν υπάρχουν καταγεγραμμένες ενέργειες{admin() || category() ? " με αυτά τα φίλτρα" : " ακόμη"}.</p>
 						</div>
 					}>
@@ -147,7 +149,7 @@ export default function ActivityPage() {
 															(isDeletion(row.endpoint) ? "bg-accent-soft text-danger" : "bg-accent-soft text-accent-ink")
 														}
 														aria-hidden="true">
-														<i class={`fa-solid ${GROUP_ICONS[groupName] ?? "fa-pen"}`}></i>
+														<Icon name={GROUP_ICONS[groupName] ?? "pen"} />
 													</span>
 													<div class="grid min-w-0 flex-1 gap-0.5">
 														<p class="font-bold">

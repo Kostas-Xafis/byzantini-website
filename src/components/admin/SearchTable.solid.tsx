@@ -3,6 +3,7 @@ import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } f
 import type { SetStoreFunction } from "solid-js/store";
 import type { CellValue } from "./table/Row.solid";
 import { ALL_COLUMNS } from "./table/searchMatch";
+import Icon from "@components/other/Icon.solid";
 
 export type SearchColumn = {
 	columnName: string;
@@ -95,7 +96,7 @@ export function SearchTable(props: SearchTableProps) {
 
 	return (
 		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-xl border border-line bg-surface px-3 max-sm:mx-4 py-1.5 shadow-sm shadow-shade">
-			<i class="fa-solid fa-magnifying-glass text-accent-ink" aria-hidden="true"></i>
+			<Icon name="search" class="text-accent-ink" />
 			<select
 				aria-label="Στήλη αναζήτησης"
 				class="max-w-[14rem] cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-accent-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
@@ -151,7 +152,7 @@ export function SearchTable(props: SearchTableProps) {
 					aria-label="Καθαρισμός αναζήτησης"
 					class="grid h-6 w-6 place-items-center rounded-full text-accent-ink transition-colors hover:bg-accent-soft"
 					onClick={clear}>
-					<i class="fa-solid fa-xmark text-sm leading-none" aria-hidden="true"></i>
+					<Icon name="close" class="text-sm leading-none" />
 				</button>
 			</Show>
 		</div>

@@ -3,6 +3,7 @@ import type { APIResponse } from "@routes/index.client";
 import { For, Show, createSignal, onMount } from "solid-js";
 import { Badge, PanelPage, cardClass, hintClass, secondaryButtonClass } from "./Panel.solid";
 import { toast } from "./toast";
+import Icon from "@components/other/Icon.solid";
 
 /**
  * «Σφάλματα» (sysadmin): unexpected server errors, one row per distinct error with how often it happened
@@ -52,14 +53,14 @@ export default function ErrorsPage() {
 					when={rows().length > 0}
 					fallback={
 						<div class={`${cardClass} grid place-items-center gap-2 p-10 text-center`}>
-							<i class="fa-solid fa-circle-check text-3xl text-green-700 dark:text-green-300" aria-hidden="true"></i>
+							<Icon name="check-circle" class="text-3xl text-green-700 dark:text-green-300" />
 							<p class={hintClass}>Δεν έχουν καταγραφεί σφάλματα.</p>
 						</div>
 					}>
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<p class={hintClass}>Ειδοποίηση με email στον διαχειριστή συστήματος κάθε 15 λεπτά, όταν υπάρχουν νέα.</p>
 						<button type="button" class={secondaryButtonClass} disabled={busy()} onClick={() => remove(rows().map((row) => row.id))}>
-							<i class="fa-solid fa-trash" aria-hidden="true"></i>
+							<Icon name="trash" />
 							Διαγραφή όλων
 						</button>
 					</div>
@@ -69,7 +70,7 @@ export default function ErrorsPage() {
 								<li class={`${cardClass} grid gap-2 p-4 sm:p-5`}>
 									<div class="flex flex-wrap items-center gap-2">
 										<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-danger" aria-hidden="true">
-											<i class="fa-solid fa-triangle-exclamation"></i>
+											<Icon name="warning" />
 										</span>
 										<p class="font-bold [overflow-wrap:anywhere]">{row.source}</p>
 										<Badge>HTTP {row.status}</Badge>
@@ -83,7 +84,7 @@ export default function ErrorsPage() {
 											disabled={busy()}
 											onClick={() => remove([row.id])}
 											aria-label={`Διαγραφή του σφάλματος ${row.source}`}>
-											<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+											<Icon name="close" />
 											Διαγραφή
 										</button>
 									</div>

@@ -1,5 +1,7 @@
 import type { CustomEvents } from "@_types/custom-events";
-import { For, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import { CloseButton } from "../admin/table/CloseButton.solid";
@@ -9,7 +11,7 @@ export type MultiFileInputProps = {
 	prefix: string;
 	value?: [string, AnyRecord][];
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	fileExtension?: string;
 	metadata?: AnyRecord[];
@@ -17,7 +19,7 @@ export type MultiFileInputProps = {
 };
 
 export default function MultiFileInput(props: MultiFileInputProps) {
-	const { name, value: initFiles = [], prefix, required, iconClasses, disabled, fileExtension, metadata, filePreview } = props;
+	const { name, value: initFiles = [], prefix, required, icon, disabled, fileExtension, metadata, filePreview } = props;
 
 	const [input, setInput] = createSignal<HTMLInputElement>();
 	const fileHandler = new FileHandler(prefix + name, {
@@ -116,7 +118,9 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 						((fileList().length > 0 && " -z-10 blur-[2px]") || " hover:bg-gray-600 dark:hover:bg-gray-700 group/file")
 					}>
 					<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
-						<i class={"text-5xl text-gray-400 group-hover/file:text-gray-50  " + (iconClasses || "")}></i>
+						<Show when={icon}>
+							<Icon name={icon!} class="text-5xl text-gray-400 group-hover/file:text-gray-50" />
+						</Show>
 						<p class="text-2xl text-gray-400  group-hover/file:text-gray-50">Drag&thinsp; & Drop</p>
 					</div>
 				</div>

@@ -31,7 +31,7 @@ export const onDeleteInstrument = function (hydrate: CacheMutationsReturnType, s
 					name: "name",
 					label: "Όργανο",
 					type: "select",
-					iconClasses: "fa-solid fa-chalkboard-teacher",
+					icon: "teacher",
 					selectList: instruments.map((c) => c.name),
 					valueLiteral: true,
 				} as InputProps,

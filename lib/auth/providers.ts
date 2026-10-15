@@ -27,7 +27,7 @@ export type ProviderProfile = {
 	avatarUrl: string | null;
 };
 
-export type ProviderInfo = { id: ProviderId; label: string; icon: string };
+export type ProviderInfo = { id: ProviderId; label: string };
 
 type ProviderDefinition = ProviderInfo & {
 	/** Apple posts the result back (`response_mode=form_post`) instead of redirecting with a query string. */
@@ -78,7 +78,6 @@ const definitions: Record<ProviderId, ProviderDefinition> = {
 	google: {
 		id: "google",
 		label: "Google",
-		icon: "fa-brands fa-google",
 		formPost: false,
 		isConfigured: (env) => !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
 		authorizationURL: (origin, state, verifier) => {
@@ -96,7 +95,6 @@ const definitions: Record<ProviderId, ProviderDefinition> = {
 	apple: {
 		id: "apple",
 		label: "Apple",
-		icon: "fa-brands fa-apple",
 		formPost: true,
 		isConfigured: (env) => !!(env.APPLE_CLIENT_ID && env.APPLE_TEAM_ID && env.APPLE_KEY_ID && env.APPLE_PRIVATE_KEY),
 		authorizationURL: (origin, state) => {
@@ -116,7 +114,6 @@ const definitions: Record<ProviderId, ProviderDefinition> = {
 	microsoft: {
 		id: "microsoft",
 		label: "Microsoft",
-		icon: "fa-brands fa-microsoft",
 		formPost: false,
 		isConfigured: (env) => !!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET),
 		authorizationURL: (origin, state, verifier) => {
@@ -147,13 +144,13 @@ export function getProvider(id: string): ProviderDefinition | undefined {
 export function enabledProviders(): ProviderInfo[] {
 	const env = getEnv();
 	return PROVIDER_IDS.filter((id) => definitions[id].isConfigured(env)).map((id) => {
-		const { label, icon } = definitions[id];
-		return { id, label, icon };
+		const { label } = definitions[id];
+		return { id, label };
 	});
 }
 
 /** Display info for any known provider (also ones disabled here, e.g. an identity linked in production). */
 export const providerInfo = (id: ProviderId): ProviderInfo => {
-	const { label, icon } = definitions[id];
-	return { id, label, icon };
+	const { label } = definitions[id];
+	return { id, label };
 };

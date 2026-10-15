@@ -18,6 +18,7 @@ import {
 	secondaryButtonClass,
 } from "./Panel.solid";
 import { toast } from "./toast";
+import Icon from "@components/other/Icon.solid";
 
 /**
  * «Ο λογαριασμός μου» — the signed-in admin's ways in and devices:
@@ -191,7 +192,7 @@ export default function AccountPage() {
 					<>
 						<section class={`${cardClass} flex flex-wrap items-center gap-4 p-5 sm:p-6`}>
 							<div class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-accent-soft text-2xl text-accent-ink ring-4 ring-surface">
-								<Show when={me().avatar_url} fallback={<i class="fa-solid fa-user" aria-hidden="true"></i>}>
+								<Show when={me().avatar_url} fallback={<Icon name="user" />}>
 									{(avatar) => <img src={avatar()} alt="" referrerPolicy="no-referrer" class="h-full w-full object-cover" />}
 								</Show>
 							</div>
@@ -203,13 +204,13 @@ export default function AccountPage() {
 						</section>
 
 						<PanelCard
-							icon="fa-solid fa-right-to-bracket"
+							icon="log-in"
 							title="Τρόποι εισόδου"
 							description="Συνδέστε λογαριασμούς για να μπαίνετε με ένα κλικ. Δεν χρειάζεται να έχουν το ίδιο email με τον λογαριασμό σας.">
 							<ul class="grid gap-2">
 								<li class="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
 									<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent-ink" aria-hidden="true">
-										<i class="fa-solid fa-key"></i>
+										<Icon name="key" />
 									</span>
 									<div class="grid flex-1 min-w-[10rem]">
 										<span class="font-bold">Email και κωδικός</span>
@@ -273,7 +274,7 @@ export default function AccountPage() {
 
 						<PanelCollapsible
 							id="account-password"
-							icon="fa-solid fa-lock"
+							icon="lock"
 							title={me().hasPassword ? "Αλλαγή κωδικού" : "Ορισμός κωδικού"}
 							description={me().hasPassword ? "Μετά την αλλαγή, οι άλλες συσκευές αποσυνδέονται." : "Για να συνδέεστε και με email και κωδικό."}>
 							<form ref={passwordForm} class="grid gap-4" onSubmit={onPasswordSubmit}>
@@ -303,7 +304,7 @@ export default function AccountPage() {
 
 						<PanelCollapsible
 							id="account-sessions"
-							icon="fa-solid fa-laptop"
+							icon="laptop"
 							title="Συνδεδεμένες συσκευές"
 							description="Κάθε σύνδεση ισχύει 7 ημέρες. Αποσυνδέστε όποια συσκευή δεν αναγνωρίζετε."
 							badge={<Badge>{sessions().length}</Badge>}>
@@ -312,8 +313,7 @@ export default function AccountPage() {
 									{(session) => (
 										<li class="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
 											<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent-ink" aria-hidden="true">
-												<i
-													class={`fa-solid ${/Android|iPhone|iPad/.test(session.user_agent ?? "") ? "fa-mobile-screen" : "fa-desktop"}`}></i>
+												<Icon name={/Android|iPhone|iPad/.test(session.user_agent ?? "") ? "smartphone" : "monitor"} />
 											</span>
 											<div class="grid flex-1 min-w-[10rem]">
 												<span class="flex flex-wrap items-center gap-2 font-bold">
@@ -339,7 +339,7 @@ export default function AccountPage() {
 							</ul>
 							<Show when={sessions().length > 1}>
 								<button type="button" class={primaryButtonClass} disabled={busy() !== null} onClick={signOutOthers}>
-									<i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+									<Icon name="log-out" />
 									{busy() === "sessions" ? "Αποσύνδεση…" : "Αποσύνδεση από όλες τις άλλες συσκευές"}
 								</button>
 							</Show>

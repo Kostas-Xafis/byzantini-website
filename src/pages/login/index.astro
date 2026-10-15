@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import ProviderButtons from "@components/auth/ProviderButtons.astro";
 import Input from "@components/input/Input.astro";
 import SigninLayout from "@layouts/SigninLayout.astro";
@@ -31,16 +32,15 @@ const expired = isExpiredLogin(Astro.url.search);
 				<p
 					role="status"
 					class="max-w-[30ch] justify-self-center rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
-					<i class="fa-solid fa-clock-rotate-left mr-1" aria-hidden="true" />Η συνεδρία σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε από εκεί που
-					ήσασταν.
+					<Icon name="history" class="mr-1" />Η συνεδρία σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε από εκεί που ήσασταν.
 				</p>
 			)
 		}
 		<ProviderButtons providers={providers} verb="Είσοδος" />
 		<form id="loginForm" action="" method="post" class="group grid gap-y-8">
-			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
+			<Input type="email" name="email" label="Email" icon="mail" />
 			<div class="grid gap-1">
-				<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+				<Input type="password" name="password" label="Κωδικός" icon="lock" required />
 				<a href="/login/forgot" class="justify-self-end px-2 text-sm text-red-900 underline underline-offset-2 dark:text-red-200"
 					>Ξεχάσατε τον κωδικό;</a
 				>

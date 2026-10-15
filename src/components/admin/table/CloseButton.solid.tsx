@@ -1,3 +1,4 @@
+import Icon from "@components/other/Icon.solid";
 type Props = {
 	onClick?: (e: MouseEvent) => void;
 	classes?: string;
@@ -16,7 +17,7 @@ export function CloseButton(props: Props) {
 			aria-label={props.label ?? "Κλείσιμο"}
 			title={props.label ?? "Κλείσιμο"}
 			onclick={props.onClick}>
-			<i aria-hidden="true" class="w-full fa-solid fa-xmark"></i>
+			<Icon name="close" />
 		</button>
 	);
 }

@@ -1,4 +1,6 @@
 import { Show, createSignal, type JSX } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 
 /**
  * Building blocks of the admin "panel" pages (Ρυθμίσεις, Ο λογαριασμός μου): a centred, scrollable
@@ -35,13 +37,13 @@ export function PanelPage(props: { title: string; subtitle?: JSX.Element; childr
 	);
 }
 
-type CardHeaderProps = { icon: string; title: string; description?: JSX.Element; aside?: JSX.Element };
+type CardHeaderProps = { icon: IconName; title: string; description?: JSX.Element; aside?: JSX.Element };
 
 function CardHeader(props: CardHeaderProps) {
 	return (
 		<div class="flex items-start gap-3 min-w-0">
 			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-ink" aria-hidden="true">
-				<i class={`${props.icon} text-lg`}></i>
+				<Icon name={props.icon} class="text-lg" />
 			</span>
 			<div class="grid gap-0.5 min-w-0 flex-1">
 				<h2 class="font-anaktoria text-2xl leading-tight">{props.title}</h2>
@@ -95,9 +97,10 @@ export function PanelCollapsible(props: CardHeaderProps & { id: string; badge?: 
 					<CardHeader icon={props.icon} title={props.title} description={props.description} />
 				</div>
 				{props.badge}
-				<i
-					class="fa-solid fa-chevron-down shrink-0 text-accent-ink/70 transition-transform duration-200 group-open/panel:rotate-180 motion-reduce:transition-none"
-					aria-hidden="true"></i>
+				<Icon
+					name="chevron-down"
+					class="shrink-0 text-accent-ink/70 transition-transform duration-200 group-open/panel:rotate-180 motion-reduce:transition-none"
+				/>
 			</summary>
 			<div class="grid gap-5 px-5 pb-5 sm:px-6 sm:pb-6">{props.children}</div>
 		</details>

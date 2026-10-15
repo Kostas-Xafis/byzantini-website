@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import type { Instruments } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
@@ -195,10 +196,7 @@ const breadcrumbs = breadcrumbsSchema([
 																"inline-flex items-center gap-1.5 rounded-full px-[0.55vw] py-[0.18vw] max-sm:px-2 max-sm:py-0.5 text-[0.88vw] max-sm:text-xs leading-snug font-medium [word-break:break-word] " +
 																(isOnline ? "bg-white text-red-900 border border-red-900" : "bg-red-900 text-red-50")
 															}>
-															<i
-																class={"fa-solid " + (isOnline ? "fa-globe" : "fa-location-dot") + " text-[0.75em]"}
-																aria-hidden="true"
-															/>
+															<Icon name={isOnline ? "globe" : "map-pin"} class="text-[0.75em]" />
 															{str}
 														</span>
 													);
@@ -228,7 +226,7 @@ const breadcrumbs = breadcrumbsSchema([
 													rel="noopener"
 													href={cvSrc + teacher.cv}
 													class="inline-flex items-center gap-1.5 rounded-lg border-2 border-red-900 px-[0.65vw] py-[0.35vw] max-sm:px-2.5 max-sm:py-1 text-[1.05vw] max-sm:text-sm font-medium text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-													<i class="fa-solid fa-file-lines" aria-hidden="true" /> Βιογραφικό
+													<Icon name="file-text" /> Βιογραφικό
 												</a>
 											) : null}
 											{teacher.linktree ? (
@@ -237,10 +235,7 @@ const breadcrumbs = breadcrumbsSchema([
 													rel="noopener"
 													href={teacher.linktree}
 													class="inline-flex items-center gap-1.5 rounded-lg border-2 border-red-900 px-[0.65vw] py-[0.35vw] max-sm:px-2.5 max-sm:py-1 text-[1.05vw] max-sm:text-sm font-medium text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-													<i
-														class={"fa-" + (teacher.linktree.includes("youtube") ? "brands fa-youtube" : "solid fa-link")}
-														aria-hidden="true"
-													/>{" "}
+													<Icon name={teacher.linktree.includes("youtube") ? "youtube" : "link"} />{" "}
 													{teacher.linktree.includes("youtube") ? "YouTube" : "Πολυμέσα"}
 												</a>
 											) : null}

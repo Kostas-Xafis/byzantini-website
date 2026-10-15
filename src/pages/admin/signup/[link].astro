@@ -33,9 +33,9 @@ const providers = enabledProviders();
 		<ProviderButtons providers={providers} verb="Εγγραφή" />
 		<form id="signupForm" action="" method="post" class="group grid gap-y-8" data-email={invitedEmail}>
 			<!-- The account must use the invited email (enforced server-side), so it is shown, not edited. -->
-			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" value={invitedEmail} disabled />
+			<Input type="email" name="email" label="Email" icon="mail" value={invitedEmail} disabled />
 			<div class="grid gap-1">
-				<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+				<Input type="password" name="password" label="Κωδικός" icon="lock" required />
 				<p class="px-4 text-sm text-gray-600 dark:text-gray-300">Τουλάχιστον 8 χαρακτήρες.</p>
 			</div>
 			<button

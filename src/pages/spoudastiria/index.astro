@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { useAPI, API } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
@@ -39,13 +40,13 @@ const groups = [
 	{
 		id: "school",
 		label: "Σπουδαστήρια Σχολής",
-		icon: "fa-solid fa-church",
+		icon: "church",
 		locations: schoolLocations,
 	},
 	{
 		id: "partner",
 		label: "Συνεργαζόμενες Σχολές",
-		icon: "fa-solid fa-handshake",
+		icon: "handshake",
 		locations: otherLocations,
 	},
 ] as const;
@@ -142,7 +143,7 @@ const placesSchema = {
 								data-show={ind === 0}
 								aria-pressed={ind === 0 ? "true" : "false"}
 								class="relative flex items-center gap-2 rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-4 max-sm:py-2 text-[1.05vw] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white data-[show=true]:bg-amber-400 data-[show=true]:text-red-950 data-[show=true]:font-semibold data-[show=true]:shadow-md">
-								<i class={g.icon + " text-[0.9em] max-sm:hidden"} aria-hidden="true" />
+								<Icon name={g.icon} class="text-[0.9em] max-sm:hidden" />
 								{g.label}
 							</button>
 						))
@@ -157,7 +158,7 @@ const placesSchema = {
 					<span
 						id="spoudastiriaGroupIcon"
 						class="grid size-12 max-sm:size-10 shrink-0 place-items-center rounded-2xl bg-red-900 text-amber-400 shadow-md shadow-red-900/30">
-						<i class="fa-solid fa-church text-lg" aria-hidden="true"></i>
+						<Icon name="church" class="text-lg" />
 					</span>
 					<div class="flex flex-col gap-y-0.5">
 						<h2 id="spoudastiriaGroupTitle" class="font-anaktoria text-2xl max-sm:text-xl font-bold leading-tight text-red-900">
@@ -191,7 +192,7 @@ const placesSchema = {
 											"absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" +
 											(l.image ? "" : " grid place-items-center")
 										}>
-										{!l.image && <i class="fa-solid fa-church text-5xl text-red-50/60" />}
+										{!l.image && <Icon name="church" class="text-5xl text-red-50/60" />}
 									</div>
 									<span class="absolute left-3 top-3 rounded-full border border-amber-400/50 bg-red-950/80 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm">
 										{badgeLabel(l)}
@@ -200,16 +201,16 @@ const placesSchema = {
 								<div class="flex flex-1 flex-col gap-y-3 p-5 max-sm:p-4">
 									<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">{l.name}</h3>
 									<p class="text-base max-sm:text-sm leading-relaxed">
-										<i class="fa-solid fa-location-dot pr-2 text-red-900/70" />
+										<Icon name="map-pin" class="pr-2 text-red-900/70" />
 										{formatAddress(l)}
 									</p>
 									<p class="text-base max-sm:text-sm">
-										<i class="fa-solid fa-user pr-2.5 text-red-900/70" />
+										<Icon name="user" class="pr-2.5 text-red-900/70" />
 										{l.manager}
 									</p>
 									{l.teacherCount > 0 && (
 										<p class="text-base max-sm:text-sm">
-											<i class="fa-solid fa-chalkboard-user pr-2 text-red-900/70" />
+											<Icon name="teacher" class="pr-2 text-red-900/70" />
 											{teachersLabel(l.teacherCount)}
 										</p>
 									)}
@@ -219,7 +220,7 @@ const placesSchema = {
 												<a
 													href={`tel:${phone}`}
 													class="inline-flex items-center gap-1.5 rounded-full bg-red-900 px-3 py-1 text-sm max-sm:text-xs font-medium text-red-50 transition-colors duration-200 hover:bg-red-800">
-													<i class="fa-solid fa-phone text-[0.8em]" />
+													<Icon name="phone" class="text-[0.8em]" />
 													{phone}
 												</a>
 											))}
@@ -227,7 +228,7 @@ const placesSchema = {
 									)}
 									{l.email && (
 										<a href={`mailto:${l.email}`} class="inline-flex w-max items-center gap-2 text-base max-sm:text-sm text-red-900">
-											<i class="fa-regular fa-envelope" />
+											<Icon name="mail" />
 											<span class="underline decoration-red-900/50 decoration-1 underline-offset-4">{l.email}</span>
 										</a>
 									)}
@@ -236,7 +237,7 @@ const placesSchema = {
 											type="button"
 											data-open-location={l.id}
 											class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-											<i class="fa-solid fa-map-location-dot" />
+											<Icon name="map" />
 											Χάρτης & λεπτομέρειες
 										</button>
 										<a
@@ -244,7 +245,7 @@ const placesSchema = {
 											rel="noopener"
 											href={directionsHref(l)}
 											class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
-											<i class="fa-solid fa-diamond-turn-right" />
+											<Icon name="directions" />
 											Οδηγίες
 										</a>
 									</div>
@@ -269,13 +270,13 @@ const placesSchema = {
 					<a
 						href="/epikoinonia"
 						class="inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-						<i class="fa-solid fa-phone text-amber-400"></i>
+						<Icon name="phone" class="text-amber-400" />
 						Επικοινωνία
 					</a>
 					<a
 						href="/eggrafes"
 						class="inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-						<i class="fa-solid fa-pen-to-square text-amber-400"></i>
+						<Icon name="edit" class="text-amber-400" />
 						Εγγραφές
 					</a>
 				</div>
@@ -308,7 +309,7 @@ const placesSchema = {
 					id="locationModalClose"
 					aria-label="Κλείσιμο λεπτομερειών"
 					class="absolute border-red-800 border-2 right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/40 text-red-50 backdrop-blur-sm transition-colors duration-200 hover:bg-red-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">
-					<i class="fa-solid fa-xmark text-xl"></i>
+					<Icon name="close" class="text-xl" />
 				</button>
 			</div>
 			<div class="flex-1 overflow-y-auto">
@@ -385,6 +386,7 @@ const placesSchema = {
 </Layout>
 
 <script>
+	import { createIcon, type IconName } from "@lib/icons";
 	import { AnimTimeline, onElementMount } from "@utilities/dom";
 	import { trapFocus } from "@utilities/focusTrap";
 
@@ -432,20 +434,20 @@ const placesSchema = {
 		let releaseTrap: (() => void) | undefined;
 
 		// Meta-πληροφορίες κατηγοριών για την ένδειξη της τρέχουσας ομάδας.
-		const GROUP_META: Record<string, { title: string; icon: string }> = {
-			school: { title: "Σπουδαστήρια Σχολής", icon: "fa-solid fa-church" },
-			partner: { title: "Συνεργαζόμενες Σχολές", icon: "fa-solid fa-handshake" },
+		const GROUP_META: Record<string, { title: string; icon: IconName }> = {
+			school: { title: "Σπουδαστήρια Σχολής", icon: "church" },
+			partner: { title: "Συνεργαζόμενες Σχολές", icon: "handshake" },
 		};
 		const setGroupHeader = (group: string) => {
 			const meta = GROUP_META[group];
 			if (!meta) return;
 			const title = document.querySelector("#spoudastiriaGroupTitle");
 			const count = document.querySelector("#spoudastiriaGroupCount");
-			const icon = document.querySelector("#spoudastiriaGroupIcon i");
+			const icon = document.querySelector("#spoudastiriaGroupIcon .icon");
 			const n = DATA.filter((l) => (group === "partner" ? !!l.partner : !l.partner)).length;
 			if (title) title.textContent = meta.title;
 			if (count) count.textContent = n === 1 ? "1 σημείο" : `${n} σημεία`;
-			if (icon) icon.className = meta.icon;
+			if (icon) icon.replaceWith(createIcon(meta.icon, { class: "text-lg" }));
 		};
 
 		// Εναλλαγή κατηγορίας (Σπουδαστήρια / Συνεργαζόμενες)
@@ -515,9 +517,7 @@ const placesSchema = {
 				a.href = `tel:${phone}`;
 				a.className =
 					"inline-flex items-center gap-1.5 rounded-full bg-red-900 px-3 py-1 text-sm font-medium text-red-50 transition-colors duration-200 hover:bg-red-800";
-				const i = document.createElement("i");
-				i.className = "fa-solid fa-phone text-[0.8em]";
-				a.appendChild(i);
+				a.appendChild(createIcon("phone", { class: "text-[0.8em]" }));
 				a.appendChild(document.createTextNode(phone));
 				phonesEl.appendChild(a);
 			});
@@ -529,9 +529,7 @@ const placesSchema = {
 				const a = document.createElement("a");
 				a.href = `mailto:${l.email}`;
 				a.className = "inline-flex items-center gap-2 text-base max-sm:text-sm text-red-900";
-				const i = document.createElement("i");
-				i.className = "fa-regular fa-envelope";
-				a.appendChild(i);
+				a.appendChild(createIcon("mail"));
 				const span = document.createElement("span");
 				span.innerText = l.email;
 				span.className = "underline decoration-red-900/50 decoration-1 underline-offset-4";
@@ -540,23 +538,24 @@ const placesSchema = {
 			}
 
 			actionsEl.innerHTML = "";
-			[
+			const actions: { href: string | null | undefined; icon: IconName; label: string }[] = [
 				{
 					href: l.link,
-					icon: "fa-solid fa-link",
+					icon: "link",
 					label: "Σύνδεσμος",
 				},
 				{
 					href: l.youtube,
-					icon: "fa-brands fa-youtube",
+					icon: "youtube",
 					label: "YouTube",
 				},
 				{
 					href: directionsHref(l),
-					icon: "fa-solid fa-diamond-turn-right",
+					icon: "directions",
 					label: "Οδηγίες στους Χάρτες",
 				},
-			]
+			];
+			actions
 				.filter((a) => !!a.href)
 				.forEach((action) => {
 					const a = document.createElement("a");
@@ -565,9 +564,7 @@ const placesSchema = {
 					a.rel = "noopener";
 					a.className =
 						"inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50";
-					const i = document.createElement("i");
-					i.className = action.icon;
-					a.appendChild(i);
+					a.appendChild(createIcon(action.icon));
 					a.appendChild(document.createTextNode(action.label));
 					actionsEl.appendChild(a);
 				});

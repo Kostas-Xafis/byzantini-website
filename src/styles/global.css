@@ -77,10 +77,12 @@
 
 /*
  * Icons (lib/icons.ts, <Icon>): sit in text like a glyph — Tailwind's preflight makes every <svg> a block.
+ * content-box so padding (`pr-2`, `px-2`) adds room around the 1em glyph instead of shrinking it.
  * In the base layer so any utility (`hidden`, `flex`, `align-middle`, `size-*`, …) still wins.
  */
 @layer base {
 	.icon {
+		box-sizing: content-box;
 		display: inline-block;
 		vertical-align: -0.125em;
 		flex-shrink: 0;

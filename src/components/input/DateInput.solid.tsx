@@ -1,5 +1,7 @@
 import AirDatepicker from "air-datepicker";
-import { onCleanup, onMount } from "solid-js";
+import { Show, onCleanup, onMount } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 import { setFocusFixed } from "@utilities/dom";
 import { sleep } from "@utilities/sleep";
 
@@ -27,14 +29,14 @@ type DateInputProps = {
 	prefix: string;
 	value?: number;
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	blurDisabled?: boolean;
 	minmax?: [number, number];
 };
 
 export default function DateInput(props: DateInputProps) {
-	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
+	const { name, value, required, icon, disabled, blurDisabled = true } = props;
 	let datepicker: AirDatepicker<HTMLInputElement> | undefined;
 	let disposed = false;
 	// The component's own input (a ref, not a document lookup): the router renders a page before inserting it
@@ -137,11 +139,12 @@ export default function DateInput(props: DateInputProps) {
 
 	return (
 		<>
-			<i
-				class={
-					"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-					(iconClasses || "")
-				}></i>
+			<Show when={icon}>
+				<Icon
+					name={icon!}
+					class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+				/>
+			</Show>
 			<input
 				ref={dateInput}
 				class={

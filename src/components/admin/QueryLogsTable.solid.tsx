@@ -40,13 +40,13 @@ const QueryLogFilterInputs = (): Record<keyof QueryLogFilterFields, InputProps> 
 		name: "startDate",
 		label: "Από",
 		type: "date",
-		iconClasses: "fa-regular fa-calendar-days",
+		icon: "calendar",
 	},
 	endDate: {
 		name: "endDate",
 		label: "Έως",
 		type: "date",
-		iconClasses: "fa-regular fa-calendar-days",
+		icon: "calendar",
 	},
 	limit: {
 		name: "limit",
@@ -54,7 +54,7 @@ const QueryLogFilterInputs = (): Record<keyof QueryLogFilterFields, InputProps> 
 		type: "number",
 		value: DEFAULT_LIMIT,
 		minmax: [1, 5000],
-		iconClasses: "fa-solid fa-hashtag",
+		icon: "hash",
 	},
 });
 

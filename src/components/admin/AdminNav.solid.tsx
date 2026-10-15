@@ -3,44 +3,46 @@ import { sleep } from "@utilities/sleep";
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import type { Permission } from "@lib/auth/roles";
 import { useCurrentUser } from "./currentUser";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 
 /** `permission`: only admins whose role has it see the link (lib/auth/roles.ts). */
-type NavLink = { name: string; url: string; force: boolean; icon: string; permission?: Permission };
+type NavLink = { name: string; url: string; force: boolean; icon: IconName; permission?: Permission };
 type NavSection = { title: string | null; links: NavLink[] };
 
 const sections: NavSection[] = [
 	{
 		title: null,
-		links: [{ name: "Αρχική", url: "/admin", force: false, icon: "fa-solid fa-house" }],
+		links: [{ name: "Αρχική", url: "/admin", force: false, icon: "home" }],
 	},
 	{
 		title: "Σχολή",
 		links: [
-			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "fa-solid fa-clipboard-list" },
-			{ name: "Μαθητολόγιο", url: "/admin/pupils", force: false, icon: "fa-solid fa-address-book" },
-			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "fa-solid fa-chalkboard-user" },
-			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "fa-solid fa-location-dot" },
-			{ name: "Βιβλία", url: "/admin/books", force: false, icon: "fa-solid fa-book" },
-			{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false, icon: "fa-solid fa-bullhorn" },
+			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "clipboard-list" },
+			{ name: "Μαθητολόγιο", url: "/admin/pupils", force: false, icon: "address-book" },
+			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "teacher" },
+			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "map-pin" },
+			{ name: "Βιβλία", url: "/admin/books", force: false, icon: "book" },
+			{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false, icon: "megaphone" },
 		],
 	},
 	{
 		title: "Οικονομικά",
 		links: [
-			{ name: "Οφειλές Μαθητών", url: "/admin/payments", force: false, icon: "fa-solid fa-hand-holding-dollar" },
-			{ name: "Οφειλές Σχολής", url: "/admin/payoffs", force: false, icon: "fa-solid fa-file-invoice-dollar" },
+			{ name: "Οφειλές Μαθητών", url: "/admin/payments", force: false, icon: "hand-coins" },
+			{ name: "Οφειλές Σχολής", url: "/admin/payoffs", force: false, icon: "invoice" },
 		],
 	},
 	{
 		title: "Σύστημα",
 		links: [
-			{ name: "Ο λογαριασμός μου", url: "/admin/account", force: false, icon: "fa-solid fa-user-shield" },
-			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "fa-solid fa-users-gear" },
-			{ name: "Ιστορικό ενεργειών", url: "/admin/activity", force: false, icon: "fa-solid fa-clock-rotate-left", permission: "activityLog" },
-			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database", permission: "queryLogs" },
-			{ name: "Σφάλματα", url: "/admin/errors", force: false, icon: "fa-solid fa-triangle-exclamation", permission: "queryLogs" },
-			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "fa-solid fa-gear" },
-			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "fa-solid fa-right-from-bracket" },
+			{ name: "Ο λογαριασμός μου", url: "/admin/account", force: false, icon: "user-shield" },
+			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "users-gear" },
+			{ name: "Ιστορικό ενεργειών", url: "/admin/activity", force: false, icon: "history", permission: "activityLog" },
+			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "database", permission: "queryLogs" },
+			{ name: "Σφάλματα", url: "/admin/errors", force: false, icon: "warning", permission: "queryLogs" },
+			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "settings" },
+			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "log-out" },
 		],
 	},
 ];
@@ -139,7 +141,7 @@ export default function AdminNav(props: RouterProps) {
 					</div>
 					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
 						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
-							<Show when={user()?.avatar_url} fallback={<i class="fa-solid fa-user"></i>}>
+							<Show when={user()?.avatar_url} fallback={<Icon name="user" />}>
 								{(avatar) => <img src={avatar()} alt="" referrerPolicy="no-referrer" class="h-full w-full object-cover" />}
 							</Show>
 						</div>
@@ -169,7 +171,7 @@ export default function AdminNav(props: RouterProps) {
 											aria-current={isActive(link.url) ? "page" : undefined}
 											class={linkBaseClasses + (isActive(link.url) ? linkActiveClasses : "")}
 											onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>
-											<i class={`${link.icon} w-5 text-center text-base text-red-200/90`} aria-hidden="true"></i>
+											<Icon name={link.icon} class="w-5 text-base text-red-200/90" />
 											<p class="font-bold font-anaktoria text-lg text-red-50">{link.name}</p>
 										</A>
 									)}
@@ -187,7 +189,10 @@ export default function AdminNav(props: RouterProps) {
 						aria-controls="burgerNavMenu"
 						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-has-checked/nav:translate-x-[calc(50%_-_7px)]">
 						{/* 7px = 1/2 of 14px = 0.875rem */}
-						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
+						<Icon
+							name="menu"
+							class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
+						/>
 						<span class="opacity-100 transition-opacity group-has-checked/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
 							{currentPage()}
 						</span>
@@ -217,7 +222,7 @@ export default function AdminNav(props: RouterProps) {
 												}
 												href={link.url}>
 												<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
-													<i class={`${link.icon} mr-2 text-base text-red-200/90`} aria-hidden="true"></i>
+													<Icon name={link.icon} class="mr-2 text-base text-red-200/90" />
 													{link.name}
 												</p>
 											</A>

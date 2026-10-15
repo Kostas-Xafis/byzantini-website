@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import { currentSchoolYearShort, REGISTRATION_WINDOW_LABEL } from "@lib/pupils/years";
 
 // The home page is prerendered, so this is the school year at BUILD time; the inline script below
@@ -25,7 +26,7 @@ const schoolYear = currentSchoolYearShort();
 	</h3>
 	<div id="fek" class="mt-[5vw] w-max p-[1.5vw] py-[1vw] grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg">
 		<h3 class="text-[clamp(1.125rem,1.75vw,2.25rem)] font-anaktoria font-bold text-red-50 self-center max-sm:text-base">
-			<i class="fa-solid fa-chevron-right pr-4 text-[clamp(0.875rem,1.5vw,1.75rem)] max-sm:text-xs self-center"></i>Ανεγνωρισμένη υπό του Κράτους
+			<Icon name="chevron-right" class="pr-4 text-[clamp(0.875rem,1.5vw,1.75rem)] max-sm:text-xs self-center" />Ανεγνωρισμένη υπό του Κράτους
 		</h3>
 		<div class="mt-[1vh] grid grid-cols-[max-content_max-content] gap-x-8 place-content-center">
 			<a
@@ -55,16 +56,18 @@ const schoolYear = currentSchoolYearShort();
 			<a
 				class="group/regbtn px-[2vw] py-[0.75vh] text-[clamp(1.25rem,2.25vw,2.75rem)] max-sm:text-xl max-3xs:text-lg font-bold self-center shadow-md rounded-xl outline-hidden outline-red-50 bg-red-50 text-red-900"
 				href="/eggrafes">
-				Εγγραφές <i
-					class="w-0 fa-solid fa-chevron-right font-bold text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
-				></i>
+				Εγγραφές <Icon
+					name="chevron-right"
+					class="-mr-[1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+				/>
 			</a>
 			<a
 				class="group/regbtn px-[2vw] py-[0.75vh] text-[clamp(1.25rem,2.25vw,2.75rem)] max-sm:text-xl max-3xs:text-lg font-bold self-center shadow-md rounded-xl outline-hidden outline-red-50 bg-red-50 text-red-900"
 				href="/sxoli/anakoinoseis">
-				Ανακοινώσεις <i
-					class="w-0 fa-solid fa-chevron-right font-bold text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
-				></i>
+				Ανακοινώσεις <Icon
+					name="chevron-right"
+					class="-mr-[1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+				/>
 			</a>
 		</div>
 	</div>
@@ -73,7 +76,7 @@ const schoolYear = currentSchoolYearShort();
 		class="max-sm:hidden group/regbtn absolute bottom-0 left-[50%] translate-x-[-50%] flex flex-col px-[4vw] py-[0.25vh] mt-[1.5vw]"
 		href="/#xairetismos-mitropolitou">
 		<p class="text-red-50 font-anaktoria text-2xl">Χαιρετισμός Σεβ. Μητροπολίτου</p>
-		<i class="text-red-50 w-0 fa-solid fa-chevron-down font-bold text-[1vw] self-center max-sm:text-sm max-sm:px-2 max-3xs:text-xs"></i>
+		<Icon name="chevron-down" class="text-red-50 text-[1vw] self-center max-sm:text-sm max-sm:px-2 max-3xs:text-xs" />
 	</a>
 	<style is:inline>
 		#welcome-page {
@@ -118,10 +121,10 @@ const schoolYear = currentSchoolYearShort();
 			animation: fadeIn 0.5s ease-in-out forwards 1.25s;
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
 		}
-		#fek:hover i {
+		#fek:hover .icon {
 			animation: fadeInLeft 0.4s ease-out forwards;
 		}
-		#eggrafesLink a:hover > i {
+		#eggrafesLink a:hover > .icon {
 			animation: fadeInLeft 0.4s ease-out forwards;
 		}
 		#xairetismos-btn {

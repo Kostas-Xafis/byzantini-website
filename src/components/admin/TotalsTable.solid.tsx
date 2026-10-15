@@ -5,6 +5,8 @@ import { Show, createEffect, createMemo, createSignal, onCleanup, onMount, type 
 import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { cardClass } from "./Panel.solid";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 
 type TotalsTable = {
 	total_registrations: number;
@@ -49,7 +51,7 @@ const formatEuro = (amount: number) => new Intl.NumberFormat("el-GR", { style: "
 const formatVisit = (time: number) => new Date(time).toLocaleString("el-GR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 /** A dashboard tile that opens the list behind its number. */
-function AttentionTile(props: { href: string; icon: string; title: string; value: JSX.Element; detail: JSX.Element; calm: boolean }) {
+function AttentionTile(props: { href: string; icon: IconName; title: string; value: JSX.Element; detail: JSX.Element; calm: boolean }) {
 	return (
 		<a
 			href={props.href}
@@ -61,10 +63,10 @@ function AttentionTile(props: { href: string; icon: string; title: string; value
 						(props.calm ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-100" : "bg-accent-soft text-accent-ink")
 					}
 					aria-hidden="true">
-					<i class={props.icon}></i>
+					<Icon name={props.icon} />
 				</span>
 				<p class="flex-1 text-base font-bold leading-tight">{props.title}</p>
-				<i class="fa-solid fa-arrow-right text-sm text-ink-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true"></i>
+				<Icon name="arrow-right" class="text-sm text-ink-muted transition-transform group-hover:translate-x-0.5" />
 			</div>
 			<p class="text-3xl font-bold mt-1">{props.value}</p>
 			<p class="text-sm text-ink-muted">{props.detail}</p>
@@ -242,7 +244,7 @@ export default function TotalsTable() {
 								<div class="grid grid-cols-3 max-lg:grid-cols-1 gap-4">
 									<AttentionTile
 										href="/admin/pupils?review=1"
-										icon="fa-solid fa-clipboard-check"
+										icon="clipboard-check"
 										title="Προς έλεγχο"
 										value={data().needs_review}
 										detail={data().needs_review === 1 ? "μαθητής στο Μαθητολόγιο" : "μαθητές στο Μαθητολόγιο"}
@@ -250,7 +252,7 @@ export default function TotalsTable() {
 									/>
 									<AttentionTile
 										href={`/admin/registrations?year=${yearStart}`}
-										icon="fa-solid fa-euro-sign"
+										icon="euro"
 										title={`Οφειλές ${shortYear}`}
 										value={formatEuro(data().owing.amount)}
 										detail={
@@ -262,7 +264,7 @@ export default function TotalsTable() {
 									/>
 									<AttentionTile
 										href={`/admin/registrations?year=${yearStart}`}
-										icon="fa-solid fa-globe"
+										icon="globe"
 										title="Νέες online εγγραφές"
 										value={data().new_online}
 										detail={

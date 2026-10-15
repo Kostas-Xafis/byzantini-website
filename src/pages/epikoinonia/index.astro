@@ -1,4 +1,6 @@
 ---
+import Icon from "@components/other/Icon.astro";
+import type { IconName } from "@lib/icons";
 import DeveloperCredit from "@components/other/DeveloperCredit.astro";
 import GMap from "@components/other/GMap.astro";
 import JsonLd from "@components/seo/JsonLd.astro";
@@ -13,14 +15,14 @@ export const prerender = false;
 const departments = [
 	{
 		title: "Βυζαντινή Μουσική",
-		icon: "fa-solid fa-church",
+		icon: "church",
 		description: "Ψαλτική: θεωρία και πράξη, λειτουργικό και τυπικό, υμνολογία, χορωδιακά μαθήματα.",
 		phones: [SCHOOL.telephone[0]],
 		email: "byzscholemousikhs@gmail.com",
 	},
 	{
 		title: "Παραδοσιακή & Ευρωπαϊκή Μουσική",
-		icon: "fa-solid fa-music",
+		icon: "music",
 		description: "Παραδοσιακά όργανα και τραγούδι, ορχήστρα, καθώς και πιάνο, φλάουτο, σολφέζ και θεωρία.",
 		phones: SCHOOL.telephone.slice(1),
 		email: "music@inmm.gr",
@@ -34,25 +36,25 @@ const hoursRanges = [
 	},
 ];
 
-const socials = [
+const socials: { name: string; icon: IconName; url: string }[] = [
 	{
 		name: "Facebook",
-		icon: "fa-brands fa-facebook",
+		icon: "facebook",
 		url: "https://www.facebook.com/profile.php?id=100032307446762",
 	},
 	{
 		name: "Instagram",
-		icon: "fa-brands fa-instagram",
+		icon: "instagram",
 		url: "https://www.instagram.com/musicschool_metamorfosis/",
 	},
 	{
 		name: "YouTube",
-		icon: "fa-brands fa-youtube",
+		icon: "youtube",
 		url: "https://www.youtube.com/@user-sx5os9rc1k",
 	},
 	{
 		name: "Ιστοσελίδα Ενορίας",
-		icon: "fa-solid fa-link",
+		icon: "link",
 		url: "https://inmm.gr/",
 	},
 ];
@@ -165,7 +167,7 @@ const contactPageSchema = {
 						<article class="group flex flex-col gap-y-5 rounded-xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-7 shadow-xl shadow-red-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-950/50 max-sm:px-5">
 							<div class="flex flex-row items-center gap-x-5">
 								<span class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60 transition-transform duration-300 group-hover:scale-110 max-sm:size-12">
-									<i class={dept.icon + " text-2xl max-sm:text-xl"} />
+									<Icon name={dept.icon} class="text-2xl max-sm:text-xl" />
 								</span>
 								<h3 class="text-2xl max-sm:text-xl font-bold font-anaktoria leading-tight text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
 									{dept.title}
@@ -175,7 +177,7 @@ const contactPageSchema = {
 							<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
 								{dept.phones.map((phone) => (
 									<li class="flex flex-row items-center gap-x-3">
-										<i class="fa-solid fa-phone text-amber-400" />
+										<Icon name="phone" class="text-amber-400" />
 										<a
 											href={`tel:${phone}`}
 											class="text-red-50 underline decoration-amber-400/70 decoration-1 underline-offset-4 transition-colors hover:text-amber-300">
@@ -185,13 +187,14 @@ const contactPageSchema = {
 											type="button"
 											data-copy={phone}
 											aria-label={`Αντιγραφή τηλεφώνου ${phone}`}
-											class="copy ml-auto grid size-8 place-items-center rounded-full bg-red-950/60 text-base text-red-50 transition-colors duration-300 hover:bg-gray-600">
-											<i class="fa-regular fa-clipboard" />
+											class="copy group/copy ml-auto grid size-8 place-items-center rounded-full bg-red-950/60 text-base text-red-50 transition-colors duration-300 hover:bg-gray-600">
+											<Icon name="clipboard" class="group-[.clicked]/copy:hidden" />
+											<Icon name="clipboard-check" class="hidden group-[.clicked]/copy:inline-block" />
 										</button>
 									</li>
 								))}
 								<li class="flex flex-row items-center gap-x-3">
-									<i class="fa-solid fa-envelope text-amber-400" />
+									<Icon name="mail" class="text-amber-400" />
 									<a
 										href={`mailto:${dept.email}`}
 										class="text-red-50 underline decoration-amber-400/70 decoration-1 underline-offset-4 transition-colors hover:text-amber-300">
@@ -201,8 +204,9 @@ const contactPageSchema = {
 										type="button"
 										data-copy={dept.email}
 										aria-label={`Αντιγραφή διεύθυνσης e-mail ${dept.email}`}
-										class="copy ml-auto grid size-8 place-items-center rounded-full bg-red-950/60 text-base text-red-50 transition-colors duration-300 hover:bg-gray-600">
-										<i class="fa-regular fa-clipboard" />
+										class="copy group/copy ml-auto grid size-8 place-items-center rounded-full bg-red-950/60 text-base text-red-50 transition-colors duration-300 hover:bg-gray-600">
+										<Icon name="clipboard" class="group-[.clicked]/copy:hidden" />
+										<Icon name="clipboard-check" class="hidden group-[.clicked]/copy:inline-block" />
 									</button>
 								</li>
 							</ul>
@@ -221,22 +225,22 @@ const contactPageSchema = {
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
-						<i class="fa-solid fa-map-location-dot text-3xl text-red-900"></i>
+						<Icon name="map" class="text-3xl text-red-900" />
 						<h3 class="text-2xl font-bold font-anaktoria text-red-900">Έδρα Σχολής</h3>
 					</div>
 					<p class="text-xl max-sm:text-base font-semibold text-red-950">
 						{seat?.name ?? SCHOOL.name}
 					</p>
 					<p class="text-lg max-sm:text-base leading-relaxed">
-						<i class="fa-solid fa-location-dot pr-2 text-red-900/70"></i>
+						<Icon name="map-pin" class="pr-2 text-red-900/70" />
 						{seat ? formatAddress(seat) : `${SCHOOL.address.streetAddress}, ${SCHOOL.address.postalCode} – ${SCHOOL.address.addressLocality}`}
 					</p>
 					<p class="text-lg max-sm:text-base">
-						<i class="fa-solid fa-user pr-2 text-red-900/70"></i>
+						<Icon name="user" class="pr-2 text-red-900/70" />
 						{seat && seat.manager.length > 0 ? seat.manager : "Πρωτοπρ. Σωτήριος Αλεβιζάκης"}
 					</p>
 					<p class="text-lg max-sm:text-base">
-						<i class="fa-solid fa-envelope pr-2 text-red-900/70"></i>
+						<Icon name="mail" class="pr-2 text-red-900/70" />
 						<a href={`mailto:${seat?.email || SCHOOL.email}`} class="underline decoration-1 underline-offset-4 transition-colors hover:text-red-900"
 							>{seat?.email || SCHOOL.email}</a
 						>
@@ -245,7 +249,7 @@ const contactPageSchema = {
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
-						<i class="fa-solid fa-clock text-3xl text-red-900"></i>
+						<Icon name="clock" class="text-3xl text-red-900" />
 						<h3 class="text-2xl font-bold font-anaktoria text-red-900">Ωράριο επικοινωνίας</h3>
 					</div>
 					<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
@@ -265,7 +269,7 @@ const contactPageSchema = {
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
-						<i class="fa-solid fa-user-tie text-3xl text-red-900"></i>
+						<Icon name="user-tie" class="text-3xl text-red-900" />
 						<h3 class="text-2xl font-bold font-anaktoria text-red-900">Διοίκηση Σχολής</h3>
 					</div>
 					<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
@@ -281,7 +285,7 @@ const contactPageSchema = {
 					<a
 						href="/sxoli/dioikitiko-symvoulio"
 						class="mt-auto inline-flex w-max items-center gap-2 rounded-full border-2 border-red-900 px-4 py-1.5 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
-						<i class="fa-solid fa-angles-right text-sm"></i>
+						<Icon name="chevrons-right" class="text-sm" />
 						Στοιχεία διοίκησης
 					</a>
 				</article>
@@ -306,7 +310,7 @@ const contactPageSchema = {
 							target="_blank"
 							href="https://maps.app.goo.gl/eYd5Zp7x5nqHrvAf8"
 							class="inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-5 py-2 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
-							<i class="fa-solid fa-diamond-turn-right"></i>
+							<Icon name="directions" />
 							Οδηγίες στους Χάρτες Google
 						</a>
 					</div>
@@ -329,7 +333,7 @@ const contactPageSchema = {
 			<div
 				class="w-full max-w-[900px] flex flex-col sm:flex-row items-center gap-x-6 gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 				<span class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60">
-					<i class="fa-solid fa-map-location-dot text-2xl"></i>
+					<Icon name="map" class="text-2xl" />
 				</span>
 				<div class="flex-1 text-center sm:text-left">
 					<h3 class="text-2xl max-sm:text-xl font-bold font-anaktoria text-red-900">
@@ -342,7 +346,7 @@ const contactPageSchema = {
 				<a
 					href="/spoudastiria"
 					class="shrink-0 inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-6 py-2.5 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
-					<i class="fa-solid fa-location-dot"></i>
+					<Icon name="map-pin" />
 					Όλα τα σπουδαστήρια
 				</a>
 			</div>
@@ -360,7 +364,7 @@ const contactPageSchema = {
 							target="_blank"
 							href={s.url}
 							class="group/link inline-flex items-center gap-3 rounded-full border-2 border-red-900 bg-white px-6 py-2.5 text-lg max-sm:text-base font-semibold text-red-900 shadow-md shadow-gray-400 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-900 hover:text-red-50 hover:shadow-lg">
-							<i class={s.icon + " text-xl transition-colors duration-300 group-hover/link:text-amber-400"} />
+							<Icon name={s.icon} class="text-xl transition-colors duration-300 group-hover/link:text-amber-400" />
 							{s.name}
 						</a>
 					))
@@ -390,7 +394,7 @@ const contactPageSchema = {
 								aria-controls={`faq-answer-${i}`}
 								aria-expanded="false"
 								class="faq-toggle flex w-full cursor-pointer items-center gap-x-4 px-6 py-4 text-left text-lg max-sm:text-base font-semibold text-red-950 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500">
-								<i class="fa-chevron fa-solid fa-chevron-right text-red-900" aria-hidden="true" />
+								<Icon name="chevron-right" class="faq-chevron shrink-0 text-red-900" />
 								{f.q}
 							</button>
 							<div id={`faq-answer-${i}`} role="region" aria-labelledby={`faq-toggle-${i}`} class="faq-answer">
@@ -401,7 +405,7 @@ const contactPageSchema = {
 											href={f.link.url}
 											class="inline-flex w-max items-center gap-2 text-base max-sm:text-sm font-semibold text-red-900 border-b border-red-900">
 											{f.link.name}
-											<i class="fa-solid fa-arrow-right text-sm translate-y-[5%]" />
+											<Icon name="arrow-right" class="text-sm translate-y-[5%]" />
 										</a>
 									</div>
 								</div>
@@ -425,19 +429,19 @@ const contactPageSchema = {
 				<a
 					href={`tel:${departments[0].phones[0]}`}
 					class="inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-					<i class="fa-solid fa-phone text-amber-400"></i>
+					<Icon name="phone" class="text-amber-400" />
 					{departments[0].phones[0]}
 				</a>
 				<a
 					href="mailto:byzscholemousikhs@gmail.com"
 					class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-					<i class="fa-solid fa-envelope text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"></i>
+					<Icon name="mail" class="text-amber-400 transition-colors duration-300 group-hover/link:text-red-950" />
 					Στείλτε e-mail
 				</a>
 				<a
 					href="/eggrafes"
 					class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-					<i class="fa-solid fa-pen-to-square text-amber-400 transition-colors duration-300 group-hover/link:text-red-950"></i>
+					<Icon name="edit" class="text-amber-400 transition-colors duration-300 group-hover/link:text-red-950" />
 					Εγγραφές
 				</a>
 			</div>
@@ -521,20 +525,15 @@ const contactPageSchema = {
 			btn.addEventListener("click", () => {
 				const text = btn.dataset.copy;
 				if (!text) return;
-				const icon = btn.querySelector("i") as HTMLElement;
 				const atl = new AnimTimeline();
 				atl.step(() => {
 					navigator.clipboard.writeText(text);
 					btn.classList.add("clicked");
-					icon.classList.remove("fa-regular", "fa-clipboard");
-					icon.classList.add("fa-solid", "fa-clipboard-check");
 				})
 					.step({
 						time: 1000,
 						anim: () => {
 							btn.classList.remove("clicked");
-							icon.classList.add("fa-regular", "fa-clipboard");
-							icon.classList.remove("fa-solid", "fa-clipboard-check");
 						},
 					})
 					.start();

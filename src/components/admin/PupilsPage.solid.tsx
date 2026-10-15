@@ -17,6 +17,7 @@ import PupilFeesDialog from "./PupilFeesDialog.solid";
 import Modal, { setGlobalOpen } from "./table/Modal.solid";
 import { ActionEnum, ActionIcon } from "./table/TableControlTypes";
 import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import Icon from "@components/other/Icon.solid";
 
 /**
  * Μαθητολόγιο — the pupil register.
@@ -59,7 +60,7 @@ const countLabel = (count: number, singular: string, plural: string) => `${count
 const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === null ? pupil.orphan_code || "—" : String(pupil.am));
 
 const field = (label: string, name: string, type: InputProps["type"], extra: Partial<InputProps> = {}): InputProps =>
-	({ label, name, type, iconClasses: "fa-solid fa-user", ...extra }) as InputProps;
+	({ label, name, type, icon: "user", ...extra }) as InputProps;
 
 /** Edit form: the pupil's identity and contact details. */
 function pupilInputs(pupil: Pupils): Record<string, InputProps> {
@@ -68,22 +69,22 @@ function pupilInputs(pupil: Pupils): Record<string, InputProps> {
 			label: "Αριθμός Μητρώου",
 			name: "am",
 			type: "number",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 			tooltip: { message: ["Κενό = χωρίς ΑΜ (εκκρεμεί απονομή)."], position: "top" },
 		},
-		amka: { label: "ΑΜΚΑ", name: "amka", type: "text", iconClasses: "fa-solid fa-id-card" },
+		amka: { label: "ΑΜΚΑ", name: "amka", type: "text", icon: "id-card" },
 		last_name: field("Επώνυμο", "last_name", "text", { required: true }),
 		first_name: field("Όνομα", "first_name", "text", { required: true }),
 		fathers_name: field("Πατρώνυμο", "fathers_name", "text"),
-		birth_date: { label: "Ημερομηνία Γέννησης", name: "birth_date", type: "date", iconClasses: "fa-regular fa-calendar-days" },
-		road: { label: "Οδός", name: "road", type: "text", iconClasses: "fa-solid fa-location-dot" },
-		number: { label: "Αριθμός", name: "number", type: "number", iconClasses: "fa-solid fa-hashtag" },
-		tk: { label: "Τ.Κ.", name: "tk", type: "number", iconClasses: "fa-solid fa-hashtag" },
-		region: { label: "Δήμος/Περιοχή", name: "region", type: "text", iconClasses: "fa-solid fa-tree-city" },
-		telephone: { label: "Τηλέφωνο", name: "telephone", type: "tel", iconClasses: "fa-solid fa-phone" },
-		cellphone: { label: "Κινητό", name: "cellphone", type: "tel", iconClasses: "fa-solid fa-mobile-screen" },
-		email: { label: "Email", name: "email", type: "email", iconClasses: "fa-solid fa-envelope" },
-		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "text", iconClasses: "fa-solid fa-note-sticky" },
+		birth_date: { label: "Ημερομηνία Γέννησης", name: "birth_date", type: "date", icon: "calendar" },
+		road: { label: "Οδός", name: "road", type: "text", icon: "map-pin" },
+		number: { label: "Αριθμός", name: "number", type: "number", icon: "hash" },
+		tk: { label: "Τ.Κ.", name: "tk", type: "number", icon: "hash" },
+		region: { label: "Δήμος/Περιοχή", name: "region", type: "text", icon: "city" },
+		telephone: { label: "Τηλέφωνο", name: "telephone", type: "tel", icon: "phone" },
+		cellphone: { label: "Κινητό", name: "cellphone", type: "tel", icon: "smartphone" },
+		email: { label: "Email", name: "email", type: "email", icon: "mail" },
+		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "text", icon: "note" },
 	};
 }
 
@@ -118,7 +119,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			name: "registration_year",
 			type: "text",
 			required: true,
-			iconClasses: "fa-solid fa-calendar-days",
+			icon: "calendar",
 			placeholder: currentSchoolYear(),
 			// Most enrollments added by the secretariat are for the current school year; still editable for past ones.
 			value: defaults.registration_year || currentSchoolYear(),
@@ -128,7 +129,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			name: "class_id",
 			type: "select",
 			required: true,
-			iconClasses: "fa-solid fa-music",
+			icon: "music",
 			selectList: MUSIC_TYPES.map((type) => type.label),
 			valueList: MUSIC_TYPES.map((type) => type.id),
 			value: defaultClassId,
@@ -151,7 +152,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			label: "Καθηγητής",
 			name: "teacher_id",
 			type: "select",
-			iconClasses: "fa-solid fa-chalkboard-user",
+			icon: "teacher",
 			selectList: teacherList.map((teacher) => teacher.fullname),
 			valueList: teacherList.map((teacher) => teacher.id),
 			value: defaults.teacher_id,
@@ -160,7 +161,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			label: "Όργανο / Μάθημα",
 			name: "instrument_id",
 			type: "select",
-			iconClasses: "fa-solid fa-guitar",
+			icon: "guitar",
 			selectList: instrumentList.map((instrument) => instrument.name),
 			valueList: instrumentList.map((instrument) => instrument.id),
 			show: defaultClassId !== 0,
@@ -182,7 +183,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			label: "Προήχθη",
 			name: "pass",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-check",
+			icon: "check",
 			multiselectOnce: true,
 			multiselectList: [
 				{ value: 1, label: "Ναι", selected: !!defaults.pass },
@@ -617,7 +618,7 @@ export default function PupilsPage() {
 				<div
 					role="search"
 					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-brand bg-surface px-4 py-2 shadow-md shadow-shade">
-					<i class="fa-solid fa-magnifying-glass text-accent-ink" aria-hidden="true"></i>
+					<Icon name="search" class="text-accent-ink" />
 					<input
 						ref={searchInput}
 						type="search"
@@ -642,7 +643,7 @@ export default function PupilsPage() {
 						}}
 					/>
 					<Show when={searching()}>
-						<i class="fa-solid fa-circle-notch fa-spin text-accent-ink" aria-hidden="true"></i>
+						<Icon name="spinner" class="text-accent-ink" spin />
 					</Show>
 					<Show when={query()}>
 						<button
@@ -655,7 +656,7 @@ export default function PupilsPage() {
 								startSearch(0);
 								searchInput?.focus();
 							}}>
-							<i class="fa-solid fa-xmark text-base leading-none" aria-hidden="true"></i>
+							<Icon name="close" class="text-base leading-none" />
 						</button>
 					</Show>
 					<Show when={results()}>
@@ -733,9 +734,7 @@ export default function PupilsPage() {
 														έλεγχος
 													</span>
 												</Show>
-												<i
-													class="fa-solid fa-chevron-right text-accent-ink/60 transition-transform group-hover:translate-x-0.5"
-													aria-hidden="true"></i>
+												<Icon name="chevron-right" class="text-accent-ink/60 transition-transform group-hover:translate-x-0.5" />
 											</span>
 										</button>
 									)}
@@ -780,7 +779,7 @@ export default function PupilsPage() {
 
 								<Show when={data().pupil.review_note}>
 									<p class="rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-base dark:border-amber-600 dark:bg-amber-900/25">
-										<i class="fa-solid fa-triangle-exclamation mr-2 text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
+										<Icon name="warning" class="mr-2 text-amber-700 dark:text-amber-300" />
 										{data().pupil.review_note}
 									</p>
 								</Show>
@@ -864,7 +863,7 @@ export default function PupilsPage() {
 															title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
 															aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
 															class="inline-grid h-7 w-7 place-items-center rounded-md border border-accent-ink/40 text-accent-ink transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
-															<i class="fa-solid fa-up-right-from-square text-base" aria-hidden="true"></i>
+															<Icon name="external-link" class="text-base" />
 														</a>
 													</Show>
 												</dd>
@@ -874,7 +873,7 @@ export default function PupilsPage() {
 											type="button"
 											onClick={() => setFeesOpen(true)}
 											class="flex w-full items-center justify-center gap-x-2 rounded-xl border-2 border-brand bg-surface px-4 py-2 font-didact text-lg font-semibold text-accent-ink shadow-md shadow-shade transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
-											<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
+											<Icon name="euro" />
 											Δίδακτρα
 										</button>
 									</div>
@@ -1005,7 +1004,7 @@ export default function PupilsPage() {
 																							aria-label={`Επεξεργασία εγγραφής ${row.registration_year}`}
 																							title="Επεξεργασία εγγραφής"
 																							class="inline-grid h-8 w-8 place-items-center rounded-md text-accent-ink transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
-																							<i class={ActionIcon.MODIFY + " text-base"} aria-hidden="true"></i>
+																							<Icon name={ActionIcon.MODIFY} class="text-base" />
 																						</button>
 																					</td>
 																				</tr>

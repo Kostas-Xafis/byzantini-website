@@ -2,12 +2,14 @@ import type { CustomEvents } from "@_types/custom-events";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import type { PartialBy } from "@_types/helpers";
 import type { FileProxy } from "@lib/fileHandling.client";
+import type { IconName } from "@lib/icons";
 import { AnimTimeline } from "@utilities/dom";
 import { Index, Show, createSignal, onMount, type JSX } from "solid-js";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";
 import MultiFileInput, { type MultiFileInputProps } from "./MultiFileInput.solid";
+import Icon from "@components/other/Icon.solid";
 
 export class InputFields<T extends Record<string, Partial<Props>>> {
 	#inputs: T = {} as T;
@@ -113,7 +115,7 @@ type InputProps = {
 	placeholder?: string | number;
 	value?: string[] | string | number | FileInputProps["value"] | MultiFileInputProps["value"];
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	blurDisabled?: boolean;
 	/** Browser autofill hint for text-like inputs (e.g. "family-name", "postal-code", "off"). */
@@ -152,7 +154,7 @@ export default function Input(props: InputProps) {
 		placeholder,
 		value,
 		required,
-		iconClasses,
+		icon,
 		disabled,
 		blurDisabled = true,
 		autocomplete,
@@ -230,11 +232,12 @@ export default function Input(props: InputProps) {
 			}>
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show when={type !== "date" && type !== "file" && type !== "multiselect" && type !== "multifile" && type !== "select" && type !== "textarea"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<input
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
 					type={type}
@@ -259,11 +262,12 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<select
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
@@ -286,11 +290,12 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*-------------------------------MULTISELECT INPUT------------------------------------ */}
 			<Show when={type === "multiselect"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg overflow-x-hidden z-10">
 					<Index each={multiselectList}>
 						{(selectItem) =>
@@ -311,8 +316,14 @@ export default function Input(props: InputProps) {
 										button.setAttribute("data-selected", button.getAttribute("data-selected") === "true" ? "false" : "true");
 									}}
 									type="button">
-									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
-									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
+									<Icon
+										name="checkbox"
+										class="absolute top-[calc(50%_-_10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='true'])]/multiselect:hidden"
+									/>
+									<Icon
+										name="checkbox-checked"
+										class="absolute top-[calc(50%_-_10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='false'])]/multiselect:hidden"
+									/>
 									<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
 										{selectItem().label}
 									</p>
@@ -334,11 +345,12 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<textarea
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
@@ -358,7 +370,7 @@ export default function Input(props: InputProps) {
 					(required ? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400" : "")
 				}>
 				{label}
-				{required ? <i class="absolute bg-transparent left-[0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : <></>}
+				{required ? <Icon name="asterisk" class="absolute bg-transparent left-[0.5ch] top-1 text-xs" /> : <></>}
 			</p>
 			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
 			{tooltip ? <Tooltip {...tooltip} /> : <></>}

@@ -1,7 +1,9 @@
 import type { CustomEvents } from "@_types/custom-events";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 import { CloseButton } from "../admin/table/CloseButton.solid";
 
 export type FileInputProps = {
@@ -9,7 +11,7 @@ export type FileInputProps = {
 	prefix: string;
 	value?: [string, AnyRecord] | [];
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	fileExtension?: string;
 	metadata?: AnyRecord;
@@ -17,7 +19,7 @@ export type FileInputProps = {
 };
 
 export default function FileInput(props: FileInputProps) {
-	const { name, prefix, value, required, iconClasses, disabled, fileExtension, metadata, filePreview } = props;
+	const { name, prefix, value, required, icon, disabled, fileExtension, metadata, filePreview } = props;
 	const [input, setInput] = createSignal<HTMLInputElement>();
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: true,
@@ -79,7 +81,9 @@ export default function FileInput(props: FileInputProps) {
 					data-name={name}
 					onclick={onFileClick}
 					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-[90%] my-3 py-3 justify-self-center self-center flex flex-col justify-center items-center font-didact border-dashed border-2 border-gray-600 dark:border-gray-400 rounded-md cursor-pointer hover:bg-gray-600 dark:hover:bg-gray-700 z-10">
-					<i class={"text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " + (iconClasses || "")}></i>
+					<Show when={icon}>
+						<Icon name={icon!} class="text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]" />
+					</Show>
 					<p class="text-xl text-gray-400  group-hover/file:text-gray-50">Drag&Drop</p>
 				</div>
 				<input

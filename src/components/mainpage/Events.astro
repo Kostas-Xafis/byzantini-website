@@ -1,11 +1,13 @@
 ---
+import Icon from "@components/other/Icon.astro";
+import type { IconName } from "@lib/icons";
 // Ενότητα «Εκδηλώσεις & Χορωδία» — εικόνες από το bucket (λέγονται μέσω του
 // catch-all [...]slug.ts). Αντικαταστήστε με νεότερες φωτογραφίες όταν υπάρχουν.
-const events = [
-	{ text: "Συναυλίες και εκδηλώσεις", icon: "fa-solid fa-microphone-lines" },
-	{ text: "Αγιασμοί έναρξης μαθημάτων", icon: "fa-solid fa-dove" },
-	{ text: "Κάλαντα Χριστουγέννων και Πρωτοχρονιάς", icon: "fa-solid fa-star" },
-	{ text: "Σεμινάρια και μουσικά εργαστήρια", icon: "fa-solid fa-guitar" },
+const events: { text: string; icon: IconName }[] = [
+	{ text: "Συναυλίες και εκδηλώσεις", icon: "microphone" },
+	{ text: "Αγιασμοί έναρξης μαθημάτων", icon: "dove" },
+	{ text: "Κάλαντα Χριστουγέννων και Πρωτοχρονιάς", icon: "star" },
+	{ text: "Σεμινάρια και μουσικά εργαστήρια", icon: "guitar" },
 ];
 ---
 
@@ -56,7 +58,7 @@ const events = [
 			{
 				events.map((e) => (
 					<li class="flex items-center gap-x-2.5 font-didact text-[0.95vw] max-sm:text-sm text-gray-700">
-						<i class={`${e.icon} w-5 text-center text-red-900 max-sm:text-sm`} aria-hidden="true" />
+						<Icon name={e.icon} class="w-5 text-red-900 max-sm:text-sm" />
 						<span>{e.text}</span>
 					</li>
 				))
@@ -67,7 +69,7 @@ const events = [
 				href="/sxoli/xorodia"
 				class="inline-flex items-center gap-x-2 rounded-xl bg-red-900 px-[1.25vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.1vw] max-sm:text-base text-red-50 shadow-md shadow-red-900/30 transition-colors hover:bg-red-950">
 				Γνωρίστε τη χορωδία
-				<i class="fa-solid fa-chevron-right text-[0.8vw] max-sm:text-xs" aria-hidden="true"></i>
+				<Icon name="chevron-right" class="text-[0.8vw] max-sm:text-xs" />
 			</a>
 		</div>
 	</div>

@@ -14,6 +14,8 @@ import {
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { TOAST_EVENT, pushAlert, updateAlert } from "./toast";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 
 // The public API lives in ./toast.ts (plain TS, usable from non-component modules); this path keeps
 // exporting it for the existing `import { createAlert, pushAlert } from "./Alert.solid"` call sites.
@@ -21,37 +23,38 @@ export { createAlert, pushAlert, toast, updateAlert, type Alert, type ProgressHa
 
 const TICK_MS = 100;
 
-const TYPE_STYLES: Record<ToastType, { icon: string; card: string; icon_color: string; bar: string; label: string }> = {
+const TYPE_STYLES: Record<ToastType, { icon: IconName; spin?: boolean; card: string; icon_color: string; bar: string; label: string }> = {
 	success: {
-		icon: "fa-circle-check",
+		icon: "check-circle",
 		card: "bg-green-50 text-green-950 border-green-700/25 border-l-green-700 dark:bg-green-950 dark:text-green-50 dark:border-green-300/25 dark:border-l-green-400",
 		icon_color: "text-green-700 dark:text-green-300",
 		bar: "bg-green-700 dark:bg-green-400",
 		label: "Επιτυχία",
 	},
 	info: {
-		icon: "fa-circle-info",
+		icon: "info",
 		card: "bg-blue-50 text-blue-950 border-blue-700/25 border-l-blue-700 dark:bg-blue-950 dark:text-blue-50 dark:border-blue-300/25 dark:border-l-blue-400",
 		icon_color: "text-blue-700 dark:text-blue-300",
 		bar: "bg-blue-700 dark:bg-blue-400",
 		label: "Ενημέρωση",
 	},
 	warning: {
-		icon: "fa-triangle-exclamation",
+		icon: "warning",
 		card: "bg-amber-50 text-amber-950 border-amber-700/25 border-l-amber-600 dark:bg-amber-950 dark:text-amber-50 dark:border-amber-300/25 dark:border-l-amber-400",
 		icon_color: "text-amber-700 dark:text-amber-300",
 		bar: "bg-amber-600 dark:bg-amber-400",
 		label: "Προειδοποίηση",
 	},
 	error: {
-		icon: "fa-circle-exclamation",
+		icon: "alert-circle",
 		card: "bg-red-50 text-red-950 border-red-700/25 border-l-red-700 dark:bg-red-950 dark:text-red-50 dark:border-red-300/25 dark:border-l-red-400",
 		icon_color: "text-red-700 dark:text-red-300",
 		bar: "bg-red-700 dark:bg-red-400",
 		label: "Σφάλμα",
 	},
 	progress: {
-		icon: "fa-circle-notch fa-spin",
+		icon: "spinner",
+		spin: true,
 		card: "bg-surface text-ink border-line border-l-accent-ink",
 		icon_color: "text-accent-ink",
 		bar: "bg-accent-ink",
@@ -60,7 +63,7 @@ const TYPE_STYLES: Record<ToastType, { icon: string; card: string; icon_color: s
 };
 
 // Animations live here (not in AdminLayout) so the component is self-contained. Reduced motion keeps
-// only opacity fades; Font Awesome's own CSS already stops `fa-spin` under reduced motion.
+// only opacity fades; <Icon spin> already stops spinning under reduced motion.
 const TOAST_CSS = `
 .byz-toast { animation: byz-toast-in 220ms cubic-bezier(.21,1.02,.73,1) both; }
 .byz-toast[data-state="closing"] { animation: byz-toast-out ${EXIT_DURATION}ms ease-in forwards; pointer-events: none; }
@@ -276,7 +279,7 @@ function ToastCard(props: { toast: Toast; onClose: () => void }) {
 				styles().card
 			}>
 			<div class="flex items-start gap-3 py-3 pr-2 pl-3">
-				<i class={`fa-solid ${styles().icon} ${styles().icon_color} mt-0.5 shrink-0 text-lg leading-6`} aria-hidden="true"></i>
+				<Icon name={styles().icon} spin={styles().spin} class={`${styles().icon_color} mt-[3px] shrink-0 text-lg`} />
 				<div class="min-w-0 flex-1">
 					<Show when={t().title}>
 						<p id={titleId} class="text-current font-bold leading-6 break-words">
@@ -317,7 +320,7 @@ function ToastCard(props: { toast: Toast; onClose: () => void }) {
 					title="Κλείσιμο"
 					onClick={() => props.onClose()}
 					class="-my-1 grid size-8 text-current shrink-0 place-items-center rounded-md transition-colors hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current dark:hover:bg-white/10">
-					<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+					<Icon name="close" />
 				</button>
 			</div>
 			<Show when={timed()}>

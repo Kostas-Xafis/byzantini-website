@@ -55,7 +55,7 @@ test("--auth-- me describes the signed-in admin", async () => {
 			permissions: z.object({ queryLogs: z.boolean(), feeCatalog: z.boolean(), deleteAdmins: z.boolean(), manageRoles: z.boolean() }),
 			hasPassword: z.literal(true),
 			identities: z.array(z.object({ id: z.string(), label: z.string() })),
-			providers: z.array(z.object({ id: z.string(), label: z.string(), icon: z.string() })),
+			providers: z.array(z.object({ id: z.string(), label: z.string() })),
 		}),
 	);
 	expect(json.data.email.toLowerCase()).toBe(testEnv.TEST_EMAIL!.toLowerCase());
@@ -77,7 +77,7 @@ test("--auth-- account routes need a session", async () => {
 
 test("--auth-- providers lists the enabled sign-in providers", async () => {
 	const json = await getJson<APIResponse["Authentication.providers"]>(await rawAPI("GET", "/auth/providers"));
-	expectBody(json, z.array(z.object({ id: z.enum(["google", "apple", "microsoft"]), label: z.string(), icon: z.string() })));
+	expectBody(json, z.array(z.object({ id: z.enum(["google", "apple", "microsoft"]), label: z.string() })));
 });
 
 test("--auth-- oauthStart refuses unknown providers and links without a session", async () => {

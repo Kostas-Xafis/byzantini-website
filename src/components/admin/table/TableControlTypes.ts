@@ -1,3 +1,5 @@
+import type { IconName } from "@lib/icons";
+
 export const enum ActionEnum {
 	ADD = "ADD",
 	MODIFY = "MODIFY",
@@ -9,20 +11,22 @@ export const enum ActionEnum {
 	NONE = "",
 }
 
-export const enum ActionIcon {
-	ADD = "fa-solid fa-plus",
-	MODIFY = "fa-regular fa-pen-to-square",
-	DELETE = "fa-regular fa-trash-can",
-	CHECK = "fa-solid fa-check",
-	ADD_USER = "fa-solid fa-user-plus",
-	DELETE_USER = "fa-solid fa-user-minus",
-	ADD_BOX = "fa-regular fa-square-plus",
-	DELETE_BOX = "fa-regular fa-square-minus",
-	DOWNLOAD_SINGLE = "fa-solid fa-download",
-	DOWNLOAD_ZIP = "fa-regular fa-file-zipper",
-	DOWNLOAD_EXCEL = "fa-solid fa-table",
-	PRINT = "fa-solid fa-print",
-}
+/** Icon of each table action (lib/icons.ts). */
+export const ActionIcon = {
+	ADD: "plus",
+	MODIFY: "edit",
+	DELETE: "trash",
+	CHECK: "check",
+	ADD_USER: "user-plus",
+	DELETE_USER: "user-minus",
+	ADD_BOX: "square-plus",
+	DELETE_BOX: "square-minus",
+	DOWNLOAD_SINGLE: "download",
+	DOWNLOAD_ZIP: "file-zip",
+	DOWNLOAD_EXCEL: "table",
+	PRINT: "printer",
+} as const satisfies Record<string, IconName>;
+export type ActionIcon = (typeof ActionIcon)[keyof typeof ActionIcon];
 
 export type EmptyAction = {
 	type: ActionEnum;

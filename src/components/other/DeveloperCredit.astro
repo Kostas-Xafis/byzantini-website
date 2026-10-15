@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import { DEVELOPER } from "@utilities/schema";
 
 /**
@@ -32,7 +33,7 @@ const isContact = variant === "contact";
 			<div class="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgb(251_191_36_/_0.7),transparent)]" aria-hidden="true" />
 			<div class="relative flex flex-col items-center gap-y-4 sm:flex-row sm:items-center sm:gap-x-6">
 				<span class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60 max-sm:size-12">
-					<i class="fa-solid fa-code text-2xl max-sm:text-xl" aria-hidden="true" />
+					<Icon name="code" class="text-2xl max-sm:text-xl" />
 				</span>
 				<div class="flex-1 text-center sm:text-left">
 					<p class="text-2xl max-sm:text-xl font-bold font-anaktoria leading-tight text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
@@ -47,9 +48,9 @@ const isContact = variant === "contact";
 					target="_blank"
 					rel="author noopener"
 					class="group/credit shrink-0 inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-semibold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl motion-reduce:transition-none motion-reduce:hover:translate-y-0">
-					<i
-						class="fa-solid fa-briefcase text-amber-400 transition-colors duration-300 group-hover/credit:text-red-950 motion-reduce:transition-none"
-						aria-hidden="true"
+					<Icon
+						name="briefcase"
+						class="text-amber-400 transition-colors duration-300 group-hover/credit:text-red-950 motion-reduce:transition-none"
 					/>
 					Δείτε τη δουλειά μου
 				</a>
