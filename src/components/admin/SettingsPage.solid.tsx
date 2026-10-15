@@ -1,12 +1,30 @@
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
-import { isDashboardDarkMode, toggleDashboardTheme } from "@utilities/theme";
-import { Show, createSignal, onMount } from "solid-js";
+import { getDashboardThemePreference, setDashboardThemePreference, type DashboardThemePreference } from "@utilities/theme";
+import { For, Show, createSignal } from "solid-js";
 import FeeCatalogEditor from "./FeeCatalogEditor.solid";
+import { PanelCard, PanelCollapsible, PanelPage, hintClass, primaryButtonClass, secondaryButtonClass } from "./Panel.solid";
 import { toast } from "./toast";
 //@ts-ignore
 import * as zip from "https://cdn.jsdelivr.net/npm/client-zip/index.js";
+
+/** When this device last downloaded a backup (shown under the button; per device, like the theme). */
+const LAST_BACKUP_KEY = "admin-last-backup";
+const readLastBackup = () => {
+	try {
+		const value = Number(localStorage.getItem(LAST_BACKUP_KEY));
+		return Number.isFinite(value) && value > 0 ? value : null;
+	} catch {
+		return null;
+	}
+};
+
+const THEME_OPTIONS: { value: DashboardThemePreference; label: string; icon: string }[] = [
+	{ value: "light", label: "Φωτεινό", icon: "fa-solid fa-sun" },
+	{ value: "dark", label: "Σκοτεινό", icon: "fa-solid fa-moon" },
+	{ value: "system", label: "Συσκευής", icon: "fa-solid fa-circle-half-stroke" },
+];
 
 const getCurrentFormattedDate = () => {
 	const d = new Date();
@@ -25,13 +43,12 @@ export default function SettingsPage() {
 	const [downloadPct, setDownloadPct] = createSignal<number | null>(null);
 	const [isCancelling, setIsCancelling] = createSignal(false);
 	let cancelDownload: (() => void) | null = null;
-	const [isDarkMode, setIsDarkMode] = createSignal(false);
+	// The admin island renders in the browser only (client:only), so the device settings are read up front:
+	// no flash of the wrong theme option.
+	const [themePreference, setThemePreference] = createSignal<DashboardThemePreference>(getDashboardThemePreference());
+	const [lastBackup, setLastBackup] = createSignal<number | null>(readLastBackup());
 	const isDevelopmentMode = import.meta.env.MODE === "development";
 	const apiHook = useAPIClient();
-
-	onMount(() => {
-		setIsDarkMode(isDashboardDarkMode());
-	});
 
 	const base64ToBlob = (base64: string, type = "application/octet-stream") => {
 		const binaryString = atob(base64);
@@ -150,6 +167,11 @@ export default function SettingsPage() {
 			anchor.remove();
 			URL.revokeObjectURL(downloadURL);
 			setDownloadPct(100);
+			const now = Date.now();
+			setLastBackup(now);
+			try {
+				localStorage.setItem(LAST_BACKUP_KEY, String(now));
+			} catch {}
 
 			progress.success(`Βάση δεδομένων και ${validBucketFiles.length} από ${total} αρχεία · ${formatMB(zipBlob.size)} (${filename}).`, {
 				title: "Το αντίγραφο ασφαλείας δημιουργήθηκε",
@@ -179,91 +201,115 @@ export default function SettingsPage() {
 
 	const onCancelDownload = () => cancelDownload?.();
 
-	const onThemeToggle = () => {
-		const nextTheme = toggleDashboardTheme();
-		setIsDarkMode(nextTheme === "dark");
+	const onThemeChange = (preference: DashboardThemePreference) => {
+		setDashboardThemePreference(preference);
+		setThemePreference(preference);
 	};
 
 	return (
-		<div class="w-full h-full min-h-0 overflow-y-auto p-6 sm:p-10 bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
-			<div class="max-w-3xl grid gap-6">
-				<h1 class="font-anaktoria text-4xl">Ρυθμίσεις</h1>
-				<p class="text-sm sm:text-base dark:text-gray-300">Διαχείριση εμφάνισης και αντιγράφων ασφαλείας του πίνακα διαχείρισης.</p>
+		<PanelPage title="Ρυθμίσεις" subtitle="Εμφάνιση του πίνακα διαχείρισης, αντίγραφα ασφαλείας και κατάλογος διδάκτρων.">
+			<PanelCard icon="fa-solid fa-palette" title="Εμφάνιση" description="Ισχύει μόνο για αυτή τη συσκευή.">
+				<div
+					role="radiogroup"
+					aria-label="Θέμα πίνακα διαχείρισης"
+					class="grid grid-cols-3 gap-1 rounded-xl border border-red-900/10 bg-red-50 p-1 dark:border-white/10 dark:bg-black/30 sm:max-w-md"
+					onKeyDown={(e) => {
+						if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+						e.preventDefault();
+						const index = THEME_OPTIONS.findIndex((o) => o.value === themePreference());
+						const next = THEME_OPTIONS[(index + (e.key === "ArrowRight" ? 1 : THEME_OPTIONS.length - 1)) % THEME_OPTIONS.length];
+						onThemeChange(next.value);
+						(e.currentTarget.querySelector(`[data-value="${next.value}"]`) as HTMLButtonElement | null)?.focus();
+					}}>
+					<For each={THEME_OPTIONS}>
+						{(option) => (
+							<button
+								type="button"
+								role="radio"
+								data-value={option.value}
+								aria-checked={themePreference() === option.value}
+								tabIndex={themePreference() === option.value ? 0 : -1}
+								onClick={() => onThemeChange(option.value)}
+								class={
+									"flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-red-900 " +
+									(themePreference() === option.value
+										? "bg-red-900 text-red-50 shadow-sm shadow-red-950/30"
+										: "text-gray-700 hover:bg-red-100 hover:text-red-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-red-100")
+								}>
+								<i class={option.icon} aria-hidden="true"></i>
+								{option.label}
+							</button>
+						)}
+					</For>
+				</div>
+			</PanelCard>
 
-				<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
-					<div class="grid gap-1">
-						<h2 class="font-anaktoria text-2xl">Εμφάνιση</h2>
-						<p class="text-sm dark:text-gray-300">Επιλέξτε πώς θα εμφανίζεται ο πίνακας διαχείρισης σε αυτή τη συσκευή.</p>
-					</div>
-					<div class="grid gap-2">
-						<p class="text-sm dark:text-gray-300">Σκοτεινή λειτουργία: {isDarkMode() ? "Ενεργή" : "Ανενεργή"}</p>
-						<button
-							type="button"
-							onClick={onThemeToggle}
-							class="w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
-							aria-label="Εναλλαγή σκοτεινής λειτουργίας πίνακα διαχείρισης">
-							{isDarkMode() ? "Απενεργοποίηση σκοτεινής λειτουργίας" : "Ενεργοποίηση σκοτεινής λειτουργίας"}
-						</button>
-						<p class="text-xs text-gray-600 dark:text-gray-300">Η επιλογή αποθηκεύεται στον browser και ισχύει μόνο για αυτή τη συσκευή.</p>
-					</div>
-				</section>
-
-				<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
-					<div class="grid gap-1">
-						<h2 class="font-anaktoria text-2xl">Ασφάλεια Δεδομένων</h2>
-						<p class="text-sm dark:text-gray-300">Λήψη πλήρους αντιγράφου ασφαλείας βάσης δεδομένων και bucket σε αρχείο .zip.</p>
-					</div>
+			<PanelCard
+				icon="fa-solid fa-cloud-arrow-down"
+				title="Αντίγραφο ασφαλείας"
+				description="Ένα αρχείο .zip με όλη τη βάση δεδομένων και όλα τα αρχεία (εικόνες, έγγραφα). Φυλάξτε το εκτός υπολογιστή.">
+				<div class="grid gap-3">
 					<div class="flex flex-wrap items-center gap-3">
 						<button
 							type="button"
 							onClick={onDownload}
 							disabled={isDownloading()}
 							aria-busy={isDownloading()}
-							class="relative w-fit overflow-hidden rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:cursor-progress transition-colors tabular-nums">
-							<Show when={isDownloading()}>
-								{/* Inline progress fill behind the label. */}
-								<span
-									aria-hidden="true"
-									class="absolute inset-y-0 left-0 bg-red-950 transition-[width] duration-300 motion-reduce:transition-none"
-									style={{ width: `${downloadPct() ?? 0}%` }}
-								/>
-							</Show>
-							<span class="relative">
-								{isDownloading() ? (
-									<>
-										<i class="fa-solid fa-circle-notch fa-spin mr-2" aria-hidden="true"></i>
-										{`Λήψη… ${downloadPct() ?? 0}%`}
-									</>
-								) : (
-									"Λήψη Backup (.zip)"
-								)}
-							</span>
+							class={`${primaryButtonClass} px-5 py-2.5`}>
+							<i class={isDownloading() ? "fa-solid fa-circle-notch fa-spin" : "fa-solid fa-download"} aria-hidden="true"></i>
+							{isDownloading() ? "Λήψη σε εξέλιξη…" : "Λήψη αντιγράφου ασφαλείας"}
 						</button>
 						<Show when={isDownloading() && (downloadPct() ?? 0) < 95}>
-							<button
-								type="button"
-								onClick={onCancelDownload}
-								disabled={isCancelling()}
-								class="w-fit rounded-md px-4 py-2 font-bold border border-red-900 text-red-900 hover:bg-red-100 disabled:cursor-wait dark:border-red-300 dark:text-red-100 dark:hover:bg-red-950 transition-colors">
+							<button type="button" onClick={onCancelDownload} disabled={isCancelling()} class={secondaryButtonClass}>
 								{isCancelling() ? "Ακύρωση…" : "Ακύρωση"}
 							</button>
 						</Show>
 					</div>
-				</section>
-
-				<FeeCatalogEditor />
-
-				{isDevelopmentMode && (
-					<section class="rounded-xl border border-red-900/20 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4">
-						<div class="grid gap-1">
-							<h2 class="font-anaktoria text-2xl">Migrations (Development ONLY)</h2>
-							<p class="text-sm dark:text-gray-300">
-								Οι migrations εκτελούνται μέσω του CLI: <code>bunx wrangler d1 migrations apply DB</code>
+					<Show
+						when={isDownloading()}
+						fallback={
+							<p class={hintClass}>
+								{lastBackup()
+									? `Τελευταία λήψη από αυτή τη συσκευή: ${new Date(lastBackup()!).toLocaleString("el-GR", { dateStyle: "medium", timeStyle: "short" })}`
+									: "Δεν έχει γίνει λήψη από αυτή τη συσκευή."}
+							</p>
+						}>
+						<div class="grid gap-1 sm:max-w-md">
+							<div
+								class="h-2 overflow-hidden rounded-full bg-red-100 dark:bg-black/40"
+								role="progressbar"
+								aria-label="Πρόοδος λήψης"
+								aria-valuemin={0}
+								aria-valuemax={100}
+								aria-valuenow={downloadPct() ?? 0}>
+								<div
+									class="h-full rounded-full bg-red-900 dark:bg-red-400 transition-[width] duration-300 motion-reduce:transition-none"
+									style={{ width: `${downloadPct() ?? 0}%` }}
+								/>
+							</div>
+							<p class={`${hintClass} tabular-nums`}>
+								{downloadPct() ?? 0}% — μπορείτε να συνεχίσετε τη δουλειά σας, η πρόοδος φαίνεται και στην ειδοποίηση.
 							</p>
 						</div>
-					</section>
-				)}
-			</div>
-		</div>
+					</Show>
+				</div>
+			</PanelCard>
+
+			<PanelCollapsible
+				id="settings-fee-catalog"
+				icon="fa-solid fa-euro-sign"
+				title="Κατάλογος διδάκτρων"
+				description="Οι τιμές διδάκτρων ανά σχολικό έτος. Κάθε αποθήκευση δημιουργεί νέα έκδοση.">
+				<FeeCatalogEditor />
+			</PanelCollapsible>
+
+			{isDevelopmentMode && (
+				<PanelCollapsible id="settings-dev" icon="fa-solid fa-code" title="Για προγραμματιστές" description="Ορατό μόνο σε development.">
+					<p class={hintClass}>
+						Οι migrations εκτελούνται μέσω του CLI: <code>bunx wrangler d1 migrations apply DB --local</code>
+					</p>
+				</PanelCollapsible>
+			)}
+		</PanelPage>
 	);
 }

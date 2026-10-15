@@ -1,15 +1,14 @@
 ---
 import AdminRouter from "@components/admin/AdminRouter.solid.tsx";
 import AdminLayout from "@layouts/AdminLayout.astro";
-import { isSessionValid, getSessionId } from "@utilities/authentication";
+import { isSessionValid } from "@lib/auth/sessions";
 import { buildLoginUrl } from "@utilities/redirect";
 export const prerender = false;
 
 // Gate the admin shell on the server (in-process session lookup, no self-fetch): a visitor without a valid
 // session is redirected before any admin markup is sent, and comes back to the requested admin URL after
 // signing in (`/login?redirect_url=<path+query>`; the hash never reaches the server).
-const sid = getSessionId(Astro);
-if (!sid || !(await isSessionValid(sid))) {
+if (!(await isSessionValid(Astro.cookies.get("session_id")?.value))) {
 	return Astro.redirect(buildLoginUrl(`${Astro.url.pathname}${Astro.url.search}`));
 }
 ---

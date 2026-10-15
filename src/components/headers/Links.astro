@@ -16,7 +16,6 @@ const { title, description, imageURL, canonical, noindex } = Astro.props;
 
 const SITE_NAME = "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής";
 const SITE_URL = (Astro.site ?? new URL(Astro.request.url)).origin;
-const hasBrandIcons = !Astro.url.pathname.includes("login");
 
 // `<title>` uses titleTemplate (suffix added only on non-home pages); OG/Twitter
 // reuse the same composed title for consistency.
@@ -120,7 +119,9 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 		@import url("/fa/css/solid.min.css") layer(components);
 		@import url("/fa/css/regular.min.css") layer(components);
 	</style>
-	{hasBrandIcons && <style is:inline>@import url("/fa/css/brands.min.css") layer(components);</style>}
+	<style is:inline>
+		@import url("/fa/css/brands.min.css") layer(components);
+	</style>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />

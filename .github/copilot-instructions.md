@@ -40,6 +40,16 @@
   id lists use `z_IdArray` (never empty). Middleware runs before body validation.
 - Middleware is attached per route via the `APIServer` middleware array
   (`authenticateMiddleware` from `lib/api/routes/middleware/authenticate.ts`).
+  Handlers get the signed-in admin with `currentSession(cookies)` — sessions
+  live in `sys_user_sessions` (one row per device, SHA-256 of the cookie), not
+  on `sys_users`.
+- Admin sign-in (AGENTS.md "Admin authentication"): PBKDF2 passwords
+  (`lib/auth/passwords.ts`), providers Google/Apple/Microsoft via `arctic`
+  (`lib/auth/providers.ts`, enabled by their env vars), matched on
+  `sys_user_identities (provider, subject)` — never by email. OAuth state is
+  the HMAC-signed `oauth_flow` cookie; callbacks land on
+  `src/pages/oauth2callback/[...provider].astro`. `src/middleware.ts` replaces
+  Astro's `checkOrigin` (exempts Apple's cross-site form POST).
 - Validation is Zod, declared on the route instance (`schema` for requests,
   `responseSchema` for the `{ data }` payload).
 

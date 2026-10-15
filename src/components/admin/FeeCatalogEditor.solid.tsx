@@ -579,16 +579,8 @@ export default function FeeCatalogEditor() {
 	};
 
 	return (
-		<section
-			class="rounded-xl border-2 border-red-900/30 dark:border-red-300/30 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4"
-			aria-labelledby="fee-catalog-title">
-			<div class="grid gap-1">
-				<h2 id="fee-catalog-title" class="font-anaktoria text-2xl">
-					Κατάλογος διδάκτρων
-				</h2>
-				<p class="text-sm dark:text-gray-300">Οι τιμές διδάκτρων ανά σχολικό έτος. Κάθε αποθήκευση δημιουργεί νέα έκδοση του καταλόγου.</p>
-			</div>
-
+		// The card and its heading come from the settings page (`PanelCollapsible`).
+		<div class="grid gap-4">
 			<div class="grid gap-1 sm:max-w-xs">
 				<label for={`${uid}-year`} class="text-sm font-bold">
 					Σχολικό έτος
@@ -747,6 +739,6 @@ export default function FeeCatalogEditor() {
 					</Show>
 				</div>
 			</Show>
-		</section>
+		</div>
 	);
 }

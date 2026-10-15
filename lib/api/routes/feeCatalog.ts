@@ -1,4 +1,3 @@
-import type { SysUsers } from "@_types/entities";
 import { getDb, logQuery } from "@lib/db";
 import { z_FeeCatalog, z_FeeCatalogInput, z_SchoolYear } from "@lib/fees";
 import { getActiveCatalog, getCatalog, getCatalogVersions } from "@lib/fees/recalculate.server";
@@ -6,8 +5,7 @@ import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
-import { COOKIE } from "./cookies";
-import { authenticateMiddleware } from "./middleware/authenticate";
+import { authenticateMiddleware, currentSession } from "./middleware/authenticate";
 
 /**
  * FeeCatalog — the versioned price catalog of the automatic fees (docs/FEES.md §2).
@@ -63,11 +61,9 @@ export const feeCatalogRoutes = {
 					const missing = teacherIds.filter((id) => !known.has(id));
 					if (missing.length > 0) throw APIError.badRequest(`Άγνωστος καθηγητής στον κατάλογο (id ${missing.join(", ")})`);
 				}
-				const [user] = await executeQuery<Pick<SysUsers, "email">>("SELECT email FROM sys_users WHERE session_id = ? LIMIT 1", [
-					cookies.get(COOKIE.sessionId),
-				]);
+				const user = await currentSession(cookies);
 				// The catalog and its rules in one batch: a version is never stored without its rules.
-				const catalogArgs = [body.school_year, body.evaluation_fee, body.multi_enrollment_factor, Date.now(), user?.email ?? null];
+				const catalogArgs = [body.school_year, body.evaluation_fee, body.multi_enrollment_factor, Date.now(), user.email];
 				const ruleArgs = body.rules.map((rule) => [
 					rule.class_id,
 					rule.class_years ? JSON.stringify(rule.class_years) : null,

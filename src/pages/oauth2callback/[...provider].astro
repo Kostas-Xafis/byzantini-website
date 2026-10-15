@@ -1,0 +1,233 @@
+---
+import { dispatchAPI } from "@hooks/useAPI.server";
+import { readAPIResponse } from "@lib/api/transport";
+import type { APIResponse } from "@routes/index.client";
+export const prerender = false;
+
+/**
+ * Where the sign-in providers send the admin back (lib/auth/providers.ts `callbackPath`):
+ * `/oauth2callback` for Google (the URI registered in the Google Cloud console), `/oauth2callback/<id>`
+ * for the others. Google and Microsoft redirect here with `?code&state`; Apple POSTs them as a form
+ * (src/middleware.ts lets that one cross-site POST through).
+ *
+ * The page finishes the sign-in on the server (`Authentication.oauthCallback`, in-process) and forwards
+ * its cookies. It then moves on with a script instead of a 302: the session cookie is `SameSite=Strict`,
+ * and a redirect chain that started on the provider's site would not send it to `/admin`.
+ */
+const provider = Astro.params.provider ?? "google";
+
+const fields: Record<string, string> = {};
+if (Astro.request.method === "POST") {
+	const form = await Astro.request.formData().catch(() => null);
+	form?.forEach((value, key) => typeof value === "string" && (fields[key] = value));
+} else {
+	Astro.url.searchParams.forEach((value, key) => (fields[key] = value));
+}
+if (!fields.code && !fields.error) return Astro.redirect("/login");
+
+type Result = APIResponse["Authentication.oauthCallback"];
+let result: Result;
+try {
+	const response = await dispatchAPI(
+		"Authentication.oauthCallback",
+		{ UrlArgs: { provider }, RequestObject: { code: fields.code, state: fields.state, error: fields.error } },
+		Astro,
+	);
+	for (const cookie of response.headers.getSetCookie()) Astro.response.headers.append("Set-Cookie", cookie);
+	const payload = await readAPIResponse<Result>(response);
+	result = "data" in payload ? payload.data : { ok: false, error: payload.message, back: "/login" };
+} catch (error) {
+	console.error("[oauth2callback]", error);
+	result = { ok: false, error: "Προέκυψε σφάλμα κατά τη σύνδεση. Δοκιμάστε ξανά.", back: "/login" };
+}
+// The URL carries a one-time code: keep it out of caches and Referer headers.
+Astro.response.headers.set("Cache-Control", "no-store");
+Astro.response.headers.set("Referrer-Policy", "no-referrer");
+const backLabel = result.ok
+	? ""
+	: result.back.startsWith("/admin/account")
+		? "Επιστροφή στον λογαριασμό"
+		: result.back.startsWith("/admin/signup")
+			? "Επιστροφή στην εγγραφή"
+			: "Επιστροφή στη σύνδεση";
+---
+
+<!doctype html>
+<html lang="el">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="robots" content="noindex, nofollow" />
+		<meta name="referrer" content="no-referrer" />
+		<title>{result.ok ? "Σύνδεση..." : "Η σύνδεση απέτυχε"}</title>
+		<link rel="stylesheet" href="/fa/css/fontawesome.min.css" />
+		<link rel="stylesheet" href="/fa/css/solid.min.css" />
+		<style>
+			html {
+				font-family:
+					system-ui,
+					-apple-system,
+					sans-serif;
+			}
+			body {
+				margin: 0;
+				padding: 1rem;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				min-height: 100vh;
+				background: radial-gradient(ellipse at top, rgb(153 27 27 / 0.45), white);
+				background-repeat: no-repeat;
+				box-sizing: border-box;
+			}
+			.container {
+				max-width: 460px;
+				width: 100%;
+				background: white;
+				border: 1px solid rgba(127, 29, 29, 0.15);
+				box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+				border-radius: 12px;
+				padding: 1.5rem 1.25rem;
+				text-align: center;
+				color: #282828;
+			}
+			.spinner {
+				width: 44px;
+				height: 44px;
+				margin: 0 auto 14px;
+				border: 4px solid rgba(127, 29, 29, 0.2);
+				border-top-color: rgb(127, 29, 29);
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			h1 {
+				font-size: 1.6rem;
+				margin: 0;
+				color: rgb(127, 29, 29);
+			}
+			p,
+			a {
+				color: #282828;
+			}
+			.status {
+				font-size: 1rem;
+				margin: 0.65rem 0 0;
+				opacity: 0.85;
+			}
+			.actions {
+				margin-top: 1.1rem;
+				display: grid;
+				gap: 0.6rem;
+			}
+			.action-link {
+				display: inline-block;
+				text-decoration: none;
+				padding: 0.65rem 0.9rem;
+				border-radius: 8px;
+				font-size: 0.95rem;
+				font-weight: 600;
+				transition: background-color 0.2s ease;
+			}
+			.action-link.primary {
+				background: rgb(127, 29, 29);
+				color: rgb(254, 242, 242);
+			}
+			.action-link.primary:hover {
+				background: rgb(127, 29, 29);
+				filter: brightness(0.9);
+			}
+			.action-link.secondary {
+				border: 1px solid rgba(127, 29, 29, 0.45);
+				background: rgba(127, 29, 29, 0.07);
+				color: rgb(127, 29, 29);
+			}
+			.action-link.secondary:hover {
+				background: rgba(127, 29, 29, 0.12);
+			}
+			.error-icon {
+				font-size: 2.2rem;
+				margin-bottom: 10px;
+				color: rgb(185, 28, 28);
+			}
+			@media (prefers-color-scheme: dark) {
+				body {
+					background: radial-gradient(ellipse at top, rgb(127 29 29 / 0.5), rgb(12 12 12));
+					background-repeat: no-repeat;
+				}
+				.container {
+					background: #1a1a1a;
+					border-color: rgba(153, 27, 27, 0.5);
+				}
+				h1,
+				.action-link.secondary {
+					color: rgb(252, 165, 165);
+				}
+				p,
+				a {
+					color: rgb(246, 246, 246);
+				}
+				.spinner {
+					border-color: rgba(248, 113, 113, 0.2);
+					border-top-color: rgb(248, 113, 113);
+				}
+				.action-link.secondary {
+					border-color: rgba(248, 113, 113, 0.55);
+					background: rgba(248, 113, 113, 0.1);
+				}
+				.action-link.secondary:hover {
+					background: rgba(248, 113, 113, 0.18);
+				}
+			}
+			@media (max-width: 480px) {
+				.container {
+					padding: 1.25rem 1rem;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container" role="status" aria-live="polite">
+			{
+				result.ok ? (
+					<>
+						<div class="spinner" />
+						<h1>Ολοκλήρωση σύνδεσης</h1>
+						<p class="status">Η σύνδεση ολοκληρώθηκε. Μεταφορά...</p>
+						<div class="actions">
+							<a id="continue" class="action-link primary" href={result.redirect} data-redirect={result.redirect}>
+								Συνέχεια
+							</a>
+						</div>
+					</>
+				) : (
+					<>
+						<i class="error-icon fa-solid fa-circle-exclamation" aria-hidden="true" />
+						<h1>Η σύνδεση απέτυχε</h1>
+						<p class="status">{result.error}</p>
+						<div class="actions">
+							<a class="action-link primary" href={result.back}>
+								{backLabel}
+							</a>
+							<a class="action-link secondary" href="/">
+								Αρχική σελίδα
+							</a>
+						</div>
+					</>
+				)
+			}
+		</div>
+		<script>
+			// A same-site navigation started by this page, so the SameSite=Strict session cookie is sent.
+			const target = document.getElementById("continue")?.dataset.redirect;
+			if (target) {
+				localStorage.removeItem("sys_user"); // pre-0008 copy of the signed-in admin
+				window.location.replace(target);
+			}
+		</script>
+	</body>
+</html>

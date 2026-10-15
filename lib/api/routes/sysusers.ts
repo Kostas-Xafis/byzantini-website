@@ -1,16 +1,17 @@
 import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
 import { isOwnerEmail } from "@env/ownerEmail";
-import { z_IdArray, z_LoginCredentials, z_SysUsers } from "@lib/api/schemas";
+import { hashPassword } from "@lib/auth/passwords";
+import { forgetUserSessions } from "@lib/auth/sessions";
+import { z_IdArray, z_SignupCredentials, z_SysUsers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
-import type { Transaction } from "@lib/db";
+import { getDb, type Transaction } from "@lib/db";
 import { executeQuery, questionMarks } from "@lib/utils.server";
-import { createSessionId, generateShaKey } from "@utilities/authentication";
 import { z } from "astro/zod";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
-import { COOKIE, SESSION_COOKIE_OPTIONS } from "./cookies";
+import { COOKIE } from "./cookies";
 import { sendAutomatedEmail } from "./emailService";
-import { authenticateMiddleware } from "./middleware/authenticate";
+import { authenticateMiddleware, currentSession, startSession } from "./middleware/authenticate";
 
 /**
  * SysUsers — Phase 4 route group (contracts + handlers in one place).
@@ -30,10 +31,8 @@ const z_SysUserInviteEmail = z.object({
 });
 
 const z_RegisterSysUserResponse = z.object({
-	session_id: z.string(),
 	id: z.number().int(),
 	email: z.email("Μη έγκυρο email"),
-	avatar_url: z.string().nullable(),
 });
 
 /**
@@ -53,6 +52,19 @@ export async function findRegisterLink(T: Transaction, link: string): Promise<Sy
 	const [invite] = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ? LIMIT 1", [link]);
 	if (!invite?.email || invite.exp_date < Date.now()) return undefined;
 	return invite;
+}
+
+/** Deletes admins with their sessions and connected accounts, in one batch. */
+async function deleteSysUsers(ids: number[]) {
+	if (ids.length === 0) return;
+	const marks = questionMarks(ids);
+	const db = getDb();
+	await db.batch([
+		db.prepare(`DELETE FROM sys_user_sessions WHERE user_id IN (${marks})`).bind(...ids),
+		db.prepare(`DELETE FROM sys_user_identities WHERE user_id IN (${marks})`).bind(...ids),
+		db.prepare(`DELETE FROM sys_users WHERE id IN (${marks})`).bind(...ids),
+	]);
+	for (const id of ids) forgetUserSessions(id);
 }
 
 export const sysusersRoutes = {
@@ -76,23 +88,21 @@ export const sysusersRoutes = {
 		[authenticateMiddleware],
 		({ cookies }) =>
 			handlerResult(async () => {
-				const session_id = cookies.get(COOKIE.sessionId);
-				const [user] = await executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
-				return user;
+				const { userId: id, email } = await currentSession(cookies);
+				return { id, email };
 			}),
 	),
 	delete: new APIServer({ method: "DELETE", path: "/sys", schema: z_IdArray }, [authenticateMiddleware], ({ body, cookies }) =>
-		handlerResult(async (T) => {
-			const session_id = cookies.get(COOKIE.sessionId);
-			const [self] = await T.executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE session_id = ? LIMIT 1", [session_id]);
-			if (!self) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
+		handlerResult(async () => {
+			const self = await currentSession(cookies);
 
 			let ids = [...new Set(body.filter((id) => id > 0))];
 			if (ids.length === 0) throw APIError.badRequest("Δεν επιλέχθηκε καμία εγγραφή");
 
-			if (ids.includes(self.id)) {
-				ids = ids.filter((userId) => userId !== self.id);
-				await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [self.id]);
+			if (ids.includes(self.userId)) {
+				ids = ids.filter((userId) => userId !== self.userId);
+				await deleteSysUsers([self.userId]);
+				cookies.delete(COOKIE.sessionId);
 				if (ids.length === 0) return "Deleted self successfully";
 			}
 
@@ -100,14 +110,13 @@ export const sysusersRoutes = {
 				throw APIError.forbidden("Δεν έχετε δικαίωμα διαγραφής άλλων διαχειριστών");
 			}
 
-			if (ids.length === 1) await T.executeQuery("DELETE FROM sys_users WHERE id = ?", [ids[0]]);
-			else await T.executeQuery(`DELETE FROM sys_users WHERE id IN (${questionMarks(ids)})`, ids);
+			await deleteSysUsers(ids);
 			return "User/s deleted successfully";
 		}, "Σφάλμα κατά τη διαγραφή των διαχειριστών"),
 	),
 	registerSysUser: new APIServer(
-		{ method: "POST", path: "/sys/register/[link:string]", schema: z_LoginCredentials, responseSchema: z_RegisterSysUserResponse },
-		({ params, body, cookies }) =>
+		{ method: "POST", path: "/sys/register/[link:string]", schema: z_SignupCredentials, responseSchema: z_RegisterSysUserResponse },
+		({ params, body, cookies, request }) =>
 			handlerResult(async (T) => {
 				const { email, password } = body;
 				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
@@ -115,12 +124,12 @@ export const sysusersRoutes = {
 				// The link must have been issued for this email; it is used up here.
 				if (!(await consumeRegisterLink(T, params.link, email))) throw APIError.gone("Ο σύνδεσμος εγγραφής δεν είναι έγκυρος ή έχει λήξει");
 
-				const key = await generateShaKey(password);
-
-				const args = { email, password: key, ...createSessionId() };
-				const { insertId } = await T.executeQuery("INSERT INTO sys_users (email, password, session_id, session_exp_date) VALUES (???)", args);
-				cookies.set(COOKIE.sessionId, args.session_id, SESSION_COOKIE_OPTIONS);
-				return { id: insertId, session_id: args.session_id, email, avatar_url: null };
+				const { insertId } = await T.executeQuery("INSERT INTO sys_users (email, password, google_email_match) VALUES (?, ?, 0)", [
+					email,
+					await hashPassword(password),
+				]);
+				await startSession(cookies, request, insertId, "password");
+				return { id: insertId, email };
 			}, "Σφάλμα κατά την εγγραφή του χρήστη"),
 	),
 	createRegisterLink: new APIServer(
@@ -135,7 +144,8 @@ export const sysusersRoutes = {
 				const link = R.link(64);
 				// 24 hours expiration
 				const exp_date = Date.now() + 1000 * 60 * 60 * 24;
-				await T.executeQuery("DELETE FROM sys_user_register_links WHERE exp_date < ?", [Date.now()]);
+				// Expired invites, and any earlier invite to the same address (only the newest link works).
+				await T.executeQuery("DELETE FROM sys_user_register_links WHERE exp_date < ? OR email = ? COLLATE NOCASE", [Date.now(), email]);
 				await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date, email) VALUES (?, ?, ?)", [link, exp_date, email]);
 
 				const signupLink = `${new URL(request.url).origin}/admin/signup/${link}`;

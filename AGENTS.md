@@ -197,8 +197,9 @@ or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
 - **Wrangler persistence is config-relative**: with `--config dist/server/wrangler.json`
   local state lands in `dist/server/.wrangler` unless `--persist-to .wrangler/state`
   is passed (`scripts/cf.ts` passes it).
-- **Astro `security.checkOrigin`** rejects form/multipart POSTs without an
-  `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
+- **Cross-site form check** (Astro's `security.checkOrigin` rule, now applied by
+  `src/middleware.ts` so Apple's callback can be exempted) rejects form/multipart
+  POSTs without an `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
 - Running `bun run build` while `bun run dev` is up repoints
   `.wrangler/deploy/config.json` at `dist/server`; restart the dev server after.
 - `bun run astro-check` reports 15 pre-existing errors (Links shareImage alt,
@@ -253,6 +254,61 @@ The person data that used to live on `registrations` is split into two tables
   `bun run dev:clean` removes the fixtures the API suite writes to the local
   dev DB.
 
+## Admin authentication (sign-in, sessions, providers)
+
+Migration `0008_auth_identities_sessions.sql`; code in `lib/auth/` (server-only
+except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
+
+- **Sessions** (`lib/auth/sessions.ts`): one `sys_user_sessions` row per
+  device; the HttpOnly `session_id` cookie holds a random token and the table
+  stores only its **SHA-256** (`id`). Signing in on a second device never
+  signs the first out; logout ends only the current device. A per-isolate
+  cache (60 s) keeps lookups cheap — a revoked session dies everywhere within
+  that window. `sys_users` no longer has `session_id`/`session_exp_date`;
+  routes get the admin with `currentSession(cookies)` (`middleware/authenticate.ts`),
+  never by querying a session column.
+- **Passwords** (`lib/auth/passwords.ts`): PBKDF2-SHA256, format
+  `pbkdf2$<iterations>$<salt>$<hash>` (workerd caps iterations at 100 000).
+  Legacy `<sha256>:<salt>` hashes (SHA-256 over password + `SECRET` + salt)
+  still verify and are re-hashed on the next sign-in — **do not rotate
+  `SECRET` until every admin has signed in once** after 0008, or their legacy
+  hashes stop verifying. `password = ''` means "no password"
+  (provider-only admin). New passwords: ≥ 8 chars (`z_NewPassword`).
+- **Providers** (`lib/auth/providers.ts`, on `arctic`): Google, Apple,
+  Microsoft — each enabled only when its env vars are set (`types/env.ts`).
+  Accounts are matched on `sys_user_identities (provider, subject)`, never on
+  the email the provider reports (Microsoft's `email` is unverified; Apple may
+  give a private-relay address). The only email match left is the one-time
+  adoption of **pre-0008 Google admins** (`sys_users.google_email_match = 1`,
+  verified Google email); connecting or disconnecting Google clears it.
+- **OAuth flow**: `Authentication.oauthStart` (`intent`: `login` | `signup`
+  with an invite `link` | `link` = connect to the signed-in admin) sets the
+  HMAC-signed `oauth_flow` cookie (`lib/auth/oauthFlow.ts`; carries state,
+  PKCE verifier, admin id, redirect) → provider →
+  `src/pages/oauth2callback/[...provider].astro` (`/oauth2callback` for
+  Google — the URI registered in Google Cloud — `/oauth2callback/<id>` for the
+  others) → in-process `Authentication.oauthCallback` (`dispatchAPI` in
+  `useAPI.server.ts` forwards its `Set-Cookie`). The page continues with a
+  script, not a 302: the session cookie is `SameSite=Strict` and would not be
+  sent on a redirect chain that started on the provider's site. Apple returns
+  with a **cross-site form POST**, so Astro's `security.checkOrigin` is off and
+  `src/middleware.ts` (`lib/utilities/originCheck.ts`) applies the same rule
+  with that one path exempted; Apple's flow cookie is `SameSite=None; Secure`.
+- **«Ο λογαριασμός μου»** (`/admin/account`, `AccountPage.solid.tsx`): connect /
+  disconnect providers (the last way in cannot be removed), set or change the
+  password (the current one is not asked within 10 min of signing in — the
+  recovery path for admins who never knew their password), list and sign out
+  devices. A password change signs out every other device. The signed-in admin
+  in the UI comes from `Authentication.me` (`src/components/admin/currentUser.ts`),
+  not `localStorage` (the old `sys_user` key is removed on sight).
+- **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
+  production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
+  `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
+  `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` (the `.p8` PEM; Apple needs a paid
+  developer account and does not accept `localhost` redirect URIs);
+  `MICROSOFT_CLIENT_ID/SECRET` (+ optional `MICROSOFT_TENANT`, default
+  `common`).
+
 ## Env, storage and external services
 
 - Server-side env comes from the `cloudflare:workers` env module
@@ -261,7 +317,8 @@ The person data that used to live on `registrations` is split into two tables
   (memoised, frozen) with the runtime env, runtime wins, values are **not
   coerced** (strings stay strings). Bindings (`DB`, `S3_BUCKET`,
   `EMAIL_SERVICE`, ...) come from `runtimeEnv` / the handler `env`. **Site dev values live in `.env`** (gitignored, auto-loaded by
-  Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
+  Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET` (+ optional `APPLE_*`,
+  `MICROSOFT_*` — see Admin authentication), `GOOGLE_MAPS_KEY`,
   `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`.
   The public-route rate limiter (`lib/api/routes/middleware/rateLimit.ts`) skips
   loopback clients, so local dev and `bun run test` are never throttled; set

@@ -26,6 +26,9 @@ export default defineConfig({
 	// Astro Sessions are not used (auth is cookie + D1 sys_users). Disabling
 	// them stops @astrojs/cloudflare from auto-adding the SESSION KV binding.
 	session: false,
+	// The cross-site form POST check lives in src/middleware.ts: same rule, plus the one exemption
+	// Sign in with Apple needs (its callback is a cross-site form POST).
+	security: { checkOrigin: false },
 	prefetch: {
 		prefetchAll: false,
 		defaultStrategy: "hover",

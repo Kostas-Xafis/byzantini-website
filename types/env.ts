@@ -15,6 +15,15 @@ export type EnvTypes = {
 	GOOGLE_MAPS_KEY?: string;
 	GOOGLE_CLIENT_ID?: string;
 	GOOGLE_CLIENT_SECRET?: string;
+	/** Sign in with Apple (lib/auth/providers.ts): the Services ID, team, key id and the `.p8` key (PEM). */
+	APPLE_CLIENT_ID?: string;
+	APPLE_TEAM_ID?: string;
+	APPLE_KEY_ID?: string;
+	APPLE_PRIVATE_KEY?: string;
+	/** Microsoft (Entra ID) sign-in; the tenant defaults to `common` (work, school and personal accounts). */
+	MICROSOFT_CLIENT_ID?: string;
+	MICROSOFT_CLIENT_SECRET?: string;
+	MICROSOFT_TENANT?: string;
 	AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN?: string;
 	PDF_SERVICE_AUTH_TOKEN?: string;
 };

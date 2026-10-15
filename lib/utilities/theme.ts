@@ -52,3 +52,20 @@ export function isDashboardDarkMode() {
 	if (typeof document === "undefined") return false;
 	return document.documentElement.classList.contains("dark");
 }
+
+/** The theme setting chosen on this device: an explicit theme, or "system" (follow the OS). */
+export type DashboardThemePreference = DashboardTheme | "system";
+
+export function getDashboardThemePreference(): DashboardThemePreference {
+	return getStoredDashboardTheme() ?? "system";
+}
+
+/** Applies and remembers a preference; "system" forgets the stored theme and follows the OS again. */
+export function setDashboardThemePreference(preference: DashboardThemePreference) {
+	if (preference === "system") {
+		if (typeof window !== "undefined") window.localStorage.removeItem(DASHBOARD_THEME_STORAGE_KEY);
+		applyDashboardTheme(getSystemDashboardTheme(), { persist: false });
+	} else {
+		applyDashboardTheme(preference);
+	}
+}

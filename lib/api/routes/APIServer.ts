@@ -106,6 +106,7 @@ export class APIServer<
 			params: Record<string, string | number>;
 		} | null;
 		if (!match) {
+			await discardBody(request);
 			const allowed = this.allowedMethods(path);
 			if (allowed.length === 0) return this.jsonError(ROUTE_NOT_FOUND_MESSAGE, HTTP.NOT_FOUND);
 			const response = this.jsonError(METHOD_NOT_ALLOWED_MESSAGE, HTTP.METHOD_NOT_ALLOWED);
@@ -120,7 +121,10 @@ export class APIServer<
 			// Middleware first: an anonymous or rate-limited caller is turned away before its body is read.
 			for (const middleware of route.middleware) {
 				const result = await middleware({ route, request, cookies });
-				if (result instanceof Response) return this.validateResponse(cookies.apply(result), route.responseSchema, context);
+				if (result instanceof Response) {
+					await discardBody(request);
+					return this.validateResponse(cookies.apply(result), route.responseSchema, context);
+				}
 			}
 
 			// Body parsing — ALWAYS (a schemaless handler still receives it, typed `unknown`)
@@ -296,6 +300,17 @@ export const HTTP = {
 } as const;
 
 export type HTTPStatus = (typeof HTTP)[keyof typeof HTTP];
+
+/**
+ * Reads to the end a request body the route never read (unknown path, wrong method, refused by
+ * middleware). In local dev, miniflare forwards even a body-less DELETE as a body stream; answering
+ * without consuming it left the connection unusable and the NEXT request on it failed with "socket
+ * connection was closed unexpectedly" (~6% of requests after a body-less DELETE that got a 401).
+ * `body.cancel()` does not fix it; reading does. The client has already sent the bytes either way.
+ */
+async function discardBody(request: Request) {
+	if (request.body && !request.bodyUsed) await request.arrayBuffer().catch(() => {});
+}
 
 /**
  * Handler-result helper mirroring the old `execTryCatch` semantics:

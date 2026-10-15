@@ -42,3 +42,21 @@ export async function useAPI<T extends APIEndpointNames>(
 		throw err;
 	}
 }
+
+/**
+ * SERVER ONLY — like `useAPI`, but returns the route's raw `Response`, so the page can forward its
+ * `Set-Cookie` headers (the OAuth callback page signs the admin in this way). The synthetic request keeps
+ * the incoming request's origin (cookies come out `Secure` over https, and redirect URIs match) plus its
+ * cookies, user agent and client IP.
+ */
+export async function dispatchAPI<T extends APIEndpointNames>(endpoint: T, req: APIArgs[T] | undefined, ctx: Pick<APIContext, "request">): Promise<Response> {
+	const { path, init } = buildAPIRequest(APIEndpoints[endpoint], req);
+	const origin = new URL(ctx.request.url).origin;
+	const headers = new Headers(init.headers);
+	for (const name of ["cookie", "user-agent", "cf-connecting-ip"]) {
+		const value = ctx.request.headers.get(name);
+		if (value) headers.set(name, value);
+	}
+	headers.set("origin", origin);
+	return APIServer.handle(new Request(`${origin}/api${path}`, { ...init, headers }), "/api");
+}

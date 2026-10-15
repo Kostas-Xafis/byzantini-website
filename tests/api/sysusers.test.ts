@@ -4,7 +4,7 @@ import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { expect, test } from "bun:test";
 import { z } from "astro/zod";
-import { expectBody, getJson, useTestAPI } from "../testHelpers";
+import { expectBody, getJson, sessionCookieOf, useTestAPI } from "../testHelpers";
 
 const sysUsersSimple = z_SysUsers.pick({ id: true, email: true });
 
@@ -49,7 +49,8 @@ function sysUsersTest() {
 		});
 
 		const json = await getJson<APIResponse["SysUsers.registerSysUser"]>(res);
-		expectBody(json, z.object({ session_id: z.string(), id: z.number() }));
+		expectBody(json, z.object({ id: z.number(), email: z.string() }));
+		expect(sessionCookieOf(res)).toBeDefined();
 
 		newSysUserId = json.data.id;
 	});

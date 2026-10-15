@@ -1,7 +1,7 @@
-import { isOwnerEmail } from "@env/ownerEmail";
 import { A, useLocation, type RouterProps } from "@solidjs/router";
 import { sleep } from "@utilities/sleep";
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { useCurrentUser } from "./currentUser";
 
 type NavLink = { name: string; url: string; force: boolean; icon: string };
 type NavSection = { title: string | null; links: NavLink[] };
@@ -32,6 +32,7 @@ const sections: NavSection[] = [
 	{
 		title: "Σύστημα",
 		links: [
+			{ name: "Ο λογαριασμός μου", url: "/admin/account", force: false, icon: "fa-solid fa-user-shield" },
 			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "fa-solid fa-users-gear" },
 			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database" },
 			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "fa-solid fa-gear" },
@@ -71,12 +72,8 @@ const measureIndicator = (list: HTMLDivElement | undefined) => {
 };
 
 export default function AdminNav(props: RouterProps) {
-	type StoredSysUser = {
-		email?: string | null;
-		avatar_url?: string | null;
-	};
-	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
-	const isOwner = () => isOwnerEmail(user.email);
+	const user = useCurrentUser();
+	const isOwner = () => user()?.isOwner === true;
 
 	const location = useLocation();
 
@@ -139,9 +136,11 @@ export default function AdminNav(props: RouterProps) {
 					</div>
 					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
 						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
-							{user.avatar_url ? <img src={user.avatar_url} alt="Avatar" class="h-full w-full object-cover" /> : <i class="fa-solid fa-user"></i>}
+							<Show when={user()?.avatar_url} fallback={<i class="fa-solid fa-user"></i>}>
+								{(avatar) => <img src={avatar()} alt="" referrerPolicy="no-referrer" class="h-full w-full object-cover" />}
+							</Show>
 						</div>
-						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{user.email}</p>
+						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{user()?.email}</p>
 					</div>
 				</div>
 				<div ref={desktopListEl} class="relative h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start pt-4 content-start max-sm:hidden">

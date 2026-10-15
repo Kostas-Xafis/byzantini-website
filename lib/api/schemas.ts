@@ -44,9 +44,36 @@ export const z_Wholesalers = z.object({
 export const z_SysUsers = z.object({
 	id: positiveInt("Μη έγκυρο id"),
 	email: z.email("Μη έγκυρο email"),
-	password: z.string().min(1, "Μη έγκυρος κωδικός"),
-	session_id: z.string().min(1, "Μη έγκυρο session_id"),
-	session_exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης session"),
+	/** PBKDF2 hash (`lib/auth/passwords.ts`); '' when the admin has no password (provider-only account). */
+	password: z.string(),
+	/** Pre-0008 admins: the first Google sign-in with their verified email adopts that Google account. */
+	google_email_match: looseBoolean(),
+});
+
+/** Sign-in providers an admin can connect (`lib/auth/providers.ts`). */
+export const z_AuthProviderId = z.enum(["google", "apple", "microsoft"], "Άγνωστος πάροχος σύνδεσης");
+
+/** One signed-in device (migration 0008). `id` is the SHA-256 of the session cookie, never the cookie itself. */
+export const z_SysUserSession = z.object({
+	id: z.string().min(1),
+	user_id: positiveInt("Μη έγκυρο id"),
+	method: z.string(),
+	created_at: positiveInt(),
+	last_seen_at: positiveInt(),
+	expires_at: positiveInt(),
+	user_agent: z.string().nullable(),
+});
+
+/** An external account connected to an admin (migration 0008). Sign-in matches (provider, subject). */
+export const z_SysUserIdentity = z.object({
+	id: positiveInt("Μη έγκυρο id"),
+	user_id: positiveInt("Μη έγκυρο id"),
+	provider: z_AuthProviderId,
+	subject: z.string().min(1),
+	email: z.string().nullable(),
+	avatar_url: z.string().nullable(),
+	created_at: positiveInt(),
+	last_used_at: positiveInt().nullable(),
 });
 
 export const z_SysUserRegisterLink = z.object({
@@ -59,6 +86,14 @@ export const z_SysUserRegisterLink = z.object({
 export const z_LoginCredentials = z.object({
 	email: z.email("Μη έγκυρο email"),
 	password: z.string().min(1, "Μη έγκυρος κωδικός"),
+});
+
+/** A password an admin chooses (signup, change). The upper bound keeps PBKDF2 input sane. */
+export const z_NewPassword = z.string().min(8, "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες").max(256, "Ο κωδικός είναι πολύ μεγάλος");
+
+export const z_SignupCredentials = z.object({
+	email: z.email("Μη έγκυρο email"),
+	password: z_NewPassword,
 });
 
 export const z_Teachers = z.object({

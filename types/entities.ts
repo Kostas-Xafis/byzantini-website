@@ -24,7 +24,9 @@ import type {
 	z_PupilSearchResult,
 	z_Pupils,
 	z_QueryLogs,
+	z_SysUserIdentity,
 	z_SysUserRegisterLink,
+	z_SysUserSession,
 	z_SysUsers,
 	z_TeacherClassesResponse,
 	z_TeacherInstruments,
@@ -46,6 +48,8 @@ export type Wholesalers = z.infer<typeof z_Wholesalers>;
 export type SysUsers = z.infer<typeof z_SysUsers>;
 
 export type SysUserRegisterLink = z.infer<typeof z_SysUserRegisterLink>;
+export type SysUserSession = z.infer<typeof z_SysUserSession>;
+export type SysUserIdentity = z.infer<typeof z_SysUserIdentity>;
 
 export type Teachers = z.infer<typeof z_Teachers>;
 
