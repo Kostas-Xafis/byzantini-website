@@ -93,6 +93,15 @@
   `lib/auth/roles.ts`). Restricted routes use `requirePermission("<permission>")`
   after `authenticateMiddleware`; the UI hides features via
   `Authentication.me().permissions`. Never gate features by email.
+- Every successful data change by a signed-in admin is logged to
+  `sys_activity` («Ιστορικό ενεργειών») — only endpoints listed in
+  `lib/activity/labels.ts`; add new mutating routes there with a Greek label.
+- A 401 in the dashboard sends the admin to `/login?…&expired=1` and back
+  (`lib/auth/sessionExpiry.client.ts`); password reset is
+  `/login/forgot` → `/login/reset/<token>` (`Authentication.*PasswordReset`).
+- Admin colours are tokens in `src/styles/global.css` (`bg-surface`,
+  `text-ink`, `border-line`, `bg-brand`, …, dark values on `.dark`) — use them
+  instead of `bg-white dark:bg-dark` pairs or new hex values.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by
