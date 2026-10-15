@@ -7,6 +7,7 @@ export type TooltipProps = {
 export default function Tooltip(props: TooltipProps) {
 	return props.position === "left" ? (
 		<ul
+			data-tooltip={props.position}
 			class={
 				"absolute w-[25ch] p-8 pt-6 bg-red-100 dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-md left-[calc(-25ch-2rem)] top-8 translate-y-[-50%] grid auto-rows-max gap-y-2" +
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-5000 group-not-focus-within/tooltip:duration-0 group-not-focus-within/tooltip:opacity-[0.0001]"
@@ -29,6 +30,7 @@ export default function Tooltip(props: TooltipProps) {
 		</ul>
 	) : props.position === "right" ? (
 		<ul
+			data-tooltip={props.position}
 			class={
 				"absolute w-[25ch] p-8 pt-6 bg-red-100 dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-md right-[calc(-25ch-2rem)] top-8 translate-y-[-50%] grid auto-rows-max gap-y-2" +
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-5000 group-not-focus-within/tooltip:duration-0 group-not-focus-within/tooltip:opacity-[0.0001]"
@@ -51,6 +53,7 @@ export default function Tooltip(props: TooltipProps) {
 		</ul>
 	) : props.position === "top" ? (
 		<ul
+			data-tooltip={props.position}
 			class={
 				"absolute h-max w-full p-2 pt-1 bg-red-100 dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-md -top-8 -translate-y-full left-[50%] translate-x-[-50%] flex flex-col gap-1" +
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-5000 group-not-focus-within/tooltip:duration-0 group-not-focus-within/tooltip:opacity-[0.0001]"
@@ -75,6 +78,7 @@ export default function Tooltip(props: TooltipProps) {
 		</ul>
 	) : (
 		<ul
+			data-tooltip={props.position}
 			class={
 				"absolute h-max p-8 pt-6 bg-red-100 dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-md top-[calc(100%+2rem)] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4" +
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-5000 group-not-focus-within/tooltip:duration-0 group-not-focus-within/tooltip:opacity-[0.0001]"

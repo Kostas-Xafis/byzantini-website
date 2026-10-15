@@ -1,5 +1,6 @@
 import { onBackdropClick, trapFocus, type InitialFocus } from "@utilities/focusTrap";
 import { Show, onCleanup, onMount, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
 import Icon from "@components/other/Icon.solid";
 
 export type DialogProps = {
@@ -38,9 +39,13 @@ export type DialogProps = {
  * (pass its id as `labelledBy`) and close button (use `DialogCloseButton`).
  */
 export default function Dialog(props: DialogProps) {
+	// Portalled to <body>: rendered in place, the backdrop's z-index only counted inside the page's own stacking
+	// context, so the admin sidebar (its logo) stayed above the blur.
 	return (
 		<Show when={props.open}>
-			<DialogInner {...props} />
+			<Portal>
+				<DialogInner {...props} />
+			</Portal>
 		</Show>
 	);
 }

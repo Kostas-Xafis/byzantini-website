@@ -243,3 +243,33 @@
 	margin: 0.25rem;
 	margin-top: 0.875rem;
 }
+/*
+ * Tooltips in a modal open below their field: above it, the first row's tooltip was clipped by the scrolling body
+ * (only its bottom edge and arrow showed above the field). Token colours instead of the public form's red/grey.
+ */
+.modal-form [data-tooltip] {
+	top: calc(100% + 0.5rem);
+	bottom: auto;
+	left: 0;
+	right: auto;
+	width: 100%;
+	translate: 0 0;
+	padding: 0.5rem 0.75rem;
+	color: var(--color-ink);
+	background: var(--color-surface-muted);
+	border: 1px solid var(--color-line);
+	border-radius: 0.625rem;
+	box-shadow: 0 8px 24px -8px var(--color-shade);
+}
+.modal-form [data-tooltip] > li:last-child {
+	display: none;
+}
+.modal-form [data-tooltip] .icon {
+	color: var(--color-accent-ink);
+}
+.modal-form [data-tooltip] li {
+	max-width: none;
+}
+.modal-form [data-tooltip] > li:first-child {
+	display: none;
+}
