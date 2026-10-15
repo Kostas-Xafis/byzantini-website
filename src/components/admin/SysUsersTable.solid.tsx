@@ -77,7 +77,7 @@ function PendingInvites(props: { invites: APIResponse["SysUsers.getInvites"]; on
 						<li class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-surface-muted px-3 py-2">
 							<div class="grid min-w-0 flex-[1_1_14rem]">
 								<span class="truncate font-bold">{invite.email}</span>
-								<span class={`${hintClass} [overflow-wrap:anywhere]`}>
+								<span class={`${hintClass} wrap-anywhere`}>
 									{expiresIn(invite.expires_at)}
 									<Show when={invite.invited_by}> · από {invite.invited_by}</Show>
 								</span>

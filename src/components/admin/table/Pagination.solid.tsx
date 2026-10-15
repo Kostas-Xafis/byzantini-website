@@ -58,7 +58,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-shade data-[active=true]:hover:bg-brand-hover data-[active=true]:hover:text-brand-ink"
 					data-pageTurn="-1"
 					type="button">
-					<Icon name="arrow-left" class="text-xl py-[2px] group-data-[active=false]/pgBtn:text-ink-muted/40" />
+					<Icon name="arrow-left" class="text-xl py-0.5 group-data-[active=false]/pgBtn:text-ink-muted/40" />
 				</button>
 				{maxPage() > 1 && pagination.page - 1 >= 0 && (
 					<button
@@ -72,7 +72,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 				<button
 					aria-label={`Σελίδα ${pagination.page + 1}`}
 					aria-current="page"
-					class="relative focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 hover:shadow-md hover:shadow-shade hover:bg-brand-hover hover:text-brand-ink hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-brand before:z-[10]"
+					class="relative focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 hover:shadow-md hover:shadow-shade hover:bg-brand-hover hover:text-brand-ink hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-px before:bg-brand before:z-10"
 					data-pageTurn="0"
 					type="button">
 					{pagination.page + 1}
@@ -95,7 +95,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-shade data-[active=true]:hover:bg-brand-hover data-[active=true]:hover:text-brand-ink"
 					data-pageTurn="1"
 					type="button">
-					<Icon name="arrow-right" class="text-xl py-[2px] group-data-[active=false]/pgBtn:text-ink-muted/40" />
+					<Icon name="arrow-right" class="text-xl py-0.5 group-data-[active=false]/pgBtn:text-ink-muted/40" />
 				</button>
 			</div>
 		</Show>

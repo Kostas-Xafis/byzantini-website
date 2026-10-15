@@ -9,8 +9,8 @@ const schoolYear = currentSchoolYearShort();
 
 <main
 	id="welcome-page"
-	class={"relative h-[100dvh] supports-[height:1svh]:h-[100svh] p-[5vw] pb-[6vw] max-xl:p-[2.5vw] sm:content-end grid grid-rows-[1fr_repeat(5,_max-content)] grid-cols-2 grid-flow-col" +
-		" max-sm:grid-rows-[repeat(4,_max-content)_1fr] max-sm:grid-cols-[100%] max-sm:items-center max-sm:bg-center max-sm:pt-[8rem] max-sm:min-h-[720px]"}>
+	class={"relative h-dvh supports-[height:1svh]:h-svh p-[5vw] pb-[6vw] max-xl:p-[2.5vw] sm:content-end grid grid-rows-[1fr_repeat(5,max-content)] grid-cols-2 grid-flow-col" +
+		" max-sm:grid-rows-[repeat(4,max-content)_1fr] max-sm:grid-cols-[100%] max-sm:items-center max-sm:bg-center max-sm:pt-32 max-sm:min-h-180"}>
 	<div class="max-sm:hidden"></div>
 	<img src="/church_low.jpg" class="hidden" fetchpriority="high" />
 	<h1 class="text-[4vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl">
@@ -46,7 +46,7 @@ const schoolYear = currentSchoolYearShort();
 	<div
 		id="eggrafesLink"
 		class={"glass place-self-center w-max h-max rounded-lg font-anaktoria row-span-full" +
-			" shadow-lg shadow-stone-800 px-[2vw] py-[2vh] grid auto-cols-max place-items-center max-sm:!row-span-1"}>
+			" shadow-lg shadow-stone-800 px-[2vw] py-[2vh] grid auto-cols-max place-items-center max-sm:row-span-1!"}>
 		<h3 class="text-[clamp(1.75rem,2.75vw,3.5rem)] h-min font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</h3>
 		<h3 class="text-[clamp(1.25rem,2.25vw,2.75rem)] h-min font-bold text-red-50 self-center max-sm:text-xl">
 			Σχολικού Έτους <span data-school-year-short>{schoolYear}</span>
@@ -58,7 +58,7 @@ const schoolYear = currentSchoolYearShort();
 				href="/eggrafes">
 				Εγγραφές <Icon
 					name="chevron-right"
-					class="-mr-[1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+					class="mr-[-1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
 				/>
 			</a>
 			<a
@@ -66,7 +66,7 @@ const schoolYear = currentSchoolYearShort();
 				href="/sxoli/anakoinoseis">
 				Ανακοινώσεις <Icon
 					name="chevron-right"
-					class="-mr-[1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
+					class="mr-[-1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
 				/>
 			</a>
 		</div>

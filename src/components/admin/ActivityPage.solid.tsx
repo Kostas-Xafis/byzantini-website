@@ -94,7 +94,7 @@ export default function ActivityPage() {
 	return (
 		<PanelPage title="Ιστορικό ενεργειών" subtitle="Ποιος διαχειριστής άλλαξε τι — οι πιο πρόσφατες αλλαγές πρώτα.">
 			<section class={`${cardClass} flex flex-wrap items-end gap-4 p-4 sm:p-5`} aria-label="Φίλτρα">
-				<label class="grid gap-1 min-w-[14rem] flex-1">
+				<label class="grid gap-1 min-w-56 flex-1">
 					<span class="text-sm font-bold">Διαχειριστής</span>
 					<select
 						class={inputClass}
@@ -107,7 +107,7 @@ export default function ActivityPage() {
 						<For each={admins()}>{(email) => <option value={email}>{email}</option>}</For>
 					</select>
 				</label>
-				<label class="grid gap-1 min-w-[12rem] flex-1">
+				<label class="grid gap-1 min-w-48 flex-1">
 					<span class="text-sm font-bold">Κατηγορία</span>
 					<select
 						class={inputClass}

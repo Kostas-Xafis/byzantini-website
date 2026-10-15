@@ -24,7 +24,7 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 			applyDashboardTheme(resolveDashboardTheme(), { persist: false });
 		</script>
 	</head>
-	<body class="box-border h-[100dvh] p-0 grid bg-white grid-rows-[100dvh] overflow-hidden">
+	<body class="box-border h-dvh p-0 grid bg-white grid-rows-[100dvh] overflow-hidden">
 		<slot />
 		<style is:inline>
 			/* @layer base: see Layout.astro — keeps `text-*` utilities above these element defaults. */

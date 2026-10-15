@@ -8,7 +8,7 @@ import type { IconName } from "@lib/icons";
  * screen-reader support for free) and remember, per device, whether they were left open.
  *
  * Dark mode: the colours are tokens (src/styles/global.css) that switch with the`.dark` class, so cards use
- * `bg-surface`; anything that must stay white in both themes (brand marks) uses`bg-[#fff]`.
+ * `bg-surface`; anything that must stay white in both themes (brand marks) uses `bg-white`.
  */
 
 export const cardClass = "rounded-2xl border border-line bg-surface text-ink shadow-sm shadow-shade";

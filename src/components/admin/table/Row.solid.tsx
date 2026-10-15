@@ -230,28 +230,28 @@ export default function Row(props: Props) {
 								class={
 									"cell" +
 									(header
-										? " group/head grid h-full items-center cursor-pointer select-none rounded-md hover:bg-accent-soft data-[asc]:bg-brand data-[desc]:bg-brand data-[asc]:text-brand-ink data-[desc]:text-brand-ink"
+										? " group/head grid h-full items-center cursor-pointer select-none rounded-md hover:bg-accent-soft data-asc:bg-brand data-desc:bg-brand data-asc:text-brand-ink data-desc:text-brand-ink"
 										: "")
 								}
 								data-col-ind={header && colIndex()}
 								onClick={onClickSort}>
 								{header ? (
 									<>
-										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">{item}</span>
+										<span class="max-sm:text-base group-data-asc/head:pr-[1.5ch] group-data-desc/head:pr-[1.5ch]">{item}</span>
 										<Icon
 											name="chevron-up"
-											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-[asc]/head:flex"
+											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-asc/head:flex"
 										/>
 										<Icon
 											name="chevron-down"
-											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-[desc]/head:flex"
+											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-desc/head:flex"
 										/>
 									</>
 								) : highlightedParts ? (
 									<>
 										{highlightedParts.map((part) =>
 											part.highlight ? (
-												<mark class="rounded-[2px] bg-yellow-300/80 px-[1px] dark:bg-yellow-500/80">{part.text}</mark>
+												<mark class="rounded-xs bg-yellow-300/80 px-px dark:bg-yellow-500/80">{part.text}</mark>
 											) : (
 												part.text
 											),

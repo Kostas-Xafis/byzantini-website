@@ -34,7 +34,7 @@ const highlight = (url: string) => {
 
 <>
 	<nav
-		class={"group/nav glass-dark fixed top-0 left-0 w-full z-[1000] transition-colors" +
+		class={"group/nav glass-dark fixed top-0 left-0 w-full z-1000 transition-colors" +
 			" grid grid-cols-[max-content_1fr] grid-rows-[100%] h-(--nav-h)" +
 			" max-xl:flex max-xl:flex-col"}>
 		<input id="mobile-nav-toggle" type="checkbox" class="peer sr-only" />
@@ -42,20 +42,20 @@ const highlight = (url: string) => {
 		<div class="relative pl-4 grid grid-cols-[max-content_max-content] grid-rows-[1fr] gap-x-4 font-anaktoria self-center z-10 max-xl:hidden">
 			<a
 				href="/"
-				class="row-span-full w-[calc(var(--nav-h)-0.75rem)] aspect-square place-self-center [mask-image:url('/logo.png')] [mask-size:contain] [mask-repeat:no-repeat]">
+				class="row-span-full w-[calc(var(--nav-h)-0.75rem)] aspect-square place-self-center mask-[url('/logo.png')] mask-contain mask-no-repeat">
 				<div class="w-full h-full bg-red-50"></div>
 				<img class="hidden" src="/logo.png" alt="Λογότυπο Σχολής" />
 			</a>
-			<div class="absolute top-[50%] translate-y-[calc(-50%+2px)] left-[calc(1rem-1px)] -z-10">
+			<div class="absolute top-[50%] translate-y-[calc(-50%+2px)] left-3.75 -z-10">
 				<div class="w-[calc(var(--nav-h)-0.75rem)] aspect-square mask-[url('/logo.png')] mask-contain mask-no-repeat">
-					<div class="w-full h-full bg-[rgb(0_0_0_/_0.25)]"></div>
+					<div class="w-full h-full bg-[rgb(0_0_0_/0.25)]"></div>
 				</div>
 			</div>
 			<div class="flex flex-col justify-center h-full">
-				<p class="navTitle mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[clamp(1.5rem,1.75vw,2.25rem)] leading-tight">
+				<p class="navTitle mt-1 font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0/0.75)] text-red-50 text-[clamp(1.5rem,1.75vw,2.25rem)] leading-tight">
 					Σχολή Βυζαντινής & Παραδοσιακής Μουσικής
 				</p>
-				<p class="navTitle font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0_/_0.75)] text-red-50 text-[clamp(1rem,1.2vw,1.5rem)] leading-tight">
+				<p class="navTitle font-bold drop-shadow-[-2px_1px_2px_rgba(0_0_0/0.75)] text-red-50 text-[clamp(1rem,1.2vw,1.5rem)] leading-tight">
 					Ι.Ν. Μεταμορφώσεως του Σωτήρος<span class="max-2xl:hidden">, ομωνύμου δήμου</span>
 				</p>
 			</div>
@@ -72,13 +72,13 @@ const highlight = (url: string) => {
 							</div>
 							<div
 								class={
-									"absolute left-2 right-2 bottom-[10%] translate-y-[-1px] h-[2px] rounded-[2px] drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.25)]" +
+									"absolute left-2 right-2 bottom-[10%] -translate-y-px h-0.5 rounded-xs drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.25)]" +
 									(highlight(link.url)
-										? " bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))]"
-										: " scale-x-0 transition-transform duration-300 group-hover:bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))] group-hover:scale-x-100")
+										? " bg-[radial-gradient(50%_50%_at_50%_50%,rgb(254_226_226/0.2),rgb(254_226_226/0.8))]"
+										: " scale-x-0 transition-transform duration-300 group-hover:bg-[radial-gradient(50%_50%_at_50%_50%,rgb(254_226_226/0.2),rgb(254_226_226/0.8))] group-hover:scale-x-100")
 								}
 							/>
-							<div class="absolute top-[100%] left-0 bg-red-900 opacity-0 pointer-events-none overflow-hidden rounded-b-md shadow-md shadow-gray-600 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
+							<div class="absolute top-full left-0 bg-red-900 opacity-0 pointer-events-none overflow-hidden rounded-b-md shadow-md shadow-gray-600 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
 								{link.expand.map((sublink) => (
 									<a href={link.url + sublink.url} class="relative grid py-4 transition-colors ease-in-out hover:bg-red-950">
 										<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
@@ -98,10 +98,10 @@ const highlight = (url: string) => {
 							</div>
 							<div
 								class={
-									"absolute left-2 right-2 bottom-[10%] translate-y-[-1px] h-[2px] rounded-[2px] drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.25)]" +
+									"absolute left-2 right-2 bottom-[10%] -translate-y-px h-0.5 rounded-xs drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.25)]" +
 									(highlight(link.url)
-										? " bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))]"
-										: " scale-x-0 transition-transform duration-300 group-hover:bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(254_226_226_/_0.2),_rgb(254_226_226_/_0.8))] group-hover:scale-x-100")
+										? " bg-[radial-gradient(50%_50%_at_50%_50%,rgb(254_226_226/0.2),rgb(254_226_226/0.8))]"
+										: " scale-x-0 transition-transform duration-300 group-hover:bg-[radial-gradient(50%_50%_at_50%_50%,rgb(254_226_226/0.2),rgb(254_226_226/0.8))] group-hover:scale-x-100")
 								}
 							/>
 						</a>
@@ -119,9 +119,9 @@ const highlight = (url: string) => {
 		*/
 		}
 		<div
-			class="hidden max-xl:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-[3px] h-full pl-2 py-1 transition-colors group-has-checked/nav:bg-red-950">
+			class="hidden max-xl:grid w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-0.75 h-full pl-2 py-1 transition-colors group-has-checked/nav:bg-red-950">
 			<div class="relative row-span-2 place-self-center">
-				<div class="absolute inset-0 translate-x-[2px] translate-y-[2px] mask-[url('/logo.png')] mask-contain mask-no-repeat" aria-hidden="true">
+				<div class="absolute inset-0 translate-x-0.5 translate-y-0.5 mask-[url('/logo.png')] mask-contain mask-no-repeat" aria-hidden="true">
 					<div class="w-full h-full bg-[rgb(0_0_0_/0.25)]"></div>
 				</div>
 				<a href="/" class="relative block w-12 aspect-square mask-[url('/logo.png')] mask-contain mask-no-repeat">

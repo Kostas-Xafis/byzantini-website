@@ -322,7 +322,7 @@ export default function TotalsTable() {
 						<p class="text-sm text-ink-muted">Τελευταίο έτος: {growthChart().lastValue}</p>
 					</div>
 					<div class="mt-3 grid grid-cols-[minmax(320px,440px)_1fr] max-md:grid-cols-1 gap-4 items-start">
-						<div class="w-full max-w-[440px] h-[190px] self-center">
+						<div class="w-full max-w-110 h-47.5 self-center">
 							<canvas ref={growthCanvas}></canvas>
 						</div>
 						<div class="grid grid-cols-1 gap-2">

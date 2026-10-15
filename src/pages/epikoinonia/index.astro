@@ -142,7 +142,7 @@ const contactPageSchema = {
 			/>
 			<div class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
 				<h1
-					class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
+					class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%-6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-0.5 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
 					Επικοινωνία
 				</h1>
 				<p
@@ -161,7 +161,7 @@ const contactPageSchema = {
 			<h2 class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 				Στοιχεία τμημάτων
 			</h2>
-			<div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1400px]">
+			<div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-350">
 				{
 					departments.map((dept) => (
 						<article class="group flex flex-col gap-y-5 rounded-xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-7 shadow-xl shadow-red-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-red-950/50 max-sm:px-5">
@@ -221,7 +221,7 @@ const contactPageSchema = {
 			<h2 class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 				Έδρα, ωράριο & διοίκηση
 			</h2>
-			<div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px]">
+			<div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 max-w-350">
 				<article
 					class="flex flex-col gap-y-4 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 					<div class="flex flex-row items-center gap-x-3">
@@ -255,7 +255,7 @@ const contactPageSchema = {
 					<ul class="flex flex-col gap-y-3 text-lg max-sm:text-base">
 						{
 							hoursRanges.map((h) => (
-								<li class="flex flex-col gap-y-1 rounded-md bg-red-900/[0.06] px-4 py-2">
+								<li class="flex flex-col gap-y-1 rounded-md bg-red-900/6 px-4 py-2">
 									<span class="text-red-950/80">{h.days}</span>
 									<span class="font-semibold text-red-900">{h.range}</span>
 								</li>
@@ -297,7 +297,7 @@ const contactPageSchema = {
 			<h2 class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 				Πώς θα μας βρείτε
 			</h2>
-			<div class="w-full grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 max-w-[1400px]">
+			<div class="w-full grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 max-w-350">
 				<div class="flex flex-col gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400">
 					<h3 class="text-3xl font-bold font-anaktoria text-red-900">
 						{seat?.name ?? "Ι. Ναός Μεταμορφώσεως του Σωτήρος"}
@@ -315,7 +315,7 @@ const contactPageSchema = {
 						</a>
 					</div>
 				</div>
-				<div class="h-[420px] overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400 max-sm:h-[300px]">
+				<div class="h-105 overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400 max-sm:h-75">
 					<GMap mapEmbedSrc={mapSrc} />
 				</div>
 			</div>
@@ -331,7 +331,7 @@ const contactPageSchema = {
 				αναλυτικά τις διευθύνσεις, τα τηλέφωνα και τους χάρτες όλων των σημείων διεξαγωγής.
 			</p>
 			<div
-				class="w-full max-w-[900px] flex flex-col sm:flex-row items-center gap-x-6 gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
+				class="w-full max-w-225 flex flex-col sm:flex-row items-center gap-x-6 gap-y-5 rounded-xl border-2 border-red-900 bg-white p-6 shadow-md shadow-gray-400 transition-shadow duration-300 hover:shadow-xl">
 				<span class="grid size-14 shrink-0 place-items-center rounded-full bg-amber-400 text-red-950 shadow-md ring-2 ring-white/60">
 					<Icon name="map" class="text-2xl" />
 				</span>
@@ -384,7 +384,7 @@ const contactPageSchema = {
 			<h2 class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
 				Συχνές ερωτήσεις
 			</h2>
-			<div class="w-full flex flex-col gap-y-4 max-w-[900px]">
+			<div class="w-full flex flex-col gap-y-4 max-w-225">
 				{
 					faqs.map((f, i) => (
 						<div class="faq-item">

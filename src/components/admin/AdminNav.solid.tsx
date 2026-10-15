@@ -124,7 +124,7 @@ export default function AdminNav(props: RouterProps) {
 				<div class="relative grid justify-items-center content-start gap-y-2 font-anaktoria">
 					<a
 						href="/"
-						class="w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20 relative"
+						class="w-17.5 max-sm:w-12.5 row-span-full aspect-square z-20 relative"
 						onClick={(e) => {
 							e.preventDefault(); // prevent router from changing url
 							forceURLChange("/");
@@ -136,11 +136,11 @@ export default function AdminNav(props: RouterProps) {
 						/>
 					</a>
 					{/* <!-- 50% width - 40px (50% of img) - 2px offset --> */}
-					<div class="w-[70px] max-sm:w-[50px] aspect-square absolute top-[2px] blur-xl opacity-40 z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px] pointer-events-none">
+					<div class="w-17.5 max-sm:w-12.5 aspect-square absolute top-0.5 blur-xl opacity-40 z-10 left-[calc(50%-35px-2px)] max-sm:left-[calc(50%-26px)] max-sm:top-px pointer-events-none">
 						<img src="/logo.png" alt="" aria-hidden="true" class="h-full w-full object-contain brightness-0" />
 					</div>
-					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
-						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
+					<div class="max-sm:hidden w-42.5 px-2 flex items-center justify-center gap-2">
+						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-2xs text-red-900 dark:text-red-100 shadow-md shadow-black/30">
 							<Show when={user()?.avatar_url} fallback={<Icon name="user" />}>
 								{(avatar) => <img src={avatar()} alt="" referrerPolicy="no-referrer" class="h-full w-full object-cover" />}
 							</Show>
@@ -187,11 +187,11 @@ export default function AdminNav(props: RouterProps) {
 					<button
 						type="button"
 						aria-controls="burgerNavMenu"
-						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-has-checked/nav:translate-x-[calc(50%_-_7px)]">
+						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-has-checked/nav:translate-x-[calc(50%-7px)]">
 						{/* 7px = 1/2 of 14px = 0.875rem */}
 						<Icon
 							name="menu"
-							class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
+							class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%-0.5rem)] text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
 						/>
 						<span class="opacity-100 transition-opacity group-has-checked/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
 							{currentPage()}
@@ -199,7 +199,7 @@ export default function AdminNav(props: RouterProps) {
 					</button>
 					<div
 						id="burgerNavMenu"
-						class="flex invisible opacity-0 pointer-events-none transition-[opacity,visibility] duration-300 group-has-checked/nav:visible group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto fixed top-[3.5rem] left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 gap-0.5 overflow-y-auto flex-col w-full z-[5000]">
+						class="flex invisible opacity-0 pointer-events-none transition-[opacity,visibility] duration-300 group-has-checked/nav:visible group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto fixed top-14 left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 gap-0.5 overflow-y-auto flex-col w-full z-5000">
 						<For each={visibleSections()}>
 							{(section) => (
 								<div>

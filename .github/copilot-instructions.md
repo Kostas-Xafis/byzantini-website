@@ -111,8 +111,11 @@
   `text-danger`, …, dark values on `.dark`) — use them instead of
   `bg-white dark:bg-dark` pairs or new hex values. All of `src/components/admin`
   is on them and the `html.dark .bg-white` patch is gone, so a new `bg-white`
-  stays white in dark mode (use `bg-[#fff]` only for brand logos). Status colours,
+  stays white in dark mode (brand logos included). Status colours,
   `AdminNav` and the shared `input/*` controls keep their own `dark:` pairs.
+- Tailwind classes are canonical (what IntelliSense suggests: `h-dvh`, `z-1000`,
+  `bg-linear-to-r`, `important!` at the end), not arbitrary values; its
+  `cssConflict` warnings on `dark:`/`group-*` pairs are false positives.
 - Icons: the project's own inline-SVG set in `lib/icons.ts` (typed `IconName`),
   rendered with `<Icon name="…" />` (`src/components/other/Icon.solid.tsx` /
   `Icon.astro`) or `createIcon()` for hand-built DOM. No Font Awesome / icon

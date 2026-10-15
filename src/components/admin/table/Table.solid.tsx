@@ -217,8 +217,8 @@ export default function Table(props: Props) {
 		<div
 			id="table"
 			class={
-				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
-				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4" +
+				"h-dvh pt-[1.5vh] justify-center content-start items-start gap-y-3 z-1" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-dvw max-sm:py-4" +
 				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") || " grid-rows-[max-content,1fr]") +
 				(hasControlGroup("left") ? " pr-8" : "")
 			}
@@ -272,8 +272,8 @@ export default function Table(props: Props) {
 					"grid-row": "table",
 				}}
 				class={
-					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row rounded-2xl font-didact border border-line bg-surface text-ink shadow-sm shadow-shade " +
-					(hasControlGroup("left") ? " max-w-[100%] max-sm:max-w-[97.5%]" : " max-w-[90%] max-sm:max-w-[92.5%]")
+					"relative z-1000 overflow-x-auto justify-self-center col-[1/1] grid auto-rows-[auto_1fr] grid-flow-row rounded-2xl font-didact border border-line bg-surface text-ink shadow-sm shadow-shade " +
+					(hasControlGroup("left") ? " max-w-full max-sm:max-w-[97.5%]" : " max-w-[90%] max-sm:max-w-[92.5%]")
 				}
 				onMouseMove={move}
 				onMouseDown={startDragging}

@@ -2,7 +2,7 @@ export default function Spinner(props: { classes?: string }) {
 	return (
 		<>
 			<div class={"w-full h-full grid grid-rows-[1fr] place-items-center" + (" " + (props.classes || ""))}>
-				<div class="spinner w-[50px] aspect-square rounded-[50%] bg-red-900"></div>
+				<div class="spinner w-12.5 aspect-square rounded-[50%] bg-red-900"></div>
 			</div>
 			<style>
 				{`.spinner {

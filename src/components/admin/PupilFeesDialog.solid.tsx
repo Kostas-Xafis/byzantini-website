@@ -231,7 +231,7 @@ export default function PupilFeesDialog(props: Props) {
 						<p class="text-base text-danger">{previewError()}</p>
 					</Show>
 					<div class="overflow-x-auto">
-						<table class="w-full min-w-[960px] border-collapse text-base">
+						<table class="w-full min-w-240 border-collapse text-base">
 							<caption class="sr-only">Εγγραφές και δίδακτρα του σχολικού έτους {year()}, με τη σειρά των εκπτώσεων</caption>
 							<thead>
 								<tr class="bg-accent-soft text-left [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-semibold">
@@ -365,7 +365,7 @@ export default function PupilFeesDialog(props: Props) {
 
 				{/* totals */}
 				<div class="flex flex-wrap items-end justify-between gap-4">
-					<dl class="grid min-w-[260px] grid-cols-[auto_auto] gap-x-8 gap-y-1 rounded-lg bg-accent-soft px-4 py-3 text-lg [&_dd]:text-right [&_dd]:tabular-nums [&_dt]:text-ink-muted">
+					<dl class="grid min-w-65 grid-cols-[auto_auto] gap-x-8 gap-y-1 rounded-lg bg-accent-soft px-4 py-3 text-lg [&_dd]:text-right [&_dd]:tabular-nums [&_dt]:text-ink-muted">
 						<dt>Δίδακτρα τμημάτων</dt>
 						<dd>{euro(totals().classes)}</dd>
 						<dt>Τέλη κατάταξης</dt>
@@ -392,7 +392,7 @@ export default function PupilFeesDialog(props: Props) {
 					<Spinner />
 				</Show>
 			</div>
-			<DialogCloseButton class="absolute top-4 right-4 h-[1.5rem] w-[1.5rem] text-xl max-sm:h-8 max-sm:w-8 max-sm:text-lg" onClick={props.onClose} />
+			<DialogCloseButton class="absolute top-4 right-4 h-6 w-6 text-xl max-sm:h-8 max-sm:w-8 max-sm:text-lg" onClick={props.onClose} />
 		</Dialog>
 	);
 }

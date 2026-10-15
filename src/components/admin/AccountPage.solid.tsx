@@ -212,7 +212,7 @@ export default function AccountPage() {
 									<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent-ink" aria-hidden="true">
 										<Icon name="key" />
 									</span>
-									<div class="grid flex-1 min-w-[10rem]">
+									<div class="grid flex-1 min-w-40">
 										<span class="font-bold">Email και κωδικός</span>
 										<span class={hintClass}>{me().hasPassword ? "Ορισμένος κωδικός" : "Δεν έχει οριστεί κωδικός"}</span>
 									</div>
@@ -227,11 +227,11 @@ export default function AccountPage() {
 									{(row) => (
 										<li class="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
 											<span
-												class="grid h-9 w-9 place-items-center rounded-lg bg-[#fff] text-[#111] ring-1 ring-gray-200 dark:ring-0"
+												class="grid h-9 w-9 place-items-center rounded-lg bg-white text-[#111] ring-1 ring-gray-200 dark:ring-0"
 												aria-hidden="true"
 												innerHTML={PROVIDER_ICONS[row.id] ?? ""}
 											/>
-											<div class="grid flex-1 min-w-[10rem]">
+											<div class="grid flex-1 min-w-40">
 												<span class="font-bold">{row.label}</span>
 												<Show when={row.identity} fallback={<span class={hintClass}>Δεν έχει συνδεθεί</span>}>
 													{(identity) => (
@@ -315,7 +315,7 @@ export default function AccountPage() {
 											<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent-ink" aria-hidden="true">
 												<Icon name={/Android|iPhone|iPad/.test(session.user_agent ?? "") ? "smartphone" : "monitor"} />
 											</span>
-											<div class="grid flex-1 min-w-[10rem]">
+											<div class="grid flex-1 min-w-40">
 												<span class="flex flex-wrap items-center gap-2 font-bold">
 													{deviceLabel(session.user_agent)}
 													<Show when={session.current}>

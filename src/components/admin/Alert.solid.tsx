@@ -221,7 +221,7 @@ export default function AlertStack() {
 			<section
 				ref={sectionEl}
 				aria-label="Ειδοποιήσεις"
-				class="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[9999] flex flex-col items-stretch gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-96 sm:items-end"
+				class="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-9999 flex flex-col items-stretch gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-96 sm:items-end"
 				onKeyDown={onKeyDown}
 				onFocusIn={onFocusIn}
 				onFocusOut={onFocusOut}>
@@ -279,15 +279,17 @@ function ToastCard(props: { toast: Toast; onClose: () => void }) {
 				styles().card
 			}>
 			<div class="flex items-start gap-3 py-3 pr-2 pl-3">
-				<Icon name={styles().icon} spin={styles().spin} class={`${styles().icon_color} mt-[3px] shrink-0 text-lg`} />
+				<Icon name={styles().icon} spin={styles().spin} class={`${styles().icon_color} mt-0.75 shrink-0 text-lg`} />
 				<div class="min-w-0 flex-1">
 					<Show when={t().title}>
-						<p id={titleId} class="text-current font-bold leading-6 break-words">
+						<p id={titleId} class="text-current font-bold leading-6 wrap-break-word">
 							{t().title}
 						</p>
 					</Show>
 					<Show when={t().message}>
-						<p id={messageId} class={"text-current text-[0.95rem] leading-6 break-words whitespace-pre-line" + (t().title ? "" : " font-medium")}>
+						<p
+							id={messageId}
+							class={"text-current text-[0.95rem] leading-6 wrap-break-word whitespace-pre-line" + (t().title ? "" : " font-medium")}>
 							{t().message}
 						</p>
 					</Show>

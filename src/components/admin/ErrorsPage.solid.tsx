@@ -72,7 +72,7 @@ export default function ErrorsPage() {
 										<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-danger" aria-hidden="true">
 											<Icon name="warning" />
 										</span>
-										<p class="font-bold [overflow-wrap:anywhere]">{row.source}</p>
+										<p class="font-bold wrap-anywhere">{row.source}</p>
 										<Badge>HTTP {row.status}</Badge>
 										<Badge>{row.count === 1 ? "1 φορά" : `${row.count} φορές`}</Badge>
 										<Show when={row.notified_at === null || row.notified_at < row.last_seen_at}>
@@ -88,10 +88,10 @@ export default function ErrorsPage() {
 											Διαγραφή
 										</button>
 									</div>
-									<p class="font-mono text-sm break-words [overflow-wrap:anywhere]">
+									<p class="font-mono text-sm wrap-break-word wrap-anywhere">
 										<span class="font-bold">{row.error_name}:</span> {row.message}
 									</p>
-									<p class={`${hintClass} [overflow-wrap:anywhere]`}>
+									<p class={`${hintClass} wrap-anywhere`}>
 										Τελευταία φορά {dateTime(row.last_seen_at)} · πρώτη {dateTime(row.first_seen_at)} · {row.host}
 									</p>
 								</li>

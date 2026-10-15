@@ -99,7 +99,7 @@ export function SearchTable(props: SearchTableProps) {
 			<Icon name="search" class="text-accent-ink" />
 			<select
 				aria-label="Στήλη αναζήτησης"
-				class="max-w-[14rem] cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-accent-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
+				class="max-w-56 cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-accent-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
 				onChange={(e) => {
 					const colName = e.currentTarget.value;
 					const next = allColumns().find((c) => c.columnName === colName);

@@ -42,7 +42,7 @@ const excerpt = (content: string, max = 220) => {
 		<header class="flex flex-col items-center gap-y-6">
 			<h1
 				id="announcementsHead"
-				class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-red-900 after:max-sm:rounded-xs after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
+				class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[3.5vw] font-bold font-anaktoria text-red-900 overflow-hidden after:left-[calc(50%-6ch)] after:w-[12ch] after:bg-red-900 after:max-sm:rounded-xs after:max-sm:h-0.5 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 				Ανακοινώσεις
 			</h1>
 			<p
@@ -80,7 +80,7 @@ const excerpt = (content: string, max = 220) => {
 							}>
 							<div class="announcementMedia relative overflow-hidden sm:w-[clamp(220px,32%,400px)] sm:shrink-0 sm:self-stretch">
 								<div
-									class="announcementPlaceholder w-full aspect-[16/9] max-sm:max-h-[300px] sm:aspect-auto sm:h-full grid place-items-center bg-red-900/[0.06]"
+									class="announcementPlaceholder w-full aspect-video max-sm:max-h-75 sm:aspect-auto sm:h-full grid place-items-center bg-red-900/6"
 									class:list={[a.main_image ? "hidden" : ""]}>
 									<Icon name="megaphone" class="text-5xl sm:text-6xl text-red-900/50" />
 								</div>
@@ -92,7 +92,7 @@ const excerpt = (content: string, max = 220) => {
 										height="300"
 										loading="lazy"
 										decoding="async"
-										class="w-full aspect-[16/9] max-sm:max-h-[300px] sm:aspect-auto sm:h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]"
+										class="w-full aspect-video max-sm:max-h-75 sm:aspect-auto sm:h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]"
 									/>
 								)}
 								{isRecent(a.date) && (

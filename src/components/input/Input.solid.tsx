@@ -225,7 +225,7 @@ export default function Input(props: InputProps) {
 		// The label wraps its control, which is what links them — an explicit `for` without a matching id would break it.
 		<label
 			class={
-				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
+				"group/tooltip relative h-min max-h-50 max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
 				getInputSpecific(type) +
 				(disabled && blurDisabled ? " blur-[1px]" : "") +
 				(isShown() ? "" : " hidden")
@@ -235,11 +235,11 @@ export default function Input(props: InputProps) {
 				<Show when={icon}>
 					<Icon
 						name={icon!}
-						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
 					/>
 				</Show>
 				<input
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg outline-hidden! z-10"
 					type={type}
 					name={name}
 					aria-required={required ? "true" : undefined}
@@ -265,11 +265,11 @@ export default function Input(props: InputProps) {
 				<Show when={icon}>
 					<Icon
 						name={icon!}
-						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
 					/>
 				</Show>
 				<select
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
 					aria-required={required ? "true" : undefined}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
@@ -291,10 +291,7 @@ export default function Input(props: InputProps) {
 			{/*-------------------------------MULTISELECT INPUT------------------------------------ */}
 			<Show when={type === "multiselect"}>
 				<Show when={icon}>
-					<Icon
-						name={icon!}
-						class="absolute text-lg text-gray-500 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
-					/>
+					<Icon name={icon!} class="absolute text-lg text-gray-500 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]" />
 				</Show>
 				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg overflow-x-hidden z-10">
 					<Index each={multiselectList}>
@@ -318,11 +315,11 @@ export default function Input(props: InputProps) {
 									type="button">
 									<Icon
 										name="checkbox"
-										class="absolute top-[calc(50%_-_10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='true'])]/multiselect:hidden"
+										class="absolute top-[calc(50%-10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='true'])]/multiselect:hidden"
 									/>
 									<Icon
 										name="checkbox-checked"
-										class="absolute top-[calc(50%_-_10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='false'])]/multiselect:hidden"
+										class="absolute top-[calc(50%-10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='false'])]/multiselect:hidden"
 									/>
 									<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
 										{selectItem().label}
@@ -348,11 +345,11 @@ export default function Input(props: InputProps) {
 				<Show when={icon}>
 					<Icon
 						name={icon!}
-						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
 					/>
 				</Show>
 				<textarea
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
 					aria-required={required ? "true" : undefined}
 					placeholder={(placeholder as string) || ""}
@@ -366,7 +363,7 @@ export default function Input(props: InputProps) {
 			</Show>
 			<p
 				class={
-					"absolute w-min bg-surface text-red-950 dark:text-red-50 rounded-t-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10" +
+					"absolute w-min bg-surface text-red-950 dark:text-red-50 rounded-t-md left-2 whitespace-nowrap top-[-1.5ch] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10" +
 					(required ? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400" : "")
 				}>
 				{label}

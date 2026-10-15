@@ -140,7 +140,7 @@ export default function QueryLogsTable() {
 		return (
 			<form
 				data-prefix={FILTER_FORM_PREFIX}
-				class="grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-md border-[2px] border-brand px-4 py-3 max-xl:grid-cols-2 max-sm:grid-cols-1"
+				class="grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-md border-2 border-brand px-4 py-3 max-xl:grid-cols-2 max-sm:grid-cols-1"
 				onSubmit={applyFilters}>
 				<For each={Object.values(QueryLogFilterInputs())}>{(inputProps) => <Input {...inputProps} prefix={FILTER_FORM_PREFIX} />}</For>
 				<div class="flex flex-wrap gap-2 self-center max-sm:justify-center">

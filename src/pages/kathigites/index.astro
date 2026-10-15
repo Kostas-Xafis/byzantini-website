@@ -124,8 +124,8 @@ const breadcrumbs = breadcrumbsSchema([
 	<div id="teachersPage" class="group/type byz w-full font-didact">
 		<div
 			id="teachersContainer"
-			class="justify-evenly max-w-full h-min flex flex-wrap content-start gap-x-[1.25%] pt-[2vw] px-4 pb-[6rem] gap-y-8 max-sm:px-2 max-sm:pt-5 max-lg:pb-[9.5rem] max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
-			<header class="w-full flex-grow pb-[1.2vw] max-sm:pb-4 text-center">
+			class="justify-evenly max-w-full h-min flex flex-wrap content-start gap-x-[1.25%] pt-[2vw] px-4 pb-24 gap-y-8 max-sm:px-2 max-sm:pt-5 max-lg:pb-38 max-sm:gap-y-6 overflow-auto max-sm:max-w-[calc(100%-0.5rem)]">
+			<header class="w-full grow pb-[1.2vw] max-sm:pb-4 text-center">
 				<h1
 					id="teachersHead"
 					class="text-5xl max-sm:text-3xl font-anaktoria font-bold text-red-900 leading-tight drop-shadow-[-1px_1px_1px_rgba(15,15,15,0.2)]">
@@ -154,7 +154,7 @@ const breadcrumbs = breadcrumbsSchema([
 						return (
 							<article
 								class={
-									"group/card w-full sm:w-[48.5%] sm:max-w-[750px] hidden" +
+									"group/card w-full sm:w-[48.5%] sm:max-w-187.5 hidden" +
 									showCls +
 									" rounded-2xl max-sm:rounded-xl bg-white border-2 max-sm:border border-red-900 overflow-hidden" +
 									" shadow-md shadow-gray-400/50 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-gray-500/50 show"
@@ -162,7 +162,7 @@ const breadcrumbs = breadcrumbsSchema([
 								<div class="flex h-full">
 									<div
 										class={
-											"relative shrink-0 overflow-hidden sm:w-[38%] sm:aspect-[3/4] max-sm:w-[36%] max-sm:aspect-[4/5] sm:group-odd/card:order-last"
+											"relative shrink-0 overflow-hidden sm:w-[38%] sm:aspect-3/4 max-sm:w-[36%] max-sm:aspect-4/5 sm:group-odd/card:order-last"
 										}>
 										{teacher.picture ? (
 											<img
@@ -175,7 +175,7 @@ const breadcrumbs = breadcrumbsSchema([
 												class="absolute inset-0 w-full h-full object-cover"
 											/>
 										) : (
-											<span class="absolute inset-0 grid place-items-center bg-gradient-to-br from-red-100 via-red-50 to-white">
+											<span class="absolute inset-0 grid place-items-center bg-linear-to-br from-red-100 via-red-50 to-white">
 												<span class="font-anaktoria font-bold text-red-900/60 text-[2.2vw] max-sm:text-2xl select-none">
 													{monogram(teacher.fullname)}
 												</span>
@@ -249,7 +249,7 @@ const breadcrumbs = breadcrumbsSchema([
 			}
 		</div>
 	</div>
-	<nav id="btsContainer" class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]" aria-label="Κατηγορίες μαθημάτων">
+	<nav id="btsContainer" class="fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-1001" aria-label="Κατηγορίες μαθημάτων">
 		<div
 			class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 			{

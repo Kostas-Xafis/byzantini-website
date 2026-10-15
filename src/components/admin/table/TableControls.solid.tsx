@@ -74,7 +74,7 @@ export function TableControl(props: Props) {
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
 					class={
-						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-ink"
+						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-ink"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
 					<Icon
@@ -101,7 +101,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 
 export function TopTableGroup(props: { children: Element | JSX.Element }) {
 	return (
-		<div style={{ "grid-area": "top_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
+		<div style={{ "grid-area": "top_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-1001">
 			{props.children}
 		</div>
 	);
@@ -109,7 +109,7 @@ export function TopTableGroup(props: { children: Element | JSX.Element }) {
 
 export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 	return (
-		<div style={{ "grid-area": "bottom_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1000]">
+		<div style={{ "grid-area": "bottom_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-1000">
 			{props.children}
 		</div>
 	);
@@ -117,9 +117,7 @@ export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 
 export function LeftTableGroup(props: { children?: Element | JSX.Element }) {
 	return (
-		<div
-			style={{ "grid-area": "left_tools" }}
-			class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-[1000]">
+		<div style={{ "grid-area": "left_tools" }} class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-1000">
 			{props.children}
 		</div>
 	);

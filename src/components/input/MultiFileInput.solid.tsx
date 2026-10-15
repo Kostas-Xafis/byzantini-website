@@ -117,7 +117,7 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 						"absolute inset-0 grid items-center" +
 						((fileList().length > 0 && " -z-10 blur-[2px]") || " hover:bg-gray-600 dark:hover:bg-gray-700 group/file")
 					}>
-					<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
+					<div class="flex flex-col items-center z-[-1] group-hover/file:z-0">
 						<Show when={icon}>
 							<Icon name={icon!} class="text-5xl text-gray-400 group-hover/file:text-gray-50" />
 						</Show>
@@ -134,7 +134,7 @@ export default function MultiFileInput(props: MultiFileInputProps) {
 								// ondragenter={(e) => onAllowDrop(e)}
 								// data-file-idx={index()}
 								style={{ "word-break": "break-all" }}
-								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 dark:border-gray-400 rounded-lg cursor-default overflow-hidden z-[1]">
+								class="relative flex flex-row items-end h-62.5 w-68.75 gap-x-2 border-2 border-gray-600 dark:border-gray-400 rounded-lg cursor-default overflow-hidden z-1">
 								{filePreview && (
 									<div class="absolute flex -z-10 inset-0 w-full h-full place-self-center rounded-md overflow-hidden">
 										{filePreview(file as FileProxy<AnyRecord>)}

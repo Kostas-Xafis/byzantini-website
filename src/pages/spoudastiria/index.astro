@@ -117,7 +117,7 @@ const placesSchema = {
 				/>
 				<div class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
 					<h1
-						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[6vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%_-_6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-[2px] drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
+						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[6vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%-6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-0.5 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
 						Σπουδαστήρια
 					</h1>
 					<p
@@ -152,7 +152,7 @@ const placesSchema = {
 			</nav>
 
 			<!-- Λίστα σπουδαστηρίων -->
-			<section id="spoudastiriaSection" class="w-full max-w-[1400px] self-center flex flex-col gap-y-5" aria-label="Σημεία διεξαγωγής μαθημάτων">
+			<section id="spoudastiriaSection" class="w-full max-w-350 self-center flex flex-col gap-y-5" aria-label="Σημεία διεξαγωγής μαθημάτων">
 				<!-- Ένδειξη της τρέχουσας κατηγορίας -->
 				<header id="spoudastiriaGroupHeader" class="flex items-center gap-3 max-sm:gap-2.5 px-1" aria-live="polite">
 					<span
@@ -177,7 +177,7 @@ const placesSchema = {
 									"location-card group/card relative flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-md shadow-gray-400/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-gray-500/50",
 									l.partner ? "hidden" : "",
 								]}>
-								<div class="relative shrink-0 aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
+								<div class="relative shrink-0 aspect-video overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
 									{l.image && (
 										<img
 											src={imgSrc + l.image}
@@ -189,7 +189,7 @@ const placesSchema = {
 									)}
 									<div
 										class={
-											"absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" +
+											"absolute inset-0 bg-linear-to-t from-black/55 via-transparent to-transparent" +
 											(l.image ? "" : " grid place-items-center")
 										}>
 										{!l.image && <Icon name="church" class="text-5xl text-red-50/60" />}
@@ -285,7 +285,7 @@ const placesSchema = {
 	</div>
 
 	<!-- Αναδυόμενο παράθυρο λεπτομερειών -->
-	<div id="locationModal" class="hidden fixed inset-0 z-[1100] grid place-items-center p-4 max-sm:p-0" role="presentation">
+	<div id="locationModal" class="hidden fixed inset-0 z-1100 grid place-items-center p-4 max-sm:p-0" role="presentation">
 		<div id="locationModalBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-[3px]"></div>
 		<div
 			role="dialog"
@@ -293,9 +293,9 @@ const placesSchema = {
 			aria-labelledby="locationModalTitle"
 			id="locationModalPanel"
 			class="relative w-full max-w-3xl flex flex-col overflow-hidden rounded-2xl border-2 border-red-900 bg-white shadow-2xl shadow-black/50 max-h-[92dvh]">
-			<div class="relative shrink-0 aspect-[21/9] max-sm:aspect-[16/9] overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
+			<div class="relative shrink-0 aspect-21/9 max-sm:aspect-video overflow-hidden bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)]">
 				<img id="locationModalImage" class="absolute inset-0 h-full w-full object-cover" alt="" />
-				<div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
+				<div class="absolute inset-0 bg-linear-to-t from-black/75 via-black/25 to-transparent"></div>
 				<div class="absolute bottom-4 left-6 right-16 max-sm:left-4">
 					<p id="locationModalBadge" class="text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">Σπουδαστήριο Σχολής</p>
 					<h2
@@ -335,7 +335,7 @@ const placesSchema = {
 				</div>
 				<div
 					id="locationModalMapWrap"
-					class="mx-6 mb-6 max-sm:mx-4 max-sm:mb-4 h-[300px] max-sm:h-[260px] overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400">
+					class="mx-6 mb-6 max-sm:mx-4 max-sm:mb-4 h-75 max-sm:h-65 overflow-hidden rounded-xl border-2 border-red-900 shadow-md shadow-gray-400">
 					<!-- ο χάρτης δημιουργείται δυναμικά κατά το άνοιγμα -->
 				</div>
 			</div>

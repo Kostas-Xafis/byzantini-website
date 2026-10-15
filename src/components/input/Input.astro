@@ -21,12 +21,12 @@ const { type, name, label, placeholder, value, required, disabled, icon, minmax 
 		icon && (
 			<Icon
 				name={icon}
-				class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+				class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
 			/>
 		)
 	}
 	<input
-		class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
+		class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg outline-hidden! z-10"
 		type={type}
 		name={name}
 		placeholder={placeholder || ""}
@@ -36,7 +36,7 @@ const { type, name, label, placeholder, value, required, disabled, icon, minmax 
 		max={minmax ? minmax[1] : ""}
 	/>
 	<p
-		class="absolute w-min bg-surface text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
+		class="absolute w-min bg-surface text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap top-[-1.5ch] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
 		{label}
 		{required ? <Icon name="asterisk" class="absolute bg-surface left-[-0.5ch] top-1 text-xs" /> : ""}
 	</p>

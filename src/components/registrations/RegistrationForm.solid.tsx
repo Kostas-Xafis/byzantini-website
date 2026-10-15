@@ -746,12 +746,12 @@ export function RegistrationForm() {
 				{/* MAIN PAGE - USER HASN'T SELECTED A FORM YET (or went Back to the picker) */}
 				<div
 					id="registrationPicker"
-					class="w-full max-sm:w-[calc(100dvw_-_4.25rem)] h-full max-sm:h-[calc(100dvh_-_4.25rem)] place-items-center font-didact">
+					class="w-full max-sm:w-[calc(100dvw-4.25rem)] h-full max-sm:h-[calc(100dvh-4.25rem)] place-items-center font-didact">
 					<h1 class="sr-only">Εγγραφές στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής</h1>
 					<div id="firstSelect" class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
 						<For each={btns}>
 							{([str, type]) => (
-								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
+								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
 									<div
 										id={type}
 										class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-red-900/80 group-hover/select:shadow-md group-focus-within/select:bg-red-900/80 group-focus-within/select:shadow-md">
@@ -844,7 +844,7 @@ export function RegistrationForm() {
 										</div>
 									}>
 									<button
-										class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
+										class="col-span-full w-max font-didact place-self-center text-2.5xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
 										type="submit">
 										Εγγραφή
 									</button>
@@ -911,7 +911,7 @@ export function RegistrationForm() {
 										}>
 										<button
 											type="submit"
-											class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
+											class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
 											Ανάκτηση στοιχείων
 										</button>
 									</Show>
@@ -938,7 +938,7 @@ export function RegistrationForm() {
 					</div>
 					<nav
 						id="registrationSelect"
-						class={"fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]" + (step() === "form" ? "" : " hidden")}
+						class={"fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-1001" + (step() === "form" ? "" : " hidden")}
 						aria-label="Κατηγορίες μαθημάτων">
 						<div class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 							<For each={btns}>

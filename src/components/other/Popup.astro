@@ -12,7 +12,7 @@ export interface Props {
 const { title, content, okButton = "Εντάξει", cancelButton } = Astro.props;
 ---
 
-<div id="popup" class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]" role="presentation">
+<div id="popup" class="hide fixed inset-0 w-dvw h-dvh grid place-items-center backdrop-blur-[6px]" role="presentation">
 	<div
 		id="popupPanel"
 		role="dialog"
@@ -23,7 +23,7 @@ const { title, content, okButton = "Εντάξει", cancelButton } = Astro.prop
 		class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600 focus-visible:outline-hidden">
 		{
 			typeof title === "string" ? (
-				<h2 id="popup-title" class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">
+				<h2 id="popup-title" class="text-3xl font-didact [text-shadow:-1px_1px_2px_rgb(35,35,35,0.4)]">
 					{title}
 				</h2>
 			) : (

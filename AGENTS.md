@@ -518,7 +518,14 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   (green/amber/blue/sky/violet toasts, badges, notes), the modal backdrop, the
   admin sidebar (`AdminNav`), and the shared `input/*` controls, whose light look
   must stay identical on the public form (only their surface uses `bg-surface`).
-  Anything that must stay white in both themes (brand logos) is `bg-[#fff]`.
+  Anything that must stay white in both themes (brand logos) is plain `bg-white`
+  (nothing repaints it any more).
+- **Tailwind classes are canonical**: write what IntelliSense suggests
+  (`h-dvh`, `z-1000`, `bg-linear-to-r`, `p-0.75`, `mask-contain`, `important!`
+  at the end) rather than arbitrary values (`h-[100dvh]`, `z-[1000]`, …) — both
+  compile to the same CSS. Its `cssConflict` warnings on `dark:`/`group-*` pairs
+  (`bg-red-100 dark:bg-dark`) are false positives: selector variants don't
+  conflict.
 - **Icons are the project's own inline-SVG set** (Font Awesome is gone):
   `lib/icons.ts` (`ICONS`: name → 24×24 markup, one stroke, `currentColor`;
   typed `IconName`, so a typo fails `typecheck`) rendered by
