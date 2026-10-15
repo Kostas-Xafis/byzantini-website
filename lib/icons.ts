@@ -74,7 +74,8 @@ export const ICONS = {
 	feather: `<path d="M19.5 4.5C13 4.5 8 8.5 8 15v1.5h1.5c6.5 0 10-5 10-12z"/><path d="M4 20 15 9"/><path d="M8 14.5h5"/>`,
 	scroll: `<path d="M7 17V5.5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2h-4"/><path d="M17 5.5v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V17h10v1.5a2 2 0 0 0 2 2"/><path d="M10.5 8.5h3M10.5 12h3"/>`,
 	music: `<path d="M9 18V5.5l11-2.5v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>`,
-	guitar: `<path d="M11.2 9.7c-1.6-1-3.6-.5-4.4 1.1-.4.8-.3 1.7-.8 2.3-.6.7-1.8.6-2.5 1.4-1.5 1.8-1 4.8 1.1 6.4 1.9 1.6 4.6 1.8 6 .2.8-.8.6-2 1.3-2.6.6-.5 1.6-.3 2.4-.8 1.5-.9 1.9-2.9.9-4.4"/><path d="m12.5 11.5 7-7"/><path d="m18.5 2.5 3 3"/><circle cx="9" cy="15" r="1.5"/><path d="m5.8 17 1.2 1.2"/>`,
+	// Drawn upright (headstock at the top) and turned 45° so the headstock points top-right.
+	guitar: `<g transform="rotate(45 12 12)"><path d="M12 10c2.4 0 3.7 1.5 3.7 3.4 0 1.5-1 2-1 2.9s2.1 1.5 2.1 3.7c0 2.6-2.2 4.4-4.8 4.4s-4.8-1.8-4.8-4.4c0-2.2 2.1-2.8 2.1-3.7s-1-1.4-1-2.9C8.3 11.5 9.6 10 12 10z"/><circle cx="12" cy="13.6" r="1.4"/><path d="M12 3.2V10M10.4 21.2h3.2"/><path d="M10.9 3.2 10.5-.6h3l-.4 3.8z"/></g>`,
 	dove: `<path d="M21 8.5 18.8 7.6a2.6 2.6 0 0 0-4.6 1C14 13 11 16.2 6.5 16.6L3 19.5h7c5 0 8.5-3.5 8.5-8.5"/><path d="M14.3 9.6C10.8 9.6 6.8 7.6 5 3.5c-1 4 .2 8 4 10.3"/><path d="M17.2 8.2h.01"/>`,
 	palette: `<path d="M12 3a9 9 0 0 0 0 18c1.2 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="9.5" cy="7.2" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.2" r="1.2" fill="currentColor" stroke="none"/>`,
 
