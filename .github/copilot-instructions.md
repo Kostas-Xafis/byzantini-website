@@ -111,7 +111,10 @@
   `bun run replicate:bucket`; restart the dev server afterwards). No
   `bucket:serve` / HTTP store anymore. The public catch-all serves only the
   prefixes in `lib/bucket/publicFiles.ts`; inline-script JSON uses
-  `jsonForScript` (`lib/utilities/safeJson.ts`).
+  `jsonForScript` (`lib/utilities/safeJson.ts`). Security headers + the
+  dashboard's strict CSP live in `lib/utilities/securityHeaders.ts` (mirrored
+  in `public/_headers`); new third-party origins in the admin go into
+  `STRICT_CSP`.
 - **Worker↔worker calls use service bindings, never HTTP URLs.** The site's
   `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`) and
   `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each

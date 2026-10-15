@@ -405,6 +405,16 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   404 until added there. Stored Content-Type + `nosniff`; only raster images,
   PDFs and fonts inline, everything else a sandboxed attachment. Admin uploads
   accept JPEG/PNG/WebP/GIF (+ PDF for CVs) up to 10 MB — no SVG.
+- **Security headers** (`lib/utilities/securityHeaders.ts`, applied in
+  `src/middleware.ts`; prerendered pages get the same from `public/_headers`,
+  kept in sync by `tests/unit/securityHeaders.test.ts`): nosniff,
+  Referrer-Policy, Permissions-Policy, frame protection and HSTS everywhere;
+  an enforced CSP on `/admin`, `/login`, `/oauth2callback` that lists exactly
+  what they load (jsDelivr, cdnjs, Google Fonts, Cloudflare analytics,
+  https avatars, blob:/data:). **Loading something new from another origin in
+  the dashboard? Add it to `STRICT_CSP`** (and regenerate `public/_headers`'
+  `/login/*` line) — otherwise the browser blocks it. Headers a route sets
+  itself win.
 - JSON inside an inline `<script>` (JSON-LD, page data) goes through
   `jsonForScript` (`lib/utilities/safeJson.ts`), never bare `JSON.stringify`.
 - **Worker↔worker calls go through service bindings, never HTTP URLs**: the
