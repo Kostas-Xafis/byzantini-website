@@ -17,7 +17,7 @@ title contains `@phone` (sign-in, both registration tests).
 ```bash
 bunx playwright install chromium   # once per machine (browsers live in ~/.cache/ms-playwright, never in the repo)
 bun run e2e                        # all projects
-bun run e2e -- --project desktop -g "roles"   # any Playwright CLI flag after --
+bun run e2e -- --project=desktop -g "roles"   # any Playwright CLI flag after -- (use --project=<name>: under Bun a file path after `--project <name>` is read as another project)
 ```
 
 Needs, like the API suite:
@@ -38,11 +38,18 @@ Failures keep a trace and a screenshot in `e2e/test-results/` (gitignored): `bun
 There is deliberately no HTML report: the dev server's file watcher reloads open pages when an `.html` file
 under the project changes.
 
+## Content-Security-Policy
+
+Every test fails when its page logs a CSP violation (the automatic `cspViolations` fixture): the dashboard
+and the sign-in pages carry a strict CSP (`src/middleware.ts`), and a blocked script or style may not break
+any assertion. A failure there is a finding about the page or the policy — never loosen it in the tests.
+
 ## Data the suite writes (and removes)
 
 - **Admins:** the harness admin is only used through the API. Every browser sign-in is a throwaway
   `e2e.<role>.<random>@example.com` admin, created the real way (invite → `POST /api/sys/register/<link>`,
-  `SysUsers.setRole` for an owner) and deleted when the test ends, passed or failed (`support/fixtures.ts`).
+  `SysUsers.setRole` for an owner) and deleted when the test ends, passed or failed, together with the
+  «Ιστορικό ενεργειών» rows about them (`support/fixtures.ts`).
   The owner's own account is never used in the browser.
 - **Pupil:** the registration happy path writes a «Δοκιμαστικός Μαθητής» without ΑΜ (an orphan `000-Ο<n>` row),
   an ΑΜΚΑ starting with 99 (no real ΑΜΚΑ does) and a `pupils.test.e2e.*@example.com` email; the test deletes the

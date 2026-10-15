@@ -544,7 +544,8 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   emails worker (invites) and tests/.env.test. The harness admin acts only
   through the API: every browser sign-in is a throwaway `e2e.<role>.*@example.com`
   admin (invite → signup → `setRole`) deleted when the test ends
-  (`e2e/support/fixtures.ts`); the registration test's «Δοκιμαστικός Μαθητής»
+  (`e2e/support/fixtures.ts`, with its activity-log rows); every test also fails
+  on a CSP violation in its page (report it, never loosen the policy for it); the registration test's «Δοκιμαστικός Μαθητής»
   (orphan row, ΑΜΚΑ 99…, `pupils.test.e2e.*@example.com`) is deleted too, and
   `bun run dev:clean` catches both. `e2e/` is typechecked by `bun run typecheck`.
   Do not edit `package.json`/`tsconfig.json` while the Astro dev server runs:
