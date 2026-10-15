@@ -50,6 +50,8 @@ export const ACTIVITY_LABELS: Record<string, string> = {
 	"FeeCatalog.create": "Νέα έκδοση καταλόγου διδάκτρων",
 
 	"SysUsers.createRegisterLink": "Πρόσκληση νέου διαχειριστή",
+	"SysUsers.resendInvite": "Επαναποστολή πρόσκλησης διαχειριστή",
+	"SysUsers.revokeInvite": "Ακύρωση πρόσκλησης διαχειριστή",
 	"SysUsers.setRole": "Αλλαγή ρόλου διαχειριστή",
 	"SysUsers.delete": "Διαγραφή διαχειριστών",
 	"Authentication.changePassword": "Αλλαγή κωδικού",

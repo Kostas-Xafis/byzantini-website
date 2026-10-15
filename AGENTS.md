@@ -323,6 +323,15 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   (`services/emailWorker/render/emails/SysuserPasswordReset.tsx`) — **publish it
   with `bun run templates:build --prod` before deploying**, or reset emails fail
   (the page still answers the generic message; the error is logged).
+- **Admin invites** (`SysUsers.createRegisterLink`, «Διαχειριστές»): a 24-hour
+  link bound to the invited email, used up on signup. `sys_user_register_links`
+  (recreated in 0008) stores only the link's **SHA-256** (`id`) plus `email`,
+  `invited_by`, `created_at`, `expires_at`; one pending invite per email (a new
+  invite replaces the old link). «Εκκρεμείς προσκλήσεις» under the admins table
+  (shown only while some exist): `SysUsers.getInvites` (unexpired, never the
+  link), `resendInvite` (new link + another 24 h; the old link dies) and
+  `revokeInvite` (by email) — open to every admin, like inviting. Invites sent
+  before 0008 are dropped by the migration: re-send them after deploying.
 - **Roles** (`lib/auth/roles.ts`, client-safe; `sys_users.role` in 0008):
   `sysadmin` (the maintainer) · `owner` (the school's owner) · `secretary`
   (the secretariat). `PERMISSIONS` lists the only restricted features —

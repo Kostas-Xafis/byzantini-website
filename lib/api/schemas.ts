@@ -79,12 +79,19 @@ export const z_SysUserIdentity = z.object({
 	last_used_at: positiveInt().nullable(),
 });
 
+/** A pending admin invite (migration 0008). `id` is the SHA-256 of the emailed link — never the link itself. */
 export const z_SysUserRegisterLink = z.object({
-	link: z.string().min(1, "Μη έγκυρος σύνδεσμος"),
-	exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης"),
-	/** The invited email — the account created from the link must use it (migration 0004). */
-	email: z.email("Μη έγκυρο email").nullable(),
+	id: z.string().min(1),
+	/** The invited email — the account created from the link must use it. */
+	email: z.email("Μη έγκυρο email"),
+	/** Email of the admin who sent (or last resent) the invite. */
+	invited_by: z.string().nullable(),
+	created_at: positiveInt(),
+	expires_at: positiveInt("Μη έγκυρη ημερομηνία λήξης"),
 });
+
+/** «Εκκρεμείς προσκλήσεις» row: everything but the hashed link. */
+export const z_PendingInvite = z_SysUserRegisterLink.omit({ id: true });
 
 export const z_LoginCredentials = z.object({
 	email: z.email("Μη έγκυρο email"),

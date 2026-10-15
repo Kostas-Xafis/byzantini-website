@@ -1,14 +1,14 @@
 import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
-import { hashPassword } from "@lib/auth/passwords";
+import { hashPassword, sha256Hex } from "@lib/auth/passwords";
 import { ROLE_LABELS } from "@lib/auth/roles";
 import { forgetUserSessions } from "@lib/auth/sessions";
-import { z_IdArray, z_SignupCredentials, z_SysUsers } from "@lib/api/schemas";
+import { z_IdArray, z_PendingInvite, z_SignupCredentials, z_SysUsers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
 import { getDb, type Transaction } from "@lib/db";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
 import { APIError } from "./APIError";
-import { APIServer, handlerResult } from "./APIServer";
+import { APIServer, handlerResult, type RouteContext } from "./APIServer";
 import { COOKIE } from "./cookies";
 import { sendAutomatedEmail } from "./emailService";
 import { authenticateMiddleware, currentSession, requirePermission, startSession } from "./middleware/authenticate";
@@ -35,24 +35,65 @@ const z_RegisterSysUserResponse = z.object({
 	email: z.email("Μη έγκυρο email"),
 });
 
+/** How long an invite link works. */
+const INVITE_TTL_MS = 1000 * 60 * 60 * 24;
+
+/*
+ * Invite links are stored like sessions and reset links: only their SHA-256 (`id`), so a database dump
+ * holds no usable link. One pending invite per email — a new invite or a resend replaces the old link.
+ */
+
 /**
  * Uses up an unexpired invite issued for `email`. A single `DELETE … RETURNING`
  * statement, so the same link can never create two accounts (no transaction needed).
  */
 export async function consumeRegisterLink(T: Transaction, link: string, email: string): Promise<boolean> {
-	const consumed = await T.executeQuery<Pick<SysUserRegisterLink, "link">>(
-		"DELETE FROM sys_user_register_links WHERE link = ? AND email = ? COLLATE NOCASE AND exp_date >= ? RETURNING link",
-		[link, email, Date.now()],
+	const consumed = await T.executeQuery<Pick<SysUserRegisterLink, "id">>(
+		"DELETE FROM sys_user_register_links WHERE id = ? AND email = ? COLLATE NOCASE AND expires_at >= ? RETURNING id",
+		[await sha256Hex(link), email, Date.now()],
 	);
 	return consumed.length === 1;
 }
 
 /** The invite behind `link`, or undefined when it does not exist or has expired. */
 export async function findRegisterLink(T: Transaction, link: string): Promise<SysUserRegisterLink | undefined> {
-	const [invite] = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE link = ? LIMIT 1", [link]);
-	if (!invite?.email || invite.exp_date < Date.now()) return undefined;
+	const [invite] = await T.executeQuery<SysUserRegisterLink>("SELECT * FROM sys_user_register_links WHERE id = ? LIMIT 1", [await sha256Hex(link)]);
+	if (!invite || invite.expires_at < Date.now()) return undefined;
 	return invite;
 }
+
+/**
+ * Issues a fresh 24-hour invite link for `email` (replacing any earlier one, which stops working) and emails it.
+ * Returns the link and its expiry.
+ */
+async function issueInvite(T: Transaction, { request, env, cookies }: Pick<RouteContext<string, undefined>, "request" | "env" | "cookies">, email: string) {
+	const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
+	if (existingUser) throw APIError.conflict("Ο χρήστης υπάρχει ήδη");
+
+	const { email: invitedBy } = await currentSession(cookies);
+	const link = R.link(64);
+	const now = Date.now();
+	const expires_at = now + INVITE_TTL_MS;
+	// Expired invites, and any earlier invite to the same address (only the newest link works).
+	await T.executeQuery("DELETE FROM sys_user_register_links WHERE expires_at < ? OR email = ? COLLATE NOCASE", [now, email]);
+	await T.executeQuery("INSERT INTO sys_user_register_links (id, email, invited_by, created_at, expires_at) VALUES (?, ?, ?, ?, ?)", [
+		await sha256Hex(link),
+		email,
+		invitedBy,
+		now,
+		expires_at,
+	]);
+
+	await sendAutomatedEmail(env, {
+		to: email,
+		subject: "Πρόσκληση διαχειριστή",
+		htmlTemplateName: "sysuser_register_link.html",
+		templateData: { token: `${new URL(request.url).origin}/admin/signup/${link}` },
+	});
+	return { link, expires_at };
+}
+
+const z_IssuedInvite = z.object({ link: z.string(), expires_at: z.number().int() });
 
 /** Deletes admins with their sessions and connected accounts, in one batch. */
 async function deleteSysUsers(ids: number[]) {
@@ -156,31 +197,41 @@ export const sysusersRoutes = {
 			}, "Σφάλμα κατά την εγγραφή του χρήστη"),
 	),
 	createRegisterLink: new APIServer(
-		{ method: "POST", path: "/sys/register", schema: z_SysUserInviteEmail, responseSchema: z.object({ link: z.string() }) },
+		{ method: "POST", path: "/sys/register", schema: z_SysUserInviteEmail, responseSchema: z_IssuedInvite },
 		[authenticateMiddleware],
-		({ body, request, env }) =>
+		(ctx) => handlerResult((T) => issueInvite(T, ctx, ctx.body.email), "Σφάλμα κατά τη δημιουργία του συνδέσμου εγγραφής"),
+	),
+	/** «Εκκρεμείς προσκλήσεις»: unexpired invites, newest first — never the link (only its hash is stored). */
+	getInvites: new APIServer({ method: "GET", path: "/sys/invites", responseSchema: z.array(z_PendingInvite) }, [authenticateMiddleware], () =>
+		handlerResult(
+			() =>
+				executeQuery<z.infer<typeof z_PendingInvite>>(
+					"SELECT email, invited_by, created_at, expires_at FROM sys_user_register_links WHERE expires_at >= ? ORDER BY created_at DESC",
+					[Date.now()],
+				),
+			"Σφάλμα κατά την ανάκτηση των προσκλήσεων",
+		),
+	),
+	/** «Επαναποστολή»: a new link (the old one stops working) and another 24 hours. */
+	resendInvite: new APIServer(
+		{ method: "POST", path: "/sys/invites/resend", schema: z_SysUserInviteEmail, responseSchema: z_IssuedInvite },
+		[authenticateMiddleware],
+		(ctx) =>
 			handlerResult(async (T) => {
-				const { email } = body;
-				const [existingUser] = await T.executeQuery<Pick<SysUsers, "id">>("SELECT id FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [email]);
-				if (existingUser) throw APIError.conflict("Ο χρήστης υπάρχει ήδη");
-
-				const link = R.link(64);
-				// 24 hours expiration
-				const exp_date = Date.now() + 1000 * 60 * 60 * 24;
-				// Expired invites, and any earlier invite to the same address (only the newest link works).
-				await T.executeQuery("DELETE FROM sys_user_register_links WHERE exp_date < ? OR email = ? COLLATE NOCASE", [Date.now(), email]);
-				await T.executeQuery("INSERT INTO sys_user_register_links (link, exp_date, email) VALUES (?, ?, ?)", [link, exp_date, email]);
-
-				const signupLink = `${new URL(request.url).origin}/admin/signup/${link}`;
-				await sendAutomatedEmail(env, {
-					to: email,
-					subject: "Πρόσκληση διαχειριστή",
-					htmlTemplateName: "sysuser_register_link.html",
-					templateData: { token: signupLink },
-				});
-
-				return { link };
-			}, "Σφάλμα κατά τη δημιουργία του συνδέσμου εγγραφής"),
+				const [invite] = await T.executeQuery<{ email: string }>("SELECT email FROM sys_user_register_links WHERE email = ? COLLATE NOCASE LIMIT 1", [
+					ctx.body.email,
+				]);
+				if (!invite) throw APIError.notFound("Η πρόσκληση δεν βρέθηκε");
+				return issueInvite(T, ctx, invite.email);
+			}, "Σφάλμα κατά την επαναποστολή της πρόσκλησης"),
+	),
+	/** «Ακύρωση»: the invite's link stops working at once. */
+	revokeInvite: new APIServer({ method: "DELETE", path: "/sys/invites", schema: z_SysUserInviteEmail }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async () => {
+			const removed = await executeQuery<{ id: string }>("DELETE FROM sys_user_register_links WHERE email = ? COLLATE NOCASE RETURNING id", [body.email]);
+			if (removed.length === 0) throw APIError.notFound("Η πρόσκληση δεν βρέθηκε");
+			return "Η πρόσκληση ακυρώθηκε";
+		}, "Σφάλμα κατά την ακύρωση της πρόσκλησης"),
 	),
 	validateRegisterLink: new APIServer(
 		{
@@ -191,7 +242,7 @@ export const sysusersRoutes = {
 		({ params }) =>
 			handlerResult(async (T) => {
 				const invite = await findRegisterLink(T, params.link);
-				return invite ? { isValid: true, email: invite.email ?? undefined } : { isValid: false };
+				return invite ? { isValid: true, email: invite.email } : { isValid: false };
 			}, "Σφάλμα κατά τον έλεγχο του συνδέσμου εγγραφής"),
 	),
 };

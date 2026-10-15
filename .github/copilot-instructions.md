@@ -99,6 +99,9 @@
 - A 401 in the dashboard sends the admin to `/login?…&expired=1` and back
   (`lib/auth/sessionExpiry.client.ts`); password reset is
   `/login/forgot` → `/login/reset/<token>` (`Authentication.*PasswordReset`).
+- Admin invites store only the link's SHA-256 (`sys_user_register_links.id`);
+  pending ones are listed, resent and revoked under the admins table
+  (`SysUsers.getInvites` / `resendInvite` / `revokeInvite`).
 - Admin colours are tokens in `src/styles/global.css` (`bg-surface`,
   `text-ink`, `border-line`, `bg-brand`, …, dark values on `.dark`) — use them
   instead of `bg-white dark:bg-dark` pairs or new hex values.

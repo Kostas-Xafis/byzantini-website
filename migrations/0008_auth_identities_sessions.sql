@@ -74,3 +74,16 @@ CREATE TABLE sys_activity (
 );
 CREATE INDEX sys_activity_created ON sys_activity (created_at);
 CREATE INDEX sys_activity_user ON sys_activity (user_id, created_at);
+
+-- Admin invites (SysUsers.createRegisterLink / resendInvite / revokeInvite). Like sessions and reset links,
+-- only the SHA-256 of the emailed link is stored (`id`). One pending invite per email; `invited_by` is the
+-- inviting admin's email, shown in «Εκκρεμείς προσκλήσεις». Invites issued before 0008 are dropped (re-invite).
+DROP TABLE sys_user_register_links;
+CREATE TABLE sys_user_register_links (
+	id TEXT PRIMARY KEY NOT NULL,
+	email TEXT NOT NULL,
+	invited_by TEXT,
+	created_at INTEGER NOT NULL,
+	expires_at INTEGER NOT NULL
+);
+CREATE UNIQUE INDEX sys_user_register_links_email ON sys_user_register_links (email COLLATE NOCASE);
