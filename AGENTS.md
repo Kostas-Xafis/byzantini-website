@@ -72,6 +72,7 @@ Core loop:
 | Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the pdfWorker's golden-PDF suite and the emailWorker's offline campaign suite (never sends) |
 | Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite; the pdf suite needs the PDF worker started **before** the dev server); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
+| E2E smoke tests | `bun run e2e` | Playwright (Chromium, 1280 + 375 px) in `e2e/`, **not** part of `bun run test`; needs the dev server (`E2E_BASE_URL`, default `http://localhost:4321`), the emails worker and tests/.env.test; once per machine `bunx playwright install chromium`; see e2e/README.md |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
 Database tooling (wrangler D1 commands — local dev database is the miniflare
@@ -85,7 +86,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
 | Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
-| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
+| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this
@@ -498,6 +499,21 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   endpoint.
 - `TEST_EMAIL` / `TEST_PASSWORD` come from the test env files — never hardcode
   them.
+- **End-to-end smoke tests** (`e2e/`, Playwright, `bun run e2e` — kept out of
+  `bun run test`): admin password sign-in → «Αρχική», an ended session →
+  `/login?…&expired=1` and back, what a secretary / an owner sees, the public
+  registration form (empty submit, new student ΑΜ 000) and the public navbar at
+  1024/1366 px. Projects `desktop` (1280 px, everything) and `phone` (375 px,
+  titles tagged `@phone`). The runner runs on Bun (`bunx --bun playwright test`).
+  Needs the dev server (`E2E_BASE_URL`, default `http://localhost:4321`), the
+  emails worker (invites) and tests/.env.test. The harness admin acts only
+  through the API: every browser sign-in is a throwaway `e2e.<role>.*@example.com`
+  admin (invite → signup → `setRole`) deleted when the test ends
+  (`e2e/support/fixtures.ts`); the registration test's «Δοκιμαστικός Μαθητής»
+  (orphan row, ΑΜΚΑ 99…, `pupils.test.e2e.*@example.com`) is deleted too, and
+  `bun run dev:clean` catches both. `e2e/` is typechecked by `bun run typecheck`.
+  Do not edit `package.json`/`tsconfig.json` while the Astro dev server runs:
+  its restart fails and every request answers 500 until it is restarted.
 - **PDF golden hashes**: the PDF worker's output is a pure function of the
   request (no metadata timestamps; the printed school year comes from
   `registration_year`), so each dummy fixture in
