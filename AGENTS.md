@@ -335,7 +335,7 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   `isOwnerEmail(...)`) — backed by `VITE_OWNER_EMAIL` (same var inlines into
   client AND server bundles; hardcoded fallback in the module) and set in
   `.env`/`.env.production`. Never hardcode the owner email in features;
-  owner-only UI (global search, query-logs link, user deletion) goes through
+  owner-only UI (query-logs link, user deletion) goes through
   this module.
 - Storage goes through `Bucket` (`lib/bucket/index.ts`) — always the R2
   binding `S3_BUCKET`: real R2 in production, miniflare-emulated locally

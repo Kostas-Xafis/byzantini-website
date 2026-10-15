@@ -1,6 +1,6 @@
 /**
  * Owner (super-admin) email — the single source of truth for owner-only UI and
- * backend checks (global search, query-log visibility, user management).
+ * backend checks (query-log visibility, user management).
  *
  * Resolution order:
  * 1. `VITE_OWNER_EMAIL` from the Vite-native env files (`.env`, `.env.production`)
