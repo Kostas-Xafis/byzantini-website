@@ -137,7 +137,9 @@ test("--auth-- a new admin: signup, two devices, password change, sign-out", asy
 		// Nothing to disconnect; the only way in cannot be removed either.
 		expect((await rawAPI("DELETE", "/auth/identities/google", undefined, deviceA)).status).toBe(404);
 
-		// Changing the password signs the other device out.
+		// Changing the password signs the other device out. Only the new password is asked, however old the session:
+		// age device A's session by an hour first.
+		withLocalDb((db) => db.run("UPDATE sys_user_sessions SET created_at = ? WHERE user_id = ?", [Date.now() - 60 * 60 * 1000, created.data.id]));
 		const newPassword = R.string(12, "a-Z-9");
 		expect((await rawAPI("POST", "/auth/password", { new_password: "short" }, deviceA)).status).toBe(400);
 		expect((await rawAPI("POST", "/auth/password", { new_password: newPassword }, deviceA)).status).toBe(200);

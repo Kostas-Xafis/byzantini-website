@@ -303,9 +303,8 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   with that one path exempted; Apple's flow cookie is `SameSite=None; Secure`.
 - **«Ο λογαριασμός μου»** (`/admin/account`, `AccountPage.solid.tsx`): connect /
   disconnect providers (the last way in cannot be removed), set or change the
-  password (the current one is not asked within 10 min of signing in — the
-  recovery path for admins who never knew their password), list and sign out
-  devices. A password change signs out every other device. The signed-in admin
+  password (only the new one, twice — the current password is never asked or
+  shown, by owner decision), list and sign out devices. A password change signs out every other device. The signed-in admin
   in the UI comes from `Authentication.me` (`src/components/admin/currentUser.ts`),
   not `localStorage` (the old `sys_user` key is removed on sight).
 - **Ended sessions** (`lib/auth/sessionExpiry.client.ts`): any 401 in the

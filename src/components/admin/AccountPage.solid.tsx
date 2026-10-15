@@ -134,14 +134,13 @@ export default function AccountPage() {
 		e.preventDefault();
 		setPasswordError("");
 		const data = new FormData(passwordForm);
-		const current = (data.get("current_password") as string | null) ?? "";
 		const next = data.get("new_password") as string;
 		if (next.length < 8) return setPasswordError("Ο νέος κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες");
 		if (next !== data.get("confirm_password")) return setPasswordError("Οι δύο κωδικοί δεν ταιριάζουν");
 		setBusy("password");
 		try {
 			const res = await apiCall("Authentication.changePassword", {
-				RequestObject: { new_password: next, ...(current ? { current_password: current } : {}) },
+				RequestObject: { new_password: next },
 			});
 			toast.success("message" in res ? res.message : "Ο κωδικός άλλαξε", { title: "Κωδικός" });
 			passwordForm.reset();
@@ -282,16 +281,6 @@ export default function AccountPage() {
 							<form ref={passwordForm} class="grid gap-4" onSubmit={onPasswordSubmit}>
 								{/* Lets password managers attach the new password to the right account. */}
 								<input type="email" name="username" autocomplete="username" value={me().email} class="hidden" readOnly />
-								<Show when={me().passwordChangeNeedsCurrent}>
-									<label class="grid gap-1">
-										<span class="text-sm font-bold">Τρέχων κωδικός</span>
-										<input type="password" name="current_password" autocomplete="current-password" required class={inputClass} />
-										<span class="text-xs text-gray-600 dark:text-gray-300">
-											Δεν τον θυμάστε; Αποσυνδεθείτε και πατήστε «Ξεχάσατε τον κωδικό;» στη σελίδα εισόδου. Αν μόλις συνδεθήκατε (π.χ. με
-											Google), μπορείτε για 10 λεπτά να ορίσετε νέο χωρίς αυτόν.
-										</span>
-									</label>
-								</Show>
 								<div class="grid gap-4 sm:grid-cols-2">
 									<label class="grid gap-1 content-start">
 										<span class="text-sm font-bold">Νέος κωδικός</span>

@@ -35,7 +35,7 @@ test("summaries name the target without dumping the body", () => {
 	expect(summarize({}, { last_name: "Παπαδόπουλος", first_name: "Γιώργος", am: "706", amka: "01010112345" })).toBe("Παπαδόπουλος Γιώργος · ΑΜ 706");
 	expect(summarize({}, { id: 9, role: "owner" })).toBe("ρόλος: Ιδιοκτήτης · #9");
 	// Never secrets: passwords and tokens are not echoed.
-	expect(summarize({ token: "abc" }, { new_password: "hunter22", current_password: "x" })).toBe("");
+	expect(summarize({ token: "abc" }, { new_password: "hunter22" })).toBe("");
 	expect(
 		summarize(
 			{},

@@ -34,8 +34,6 @@ import { consumeRegisterLink, findRegisterLink } from "./sysusers";
 
 /** Admin page with the account settings (connected providers, password, devices). */
 export const ACCOUNT_PATH = "/admin/account";
-/** A session this young may set a new password without the current one ("recently signed in"). */
-const RECENT_SIGN_IN_MS = 1000 * 60 * 10;
 
 const z_UserLoginRes = z.union([z.object({ isValid: z.literal(true), email: z.string() }), z.object({ isValid: z.literal(false) })]);
 
@@ -51,8 +49,6 @@ const z_MeRes = z.object({
 	),
 	avatar_url: z.string().nullable(),
 	hasPassword: z.boolean(),
-	/** False when the session is recent enough to set a password without the current one. */
-	passwordChangeNeedsCurrent: z.boolean(),
 	sessionMethod: z.string(),
 	identities: z.array(
 		z_ProviderInfo.extend({
@@ -282,15 +278,13 @@ export const authenticationRoutes = {
 			const session = await currentSession(cookies);
 			const user = await loadUser(session.userId);
 			const identities = await identitiesOf(user.id);
-			const withPassword = hasPassword(user.password);
 			return {
 				id: user.id,
 				email: user.email,
 				role: user.role,
 				permissions: permissionsOf(user.role),
 				avatar_url: identities.find((i) => i.avatar_url)?.avatar_url ?? null,
-				hasPassword: withPassword,
-				passwordChangeNeedsCurrent: withPassword && Date.now() - session.createdAt > RECENT_SIGN_IN_MS,
+				hasPassword: hasPassword(user.password),
 				sessionMethod: session.method,
 				identities: identities
 					.filter((i) => isProviderId(i.provider))
@@ -390,17 +384,12 @@ export const authenticationRoutes = {
 		}, "Σφάλμα κατά την αποσύνδεση του λογαριασμού"),
 	),
 	changePassword: new APIServer(
-		{ method: "POST", path: "/auth/password", schema: z.object({ current_password: z.string().optional(), new_password: z_NewPassword }) },
+		{ method: "POST", path: "/auth/password", schema: z.object({ new_password: z_NewPassword }) },
 		[authenticateMiddleware, rateLimitMiddleware("password")],
 		({ body, cookies }) =>
 			handlerResult(async () => {
 				const session = await currentSession(cookies);
 				const user = await loadUser(session.userId);
-				const needsCurrent = hasPassword(user.password) && Date.now() - session.createdAt > RECENT_SIGN_IN_MS;
-				if (needsCurrent) {
-					if (!body.current_password) throw APIError.badRequest("Συμπληρώστε τον τρέχοντα κωδικό");
-					if (!(await verifyPassword(body.current_password, user.password)).valid) throw APIError.badRequest("Ο τρέχων κωδικός δεν είναι σωστός");
-				}
 				await executeQuery("UPDATE sys_users SET password = ? WHERE id = ?", [await hashPassword(body.new_password), user.id]);
 				// Whoever knew the old password is signed out everywhere else.
 				await revokeUserSessions(user.id, session.id);
