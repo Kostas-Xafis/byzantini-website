@@ -1,9 +1,8 @@
 import type { ClassType, Teachers as FullTeachers, Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations } from "@_types/entities";
 import type { APIClient } from "@hooks/useAPIClient.solid";
+import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
-import { Random } from "@lib/random";
 import { API } from "@routes/index.client";
-import { sleep } from "@utilities/sleep";
 import { type Props as InputProps } from "../../../input/Input.solid";
 
 export type TeachersMetadata = { teacher_id: number; type: "cv" | "picture" };
@@ -279,51 +278,11 @@ export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: 
 };
 
 export function picturePreview(file: FileProxy<TeachersMetadata>) {
-	const id = Random.string(12, "hex");
-
-	(async function () {
-		await sleep(10);
-		const src = !file.isProxy() ? await file.toImageUrl() : `/kathigites/picture/${file.getName()}`;
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	})();
-
-	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
+	return filePreviewImage(file, (f) => `/kathigites/picture/${f.getName()}`, { alt: "Φωτογραφία", top: true });
 }
+// The first page of the CV (a stored CV is fetched and rendered too — `toImageUrl` handles both).
 export function cvPreview(file: FileProxy<TeachersMetadata>) {
-	const id = Random.string(12, "hex");
-
-	(async function () {
-		const src = await file.toImageUrl();
-		const canvas = document.querySelector(`canvas[data-id="${id}"]`) as HTMLCanvasElement;
-		if (!canvas) return;
-
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
-
-		const img = new Image();
-		img.onload = function () {
-			// Set canvas size to match the container
-			const rect = canvas.getBoundingClientRect();
-			canvas.width = rect.width;
-			canvas.height = rect.height;
-
-			// Calculate scaled dimensions (0.85x scale)
-			const scale = 0.6;
-			const scaledWidth = img.width * scale;
-			const scaledHeight = img.height * scale;
-
-			// Calculate position to align to top-left corner
-			const x = -50; // Left alignment
-			const y = -50; // Top alignment
-
-			// Clear canvas and draw scaled image
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-		};
-		img.src = src;
-	})();
-
-	return <canvas data-id={id} class="w-full overflow-hidden" style="object-fit: cover;" />;
+	return filePreviewImage(file, undefined, { alt: "Βιογραφικό", top: true });
 }
 
 export const PREFIX = "teachers";

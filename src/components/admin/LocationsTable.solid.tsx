@@ -4,10 +4,9 @@ import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
-import { Random } from "@lib/random";
 import type { ExtendedFormData } from "@utilities/forms";
-import { sleep } from "@utilities/sleep";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
@@ -157,15 +156,7 @@ const columnNames: ColumnType<LocationsTable> = {
 };
 
 function picturePreview(file: FileProxy<LocationsMetadata>) {
-	const id = Random.string(12, "hex");
-
-	(async function () {
-		await sleep(10);
-		const src = !file.isProxy() ? await file.toImageUrl() : `/spoudastiria/${file.getName()}`;
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	})();
-
-	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
+	return filePreviewImage(file, (f) => `/spoudastiria/${f.getName()}`, { alt: "Φωτογραφία" });
 }
 
 function stripSrcFromIFrame(str: string) {
