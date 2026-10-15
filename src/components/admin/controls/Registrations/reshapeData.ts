@@ -1,7 +1,7 @@
 import { createMemo, createSignal } from "solid-js";
 import { API, type APIResponse } from "@lib/routes/index.client";
 import type { Instruments, JoinedEnrollments, Teachers } from "@_types/entities";
-import { classYearLabel } from "@lib/classYears";
+import { EVALUATION_BADGE, classYearLabel } from "@lib/classYears";
 import { ALL_COLUMNS, cellMatches, rowMatchesAny } from "../../table/searchMatch";
 import type { SearchColumn, SearchSetter } from "../../SearchTable.solid";
 import { toggleCheckboxes } from "../../table/Row.solid";
@@ -105,6 +105,14 @@ export const searchColumns: SearchColumn[] = [
 // shared matchers know how to interpret each cell.
 const searchColumnTypes = Object.values(columns).map(({ type }) => type);
 
+/**
+ * The «Κατάταξη» badge of a placed evaluation row is added to the class-year cell on hydrate, so it is not in
+ * the row data: match it here, so searching the class year (or all columns) for «Κατάταξη» finds those rows
+ * too. Awaiting rows already carry «Υπό Κατάταξη» as their cell text.
+ */
+const evaluationBadgeMatches = (enrollment: JoinedEnrollments, query: string) =>
+	!!enrollment.evaluation && !!enrollment.class_year && cellMatches(EVALUATION_BADGE, "string", query);
+
 export const reshapeData = function (store: Partial<APIResponse>, searchQuery: SearchSetter) {
 	const [dataLength, setDataLength] = createSignal(0);
 
@@ -124,10 +132,16 @@ export const reshapeData = function (store: Partial<APIResponse>, searchQuery: S
 			const query = String(value).trim();
 			const columnIndex = columnIndexOf(columnName as string);
 			if (query) {
+				// Rows map 1:1 onto `enrollments`, so the filter index finds the row's enrollment.
+				const matchesBadge = columnName === "class_year";
 				if (columnName === ALL_COLUMNS) {
-					searchRows = searchRows.filter((row) => rowMatchesAny(row, searchColumnTypes, query));
+					searchRows = searchRows.filter((row, i) => rowMatchesAny(row, searchColumnTypes, query) || evaluationBadgeMatches(enrollments[i], query));
 				} else if (columnIndex >= 0) {
-					searchRows = searchRows.filter((row) => cellMatches(row[columnIndex], searchColumnTypes[columnIndex], query));
+					searchRows = searchRows.filter(
+						(row, i) =>
+							cellMatches(row[columnIndex], searchColumnTypes[columnIndex], query) ||
+							(matchesBadge && evaluationBadgeMatches(enrollments[i], query)),
+					);
 				}
 			}
 			toggleCheckboxes(false);
