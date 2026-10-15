@@ -53,12 +53,12 @@ function AttentionTile(props: { href: string; icon: string; title: string; value
 	return (
 		<a
 			href={props.href}
-			class={`${cardClass} group p-4 grid gap-1 content-start hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 transition-colors`}>
+			class={`${cardClass} group p-4 grid gap-1 content-start hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink transition-colors`}>
 			<div class="flex items-center gap-2">
 				<span
 					class={
 						"grid h-8 w-8 shrink-0 place-items-center rounded-lg " +
-						(props.calm ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-100" : "bg-accent-soft text-brand dark:text-red-200")
+						(props.calm ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-100" : "bg-accent-soft text-accent-ink")
 					}
 					aria-hidden="true">
 					<i class={props.icon}></i>
@@ -231,7 +231,7 @@ export default function TotalsTable() {
 
 	return (
 		<Show when={store[API.Pupils.getTotalByYear]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-red-950 dark:text-red-50">
+			<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-ink">
 				<Show when={!attention.error && attention()}>
 					{(data) => {
 						const yearStart = data().school_year.slice(0, 4);
@@ -279,66 +279,62 @@ export default function TotalsTable() {
 				</Show>
 				<div class="w-full max-w-5xl justify-self-center grid grid-cols-2 max-md:grid-cols-1 gap-4">
 					<div class={`${cardClass} p-4`}>
-						<p class="text-lg font-bold tracking-wide text-red-900/80 dark:text-red-100">Αυτή την εβδομάδα</p>
-						<p class="text-3xl font-bold text-red-900 dark:text-red-50 mt-1">{summary().weekCount}</p>
-						<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Νέες εγγραφές</p>
+						<p class="text-lg font-bold tracking-wide text-accent-ink/80">Αυτή την εβδομάδα</p>
+						<p class="text-3xl font-bold text-accent-ink mt-1">{summary().weekCount}</p>
+						<p class="text-sm text-ink-muted mt-1">Νέες εγγραφές</p>
 					</div>
 					<div class={`${cardClass} p-4`}>
-						<p class="text-lg font-bold tracking-wide text-red-900/80 dark:text-red-100">Αυτόν τον μήνα</p>
-						<p class="text-3xl font-bold text-red-900 dark:text-red-50 mt-1">{summary().monthCount}</p>
-						<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{summary().monthLabel}</p>
+						<p class="text-lg font-bold tracking-wide text-accent-ink/80">Αυτόν τον μήνα</p>
+						<p class="text-3xl font-bold text-accent-ink mt-1">{summary().monthCount}</p>
+						<p class="text-sm text-ink-muted mt-1">{summary().monthLabel}</p>
 					</div>
 				</div>
 				<div class={`w-full max-w-5xl justify-self-center ${cardClass} p-4`}>
-					<p class="text-xl font-bold tracking-wide text-red-900/80 dark:text-red-100">Γρήγορες ενέργειες</p>
+					<p class="text-xl font-bold tracking-wide text-accent-ink/80">Γρήγορες ενέργειες</p>
 					<div class="mt-3 grid grid-cols-2 max-sm:grid-cols-1 gap-2 h-max">
 						<a
 							href="/admin/registrations"
-							class="text-center px-3 py-2 text-lg rounded-md bg-red-900 text-red-50 hover:bg-red-950 transition-colors">
+							class="text-center px-3 py-2 text-lg rounded-md bg-brand text-brand-ink hover:bg-brand-hover transition-colors">
 							Εγγραφές
 						</a>
 						<a
 							href="/admin/announcements"
-							class="text-center px-3 py-2 text-lg rounded-md bg-red-900 text-red-50 hover:bg-red-950 transition-colors">
+							class="text-center px-3 py-2 text-lg rounded-md bg-brand text-brand-ink hover:bg-brand-hover transition-colors">
 							Ανακοινώσεις
 						</a>
 						<a
 							href="/admin/payments"
-							class="text-center px-3 py-2 text-lg rounded-md border border-red-900 dark:border-red-700 text-red-900 dark:text-red-100 hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
+							class="text-center px-3 py-2 text-lg rounded-md border border-brand text-accent-ink hover:bg-accent-soft transition-colors">
 							Οφειλές
 						</a>
 						<a
 							href="/admin/teachers"
-							class="text-center px-3 py-2 text-lg rounded-md border border-red-900 dark:border-red-700 text-red-900 dark:text-red-100 hover:bg-red-50 dark:hover:bg-red-900/35 transition-colors">
+							class="text-center px-3 py-2 text-lg rounded-md border border-brand text-accent-ink hover:bg-accent-soft transition-colors">
 							Καθηγητές
 						</a>
 					</div>
 				</div>
 				<div class={`w-full max-w-5xl justify-self-center ${cardClass} p-4`}>
 					<div class="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-						<p class="text-lg font-semibold tracking-wide text-red-900/80 dark:text-red-100">Εξέλιξη συνολικών εγγραφών</p>
-						<p class="text-sm text-gray-600 dark:text-gray-300">Τελευταίο έτος: {growthChart().lastValue}</p>
+						<p class="text-lg font-semibold tracking-wide text-accent-ink/80">Εξέλιξη συνολικών εγγραφών</p>
+						<p class="text-sm text-ink-muted">Τελευταίο έτος: {growthChart().lastValue}</p>
 					</div>
 					<div class="mt-3 grid grid-cols-[minmax(320px,440px)_1fr] max-md:grid-cols-1 gap-4 items-start">
 						<div class="w-full max-w-[440px] h-[190px] self-center">
 							<canvas ref={growthCanvas}></canvas>
 						</div>
 						<div class="grid grid-cols-1 gap-2">
-							<p class="text-sm font-semibold text-red-900/80 dark:text-red-100">Τελευταία 3 σχολικά έτη</p>
+							<p class="text-sm font-semibold text-accent-ink/80">Τελευταία 3 σχολικά έτη</p>
 							{recentGrowth().map((item) => (
-								<div class="rounded-md border border-red-900/15 dark:border-red-800/40 bg-red-50/40 dark:bg-red-900/20 px-3 py-2 flex items-center justify-between gap-3">
+								<div class="rounded-md border border-line bg-surface-muted px-3 py-2 flex items-center justify-between gap-3">
 									<div>
-										<p class="text-sm font-semibold text-red-900 dark:text-red-100">{item.label}</p>
-										<p class="text-xs text-gray-600 dark:text-gray-300">{item.total} εγγραφές</p>
+										<p class="text-sm font-semibold text-accent-ink">{item.label}</p>
+										<p class="text-xs text-ink-muted">{item.total} εγγραφές</p>
 									</div>
 									<p
 										class={
 											"text-sm font-semibold " +
-											(item.yoy === null
-												? "text-gray-500 dark:text-gray-300"
-												: item.yoy >= 0
-													? "text-emerald-700 dark:text-emerald-400"
-													: "text-red-800 dark:text-red-300")
+											(item.yoy === null ? "text-ink-muted" : item.yoy >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-danger")
 										}>
 										{item.yoy === null ? "—" : `${item.yoy >= 0 ? "+" : ""}${item.yoy.toFixed(1)}%`}
 									</p>

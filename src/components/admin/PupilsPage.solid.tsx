@@ -602,24 +602,22 @@ export default function PupilsPage() {
 	// top-tools / scrolling data / bottom-tools grid. On small screens the shell
 	// releases the height and the page scrolls normally, like the tables do.
 	return (
-		<div class="flex h-full w-full flex-col overflow-hidden p-6 text-red-950 max-sm:h-auto max-sm:grid max-sm:grid-rows-[20%_75%_5%] max-sm:p-3 dark:text-red-50">
+		<div class="flex h-full w-full flex-col overflow-hidden p-6 text-ink max-sm:h-auto max-sm:grid max-sm:grid-rows-[20%_75%_5%] max-sm:p-3">
 			{/* ---- pinned top: title + search ---- */}
 			<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-y-4">
 				{/* ---- landing heading ---- */}
 				<Show when={selectedId() === null}>
 					<div class="grid justify-items-center gap-y-2 pt-[6vh] pb-2 text-center max-sm:pt-2">
 						<h1 class="font-anaktoria text-5xl max-sm:text-4xl">Μαθητολόγιο</h1>
-						<p class="max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-							Αναζητήστε μαθητή με ΑΜ, ονοματεπώνυμο, ΑΜΚΑ, τηλέφωνο, email ή περιοχή.
-						</p>
+						<p class="max-w-2xl text-lg text-ink-muted">Αναζητήστε μαθητή με ΑΜ, ονοματεπώνυμο, ΑΜΚΑ, τηλέφωνο, email ή περιοχή.</p>
 					</div>
 				</Show>
 
 				{/* ---- search ---- */}
 				<div
 					role="search"
-					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark dark:shadow-gray-700">
-					<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200" aria-hidden="true"></i>
+					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-brand bg-surface px-4 py-2 shadow-md shadow-shade">
+					<i class="fa-solid fa-magnifying-glass text-accent-ink" aria-hidden="true"></i>
 					<input
 						ref={searchInput}
 						type="search"
@@ -628,7 +626,7 @@ export default function PupilsPage() {
 						spellcheck="false"
 						aria-label="Αναζήτηση μαθητή"
 						placeholder="Αναζήτηση…"
-						class="min-w-0 flex-1 bg-transparent font-didact text-xl max-sm:text-lg text-red-950 dark:text-red-50 placeholder:text-gray-400 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
+						class="min-w-0 flex-1 bg-transparent font-didact text-xl max-sm:text-lg text-ink placeholder:text-ink-muted/70 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
 						value={query()}
 						onInput={(e) => setQuery(e.currentTarget.value)}
 						onKeyDown={(e) => {
@@ -644,13 +642,13 @@ export default function PupilsPage() {
 						}}
 					/>
 					<Show when={searching()}>
-						<i class="fa-solid fa-circle-notch fa-spin text-red-900 dark:text-red-200" aria-hidden="true"></i>
+						<i class="fa-solid fa-circle-notch fa-spin text-accent-ink" aria-hidden="true"></i>
 					</Show>
 					<Show when={query()}>
 						<button
 							type="button"
 							aria-label="Καθαρισμός αναζήτησης"
-							class="grid h-6 w-6 shrink-0 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/70"
+							class="grid h-6 w-6 shrink-0 place-items-center rounded-full text-accent-ink transition-colors hover:bg-accent-soft"
 							onClick={() => {
 								setQuery("");
 								clearTimeout(debounceTimer);
@@ -661,14 +659,14 @@ export default function PupilsPage() {
 						</button>
 					</Show>
 					<Show when={results()}>
-						<span class="whitespace-nowrap font-didact text-base text-gray-600 dark:text-gray-300" aria-live="polite">
+						<span class="whitespace-nowrap font-didact text-base text-ink-muted" aria-live="polite">
 							{countLabel(results()!.total, "μαθητής", "μαθητές")}
 						</span>
 					</Show>
-					<label class="flex cursor-pointer items-center gap-x-2 whitespace-nowrap font-didact text-base text-gray-700 dark:text-gray-200">
+					<label class="flex cursor-pointer items-center gap-x-2 whitespace-nowrap font-didact text-base text-ink-muted">
 						<input
 							type="checkbox"
-							class="size-4 cursor-pointer accent-red-900 dark:accent-red-500"
+							class="size-4 cursor-pointer accent-brand"
 							checked={needsReviewOnly()}
 							onChange={(e) => {
 								setNeedsReviewOnly(e.currentTarget.checked);
@@ -681,7 +679,7 @@ export default function PupilsPage() {
 						<button
 							type="button"
 							onClick={backToSearch}
-							class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/35">
+							class="rounded-md border border-brand px-3 py-1 font-didact text-base transition-colors hover:bg-accent-soft">
 							Πίσω στην αναζήτηση
 						</button>
 					</Show>
@@ -702,7 +700,7 @@ export default function PupilsPage() {
 							}>
 							<div class="grid gap-y-2">
 								<Show when={results() && results()!.rows.length === 0}>
-									<p class="py-10 text-center text-xl text-gray-600 dark:text-gray-300">
+									<p class="py-10 text-center text-xl text-ink-muted">
 										<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
 											Δεν βρέθηκε μαθητής για «{query().trim()}».
 										</Show>
@@ -713,8 +711,8 @@ export default function PupilsPage() {
 										<button
 											type="button"
 											onClick={() => openPupil(row.id)}
-											class="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-red-900/20 bg-white px-4 py-3 text-left shadow-sm shadow-gray-200 transition-colors hover:border-red-900/40 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-800/50 dark:bg-dark dark:shadow-gray-800 dark:hover:border-red-700/70 dark:hover:bg-red-900/25">
-											<span class="rounded-md bg-red-50 px-2 py-0.5 font-didact text-xl font-bold tabular-nums text-red-900 dark:bg-red-900/40 dark:text-red-100">
+											class="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-line bg-surface px-4 py-3 text-left shadow-sm shadow-shade transition-colors hover:border-accent-ink/40 hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
+											<span class="rounded-md bg-accent-soft px-2 py-0.5 font-didact text-xl font-bold tabular-nums text-accent-ink">
 												{amLabel(row)}
 											</span>
 											<span class="grid min-w-0">
@@ -722,10 +720,10 @@ export default function PupilsPage() {
 													{row.last_name} {row.first_name}
 													<Show when={row.fathers_name}>
 														{" "}
-														<span class="font-normal text-gray-500 dark:text-gray-400">({row.fathers_name})</span>
+														<span class="font-normal text-ink-muted">({row.fathers_name})</span>
 													</Show>
 												</span>
-												<span class="truncate text-base text-gray-600 dark:text-gray-300">{resultMeta(row)}</span>
+												<span class="truncate text-base text-ink-muted">{resultMeta(row)}</span>
 											</span>
 											<span class="flex items-center gap-x-2">
 												<Show when={row.needs_review}>
@@ -736,7 +734,7 @@ export default function PupilsPage() {
 													</span>
 												</Show>
 												<i
-													class="fa-solid fa-chevron-right text-red-900/60 transition-transform group-hover:translate-x-0.5 dark:text-red-200/60"
+													class="fa-solid fa-chevron-right text-accent-ink/60 transition-transform group-hover:translate-x-0.5"
 													aria-hidden="true"></i>
 											</span>
 										</button>
@@ -766,7 +764,7 @@ export default function PupilsPage() {
 										<h1 class="font-anaktoria text-4xl leading-tight max-sm:text-3xl">
 											{data().pupil.last_name} {data().pupil.first_name}
 										</h1>
-										<p class="flex flex-wrap items-center gap-x-2 font-didact text-lg text-gray-600 dark:text-gray-300">
+										<p class="flex flex-wrap items-center gap-x-2 font-didact text-lg text-ink-muted">
 											<Show when={data().pupil.needs_review}>
 												<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
 													χρειάζεται έλεγχο
@@ -801,11 +799,11 @@ export default function PupilsPage() {
 													<li class="flex flex-wrap items-center gap-x-3 gap-y-1">
 														<span class="tabular-nums">{enrollment.registration_year}</span>
 														<span>{musicLabel(enrollment.class_id)}</span>
-														<span class="text-gray-600 dark:text-gray-300">{teacherName(enrollment.teacher_id)}</span>
+														<span class="text-ink-muted">{teacherName(enrollment.teacher_id)}</span>
 														<button
 															type="button"
 															onClick={() => openEnrollmentEditor(enrollment)}
-															class="rounded-md border border-red-900 px-3 py-0.5 font-didact text-base transition-colors hover:bg-red-100 dark:border-red-700 dark:hover:bg-red-900/35">
+															class="rounded-md border border-brand px-3 py-0.5 font-didact text-base transition-colors hover:bg-accent-soft">
 															Ορισμός έτους φοίτησης
 															<span class="sr-only">
 																{" "}
@@ -816,7 +814,7 @@ export default function PupilsPage() {
 												)}
 											</For>
 										</ul>
-										<p class="text-gray-600 dark:text-gray-300">
+										<p class="text-ink-muted">
 											Όταν τοποθετηθούν όλες, καθαρίστε τη «Σημείωση ελέγχου» από την επεξεργασία στοιχείων μαθητή.
 										</p>
 									</section>
@@ -825,9 +823,9 @@ export default function PupilsPage() {
 								<div class="grid grid-cols-[minmax(260px,1fr)_2fr] gap-4 max-lg:grid-cols-1">
 									{/* ---- left: personal information + the pupil's fees ---- */}
 									<div class="grid h-max gap-y-3">
-										<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+										<section class="grid h-max gap-y-3 rounded-xl border border-line bg-surface p-4 shadow-md shadow-shade">
 											<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
-											<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
+											<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-ink-muted [&_dd]:tabular-nums [&_dt]:underline [&_dd]:underline-offset-1">
 												<dt>Επώνυμο:</dt>
 												<dd>{data().pupil.last_name || "-"}</dd>
 												<dt>Όνομα:</dt>
@@ -865,7 +863,7 @@ export default function PupilsPage() {
 															rel="noreferrer"
 															title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
 															aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-															class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
+															class="inline-grid h-7 w-7 place-items-center rounded-md border border-accent-ink/40 text-accent-ink transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
 															<i class="fa-solid fa-up-right-from-square text-base" aria-hidden="true"></i>
 														</a>
 													</Show>
@@ -875,17 +873,17 @@ export default function PupilsPage() {
 										<button
 											type="button"
 											onClick={() => setFeesOpen(true)}
-											class="flex w-full items-center justify-center gap-x-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 font-didact text-lg font-semibold text-red-900 shadow-md shadow-gray-300 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:bg-dark dark:text-red-100 dark:shadow-gray-700 dark:hover:bg-red-900/35">
+											class="flex w-full items-center justify-center gap-x-2 rounded-xl border-2 border-brand bg-surface px-4 py-2 font-didact text-lg font-semibold text-accent-ink shadow-md shadow-shade transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
 											<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
 											Δίδακτρα
 										</button>
 									</div>
 
 									{/* ---- right: music types + history ---- */}
-									<section class="grid h-max gap-y-4 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+									<section class="grid h-max gap-y-4 rounded-xl border border-line bg-surface p-4 shadow-md shadow-shade">
 										<Show
 											when={availableMusicTypes(data().enrollments).length > 0}
-											fallback={<p class="text-gray-600 dark:text-gray-300">Δεν υπάρχουν εγγραφές.</p>}>
+											fallback={<p class="text-ink-muted">Δεν υπάρχουν εγγραφές.</p>}>
 											{/* tabs — only the departments this pupil ever enrolled in */}
 											<div
 												role="tablist"
@@ -912,8 +910,8 @@ export default function PupilsPage() {
 															class={
 																"rounded-full px-4 py-1.5 font-didact text-base font-semibold transition-colors " +
 																(activeMusic() === classId
-																	? "bg-red-900 text-red-50 dark:bg-red-800"
-																	: "border border-red-900 text-red-900 hover:bg-red-50 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/35")
+																	? "bg-brand text-brand-ink"
+																	: "border border-brand text-accent-ink hover:bg-accent-soft")
 															}>
 															{musicLabel(classId)}
 															<span class="ml-2 opacity-70">{enrollmentsFor(classId).length}</span>
@@ -929,14 +927,14 @@ export default function PupilsPage() {
 														<div class="grid gap-y-1">
 															<p class="flex flex-wrap items-baseline gap-x-2">
 																<span class="font-anaktoria text-xl">{group.name}</span>
-																<span class="font-didact text-base text-gray-500 dark:text-gray-400">
+																<span class="font-didact text-base text-ink-muted">
 																	{countLabel(group.rows.length, "εγγραφή", "εγγραφές")}
 																</span>
 															</p>
 															<div class="overflow-x-auto">
 																<table class="w-full border-collapse font-didact text-base">
 																	<thead>
-																		<tr class="bg-red-50 text-left dark:bg-red-900/25">
+																		<tr class="bg-accent-soft text-left">
 																			<th scope="col" class="px-2 py-1.5 font-semibold">
 																				Έτος
 																			</th>
@@ -960,7 +958,7 @@ export default function PupilsPage() {
 																	<tbody>
 																		<For each={group.rows}>
 																			{(row) => (
-																				<tr class="border-t border-red-900/10 transition-colors hover:bg-red-50/60 dark:border-red-800/40 dark:hover:bg-red-900/15">
+																				<tr class="border-t border-line transition-colors hover:bg-surface-muted">
 																					<td class="whitespace-nowrap px-2 py-1.5 tabular-nums">
 																						{row.registration_year}
 																					</td>
@@ -995,7 +993,7 @@ export default function PupilsPage() {
 																								"rounded-full px-2 py-0.5 text-sm font-semibold " +
 																								(row.pass
 																									? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100"
-																									: "bg-gray-200 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200")
+																									: "bg-ink/10 text-ink-muted")
 																							}>
 																							{row.pass ? "Ναι" : "Όχι"}
 																						</span>
@@ -1006,7 +1004,7 @@ export default function PupilsPage() {
 																							onClick={() => openEnrollmentEditor(row)}
 																							aria-label={`Επεξεργασία εγγραφής ${row.registration_year}`}
 																							title="Επεξεργασία εγγραφής"
-																							class="inline-grid h-8 w-8 place-items-center rounded-md text-red-900 transition-colors hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:text-red-200 dark:hover:bg-red-900/35">
+																							class="inline-grid h-8 w-8 place-items-center rounded-md text-accent-ink transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
 																							<i class={ActionIcon.MODIFY + " text-base"} aria-hidden="true"></i>
 																						</button>
 																					</td>
@@ -1056,17 +1054,17 @@ export default function PupilsPage() {
 						type="button"
 						disabled={page() === 0}
 						onClick={() => goToPage(page() - 1)}
-						class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						class="rounded-md border border-brand px-3 py-1 font-didact text-base transition-colors hover:bg-accent-soft disabled:opacity-40 disabled:hover:bg-transparent">
 						Προηγούμενη
 					</button>
-					<span class="font-didact text-base text-gray-600 dark:text-gray-300">
+					<span class="font-didact text-base text-ink-muted">
 						Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
 					</span>
 					<button
 						type="button"
 						disabled={(page() + 1) * PAGE_SIZE >= results()!.total}
 						onClick={() => goToPage(page() + 1)}
-						class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						class="rounded-md border border-brand px-3 py-1 font-didact text-base transition-colors hover:bg-accent-soft disabled:opacity-40 disabled:hover:bg-transparent">
 						Επόμενη
 					</button>
 				</div>

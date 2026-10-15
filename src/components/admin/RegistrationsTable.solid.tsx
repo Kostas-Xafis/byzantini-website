@@ -291,7 +291,7 @@ export default function RegistrationsTable() {
 										<div class="pb-2 flex items-center gap-x-4">
 											<select
 												aria-label="Σχολική χρονιά"
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
+												class="px-2 py-1 border border-ink text-xl text-ink rounded-md transition-colors duration-200 hover:bg-brand hover:text-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
 												onChange={(e) => {
 													const value = e.currentTarget.value;
 													if (value === "") return;

@@ -52,9 +52,9 @@ const TYPE_STYLES: Record<ToastType, { icon: string; card: string; icon_color: s
 	},
 	progress: {
 		icon: "fa-circle-notch fa-spin",
-		card: "bg-white text-gray-900 border-gray-900/15 border-l-red-900 dark:bg-[#2a1216] dark:text-red-50 dark:border-red-100/20 dark:border-l-red-300",
-		icon_color: "text-red-900 dark:text-red-200",
-		bar: "bg-red-800 dark:bg-red-300",
+		card: "bg-surface text-ink border-line border-l-accent-ink",
+		icon_color: "text-accent-ink",
+		bar: "bg-accent-ink",
 		label: "Σε εξέλιξη",
 	},
 };
@@ -229,7 +229,7 @@ export default function AlertStack() {
 								type="button"
 								aria-expanded={expanded()}
 								onClick={() => setExpanded(!expanded())}
-								class="rounded-full border border-gray-900/15 bg-white px-3 py-1 text-gray-900 shadow-md transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:border-red-100/20 dark:bg-[#2a1216] dark:text-red-50 dark:hover:bg-[#3a1a20] dark:focus-visible:outline-red-200">
+								class="rounded-full border border-line bg-surface px-3 py-1 text-ink shadow-md transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 								{expanded() ? "Σύμπτυξη" : `+${hiddenCount()} ακόμη`}
 							</button>
 						</Show>
@@ -237,7 +237,7 @@ export default function AlertStack() {
 							<button
 								type="button"
 								onClick={() => run({ kind: "dismiss" })}
-								class="rounded-full border border-gray-900/15 bg-white px-3 py-1 text-gray-900 shadow-md transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:border-red-100/20 dark:bg-[#2a1216] dark:text-red-50 dark:hover:bg-[#3a1a20] dark:focus-visible:outline-red-200">
+								class="rounded-full border border-line bg-surface px-3 py-1 text-ink shadow-md transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 								Κλείσιμο όλων
 							</button>
 						</Show>

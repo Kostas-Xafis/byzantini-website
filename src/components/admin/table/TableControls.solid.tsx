@@ -73,7 +73,7 @@ export function TableControl(props: Props) {
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
 					class={
-						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-brand dark:text-red-100 transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
+						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-ink"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
 					<i
@@ -94,7 +94,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center divide-x divide-line rounded-xl border border-line bg-surface text-ink shadow-sm shadow-red-950/10 dark:shadow-black/40">
+			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center divide-x divide-line rounded-xl border border-line bg-surface text-ink shadow-sm shadow-shade">
 			{props.children}
 		</div>
 	);

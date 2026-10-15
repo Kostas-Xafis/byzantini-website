@@ -138,7 +138,7 @@ export default function Modal(props: Props) {
 				{/* Outside the scrolling <form> for layout, but owned by it via `form=` — so Enter in a field submits. */}
 				<button
 					class={
-						"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors text-white peer-[:is(.animate-shake)]/form:bg-red-600 dark:peer-[:is(.animate-shake)]/form:bg-red-700" +
+						"col-span-full w-min place-self-center text-[1.75rem] p-2 px-6 shadow-lg shadow-shade rounded-lg transition-colors text-white peer-[:is(.animate-shake)]/form:bg-red-600 " +
 						// Destructive actions get a red button, everything else stays green.
 						(actionStore.action.type === ActionEnum.DELETE
 							? " bg-red-700 hover:bg-red-800 focus:bg-red-800"

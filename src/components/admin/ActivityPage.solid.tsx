@@ -125,17 +125,17 @@ export default function ActivityPage() {
 					when={rows().length > 0}
 					fallback={
 						<div class={`${cardClass} grid place-items-center gap-2 p-10 text-center`}>
-							<i class="fa-solid fa-clock-rotate-left text-3xl text-red-900/60 dark:text-red-200/60" aria-hidden="true"></i>
+							<i class="fa-solid fa-clock-rotate-left text-3xl text-accent-ink/60" aria-hidden="true"></i>
 							<p class={hintClass}>Δεν υπάρχουν καταγεγραμμένες ενέργειες{admin() || category() ? " με αυτά τα φίλτρα" : " ακόμη"}.</p>
 						</div>
 					}>
 					<For each={days()}>
 						{(group) => (
 							<section class={`${cardClass} overflow-hidden`} aria-label={group.day}>
-								<h2 class="sticky top-0 z-10 border-b border-red-900/10 bg-red-50/95 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-red-900 backdrop-blur dark:border-white/10 dark:bg-black/60 dark:text-red-200">
+								<h2 class="sticky top-0 z-10 border-b border-line bg-surface-muted/95 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-accent-ink backdrop-blur">
 									{group.day}
 								</h2>
-								<ol class="divide-y divide-red-900/10 dark:divide-white/10">
+								<ol class="divide-y divide-line">
 									<For each={group.rows}>
 										{(row) => {
 											const groupName = row.endpoint.split(".")[0]!;
@@ -144,9 +144,7 @@ export default function ActivityPage() {
 													<span
 														class={
 															"mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-sm " +
-															(isDeletion(row.endpoint)
-																? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200"
-																: "bg-red-50 text-red-900 dark:bg-black/30 dark:text-red-200")
+															(isDeletion(row.endpoint) ? "bg-accent-soft text-danger" : "bg-accent-soft text-accent-ink")
 														}
 														aria-hidden="true">
 														<i class={`fa-solid ${GROUP_ICONS[groupName] ?? "fa-pen"}`}></i>
@@ -155,10 +153,10 @@ export default function ActivityPage() {
 														<p class="font-bold">
 															{row.label}
 															<Show when={row.summary}>
-																<span class="font-normal text-gray-700 dark:text-gray-300"> — {row.summary}</span>
+																<span class="font-normal text-ink-muted"> — {row.summary}</span>
 															</Show>
 														</p>
-														<p class="text-sm text-gray-600 dark:text-gray-400 break-all">
+														<p class="text-sm text-ink-muted break-all">
 															<time datetime={new Date(row.created_at).toISOString()}>{timeLabel(row.created_at)}</time> ·{" "}
 															{row.user_email} · {ACTIVITY_GROUPS[groupName] ?? groupName}
 														</p>

@@ -47,9 +47,9 @@ export function EvaluationBadge() {
 }
 
 const inputClass =
-	"w-full rounded-md border-2 border-gray-800 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-md shadow-gray-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:border-gray-500 dark:bg-dark dark:text-red-50 dark:shadow-gray-700 dark:focus-visible:outline-red-300";
+	"w-full rounded-md border-2 border-ink-muted bg-surface px-3 py-2 font-didact text-lg text-ink shadow-md shadow-shade focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink";
 
-const fieldsetClass = "col-span-full grid gap-4 rounded-lg border-2 border-red-900/30 p-4 font-didact text-red-950 dark:border-red-800/60 dark:text-red-50";
+const fieldsetClass = "col-span-full grid gap-4 rounded-lg border-2 border-accent-ink/30 p-4 font-didact text-ink";
 
 let uidSeq = 0;
 const nextUid = (prefix: string) => `${prefix}-${++uidSeq}`;
@@ -126,7 +126,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 						value="true"
 						checked={evaluation()}
 						onChange={(e) => setEvaluation(e.currentTarget.checked)}
-						class="size-5 cursor-pointer accent-red-900 dark:accent-red-500"
+						class="size-5 cursor-pointer accent-brand"
 					/>
 					{EVALUATION_LABEL}
 				</label>
@@ -149,7 +149,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 							)}
 						</Index>
 					</select>
-					<span id={`${uid}-hint`} class="text-sm text-gray-600 dark:text-gray-300">
+					<span id={`${uid}-hint`} class="text-sm text-ink-muted">
 						<Show when={!classYear()} fallback={evaluation() ? `Τοποθετήθηκε μετά από κατάταξη (${EVALUATION_BADGE})` : ""}>
 							{evaluation() ? "Αναμένει κατάταξη — επιλέξτε έτος για να τοποθετηθεί" : "Απαιτείται έτος φοίτησης"}
 						</Show>
