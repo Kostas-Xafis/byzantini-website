@@ -3,6 +3,7 @@ import { Route, Router } from "@solidjs/router";
 import { Show, type Component } from "solid-js";
 import { useCurrentUser } from "./currentUser";
 import AccountPage from "./AccountPage.solid.tsx";
+import ActivityPage from "./ActivityPage.solid.tsx";
 import AdminPage from "./AdminPage.solid.tsx";
 import AnnouncementsTable from "./AnnouncementsTable.solid.tsx";
 import BooksTable from "./BooksTable.solid.tsx";
@@ -56,6 +57,7 @@ export default function AdminRouter() {
 				<Route path="/admin/announcements" component={AnnouncementsTable} />
 				<Route path="/admin/account" component={AccountPage} />
 				<Route path="/admin/sysusers" component={SysUsersTable} />
+				<Route path="/admin/activity" component={restricted("activityLog", ActivityPage)} />
 				<Route path="/admin/query-logs" component={restricted("queryLogs", QueryLogsTable)} />
 				<Route path="/admin/settings" component={SettingsPage} />
 				<Route

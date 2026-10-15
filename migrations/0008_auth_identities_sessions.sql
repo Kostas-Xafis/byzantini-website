@@ -60,3 +60,17 @@ CREATE TABLE sys_user_password_resets (
 	expires_at INTEGER NOT NULL
 );
 CREATE INDEX sys_user_password_resets_user ON sys_user_password_resets (user_id);
+
+-- «Ιστορικό ενεργειών»: one row per successful change an admin makes (lib/activity/record.server.ts).
+-- The email is copied so the row stays readable after the account is deleted; rows are kept 2 years.
+CREATE TABLE sys_activity (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	created_at INTEGER NOT NULL,
+	user_id INTEGER,
+	user_email TEXT NOT NULL,
+	endpoint TEXT NOT NULL,
+	label TEXT NOT NULL,
+	summary TEXT
+);
+CREATE INDEX sys_activity_created ON sys_activity (created_at);
+CREATE INDEX sys_activity_user ON sys_activity (user_id, created_at);

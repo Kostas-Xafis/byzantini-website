@@ -1,9 +1,11 @@
 import { A, useLocation, type RouterProps } from "@solidjs/router";
 import { sleep } from "@utilities/sleep";
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import type { Permission } from "@lib/auth/roles";
 import { useCurrentUser } from "./currentUser";
 
-type NavLink = { name: string; url: string; force: boolean; icon: string };
+/** `permission`: only admins whose role has it see the link (lib/auth/roles.ts). */
+type NavLink = { name: string; url: string; force: boolean; icon: string; permission?: Permission };
 type NavSection = { title: string | null; links: NavLink[] };
 
 const sections: NavSection[] = [
@@ -34,7 +36,8 @@ const sections: NavSection[] = [
 		links: [
 			{ name: "Ο λογαριασμός μου", url: "/admin/account", force: false, icon: "fa-solid fa-user-shield" },
 			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "fa-solid fa-users-gear" },
-			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database" },
+			{ name: "Ιστορικό ενεργειών", url: "/admin/activity", force: false, icon: "fa-solid fa-clock-rotate-left", permission: "activityLog" },
+			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database", permission: "queryLogs" },
 			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "fa-solid fa-gear" },
 			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "fa-solid fa-right-from-bracket" },
 		],
@@ -82,7 +85,7 @@ export default function AdminNav(props: RouterProps) {
 		sections
 			.map((section) => ({
 				...section,
-				links: section.links.filter((link) => link.url !== "/admin/query-logs" || user()?.permissions.queryLogs === true),
+				links: section.links.filter((link) => !link.permission || user()?.permissions[link.permission] === true),
 			}))
 			.filter((section) => section.links.length > 0),
 	);

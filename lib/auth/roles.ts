@@ -3,7 +3,7 @@
  * to hide what the signed-in admin cannot use). Stored in `sys_users.role` (migration 0008).
  *
  * - `sysadmin` — the maintainer: everything, including the query logs and changing roles.
- * - `owner` — the school's owner: the fee catalog and deleting admins.
+ * - `owner` — the school's owner: the fee catalog, the activity log and deleting admins.
  * - `secretary` — the secretariat: everything else. Every new account (invite) starts here.
  *
  * Anything not listed under PERMISSIONS is open to every signed-in admin.
@@ -20,6 +20,8 @@ export const PERMISSIONS = {
 	deleteAdmins: ["sysadmin", "owner"],
 	/** Changing an admin's role (SysUsers.setRole). */
 	manageRoles: ["sysadmin"],
+	/** «Ιστορικό ενεργειών» — who changed what (Activity.*). */
+	activityLog: ["sysadmin", "owner"],
 } as const satisfies Record<string, readonly Role[]>;
 export type Permission = keyof typeof PERMISSIONS;
 

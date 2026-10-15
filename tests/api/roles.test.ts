@@ -40,7 +40,7 @@ afterAll(async () => {
 test("--roles-- the harness admin is the sysadmin and may do everything", async () => {
 	const me = (await getJson<APIResponse["Authentication.me"]>(await useTestAPI("Authentication.me"))).data;
 	expect(me.role).toBe("sysadmin");
-	expect(me.permissions).toEqual({ queryLogs: true, feeCatalog: true, deleteAdmins: true, manageRoles: true });
+	expect(me.permissions).toEqual({ queryLogs: true, feeCatalog: true, deleteAdmins: true, manageRoles: true, activityLog: true });
 	await getJson(await useTestAPI("QueryLogs.get"));
 	await getJson(await useTestAPI("FeeCatalog.getYears"));
 });
@@ -49,9 +49,10 @@ test("--roles-- an invited admin is a secretary: no query logs, fee catalog, del
 	const secretary = await newAdmin();
 	const me = (await getJson<APIResponse["Authentication.me"]>(await rawAPI("GET", "/auth/me", undefined, secretary.cookie))).data;
 	expect(me.role).toBe("secretary");
-	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: false, deleteAdmins: false, manageRoles: false });
+	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: false, deleteAdmins: false, manageRoles: false, activityLog: false });
 
 	await expectStatus("GET", "/query-logs", secretary.cookie, 403);
+	await expectStatus("POST", "/activity", secretary.cookie, 403, {});
 	await expectStatus("GET", "/fee-catalogs", secretary.cookie, 403);
 	await expectStatus("GET", `/fee-catalogs/${SCHOOL_YEAR}`, secretary.cookie, 403);
 	// Not even their own account.
@@ -73,9 +74,10 @@ test("--roles-- the sysadmin promotes a secretary to owner; the owner gets the f
 	expect(promoted.data.role).toBe("owner");
 
 	const me = (await getJson<APIResponse["Authentication.me"]>(await rawAPI("GET", "/auth/me", undefined, owner.cookie))).data;
-	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: true, deleteAdmins: true, manageRoles: false });
+	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: true, deleteAdmins: true, manageRoles: false, activityLog: true });
 	await expectStatus("GET", "/fee-catalogs", owner.cookie, 200);
 	await expectStatus("GET", "/query-logs", owner.cookie, 403);
+	await expectStatus("POST", "/activity", owner.cookie, 200, {});
 	await expectStatus("PUT", "/sys/role", owner.cookie, 403, { id: victim.id, role: "owner" });
 
 	// The owner may delete a secretary, but not the sysadmin.

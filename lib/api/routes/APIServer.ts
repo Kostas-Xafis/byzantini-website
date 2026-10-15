@@ -76,6 +76,15 @@ export class APIServer<
 > extends APIRoute<M, P, O, R> {
 	readonly handler: Handler<P, O>;
 	readonly middleware: MiddlewareFunction[] = [];
+	/** The endpoint key (`Books.post`), set by the registry (`lib/api/routes/index.ts`). */
+	endpoint?: string;
+
+	/**
+	 * Called after every successful non-GET request (the registry installs the activity log,
+	 * `lib/activity/record.server.ts`). It never fails or delays the answer beyond its own await: errors
+	 * are logged and swallowed.
+	 */
+	static afterWrite?: (write: { route: APIServer; params: Record<string, string | number>; body: unknown; cookies: ServerCookies }) => Promise<void>;
 
 	constructor(route: APIRouteOptions<M, P, O, R>, handler?: Handler<P, O>);
 	constructor(route: APIRouteOptions<M, P, O, R>, middleware: MiddlewareFunction[], handler: Handler<P, O>);
@@ -155,6 +164,9 @@ export class APIServer<
 				cookies,
 				env: runtimeEnv,
 			} as never);
+			if (method !== "GET" && response.ok && this.afterWrite) {
+				await this.afterWrite({ route, params, body, cookies }).catch((error) => console.error(`[api] ${context}: afterWrite failed`, error));
+			}
 			return await this.validateResponse(cookies.apply(response), route.responseSchema, context);
 		} catch (error) {
 			// Handlers without `handlerResult`, middleware and body/response parsing end up here.

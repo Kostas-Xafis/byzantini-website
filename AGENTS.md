@@ -319,7 +319,7 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - **Roles** (`lib/auth/roles.ts`, client-safe; `sys_users.role` in 0008):
   `sysadmin` (the maintainer) · `owner` (the school's owner) · `secretary`
   (the secretariat). `PERMISSIONS` lists the only restricted features —
-  `queryLogs` (sysadmin), `feeCatalog` and `deleteAdmins` (sysadmin + owner),
+  `queryLogs` (sysadmin), `feeCatalog`, `activityLog` and `deleteAdmins` (sysadmin + owner),
   `manageRoles` (sysadmin); **everything else is open to every signed-in
   admin**. Routes enforce them with `requirePermission("…")` after
   `authenticateMiddleware`; the UI reads `Authentication.me().permissions` to
@@ -330,6 +330,17 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   always remains. The role is cached with the session (60 s per isolate).
   To add a restricted feature: a `PERMISSIONS` entry + `requirePermission` on
   its routes + a `permissions.<name>` check in the UI.
+- **Activity log** («Ιστορικό ενεργειών», `/admin/activity`, sysadmin + owner):
+  `APIServer.afterWrite` (installed by the registry, which also sets each
+  route's `endpoint` key) calls `lib/activity/record.server.ts` after every
+  successful non-GET request; only endpoints listed in
+  `lib/activity/labels.ts` (`ACTIVITY_LABELS`, Greek labels) by a signed-in
+  admin are written to `sys_activity` (0008) with the admin's email, the label
+  and a short target summary (ids, a title/name — never passwords or whole
+  bodies). Rows are kept 2 years. **Adding a route that changes data? Add it
+  to `ACTIVITY_LABELS`** (`tests/unit/activity.test.ts` checks every entry is
+  a real non-GET route). Routes: `Activity.list` (cursor + admin/category
+  filters), `Activity.admins`. `query_logs` stays the raw SQL trace (sysadmin).
 - **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
   production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
   `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
