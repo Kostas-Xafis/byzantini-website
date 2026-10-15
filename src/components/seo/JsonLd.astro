@@ -3,7 +3,9 @@ export interface Props {
 	data: Record<string, unknown>;
 }
 
+import { jsonForScript } from "@utilities/safeJson";
+
 const { data } = Astro.props;
 ---
 
-<script type="application/ld+json" set:html={JSON.stringify(data)} />
+<script type="application/ld+json" set:html={jsonForScript(data)} />

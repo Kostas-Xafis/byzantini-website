@@ -3,6 +3,7 @@ import JsonLd from "@components/seo/JsonLd.astro";
 import { useAPI, API } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import { jsonForScript } from "@utilities/safeJson";
 import type { Locations, TeacherLocations } from "@_types/entities";
 
 export const prerender = false;
@@ -340,7 +341,7 @@ const placesSchema = {
 		</div>
 	</div>
 
-	<script is:inline type="application/json" id="spoudastiria-data" set:html={JSON.stringify(locationsWithTeachers)} />
+	<script is:inline type="application/json" id="spoudastiria-data" set:html={jsonForScript(locationsWithTeachers)} />
 	<style is:inline>
 		#spoudastiriaPage {
 			opacity: 0.0001;
