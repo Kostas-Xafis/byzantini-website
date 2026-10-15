@@ -75,6 +75,18 @@
 	}
 }
 
+/*
+ * Icons (lib/icons.ts, <Icon>): sit in text like a glyph — Tailwind's preflight makes every <svg> a block.
+ * In the base layer so any utility (`hidden`, `flex`, `align-middle`, `size-*`, …) still wins.
+ */
+@layer base {
+	.icon {
+		display: inline-block;
+		vertical-align: -0.125em;
+		flex-shrink: 0;
+	}
+}
+
 @layer components {
 	.glass {
 		/*tw red 900*/
