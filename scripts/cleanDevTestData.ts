@@ -5,7 +5,8 @@
  * The tests write real rows (that is the point: they exercise live routes), so
  * after `bun run test` the local dev database holds fixtures such as pupils
  * with ΑΜ 9000-9999 ("Δοκιμαστικός Μαθητής"), a couple of test payments and
- * `pupils.test.*@example.com` newsletter subscriptions. They pollute the admin
+ * `pupils.test.*@example.com` newsletter subscriptions, plus the «Ιστορικό
+ * ενεργειών» entries those runs write (`sys_activity`). They pollute the admin
  * UI and the counts, so this script removes them and re-derives the
  * `total_enrollments` counter.
  *
@@ -25,6 +26,12 @@ const D1_STATE_DIR = path.join(REPO_ROOT, ".wrangler/state/v3/d1/miniflare-D1Dat
 /** Fixtures the test suite creates. Keep in sync with tests/api/*.test.ts. */
 const TEST_PUPIL_WHERE = "am BETWEEN 9000 AND 9999 AND last_name = 'Μαθητής' AND first_name = 'Δοκιμαστικός'";
 const TEST_EMAIL_LIKE = ["pupils.test.%@example.com", "test.%example.com"];
+/**
+ * Activity rows of test runs: made by a throwaway `@example.com` admin, or naming a test fixture (an invite to /
+ * pupil with an `@example.com` address, a «Δοκιμαστικός Μαθητής»). Not every row of the harness admin — once the
+ * local DB is a production replica it also holds the real history.
+ */
+const TEST_ACTIVITY_WHERE = "user_email LIKE '%@example.com' OR summary LIKE '%@example.com%' OR summary LIKE '%Δοκιμαστικός%'";
 
 function findDbFile(): string {
 	if (!existsSync(D1_STATE_DIR)) throw new Error(`Local D1 directory not found: ${D1_STATE_DIR}`);
@@ -50,6 +57,7 @@ const counts = {
 		}
 	).c,
 	subscriptions: (db.query(`SELECT COUNT(*) AS c FROM email_subscriptions WHERE ${emailFilter}`).get(...TEST_EMAIL_LIKE) as { c: number }).c,
+	activity: (db.query(`SELECT COUNT(*) AS c FROM sys_activity WHERE ${TEST_ACTIVITY_WHERE}`).get() as { c: number }).c,
 };
 
 console.log(`Database: ${dbFile}`);
@@ -57,6 +65,7 @@ console.log(`Mode    : ${apply ? "APPLY" : "DRY RUN"}`);
 console.log(`  test pupils        : ${counts.pupils}`);
 console.log(`  test enrollments   : ${counts.enrollments}`);
 console.log(`  test subscriptions : ${counts.subscriptions}`);
+console.log(`  test activity rows : ${counts.activity}`);
 
 if (!apply) {
 	console.log("\nDRY RUN — nothing removed. Re-run with --apply.");
@@ -68,11 +77,14 @@ const tx = db.transaction(() => {
 	db.run(`DELETE FROM pupil_enrollments WHERE pupil_id IN (SELECT id FROM pupils WHERE ${TEST_PUPIL_WHERE})`);
 	db.run(`DELETE FROM pupils WHERE ${TEST_PUPIL_WHERE}`);
 	db.run(`DELETE FROM email_subscriptions WHERE ${emailFilter}`, TEST_EMAIL_LIKE);
+	db.run(`DELETE FROM sys_activity WHERE ${TEST_ACTIVITY_WHERE}`);
 	db.run("UPDATE total_enrollments SET amount = (SELECT COUNT(*) FROM pupil_enrollments)");
 });
 tx();
 
-const after = db.query("SELECT (SELECT COUNT(*) FROM pupils) pupils, (SELECT COUNT(*) FROM pupil_enrollments) enrollments, (SELECT amount FROM total_enrollments) counter").get() as {
+const after = db
+	.query("SELECT (SELECT COUNT(*) FROM pupils) pupils, (SELECT COUNT(*) FROM pupil_enrollments) enrollments, (SELECT amount FROM total_enrollments) counter")
+	.get() as {
 	pupils: number;
 	enrollments: number;
 	counter: number;
