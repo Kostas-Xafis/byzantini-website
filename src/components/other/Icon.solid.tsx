@@ -6,7 +6,7 @@ export type IconProps = Omit<JSX.SvgSVGAttributes<SVGSVGElement>, "class"> & {
 	class?: string;
 	/** Accessible name; without it the icon is decorative (`aria-hidden`). */
 	title?: string;
-	/** Width and height; default `1em`. */
+	/** Width and height; default the `.icon` rule's `calc(1em + 4px)`. */
 	size?: number | string;
 	/** Rotate continuously (stops under reduced motion). */
 	spin?: boolean;
@@ -18,12 +18,15 @@ export type IconProps = Omit<JSX.SvgSVGAttributes<SVGSVGElement>, "class"> & {
  */
 export default function Icon(props: IconProps) {
 	const [own, rest] = splitProps(props, ["name", "class", "title", "size", "spin"]);
+	// An explicit size is written inline too: the `.icon` rule's default size would beat the attributes.
+	const size = () => (typeof own.size === "number" ? `${own.size}px` : own.size);
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			viewBox="0 0 24 24"
-			width={own.size ?? "1em"}
-			height={own.size ?? "1em"}
+			width={own.size}
+			height={own.size}
+			style={own.size === undefined ? undefined : { width: size(), height: size() }}
 			fill="none"
 			stroke="currentColor"
 			stroke-width={ICON_STROKE}

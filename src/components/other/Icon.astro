@@ -7,7 +7,7 @@ export interface Props extends Omit<astroHTML.JSX.SVGAttributes, "class"> {
 	class?: string;
 	/** Accessible name; without it the icon is decorative (`aria-hidden`). */
 	title?: string;
-	/** Width and height; default `1em`. */
+	/** Width and height; default the `.icon` rule's `calc(1em + 4px)`. */
 	size?: number | string;
 	/** Rotate continuously (stops under reduced motion). */
 	spin?: boolean;

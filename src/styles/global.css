@@ -83,6 +83,10 @@
 @layer base {
 	.icon {
 		box-sizing: content-box;
+		/* The default size: the font size + 4px, so an icon matches the Font Awesome glyph it replaced. The
+		   size, width and height utility classes override it; so does the `size` prop (written inline). */
+		width: calc(1em + 4px);
+		height: calc(1em + 4px);
 		display: inline-block;
 		vertical-align: -0.125em;
 		flex-shrink: 0;

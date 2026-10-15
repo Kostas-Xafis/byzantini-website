@@ -9,7 +9,7 @@
  *
  * Render with `<Icon name="…" />` — `src/components/other/Icon.solid.tsx` (Solid) or `Icon.astro` (Astro);
  * scripts that build DOM use `createIcon(...)`. Names are typed (`IconName`), so a typo fails the typecheck.
- * The base look (`.icon`: inline-block, 1em, text-like vertical alignment) is in `src/styles/global.css`.
+ * The base look (`.icon`: inline-block, the font size + 4px, text-like vertical alignment) is in `src/styles/global.css`.
  */
 
 export const ICON_STROKE = 1.75;
@@ -184,7 +184,7 @@ export interface IconOptions {
 	class?: string;
 	/** Accessible name; without it the icon is decorative (`aria-hidden`). */
 	title?: string;
-	/** Width and height; default `1em` (scales with the font size like a glyph). */
+	/** Width and height; default the `.icon` rule's `calc(1em + 4px)` (scales with the font size like a glyph). */
 	size?: number | string;
 }
 
@@ -192,12 +192,9 @@ const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
 
 /** The `<svg>` attributes every icon shares — used by both components and `iconSvg`. */
 export function iconAttributes(opts: IconOptions = {}): Record<string, string> {
-	const size = opts.size === undefined ? "1em" : String(opts.size);
 	const attrs: Record<string, string> = {
 		xmlns: "http://www.w3.org/2000/svg",
 		viewBox: "0 0 24 24",
-		width: size,
-		height: size,
 		fill: "none",
 		stroke: "currentColor",
 		"stroke-width": String(ICON_STROKE),
@@ -205,6 +202,11 @@ export function iconAttributes(opts: IconOptions = {}): Record<string, string> {
 		"stroke-linejoin": "round",
 		class: opts.class ? `icon ${opts.class}` : "icon",
 	};
+	if (opts.size !== undefined) {
+		// Inline too: the `.icon` rule's default size would beat the presentation attributes.
+		const size = typeof opts.size === "number" ? `${opts.size}px` : opts.size;
+		Object.assign(attrs, { width: String(opts.size), height: String(opts.size), style: `width:${size};height:${size}` });
+	}
 	if (opts.title) attrs.role = "img";
 	else attrs["aria-hidden"] = "true";
 	return attrs;
