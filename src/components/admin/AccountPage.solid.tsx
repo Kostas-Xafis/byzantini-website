@@ -3,6 +3,7 @@ import { startOAuth } from "@lib/auth/oauth.client";
 import type { APIResponse } from "@routes/index.client";
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 import { PROVIDER_ICONS } from "@lib/auth/providerIcons";
+import { ROLE_LABELS } from "@lib/auth/roles";
 import { refreshCurrentUser, useCurrentUser } from "./currentUser";
 import {
 	Badge,
@@ -199,9 +200,7 @@ export default function AccountPage() {
 								<p class="text-lg font-bold break-all">{me().email}</p>
 								<p class={hintClass}>Συνδεθήκατε με {methodLabel(me().sessionMethod)}</p>
 							</div>
-							<Show when={me().isOwner}>
-								<Badge>Κύριος διαχειριστής</Badge>
-							</Show>
+							<Badge tone={me().role === "secretary" ? "neutral" : "success"}>{ROLE_LABELS[me().role]}</Badge>
 						</section>
 
 						<PanelCard

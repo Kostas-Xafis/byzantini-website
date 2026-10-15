@@ -49,7 +49,8 @@ test("--auth-- me describes the signed-in admin", async () => {
 		z.object({
 			id: z.number(),
 			email: z.string(),
-			isOwner: z.boolean(),
+			role: z.enum(["sysadmin", "owner", "secretary"]),
+			permissions: z.object({ queryLogs: z.boolean(), feeCatalog: z.boolean(), deleteAdmins: z.boolean(), manageRoles: z.boolean() }),
 			hasPassword: z.literal(true),
 			identities: z.array(z.object({ id: z.string(), label: z.string() })),
 			providers: z.array(z.object({ id: z.string(), label: z.string(), icon: z.string() })),
@@ -120,7 +121,7 @@ test("--auth-- a new admin: signup, two devices, password change, sign-out", asy
 
 	try {
 		const me = await getJson<APIResponse["Authentication.me"]>(await rawAPI("GET", "/auth/me", undefined, deviceA));
-		expect(me.data).toMatchObject({ id: created.data.id, hasPassword: true, isOwner: false, identities: [] });
+		expect(me.data).toMatchObject({ id: created.data.id, hasPassword: true, role: "secretary", identities: [] });
 
 		// A second device.
 		const second = await login(email, password);

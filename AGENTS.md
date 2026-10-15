@@ -301,6 +301,20 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   devices. A password change signs out every other device. The signed-in admin
   in the UI comes from `Authentication.me` (`src/components/admin/currentUser.ts`),
   not `localStorage` (the old `sys_user` key is removed on sight).
+- **Roles** (`lib/auth/roles.ts`, client-safe; `sys_users.role` in 0008):
+  `sysadmin` (the maintainer) · `owner` (the school's owner) · `secretary`
+  (the secretariat). `PERMISSIONS` lists the only restricted features —
+  `queryLogs` (sysadmin), `feeCatalog` and `deleteAdmins` (sysadmin + owner),
+  `manageRoles` (sysadmin); **everything else is open to every signed-in
+  admin**. Routes enforce them with `requirePermission("…")` after
+  `authenticateMiddleware`; the UI reads `Authentication.me().permissions` to
+  hide what an admin cannot use (`restricted(...)` in `AdminRouter` for typed
+  URLs). Every new account (invite, password or provider signup) is a
+  `secretary`; roles change only through `SysUsers.setRole` (sysadmin, never
+  one's own role). Only a sysadmin may delete a sysadmin and at least one
+  always remains. The role is cached with the session (60 s per isolate).
+  To add a restricted feature: a `PERMISSIONS` entry + `requirePermission` on
+  its routes + a `permissions.<name>` check in the UI.
 - **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
   production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
   `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
@@ -331,12 +345,9 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   also mirrors the prod token pairs for archival/recovery — only
   `VITE_`/`PUBLIC_` keys are ever inlined client-side; non-prefixed keys are
   NOT inlined into the worker (runtime reads them from the CF secret).
-- Owner (super-admin) email: use `@env/ownerEmail` (`OWNER_EMAIL`,
-  `isOwnerEmail(...)`) — backed by `VITE_OWNER_EMAIL` (same var inlines into
-  client AND server bundles; hardcoded fallback in the module) and set in
-  `.env`/`.env.production`. Never hardcode the owner email in features;
-  owner-only UI (query-logs link, user deletion) goes through
-  this module.
+- Who may do what is decided by **roles** (`sys_users.role`, see Admin
+  authentication), never by comparing emails. The old `@env/ownerEmail` /
+  `VITE_OWNER_EMAIL` is gone (the variable may stay in `.env`; nothing reads it).
 - Storage goes through `Bucket` (`lib/bucket/index.ts`) — always the R2
   binding `S3_BUCKET`: real R2 in production, miniflare-emulated locally
   (`.wrangler/state/v3/r2`). Dev data comes from `bun run replicate:bucket`,

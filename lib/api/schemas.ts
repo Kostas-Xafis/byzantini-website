@@ -5,6 +5,7 @@
  * Greek validation messages preserved.
  */
 import { z } from "astro/zod";
+import { ROLES } from "@lib/auth/roles";
 
 const looseBoolean = (message = "Μη έγκυρο loose boolean") =>
 	z.union([z.boolean(), z.literal(0), z.literal(1)], { message }).transform((v) => v === true || v === 1);
@@ -48,6 +49,8 @@ export const z_SysUsers = z.object({
 	password: z.string(),
 	/** Pre-0008 admins: the first Google sign-in with their verified email adopts that Google account. */
 	google_email_match: looseBoolean(),
+	/** lib/auth/roles.ts (migration 0008). */
+	role: z.enum(ROLES, "Μη έγκυρος ρόλος"),
 });
 
 /** Sign-in providers an admin can connect (`lib/auth/providers.ts`). */

@@ -89,10 +89,10 @@
   `.dev.vars`). Non-prefixed `.env.production` keys are never inlined.
 - Client `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
   (gitignored).
-- Owner (super-admin) email belongs in `@env/ownerEmail` (`OWNER_EMAIL`,
-  `isOwnerEmail(...)`), backed by `VITE_OWNER_EMAIL` (inlined into client AND
-  server bundles; hardcoded fallback in the module). Owner-only UI (global
-  search, query-logs link, user deletion) must go through this module.
+- Access is role-based (`sys_users.role`: `sysadmin` · `owner` · `secretary`,
+  `lib/auth/roles.ts`). Restricted routes use `requirePermission("<permission>")`
+  after `authenticateMiddleware`; the UI hides features via
+  `Authentication.me().permissions`. Never gate features by email.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by

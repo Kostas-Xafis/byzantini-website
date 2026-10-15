@@ -73,7 +73,6 @@ const measureIndicator = (list: HTMLDivElement | undefined) => {
 
 export default function AdminNav(props: RouterProps) {
 	const user = useCurrentUser();
-	const isOwner = () => user()?.isOwner === true;
 
 	const location = useLocation();
 
@@ -83,7 +82,7 @@ export default function AdminNav(props: RouterProps) {
 		sections
 			.map((section) => ({
 				...section,
-				links: section.links.filter((link) => link.url !== "/admin/query-logs" || isOwner()),
+				links: section.links.filter((link) => link.url !== "/admin/query-logs" || user()?.permissions.queryLogs === true),
 			}))
 			.filter((section) => section.links.length > 0),
 	);

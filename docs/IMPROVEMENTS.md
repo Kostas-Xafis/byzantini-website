@@ -128,7 +128,7 @@ Still open from this list: **B3** (verify email delivery on a real deploy), **B7
 
 ### B7. Session handling needs hardening
 
-**Status:** 🟡 Partly done — `94e84ae`: crypto tokens, HttpOnly/Secure cookie, expiry check, 5-min cache, cookie-based logout, log redaction, owner-only query logs; `3c559a1`: login rate limit. Left: password hashing (PBKDF2), `session_id` still in JSON bodies, DB backup routes open to any admin
+**Status:** ✅ Done (2026-10-15) — `94e84ae`: crypto tokens, HttpOnly/Secure cookie, expiry check, cookie-based logout, log redaction; `3c559a1`: login rate limit; admin auth rework (migration 0008, AGENTS.md "Admin authentication"): PBKDF2 passwords, hashed per-device sessions, no `session_id` in any JSON body, role-based access (`sysadmin`/`owner`/`secretary`) enforced server-side. The DB backup routes stay open to every admin by decision (only query logs, the fee catalog, admin deletion and role changes are restricted).
 - **Weak randomness:** `lib/random.ts:56` uses `Math.random()` for session ids (`authentication.ts:60`), invite links, `registration_url`
   and unsubscribe tokens. Public `getSubscriptionToken` hands out fresh outputs → state recovery is feasible.
   → `crypto.getRandomValues` / `crypto.randomUUID()`.

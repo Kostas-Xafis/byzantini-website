@@ -63,6 +63,7 @@ export const APIEndpoints = {
 	"SysUsers.getById": { method: "POST", path: "/sys/id", multipart: false, rawBlob: false },
 	"SysUsers.getBySid": { method: "GET", path: "/sys/sid", multipart: false, rawBlob: false },
 	"SysUsers.delete": { method: "DELETE", path: "/sys", multipart: false, rawBlob: false },
+	"SysUsers.setRole": { method: "PUT", path: "/sys/role", multipart: false, rawBlob: false },
 	"SysUsers.registerSysUser": { method: "POST", path: "/sys/register/[link:string]", multipart: false, rawBlob: false },
 	"SysUsers.createRegisterLink": { method: "POST", path: "/sys/register", multipart: false, rawBlob: false },
 	"SysUsers.validateRegisterLink": { method: "POST", path: "/sys/register/validate/[link:string]", multipart: false, rawBlob: false },

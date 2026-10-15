@@ -1,6 +1,6 @@
 import type { SysUserRegisterLink, SysUsers } from "@_types/entities";
-import { isOwnerEmail } from "@env/ownerEmail";
 import { hashPassword } from "@lib/auth/passwords";
+import { ROLE_LABELS } from "@lib/auth/roles";
 import { forgetUserSessions } from "@lib/auth/sessions";
 import { z_IdArray, z_SignupCredentials, z_SysUsers } from "@lib/api/schemas";
 import { Random as R } from "@lib/random";
@@ -11,7 +11,7 @@ import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE } from "./cookies";
 import { sendAutomatedEmail } from "./emailService";
-import { authenticateMiddleware, currentSession, startSession } from "./middleware/authenticate";
+import { authenticateMiddleware, currentSession, requirePermission, startSession } from "./middleware/authenticate";
 
 /**
  * SysUsers — Phase 4 route group (contracts + handlers in one place).
@@ -67,52 +67,75 @@ async function deleteSysUsers(ids: number[]) {
 	for (const id of ids) forgetUserSessions(id);
 }
 
+const z_SysUserRow = z_SysUsers.pick({ id: true, email: true, role: true });
+type SysUserRow = Pick<SysUsers, "id" | "email" | "role">;
+
 export const sysusersRoutes = {
-	get: new APIServer({ method: "GET", path: "/sys", responseSchema: z.array(z_SysUsers.pick({ id: true, email: true })) }, [authenticateMiddleware], () =>
-		handlerResult(() => executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users"), "Σφάλμα κατά την ανάκτηση των χρηστών"),
+	get: new APIServer({ method: "GET", path: "/sys", responseSchema: z.array(z_SysUserRow) }, [authenticateMiddleware], () =>
+		handlerResult(() => executeQuery<SysUserRow>("SELECT id, email, role FROM sys_users"), "Σφάλμα κατά την ανάκτηση των χρηστών"),
 	),
-	getById: new APIServer(
-		{ method: "POST", path: "/sys/id", schema: z_IdArray, responseSchema: z_SysUsers.pick({ id: true, email: true }) },
-		[authenticateMiddleware],
-		({ body }) =>
-			handlerResult(async () => {
-				const [id] = body;
-				const [user] = await executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE id = ? LIMIT 1", [id]);
-
-				if (!user) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
-				return user;
-			}),
-	),
-	getBySid: new APIServer(
-		{ method: "GET", path: "/sys/sid", responseSchema: z_SysUsers.pick({ id: true, email: true }) },
-		[authenticateMiddleware],
-		({ cookies }) =>
-			handlerResult(async () => {
-				const { userId: id, email } = await currentSession(cookies);
-				return { id, email };
-			}),
-	),
-	delete: new APIServer({ method: "DELETE", path: "/sys", schema: z_IdArray }, [authenticateMiddleware], ({ body, cookies }) =>
+	getById: new APIServer({ method: "POST", path: "/sys/id", schema: z_IdArray, responseSchema: z_SysUserRow }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async () => {
-			const self = await currentSession(cookies);
+			const [id] = body;
+			const [user] = await executeQuery<SysUserRow>("SELECT id, email, role FROM sys_users WHERE id = ? LIMIT 1", [id]);
 
-			let ids = [...new Set(body.filter((id) => id > 0))];
-			if (ids.length === 0) throw APIError.badRequest("Δεν επιλέχθηκε καμία εγγραφή");
+			if (!user) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
+			return user;
+		}),
+	),
+	getBySid: new APIServer({ method: "GET", path: "/sys/sid", responseSchema: z_SysUserRow }, [authenticateMiddleware], ({ cookies }) =>
+		handlerResult(async () => {
+			const { userId: id, email, role } = await currentSession(cookies);
+			return { id, email, role };
+		}),
+	),
+	/**
+	 * Deletes admins, own account included (sysadmin and owner only). Only a sysadmin may delete a
+	 * sysadmin, and at least one sysadmin always remains.
+	 */
+	delete: new APIServer(
+		{ method: "DELETE", path: "/sys", schema: z_IdArray },
+		[authenticateMiddleware, requirePermission("deleteAdmins")],
+		({ body, cookies }) =>
+			handlerResult(async () => {
+				const self = await currentSession(cookies);
+				const ids = [...new Set(body.filter((id) => id > 0))];
+				if (ids.length === 0) throw APIError.badRequest("Δεν επιλέχθηκε καμία εγγραφή");
 
-			if (ids.includes(self.userId)) {
-				ids = ids.filter((userId) => userId !== self.userId);
-				await deleteSysUsers([self.userId]);
-				cookies.delete(COOKIE.sessionId);
-				if (ids.length === 0) return "Deleted self successfully";
-			}
+				const targets = await executeQuery<SysUserRow>(`SELECT id, email, role FROM sys_users WHERE id IN (${questionMarks(ids)})`, ids);
+				if (targets.length === 0) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
+				if (self.role !== "sysadmin" && targets.some((user) => user.role === "sysadmin")) {
+					throw APIError.forbidden(`Μόνο ο ${ROLE_LABELS.sysadmin} μπορεί να διαγράψει λογαριασμό ${ROLE_LABELS.sysadmin}`);
+				}
+				const [{ remaining }] = await executeQuery<{ remaining: number }>(
+					`SELECT COUNT(*) AS remaining FROM sys_users WHERE role = 'sysadmin' AND id NOT IN (${questionMarks(ids)})`,
+					ids,
+				);
+				if (remaining === 0) throw APIError.badRequest(`Πρέπει να παραμείνει τουλάχιστον ένας ${ROLE_LABELS.sysadmin}`);
 
-			if (!isOwnerEmail(self.email)) {
-				throw APIError.forbidden("Δεν έχετε δικαίωμα διαγραφής άλλων διαχειριστών");
-			}
-
-			await deleteSysUsers(ids);
-			return "User/s deleted successfully";
-		}, "Σφάλμα κατά τη διαγραφή των διαχειριστών"),
+				await deleteSysUsers(targets.map((user) => user.id));
+				if (targets.some((user) => user.id === self.userId)) {
+					cookies.delete(COOKIE.sessionId);
+					if (targets.length === 1) return "Deleted self successfully";
+				}
+				return "User/s deleted successfully";
+			}, "Σφάλμα κατά τη διαγραφή των διαχειριστών"),
+	),
+	/** Changes an admin's role (sysadmin only). Nobody changes their own role, so a sysadmin always remains. */
+	setRole: new APIServer(
+		{ method: "PUT", path: "/sys/role", schema: z_SysUserRow.pick({ id: true, role: true }), responseSchema: z_SysUserRow },
+		[authenticateMiddleware, requirePermission("manageRoles")],
+		({ body, cookies }) =>
+			handlerResult(async () => {
+				const self = await currentSession(cookies);
+				if (body.id === self.userId) throw APIError.badRequest("Δεν μπορείτε να αλλάξετε τον δικό σας ρόλο");
+				const [user] = await executeQuery<SysUserRow>("SELECT id, email, role FROM sys_users WHERE id = ? LIMIT 1", [body.id]);
+				if (!user) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
+				await executeQuery("UPDATE sys_users SET role = ? WHERE id = ?", [body.role, user.id]);
+				// This isolate sees the new role at once; others within the session cache window.
+				forgetUserSessions(user.id);
+				return { ...user, role: body.role };
+			}, "Σφάλμα κατά την αλλαγή ρόλου"),
 	),
 	registerSysUser: new APIServer(
 		{ method: "POST", path: "/sys/register/[link:string]", schema: z_SignupCredentials, responseSchema: z_RegisterSysUserResponse },
@@ -124,7 +147,7 @@ export const sysusersRoutes = {
 				// The link must have been issued for this email; it is used up here.
 				if (!(await consumeRegisterLink(T, params.link, email))) throw APIError.gone("Ο σύνδεσμος εγγραφής δεν είναι έγκυρος ή έχει λήξει");
 
-				const { insertId } = await T.executeQuery("INSERT INTO sys_users (email, password, google_email_match) VALUES (?, ?, 0)", [
+				const { insertId } = await T.executeQuery("INSERT INTO sys_users (email, password, google_email_match, role) VALUES (?, ?, 0, 'secretary')", [
 					email,
 					await hashPassword(password),
 				]);

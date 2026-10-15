@@ -5,7 +5,7 @@ import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult } from "./APIServer";
-import { authenticateMiddleware, currentSession } from "./middleware/authenticate";
+import { authenticateMiddleware, currentSession, requirePermission } from "./middleware/authenticate";
 
 /**
  * FeeCatalog — the versioned price catalog of the automatic fees (docs/FEES.md §2).
@@ -27,31 +27,34 @@ const INSERT_RULE =
 
 export const feeCatalogRoutes = {
 	/** School years that have a catalog, newest first. */
-	getYears: new APIServer({ method: "GET", path: "/fee-catalogs", responseSchema: z.array(z.string()) }, [authenticateMiddleware], () =>
-		handlerResult(async () => {
-			const rows = await executeQuery<{ school_year: string }>("SELECT DISTINCT school_year FROM fee_catalogs ORDER BY school_year DESC");
-			return rows.map((row) => row.school_year);
-		}, "Σφάλμα κατά την ανάκτηση των καταλόγων διδάκτρων"),
+	getYears: new APIServer(
+		{ method: "GET", path: "/fee-catalogs", responseSchema: z.array(z.string()) },
+		[authenticateMiddleware, requirePermission("feeCatalog")],
+		() =>
+			handlerResult(async () => {
+				const rows = await executeQuery<{ school_year: string }>("SELECT DISTINCT school_year FROM fee_catalogs ORDER BY school_year DESC");
+				return rows.map((row) => row.school_year);
+			}, "Σφάλμα κατά την ανάκτηση των καταλόγων διδάκτρων"),
 	),
 
 	/** The active (newest) catalog of a school year, or null when the year has none. */
 	getActive: new APIServer(
 		{ method: "GET", path: "/fee-catalogs/[school_year:string]", responseSchema: z_FeeCatalog.nullable() },
-		[authenticateMiddleware],
+		[authenticateMiddleware, requirePermission("feeCatalog")],
 		({ params }) => handlerResult(() => getActiveCatalog(params.school_year), "Σφάλμα κατά την ανάκτηση του καταλόγου διδάκτρων"),
 	),
 
 	/** Every version of a school year's catalog, newest first (the first one is the active catalog). */
 	getVersions: new APIServer(
 		{ method: "GET", path: "/fee-catalogs/[school_year:string]/versions", responseSchema: z.array(z_FeeCatalog) },
-		[authenticateMiddleware],
+		[authenticateMiddleware, requirePermission("feeCatalog")],
 		({ params }) => handlerResult(() => getCatalogVersions(params.school_year), "Σφάλμα κατά την ανάκτηση των εκδόσεων του καταλόγου"),
 	),
 
 	/** Saves a new version of a school year's catalog (it becomes the active one). Returns the new row. */
 	create: new APIServer(
 		{ method: "POST", path: "/fee-catalogs", schema: z_CatalogCreate, responseSchema: z_FeeCatalog },
-		[authenticateMiddleware],
+		[authenticateMiddleware, requirePermission("feeCatalog")],
 		({ body, cookies }) =>
 			handlerResult(async () => {
 				const teacherIds = [...new Set(body.rules.map((rule) => rule.teacher_id).filter((id): id is number => id !== null))];

@@ -4,7 +4,7 @@ import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { API } from "@routes/index.client";
 import { SelectedRows } from "@lib/hooks/useSelectedRows.solid";
-import { isOwnerEmail } from "@env/ownerEmail";
+import { ROLES, ROLE_LABELS, type Role } from "@lib/auth/roles";
 import type { ExtendedFormData } from "@utilities/forms";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -14,15 +14,14 @@ import { createAlert, pushAlert } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
 import { type Action } from "./table/TableControls.solid";
+import { useCurrentUser } from "./currentUser";
 
 const PREFIX = "sysusers";
 
-type SysUsers = Pick<FullSysUser, "id" | "email">;
+type SysUsers = Pick<FullSysUser, "id" | "email" | "role">;
 
 const sysusersToTable = (sysusers: SysUsers[]): SysUsers[] => {
-	return sysusers.map((u) => {
-		return Object.values(u) as unknown as SysUsers;
-	});
+	return sysusers.map((u) => [u.id, u.email, ROLE_LABELS[u.role] ?? u.role] as unknown as SysUsers);
 };
 
 export default function SysUsersTable() {
@@ -40,10 +39,13 @@ export default function SysUsersTable() {
 	});
 	createAPIResource(API.SysUsers.get, undefined, { cache: setStore });
 	createAPIResource(API.SysUsers.getBySid, undefined, { cache: setStore });
+	// Who may delete admins or change roles (lib/auth/roles.ts); the routes enforce the same.
+	const me = useCurrentUser();
 
 	const columnNames: ColumnType<SysUsers> = {
 		id: { type: "number", name: "Id", size: 4 },
 		email: { type: "string", name: "Email", size: 30 },
+		role: { type: "string", name: "Ρόλος", size: 16 },
 	};
 
 	const shapedData = createMemo(() => {
@@ -89,9 +91,10 @@ export default function SysUsersTable() {
 		const self = store[API.SysUsers.getBySid];
 		if (!sysusers || selectedItems.length < 1 || !self) return deleteModal;
 
-		const canDeleteOthers = isOwnerEmail(self.email);
-		const hasOthersSelected = selectedItems.some((id) => id !== self.id);
-		if (!canDeleteOthers && hasOthersSelected) return deleteModal;
+		if (!me()?.permissions.deleteAdmins) return deleteModal;
+		// Only a sysadmin deletes a sysadmin (the route also keeps at least one).
+		const selected = sysusers.filter((user) => selectedItems.includes(user.id));
+		if (self.role !== "sysadmin" && selected.some((user) => user.role === "sysadmin")) return deleteModal;
 
 		const submit = async function () {
 			const ids = selectedItems.map((i) => (sysusers.find((p) => p.id === i) as SysUsers).id);
@@ -112,8 +115,48 @@ export default function SysUsersTable() {
 			...deleteModal,
 		};
 	});
+	const onRole = createMemo((): Action | EmptyAction => {
+		const roleModal = {
+			type: ActionEnum.MODIFY,
+			icon: ActionIcon.MODIFY,
+		};
+		const sysusers = store[API.SysUsers.get];
+		const self = store[API.SysUsers.getBySid];
+		if (!sysusers || !self || selectedItems.length !== 1 || selectedItems[0] === self.id) return roleModal;
+		const user = sysusers.find((u) => u.id === selectedItems[0]);
+		if (!user) return roleModal;
+
+		const submit = async function (formData: ExtendedFormData<{ role: Role }>) {
+			const role = formData.string("role") as Role;
+			const res = await apiHook(API.SysUsers.setRole, { RequestObject: { id: user.id, role } });
+			if (!("data" in res)) return;
+			setSysUserHydrate({ action: ActionEnum.MODIFY, id: user.id, isMultiple: false });
+			pushAlert(createAlert("success", `${user.email}: ${ROLE_LABELS[role]}`));
+		};
+		return {
+			inputs: {
+				role: {
+					name: "role",
+					label: "Ρόλος",
+					type: "select",
+					iconClasses: "fa-solid fa-user-shield",
+					selectList: ROLES.map((role) => ROLE_LABELS[role]),
+					valueList: [...ROLES],
+					value: user.role,
+					required: true,
+				} as InputProps,
+			},
+			onSubmit: submit,
+			submitText: "Αποθήκευση",
+			headerText: `Ρόλος του ${user.email}`,
+			...roleModal,
+		};
+	});
+
 	return (
-		<Show when={store[API.SysUsers.get] !== undefined} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+		<Show
+			when={store[API.SysUsers.get] !== undefined && store[API.SysUsers.getBySid] !== undefined && me() !== undefined}
+			fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			<Table
 				prefix={PREFIX}
 				data={shapedData}
@@ -122,7 +165,12 @@ export default function SysUsersTable() {
 					{
 						position: "top",
 						prefix: PREFIX,
-						controlGroups: [{ controls: [onAdd, onDelete] }],
+						// Invites are open to every admin (always as Γραμματεία); deleting and changing roles are not.
+						controlGroups: [
+							{
+								controls: [onAdd, ...(me()!.permissions.manageRoles ? [onRole] : []), ...(me()!.permissions.deleteAdmins ? [onDelete] : [])],
+							},
+						],
 					},
 				]}
 			/>

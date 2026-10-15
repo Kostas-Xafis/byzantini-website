@@ -1,7 +1,7 @@
 import type { SysUserIdentity, SysUsers } from "@_types/entities";
 import { getEnv } from "@env/env";
-import { isOwnerEmail } from "@env/ownerEmail";
 import { OAUTH_FLOW_TTL_MS, openOAuthFlow, sealOAuthFlow, z_OAuthIntent, type OAuthFlow } from "@lib/auth/oauthFlow";
+import { PERMISSIONS, ROLES, permissionsOf } from "@lib/auth/roles";
 import { hasPassword, hashPassword, timingSafeEqual, verifyPassword } from "@lib/auth/passwords";
 import { enabledProviders, getProvider, isProviderId, providerInfo, type ProviderId, type ProviderProfile } from "@lib/auth/providers";
 import { listSessions, revokeSession, revokeUserSessions } from "@lib/auth/sessions";
@@ -42,7 +42,11 @@ const z_ProviderInfo = z.object({ id: z.string(), label: z.string(), icon: z.str
 const z_MeRes = z.object({
 	id: z.number(),
 	email: z.string(),
-	isOwner: z.boolean(),
+	role: z.enum(ROLES),
+	/** What this admin may use (lib/auth/roles.ts) — the UI hides the rest. */
+	permissions: z.object(
+		Object.fromEntries(Object.keys(PERMISSIONS).map((permission) => [permission, z.boolean()])) as Record<keyof typeof PERMISSIONS, z.ZodBoolean>,
+	),
 	avatar_url: z.string().nullable(),
 	hasPassword: z.boolean(),
 	/** False when the session is recent enough to set a password without the current one. */
@@ -110,7 +114,10 @@ const flowCookieOptions = (formPost: boolean): CookieOptions => ({
 });
 
 async function loadUser(userId: number) {
-	const [user] = await executeQuery<Pick<SysUsers, "id" | "email" | "password">>("SELECT id, email, password FROM sys_users WHERE id = ? LIMIT 1", [userId]);
+	const [user] = await executeQuery<Pick<SysUsers, "id" | "email" | "password" | "role">>(
+		"SELECT id, email, password, role FROM sys_users WHERE id = ? LIMIT 1",
+		[userId],
+	);
 	if (!user) throw APIError.notFound("Ο χρήστης δεν βρέθηκε");
 	return user;
 }
@@ -188,7 +195,7 @@ async function oauthSignup({ flow, profile, provider, label, cookies, request, T
 	const now = Date.now();
 	const db = getDb();
 	await db.batch([
-		db.prepare("INSERT INTO sys_users (email, password, google_email_match) VALUES (?, '', 0)").bind(profile.email),
+		db.prepare("INSERT INTO sys_users (email, password, google_email_match, role) VALUES (?, '', 0, 'secretary')").bind(profile.email),
 		db
 			.prepare(
 				"INSERT INTO sys_user_identities (user_id, provider, subject, email, avatar_url, created_at, last_used_at) SELECT id, ?, ?, ?, ?, ?, ? FROM sys_users WHERE email = ? COLLATE NOCASE",
@@ -261,7 +268,8 @@ export const authenticationRoutes = {
 			return {
 				id: user.id,
 				email: user.email,
-				isOwner: isOwnerEmail(user.email),
+				role: user.role,
+				permissions: permissionsOf(user.role),
 				avatar_url: identities.find((i) => i.avatar_url)?.avatar_url ?? null,
 				hasPassword: withPassword,
 				passwordChangeNeedsCurrent: withPassword && Date.now() - session.createdAt > RECENT_SIGN_IN_MS,

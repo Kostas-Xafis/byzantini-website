@@ -1,4 +1,4 @@
-import { isOwnerEmail } from "@env/ownerEmail";
+import { can, PERMISSIONS, ROLE_LABELS, type Permission } from "@lib/auth/roles";
 import { createSession, resolveSession, type ResolvedSession, type SessionMethod } from "@lib/auth/sessions";
 import { APIError } from "../APIError";
 import { COOKIE, SESSION_COOKIE_OPTIONS, type ServerCookies } from "../cookies";
@@ -23,14 +23,20 @@ export async function currentSession(cookies: ServerCookies): Promise<ResolvedSe
 	return session;
 }
 
+/** The 403 message for a permission: who may use it, in Greek. */
+export const forbiddenMessage = (permission: Permission) =>
+	`Δεν έχετε δικαίωμα για αυτή την ενέργεια (μόνο: ${PERMISSIONS[permission].map((role) => ROLE_LABELS[role]).join(", ")}).`;
+
 /**
- * Owner-only routes (the UI already hides them from other admins — this enforces it).
- * Use after `authenticateMiddleware`: `[authenticateMiddleware, ownerOnlyMiddleware]`.
+ * Role check (lib/auth/roles.ts). The UI hides what an admin cannot use — this enforces it.
+ * Use after `authenticateMiddleware`: `[authenticateMiddleware, requirePermission("queryLogs")]`.
  */
-export const ownerOnlyMiddleware: MiddlewareFunction = async ({ cookies }) => {
-	const session = await resolveSession(cookies.get(COOKIE.sessionId));
-	if (!isOwnerEmail(session?.email)) return APIServer.jsonError("Forbidden", HTTP.FORBIDDEN);
-};
+export const requirePermission =
+	(permission: Permission): MiddlewareFunction =>
+	async ({ cookies }) => {
+		const session = await resolveSession(cookies.get(COOKIE.sessionId));
+		if (!can(session?.role, permission)) return APIServer.jsonError(forbiddenMessage(permission), HTTP.FORBIDDEN);
+	};
 
 /** Opens a session for `userId` and sets the HttpOnly session cookie on the response. */
 export async function startSession(cookies: ServerCookies, request: Request, userId: number, method: SessionMethod) {

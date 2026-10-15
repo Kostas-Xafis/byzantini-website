@@ -3,6 +3,7 @@ import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { getDashboardThemePreference, setDashboardThemePreference, type DashboardThemePreference } from "@utilities/theme";
 import { For, Show, createSignal } from "solid-js";
+import { useCurrentUser } from "./currentUser";
 import FeeCatalogEditor from "./FeeCatalogEditor.solid";
 import { PanelCard, PanelCollapsible, PanelPage, hintClass, primaryButtonClass, secondaryButtonClass } from "./Panel.solid";
 import { toast } from "./toast";
@@ -49,6 +50,7 @@ export default function SettingsPage() {
 	const [lastBackup, setLastBackup] = createSignal<number | null>(readLastBackup());
 	const isDevelopmentMode = import.meta.env.MODE === "development";
 	const apiHook = useAPIClient();
+	const user = useCurrentUser();
 
 	const base64ToBlob = (base64: string, type = "application/octet-stream") => {
 		const binaryString = atob(base64);
@@ -207,7 +209,7 @@ export default function SettingsPage() {
 	};
 
 	return (
-		<PanelPage title="Ρυθμίσεις" subtitle="Εμφάνιση του πίνακα διαχείρισης, αντίγραφα ασφαλείας και κατάλογος διδάκτρων.">
+		<PanelPage title="Ρυθμίσεις" subtitle="Εμφάνιση, αντίγραφα ασφαλείας και λοιπές ρυθμίσεις του πίνακα διαχείρισης.">
 			<PanelCard icon="fa-solid fa-palette" title="Εμφάνιση" description="Ισχύει μόνο για αυτή τη συσκευή.">
 				<div
 					role="radiogroup"
@@ -295,13 +297,16 @@ export default function SettingsPage() {
 				</div>
 			</PanelCard>
 
-			<PanelCollapsible
-				id="settings-fee-catalog"
-				icon="fa-solid fa-euro-sign"
-				title="Κατάλογος διδάκτρων"
-				description="Οι τιμές διδάκτρων ανά σχολικό έτος. Κάθε αποθήκευση δημιουργεί νέα έκδοση.">
-				<FeeCatalogEditor />
-			</PanelCollapsible>
+			{/* Sysadmin and owner only (lib/auth/roles.ts); the FeeCatalog routes enforce it. */}
+			<Show when={user()?.permissions.feeCatalog}>
+				<PanelCollapsible
+					id="settings-fee-catalog"
+					icon="fa-solid fa-euro-sign"
+					title="Κατάλογος διδάκτρων"
+					description="Οι τιμές διδάκτρων ανά σχολικό έτος. Κάθε αποθήκευση δημιουργεί νέα έκδοση.">
+					<FeeCatalogEditor />
+				</PanelCollapsible>
+			</Show>
 
 			{isDevelopmentMode && (
 				<PanelCollapsible id="settings-dev" icon="fa-solid fa-code" title="Για προγραμματιστές" description="Ορατό μόνο σε development.">

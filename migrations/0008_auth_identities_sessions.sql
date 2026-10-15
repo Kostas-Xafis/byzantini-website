@@ -41,3 +41,12 @@ ALTER TABLE sys_users DROP COLUMN session_id;
 ALTER TABLE sys_users DROP COLUMN session_exp_date;
 
 -- `password` = '' now means "no password set" (accounts created through a provider).
+
+-- Admin roles (lib/auth/roles.ts): sysadmin (maintainer), owner (the school's owner), secretary.
+-- Every account starts as a secretary — invites never grant more. Roles change only through
+-- SysUsers.setRole (sysadmin only).
+ALTER TABLE sys_users ADD COLUMN role TEXT NOT NULL DEFAULT 'secretary' CHECK (role IN ('sysadmin', 'owner', 'secretary'));
+
+-- The current maintainer and owner.
+UPDATE sys_users SET role = 'sysadmin' WHERE email = 'koxafis@gmail.com' COLLATE NOCASE;
+UPDATE sys_users SET role = 'owner' WHERE email = 'sotiris_ale@hotmail.com' COLLATE NOCASE;

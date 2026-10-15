@@ -2,6 +2,7 @@ import type { SysUserSession, SysUsers } from "@_types/entities";
 import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import { sha256Hex } from "./passwords";
+import { isRole, type Role } from "./roles";
 
 /**
  * Admin sessions (server-only) — one `sys_user_sessions` row per signed-in device (migration 0008).
@@ -28,6 +29,8 @@ export type ResolvedSession = {
 	id: string;
 	userId: number;
 	email: string;
+	/** The admin's role (lib/auth/roles.ts) — cached with the session, so a role change applies within the cache window. */
+	role: Role;
 	method: string;
 	createdAt: number;
 	expiresAt: number;
@@ -65,9 +68,9 @@ export async function resolveSession(token: string | null | undefined): Promise<
 	cache.delete(id);
 
 	const [row] = await executeQuery<
-		Pick<SysUserSession, "id" | "user_id" | "method" | "created_at" | "expires_at" | "last_seen_at"> & Pick<SysUsers, "email">
+		Pick<SysUserSession, "id" | "user_id" | "method" | "created_at" | "expires_at" | "last_seen_at"> & Pick<SysUsers, "email" | "role">
 	>(
-		`SELECT s.id, s.user_id, s.method, s.created_at, s.expires_at, s.last_seen_at, u.email
+		`SELECT s.id, s.user_id, s.method, s.created_at, s.expires_at, s.last_seen_at, u.email, u.role
 		FROM sys_user_sessions s JOIN sys_users u ON u.id = s.user_id
 		WHERE s.id = ? AND s.expires_at > ? LIMIT 1`,
 		[id, now],
@@ -76,7 +79,15 @@ export async function resolveSession(token: string | null | undefined): Promise<
 	if (now - row.last_seen_at > LAST_SEEN_INTERVAL_MS) {
 		await executeQuery("UPDATE sys_user_sessions SET last_seen_at = ? WHERE id = ?", [now, id]);
 	}
-	const session: ResolvedSession = { id, userId: row.user_id, email: row.email, method: row.method, createdAt: row.created_at, expiresAt: row.expires_at };
+	const session: ResolvedSession = {
+		id,
+		userId: row.user_id,
+		email: row.email,
+		role: isRole(row.role) ? row.role : "secretary",
+		method: row.method,
+		createdAt: row.created_at,
+		expiresAt: row.expires_at,
+	};
 	cache.set(id, { session, cachedAt: now });
 	return session;
 }
