@@ -518,6 +518,18 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   admin sidebar (`AdminNav`), and the shared `input/*` controls, whose light look
   must stay identical on the public form (only their surface uses `bg-surface`).
   Anything that must stay white in both themes (brand logos) is `bg-[#fff]`.
+- **Icons are the project's own inline-SVG set** (Font Awesome is gone):
+  `lib/icons.ts` (`ICONS`: name → 24×24 markup, one stroke, `currentColor`;
+  typed `IconName`, so a typo fails `typecheck`) rendered by
+  `<Icon name="…" />` — `src/components/other/Icon.solid.tsx` / `Icon.astro`
+  (decorative by default, `title` → `role="img"`; `spin` for spinners;
+  `size` defaults to `1em`, so `text-*` sizes it like a glyph). Hand-built DOM
+  uses `createIcon(name, { class })`. Icon props in data are `IconName`
+  (input `icon`, `ActionIcon`, nav links, `Panel` cards). The base `.icon`
+  rule (inline-block, content-box, text-like `vertical-align`) is in
+  `global.css`'s base layer, so `hidden`/`flex`/`size-*` utilities win. Need
+  a new glyph? Draw it on the same grid in `lib/icons.ts` (no third-party
+  icon paths except CC0 brand marks); never reintroduce an icon font.
 
 ## Tests
 
