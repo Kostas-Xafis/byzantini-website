@@ -83,6 +83,7 @@ export const APIEndpoints = {
 	"Pupils.getYears": { method: "GET", path: "/pupils/years", multipart: false, rawBlob: false },
 	"Pupils.getTotalByYear": { method: "GET", path: "/pupils/totalByYear", multipart: false, rawBlob: false },
 	"Pupils.getTotal": { method: "GET", path: "/pupils/total", multipart: false, rawBlob: false },
+	"Pupils.dashboardSummary": { method: "GET", path: "/pupils/dashboard/[since:number]", multipart: false, rawBlob: false },
 	"Pupils.getByAm": { method: "POST", path: "/pupils/lookup", multipart: false, rawBlob: false },
 	"Pupils.getByReregistrationUrl": { method: "GET", path: "/pupils/reregistration/[url:string]", multipart: false, rawBlob: false },
 	"EmailSubscriptions.emailSubscribe": { method: "POST", path: "/registrations/email-subscribe", multipart: false, rawBlob: false },

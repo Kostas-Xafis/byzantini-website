@@ -224,6 +224,12 @@ const z_SettleYear = z.object({
 	payment_date: z.number().int().min(0, "Μη έγκυρη ημερομηνία πληρωμής"),
 });
 const z_SettleYearResponse = z.object({ updated: z.array(z.number().int()) });
+const z_DashboardSummary = z.object({
+	school_year: z.string(),
+	needs_review: z.number().int(),
+	owing: z.object({ enrollments: z.number().int(), pupils: z.number().int(), amount: z.number() }),
+	new_online: z.number().int(),
+});
 const z_FeePreviewResponse = z.object({
 	/** The active catalog of the school year (what a new enrollment would pin), or null. */
 	active_catalog_id: z.number().int().nullable(),
@@ -941,6 +947,43 @@ export const pupilsRoutes = {
 			const [row] = await executeQuery<{ total: number }>("SELECT amount AS total FROM total_enrollments");
 			return row ?? { total: 0 };
 		}),
+	),
+
+	/**
+	 * «Αρχική» dashboard: what needs the secretariat's attention, in one statement.
+	 * `since` (epoch ms) is the admin's previous visit — the client remembers it per device;
+	 * `new_online` counts public-form enrollments after it. `owing` covers the current school
+	 * year (`currentSchoolYearStart`) only.
+	 */
+	dashboardSummary: new APIServer(
+		{ method: "GET", path: "/pupils/dashboard/[since:number]", responseSchema: z_DashboardSummary },
+		[authenticateMiddleware],
+		({ params }) =>
+			handlerResult(async () => {
+				const schoolYear = schoolYearOf(currentSchoolYearStart());
+				const [row] = await executeQuery<{
+					needs_review: number;
+					owing_enrollments: number;
+					owing_pupils: number;
+					owing_amount: number | null;
+					new_online: number;
+				}>(
+					`SELECT
+						(SELECT COUNT(*) FROM pupils WHERE needs_review = 1) AS needs_review,
+						COUNT(*) AS owing_enrollments,
+						COUNT(DISTINCT pupil_id) AS owing_pupils,
+						SUM(total_payment - payment_amount) AS owing_amount,
+						(SELECT COUNT(*) FROM pupil_enrollments WHERE source = 'form' AND date > ?) AS new_online
+					FROM pupil_enrollments WHERE registration_year = ? AND payment_amount < total_payment`,
+					[params.since, schoolYear],
+				);
+				return {
+					school_year: schoolYear,
+					needs_review: row?.needs_review ?? 0,
+					owing: { enrollments: row?.owing_enrollments ?? 0, pupils: row?.owing_pupils ?? 0, amount: row?.owing_amount ?? 0 },
+					new_online: row?.new_online ?? 0,
+				};
+			}, "Σφάλμα κατά την ανάκτηση της σύνοψης"),
 	),
 
 	/**

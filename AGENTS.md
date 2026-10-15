@@ -250,9 +250,16 @@ The person data that used to live on `registrations` is split into two tables
   updateEnrollment/deleteEnrollments`) — never write `total_payment` of a
   pinned enrollment by hand except as a manual price (`fee_manual`).
 - The secretaries resolve the remaining review cases in the admin
-  Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»);
-  `bun run dev:clean` removes the fixtures the API suite writes to the local
-  dev DB.
+  Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»;
+  deep link `/admin/pupils?review=1`); `bun run dev:clean` removes the
+  fixtures the API suite writes to the local dev DB.
+- **«Αρχική» dashboard** (`TotalsTable.solid.tsx`): «Χρειάζονται προσοχή»
+  tiles from `Pupils.dashboardSummary` (`GET /pupils/dashboard/<since>`, one
+  statement): pupils to review, unpaid fees of the current school year
+  (`payment_amount < total_payment`), public-form enrollments after `since`.
+  `since` is the admin's previous visit, remembered per device in
+  `localStorage` (`admin-dashboard-visits`; a new visit starts after 30 min
+  away, the first one counts the last 7 days).
 
 ## Admin authentication (sign-in, sessions, providers)
 

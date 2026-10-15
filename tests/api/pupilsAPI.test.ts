@@ -14,6 +14,7 @@
  * a real pupil on every run).
  */
 import { z_PupilEnrollments, z_Pupils } from "@lib/api/schemas";
+import { currentSchoolYear } from "@lib/pupils/years";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { Database } from "bun:sqlite";
@@ -159,6 +160,38 @@ function pupilsTest() {
 		expect(years.data).toContain("2025-2026");
 		expect(total.data.total).toBeGreaterThan(1000);
 		expect(typeof byYear.data[2025]).toBe("number");
+	});
+
+	test("--pupils-- #10b dashboardSummary matches the local database", async () => {
+		const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
+		const res = await useTestAPI("Pupils.dashboardSummary", { UrlArgs: { since } });
+		const json = await getJson<APIResponse["Pupils.dashboardSummary"]>(res);
+		expect(json.data.school_year).toBe(currentSchoolYear());
+		expect(json.data.owing.amount).toBeGreaterThanOrEqual(0);
+		const expected = withLocalDb(
+			(db) =>
+				db
+					.query(
+						`SELECT (SELECT COUNT(*) FROM pupils WHERE needs_review = 1) AS needs_review,
+							COUNT(*) AS enrollments, COUNT(DISTINCT pupil_id) AS pupils, COALESCE(SUM(total_payment - payment_amount), 0) AS amount,
+							(SELECT COUNT(*) FROM pupil_enrollments WHERE source = 'form' AND date > ?) AS new_online
+						FROM pupil_enrollments WHERE registration_year = ? AND payment_amount < total_payment`,
+					)
+					.get(since, currentSchoolYear()) as { needs_review: number; enrollments: number; pupils: number; amount: number; new_online: number },
+		);
+		if (!expected) return; // no local dev DB to compare with
+		expect(json.data.needs_review).toBe(expected.needs_review);
+		expect(json.data.owing).toEqual({ enrollments: expected.enrollments, pupils: expected.pupils, amount: expected.amount });
+		expect(json.data.new_online).toBe(expected.new_online);
+
+		// a later `since` can only count fewer new online enrollments
+		const later = await getJson<APIResponse["Pupils.dashboardSummary"]>(await useTestAPI("Pupils.dashboardSummary", { UrlArgs: { since: Date.now() } }));
+		expect(later.data.new_online).toBeLessThanOrEqual(json.data.new_online);
+	});
+
+	test("--pupils-- #10c dashboardSummary requires a session", async () => {
+		const res = await rawAPI("GET", `/pupils/dashboard/${Date.now()}`);
+		expect(res.status).toBe(401);
 	});
 
 	test("--pupils-- #11 getEnrollmentsByYear returns the joined legacy-compatible row", async () => {

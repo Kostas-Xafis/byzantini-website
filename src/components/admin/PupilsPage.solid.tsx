@@ -1,6 +1,7 @@
 import { customEvent } from "@_types/custom-events";
 import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
 import { currentSchoolYear } from "@lib/pupils/years";
 import { API, type APIResponse } from "@routes/index.client";
@@ -238,7 +239,7 @@ export default function PupilsPage() {
 
 	/**
 	 * Mirror the shareable state into the URL: `?pupil=<id>` for the open record,
-	 * `?q=<query>` for the search. The typed query is component state, so without
+	 * `?q=<query>` for the search, `?review=1` for «Μόνο προς έλεγχο». The typed query is component state, so without
 	 * this it is lost the moment the page remounts (reload, or a detour to another
 	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
 	 *
@@ -247,13 +248,21 @@ export default function PupilsPage() {
 	 * page; everything else replaces. The router's `history.state` (`_depth`) is preserved.
 	 */
 	let pushOnNextSync = false;
+	// The router renders the page before it commits the URL of an in-app navigation, so until then
+	// `window.location` is still the previous page's: read the deep link from the router's location,
+	// and never write onto the previous page's history entry.
+	const location = useLocation();
+	const initialSearch = location.search;
 	const syncUrl = (id: number | null) => {
+		if (window.location.pathname !== untrack(() => location.pathname)) return;
 		const text = untrack(() => query()).trim();
 		const params = new URLSearchParams(window.location.search);
 		if (id === null) params.delete("pupil");
 		else params.set("pupil", String(id));
 		if (text) params.set("q", text);
 		else params.delete("q");
+		if (untrack(needsReviewOnly)) params.set("review", "1");
+		else params.delete("review");
 		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
 		if (next === `${window.location.pathname}${window.location.search}`) return;
 		const state = window.history.state as { _depth?: number; pupilRecord?: number } | null;
@@ -420,9 +429,11 @@ export default function PupilsPage() {
 		})();
 
 		// deep link: /admin/pupils?pupil=<id> (and/or ?q=<query>)
-		const params = new URLSearchParams(window.location.search);
+		const params = new URLSearchParams(initialSearch);
 		const deepLink = params.get("pupil");
 		const deepQuery = params.get("q");
+		// ?review=1 opens with «Μόνο προς έλεγχο» on (the «Αρχική» dashboard links here)
+		if (params.get("review") === "1") setNeedsReviewOnly(true);
 		if (deepQuery) {
 			setQuery(deepQuery);
 			// the search below already covers the seeded query, so drop the debounce

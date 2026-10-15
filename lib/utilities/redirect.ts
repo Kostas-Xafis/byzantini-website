@@ -1,7 +1,7 @@
 /**
  * Login-return plumbing (`?redirect_url=`).
  *
- * Admin deep links are shareable — `/admin/pupils?q=<query>`, `/admin/books?search=<query>&col=3`,
+ * Admin deep links are shareable — `/admin/pupils?q=<query>` (`&review=1`), `/admin/books?search=<query>&col=3`,
  * `/admin/registrations?year=2024&search=<query>` — but the dashboard guard
  * (`AdminLayout`) sends a logged-out visitor to the bare `/login`, so the query
  * they were sent for was lost and they landed on the dashboard home instead.

@@ -167,7 +167,10 @@
   enrollment write. `bun run fees:backfill` (dry run by default, `--apply`)
   fills the 2026-2027 fees.
 - Pupils that still need attention are reviewed in the admin Μαθητολόγιο page
-  (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»).
+  (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου», deep link
+  `/admin/pupils?review=1`). The «Αρχική» dashboard's attention tiles come from
+  `Pupils.dashboardSummary` (review count, unpaid fees of the current year, new
+  online enrollments since the admin's previous visit).
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker
