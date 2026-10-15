@@ -181,7 +181,7 @@
   before the dev server).
 - End-to-end smoke tests: `bun run e2e` (Playwright on Bun, `e2e/`, not part of
   `bun run test`; Chromium at 1280 and 375 px). Needs the dev server
-  (`E2E_BASE_URL`, default `http://localhost:4321`), the emails worker and
+  (`E2E_BASE_URL`, default `http://e2e.localhost:4321`, its own cookie host), the emails worker and
   tests/.env.test; browsers via `bunx playwright install chromium`. Browser
   sign-ins use throwaway `e2e.*@example.com` admins that the fixtures delete;
   see `e2e/README.md`.

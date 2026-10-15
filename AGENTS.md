@@ -72,7 +72,7 @@ Core loop:
 | Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the pdfWorker's golden-PDF suite and the emailWorker's offline campaign suite (never sends) |
 | Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite; the pdf suite needs the PDF worker started **before** the dev server); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
-| E2E smoke tests | `bun run e2e` | Playwright (Chromium, 1280 + 375 px) in `e2e/`, **not** part of `bun run test`; needs the dev server (`E2E_BASE_URL`, default `http://localhost:4321`), the emails worker and tests/.env.test; once per machine `bunx playwright install chromium`; see e2e/README.md |
+| E2E smoke tests | `bun run e2e` | Playwright (Chromium, 1280 + 375 px) in `e2e/`, **not** part of `bun run test`; needs the dev server (`E2E_BASE_URL`, default `http://e2e.localhost:4321` — a host of its own, since cookies ignore the port), the emails worker and tests/.env.test; once per machine `bunx playwright install chromium`; see e2e/README.md |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
 Database tooling (wrangler D1 commands — local dev database is the miniflare
@@ -505,7 +505,8 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   registration form (empty submit, new student ΑΜ 000) and the public navbar at
   1024/1366 px. Projects `desktop` (1280 px, everything) and `phone` (375 px,
   titles tagged `@phone`). The runner runs on Bun (`bunx --bun playwright test`).
-  Needs the dev server (`E2E_BASE_URL`, default `http://localhost:4321`), the
+  Needs the dev server (`E2E_BASE_URL`, default `http://e2e.localhost:4321`:
+  cookies ignore the port, so the suite's admin sessions stay off `localhost`), the
   emails worker (invites) and tests/.env.test. The harness admin acts only
   through the API: every browser sign-in is a throwaway `e2e.<role>.*@example.com`
   admin (invite → signup → `setRole`) deleted when the test ends

@@ -4,8 +4,12 @@ import path from "node:path";
 /**
  * The e2e environment: the site under test and the harness admin.
  *
- * - `E2E_BASE_URL` — the dev server to test (default http://localhost:4321). Not `VITE_URL`: the e2e run
- *   may target another dev server than the API suite (e.g. a worktree's on its own port).
+ * - `E2E_BASE_URL` — the dev server to test (default http://e2e.localhost:4321). Not `VITE_URL`: the e2e run
+ *   may target another dev server than the API suite (e.g. a worktree's on its own port). The host is
+ *   `e2e.localhost`, not `localhost`: cookies ignore the port, so a `session_id` set on localhost:<any port>
+ *   would replace the admin session of whoever else is signed in on localhost in the same browser.
+ *   `*.localhost` resolves to the loopback in Chromium and Bun; the origin check compares against the
+ *   request's own host, so it works unchanged.
  * - `TEST_EMAIL` / `TEST_PASSWORD` — the harness admin (a sysadmin) from tests/.env.test, the same one the
  *   API suite uses. It only ever acts through the API (invites, roles, deletions); the browser always signs
  *   in as a throwaway `@example.com` admin.
@@ -25,7 +29,7 @@ function loadTestEnv() {
 }
 loadTestEnv();
 
-export const BASE_URL = (process.env.E2E_BASE_URL || "http://localhost:4321").replace(/\/+$/, "");
+export const BASE_URL = (process.env.E2E_BASE_URL || "http://e2e.localhost:4321").replace(/\/+$/, "");
 
 export function harnessCredentials() {
 	const { TEST_EMAIL, TEST_PASSWORD } = process.env;

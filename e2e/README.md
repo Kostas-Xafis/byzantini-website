@@ -22,7 +22,10 @@ bun run e2e -- --project desktop -g "roles"   # any Playwright CLI flag after --
 
 Needs, like the API suite:
 
-- the dev server — `E2E_BASE_URL` (default `http://localhost:4321`), e.g. `E2E_BASE_URL=http://localhost:4323 bun run e2e`;
+- the dev server — `E2E_BASE_URL` (default `http://e2e.localhost:4321`), e.g. `E2E_BASE_URL=http://e2e.localhost:4323 bun run e2e`.
+  Keep the `e2e.localhost` host: cookies are shared across ports, so a test admin's `session_id` on
+  `localhost:<port>` would sign out whoever uses the dashboard on `localhost` in the same browser. If you
+  look at the suite's pages in a shared browser, use that host there too;
 - the **emails worker** (`cd services/emailWorker && bunx wrangler dev --config wrangler.jsonc`): the tests invite their
   admins, which sends an invite email (dry-run locally — nothing is sent);
 - `tests/.env.test` (`TEST_EMAIL` / `TEST_PASSWORD`, the harness sysadmin) and the local dev DB

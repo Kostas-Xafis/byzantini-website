@@ -5,7 +5,7 @@ import { BASE_URL } from "./support/env";
  * End-to-end smoke tests (docs/IMPROVEMENTS.md T3) — a real Chromium against a running dev server.
  *
  * Kept out of `bun run test` (that is `bun test ./tests/`). Run with `bun run e2e` (see e2e/README.md):
- * it needs the dev server (`E2E_BASE_URL`, default http://localhost:4321), the emails worker (inviting the
+ * it needs the dev server (`E2E_BASE_URL`, default http://e2e.localhost:4321), the emails worker (inviting the
  * throwaway admins sends an email, dry-run locally) and tests/.env.test (the harness admin).
  *
  * Projects: `desktop` (1280 px) runs everything; `phone` (375 px) runs the tests tagged `@phone`.
