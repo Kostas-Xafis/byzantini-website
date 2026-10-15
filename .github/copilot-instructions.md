@@ -113,6 +113,10 @@
   is on them and the `html.dark .bg-white` patch is gone, so a new `bg-white`
   stays white in dark mode (use `bg-[#fff]` only for brand logos). Status colours,
   `AdminNav` and the shared `input/*` controls keep their own `dark:` pairs.
+- Icons: the project's own inline-SVG set in `lib/icons.ts` (typed `IconName`),
+  rendered with `<Icon name="…" />` (`src/components/other/Icon.solid.tsx` /
+  `Icon.astro`) or `createIcon()` for hand-built DOM. No Font Awesome / icon
+  fonts; new glyphs are drawn on the same 24×24 grid.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by

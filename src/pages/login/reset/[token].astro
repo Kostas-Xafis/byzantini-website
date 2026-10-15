@@ -21,12 +21,12 @@ Astro.response.headers.set("Cache-Control", "no-store");
 					<form id="resetForm" class="grid gap-y-6" data-token={token}>
 						{/* Lets password managers file the new password under the right account. */}
 						<input type="email" name="username" autocomplete="username" value={email} class="hidden" readonly />
-						<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" value={email} disabled />
+						<Input type="email" name="email" label="Email" icon="mail" value={email} disabled />
 						<div class="grid gap-1">
-							<Input type="password" name="password" label="Νέος κωδικός" iconClasses="fa-solid fa-lock" required />
+							<Input type="password" name="password" label="Νέος κωδικός" icon="lock" required />
 							<p class="px-4 text-sm text-gray-600 dark:text-gray-300">Τουλάχιστον 8 χαρακτήρες.</p>
 						</div>
-						<Input type="password" name="confirm" label="Επιβεβαίωση" iconClasses="fa-solid fa-lock" required />
+						<Input type="password" name="confirm" label="Επιβεβαίωση" icon="lock" required />
 						<button
 							class="py-2 text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 disabled:opacity-60 disabled:cursor-wait"
 							type="submit">

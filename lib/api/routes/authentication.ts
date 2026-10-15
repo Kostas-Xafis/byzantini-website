@@ -37,7 +37,7 @@ export const ACCOUNT_PATH = "/admin/account";
 
 const z_UserLoginRes = z.union([z.object({ isValid: z.literal(true), email: z.string() }), z.object({ isValid: z.literal(false) })]);
 
-const z_ProviderInfo = z.object({ id: z.string(), label: z.string(), icon: z.string() });
+const z_ProviderInfo = z.object({ id: z.string(), label: z.string() });
 
 const z_MeRes = z.object({
 	id: z.number(),

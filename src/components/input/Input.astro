@@ -1,4 +1,6 @@
 ---
+import Icon from "@components/other/Icon.astro";
+import type { IconName } from "@lib/icons";
 export interface Props {
 	type: "checkbox" | "date" | "email" | "hidden" | "number" | "password" | "radio" | "tel" | "text" | "time" | "url";
 	name: string;
@@ -6,18 +8,23 @@ export interface Props {
 	placeholder?: string;
 	value?: string | number;
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	minmax?: [number, number];
 }
 
-const { type, name, label, placeholder, value, required, disabled, iconClasses, minmax } = Astro.props;
+const { type, name, label, placeholder, value, required, disabled, icon, minmax } = Astro.props;
 ---
 
 <label class={"relative h-min max-w-[30ch] max-sm:w-[27.5ch] grid text-xl rounded-md font-didact z-10 "}>
-	<i
-		class={"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-			(iconClasses || "")}></i>
+	{
+		icon && (
+			<Icon
+				name={icon}
+				class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+			/>
+		)
+	}
 	<input
 		class="formInputs peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
 		type={type}
@@ -31,7 +38,7 @@ const { type, name, label, placeholder, value, required, disabled, iconClasses, 
 	<p
 		class="absolute w-min bg-surface text-red-950 dark:text-red-50 rounded-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400">
 		{label}
-		{required ? <i class="absolute bg-surface left-[-0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : ""}
+		{required ? <Icon name="asterisk" class="absolute bg-surface left-[-0.5ch] top-1 text-xs" /> : ""}
 	</p>
 	<div
 		class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-500 dark:border-gray-600 peer-[:not(:focus-within):invalid]:border-red-400 -z-10">

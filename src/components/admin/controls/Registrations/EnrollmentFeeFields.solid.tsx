@@ -2,6 +2,7 @@ import { EVALUATION_BADGE, EVALUATION_LABEL, placementClassYearsForClassId } fro
 import { type APIResponse } from "@routes/index.client";
 import type { ExtendedFormData } from "@utilities/forms";
 import { Index, Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
+import Icon from "@components/other/Icon.solid";
 
 /*
  * Enrollment form pieces for the fees (docs/FEES.md §3, §5), rendered inside the generic `Modal` through an
@@ -29,7 +30,7 @@ export function FeeManualMarker(props: { compact?: boolean }) {
 		<span
 			title="Ειδική τιμή: ορίστηκε χειροκίνητα, δεν επανυπολογίζεται"
 			class="inline-flex items-center gap-x-1 whitespace-nowrap rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-900 dark:bg-sky-900/50 dark:text-sky-100">
-			<i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>
+			<Icon name="hand-coins" />
 			{props.compact ? <span class="sr-only">Ειδική τιμή</span> : "Ειδική τιμή"}
 		</span>
 	);

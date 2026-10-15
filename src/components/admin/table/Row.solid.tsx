@@ -4,6 +4,7 @@ import { createAlert, pushAlert } from "../Alert.solid";
 import { For, type Setter } from "solid-js";
 import { findHighlightRanges } from "./searchMatch";
 import { SortDirection } from "./Table.solid";
+import Icon from "@components/other/Icon.solid";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean" | "copy";
 
@@ -168,12 +169,8 @@ export default function Row(props: Props) {
 							aria-label={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
 							title={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
 							class="rounded focus-visible:outline-2 focus-visible:outline-accent-ink">
-							<i
-								aria-hidden="true"
-								class={"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
-							<i
-								aria-hidden="true"
-								class={"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
+							<Icon name="checkbox" class={"selectBox group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")} />
+							<Icon name="checkbox-checked" class={"selectBox group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")} />
 						</button>
 					</div>
 				)}
@@ -186,7 +183,7 @@ export default function Row(props: Props) {
 							if (type === "link") {
 								return (
 									<a href={item as string} target="_blank" class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
-										<i class="fa-solid fa-up-right-from-square text-accent-ink"></i>
+										<Icon name="external-link" class="text-accent-ink" />
 									</a>
 								);
 							}
@@ -197,7 +194,7 @@ export default function Row(props: Props) {
 											type="button"
 											class="text-xl leading-none transition-transform duration-150 hover:scale-110 focus-visible:outline-hidden"
 											onClick={(e) => copyCellValue(e, String(item))}>
-											<i class="fa-regular fa-copy text-accent-ink"></i>
+											<Icon name="copy" class="text-accent-ink" />
 											<span class="sr-only">Αντιγραφή αναγνωριστικού</span>
 										</button>
 									</div>
@@ -241,8 +238,14 @@ export default function Row(props: Props) {
 								{header ? (
 									<>
 										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">{item}</span>
-										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
-										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
+										<Icon
+											name="chevron-up"
+											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-[asc]/head:flex"
+										/>
+										<Icon
+											name="chevron-down"
+											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-[desc]/head:flex"
+										/>
 									</>
 								) : highlightedParts ? (
 									<>

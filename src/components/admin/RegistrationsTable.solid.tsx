@@ -27,6 +27,7 @@ import {
 import { PREFIX } from "./controls/Registrations/helpers";
 import type { JoinedEnrollments } from "@_types/entities";
 import { EVALUATION_BADGE } from "@lib/classYears";
+import { createIcon } from "@lib/icons";
 import { toggleCheckbox } from "./table/Row.solid";
 
 const PAID_LABEL = "Πληρωμένη";
@@ -76,9 +77,7 @@ const setFeeCues = (row: HTMLElement, registration: JoinedEnrollments) => {
 		marker.setAttribute(FEE_DECOR, "");
 		marker.title = "Ειδική τιμή: ορίστηκε χειροκίνητα";
 		marker.className = "ml-1 inline-block text-sm text-sky-800 dark:text-sky-200";
-		const icon = document.createElement("i");
-		icon.className = "fa-solid fa-hand-holding-dollar";
-		icon.setAttribute("aria-hidden", "true");
+		const icon = createIcon("hand-coins");
 		const text = document.createElement("span");
 		text.className = "sr-only";
 		text.textContent = "Ειδική τιμή";

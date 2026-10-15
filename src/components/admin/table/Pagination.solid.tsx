@@ -2,6 +2,7 @@ import { customEvent } from "@_types/custom-events";
 import { getParent } from "@utilities/dom";
 import { Show, createEffect, createMemo, on, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
+import Icon from "@components/other/Icon.solid";
 
 export type Page = {
 	page: number;
@@ -57,7 +58,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-shade data-[active=true]:hover:bg-brand-hover data-[active=true]:hover:text-brand-ink"
 					data-pageTurn="-1"
 					type="button">
-					<i aria-hidden="true" class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-ink-muted/40"></i>
+					<Icon name="arrow-left" class="text-xl py-[2px] group-data-[active=false]/pgBtn:text-ink-muted/40" />
 				</button>
 				{maxPage() > 1 && pagination.page - 1 >= 0 && (
 					<button
@@ -94,7 +95,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-shade data-[active=true]:hover:bg-brand-hover data-[active=true]:hover:text-brand-ink"
 					data-pageTurn="1"
 					type="button">
-					<i aria-hidden="true" class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-ink-muted/40"></i>
+					<Icon name="arrow-right" class="text-xl py-[2px] group-data-[active=false]/pgBtn:text-ink-muted/40" />
 				</button>
 			</div>
 		</Show>

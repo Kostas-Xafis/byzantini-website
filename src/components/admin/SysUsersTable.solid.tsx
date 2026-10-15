@@ -16,6 +16,7 @@ import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTy
 import { type Action } from "./table/TableControls.solid";
 import { useCurrentUser } from "./currentUser";
 import { Badge, cardClass, hintClass, secondaryButtonClass } from "./Panel.solid";
+import Icon from "@components/other/Icon.solid";
 
 const PREFIX = "sysusers";
 
@@ -64,7 +65,7 @@ function PendingInvites(props: { invites: APIResponse["SysUsers.getInvites"]; on
 	return (
 		<section class={`${cardClass} w-[90%] max-sm:w-[92.5%] mb-2 p-4 grid gap-3 font-didact`} aria-labelledby="pending-invites-title">
 			<div class="flex items-center gap-2">
-				<i class="fa-solid fa-envelope-open-text text-accent-ink" aria-hidden="true"></i>
+				<Icon name="mail-open" class="text-accent-ink" />
 				<h2 id="pending-invites-title" class="font-anaktoria text-2xl leading-tight">
 					Εκκρεμείς προσκλήσεις
 				</h2>
@@ -83,11 +84,11 @@ function PendingInvites(props: { invites: APIResponse["SysUsers.getInvites"]; on
 							</div>
 							<div class="flex gap-2">
 								<button type="button" class={secondaryButtonClass} disabled={busy() !== null} onClick={() => resend(invite.email)}>
-									<i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+									<Icon name="send" />
 									Επαναποστολή
 								</button>
 								<button type="button" class={secondaryButtonClass} disabled={busy() !== null} onClick={() => revoke(invite.email)}>
-									<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+									<Icon name="close" />
 									Ακύρωση
 								</button>
 							</div>
@@ -151,7 +152,7 @@ export default function SysUsersTable() {
 					name: "invite_email",
 					label: "Email νέου διαχειριστή",
 					type: "email",
-					iconClasses: "fa-solid fa-envelope",
+					icon: "mail",
 					required: true,
 				} as InputProps,
 			},
@@ -220,7 +221,7 @@ export default function SysUsersTable() {
 					name: "role",
 					label: "Ρόλος",
 					type: "select",
-					iconClasses: "fa-solid fa-user-shield",
+					icon: "user-shield",
 					selectList: ROLES.map((role) => ROLE_LABELS[role]),
 					valueList: [...ROLES],
 					value: user.role,

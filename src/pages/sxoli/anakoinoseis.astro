@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import { type PageAnnouncement } from "@lib/api/routes/announcements";
 import JsonLd from "@components/seo/JsonLd.astro";
@@ -46,7 +47,7 @@ const excerpt = (content: string, max = 220) => {
 			</h1>
 			<p
 				class="inline-flex items-center gap-2 rounded-full border border-red-900/25 bg-red-900/[0.07] px-4 py-1.5 text-base max-sm:text-sm font-semibold tracking-wide text-red-900/90">
-				<i class="fa-solid fa-newspaper text-sm" aria-hidden="true"></i>
+				<Icon name="newspaper" class="text-sm" />
 				<span>
 					{
 						announcements.length > 0
@@ -60,7 +61,7 @@ const excerpt = (content: string, max = 220) => {
 		{
 			announcements.length === 0 ? (
 				<div class="flex flex-col items-center gap-y-4 py-16 text-center">
-					<i class="fa-solid fa-bullhorn text-6xl text-red-900/40" aria-hidden="true" />
+					<Icon name="megaphone" class="text-6xl text-red-900/40" />
 					<p class="text-2xl max-sm:text-xl font-semibold text-gray-700">Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.</p>
 					<p class="text-lg max-sm:text-base text-gray-500">Επισκεφθείτε τη σελίδα σύντομα για νεότερες ανακοινώσεις της Σχολής.</p>
 				</div>
@@ -81,7 +82,7 @@ const excerpt = (content: string, max = 220) => {
 								<div
 									class="announcementPlaceholder w-full aspect-[16/9] max-sm:max-h-[300px] sm:aspect-auto sm:h-full grid place-items-center bg-red-900/[0.06]"
 									class:list={[a.main_image ? "hidden" : ""]}>
-									<i class="fa-solid fa-bullhorn text-5xl sm:text-6xl text-red-900/50" aria-hidden="true" />
+									<Icon name="megaphone" class="text-5xl sm:text-6xl text-red-900/50" />
 								</div>
 								{a.main_image && (
 									<img
@@ -105,7 +106,7 @@ const excerpt = (content: string, max = 220) => {
 									<span
 										class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-md bg-red-900/85 px-2 py-1 text-sm max-sm:text-xs text-red-50 backdrop-blur-[2px]"
 										aria-label={`${a.total_images} φωτογραφίες`}>
-										<i class="fa-solid fa-images" aria-hidden="true" />
+										<Icon name="images" />
 										{a.total_images}
 									</span>
 								)}
@@ -113,11 +114,11 @@ const excerpt = (content: string, max = 220) => {
 							<div class="flex flex-col gap-y-3 flex-1 min-w-0 p-5 sm:p-6">
 								<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
 									<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
-										<i class="fa-solid fa-calendar-days" aria-hidden="true" />
+										<Icon name="calendar" />
 										<time datetime={new Date(a.date).toISOString()}>{formatDate(a.date)}</time>
 									</span>
 									<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
-										<i class="fa-solid fa-eye" aria-hidden="true" />
+										<Icon name="eye" />
 										{a.views} {a.views === 1 ? "προβολή" : "προβολές"}
 									</span>
 								</div>
@@ -125,10 +126,7 @@ const excerpt = (content: string, max = 220) => {
 								{a.content && <p class="text-lg max-sm:text-base text-gray-700 leading-relaxed line-clamp-3">{excerpt(a.content)}</p>}
 								<span class="mt-auto self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-base max-sm:text-sm text-red-900 transition-colors duration-300 group-hover/card:bg-red-900 group-hover/card:text-red-50">
 									Περισσότερα
-									<i
-										class="fa-solid fa-arrow-right transition-transform duration-300 pt-0.5 group-hover/card:translate-x-1"
-										aria-hidden="true"
-									/>
+									<Icon name="arrow-right" class="transition-transform duration-300 pt-0.5 group-hover/card:translate-x-1" />
 								</span>
 							</div>
 						</a>

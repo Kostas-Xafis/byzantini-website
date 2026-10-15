@@ -1,5 +1,6 @@
 import { onBackdropClick, trapFocus, type InitialFocus } from "@utilities/focusTrap";
 import { Show, onCleanup, onMount, type JSX } from "solid-js";
+import Icon from "@components/other/Icon.solid";
 
 export type DialogProps = {
 	/** Mounts the dialog (and starts the focus trap) while true. */
@@ -104,7 +105,7 @@ export function DialogCloseButton(props: { onClick: (e: MouseEvent) => void; cla
 				(props.class ?? "")
 			}
 			onClick={(e) => props.onClick(e)}>
-			<i class="w-full fa-solid fa-xmark" aria-hidden="true"></i>
+			<Icon name="close" />
 		</button>
 	);
 }

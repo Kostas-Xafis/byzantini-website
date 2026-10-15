@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
 import Spinner from "@components/other/Spinner.astro";
@@ -133,7 +134,7 @@ const videoSchemas = links
 		<a
 			href="/sxoli/anakoinoseis"
 			class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
-			<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+			<Icon name="arrow-left" />
 			Οι Ανακοινώσεις
 		</a>
 
@@ -144,13 +145,13 @@ const videoSchemas = links
 
 		<div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
 			<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
-				<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+				<Icon name="calendar" />
 				<time datetime={new Date(announcement.date).toISOString()}>
 					{formatDate(announcement.date)}
 				</time>
 			</span>
 			<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
-				<i class="fa-solid fa-eye" aria-hidden="true"></i>
+				<Icon name="eye" />
 				{announcement.views}
 				{announcement.views === 1 ? "προβολή" : "προβολές"}
 			</span>
@@ -238,7 +239,7 @@ const videoSchemas = links
 											/>
 											<span class="absolute inset-0 grid place-items-center bg-black/20 transition-colors duration-300 hover:bg-black/10">
 												<span class="grid place-items-center w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full bg-red-900 text-red-50 text-2xl max-sm:text-xl shadow-lg transition-transform duration-300 group-hover/video:scale-110">
-													<i class="fa-solid fa-play" aria-hidden="true" />
+													<Icon name="play" />
 												</span>
 											</span>
 										</button>
@@ -329,7 +330,7 @@ const videoSchemas = links
 					aria-label="Κλείσιμο"
 					title="Κλείσιμο"
 					class="rounded-xl text-2xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-					<i class="fa-solid fa-xmark text-white hover:text-red-100" aria-hidden="true"></i>
+					<Icon name="close" class="text-white hover:text-red-100" />
 				</button>
 			</div>
 			<div id="imageCarousel" data-index="0" class="max-h-[calc(95dvh_-_24px)] grid grid-rows-[calc(95dvh_-_79px),76px] justify-items-center gap-y-2">
@@ -353,7 +354,7 @@ const videoSchemas = links
 						aria-label="Προηγούμενη εικόνα"
 						title="Προηγούμενη εικόνα"
 						class="mr-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:mr-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-						<i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+						<Icon name="chevron-left" />
 					</button>
 					{
 						announcement.images
@@ -372,7 +373,7 @@ const videoSchemas = links
 						aria-label="Επόμενη εικόνα"
 						title="Επόμενη εικόνα"
 						class="ml-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:ml-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-						<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+						<Icon name="chevron-right" />
 					</button>
 				</div>
 			</div>

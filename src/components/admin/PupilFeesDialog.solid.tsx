@@ -19,6 +19,7 @@ import {
 	todayTimestamp,
 	type PreviewRow,
 } from "./controls/Registrations/EnrollmentFeeFields.solid";
+import Icon from "@components/other/Icon.solid";
 
 /**
  * «Δίδακτρα μαθητή» — one school year of a pupil at a glance (Μαθητολόγιο): every registration in discount
@@ -216,7 +217,7 @@ export default function PupilFeesDialog(props: Props) {
 						</select>
 					</label>
 					<Show when={loading() || busy()}>
-						<i class="fa-solid fa-circle-notch fa-spin text-accent-ink" aria-hidden="true"></i>
+						<Icon name="spinner" class="text-accent-ink" spin />
 						<span class="sr-only">Φόρτωση…</span>
 					</Show>
 				</div>
@@ -325,7 +326,7 @@ export default function PupilFeesDialog(props: Props) {
 																aria-controls={`fees-edit-${enrollment.id}`}
 																aria-label={`Επεξεργασία τιμής και πληρωμής: ${rowTitle(enrollment)}`}
 																onClick={() => setEditingId(editingId() === enrollment.id ? null : enrollment.id)}>
-																<i class="fa-regular fa-pen-to-square mr-1" aria-hidden="true"></i>
+																<Icon name="edit" class="mr-1" />
 																Επεξεργασία
 															</button>
 															<button
@@ -334,7 +335,7 @@ export default function PupilFeesDialog(props: Props) {
 																disabled={busy() || balance() <= 0}
 																aria-label={`Εξόφληση: ${rowTitle(enrollment)}`}
 																onClick={() => settleOne(enrollment)}>
-																<i class="fa-solid fa-check-double mr-1" aria-hidden="true"></i>
+																<Icon name="check-double" class="mr-1" />
 																Εξόφληση
 															</button>
 														</div>
@@ -383,7 +384,7 @@ export default function PupilFeesDialog(props: Props) {
 						disabled={busy() || owing().length === 0}
 						onClick={settleAll}
 						class="rounded-md bg-emerald-700 px-4 py-2 text-lg text-white shadow-md transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
-						<i class="fa-solid fa-check-double mr-2" aria-hidden="true"></i>
+						<Icon name="check-double" class="mr-2" />
 						Εξόφληση όλων
 					</button>
 				</div>
@@ -466,7 +467,7 @@ function RowEditor(props: {
 						setTouched(true);
 						if (props.catalogTotal !== null) setTotal(props.catalogTotal);
 					}}>
-					<i class="fa-solid fa-rotate-left mr-1" aria-hidden="true"></i>
+					<Icon name="undo" class="mr-1" />
 					Επαναφορά τιμής καταλόγου
 					<Show when={props.catalogTotal !== null}> ({euro(props.catalogTotal!)})</Show>
 				</button>

@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import { dispatchAPI } from "@hooks/useAPI.server";
 import { readAPIResponse } from "@lib/api/transport";
 import type { APIResponse } from "@routes/index.client";
@@ -60,8 +61,6 @@ const backLabel = result.ok
 		<meta name="robots" content="noindex, nofollow" />
 		<meta name="referrer" content="no-referrer" />
 		<title>{result.ok ? "Σύνδεση..." : "Η σύνδεση απέτυχε"}</title>
-		<link rel="stylesheet" href="/fa/css/fontawesome.min.css" />
-		<link rel="stylesheet" href="/fa/css/solid.min.css" />
 		<style>
 			html {
 				font-family:
@@ -150,6 +149,8 @@ const backLabel = result.ok
 				background: rgba(127, 29, 29, 0.12);
 			}
 			.error-icon {
+				display: inline-block;
+				line-height: 1;
 				font-size: 2.2rem;
 				margin-bottom: 10px;
 				color: rgb(185, 28, 28);
@@ -206,7 +207,9 @@ const backLabel = result.ok
 					</>
 				) : (
 					<>
-						<i class="error-icon fa-solid fa-circle-exclamation" aria-hidden="true" />
+						<span class="error-icon">
+							<Icon name="alert-circle" />
+						</span>
 						<h1>Η σύνδεση απέτυχε</h1>
 						<p class="status">{result.error}</p>
 						<div class="actions">

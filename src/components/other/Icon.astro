@@ -1,0 +1,20 @@
+---
+import { iconAttributes, iconContent, type IconName } from "@lib/icons";
+
+/** An icon of the site's set (lib/icons.ts). Decorative by default; give it a `title` when it carries meaning on its own. */
+export interface Props extends Omit<astroHTML.JSX.SVGAttributes, "class"> {
+	name: IconName;
+	class?: string;
+	/** Accessible name; without it the icon is decorative (`aria-hidden`). */
+	title?: string;
+	/** Width and height; default `1em`. */
+	size?: number | string;
+	/** Rotate continuously (stops under reduced motion). */
+	spin?: boolean;
+}
+
+const { name, class: className, title, size, spin, ...rest } = Astro.props;
+const cls = [className, spin ? "animate-spin motion-reduce:animate-none" : ""].filter(Boolean).join(" ");
+---
+
+<svg {...iconAttributes({ class: cls, title, size })} {...rest} set:html={iconContent(name, title)} />
