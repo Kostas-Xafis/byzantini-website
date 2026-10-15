@@ -9,24 +9,24 @@ import { Show, createSignal, type JSX } from "solid-js";
  * `bg-white`; anything that must stay white in both themes (brand marks) uses `bg-[#fff]`.
  */
 
-export const cardClass = "rounded-2xl border border-red-900/15 dark:border-red-200/15 bg-white shadow-sm shadow-red-950/10 dark:shadow-black/40";
+export const cardClass = "rounded-2xl border border-line bg-surface text-ink shadow-sm shadow-red-950/10 dark:shadow-black/40";
 export const primaryButtonClass =
-	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 dark:bg-red-800 dark:hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
+	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-4 py-2 font-bold bg-brand text-brand-ink hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
 export const secondaryButtonClass =
-	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-3 py-1.5 text-sm font-bold border border-red-900/60 text-red-900 hover:bg-red-50 dark:border-red-300/50 dark:text-red-100 dark:hover:bg-red-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-3 py-1.5 text-sm font-bold border border-brand/60 text-brand hover:bg-accent-soft dark:border-red-300/50 dark:text-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 export const inputClass =
-	"w-full max-w-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-red-950 dark:text-red-50 focus:outline-hidden focus:ring-2 focus:ring-red-900/40 dark:focus:ring-red-300/40";
-export const hintClass = "text-sm text-gray-600 dark:text-gray-300";
+	"w-full max-w-sm rounded-lg border border-line bg-surface-muted px-3 py-2 text-ink focus:outline-hidden focus:ring-2 focus:ring-red-900/40 dark:focus:ring-red-300/40";
+export const hintClass = "text-sm text-ink-muted";
 
 /** Centred page column (desktop) that scrolls inside the admin shell. */
 export function PanelPage(props: { title: string; subtitle?: JSX.Element; children: JSX.Element }) {
 	return (
-		<div class="w-full h-full min-h-0 overflow-y-auto bg-red-50 dark:bg-dark text-red-950 dark:text-red-50">
+		<div class="w-full h-full min-h-0 overflow-y-auto bg-page text-ink">
 			<div class="mx-auto w-full max-w-3xl px-4 py-6 sm:px-8 sm:py-10 grid gap-5">
 				<header class="grid gap-1">
 					<h1 class="font-anaktoria text-4xl">{props.title}</h1>
 					<Show when={props.subtitle}>
-						<p class="text-sm sm:text-base text-gray-700 dark:text-gray-300">{props.subtitle}</p>
+						<p class="text-sm sm:text-base text-ink-muted">{props.subtitle}</p>
 					</Show>
 				</header>
 				{props.children}
@@ -40,7 +40,7 @@ type CardHeaderProps = { icon: string; title: string; description?: JSX.Element;
 function CardHeader(props: CardHeaderProps) {
 	return (
 		<div class="flex items-start gap-3 min-w-0">
-			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200" aria-hidden="true">
+			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-brand dark:text-red-200" aria-hidden="true">
 				<i class={`${props.icon} text-lg`}></i>
 			</span>
 			<div class="grid gap-0.5 min-w-0 flex-1">
@@ -90,13 +90,13 @@ export function PanelCollapsible(props: CardHeaderProps & { id: string; badge?: 
 	};
 	return (
 		<details id={props.id} class={`${cardClass} group/panel`} open={open()} onToggle={onToggle}>
-			<summary class="flex cursor-pointer list-none items-center gap-3 rounded-2xl p-5 sm:p-6 select-none hover:bg-red-50/60 dark:hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-red-900 [&::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer list-none items-center gap-3 rounded-2xl p-5 sm:p-6 select-none hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-red-900 [&::-webkit-details-marker]:hidden">
 				<div class="flex-1 min-w-0">
 					<CardHeader icon={props.icon} title={props.title} description={props.description} />
 				</div>
 				{props.badge}
 				<i
-					class="fa-solid fa-chevron-down shrink-0 text-red-900/70 dark:text-red-200/70 transition-transform duration-200 group-open/panel:rotate-180 motion-reduce:transition-none"
+					class="fa-solid fa-chevron-down shrink-0 text-brand/70 dark:text-red-200/70 transition-transform duration-200 group-open/panel:rotate-180 motion-reduce:transition-none"
 					aria-hidden="true"></i>
 			</summary>
 			<div class="grid gap-5 px-5 pb-5 sm:px-6 sm:pb-6">{props.children}</div>

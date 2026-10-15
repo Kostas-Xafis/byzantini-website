@@ -278,7 +278,9 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 
 - **Oversized files:** `PupilsPage.solid.tsx` (872), `RegistrationForm.solid.tsx` (827 — split TypeSelect / Lookup / Form),
   `DatepickerCSS.astro` (724 lines of CSS), `pupils.ts` (598). `Input.solid.tsx` repeats a ~300-char class string 5×.
-- **Design tokens:** base/keyframe CSS duplicated across 4 layouts; `.glass` defined twice with different values; dark mode is
+- **Design tokens** (🟡 partly done 2026-10-15: dashboard colour tokens in `global.css` — panels, shared table, search, modal and the page
+  background use them; the remaining admin components still rely on the `html.dark .bg-white` patch, now token-backed):
+  base/keyframe CSS duplicated across 4 layouts; `.glass` defined twice with different values; dark mode is
   utility overrides (`html.dark .bg-white …`) with 6+ ad-hoc dark colours; hex/rgb hard-coded in 39 files → `@theme` tokens
   (`--color-surface`, `--color-text`, …).
 - **Solid reactivity:** props destructured in Input, DateInput, Popup, Modal, Row, Table — works only because parents remount.

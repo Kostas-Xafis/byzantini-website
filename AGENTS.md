@@ -460,6 +460,15 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - User-facing text is Greek — preserve existing Greek labels and wording; add
   Greek for new UI strings, do not translate existing ones.
 - Solid components use `.solid.tsx`, Astro components use `.astro`.
+- **Dashboard colours are tokens** (`src/styles/global.css` `@theme`, dark values
+  in the `.dark` block below it): `bg-page`, `bg-surface`, `bg-surface-muted`,
+  `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand` /
+  `text-brand` / `text-brand-ink` / `bg-brand-hover`, `bg-accent-soft`. Use them
+  in admin UI instead of `bg-white dark:bg-dark`-style pairs or new hex values.
+  The panel pages (`Panel.solid.tsx`) and the shared table (`table/*`,
+  `SearchTable`, `Modal`) are on them; `AdminLayout`'s legacy
+  `html.dark .bg-white` patch now resolves to `--color-surface`, so components
+  not migrated yet still match — migrate them as you touch them.
 
 ## Tests
 

@@ -63,9 +63,7 @@ export function TableControl(props: Props) {
 					aria-disabled="true"
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
-					class={
-						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 dark:text-neutral-400 opacity-50 cursor-not-allowed blur-[1px]"
-					}>
+					class={"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-ink-muted opacity-35 cursor-not-allowed"}>
 					<i aria-hidden="true" class={"text-lg max-sm:text-base " + (tableAction.action.icon || ActionIcon.ADD)}></i>
 				</button>
 			}>
@@ -75,7 +73,7 @@ export function TableControl(props: Props) {
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
 					class={
-						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl transition-colors duration-300 hover:bg-red-200 dark:hover:bg-red-900/70 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
+						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-brand dark:text-red-100 transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
 					<i
@@ -96,7 +94,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 bg-white dark:shadow-gray-700 dark:bg-dark rounded-xl bg-transparent text-red-950 dark:text-red-50">
+			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center divide-x divide-line rounded-xl border border-line bg-surface text-ink shadow-sm shadow-red-950/10 dark:shadow-black/40">
 			{props.children}
 		</div>
 	);

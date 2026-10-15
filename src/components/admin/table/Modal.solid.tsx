@@ -107,8 +107,8 @@ export default function Modal(props: Props) {
 			beforeEscape={canDismiss}
 			closeOnBackdrop={canDismiss}
 			backdropClass="modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] dark:bg-[rgb(0_0_0_/_0.6)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)] backdrop-blur-sm"
-			class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-white dark:bg-dark place-self-center grid grid-rows-[max-content_1fr_max-content] shadow-lg shadow-gray-700 rounded-md gap-y-4 justify-center text-red-950 dark:text-red-50 focus-visible:outline-hidden">
-			<h2 id={TITLE_ID} class="text-4xl p-2 w-full text-center max-sm:text-3xl">
+			class="relative max-w-[70%] max-sm:max-w-[92.5%] h-max max-h-[90vh] max-sm:max-h-[80dvh] max-sm:mt-[86px] p-6 bg-surface place-self-center grid grid-rows-[max-content_1fr_max-content] border border-line shadow-2xl shadow-black/30 rounded-2xl gap-y-4 justify-center text-ink focus-visible:outline-hidden">
+			<h2 id={TITLE_ID} class="font-anaktoria text-4xl p-2 w-full text-center max-sm:text-3xl">
 				{actionStore.action.headerText}
 			</h2>
 			<Show when={actionStore.action.summary?.length}>

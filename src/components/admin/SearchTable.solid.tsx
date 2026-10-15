@@ -94,11 +94,11 @@ export function SearchTable(props: SearchTableProps) {
 	const hasActiveQuery = () => !!props.searchQuery.value;
 
 	return (
-		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-lg border-2 border-red-900 bg-white/50 px-3 max-sm:mx-4 py-1.5 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark dark:shadow-gray-700">
-			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md dark:text-red-200" aria-hidden="true"></i>
+		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-xl border border-line bg-surface px-3 max-sm:mx-4 py-1.5 shadow-sm shadow-red-950/10 dark:shadow-black/40">
+			<i class="fa-solid fa-magnifying-glass text-brand dark:text-red-200" aria-hidden="true"></i>
 			<select
 				aria-label="Στήλη αναζήτησης"
-				class="max-w-[14rem] cursor-pointer rounded-md bg-red-300 px-2 py-1 text-sm font-bold text-red-900 shadow-md focus-visible:outline-hidden dark:bg-red-900 dark:text-red-50 dark:shadow-gray-800"
+				class="max-w-[14rem] cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-brand focus-visible:outline-2 focus-visible:outline-brand dark:text-red-50"
 				onChange={(e) => {
 					const colName = e.currentTarget.value;
 					const next = allColumns().find((c) => c.columnName === colName);
@@ -116,7 +116,7 @@ export function SearchTable(props: SearchTableProps) {
 				</For>
 			</select>
 			<input
-				class="w-48 max-sm:w-40 rounded-md bg-white px-3 py-1.5 font-didact text-base text-red-950 shadow-md shadow-gray-300 focus:shadow-lg focus-visible:outline-hidden dark:bg-dark dark:text-red-50 dark:shadow-gray-700"
+				class="w-48 max-sm:w-40 rounded-lg border border-line bg-surface-muted px-3 py-1.5 font-didact text-base text-ink focus-visible:outline-hidden focus:ring-2 focus:ring-brand/30"
 				type="text"
 				name="search"
 				autocomplete="off"

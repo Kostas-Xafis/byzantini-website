@@ -155,7 +155,7 @@ export default function Row(props: Props) {
 				class={
 					"row max-sm:text-sm" +
 					(header
-						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-t-xl before:content-[none] hover:shadow-gray-500 dark:hover:shadow-gray-700 before:!bg-white dark:before:!bg-[rgb(26_26_26)] border-b-2 border-b-red-900 dark:border-b-red-800"
+						? " header absolute top-0 left-0 right-0 rounded-t-2xl before:content-[none] bg-surface-muted text-brand dark:text-red-100 font-bold border-b-2 border-b-brand"
 						: "")
 				}>
 				{hasSelectBox && (
@@ -233,7 +233,7 @@ export default function Row(props: Props) {
 								class={
 									"cell" +
 									(header
-										? " group/head grid h-full items-center data-[asc]:bg-red-900 data-[desc]:bg-red-900 dark:data-[asc]:bg-red-800 dark:data-[desc]:bg-red-800 data-[asc]:text-white data-[desc]:text-white"
+										? " group/head grid h-full items-center cursor-pointer select-none rounded-md hover:bg-accent-soft data-[asc]:bg-brand data-[desc]:bg-brand data-[asc]:text-brand-ink data-[desc]:text-brand-ink"
 										: "")
 								}
 								data-col-ind={header && colIndex()}
