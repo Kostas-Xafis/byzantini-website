@@ -1,6 +1,7 @@
 # Error alerting — proposal (docs/IMPROVEMENTS.md P12, handoff task C2)
 
-Status: **proposal, awaiting the owner's decision.** Nothing here is implemented yet.
+Status: **option A + an uptime check chosen by the owner (2026-10-15) and implemented** — see "What was built"
+at the end. Alerts go to the sysadmin only. The uptime monitor itself still has to be created (an external account).
 
 ## The problem
 
@@ -91,3 +92,42 @@ a route that starts failing after a deploy or a data edge case, a worker that ca
 2. Who receives the alerts (the sysadmin only, or the owner too) and how often (every 15 min when there are
    errors / a daily digest).
 3. For B: who owns the Sentry account, and which region.
+
+## What was built (option A)
+
+- **Recording** — `sys_errors` (migration 0008; one row per distinct error: source, status, error class, scrubbed
+  message, host, count, first/last seen, notified_at). `APIServer.onServerError` (installed by the route
+  registry) records every 5xx the API answers — handler exceptions, a response that breaks its schema, a route that
+  answers a 5xx itself (e.g. the PDF worker failed: its public message is kept) — plus a failed `afterWrite`;
+  `src/middleware.ts` records pages that crash (`page /path`). `lib/errors/describe.ts` keeps only the error class
+  and a message with emails and digit runs ≥ 6 masked, truncated to 300 characters.
+- **«Σφάλματα» page** — `/admin/errors` (sysadmin, the `queryLogs` permission): newest first, count, «νέο» until
+  notified, «Διαγραφή» per row or all. Routes `Errors.list` / `Errors.delete`.
+- **Digest** — the emails worker's cron (`*/15 * * * *`, `services/emailWorker/src/errorDigest.ts`) reads
+  `sys_errors` through its own `DB` binding to `byzantini-db`, emails every `sysadmin` the rows seen since they were
+  last notified (at most 50 per email, a link to the page), marks them, and deletes rows older than 90 days.
+  Nothing is sent when nothing is new; a failed send is retried next run. A plain inline-HTML email — no R2 template.
+- **Health** — `GET /api/health` (public): `{ data: { ok: true } }` when the worker runs and D1 answers, 503
+  otherwise.
+
+### Setup (owner, at deploy time)
+
+1. Apply 0008 remotely (it creates `sys_errors`), deploy the site, then deploy the emails worker
+   (`cd services/emailWorker && bunx wrangler deploy --config wrangler.jsonc`) — the deploy registers the cron and
+   the D1 binding. Errors of the **preview** site are recorded in the preview database and not mailed (the worker
+   reads production only).
+2. **Uptime monitor** (any free one — UptimeRobot, Better Stack, …), in the sysadmin's name:
+   - a keyword/HTTP monitor on `https://musicschool-metamorfosi.gr/api/health`, every 5 minutes, alert when the
+     status is not 200 (or the body lacks `"ok":true`);
+   - optionally a second one on `https://musicschool-metamorfosi.gr/` for the static pages;
+   - alerts to the sysadmin's email.
+3. Check once: `bunx wrangler tail byzantini-website-emails` around a quarter past — an idle run logs nothing
+   (no new errors); the «Σφάλματα» page shows anything recorded.
+
+### Trying it locally
+
+`cd services/emailWorker && bunx wrangler dev --config wrangler.jsonc --name errors-digest-check --port 8790
+--persist-to ../../.wrangler/state --test-scheduled --var DRY_RUN:true`, then `curl
+'http://localhost:8790/__scheduled?cron=*/15+*+*+*+*'` — it reads the site's local dev database and only logs
+(`[dry-run:…]`, masked recipients). Keep `DRY_RUN:true` on the command line: the cron has no request to recognise
+a local run by.

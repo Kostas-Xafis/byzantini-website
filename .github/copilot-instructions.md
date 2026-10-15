@@ -96,6 +96,10 @@
 - Every successful data change by a signed-in admin is logged to
   `sys_activity` («Ιστορικό ενεργειών») — only endpoints listed in
   `lib/activity/labels.ts`; add new mutating routes there with a Greek label.
+- Unexpected server errors are recorded in `sys_errors` («Σφάλματα»,
+  `/admin/errors`, sysadmin) via `APIServer.onServerError`; the emails worker's
+  cron emails the sysadmins a digest (`services/emailWorker/src/errorDigest.ts`).
+  `GET /api/health` is the uptime-monitor target.
 - A 401 in the dashboard sends the admin to `/login?…&expired=1` and back
   (`lib/auth/sessionExpiry.client.ts`); password reset is
   `/login/forgot` → `/login/reset/<token>` (`Authentication.*PasswordReset`).

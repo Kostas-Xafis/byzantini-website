@@ -80,6 +80,20 @@ export const z_SysUserIdentity = z.object({
 	last_used_at: positiveInt().nullable(),
 });
 
+/** «Σφάλματα» row (migration 0008): one distinct unexpected server error, counted. */
+export const z_SysError = z.object({
+	id: positiveInt(),
+	source: z.string(),
+	status: z.number().int(),
+	error_name: z.string(),
+	message: z.string(),
+	host: z.string(),
+	count: positiveInt(),
+	first_seen_at: positiveInt(),
+	last_seen_at: positiveInt(),
+	notified_at: positiveInt().nullable(),
+});
+
 /** A pending admin invite (migration 0008). `id` is the SHA-256 of the emailed link — never the link itself. */
 export const z_SysUserRegisterLink = z.object({
 	id: z.string().min(1),

@@ -86,6 +86,16 @@ export class APIServer<
 	 */
 	static afterWrite?: (write: { route: APIServer; params: Record<string, string | number>; body: unknown; cookies: ServerCookies }) => Promise<void>;
 
+	/**
+	 * Hook for unexpected failures — every 5xx `handle` answers, plus a failed `afterWrite` — installed by the
+	 * registry (`lib/errors/record.server.ts`, the «Σφάλματα» log). Awaited before the answer leaves, so the
+	 * Workers runtime cannot cancel it; it must not throw.
+	 */
+	static onServerError?: (failure: { route: APIServer; request: Request; status: number; error: unknown }) => Promise<void>;
+
+	/** The error behind a 500 built by `errorResponse` / `validateResponse`, for `onServerError`. */
+	private static failures = new WeakMap<Response, unknown>();
+
 	constructor(route: APIRouteOptions<M, P, O, R>, handler?: Handler<P, O>);
 	constructor(route: APIRouteOptions<M, P, O, R>, middleware: MiddlewareFunction[], handler: Handler<P, O>);
 	constructor(route: APIRouteOptions<M, P, O, R>, middlewareOrHandler?: MiddlewareFunction[] | Handler<P, O>, handler?: Handler<P, O>) {
@@ -126,13 +136,29 @@ export class APIServer<
 		const { route, params } = match;
 		const context = `${method} ${path}`;
 		const cookies = new ServerCookies(request);
+		// Every answer leaves through here: a 5xx is reported to `onServerError` first.
+		const finish = async (response: Response) => {
+			if (response.status >= 500 && this.onServerError) {
+				// A route that answers a 5xx itself (e.g. an upstream worker failed) has no exception: keep its public message.
+				let error = this.failures.get(response);
+				if (error === undefined) {
+					const body = (await response
+						.clone()
+						.json()
+						.catch(() => null)) as { error?: string } | null;
+					error = new Error(`HTTP ${response.status}${body?.error ? `: ${body.error}` : ""}`);
+				}
+				await this.onServerError({ route, request, status: response.status, error }).catch(() => {});
+			}
+			return response;
+		};
 		try {
 			// Middleware first: an anonymous or rate-limited caller is turned away before its body is read.
 			for (const middleware of route.middleware) {
 				const result = await middleware({ route, request, cookies });
 				if (result instanceof Response) {
 					await discardBody(request);
-					return this.validateResponse(cookies.apply(result), route.responseSchema, context);
+					return await finish(await this.validateResponse(cookies.apply(result), route.responseSchema, context));
 				}
 			}
 
@@ -165,12 +191,15 @@ export class APIServer<
 				env: runtimeEnv,
 			} as never);
 			if (method !== "GET" && response.ok && this.afterWrite) {
-				await this.afterWrite({ route, params, body, cookies }).catch((error) => console.error(`[api] ${context}: afterWrite failed`, error));
+				await this.afterWrite({ route, params, body, cookies }).catch(async (error) => {
+					console.error(`[api] ${context}: afterWrite failed`, error);
+					await this.onServerError?.({ route, request, status: response.status, error: new Error("afterWrite failed", { cause: error }) });
+				});
 			}
-			return await this.validateResponse(cookies.apply(response), route.responseSchema, context);
+			return await finish(await this.validateResponse(cookies.apply(response), route.responseSchema, context));
 		} catch (error) {
 			// Handlers without `handlerResult`, middleware and body/response parsing end up here.
-			return cookies.apply(this.errorResponse(error, SERVER_ERROR_MESSAGE, context));
+			return await finish(cookies.apply(this.errorResponse(error, SERVER_ERROR_MESSAGE, context)));
 		}
 	}
 
@@ -196,7 +225,9 @@ export class APIServer<
 			return this.json({ error: INVALID_BODY_MESSAGE, details: treeifyError(error) }, HTTP.BAD_REQUEST);
 		}
 		console.error(`[api] ${context ?? publicMessage}:`, error);
-		return this.jsonError(publicMessage, HTTP.INTERNAL_SERVER_ERROR);
+		const response = this.jsonError(publicMessage, HTTP.INTERNAL_SERVER_ERROR);
+		this.failures.set(response, error);
+		return response;
 	}
 
 	/**
@@ -250,7 +281,9 @@ export class APIServer<
 		const result = await schema.safeParseAsync(payload);
 		if (!result.success) {
 			console.error(`[api] ${context}: response does not match its schema`, JSON.stringify(treeifyError(result.error)));
-			return this.jsonError(SERVER_ERROR_MESSAGE, HTTP.INTERNAL_SERVER_ERROR);
+			const failed = this.jsonError(SERVER_ERROR_MESSAGE, HTTP.INTERNAL_SERVER_ERROR);
+			this.failures.set(failed, new Error("The response does not match its schema"));
+			return failed;
 		}
 		const serialized = JSON.stringify(wrapped ? { data: result.data } : result.data);
 		return new Response(serialized, { status: response.status, headers: response.headers });

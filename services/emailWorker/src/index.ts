@@ -1,3 +1,4 @@
+import { runErrorDigest } from "./errorDigest";
 import { logRequest, toErrorMessage, NONE, type RequestOutcome } from "./observability";
 
 export interface Env {
@@ -20,6 +21,11 @@ export interface Env {
 	 * Optional so the worker still runs if the binding is unavailable.
 	 */
 	ANALYTICS?: AnalyticsEngineDataset;
+	/**
+	 * The website's D1 database (byzantini-db) — read by the «Σφάλματα» digest cron only (`sys_errors`,
+	 * `sys_users`). Optional so `fetch` keeps working where the binding is absent.
+	 */
+	DB?: D1Database;
 }
 
 interface MailRequest {
@@ -101,6 +107,21 @@ export default {
 			statusText: handled.response.statusText,
 			headers,
 		});
+	},
+	/** Cron (wrangler.jsonc `triggers`): emails the sysadmins new server errors — see errorDigest.ts. */
+	async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+		if (!env.DB) {
+			console.warn("[errors] no DB binding — digest skipped");
+			return;
+		}
+		// No request to judge by: a dry run only when the environment says so or there is no API key
+		// (`wrangler dev` reads ENVIRONMENT=development from .dev.vars).
+		const dryRun = decideDryRun(env);
+		ctx.waitUntil(
+			runErrorDigest(env.DB, (email) => deliverEmail(env, email, dryRun)).catch((error) =>
+				console.error("[errors] digest failed", error),
+			),
+		);
 	},
 } satisfies ExportedHandler<Env>;
 
@@ -234,14 +255,23 @@ export async function mailService(body: MailRequest, env: Env, request?: Request
 	// the binding directly — no HTTP fetch from the website's file proxy.
 	const html = await getHTMLTemplate(env, htmlTemplateName, templateData);
 
-	const dryRun = decideDryRun(env, request);
+	await deliverEmail(env, { to, subject, html, label: htmlTemplateName }, decideDryRun(env, request));
+}
+
+/**
+ * Sends one rendered email through MailerSend — or, in a dry run, only logs it (masked recipient, truncated HTML).
+ * `label` names the email in the logs (the template name), never its content.
+ */
+export async function deliverEmail(
+	env: Env,
+	{ to, subject, html, label }: { to: string; subject: string; html: string; label: string },
+	dryRun: { on: boolean; reason: string },
+): Promise<void> {
 	if (dryRun.on) {
 		// A local (wrangler dev) request NEVER sends, whatever the site's
 		// environment says. Real recipients are masked; the auth token is never
 		// logged; the rendered HTML is truncated.
-		console.log(
-			`[dry-run:${dryRun.reason}] would send to=${maskEmail(to)} subject=${subject} template=${htmlTemplateName} html=${html.length}b`,
-		);
+		console.log(`[dry-run:${dryRun.reason}] would send to=${maskEmail(to)} subject=${subject} template=${label} html=${html.length}b`);
 		console.log(html.slice(0, 500));
 		return;
 	}
@@ -266,7 +296,7 @@ export async function mailService(body: MailRequest, env: Env, request?: Request
 		const detail = await res.text().catch(() => "");
 		throw new Error(`MailerSend responded ${res.status}: ${detail.slice(0, 500)}`);
 	}
-	console.log(`[mail] to=${to} subject=${subject} template=${htmlTemplateName}`);
+	console.log(`[mail] to=${to} subject=${subject} template=${label}`);
 }
 
 /**

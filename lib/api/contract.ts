@@ -129,4 +129,7 @@ export const APIEndpoints = {
 	"Authentication.revokeOtherSessions": { method: "DELETE", path: "/auth/sessions", multipart: false, rawBlob: false },
 	"Activity.list": { method: "POST", path: "/activity", multipart: false, rawBlob: false },
 	"Activity.admins": { method: "GET", path: "/activity/admins", multipart: false, rawBlob: false },
+	"Errors.list": { method: "GET", path: "/sys/errors", multipart: false, rawBlob: false },
+	"Errors.delete": { method: "DELETE", path: "/sys/errors", multipart: false, rawBlob: false },
+	"Health.get": { method: "GET", path: "/health", multipart: false, rawBlob: false },
 } as const satisfies Record<APIEndpointNames, APIContractEntry>;

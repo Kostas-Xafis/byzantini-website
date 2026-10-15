@@ -356,6 +356,16 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   to `ACTIVITY_LABELS`** (`tests/unit/activity.test.ts` checks every entry is
   a real non-GET route). Routes: `Activity.list` (cursor + admin/category
   filters), `Activity.admins`. `query_logs` stays the raw SQL trace (sysadmin).
+- **«Σφάλματα»** (`/admin/errors`, sysadmin; docs/ERROR_ALERTING.md): every
+  5xx the API answers (and a failed `afterWrite`) reaches
+  `APIServer.onServerError` → `lib/errors/record.server.ts` → `sys_errors`
+  (0008; one row per distinct error, counted; messages scrubbed by
+  `lib/errors/describe.ts` — never bodies, cookies or query strings); crashed
+  pages are recorded by `src/middleware.ts`. The emails worker's cron
+  (`*/15`, `services/emailWorker/src/errorDigest.ts`, its own `DB` binding to
+  production `byzantini-db`) emails the **sysadmins** what is new, marks it
+  notified and prunes rows after 90 days. `GET /api/health` (public) is for the
+  external uptime monitor. Routes: `Errors.list`/`Errors.delete`, `Health.get`.
 - **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
   production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
   `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
