@@ -94,11 +94,11 @@ export function SearchTable(props: SearchTableProps) {
 	const hasActiveQuery = () => !!props.searchQuery.value;
 
 	return (
-		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-xl border border-line bg-surface px-3 max-sm:mx-4 py-1.5 shadow-sm shadow-red-950/10 dark:shadow-black/40">
-			<i class="fa-solid fa-magnifying-glass text-brand dark:text-red-200" aria-hidden="true"></i>
+		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-xl border border-line bg-surface px-3 max-sm:mx-4 py-1.5 shadow-sm shadow-shade">
+			<i class="fa-solid fa-magnifying-glass text-accent-ink" aria-hidden="true"></i>
 			<select
 				aria-label="Στήλη αναζήτησης"
-				class="max-w-[14rem] cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-brand focus-visible:outline-2 focus-visible:outline-brand dark:text-red-50"
+				class="max-w-[14rem] cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-accent-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
 				onChange={(e) => {
 					const colName = e.currentTarget.value;
 					const next = allColumns().find((c) => c.columnName === colName);
@@ -140,7 +140,7 @@ export function SearchTable(props: SearchTableProps) {
 				}}
 			/>
 			<Show when={hasActiveQuery() || value()}>
-				<span class="whitespace-nowrap font-didact text-sm text-red-950 dark:text-red-100" aria-live="polite">
+				<span class="whitespace-nowrap font-didact text-sm text-ink" aria-live="polite">
 					{props.resultsCount?.() ?? 0}
 					{props.totalCount ? <span class="opacity-70"> / {props.totalCount()}</span> : null}
 				</span>
@@ -149,7 +149,7 @@ export function SearchTable(props: SearchTableProps) {
 				<button
 					type="button"
 					aria-label="Καθαρισμός αναζήτησης"
-					class="grid h-6 w-6 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/70"
+					class="grid h-6 w-6 place-items-center rounded-full text-accent-ink transition-colors hover:bg-accent-soft"
 					onClick={clear}>
 					<i class="fa-solid fa-xmark text-sm leading-none" aria-hidden="true"></i>
 				</button>

@@ -103,8 +103,12 @@
   pending ones are listed, resent and revoked under the admins table
   (`SysUsers.getInvites` / `resendInvite` / `revokeInvite`).
 - Admin colours are tokens in `src/styles/global.css` (`bg-surface`,
-  `text-ink`, `border-line`, `bg-brand`, …, dark values on `.dark`) — use them
-  instead of `bg-white dark:bg-dark` pairs or new hex values.
+  `text-ink`, `border-line`, `bg-brand`, `text-accent-ink`, `shadow-shade`,
+  `text-danger`, …, dark values on `.dark`) — use them instead of
+  `bg-white dark:bg-dark` pairs or new hex values. All of `src/components/admin`
+  is on them and the `html.dark .bg-white` patch is gone, so a new `bg-white`
+  stays white in dark mode (use `bg-[#fff]` only for brand logos). Status colours,
+  `AdminNav` and the shared `input/*` controls keep their own `dark:` pairs.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by

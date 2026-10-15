@@ -497,12 +497,17 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - **Dashboard colours are tokens** (`src/styles/global.css` `@theme`, dark values
   in the `.dark` block below it): `bg-page`, `bg-surface`, `bg-surface-muted`,
   `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand` /
-  `text-brand` / `text-brand-ink` / `bg-brand-hover`, `bg-accent-soft`. Use them
-  in admin UI instead of `bg-white dark:bg-dark`-style pairs or new hex values.
-  The panel pages (`Panel.solid.tsx`) and the shared table (`table/*`,
-  `SearchTable`, `Modal`) are on them; `AdminLayout`'s legacy
-  `html.dark .bg-white` patch now resolves to `--color-surface`, so components
-  not migrated yet still match — migrate them as you touch them.
+  `text-brand-ink` / `bg-brand-hover`, `bg-accent-soft`, `text-accent-ink`
+  (brand red as text/icon/outline — pale in dark), `shadow-shade`, `text-danger`.
+  Use them in admin UI instead of `bg-white dark:bg-dark`-style pairs or new hex
+  values: one class, both themes. Everything under `src/components/admin` is on
+  them (`bg-white` is gone from the admin; `AdminLayout`'s old
+  `html.dark .bg-white` patch is deleted — a new `bg-white` would now stay white
+  in dark mode). Left on their own `dark:` pairs on purpose: status colours
+  (green/amber/blue/sky/violet toasts, badges, notes), the modal backdrop, the
+  admin sidebar (`AdminNav`), and the shared `input/*` controls, whose light look
+  must stay identical on the public form (only their surface uses `bg-surface`).
+  Anything that must stay white in both themes (brand logos) is `bg-[#fff]`.
 
 ## Tests
 

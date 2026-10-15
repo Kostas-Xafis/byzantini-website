@@ -29,9 +29,9 @@ const restricted = (permission: Permission, Page: Component) => () => {
 			<Show
 				when={user()!.permissions[permission]}
 				fallback={
-					<div class="grid h-full place-items-center p-8 text-center text-red-950 dark:text-red-50">
+					<div class="grid h-full place-items-center p-8 text-center text-ink">
 						<div class="grid gap-2">
-							<i class="fa-solid fa-lock text-3xl text-red-900 dark:text-red-200" aria-hidden="true"></i>
+							<i class="fa-solid fa-lock text-3xl text-accent-ink" aria-hidden="true"></i>
 							<p class="text-lg font-bold">Δεν έχετε πρόσβαση σε αυτή τη σελίδα.</p>
 						</div>
 					</div>

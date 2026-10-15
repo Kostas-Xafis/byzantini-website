@@ -278,11 +278,10 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 
 - **Oversized files:** `PupilsPage.solid.tsx` (872), `RegistrationForm.solid.tsx` (827 — split TypeSelect / Lookup / Form),
   `DatepickerCSS.astro` (724 lines of CSS), `pupils.ts` (598). `Input.solid.tsx` repeats a ~300-char class string 5×.
-- **Design tokens** (🟡 partly done 2026-10-15: dashboard colour tokens in `global.css` — panels, shared table, search, modal and the page
-  background use them; the remaining admin components still rely on the `html.dark .bg-white` patch, now token-backed):
-  base/keyframe CSS duplicated across 4 layouts; `.glass` defined twice with different values; dark mode is
-  utility overrides (`html.dark .bg-white …`) with 6+ ad-hoc dark colours; hex/rgb hard-coded in 39 files → `@theme` tokens
-  (`--color-surface`, `--color-text`, …).
+- **Design tokens** (🟡 admin dashboard colours done 2026-10-15: `global.css` tokens, every admin component on them, the `html.dark .bg-white`
+  patch deleted; still open: the `html.dark .text-gray-*`/`.shadow-gray-*` rules and `select` colours in `AdminLayout`, `input/*` controls and
+  `AdminNav` on their own `dark:` pairs, status colours, public site): base/keyframe CSS duplicated across 4 layouts; `.glass` defined twice
+  with different values; hex/rgb hard-coded in 39 files → `@theme` tokens (`--color-surface`, `--color-text`, …).
 - **Solid reactivity:** props destructured in Input, DateInput, Popup, Modal, Row, Table — works only because parents remount.
   Pupil search (`PupilsPage.solid.tsx:245–262`) can show stale results (no abort/sequence).
 - **Music-type constants** duplicated in ~8 places (`MUSIC_TYPES`, `CLASS_TYPE_*`, ternaries, three `z.literal(0|1|2)`) → centralise in `lib/classYears.ts`.

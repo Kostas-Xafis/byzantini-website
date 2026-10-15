@@ -64,7 +64,7 @@ function PendingInvites(props: { invites: APIResponse["SysUsers.getInvites"]; on
 	return (
 		<section class={`${cardClass} w-[90%] max-sm:w-[92.5%] mb-2 p-4 grid gap-3 font-didact`} aria-labelledby="pending-invites-title">
 			<div class="flex items-center gap-2">
-				<i class="fa-solid fa-envelope-open-text text-brand dark:text-red-200" aria-hidden="true"></i>
+				<i class="fa-solid fa-envelope-open-text text-accent-ink" aria-hidden="true"></i>
 				<h2 id="pending-invites-title" class="font-anaktoria text-2xl leading-tight">
 					Εκκρεμείς προσκλήσεις
 				</h2>

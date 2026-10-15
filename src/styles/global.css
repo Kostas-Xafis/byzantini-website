@@ -25,7 +25,7 @@
 	 * Dashboard colour tokens — the one place the admin's surfaces, text and lines are defined, for both
 	 * themes (the dark values are swapped in by the `.dark` block below). Use `bg-page`, `bg-surface`,
 	 * `bg-surface-muted`, `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand`,
-	 * `text-brand`, `text-brand-ink`, `bg-accent-soft` instead of `bg-white dark:bg-dark`,
+	 * `text-brand`, `text-brand-ink`, `bg-accent-soft`, `text-accent-ink`, `shadow-shade`, `text-danger` instead of `bg-white dark:bg-dark`,
 	 * `text-gray-600 dark:text-gray-300`, … pairs.
 	 */
 	--color-page: #fcf0f0;
@@ -39,6 +39,11 @@
 	--color-brand-hover: #450a0a;
 	--color-brand-ink: #fef2f2;
 	--color-accent-soft: #fee2e2;
+	/* Brand red used as text/icons/outlines on a surface (the brand fill itself is `brand`), and the colour of shadows. */
+	--color-accent-ink: #7f1d1d;
+	--color-shade: rgb(69 10 10 / 0.14);
+	/* Error text and validation messages. */
+	--color-danger: #b91c1c;
 }
 
 /* Dark values of the dashboard tokens (unlayered, so they win over the @theme defaults on :root). */
@@ -54,6 +59,9 @@
 	--color-brand-hover: #b91c1c;
 	--color-brand-ink: #fef2f2;
 	--color-accent-soft: rgb(153 27 27 / 0.35);
+	--color-accent-ink: #fecaca;
+	--color-shade: rgb(0 0 0 / 0.55);
+	--color-danger: #fca5a5;
 }
 
 /* Fixed navbar height, shared by the navbar and the page offset below it (Layout.astro).

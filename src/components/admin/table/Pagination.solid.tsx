@@ -47,27 +47,22 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 
 	return (
 		<Show when={pagination.pageSize < pagination.dataSize}>
-			<div
-				id="pagination"
-				class="pb-4 flex flex-row justify-center gap-x-2 font-didact text-2xl text-red-950 dark:text-red-50"
-				onClick={onClickPagination}>
+			<div id="pagination" class="pb-4 flex flex-row justify-center gap-x-2 font-didact text-2xl text-ink" onClick={onClickPagination}>
 				<button
 					data-active={pagination.page - 1 >= 0}
 					disabled={!(pagination.page - 1 >= 0)}
 					aria-disabled={!(pagination.page - 1 >= 0)}
 					aria-label="Προηγούμενη σελίδα"
 					title="Προηγούμενη σελίδα"
-					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 dark:data-[active=true]:hover:shadow-gray-700 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
+					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-shade data-[active=true]:hover:bg-brand-hover data-[active=true]:hover:text-brand-ink"
 					data-pageTurn="-1"
 					type="button">
-					<i
-						aria-hidden="true"
-						class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-gray-300 dark:group-data-[active=false]/pgBtn:text-gray-500"></i>
+					<i aria-hidden="true" class="text-xl py-[2px] fa-solid fa-arrow-left group-data-[active=false]/pgBtn:text-ink-muted/40"></i>
 				</button>
 				{maxPage() > 1 && pagination.page - 1 >= 0 && (
 					<button
 						aria-label={`Σελίδα ${pagination.page}`}
-						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
+						class="transition-all rounded px-2 hover:shadow-md hover:shadow-shade hover:bg-brand-hover hover:text-brand-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
 						data-pageTurn="-1"
 						type="button">
 						{pagination.page}
@@ -76,7 +71,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 				<button
 					aria-label={`Σελίδα ${pagination.page + 1}`}
 					aria-current="page"
-					class="relative focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-red-950 dark:before:bg-red-700 before:z-[10]"
+					class="relative focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 hover:shadow-md hover:shadow-shade hover:bg-brand-hover hover:text-brand-ink hover:before:hidden before:absolute before:bottom-0 before:inset-x-0 before:h-[1px] before:bg-brand before:z-[10]"
 					data-pageTurn="0"
 					type="button">
 					{pagination.page + 1}
@@ -84,7 +79,7 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 				{maxPage() >= 2 && pagination.page + 1 < maxPage() && (
 					<button
 						aria-label={`Σελίδα ${pagination.page + 2}`}
-						class="transition-all rounded px-2 hover:shadow-md hover:shadow-gray-400 dark:hover:shadow-gray-700 hover:bg-red-950 hover:text-white focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
+						class="transition-all rounded px-2 hover:shadow-md hover:shadow-shade hover:bg-brand-hover hover:text-brand-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
 						data-pageTurn="1"
 						type="button">
 						{pagination.page + 2}
@@ -96,12 +91,10 @@ export default function Pagination({ pageSize, dataSize }: Props) {
 					aria-disabled={!(pagination.page + 1 < maxPage())}
 					aria-label="Επόμενη σελίδα"
 					title="Επόμενη σελίδα"
-					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-gray-400 dark:data-[active=true]:hover:shadow-gray-700 data-[active=true]:hover:bg-red-950 data-[active=true]:hover:text-white"
+					class="group/pgBtn disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink transition-all rounded px-2 data-[active=true]:hover:shadow-md data-[active=true]:hover:shadow-shade data-[active=true]:hover:bg-brand-hover data-[active=true]:hover:text-brand-ink"
 					data-pageTurn="1"
 					type="button">
-					<i
-						aria-hidden="true"
-						class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-gray-300 dark:group-data-[active=false]/pgBtn:text-gray-500"></i>
+					<i aria-hidden="true" class="text-xl py-[2px] fa-solid fa-arrow-right group-data-[active=false]/pgBtn:text-ink-muted/40"></i>
 				</button>
 			</div>
 		</Show>
