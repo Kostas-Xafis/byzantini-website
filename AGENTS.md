@@ -398,6 +398,15 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   context-free (`Bucket.put(data, key, type)`); `list` paginates past 1000
   keys; `move` copies first, deletes the source only after, keeps the source's
   metadata and is a no-op onto the same key.
+- **Public files** (`src/pages/[...slug].ts`, rules in `lib/bucket/publicFiles.ts`):
+  the catch-all serves only bucket-root files and `PUBLIC_BUCKET_PREFIXES`
+  (`anakoinoseis/images/`, `kathigites/`, `spoudastiria/`, `choir/`,
+  `emails/files/`) — `html_templates/` / `pdf_templates/` and anything new are
+  404 until added there. Stored Content-Type + `nosniff`; only raster images,
+  PDFs and fonts inline, everything else a sandboxed attachment. Admin uploads
+  accept JPEG/PNG/WebP/GIF (+ PDF for CVs) up to 10 MB — no SVG.
+- JSON inside an inline `<script>` (JSON-LD, page data) goes through
+  `jsonForScript` (`lib/utilities/safeJson.ts`), never bare `JSON.stringify`.
 - **Worker↔worker calls go through service bindings, never HTTP URLs**: the
   site's `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`)
   and `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each

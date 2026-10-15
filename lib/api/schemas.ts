@@ -6,6 +6,7 @@
  */
 import { z } from "astro/zod";
 import { ROLES } from "@lib/auth/roles";
+import { isSafeFileName, UPLOAD_IMAGE_TYPES } from "@lib/bucket/publicFiles";
 
 const looseBoolean = (message = "Μη έγκυρο loose boolean") =>
 	z.union([z.boolean(), z.literal(0), z.literal(1)], { message }).transform((v) => v === true || v === 1);
@@ -396,12 +397,13 @@ export const z_BlobUpload = z.custom<Blob>((v) => typeof (v as any)?.arrayBuffer
 
 /** File/blob fields used by multipart image uploads.*/
 export const z_AnnouncementImageUpload = z.object({
-	name: z.string("Μη έγκυρο όνομα"),
+	// Part of the bucket key and the public URL: one path segment.
+	name: z.string("Μη έγκυρο όνομα").refine(isSafeFileName, "Μη έγκυρο όνομα αρχείου"),
 	announcement_id: positiveInt("Μη έγκυρο announcement_id"),
 	is_main: looseBoolean("Μη έγκυρη κύρια εικόνα"),
 	id: positiveInt("Μη έγκυρο id").optional(),
 	fileData: z_BlobUpload,
-	fileType: z.string("Μη έγκυρος τύπος αρχείου"),
+	fileType: z.enum(UPLOAD_IMAGE_TYPES, "Μη υποστηριζόμενος τύπος αρχείου"),
 });
 
 /**

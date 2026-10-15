@@ -109,7 +109,9 @@
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by
   `bun run replicate:bucket`; restart the dev server afterwards). No
-  `bucket:serve` / HTTP store anymore.
+  `bucket:serve` / HTTP store anymore. The public catch-all serves only the
+  prefixes in `lib/bucket/publicFiles.ts`; inline-script JSON uses
+  `jsonForScript` (`lib/utilities/safeJson.ts`).
 - **Worker↔worker calls use service bindings, never HTTP URLs.** The site's
   `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`) and
   `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each

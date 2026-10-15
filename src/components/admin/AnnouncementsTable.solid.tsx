@@ -1,3 +1,4 @@
+import { isUploadImageType } from "@lib/bucket/publicFiles";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
@@ -142,6 +143,11 @@ export default function AnnouncementsTable() {
 				const metadata = fileProxy.getMetadata();
 				const name = fileProxy.getName();
 				const { type: fileType } = file;
+				if (!isUploadImageType(fileType)) {
+					failed++;
+					pushAlert(createAlert("error", `Μη υποστηριζόμενος τύπος αρχείου: ${name} (μόνο JPG, PNG, WebP ή GIF)`));
+					return;
+				}
 				try {
 					await apiHook(API.Announcements.postImage, {
 						RequestObject: {

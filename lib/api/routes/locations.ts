@@ -1,7 +1,8 @@
 import { z } from "astro/zod";
 import type { Locations } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
-import { executeQuery, questionMarks, ImageMIMEType } from "@lib/utils.server";
+import { isUploadImageType, MAX_UPLOAD_BYTES } from "@lib/bucket/publicFiles";
+import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_BlobUpload, z_IdArray, z_Locations, z_LocationsResponse } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult, HTTP } from "./APIServer";
@@ -79,8 +80,9 @@ export const locationsRoutes = {
 				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
 
 				const blob = rawBody;
+				if (blob.size > MAX_UPLOAD_BYTES) throw new APIError(HTTP.PAYLOAD_TOO_LARGE, "Το αρχείο είναι πολύ μεγάλο (έως 10 MB)");
 				const filetype = blob.type;
-				if (ImageMIMEType.includes(filetype)) {
+				if (isUploadImageType(filetype)) {
 					const fileBuffer = await blob.arrayBuffer();
 					const filename = location.name + "." + filetype.split("/")[1];
 					const link = bucketPrefix + filename;
