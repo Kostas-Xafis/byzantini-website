@@ -47,6 +47,8 @@ export default defineConfig({
 					"**/notAssets/**",
 					"**/dist/**",
 					"**/.wrangler/**",
+					// Other agent sessions' git worktrees live here: their half-done edits must not reload this server.
+					"**/.claude/**",
 					"**/wrangler.jsonc",
 					"**/services/**",
 					"**/emailWorker/**",
