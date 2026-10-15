@@ -3,6 +3,7 @@ import {
 	SuccessfulRegistration,
 	type SuccessfulRegistrationLevel,
 } from "./emails/SuccessfulRegistration";
+import { SysuserPasswordReset } from "./emails/SysuserPasswordReset";
 import { SysuserRegisterLink } from "./emails/SysuserRegisterLink";
 import { UpenthimisiEggrafis } from "./emails/UpenthimisiEggrafis";
 import { EpistrofiMathiton } from "./emails/EpistrofiMathiton";
@@ -61,6 +62,10 @@ export const templates: TemplateDef[] = [
 	{
 		name: "sysuser_register_link.html",
 		build: () => <SysuserRegisterLink token={"{{token}}"} />,
+	},
+	{
+		name: "sysuser_password_reset.html",
+		build: () => <SysuserPasswordReset token={"{{token}}"} />,
 	},
 	{
 		name: "2026/upenthimisi_eggrafis.html",

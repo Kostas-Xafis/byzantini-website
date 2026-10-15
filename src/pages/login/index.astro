@@ -4,7 +4,7 @@ import Input from "@components/input/Input.astro";
 import SigninLayout from "@layouts/SigninLayout.astro";
 import { enabledProviders } from "@lib/auth/providers";
 import { isSessionValid } from "@lib/auth/sessions";
-import { ADMIN_HOME, readRedirectTarget } from "@utilities/redirect";
+import { ADMIN_HOME, isExpiredLogin, readRedirectTarget } from "@utilities/redirect";
 export const prerender = false;
 
 // Already signed in: straight to the dashboard (or the page that sent them here).
@@ -12,6 +12,8 @@ if (await isSessionValid(Astro.cookies.get("session_id")?.value)) {
 	return Astro.redirect(readRedirectTarget(Astro.url.search) ?? ADMIN_HOME);
 }
 const providers = enabledProviders();
+// Sent here because the session ended while the dashboard was open (lib/auth/sessionExpiry.client.ts).
+const expired = isExpiredLogin(Astro.url.search);
 ---
 
 <SigninLayout title="Είσοδος Διαχειριστή" description="Είσοδος στο σύστημα διαχείρισης της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής." noindex>
@@ -24,12 +26,27 @@ const providers = enabledProviders();
 			</a>
 		</div>
 		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">Είσοδος Διαχειριστή</h2>
+		{
+			expired && (
+				<p
+					role="status"
+					class="max-w-[30ch] justify-self-center rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+					<i class="fa-solid fa-clock-rotate-left mr-1" aria-hidden="true" />Η συνεδρία σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε από εκεί που
+					ήσασταν.
+				</p>
+			)
+		}
 		<ProviderButtons providers={providers} verb="Είσοδος" />
-		<form id="loginForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
+		<form id="loginForm" action="" method="post" class="group grid gap-y-8">
 			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
-			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+			<div class="grid gap-1">
+				<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+				<a href="/login/forgot" class="justify-self-end px-2 text-sm text-red-900 underline underline-offset-2 dark:text-red-200"
+					>Ξεχάσατε τον κωδικό;</a
+				>
+			</div>
 			<button
-				class="text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
+				class="py-2 text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
 				type="submit">Είσοδος</button
 			>
 		</form>

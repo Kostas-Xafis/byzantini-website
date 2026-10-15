@@ -9,6 +9,8 @@ import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { expect, test } from "bun:test";
 import { z } from "astro/zod";
+import { sha256Hex } from "@lib/auth/passwords";
+import { withLocalDb } from "../localDb";
 import { rawAPI } from "../rawAPI";
 import { expectBody, getJson, sessionCookieOf, testEnv, useTestAPI } from "../testHelpers";
 
@@ -154,6 +156,77 @@ test("--auth-- a new admin: signup, two devices, password change, sign-out", asy
 		const [current] = (await getJson<APIResponse["Authentication.sessions"]>(await rawAPI("GET", "/auth/sessions", undefined, deviceA))).data;
 		expect((await rawAPI("DELETE", `/auth/sessions/${current.id}`, undefined, deviceA)).status).toBe(200);
 		expect((await rawAPI("GET", "/auth/me", undefined, deviceA)).status).toBe(401);
+	} finally {
+		await getJson(await useTestAPI("SysUsers.delete", { RequestObject: [created.data.id] }));
+	}
+});
+
+// ---------------------------------------------------------------------------
+// «Ξέχασα τον κωδικό» (password reset by email)
+// ---------------------------------------------------------------------------
+
+/** Plants a reset link for `userId` straight in the local dev DB (the real one only travels by email). */
+async function plantResetToken(userId: number, expiresInMs = 60_000) {
+	const token = R.string(40, "a-Z-9");
+	const id = await sha256Hex(token);
+	const planted = withLocalDb((db) =>
+		db.run("INSERT INTO sys_user_password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [
+			id,
+			userId,
+			Date.now(),
+			Date.now() + expiresInMs,
+		]),
+	);
+	return planted ? token : null;
+}
+
+test("--auth-- a reset request answers the same whether or not the email is an admin", async () => {
+	const unknown = await getJson<APIResponse["Authentication.requestPasswordReset"]>(await rawAPI("POST", "/auth/password-reset", { email: R.email() }));
+	const known = await getJson<APIResponse["Authentication.requestPasswordReset"]>(
+		await rawAPI("POST", "/auth/password-reset", { email: testEnv.TEST_EMAIL!.toUpperCase() }),
+	);
+	expect(unknown.message).toBeString();
+	expect(known.message).toBe(unknown.message);
+	expect((await rawAPI("POST", "/auth/password-reset", { email: "not-an-email" })).status).toBe(400);
+});
+
+test("--auth-- a reset link sets a new password once, signs every device out and this one in", async () => {
+	const email = R.email();
+	const password = R.string(12, "a-Z-9");
+	const invite = await getJson<APIResponse["SysUsers.createRegisterLink"]>(await useTestAPI("SysUsers.createRegisterLink", { RequestObject: { email } }));
+	const signup = await rawAPI("POST", `/sys/register/${invite.data.link}`, { email, password });
+	const created = await getJson<APIResponse["SysUsers.registerSysUser"]>(signup);
+	const oldDevice = sessionCookieOf(signup)!;
+	try {
+		const token = await plantResetToken(created.data.id);
+		if (!token) return; // local dev DB not reachable from the tests
+
+		const valid = await getJson<APIResponse["Authentication.validatePasswordReset"]>(await rawAPI("GET", `/auth/password-reset/${token}`));
+		expect(valid.data).toEqual({ isValid: true, email });
+		expect((await rawAPI("POST", `/auth/password-reset/${token}`, { password: "short" })).status).toBe(400);
+
+		const newPassword = R.string(12, "a-Z-9");
+		const reset = await rawAPI("POST", `/auth/password-reset/${token}`, { password: newPassword });
+		expect((await getJson<APIResponse["Authentication.resetPassword"]>(reset)).data).toEqual({ email });
+		const newDevice = sessionCookieOf(reset)!;
+		expect(newDevice).toBeDefined();
+		expect((await rawAPI("GET", "/auth/me", undefined, oldDevice)).status).toBe(401);
+		expect((await rawAPI("GET", "/auth/me", undefined, newDevice)).status).toBe(200);
+		expect((await getJson<APIResponse["Authentication.userLogin"]>(await login(email, password))).data.isValid).toBe(false);
+		expect((await getJson<APIResponse["Authentication.userLogin"]>(await login(email, newPassword))).data.isValid).toBe(true);
+
+		// Used up.
+		expect((await rawAPI("POST", `/auth/password-reset/${token}`, { password: R.string(12, "a-Z-9") })).status).toBe(410);
+		expect((await getJson<APIResponse["Authentication.validatePasswordReset"]>(await rawAPI("GET", `/auth/password-reset/${token}`))).data).toEqual({
+			isValid: false,
+		});
+
+		// An expired link never works.
+		const expired = (await plantResetToken(created.data.id, -1000))!;
+		expect((await getJson<APIResponse["Authentication.validatePasswordReset"]>(await rawAPI("GET", `/auth/password-reset/${expired}`))).data.isValid).toBe(
+			false,
+		);
+		expect((await rawAPI("POST", `/auth/password-reset/${expired}`, { password: R.string(12, "a-Z-9") })).status).toBe(410);
 	} finally {
 		await getJson(await useTestAPI("SysUsers.delete", { RequestObject: [created.data.id] }));
 	}

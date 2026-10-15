@@ -6,7 +6,7 @@
  * Pure functions, so these tests need no dev server, no DB and no env file.
  */
 import { expect, test } from "bun:test";
-import { ADMIN_HOME, buildLoginUrl, currentRedirectTarget, isSafeRedirectTarget, readRedirectTarget } from "@utilities/redirect";
+import { ADMIN_HOME, buildLoginUrl, currentRedirectTarget, isExpiredLogin, isSafeRedirectTarget, readRedirectTarget } from "@utilities/redirect";
 
 // ---------------------------------------------------------------------------
 // `?redirect_url=` parsing / validation
@@ -94,4 +94,14 @@ test("a deep link survives the whole guard → login → target round trip", () 
 	expect(restored).toBe(requested);
 	expect(restored).toContain("year=2024");
 	expect(restored).toContain("col=1");
+});
+
+test("an expired session adds `expired=1` without disturbing the target", () => {
+	const target = "/admin/pupils?q=παπαδόπουλος&pupil=706";
+	const loginUrl = buildLoginUrl(target, { expired: true });
+	const search = loginUrl.slice(loginUrl.indexOf("?"));
+	expect(readRedirectTarget(search)).toBe(target);
+	expect(isExpiredLogin(search)).toBe(true);
+	expect(buildLoginUrl(ADMIN_HOME, { expired: true })).toBe("/login?expired=1");
+	expect(isExpiredLogin(buildLoginUrl(target))).toBe(false);
 });

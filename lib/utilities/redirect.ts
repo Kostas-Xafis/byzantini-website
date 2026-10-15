@@ -24,6 +24,8 @@ export const ADMIN_HOME = "/admin";
 export const LOGIN_PATH = "/login";
 /** Query parameter carrying the requested URL through the sign-in screen. */
 export const REDIRECT_PARAM = "redirect_url";
+/** Set when the session ended while the admin was working, so the sign-in screen can say so. */
+export const EXPIRED_PARAM = "expired";
 /** Query strings are not unbounded; real admin deep links are far shorter. */
 const MAX_TARGET_LENGTH = 512;
 
@@ -67,7 +69,12 @@ export function currentRedirectTarget(location: { pathname: string; search: stri
  * `/login?redirect_url=<encoded target>` — or the bare `/login` when there is
  * nothing (valid) to return to.
  */
-export function buildLoginUrl(target?: string | null): string {
-	if (!isSafeRedirectTarget(target) || target === ADMIN_HOME) return LOGIN_PATH;
-	return `${LOGIN_PATH}?${REDIRECT_PARAM}=${encodeURIComponent(target)}`;
+export function buildLoginUrl(target?: string | null, options: { expired?: boolean } = {}): string {
+	const params: string[] = [];
+	if (isSafeRedirectTarget(target) && target !== ADMIN_HOME) params.push(`${REDIRECT_PARAM}=${encodeURIComponent(target)}`);
+	if (options.expired) params.push(`${EXPIRED_PARAM}=1`);
+	return params.length ? `${LOGIN_PATH}?${params.join("&")}` : LOGIN_PATH;
 }
+
+/** Whether the sign-in screen was reached because the session ended (`?expired=1`). */
+export const isExpiredLogin = (search: string) => new URLSearchParams(search).get(EXPIRED_PARAM) === "1";

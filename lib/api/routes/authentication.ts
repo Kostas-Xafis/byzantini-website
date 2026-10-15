@@ -2,11 +2,12 @@ import type { SysUserIdentity, SysUsers } from "@_types/entities";
 import { getEnv } from "@env/env";
 import { OAUTH_FLOW_TTL_MS, openOAuthFlow, sealOAuthFlow, z_OAuthIntent, type OAuthFlow } from "@lib/auth/oauthFlow";
 import { PERMISSIONS, ROLES, permissionsOf } from "@lib/auth/roles";
-import { hasPassword, hashPassword, timingSafeEqual, verifyPassword } from "@lib/auth/passwords";
+import { hasPassword, hashPassword, sha256Hex, timingSafeEqual, verifyPassword } from "@lib/auth/passwords";
 import { enabledProviders, getProvider, isProviderId, providerInfo, type ProviderId, type ProviderProfile } from "@lib/auth/providers";
 import { listSessions, revokeSession, revokeUserSessions } from "@lib/auth/sessions";
 import { z_LoginCredentials, z_NewPassword } from "@lib/api/schemas";
 import { getDb, type Transaction } from "@lib/db";
+import { Random as R } from "@lib/random";
 import { executeQuery } from "@lib/utils.server";
 import { ADMIN_HOME, LOGIN_PATH, isSafeRedirectTarget } from "@utilities/redirect";
 import { generateCodeVerifier, generateState } from "arctic";
@@ -16,6 +17,7 @@ import { APIServer, handlerResult } from "./APIServer";
 import { COOKIE, type CookieOptions, type ServerCookies } from "./cookies";
 import { authenticateMiddleware, currentSession, startSession } from "./middleware/authenticate";
 import { rateLimitMiddleware } from "./middleware/rateLimit";
+import { sendAutomatedEmail } from "./emailService";
 import { consumeRegisterLink, findRegisterLink } from "./sysusers";
 
 /**
@@ -226,6 +228,22 @@ async function oauthLink({ flow, profile, provider, label }: FlowContext) {
 	return `${ACCOUNT_PATH}?linked=${provider}`;
 }
 
+/** «Ξέχασα τον κωδικό» links live this long and work once. */
+const PASSWORD_RESET_TTL_MS = 1000 * 60 * 60;
+/** The same answer whether or not the email belongs to an admin, so the form cannot be used to find admins. */
+const PASSWORD_RESET_SENT = "Αν υπάρχει λογαριασμός με αυτό το email, θα λάβετε σε λίγα λεπτά σύνδεσμο για νέο κωδικό. Ελέγξτε και τα ανεπιθύμητα.";
+const PASSWORD_RESET_GONE = "Ο σύνδεσμος έληξε ή έχει ήδη χρησιμοποιηθεί. Ζητήστε νέο από τη σελίδα εισόδου.";
+export const PASSWORD_RESET_PATH = "/login/reset";
+
+/** The admin behind an unexpired reset link, or undefined. */
+async function findPasswordReset(token: string) {
+	const [row] = await executeQuery<{ user_id: number; email: string }>(
+		"SELECT r.user_id, u.email FROM sys_user_password_resets r JOIN sys_users u ON u.id = r.user_id WHERE r.id = ? AND r.expires_at > ? LIMIT 1",
+		[await sha256Hex(token), Date.now()],
+	);
+	return row;
+}
+
 export const authenticationRoutes = {
 	authenticateSession: new APIServer(
 		{ method: "POST", path: "/auth/session", responseSchema: z.object({ isValid: z.boolean() }) },
@@ -403,6 +421,78 @@ export const authenticationRoutes = {
 			if (params.id === session.id) cookies.delete(COOKIE.sessionId);
 			return "Η συσκευή αποσυνδέθηκε";
 		}, "Σφάλμα κατά την αποσύνδεση της συσκευής"),
+	),
+	/**
+	 * «Ξέχασα τον κωδικό»: emails a one-time, 1-hour link to set a new password. The answer never says
+	 * whether the email belongs to an admin; only the token's SHA-256 is stored.
+	 */
+	requestPasswordReset: new APIServer(
+		{ method: "POST", path: "/auth/password-reset", schema: z.object({ email: z.email("Μη έγκυρο email") }) },
+		[rateLimitMiddleware("password-reset")],
+		({ body, request, env }) =>
+			handlerResult(async () => {
+				const [user] = await executeQuery<Pick<SysUsers, "id" | "email">>("SELECT id, email FROM sys_users WHERE email = ? COLLATE NOCASE LIMIT 1", [
+					body.email,
+				]);
+				if (!user) return PASSWORD_RESET_SENT;
+
+				const token = R.link(64);
+				const now = Date.now();
+				// Only the newest link works; expired ones of anyone are swept on the way.
+				await executeQuery("DELETE FROM sys_user_password_resets WHERE user_id = ? OR expires_at < ?", [user.id, now]);
+				await executeQuery("INSERT INTO sys_user_password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [
+					await sha256Hex(token),
+					user.id,
+					now,
+					now + PASSWORD_RESET_TTL_MS,
+				]);
+				try {
+					await sendAutomatedEmail(env, {
+						to: user.email,
+						subject: "Επαναφορά κωδικού διαχειριστή",
+						htmlTemplateName: "sysuser_password_reset.html",
+						templateData: { token: `${new URL(request.url).origin}${PASSWORD_RESET_PATH}/${token}` },
+					});
+				} catch (error) {
+					// Answer the same either way (no account discovery); the log is where a broken email service shows.
+					console.error("[auth] password reset email failed:", error);
+				}
+				return PASSWORD_RESET_SENT;
+			}, "Σφάλμα κατά την αποστολή του συνδέσμου"),
+	),
+	/** Whether a reset link still works (the reset page shows the form or an explanation). */
+	validatePasswordReset: new APIServer(
+		{ method: "GET", path: "/auth/password-reset/[token:string]", responseSchema: z.object({ isValid: z.boolean(), email: z.string().optional() }) },
+		({ params }) =>
+			handlerResult(async () => {
+				const reset = await findPasswordReset(params.token);
+				return reset ? { isValid: true, email: reset.email } : { isValid: false };
+			}, "Σφάλμα κατά τον έλεγχο του συνδέσμου"),
+	),
+	/** Sets the new password from a reset link (used up here), signs every device out and this one in. */
+	resetPassword: new APIServer(
+		{
+			method: "POST",
+			path: "/auth/password-reset/[token:string]",
+			schema: z.object({ password: z_NewPassword }),
+			responseSchema: z.object({ email: z.string() }),
+		},
+		[rateLimitMiddleware("password-reset")],
+		({ params, body, cookies, request }) =>
+			handlerResult(async () => {
+				// One statement: the same link can never be used twice.
+				const [used] = await executeQuery<{ user_id: number }>(
+					"DELETE FROM sys_user_password_resets WHERE id = ? AND expires_at > ? RETURNING user_id",
+					[await sha256Hex(params.token), Date.now()],
+				);
+				if (!used) throw APIError.gone(PASSWORD_RESET_GONE);
+				const user = await loadUser(used.user_id);
+				await executeQuery("UPDATE sys_users SET password = ? WHERE id = ?", [await hashPassword(body.password), user.id]);
+				// Whoever knew the old password (or holds an old session) is out.
+				await revokeUserSessions(user.id);
+				await startSession(cookies, request, user.id, "password");
+				return { email: user.email };
+			}, "Σφάλμα κατά την αλλαγή του κωδικού"),
 	),
 	revokeOtherSessions: new APIServer({ method: "DELETE", path: "/auth/sessions" }, [authenticateMiddleware], ({ cookies }) =>
 		handlerResult(async () => {

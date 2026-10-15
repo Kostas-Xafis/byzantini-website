@@ -119,5 +119,8 @@ export const APIEndpoints = {
 	"Authentication.changePassword": { method: "POST", path: "/auth/password", multipart: false, rawBlob: false },
 	"Authentication.sessions": { method: "GET", path: "/auth/sessions", multipart: false, rawBlob: false },
 	"Authentication.revokeSession": { method: "DELETE", path: "/auth/sessions/[id:string]", multipart: false, rawBlob: false },
+	"Authentication.requestPasswordReset": { method: "POST", path: "/auth/password-reset", multipart: false, rawBlob: false },
+	"Authentication.validatePasswordReset": { method: "GET", path: "/auth/password-reset/[token:string]", multipart: false, rawBlob: false },
+	"Authentication.resetPassword": { method: "POST", path: "/auth/password-reset/[token:string]", multipart: false, rawBlob: false },
 	"Authentication.revokeOtherSessions": { method: "DELETE", path: "/auth/sessions", multipart: false, rawBlob: false },
 } as const satisfies Record<APIEndpointNames, APIContractEntry>;

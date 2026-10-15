@@ -1,0 +1,48 @@
+---
+import SigninCard from "@components/auth/SigninCard.astro";
+import Input from "@components/input/Input.astro";
+import SigninLayout from "@layouts/SigninLayout.astro";
+export const prerender = true;
+---
+
+<SigninLayout title="Ξεχάσατε τον κωδικό;" noindex>
+	<SigninCard title="Ξεχάσατε τον κωδικό;">
+		<p class="max-w-[30ch] justify-self-center text-center text-base text-gray-700 dark:text-gray-300">
+			Γράψτε το email του λογαριασμού σας και θα σας στείλουμε σύνδεσμο για νέο κωδικό.
+		</p>
+		<form id="forgotForm" class="grid gap-y-8">
+			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" required />
+			<button
+				class="py-2 text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 disabled:opacity-60 disabled:cursor-wait"
+				type="submit">Αποστολή συνδέσμου</button
+			>
+		</form>
+		<p id="forgotMessage" role="status" class="hidden max-w-[30ch] justify-self-center text-center text-base"></p>
+		<a href="/login" class="justify-self-center text-sm text-red-900 underline underline-offset-2 dark:text-red-200">Επιστροφή στη σύνδεση</a>
+	</SigninCard>
+</SigninLayout>
+<script>
+	import { apiCall } from "@hooks/apiCall";
+
+	const form = document.getElementById("forgotForm") as HTMLFormElement;
+	const messageEl = document.getElementById("forgotMessage")!;
+	const show = (text: string, ok: boolean) => {
+		messageEl.textContent = text;
+		messageEl.className = `max-w-[30ch] justify-self-center text-center text-base ${ok ? "text-green-800 dark:text-green-300" : "text-red-700 dark:text-red-300"}`;
+	};
+
+	form.addEventListener("submit", async (e) => {
+		e.preventDefault();
+		const button = form.querySelector("button")!;
+		const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
+		button.disabled = true;
+		try {
+			const res = await apiCall("Authentication.requestPasswordReset", { RequestObject: { email } });
+			show("message" in res ? res.message : "Ο σύνδεσμος στάλθηκε.", true);
+			form.classList.add("hidden");
+		} catch (error) {
+			show(error instanceof Error ? error.message : "Προέκυψε σφάλμα. Δοκιμάστε ξανά.", false);
+			button.disabled = false;
+		}
+	});
+</script>

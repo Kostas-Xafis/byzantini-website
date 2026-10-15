@@ -301,6 +301,21 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   devices. A password change signs out every other device. The signed-in admin
   in the UI comes from `Authentication.me` (`src/components/admin/currentUser.ts`),
   not `localStorage` (the old `sys_user` key is removed on sight).
+- **Ended sessions** (`lib/auth/sessionExpiry.client.ts`): any 401 in the
+  dashboard (`apiCall`, `lib/pdf.client.ts`) and a re-check whenever the tab
+  becomes visible again (`AdminLayout`) send the admin to
+  `/login?redirect_url=…&expired=1` («Η συνεδρία σας έληξε»), and back to the
+  same page after signing in. `admin/[...slug].astro` adds `expired=1` when a
+  stale cookie is present.
+- **«Ξεχάσατε τον κωδικό;»** (`/login/forgot` → email →
+  `/login/reset/<token>`): `Authentication.requestPasswordReset` (same answer
+  whether or not the email is an admin; rate-limited), `validatePasswordReset`,
+  `resetPassword` (one-time: `DELETE … RETURNING`; signs every device out and
+  this one in). Links last 1 hour; `sys_user_password_resets` stores only the
+  token's SHA-256 (0008). Email template `sysuser_password_reset.html`
+  (`services/emailWorker/render/emails/SysuserPasswordReset.tsx`) — **publish it
+  with `bun run templates:build --prod` before deploying**, or reset emails fail
+  (the page still answers the generic message; the error is logged).
 - **Roles** (`lib/auth/roles.ts`, client-safe; `sys_users.role` in 0008):
   `sysadmin` (the maintainer) · `owner` (the school's owner) · `secretary`
   (the secretariat). `PERMISSIONS` lists the only restricted features —

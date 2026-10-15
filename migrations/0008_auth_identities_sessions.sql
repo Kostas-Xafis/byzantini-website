@@ -50,3 +50,13 @@ ALTER TABLE sys_users ADD COLUMN role TEXT NOT NULL DEFAULT 'secretary' CHECK (r
 -- The current maintainer and owner.
 UPDATE sys_users SET role = 'sysadmin' WHERE email = 'koxafis@gmail.com' COLLATE NOCASE;
 UPDATE sys_users SET role = 'owner' WHERE email = 'sotiris_ale@hotmail.com' COLLATE NOCASE;
+
+-- «Ξέχασα τον κωδικό»: one-time, 1-hour reset links (Authentication.requestPasswordReset / resetPassword).
+-- Like sessions, only the SHA-256 of the emailed token is stored.
+CREATE TABLE sys_user_password_resets (
+	id TEXT PRIMARY KEY NOT NULL,
+	user_id INTEGER NOT NULL,
+	created_at INTEGER NOT NULL,
+	expires_at INTEGER NOT NULL
+);
+CREATE INDEX sys_user_password_resets_user ON sys_user_password_resets (user_id);

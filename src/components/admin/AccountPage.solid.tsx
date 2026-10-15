@@ -287,8 +287,8 @@ export default function AccountPage() {
 										<span class="text-sm font-bold">Τρέχων κωδικός</span>
 										<input type="password" name="current_password" autocomplete="current-password" required class={inputClass} />
 										<span class="text-xs text-gray-600 dark:text-gray-300">
-											Δεν τον θυμάστε; Συνδεθείτε ξανά (π.χ. με έναν συνδεδεμένο λογαριασμό) και μέσα σε 10 λεπτά μπορείτε να ορίσετε νέο
-											χωρίς αυτόν.
+											Δεν τον θυμάστε; Αποσυνδεθείτε και πατήστε «Ξεχάσατε τον κωδικό;» στη σελίδα εισόδου. Αν μόλις συνδεθήκατε (π.χ. με
+											Google), μπορείτε για 10 λεπτά να ορίσετε νέο χωρίς αυτόν.
 										</span>
 									</label>
 								</Show>

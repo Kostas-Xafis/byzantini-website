@@ -285,25 +285,17 @@ const { title } = Astro.props;
 	</head>
 	<body class="box-border p-0">
 		<script>
-			import { apiCall, APIRequestError } from "@hooks/apiCall";
+			import { apiCall } from "@hooks/apiCall";
+			import { watchSession } from "@lib/auth/sessionExpiry.client";
 			import { API } from "@routes/index.client";
-			import { buildLoginUrl, currentRedirectTarget } from "@utilities/redirect";
 
-			// The server already validated the session before sending this page (`admin/[...slug].astro`); this is
-			// the fallback for a session that expires while the panel is open. Only a definitive "not signed in"
-			// answer (401 or `isValid: false`) leaves the page — a network error or 5xx must not log the admin out.
-			const toLogin = () => {
-				// Hand the requested URL (deep links such as /admin/pupils?q=… carry the search query in the
-				// query string) to the sign-in screen so the admin lands back on it instead of the dashboard home.
-				window.location.href = buildLoginUrl(currentRedirectTarget());
-			};
-			try {
+			// The server already validated the session before sending this page (`admin/[...slug].astro`); this
+			// catches a session that ends while the panel is open — now, and whenever the tab is shown again.
+			// A 401 makes `apiCall` send the admin to sign in (and back); a network error or 5xx keeps the page.
+			watchSession(async () => {
 				const res = await apiCall(API.Authentication.authenticateSession);
-				if ("data" in res && res.data?.isValid === false) toLogin();
-			} catch (e) {
-				if (e instanceof APIRequestError && e.status === 401) toLogin();
-				else console.warn("[admin] session check failed, staying on the page:", e);
-			}
+				return !("data" in res) || res.data?.isValid !== false;
+			});
 		</script>
 		<slot />
 		<DatepickerCSS />
