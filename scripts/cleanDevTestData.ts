@@ -5,7 +5,8 @@
  * The tests write real rows (that is the point: they exercise live routes), so
  * after `bun run test` the local dev database holds fixtures such as pupils
  * with ΑΜ 9000-9999 ("Δοκιμαστικός Μαθητής"), a couple of test payments and
- * `pupils.test.*@example.com` newsletter subscriptions. The e2e smoke suite
+ * `pupils.test.*@example.com` newsletter subscriptions, plus the «Ιστορικό
+ * ενεργειών» entries those runs write (`sys_activity`). The e2e smoke suite
  * (e2e/) registers a «Δοκιμαστικός Μαθητής» without ΑΜ (an orphan row with a
  * `pupils.test.e2e.*@example.com` email) and creates throwaway
  * `e2e.*@example.com` admins; it deletes them itself, these are the safety
@@ -32,6 +33,12 @@ const TEST_PUPIL_WHERE =
 const TEST_EMAIL_LIKE = ["pupils.test.%@example.com", "test.%example.com"];
 /** The e2e suite's throwaway admins (e2e/support/fixtures.ts). */
 const TEST_ADMIN_EMAIL_LIKE = "e2e.%@example.com";
+/**
+ * Activity rows of test runs: made by a throwaway `@example.com` admin, or naming a test fixture (an invite to /
+ * pupil with an `@example.com` address, a «Δοκιμαστικός Μαθητής»). Not every row of the harness admin — once the
+ * local DB is a production replica it also holds the real history.
+ */
+const TEST_ACTIVITY_WHERE = "user_email LIKE '%@example.com' OR summary LIKE '%@example.com%' OR summary LIKE '%Δοκιμαστικός%'";
 
 function findDbFile(): string {
 	if (!existsSync(D1_STATE_DIR)) throw new Error(`Local D1 directory not found: ${D1_STATE_DIR}`);
@@ -59,6 +66,7 @@ const counts = {
 	subscriptions: (db.query(`SELECT COUNT(*) AS c FROM email_subscriptions WHERE ${emailFilter}`).get(...TEST_EMAIL_LIKE) as { c: number }).c,
 	admins: (db.query("SELECT COUNT(*) AS c FROM sys_users WHERE email LIKE ?").get(TEST_ADMIN_EMAIL_LIKE) as { c: number }).c,
 	invites: (db.query("SELECT COUNT(*) AS c FROM sys_user_register_links WHERE email LIKE ?").get(TEST_ADMIN_EMAIL_LIKE) as { c: number }).c,
+	activity: (db.query(`SELECT COUNT(*) AS c FROM sys_activity WHERE ${TEST_ACTIVITY_WHERE}`).get() as { c: number }).c,
 };
 
 console.log(`Database: ${dbFile}`);
@@ -68,6 +76,7 @@ console.log(`  test enrollments   : ${counts.enrollments}`);
 console.log(`  test subscriptions : ${counts.subscriptions}`);
 console.log(`  test admins        : ${counts.admins}`);
 console.log(`  test invites       : ${counts.invites}`);
+console.log(`  test activity rows : ${counts.activity}`);
 
 if (!apply) {
 	console.log("\nDRY RUN — nothing removed. Re-run with --apply.");
@@ -85,6 +94,7 @@ const tx = db.transaction(() => {
 	}
 	db.run("DELETE FROM sys_users WHERE email LIKE ?", [TEST_ADMIN_EMAIL_LIKE]);
 	db.run("DELETE FROM sys_user_register_links WHERE email LIKE ?", [TEST_ADMIN_EMAIL_LIKE]);
+	db.run(`DELETE FROM sys_activity WHERE ${TEST_ACTIVITY_WHERE}`);
 	db.run("UPDATE total_enrollments SET amount = (SELECT COUNT(*) FROM pupil_enrollments)");
 });
 tx();

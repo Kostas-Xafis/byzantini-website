@@ -214,7 +214,7 @@ export default function SettingsPage() {
 				<div
 					role="radiogroup"
 					aria-label="Θέμα πίνακα διαχείρισης"
-					class="grid grid-cols-3 gap-1 rounded-xl border border-red-900/10 bg-red-50 p-1 dark:border-white/10 dark:bg-black/30 sm:max-w-md"
+					class="grid grid-cols-3 gap-1 rounded-xl border border-line bg-accent-soft p-1 sm:max-w-md"
 					onKeyDown={(e) => {
 						if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
 						e.preventDefault();
@@ -233,10 +233,10 @@ export default function SettingsPage() {
 								tabIndex={themePreference() === option.value ? 0 : -1}
 								onClick={() => onThemeChange(option.value)}
 								class={
-									"flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-red-900 " +
+									"flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-accent-ink " +
 									(themePreference() === option.value
-										? "bg-red-900 text-red-50 shadow-sm shadow-red-950/30"
-										: "text-gray-700 hover:bg-red-100 hover:text-red-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-red-100")
+										? "bg-brand text-brand-ink shadow-sm shadow-shade"
+										: "text-ink-muted hover:bg-accent-soft hover:text-accent-ink")
 								}>
 								<i class={option.icon} aria-hidden="true"></i>
 								{option.label}
@@ -278,14 +278,14 @@ export default function SettingsPage() {
 						}>
 						<div class="grid gap-1 sm:max-w-md">
 							<div
-								class="h-2 overflow-hidden rounded-full bg-red-100 dark:bg-black/40"
+								class="h-2 overflow-hidden rounded-full bg-accent-soft"
 								role="progressbar"
 								aria-label="Πρόοδος λήψης"
 								aria-valuemin={0}
 								aria-valuemax={100}
 								aria-valuenow={downloadPct() ?? 0}>
 								<div
-									class="h-full rounded-full bg-red-900 dark:bg-red-400 transition-[width] duration-300 motion-reduce:transition-none"
+									class="h-full rounded-full bg-brand transition-[width] duration-300 motion-reduce:transition-none"
 									style={{ width: `${downloadPct() ?? 0}%` }}
 								/>
 							</div>

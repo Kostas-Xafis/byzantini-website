@@ -1,7 +1,8 @@
 import { z } from "astro/zod";
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
-import { ImageMIMEType, executeQuery } from "@lib/utils.server";
+import { isUploadImageType, MAX_UPLOAD_BYTES } from "@lib/bucket/publicFiles";
+import { executeQuery } from "@lib/utils.server";
 import { z_BlobUpload, z_IdArray, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
 import { APIError } from "./APIError";
 import { APIServer, handlerResult, HTTP } from "./APIServer";
@@ -171,6 +172,7 @@ export const teachersRoutes = {
 				if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
 				const blob = body;
+				if (blob.size > MAX_UPLOAD_BYTES) throw new APIError(HTTP.PAYLOAD_TOO_LARGE, "Το αρχείο είναι πολύ μεγάλο (έως 10 MB)");
 				const filetype = blob.type;
 				const data = await blob.arrayBuffer();
 
@@ -182,7 +184,7 @@ export const teachersRoutes = {
 					await Bucket.put(data, link, filetype);
 					await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
 					return "Pdf uploaded successfully";
-				} else if (ImageMIMEType.includes(filetype)) {
+				} else if (isUploadImageType(filetype)) {
 					const link = bucketPicturePrefix + filename;
 
 					await Bucket.put(data, link, filetype);

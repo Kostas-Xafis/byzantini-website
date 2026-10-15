@@ -5,17 +5,17 @@ import { Show, createSignal, type JSX } from "solid-js";
  * page column, plain cards and collapsible cards. Collapsibles are native `<details>` (keyboard and
  * screen-reader support for free) and remember, per device, whether they were left open.
  *
- * Dark mode: AdminLayout repaints every `.bg-white` as the dashboard's dark surface, so cards use
- * `bg-white`; anything that must stay white in both themes (brand marks) uses `bg-[#fff]`.
+ * Dark mode: the colours are tokens (src/styles/global.css) that switch with the`.dark` class, so cards use
+ * `bg-surface`; anything that must stay white in both themes (brand marks) uses`bg-[#fff]`.
  */
 
-export const cardClass = "rounded-2xl border border-line bg-surface text-ink shadow-sm shadow-red-950/10 dark:shadow-black/40";
+export const cardClass = "rounded-2xl border border-line bg-surface text-ink shadow-sm shadow-shade";
 export const primaryButtonClass =
-	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-4 py-2 font-bold bg-brand text-brand-ink hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
+	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-4 py-2 font-bold bg-brand text-brand-ink hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
 export const secondaryButtonClass =
-	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-3 py-1.5 text-sm font-bold border border-brand/60 text-brand hover:bg-accent-soft dark:border-red-300/50 dark:text-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+	"inline-flex items-center justify-center gap-2 w-fit rounded-lg px-3 py-1.5 text-sm font-bold border border-accent-ink/50 text-accent-ink hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 export const inputClass =
-	"w-full max-w-sm rounded-lg border border-line bg-surface-muted px-3 py-2 text-ink focus:outline-hidden focus:ring-2 focus:ring-red-900/40 dark:focus:ring-red-300/40";
+	"w-full max-w-sm rounded-lg border border-line bg-surface-muted px-3 py-2 text-ink focus:outline-hidden focus:ring-2 focus:ring-accent-ink/40";
 export const hintClass = "text-sm text-ink-muted";
 
 /** Centred page column (desktop) that scrolls inside the admin shell. */
@@ -40,7 +40,7 @@ type CardHeaderProps = { icon: string; title: string; description?: JSX.Element;
 function CardHeader(props: CardHeaderProps) {
 	return (
 		<div class="flex items-start gap-3 min-w-0">
-			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-brand dark:text-red-200" aria-hidden="true">
+			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-ink" aria-hidden="true">
 				<i class={`${props.icon} text-lg`}></i>
 			</span>
 			<div class="grid gap-0.5 min-w-0 flex-1">
@@ -90,13 +90,13 @@ export function PanelCollapsible(props: CardHeaderProps & { id: string; badge?: 
 	};
 	return (
 		<details id={props.id} class={`${cardClass} group/panel`} open={open()} onToggle={onToggle}>
-			<summary class="flex cursor-pointer list-none items-center gap-3 rounded-2xl p-5 sm:p-6 select-none hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-red-900 [&::-webkit-details-marker]:hidden">
+			<summary class="flex cursor-pointer list-none items-center gap-3 rounded-2xl p-5 sm:p-6 select-none hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent-ink [&::-webkit-details-marker]:hidden">
 				<div class="flex-1 min-w-0">
 					<CardHeader icon={props.icon} title={props.title} description={props.description} />
 				</div>
 				{props.badge}
 				<i
-					class="fa-solid fa-chevron-down shrink-0 text-brand/70 dark:text-red-200/70 transition-transform duration-200 group-open/panel:rotate-180 motion-reduce:transition-none"
+					class="fa-solid fa-chevron-down shrink-0 text-accent-ink/70 transition-transform duration-200 group-open/panel:rotate-180 motion-reduce:transition-none"
 					aria-hidden="true"></i>
 			</summary>
 			<div class="grid gap-5 px-5 pb-5 sm:px-6 sm:pb-6">{props.children}</div>
@@ -116,9 +116,7 @@ export function Badge(props: { children: JSX.Element; tone?: "neutral" | "succes
 		<span
 			class={
 				"shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold " +
-				(props.tone === "success"
-					? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-100"
-					: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-100")
+				(props.tone === "success" ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-100" : "bg-accent-soft text-accent-ink")
 			}>
 			{props.children}
 		</span>

@@ -190,7 +190,7 @@ export default function AccountPage() {
 				{(me) => (
 					<>
 						<section class={`${cardClass} flex flex-wrap items-center gap-4 p-5 sm:p-6`}>
-							<div class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-red-100 text-2xl text-red-900 ring-4 ring-red-50 dark:bg-red-950 dark:text-red-200 dark:ring-black/30">
+							<div class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-accent-soft text-2xl text-accent-ink ring-4 ring-surface">
 								<Show when={me().avatar_url} fallback={<i class="fa-solid fa-user" aria-hidden="true"></i>}>
 									{(avatar) => <img src={avatar()} alt="" referrerPolicy="no-referrer" class="h-full w-full object-cover" />}
 								</Show>
@@ -207,10 +207,8 @@ export default function AccountPage() {
 							title="Τρόποι εισόδου"
 							description="Συνδέστε λογαριασμούς για να μπαίνετε με ένα κλικ. Δεν χρειάζεται να έχουν το ίδιο email με τον λογαριασμό σας.">
 							<ul class="grid gap-2">
-								<li class="flex flex-wrap items-center gap-3 rounded-xl border border-red-900/10 dark:border-white/10 px-4 py-3">
-									<span
-										class="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-900 dark:bg-black/30 dark:text-red-200"
-										aria-hidden="true">
+								<li class="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
+									<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent-ink" aria-hidden="true">
 										<i class="fa-solid fa-key"></i>
 									</span>
 									<div class="grid flex-1 min-w-[10rem]">
@@ -226,7 +224,7 @@ export default function AccountPage() {
 								</li>
 								<For each={providerRows()}>
 									{(row) => (
-										<li class="flex flex-wrap items-center gap-3 rounded-xl border border-red-900/10 dark:border-white/10 px-4 py-3">
+										<li class="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
 											<span
 												class="grid h-9 w-9 place-items-center rounded-lg bg-[#fff] text-[#111] ring-1 ring-gray-200 dark:ring-0"
 												aria-hidden="true"
@@ -285,7 +283,7 @@ export default function AccountPage() {
 									<label class="grid gap-1 content-start">
 										<span class="text-sm font-bold">Νέος κωδικός</span>
 										<input type="password" name="new_password" autocomplete="new-password" minLength={8} required class={inputClass} />
-										<span class="text-xs text-gray-600 dark:text-gray-300">Τουλάχιστον 8 χαρακτήρες.</span>
+										<span class="text-xs text-ink-muted">Τουλάχιστον 8 χαρακτήρες.</span>
 									</label>
 									<label class="grid gap-1 content-start">
 										<span class="text-sm font-bold">Επιβεβαίωση</span>
@@ -293,7 +291,7 @@ export default function AccountPage() {
 									</label>
 								</div>
 								<Show when={passwordError()}>
-									<p role="alert" class="text-sm text-red-700 dark:text-red-300">
+									<p role="alert" class="text-sm text-danger">
 										{passwordError()}
 									</p>
 								</Show>
@@ -312,10 +310,8 @@ export default function AccountPage() {
 							<ul class="grid gap-2">
 								<For each={sessions()} fallback={<li class={hintClass}>Φόρτωση…</li>}>
 									{(session) => (
-										<li class="flex flex-wrap items-center gap-3 rounded-xl border border-red-900/10 dark:border-white/10 px-4 py-3">
-											<span
-												class="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-900 dark:bg-black/30 dark:text-red-200"
-												aria-hidden="true">
+										<li class="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
+											<span class="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent-ink" aria-hidden="true">
 												<i
 													class={`fa-solid ${/Android|iPhone|iPad/.test(session.user_agent ?? "") ? "fa-mobile-screen" : "fa-desktop"}`}></i>
 											</span>

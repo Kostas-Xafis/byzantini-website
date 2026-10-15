@@ -272,7 +272,7 @@ export default function Table(props: Props) {
 					"grid-row": "table",
 				}}
 				class={
-					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row rounded-2xl font-didact border border-line bg-surface text-ink shadow-sm shadow-red-950/10 dark:shadow-black/40" +
+					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row rounded-2xl font-didact border border-line bg-surface text-ink shadow-sm shadow-shade " +
 					(hasControlGroup("left") ? " max-w-[100%] max-sm:max-w-[97.5%]" : " max-w-[90%] max-sm:max-w-[92.5%]")
 				}
 				onMouseMove={move}
@@ -328,7 +328,7 @@ export default function Table(props: Props) {
 		transition: box-shadow 0.2s cubic-bezier(0,.8,.43,.64);
 	}
 	/* shorthand for this:
-		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
+		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-shade before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
 	*/
 	.row::before {
 		content: "";

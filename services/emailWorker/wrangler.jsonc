@@ -14,6 +14,17 @@
 	// calls the worker through the EMAIL_SERVICE service binding.
 	"r2_buckets": [{ "binding": "BUCKET", "bucket_name": "byzantini-bucket" }],
 
+	// The website's production database — read/written only by the «Σφάλματα» digest cron
+	// (src/errorDigest.ts: sys_errors, sys_users). Same id as the site's top-level/production `DB`, so a
+	// local run with `--persist-to ../../.wrangler/state` sees the site's local dev database.
+	"d1_databases": [
+		{ "binding": "DB", "database_name": "byzantini-db", "database_id": "20e4783b-f1b4-4362-ba76-7694c91cacce" }
+	],
+
+	// Every 15 minutes: email the sysadmins any new server errors (nothing is sent when there are none).
+	// Test locally: `bunx wrangler dev --config wrangler.jsonc --test-scheduled` then GET /__scheduled.
+	"triggers": { "crons": ["*/15 * * * *"] },
+
 	// No vars any more — SITE_URL is gone: per-send template reads come from
 	// the BUCKET binding above, not from the website's HTTP file proxy.
 

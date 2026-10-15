@@ -155,7 +155,7 @@ export default function Row(props: Props) {
 				class={
 					"row max-sm:text-sm" +
 					(header
-						? " header absolute top-0 left-0 right-0 rounded-t-2xl before:content-[none] bg-surface-muted text-brand dark:text-red-100 font-bold border-b-2 border-b-brand"
+						? " header absolute top-0 left-0 right-0 rounded-t-2xl before:content-[none] bg-surface-muted text-accent-ink font-bold border-b-2 border-b-brand"
 						: "")
 				}>
 				{hasSelectBox && (
@@ -167,7 +167,7 @@ export default function Row(props: Props) {
 							type="button"
 							aria-label={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
 							title={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
-							class="rounded focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300">
+							class="rounded focus-visible:outline-2 focus-visible:outline-accent-ink">
 							<i
 								aria-hidden="true"
 								class={"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
@@ -186,7 +186,7 @@ export default function Row(props: Props) {
 							if (type === "link") {
 								return (
 									<a href={item as string} target="_blank" class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
-										<i class="fa-solid fa-up-right-from-square text-red-900 dark:text-red-300"></i>
+										<i class="fa-solid fa-up-right-from-square text-accent-ink"></i>
 									</a>
 								);
 							}
@@ -197,7 +197,7 @@ export default function Row(props: Props) {
 											type="button"
 											class="text-xl leading-none transition-transform duration-150 hover:scale-110 focus-visible:outline-hidden"
 											onClick={(e) => copyCellValue(e, String(item))}>
-											<i class="fa-regular fa-copy text-red-900 dark:text-red-300"></i>
+											<i class="fa-regular fa-copy text-accent-ink"></i>
 											<span class="sr-only">Αντιγραφή αναγνωριστικού</span>
 										</button>
 									</div>

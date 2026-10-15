@@ -62,11 +62,17 @@ const call = (method: string, path: string, body?: unknown) =>
 	);
 
 let consoleError: ReturnType<typeof spyOn>;
+// Another test file may load the registry, which installs the «Σφάλματα» recorder (a DB write): swap in a spy.
+let failures: { endpoint?: string; status: number; error: unknown }[] = [];
+const installedOnServerError = APIServer.onServerError;
 beforeEach(() => {
 	consoleError = spyOn(console, "error").mockImplementation(() => {});
+	failures = [];
+	APIServer.onServerError = async ({ route, status, error }) => void failures.push({ endpoint: route.path, status, error });
 });
 afterEach(() => {
 	consoleError.mockRestore();
+	APIServer.onServerError = installedOnServerError;
 });
 
 // ---------------------------------------------------------------------------
@@ -188,4 +194,30 @@ test("a response that breaks its schema is logged and answered with the generic 
 	expect(res.status).toBe(500);
 	expect(await res.json()).toEqual({ error: SERVER_ERROR_MESSAGE });
 	expect(consoleError).toHaveBeenCalledTimes(1);
+});
+
+// ---------------------------------------------------------------------------
+// «Σφάλματα»: every unexpected 500 reaches onServerError with its real error
+// ---------------------------------------------------------------------------
+test("onServerError gets the error behind each kind of 500, and nothing for 4xx", async () => {
+	await call("GET", "/__unit/fail/db");
+	await call("GET", "/__unit/fail/naked");
+	await call("GET", "/__unit/fail/response");
+	await call("GET", "/__unit/fail/api-error");
+	await call("GET", "/__unit/fail/zod");
+	await call("GET", "/__unit/nope");
+	expect(failures.map((f) => [f.endpoint, f.status, (f.error as Error).message])).toEqual([
+		["/__unit/fail/db", 500, "D1_ERROR: no such table: secret_table: SQLITE_ERROR"],
+		["/__unit/fail/naked", 500, "D1_ERROR: thrown outside handlerResult"],
+		["/__unit/fail/response", 500, "The response does not match its schema"],
+	]);
+});
+
+test("a failing onServerError never changes the answer", async () => {
+	APIServer.onServerError = async () => {
+		throw new Error("recorder down");
+	};
+	const res = await call("GET", "/__unit/fail/db");
+	expect(res.status).toBe(500);
+	expect(await res.json()).toEqual({ error: "Σφάλμα κατά τη δοκιμή" });
 });

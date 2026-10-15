@@ -145,7 +145,7 @@ export default function DateInput(props: DateInputProps) {
 			<input
 				ref={dateInput}
 				class={
-					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10" +
+					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10" +
 					(disabled && blurDisabled ? " blur-[1px]" : "")
 				}
 				type="text"

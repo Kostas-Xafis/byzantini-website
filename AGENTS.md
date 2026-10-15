@@ -86,7 +86,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
 | Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
-| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
+| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins, activity-log rows of throwaway `@example.com` admins / test fixtures) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this
@@ -357,6 +357,16 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   to `ACTIVITY_LABELS`** (`tests/unit/activity.test.ts` checks every entry is
   a real non-GET route). Routes: `Activity.list` (cursor + admin/category
   filters), `Activity.admins`. `query_logs` stays the raw SQL trace (sysadmin).
+- **«Σφάλματα»** (`/admin/errors`, sysadmin; docs/ERROR_ALERTING.md): every
+  5xx the API answers (and a failed `afterWrite`) reaches
+  `APIServer.onServerError` → `lib/errors/record.server.ts` → `sys_errors`
+  (0008; one row per distinct error, counted; messages scrubbed by
+  `lib/errors/describe.ts` — never bodies, cookies or query strings); crashed
+  pages are recorded by `src/middleware.ts`. The emails worker's cron
+  (`*/15`, `services/emailWorker/src/errorDigest.ts`, its own `DB` binding to
+  production `byzantini-db`) emails the **sysadmins** what is new, marks it
+  notified and prunes rows after 90 days. `GET /api/health` (public) is for the
+  external uptime monitor. Routes: `Errors.list`/`Errors.delete`, `Health.get`.
 - **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
   production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
   `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
@@ -399,6 +409,25 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   context-free (`Bucket.put(data, key, type)`); `list` paginates past 1000
   keys; `move` copies first, deletes the source only after, keeps the source's
   metadata and is a no-op onto the same key.
+- **Public files** (`src/pages/[...slug].ts`, rules in `lib/bucket/publicFiles.ts`):
+  the catch-all serves only bucket-root files and `PUBLIC_BUCKET_PREFIXES`
+  (`anakoinoseis/images/`, `kathigites/`, `spoudastiria/`, `choir/`,
+  `emails/files/`) — `html_templates/` / `pdf_templates/` and anything new are
+  404 until added there. Stored Content-Type + `nosniff`; only raster images,
+  PDFs and fonts inline, everything else a sandboxed attachment. Admin uploads
+  accept JPEG/PNG/WebP/GIF (+ PDF for CVs) up to 10 MB — no SVG.
+- **Security headers** (`lib/utilities/securityHeaders.ts`, applied in
+  `src/middleware.ts`; prerendered pages get the same from `public/_headers`,
+  kept in sync by `tests/unit/securityHeaders.test.ts`): nosniff,
+  Referrer-Policy, Permissions-Policy, frame protection and HSTS everywhere;
+  an enforced CSP on `/admin`, `/login`, `/oauth2callback` that lists exactly
+  what they load (jsDelivr, cdnjs, Google Fonts, Cloudflare analytics,
+  https avatars, blob:/data:). **Loading something new from another origin in
+  the dashboard? Add it to `STRICT_CSP`** (and regenerate `public/_headers`'
+  `/login/*` line) — otherwise the browser blocks it. Headers a route sets
+  itself win.
+- JSON inside an inline `<script>` (JSON-LD, page data) goes through
+  `jsonForScript` (`lib/utilities/safeJson.ts`), never bare `JSON.stringify`.
 - **Worker↔worker calls go through service bindings, never HTTP URLs**: the
   site's `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`)
   and `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
@@ -479,12 +508,17 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - **Dashboard colours are tokens** (`src/styles/global.css` `@theme`, dark values
   in the `.dark` block below it): `bg-page`, `bg-surface`, `bg-surface-muted`,
   `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand` /
-  `text-brand` / `text-brand-ink` / `bg-brand-hover`, `bg-accent-soft`. Use them
-  in admin UI instead of `bg-white dark:bg-dark`-style pairs or new hex values.
-  The panel pages (`Panel.solid.tsx`) and the shared table (`table/*`,
-  `SearchTable`, `Modal`) are on them; `AdminLayout`'s legacy
-  `html.dark .bg-white` patch now resolves to `--color-surface`, so components
-  not migrated yet still match — migrate them as you touch them.
+  `text-brand-ink` / `bg-brand-hover`, `bg-accent-soft`, `text-accent-ink`
+  (brand red as text/icon/outline — pale in dark), `shadow-shade`, `text-danger`.
+  Use them in admin UI instead of `bg-white dark:bg-dark`-style pairs or new hex
+  values: one class, both themes. Everything under `src/components/admin` is on
+  them (`bg-white` is gone from the admin; `AdminLayout`'s old
+  `html.dark .bg-white` patch is deleted — a new `bg-white` would now stay white
+  in dark mode). Left on their own `dark:` pairs on purpose: status colours
+  (green/amber/blue/sky/violet toasts, badges, notes), the modal backdrop, the
+  admin sidebar (`AdminNav`), and the shared `input/*` controls, whose light look
+  must stay identical on the public form (only their surface uses `bg-surface`).
+  Anything that must stay white in both themes (brand logos) is `bg-[#fff]`.
 
 ## Tests
 

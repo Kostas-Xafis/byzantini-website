@@ -74,6 +74,12 @@ function teachersTest() {
 			throw new Error("Uploaded teacher CV content does not match the source file");
 		}
 	});
+	test("--teachers-- #2b uploads refuse SVG and oversized files", async () => {
+		const svg = new Blob(['<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'], { type: "image/svg+xml" });
+		expect((await useTestAPI("Teachers.fileUpload", { UrlArgs: { id: newTeacherId as number }, RequestObject: svg })).status).toBe(415);
+		const huge = new Blob([new Uint8Array(10 * 1024 * 1024 + 1)], { type: "image/png" });
+		expect((await useTestAPI("Teachers.fileUpload", { UrlArgs: { id: newTeacherId as number }, RequestObject: huge })).status).toBe(413);
+	});
 	test("--teachers-- #3", async () => {
 		const res = await useTestAPI("Teachers.fileRename", {
 			UrlArgs: { id: newTeacherId as number },

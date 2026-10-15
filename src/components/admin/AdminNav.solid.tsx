@@ -38,6 +38,7 @@ const sections: NavSection[] = [
 			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "fa-solid fa-users-gear" },
 			{ name: "Ιστορικό ενεργειών", url: "/admin/activity", force: false, icon: "fa-solid fa-clock-rotate-left", permission: "activityLog" },
 			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database", permission: "queryLogs" },
+			{ name: "Σφάλματα", url: "/admin/errors", force: false, icon: "fa-solid fa-triangle-exclamation", permission: "queryLogs" },
 			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "fa-solid fa-gear" },
 			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "fa-solid fa-right-from-bracket" },
 		],

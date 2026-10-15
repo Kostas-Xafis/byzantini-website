@@ -2,13 +2,14 @@ import { z } from "astro/zod";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import type { SitemapItem } from "@_types/global";
 import { Bucket } from "@lib/bucket";
+import { MAX_UPLOAD_BYTES } from "@lib/bucket/publicFiles";
 import { compressImageForThumb } from "@lib/images";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements, z_IdArray } from "@lib/api/schemas";
 import { APIError } from "./APIError";
-import { APIServer, handlerResult } from "./APIServer";
+import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -233,6 +234,7 @@ export const announcementsRoutes = {
 		({ body, request }) =>
 			handlerResult(async () => {
 				const { announcement_id, fileData, fileType, name: fileName } = body;
+				if (fileData.size > MAX_UPLOAD_BYTES) throw new APIError(HTTP.PAYLOAD_TOO_LARGE, "Το αρχείο είναι πολύ μεγάλο (έως 10 MB)");
 
 				const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
 				const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;

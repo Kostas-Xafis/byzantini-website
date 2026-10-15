@@ -96,6 +96,10 @@
 - Every successful data change by a signed-in admin is logged to
   `sys_activity` («Ιστορικό ενεργειών») — only endpoints listed in
   `lib/activity/labels.ts`; add new mutating routes there with a Greek label.
+- Unexpected server errors are recorded in `sys_errors` («Σφάλματα»,
+  `/admin/errors`, sysadmin) via `APIServer.onServerError`; the emails worker's
+  cron emails the sysadmins a digest (`services/emailWorker/src/errorDigest.ts`).
+  `GET /api/health` is the uptime-monitor target.
 - A 401 in the dashboard sends the admin to `/login?…&expired=1` and back
   (`lib/auth/sessionExpiry.client.ts`); password reset is
   `/login/forgot` → `/login/reset/<token>` (`Authentication.*PasswordReset`).
@@ -103,13 +107,22 @@
   pending ones are listed, resent and revoked under the admins table
   (`SysUsers.getInvites` / `resendInvite` / `revokeInvite`).
 - Admin colours are tokens in `src/styles/global.css` (`bg-surface`,
-  `text-ink`, `border-line`, `bg-brand`, …, dark values on `.dark`) — use them
-  instead of `bg-white dark:bg-dark` pairs or new hex values.
+  `text-ink`, `border-line`, `bg-brand`, `text-accent-ink`, `shadow-shade`,
+  `text-danger`, …, dark values on `.dark`) — use them instead of
+  `bg-white dark:bg-dark` pairs or new hex values. All of `src/components/admin`
+  is on them and the `html.dark .bg-white` patch is gone, so a new `bg-white`
+  stays white in dark mode (use `bg-[#fff]` only for brand logos). Status colours,
+  `AdminNav` and the shared `input/*` controls keep their own `dark:` pairs.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by
   `bun run replicate:bucket`; restart the dev server afterwards). No
-  `bucket:serve` / HTTP store anymore.
+  `bucket:serve` / HTTP store anymore. The public catch-all serves only the
+  prefixes in `lib/bucket/publicFiles.ts`; inline-script JSON uses
+  `jsonForScript` (`lib/utilities/safeJson.ts`). Security headers + the
+  dashboard's strict CSP live in `lib/utilities/securityHeaders.ts` (mirrored
+  in `public/_headers`); new third-party origins in the admin go into
+  `STRICT_CSP`.
 - **Worker↔worker calls use service bindings, never HTTP URLs.** The site's
   `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`) and
   `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each

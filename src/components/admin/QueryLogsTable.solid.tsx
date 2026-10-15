@@ -140,19 +140,17 @@ export default function QueryLogsTable() {
 		return (
 			<form
 				data-prefix={FILTER_FORM_PREFIX}
-				class="grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-md border-[2px] border-red-900 px-4 py-3 dark:border-red-800 max-xl:grid-cols-2 max-sm:grid-cols-1"
+				class="grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-md border-[2px] border-brand px-4 py-3 max-xl:grid-cols-2 max-sm:grid-cols-1"
 				onSubmit={applyFilters}>
 				<For each={Object.values(QueryLogFilterInputs())}>{(inputProps) => <Input {...inputProps} prefix={FILTER_FORM_PREFIX} />}</For>
 				<div class="flex flex-wrap gap-2 self-center max-sm:justify-center">
-					<button
-						type="submit"
-						class="rounded-md bg-red-900 px-4 py-2 text-white shadow-md transition-colors duration-200 hover:bg-red-950 dark:bg-red-800 dark:hover:bg-red-700">
+					<button type="submit" class="rounded-md bg-brand px-4 py-2 text-white shadow-md transition-colors duration-200 hover:bg-brand-hover">
 						Εφαρμογή
 					</button>
 					<button
 						type="button"
 						onClick={resetFilters}
-						class="rounded-md border border-red-900 px-4 py-2 text-red-950 shadow-md transition-colors duration-200 hover:bg-red-100 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/50">
+						class="rounded-md border border-brand px-4 py-2 text-ink shadow-md transition-colors duration-200 hover:bg-accent-soft">
 						Τελευταία 100
 					</button>
 				</div>

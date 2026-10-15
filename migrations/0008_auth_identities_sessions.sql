@@ -87,3 +87,22 @@ CREATE TABLE sys_user_register_links (
 	expires_at INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX sys_user_register_links_email ON sys_user_register_links (email COLLATE NOCASE);
+
+-- «Σφάλματα»: unexpected server errors (lib/errors/record.server.ts) — one row per distinct error (source,
+-- status, error, message, host), counted. Messages are scrubbed of emails and long numbers; no request bodies,
+-- cookies or query strings are stored. The emails worker's cron (services/emailWorker/src/errorDigest.ts) emails
+-- the sysadmins the rows seen since they were last notified and deletes rows older than 90 days.
+CREATE TABLE sys_errors (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	fingerprint TEXT NOT NULL UNIQUE,
+	source TEXT NOT NULL,
+	status INTEGER NOT NULL,
+	error_name TEXT NOT NULL,
+	message TEXT NOT NULL,
+	host TEXT NOT NULL,
+	count INTEGER NOT NULL DEFAULT 1,
+	first_seen_at INTEGER NOT NULL,
+	last_seen_at INTEGER NOT NULL,
+	notified_at INTEGER
+);
+CREATE INDEX sys_errors_last_seen ON sys_errors (last_seen_at);

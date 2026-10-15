@@ -228,9 +228,9 @@ Still open from this list: **B3** (verify email delivery on a real deploy), **B7
 
 | ID | Finding | Where | Fix | Status |
 |---|---|---|---|---|
-| S1 | **Stored XSS via JSON-LD:** `set:html={JSON.stringify(...)}` doesn't escape `<`; announcement titles/location fields flow in. With the non-HttpOnly session cookie (B7) this is admin-session theft. | `seo/JsonLd.astro:8`, `spoudastiria/index.astro:343` | `.replace(/</g, "\\u003c")`. | ⬜ Open |
-| S2 | R2 catch-all serves **any** bucket key publicly (incl. `html_templates/*`), with no `Content-Type`/`nosniff`; uploads accept client-chosen type/name, no size limit, SVG allowed. | `src/pages/[...slug].ts:6–22`, `announcements.ts:246–263` | Prefix allowlist, `writeHttpMetadata`, `nosniff`, attachment/CSP-sandbox for non-raster types, validate uploads. | ⬜ Open |
-| S3 | No security headers at all (CSP, frame-ancestors, HSTS, nosniff, Referrer-Policy); no `src/middleware.ts`. | — | Astro middleware with a baseline set; strict CSP on `/admin`. | ⬜ Open |
+| S1 | **Stored XSS via JSON-LD:** `set:html={JSON.stringify(...)}` doesn't escape `<`; announcement titles/location fields flow in. With the non-HttpOnly session cookie (B7) this is admin-session theft. | `seo/JsonLd.astro:8`, `spoudastiria/index.astro:343` | `.replace(/</g, "\\u003c")`. | ✅ Done 2026-10-15 |
+| S2 | R2 catch-all serves **any** bucket key publicly (incl. `html_templates/*`), with no `Content-Type`/`nosniff`; uploads accept client-chosen type/name, no size limit, SVG allowed. | `src/pages/[...slug].ts:6–22`, `announcements.ts:246–263` | Prefix allowlist, `writeHttpMetadata`, `nosniff`, attachment/CSP-sandbox for non-raster types, validate uploads. | ✅ Done 2026-10-15 |
+| S3 | No security headers at all (CSP, frame-ancestors, HSTS, nosniff, Referrer-Policy); no `src/middleware.ts`. | — | Astro middleware with a baseline set; strict CSP on `/admin`. | ✅ Done 2026-10-15 (strict CSP on the dashboard/sign-in; public pages baseline only) |
 | S4 | ΑΜ+ΑΜΚΑ lookup is brute-forceable (ΑΜΚΑ = DDMMYY+5 digits; ~10k guesses with a known birth date) and returns the full row incl. `review_note`, `needs_review`, payment fields. | `pupils.ts:574–597` | Rate limit/Turnstile; return only prefill fields. | 🟡 Partly done — `3c559a1`: rate limited. Left: return only the fields the form needs |
 | S5 | Newsletter: `getSubscriptionToken` returns anyone's unsubscribe token (→ unsubscribe anyone, membership oracle); `emailSubscribe` accepts any string, no double opt-in. | `emailSubscriptions.ts:23–61` | Remove/guard the token route; `z.email()`; confirmation email. | 🟡 Partly done — `94e84ae`: tokens are now cryptographically random. Left: the public token route, email validation, double opt-in |
 | S6 | Both aux workers are reachable on `*.workers.dev` (default `workers_dev: true`); the email worker exposes `/html-templates` (bucket writes) behind the shared token. | `services/*/wrangler.jsonc` | `"workers_dev": false`; separate token or `wrangler r2 object put` for templates. | ⬜ Open |
@@ -258,7 +258,7 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 | P9 | No CI: `.github/` has only `copilot-instructions.md`. Nothing runs typecheck/build — which is how B1/B2 reached HEAD. | — | Minimal GitHub Action: `bun install`, `typecheck`, `build`, unit tests. | ⬜ Open |
 | P10 | Preview is built as production (`CLOUDFLARE_ENV=production`, `.env.production` inlined, analytics beacon fires, prod email/PDF workers). Preview config lives in 3 places (`wrangler.jsonc env.preview`, `wrangler.preview.jsonc` — missing `services`/`images` and claiming to be the deploy config — and IDs in `scripts/cf.ts:50–54`). | `scripts/cf.ts`, `wrangler.preview.jsonc` | Build preview with `CLOUDFLARE_ENV=preview`; one source of truth. | ⬜ Open |
 | P11 | No deploy/rollback runbook (the stale `docs/PHASE6_DEPLOY.md` was deleted after the merge; the deploy commands and worker names are in AGENTS.md). No `routes`/`custom_domains` in config; no written rollback plan. | `AGENTS.md`, `wrangler.jsonc` | Custom domain in config; short runbook: `wrangler versions/rollback`, D1 Time Travel bookmark before every remote migration. | ⬜ Open |
-| P12 | No alerting: site `observability` is just `{enabled: true}`, errors go to `console.log`. | `wrangler.jsonc`, `APIServer.ts:276` | Workers Logs alert / Logpush / Sentry (Toucan); `head_sampling_rate: 1`. | ⬜ Open |
+| P12 | No alerting: site `observability` is just `{enabled: true}`, errors go to `console.log`. | `wrangler.jsonc`, `APIServer.ts:276` | Workers Logs alert / Logpush / Sentry (Toucan); `head_sampling_rate: 1`. | ✅ Done 2026-10-15 (option A: sys_errors + sysadmin digest + /api/health; uptime monitor to be created) |
 | P13 | `robots.txt` is `Allow: /` only; the catch-all does an R2 GET for every bot probe; announcement OG image uses the small `thumb_`; duplicate head tags in Admin/Signin layouts; 155 KB global CSS on every page. | various | `Disallow: /admin /api/ /login /unsubscribe`; prefix allowlist; main image for OG; dedupe. | ⬜ Open |
 | P14 | **Dev footgun [live]:** running `bun run build` while `bun run dev` is up rewrites `.wrangler/deploy/config.json` to point at `dist/server`, after which the dev server 404s every SSR page and `/api/*` until restarted. | — | Document it, or have `build` write a separate deploy-config path. | ⬜ Open |
 
@@ -278,11 +278,10 @@ announcement content isn't rendered with `set:html`; SameSite=Strict + JSON bodi
 
 - **Oversized files:** `PupilsPage.solid.tsx` (872), `RegistrationForm.solid.tsx` (827 — split TypeSelect / Lookup / Form),
   `DatepickerCSS.astro` (724 lines of CSS), `pupils.ts` (598). `Input.solid.tsx` repeats a ~300-char class string 5×.
-- **Design tokens** (🟡 partly done 2026-10-15: dashboard colour tokens in `global.css` — panels, shared table, search, modal and the page
-  background use them; the remaining admin components still rely on the `html.dark .bg-white` patch, now token-backed):
-  base/keyframe CSS duplicated across 4 layouts; `.glass` defined twice with different values; dark mode is
-  utility overrides (`html.dark .bg-white …`) with 6+ ad-hoc dark colours; hex/rgb hard-coded in 39 files → `@theme` tokens
-  (`--color-surface`, `--color-text`, …).
+- **Design tokens** (🟡 admin dashboard colours done 2026-10-15: `global.css` tokens, every admin component on them, the `html.dark .bg-white`
+  patch deleted; still open: the `html.dark .text-gray-*`/`.shadow-gray-*` rules and `select` colours in `AdminLayout`, `input/*` controls and
+  `AdminNav` on their own `dark:` pairs, status colours, public site): base/keyframe CSS duplicated across 4 layouts; `.glass` defined twice
+  with different values; hex/rgb hard-coded in 39 files → `@theme` tokens (`--color-surface`, `--color-text`, …).
 - **Solid reactivity:** props destructured in Input, DateInput, Popup, Modal, Row, Table — works only because parents remount.
   Pupil search (`PupilsPage.solid.tsx:245–262`) can show stale results (no abort/sequence).
 - **Music-type constants** duplicated in ~8 places (`MUSIC_TYPES`, `CLASS_TYPE_*`, ternaries, three `z.literal(0|1|2)`) → centralise in `lib/classYears.ts`.
