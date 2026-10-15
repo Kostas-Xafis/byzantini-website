@@ -85,7 +85,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
 | Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
-| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
+| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this

@@ -13,10 +13,8 @@ import type { FeeCatalogInput, FeeRule } from "@lib/fees";
 import { currentSchoolYearStart, schoolYearOf } from "@lib/pupils/years";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { Database } from "bun:sqlite";
 import { afterAll, describe, expect, test } from "bun:test";
-import { existsSync, readdirSync, statSync } from "node:fs";
-import path from "node:path";
+import { uniqueTestAm, withLocalDb } from "../localDb.ts";
 import { getJson, useTestAPI } from "../testHelpers.ts";
 
 const YEAR = schoolYearOf(currentSchoolYearStart() + 1);
@@ -25,22 +23,6 @@ const SEED_YEAR = "2026-2027";
 // ---------------------------------------------------------------------------
 // Cleanup bookkeeping (local dev DB, best-effort)
 // ---------------------------------------------------------------------------
-const D1_DIR = path.resolve(import.meta.dir, "../../.wrangler/state/v3/d1/miniflare-D1DatabaseObject");
-function withLocalDb<T>(fn: (db: Database) => T): T | null {
-	if (!existsSync(D1_DIR)) return null;
-	const files = readdirSync(D1_DIR)
-		.filter((name) => name.endsWith(".sqlite") && !name.startsWith("metadata"))
-		.map((name) => path.join(D1_DIR, name))
-		.filter((file) => statSync(file).size > 0)
-		.sort((a, b) => statSync(b).size - statSync(a).size);
-	if (files.length === 0) return null;
-	const db = new Database(files[0]!);
-	try {
-		return fn(db);
-	} finally {
-		db.close();
-	}
-}
 const catalogIdsBefore = new Set(withLocalDb((db) => (db.query("SELECT id FROM fee_catalogs").all() as { id: number }[]).map((r) => r.id)) ?? []);
 const createdPupils: number[] = [];
 const emails: string[] = [];
@@ -74,7 +56,7 @@ async function register(fields: { class_id: 0 | 1 | 2; class_year: string; teach
 		"Pupils.post",
 		{
 			RequestObject: {
-				am: String(R.int(9000, 9999)),
+				am: String(uniqueTestAm()),
 				amka: String(R.int(10000000000, 99999999999)),
 				first_name: "Δοκιμαστικός",
 				last_name: "Μαθητής",
