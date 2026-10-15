@@ -175,7 +175,7 @@
   alias, called by path); `typescript` stays 6.0.3 for `astro check` and
   editors (TS 7 has no classic JS API). Keep tsconfigs TS 7-valid.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
-  suite writes to the local dev DB.
+  and e2e suites write to the local dev DB.
 - Fees (docs/FEES.md): «Υπό Κατάταξη» is the enrollment `evaluation` status, not
   a class year; prices come from versioned catalogs = settings + price rules
   (`fee_catalogs` + `fee_catalog_rules`, `FeeCatalog.*`),
@@ -192,6 +192,12 @@
   for the sysusers suite, which sends the invite email, the emails worker
   running locally on 8788; for the pdf suite, the PDF worker on 8787 started
   before the dev server).
+- End-to-end smoke tests: `bun run e2e` (Playwright on Bun, `e2e/`, not part of
+  `bun run test`; Chromium at 1280 and 375 px). Needs the dev server
+  (`E2E_BASE_URL`, default `http://e2e.localhost:4321`, its own cookie host), the emails worker and
+  tests/.env.test; browsers via `bunx playwright install chromium`. Browser
+  sign-ins use throwaway `e2e.*@example.com` admins that the fixtures delete;
+  see `e2e/README.md`.
 - PDF output is checked against golden SHA-256 hashes
   (`services/pdfWorker/tests/fixtures/golden.json`, dummy fixtures only) by the
   worker suite and `tests/api/pdf.test.ts`. Regenerate only after an intended
