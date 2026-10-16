@@ -7,93 +7,91 @@ import { currentSchoolYearShort, REGISTRATION_WINDOW_LABEL } from "@lib/pupils/y
 const schoolYear = currentSchoolYearShort();
 ---
 
-<main
-	id="welcome-page"
-	class={"relative h-dvh supports-[height:1svh]:h-svh p-[5vw] pb-[6vw] max-xl:p-[2.5vw] sm:content-end grid grid-rows-[1fr_repeat(5,max-content)] grid-cols-2 grid-flow-col" +
-		" max-sm:grid-rows-[repeat(4,max-content)_1fr] max-sm:grid-cols-[100%] max-sm:items-center max-sm:bg-center max-sm:pt-32 max-sm:min-h-180"}>
-	<div class="max-sm:hidden"></div>
-	<img src="/church_low.jpg" class="hidden" fetchpriority="high" />
-	<h1 class="text-[4vw] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-3.5xl max-2xs:text-2xl">
-		Σχολή Βυζαντινής &<br /><span class="pl-[0.75ch]">Παραδοσιακής Μουσικής</span>
-	</h1>
-	<h3
-		class="ml-[4vw] text-[clamp(1.125rem,2vw,2.5rem)] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-lg max-sm:pl-4 max-2xs:text-base">
-		Ι.Ν. Μεταμορφώσεως του Σωτήρος
-	</h3>
-	<h3
-		class="ml-[5vw] text-[clamp(1rem,1.5vw,2rem)] font-anaktoria font-bold text-red-50 tracking-wider leading-relaxed max-sm:text-lg max-sm:pl-8 max-2xs:text-base">
-		ομωνύμου Δήμου
-	</h3>
-	<div id="fek" class="mt-[5vw] w-max p-[1.5vw] py-[1vw] grid auto-cols-max grid-flow-col gap-x-4 glass grid-rows-[max-content_max-content] rounded-lg">
-		<h3 class="text-[clamp(1.125rem,1.75vw,2.25rem)] font-anaktoria font-bold text-red-50 self-center max-sm:text-base">
-			<Icon name="chevron-right" class="pr-4 text-[clamp(0.875rem,1.5vw,1.75rem)] max-sm:text-xs self-center" />Ανεγνωρισμένη υπό του Κράτους
-		</h3>
-		<div class="mt-[1vh] grid grid-cols-[max-content_max-content] gap-x-8 place-content-center">
-			<a
-				target="_blank"
-				href="/fek-byzantini.pdf"
-				class="px-3 max-sm:px-2 h-max self-end text-[clamp(0.875rem,1.2vw,1.5rem)] max-sm:text-2xs font-didact font-bold text-red-50 outline-hidden max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-xs hover:bg-red-50 hover:text-red-900"
-				style="grid-row: 2 / 3;">ΦΕΚ 1</a
-			>
-			<a
-				target="_blank"
-				href="/fek-paradosiaki.pdf"
-				class="px-3 max-sm:px-2 self-start h-max text-[clamp(0.875rem,1.2vw,1.5rem)] max-sm:text-2xs font-didact font-bold text-red-50 outline-hidden max-sm:outline-1 outline-red-50 rounded-md max-sm:rounded-xs hover:bg-red-50 hover:text-red-900"
-				style="grid-row: 2 / 3;">ΦΕΚ 2</a
-			>
-		</div>
-	</div>
+<main id="welcome-page" class="relative min-h-dvh supports-[height:1svh]:min-h-svh flex flex-col">
+	<img src="/church_low.jpg" class="hidden" fetchpriority="high" alt="" />
+	<!--
+		One grid for the three hero blocks: the title (with the state-recognition strip under it) on the left, the
+		registrations card on the right, both sitting on the same baseline above the «Χαιρετισμός» link. Below lg
+		they stack (title → card) and the page grows instead of letting the blocks overlap.
+	-->
 	<div
-		id="eggrafesLink"
-		class={"glass place-self-center w-max h-max rounded-lg font-anaktoria row-span-full" +
-			" shadow-lg shadow-stone-800 px-[2vw] py-[2vh] grid auto-cols-max place-items-center max-sm:row-span-1!"}>
-		<h3 class="text-[clamp(1.75rem,2.75vw,3.5rem)] h-min font-bold text-red-50 self-center max-sm:text-2xl capitalize">Εγγραφές</h3>
-		<h3 class="text-[clamp(1.25rem,2.25vw,2.75rem)] h-min font-bold text-red-50 self-center max-sm:text-xl">
-			Σχολικού Έτους <span data-school-year-short>{schoolYear}</span>
-		</h3>
-		<h3 class="text-[clamp(1.25rem,2.25vw,2.75rem)] h-min font-bold text-red-50 self-center max-sm:text-xl">{REGISTRATION_WINDOW_LABEL}</h3>
-		<div class="flex flex-col gap-y-[1.5vw] max-sm:flex-row max-sm:gap-x-4 mt-2">
-			<a
-				class="group/regbtn px-[2vw] py-[0.75vh] text-[clamp(1.25rem,2.25vw,2.75rem)] max-sm:text-xl max-3xs:text-lg font-bold self-center shadow-md rounded-xl outline-hidden outline-red-50 bg-red-50 text-red-900"
-				href="/eggrafes">
-				Εγγραφές <Icon
-					name="chevron-right"
-					class="mr-[-1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
-				/>
-			</a>
-			<a
-				class="group/regbtn px-[2vw] py-[0.75vh] text-[clamp(1.25rem,2.25vw,2.75rem)] max-sm:text-xl max-3xs:text-lg font-bold self-center shadow-md rounded-xl outline-hidden outline-red-50 bg-red-50 text-red-900"
-				href="/sxoli/anakoinoseis">
-				Ανακοινώσεις <Icon
-					name="chevron-right"
-					class="mr-[-1em] text-[clamp(0.75rem,1.25vw,1.5rem)] self-center max-sm:text-xs max-sm:px-2 max-3xs:text-xs"
-				/>
-			</a>
+		class="flex-1 w-full max-w-400 mx-auto grid content-end items-end gap-x-[4vw] gap-y-8 px-[clamp(1rem,5vw,6rem)] pt-[calc(var(--nav-h)+2rem)] pb-[clamp(5.5rem,11vh,9rem)] lg:grid-cols-[minmax(0,1fr)_auto] max-sm:content-center max-sm:gap-y-6 max-sm:pb-10">
+		<div id="hero-title" class="flex flex-col min-w-0">
+			<h1 class="text-[clamp(2rem,4.2vw,5rem)] font-anaktoria font-bold text-red-50 tracking-wider leading-[1.35] max-2xs:text-[1.6rem]">
+				Σχολή Βυζαντινής &<br /><span class="pl-[0.75ch]">Παραδοσιακής Μουσικής</span>
+			</h1>
+			<h3
+				class="mt-[0.6em] ml-[clamp(1rem,3.5vw,4rem)] text-[clamp(1.125rem,1.9vw,2.25rem)] font-anaktoria font-bold text-red-50 tracking-wider leading-snug max-2xs:text-base">
+				Ι.Ν. Μεταμορφώσεως του Σωτήρος
+			</h3>
+			<h3
+				class="ml-[clamp(1.75rem,4.5vw,5rem)] text-[clamp(1rem,1.4vw,1.75rem)] font-anaktoria font-bold text-ivory/90 tracking-wider leading-snug max-2xs:text-sm">
+				ομωνύμου Δήμου
+			</h3>
+			<div
+				id="fek"
+				class="glass mt-[clamp(1.5rem,4vh,3rem)] w-max max-w-full flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl px-[clamp(0.875rem,1.2vw,1.5rem)] py-[clamp(0.5rem,0.7vw,0.875rem)]">
+				<p class="flex items-center gap-x-2.5 font-anaktoria font-bold text-red-50 text-[clamp(1rem,1.3vw,1.6rem)] leading-tight">
+					<Icon name="certificate" class="text-ivory text-[1.1em]" />Ανεγνωρισμένη υπό του Κράτους
+				</p>
+				<div class="flex gap-x-2">
+					<a target="_blank" href="/fek-byzantini.pdf" class="fek-link" title="ΦΕΚ αναγνώρισης — Βυζαντινή Μουσική">
+						<Icon name="file-pdf" class="text-[0.95em]" />ΦΕΚ 1
+					</a>
+					<a target="_blank" href="/fek-paradosiaki.pdf" class="fek-link" title="ΦΕΚ αναγνώρισης — Παραδοσιακή Μουσική">
+						<Icon name="file-pdf" class="text-[0.95em]" />ΦΕΚ 2
+					</a>
+				</div>
+			</div>
 		</div>
+		<aside
+			id="eggrafesLink"
+			aria-labelledby="eggrafesTitle"
+			class="glass-dark w-[clamp(17rem,25vw,26rem)] max-w-full justify-self-end rounded-2xl font-anaktoria shadow-2xl shadow-black/40 px-[clamp(1.25rem,2vw,2.25rem)] py-[clamp(1.25rem,2.2vw,2.5rem)] flex flex-col items-center text-center gap-y-1 max-lg:justify-self-start max-sm:justify-self-stretch max-sm:w-auto">
+			<h2 id="eggrafesTitle" class="text-[clamp(1.875rem,2.6vw,3.25rem)] font-bold text-red-50 leading-tight">Εγγραφές</h2>
+			<p class="text-[clamp(1.125rem,1.6vw,2rem)] font-bold text-red-50 leading-snug">
+				Σχολικού Έτους <span data-school-year-short>{schoolYear}</span>
+			</p>
+			<p
+				class="mt-1 inline-flex items-center gap-x-2 rounded-full border border-ivory/30 bg-black/20 px-3 py-0.5 font-didact text-[clamp(0.875rem,1vw,1.125rem)] text-ivory">
+				<Icon name="calendar" class="text-[0.9em]" />{REGISTRATION_WINDOW_LABEL}
+			</p>
+			<div class="mt-[clamp(0.875rem,1.4vw,1.5rem)] w-full flex flex-col gap-y-2.5 max-sm:flex-row max-sm:gap-x-3">
+				<a class="hero-btn hero-btn-primary" href="/eggrafes">
+					Εγγραφές <Icon name="chevron-right" class="hero-btn-icon" />
+				</a>
+				<a class="hero-btn hero-btn-secondary" href="/sxoli/anakoinoseis">
+					Ανακοινώσεις <Icon name="chevron-right" class="hero-btn-icon" />
+				</a>
+			</div>
+		</aside>
 	</div>
 	<a
 		id="xairetismos-btn"
-		class="max-sm:hidden group/regbtn absolute bottom-0 left-[50%] translate-x-[-50%] flex flex-col px-[4vw] py-[0.25vh] mt-[1.5vw]"
+		class="max-sm:hidden group/regbtn absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center px-[4vw] pt-2 pb-1"
 		href="/#xairetismos-mitropolitou">
-		<p class="text-red-50 font-anaktoria text-2xl">Χαιρετισμός Σεβ. Μητροπολίτου</p>
-		<Icon name="chevron-down" class="text-red-50 text-[1vw] self-center max-sm:text-sm max-sm:px-2 max-3xs:text-xs" />
+		<p class="text-red-50 font-anaktoria text-[clamp(1.125rem,1.4vw,1.625rem)] whitespace-nowrap">Χαιρετισμός Σεβ. Μητροπολίτου</p>
+		<Icon name="chevron-down" class="text-red-50 text-base transition-transform duration-300 group-hover/regbtn:translate-y-0.5" />
 	</a>
 	<style is:inline>
 		#welcome-page {
-			background: linear-gradient(to bottom left, rgba(12 10 9 / 0.5), rgba(12 10 9 / 0.9)), url("/church.jpg"), url("/church_low.jpg");
+			background:
+				linear-gradient(to bottom left, rgba(12 10 9 / 0.45), rgba(12 10 9 / 0.88)), linear-gradient(to top, rgba(12 10 9 / 0.55), transparent 45%),
+				url("/church.jpg"), url("/church_low.jpg");
 			background-size: cover;
+			background-position: center;
 		}
-		#welcome-page > h1,
-		#welcome-page > h3 {
+		#hero-title > h1,
+		#hero-title > h3 {
 			transform: translateY(25px);
 			opacity: 0.0001;
 		}
-		#welcome-page h1 span,
-		#welcome-page h3 span {
+		#hero-title h1 span,
+		#hero-title h3 span {
 			text-shadow: -1px 6px 6px rgba(12 10 9 / 0.6);
 		}
-		#welcome-page > h1 > span:hover + span,
-		#welcome-page > h3 > span:hover + span {
+		#hero-title > h1 > span:hover + span,
+		#hero-title > h3 > span:hover + span {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(127 29 29 / 1) 10%, rgb(254, 202, 202));
 			background-clip: text;
@@ -101,8 +99,8 @@ const schoolYear = currentSchoolYearShort();
 			color: transparent;
 		}
 
-		#welcome-page > h1 > span:has(+ span:hover),
-		#welcome-page > h3 > span:has(+ span:hover) {
+		#hero-title > h1 > span:has(+ span:hover),
+		#hero-title > h3 > span:has(+ span:hover) {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(254, 202, 202), rgb(127 29 29 / 1) 90%);
 			background-clip: text;
@@ -110,25 +108,95 @@ const schoolYear = currentSchoolYearShort();
 			color: transparent;
 		}
 
-		#fek:is(.glass) {
+		#fek {
 			opacity: 0.0001;
 			animation: fadeIn 0.5s ease-in-out forwards 1s;
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
 		}
+		#fek .fek-link {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.375rem;
+			padding: 0.2rem 0.7rem;
+			border-radius: 999px;
+			border: 1px solid rgb(247 236 225 / 0.45);
+			font-family: "Didact Gothic", sans-serif;
+			font-weight: 700;
+			font-size: clamp(0.8125rem, 0.95vw, 1.0625rem);
+			color: var(--color-ivory);
+			text-shadow: none;
+			transition:
+				background-color 0.2s,
+				color 0.2s;
+		}
+		#fek .fek-link:hover,
+		#fek .fek-link:focus-visible {
+			background: var(--color-ivory);
+			color: #7f1d1d;
+		}
 
-		#eggrafesLink:is(.glass) {
+		#eggrafesLink {
 			opacity: 0.0001;
 			animation: fadeIn 0.5s ease-in-out forwards 1.25s;
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
+			border-color: rgb(247 236 225 / 0.18);
 		}
-		#fek:hover .icon {
-			animation: fadeInLeft 0.4s ease-out forwards;
+		#eggrafesLink .hero-btn {
+			flex: 1;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			padding: 0.45rem 1.25rem;
+			border-radius: 0.875rem;
+			font-weight: 700;
+			font-size: clamp(1.125rem, 1.6vw, 2rem);
+			text-shadow: none;
+			transition:
+				background-color 0.25s,
+				color 0.25s,
+				box-shadow 0.25s,
+				transform 0.25s;
 		}
-		#eggrafesLink a:hover > .icon {
-			animation: fadeInLeft 0.4s ease-out forwards;
+		#eggrafesLink .hero-btn-primary {
+			background: var(--color-ivory);
+			color: #7f1d1d;
+			box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.5);
+		}
+		#eggrafesLink .hero-btn-primary:hover,
+		#eggrafesLink .hero-btn-primary:focus-visible {
+			background: #fff;
+			transform: translateY(-1px);
+		}
+		#eggrafesLink .hero-btn-secondary {
+			color: var(--color-ivory);
+			border: 1.5px solid rgb(247 236 225 / 0.55);
+		}
+		#eggrafesLink .hero-btn-secondary:hover,
+		#eggrafesLink .hero-btn-secondary:focus-visible {
+			background: rgb(247 236 225 / 0.12);
+			border-color: var(--color-ivory);
+		}
+		#eggrafesLink .hero-btn-icon {
+			font-size: 0.6em;
+			transition: transform 0.25s;
+		}
+		#eggrafesLink .hero-btn:hover .hero-btn-icon {
+			transform: translateX(3px);
+		}
+		#eggrafesLink .hero-btn:focus-visible,
+		#fek .fek-link:focus-visible {
+			outline: 2px solid var(--color-ivory);
+			outline-offset: 2px;
 		}
 		#xairetismos-btn {
 			background: radial-gradient(ellipse at 50% 200%, rgb(69 10 10 / 1), transparent);
+		}
+		@media (max-width: 639.98px) {
+			#eggrafesLink .hero-btn {
+				font-size: 1.125rem;
+				padding: 0.4rem 0.75rem;
+			}
 		}
 	</style>
 </main>
@@ -137,8 +205,8 @@ const schoolYear = currentSchoolYearShort();
 	import { currentSchoolYearShort } from "@lib/pupils/years";
 	// Prerendered page: keep the school year current in the browser (see the frontmatter).
 	document.querySelectorAll("[data-school-year-short]").forEach((el) => (el.textContent = currentSchoolYearShort()));
-	onElementMount("#welcome-page > h1", () => {
-		const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")] as HTMLElement[];
+	onElementMount("#hero-title > h1", () => {
+		const heads = [...document.querySelectorAll("#hero-title > h1, #hero-title > h3")] as HTMLElement[];
 		heads.forEach((head, i) => {
 			let txt = head.innerText;
 			const txtArr = txt.split("");
@@ -170,8 +238,8 @@ const schoolYear = currentSchoolYearShort();
 		});
 	});
 	if (iOS()) {
-		onElementMount("#welcome-page > h1", () => {
-			const heads = [...document.querySelectorAll("#welcome-page > h1, #welcome-page > h3")] as HTMLElement[];
+		onElementMount("#hero-title > h1", () => {
+			const heads = [...document.querySelectorAll("#hero-title > h1, #hero-title > h3")] as HTMLElement[];
 			heads.forEach((head) => {
 				head.style.setProperty("letter-spacing", "-1px");
 			});

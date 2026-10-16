@@ -5,6 +5,7 @@ import type { FileProxy } from "@lib/fileHandling.client";
 import type { IconName } from "@lib/icons";
 import { AnimTimeline } from "@utilities/dom";
 import { Index, Show, createSignal, onMount, type JSX } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";
@@ -213,17 +214,24 @@ export default function Input(props: InputProps) {
 			case "textarea":
 				return " col-span-full max-w-full !h-[300px] max-h-[300px]";
 			case "multifile":
-				return " col-span-full max-w-full !h-[400px] max-h-[400px]";
+				return " col-span-full max-w-full! max-h-none";
 			case "file":
-				return ` ${isExt ? "col-span-full" : ""} w-[50%] justify-self-center !h-[300px] max-h-[300px]`;
+				return ` ${isExt ? "col-span-full" : ""} max-h-none`;
 			default:
 				return "";
 		}
 	};
 
+	// Fields made of several buttons (file pickers, multiselect) must not sit inside a <label>: a click anywhere in a
+	// label is forwarded to its first button — the file's «Αφαίρεση», the first option of a multiselect.
+	const wrapper = type === "file" || type === "multifile" || type === "multiselect" ? "div" : "label";
+
 	return (
 		// The label wraps its control, which is what links them — an explicit `for` without a matching id would break it.
-		<label
+		<Dynamic
+			component={wrapper}
+			role={wrapper === "div" ? "group" : undefined}
+			aria-label={wrapper === "div" ? label : undefined}
 			class={
 				"group/tooltip relative h-min max-h-50 max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
 				getInputSpecific(type) +
@@ -371,6 +379,6 @@ export default function Input(props: InputProps) {
 			</p>
 			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
 			{tooltip ? <Tooltip {...tooltip} /> : <></>}
-		</label>
+		</Dynamic>
 	);
 }

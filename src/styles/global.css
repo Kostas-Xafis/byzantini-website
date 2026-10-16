@@ -22,6 +22,14 @@
 	--color-dark: #1a1a1a;
 
 	/*
+	 * Public site accent — a warm ivory for icons, rules, outlines and badges on the burgundy panels
+	 * (it replaced the old amber/gold). `ivory` is the light tone, `ivory-deep` the rosier one used for
+	 * filled circles and gradients. Status colours (amber warnings) are not accents and stay as they are.
+	 */
+	--color-ivory: #f7ece1;
+	--color-ivory-deep: #e9cdbd;
+
+	/*
 	 * Dashboard colour tokens — the one place the admin's surfaces, text and lines are defined, for both
 	 * themes (the dark values are swapped in by the `.dark` block below). Use `bg-page`, `bg-surface`,
 	 * `bg-surface-muted`, `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand`,
@@ -124,4 +132,144 @@
 }
 @utility text-3.5xl {
 	font-size: 2rem;
+}
+
+/*
+ * Fields inside the dashboard modals (`.modal-form`, Modal.solid.tsx). The shared input controls (src/components/input)
+ * keep their public-form look everywhere else; in a modal each field becomes one flat, token-coloured box with its
+ * label on the border and a brand focus ring, instead of a shadowed input inside a second outlined box.
+ * Unlayered on purpose: it must beat the controls' own utility classes (which live in @layer utilities).
+ */
+.modal-form > :is(label, [role="group"]) {
+	max-width: none;
+	max-height: none;
+	font-size: 1.0625rem;
+}
+.modal-form > * > :is(input, select, textarea) {
+	margin: 0.25rem;
+	width: calc(100% - 0.5rem);
+	padding-top: 0.7rem;
+	padding-bottom: 0.7rem;
+	font-size: 1.0625rem;
+	color: var(--color-ink);
+	background: transparent;
+	box-shadow: none;
+	border-radius: 0.625rem;
+}
+.modal-form > * > :is(input, select, textarea):focus {
+	box-shadow: none;
+}
+.modal-form > * > :is(input, textarea)::placeholder {
+	color: var(--color-ink-muted);
+	opacity: 0.7;
+}
+/* The outline of the field — one hairline that turns brand-coloured with a soft ring while the field has focus. */
+.modal-form > * > div.absolute.inset-0 {
+	pointer-events: none;
+	border-width: 1px;
+	border-color: color-mix(in oklab, var(--color-ink) 22%, transparent);
+	border-radius: 0.75rem;
+	transition:
+		border-color 0.15s,
+		box-shadow 0.15s;
+}
+.modal-form > *:hover > div.absolute.inset-0 {
+	border-color: color-mix(in oklab, var(--color-ink) 38%, transparent);
+}
+.modal-form > *:focus-within > div.absolute.inset-0 {
+	border-color: var(--color-accent-ink);
+	box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent-ink) 18%, transparent);
+}
+/* The label, sitting on the outline. */
+.modal-form > * > p.absolute {
+	top: -0.7rem;
+	left: 0.75rem;
+	padding: 0 0.375rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--color-ink-muted);
+	background: var(--color-surface);
+	border-radius: 0.25rem;
+}
+/* Required: room for the asterisk before the text. */
+.modal-form > * > p.absolute:has(> .icon) {
+	padding-left: 1.125rem;
+}
+.modal-form > * > p.absolute > .icon {
+	left: 0.375rem;
+	top: 0.3rem;
+	width: 0.625rem;
+	height: 0.625rem;
+	color: var(--color-danger);
+}
+.modal-form > *:focus-within > p.absolute {
+	color: var(--color-accent-ink);
+}
+.modal-form > * > svg.icon.absolute {
+	left: 1rem;
+	color: var(--color-ink-muted);
+	filter: none;
+}
+/* Multiselect: a plain list of options (its field icon only crowded the checkboxes). */
+.modal-form > [role="group"] > div.overflow-x-hidden {
+	margin: 0.25rem;
+	max-width: none;
+	padding: 0.5rem 0.25rem;
+	color: var(--color-ink);
+	background: transparent;
+	box-shadow: none;
+}
+.modal-form > [role="group"]:has(> div.overflow-x-hidden) > svg.icon.absolute {
+	display: none;
+}
+.modal-form > [role="group"] > div.overflow-x-hidden button {
+	margin-left: 0.25rem;
+	border-radius: 0.5rem;
+}
+.modal-form > [role="group"] > div.overflow-x-hidden button:hover {
+	background: color-mix(in oklab, var(--color-ink) 6%, transparent);
+}
+.modal-form > [role="group"] > div.overflow-x-hidden button .icon {
+	color: var(--color-ink-muted);
+}
+.modal-form > [role="group"] > div.overflow-x-hidden button[data-selected="true"] .icon {
+	color: var(--color-accent-ink);
+}
+/* File fields draw their own (dashed) frame. */
+.modal-form > *:has(> .file-field) > div.absolute.inset-0 {
+	display: none;
+}
+.modal-form .file-field {
+	margin: 0.25rem;
+	margin-top: 0.875rem;
+}
+/*
+ * Tooltips in a modal open below their field: above it, the first row's tooltip was clipped by the scrolling body
+ * (only its bottom edge and arrow showed above the field). Token colours instead of the public form's red/grey.
+ */
+.modal-form [data-tooltip] {
+	top: calc(100% + 0.5rem);
+	bottom: auto;
+	left: 0;
+	right: auto;
+	width: 100%;
+	translate: 0 0;
+	padding: 0.5rem 0.75rem;
+	color: var(--color-ink);
+	background: var(--color-surface-muted);
+	border: 1px solid var(--color-line);
+	border-radius: 0.625rem;
+	box-shadow: 0 8px 24px -8px var(--color-shade);
+}
+.modal-form [data-tooltip] > li:last-child {
+	display: none;
+}
+.modal-form [data-tooltip] .icon {
+	color: var(--color-accent-ink);
+}
+.modal-form [data-tooltip] li {
+	max-width: none;
+}
+.modal-form [data-tooltip] > li:first-child {
+	display: none;
 }

@@ -4,13 +4,12 @@ import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResour
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
-import { Random } from "@lib/random";
 import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { ExtendedFormData } from "@utilities/forms";
 import { deepCopy } from "@utilities/objects";
-import { sleep } from "@utilities/sleep";
 import { isSafeURLPath } from "@utilities/url";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -100,13 +99,7 @@ const columnNames: ColumnType<AnnouncementTable> = {
 function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> {}
 
 function imagePreview(file: FileProxy<AnnouncementImageMetadata>) {
-	const id = Random.string(12, "hex");
-	(async function () {
-		await sleep(10);
-		const src = !file.isProxy() ? await file.toImageUrl() : `/anakoinoseis/images/${file.getMetadata().announcement_id}/thumb_${file.getName()}`;
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	})();
-	return <img data-id={id} alt={file.getName()} class="object-cover w-full overflow-hidden" />;
+	return filePreviewImage(file, (f) => `/anakoinoseis/images/${f.getMetadata().announcement_id}/thumb_${f.getName()}`);
 }
 
 type AnnouncementImageMetadata = { is_main: boolean; announcement_id: number; id: number };

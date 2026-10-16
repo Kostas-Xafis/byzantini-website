@@ -117,11 +117,11 @@ const placesSchema = {
 				/>
 				<div class="relative flex flex-col items-center gap-y-4 px-6 py-10 max-sm:px-4 max-sm:py-8">
 					<h1
-						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[6vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%-6ch)] after:w-[12ch] after:bg-amber-400 after:max-sm:rounded-xs after:max-sm:h-0.5 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
+						class="heading relative p-2 text-center text-[3.5vw] max-sm:text-4xl leading-[6vw] font-bold font-anaktoria text-red-50 overflow-hidden after:left-[calc(50%-6ch)] after:w-[12ch] after:bg-ivory-deep after:max-sm:rounded-xs after:max-sm:h-0.5 drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
 						Σπουδαστήρια
 					</h1>
 					<p
-						class="rounded-full border border-amber-400/40 bg-black/30 px-4 py-1.5 text-base max-sm:text-sm font-semibold tracking-wide text-amber-300 backdrop-blur-[2px]">
+						class="rounded-full border border-ivory-deep/40 bg-black/30 px-4 py-1.5 text-base max-sm:text-sm font-semibold tracking-wide text-ivory backdrop-blur-[2px]">
 						Σχολή Βυζαντινής & Παραδοσιακής Μουσικής — Ι.Ν. Μεταμορφώσεως του Σωτήρος
 					</p>
 					<p class="max-w-[68ch] text-center text-lg max-sm:text-base leading-relaxed text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)]">
@@ -142,7 +142,7 @@ const placesSchema = {
 								data-group={g.id}
 								data-show={ind === 0}
 								aria-pressed={ind === 0 ? "true" : "false"}
-								class="relative flex items-center gap-2 rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-4 max-sm:py-2 text-[1.05vw] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white data-[show=true]:bg-amber-400 data-[show=true]:text-red-950 data-[show=true]:font-semibold data-[show=true]:shadow-md">
+								class="relative flex items-center gap-2 rounded-full px-[1.1vw] py-[0.5vw] max-sm:px-4 max-sm:py-2 text-[1.05vw] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 hover:text-white data-[show=true]:bg-ivory-deep data-[show=true]:text-red-950 data-[show=true]:font-semibold data-[show=true]:shadow-md">
 								<Icon name={g.icon} class="text-[0.9em] max-sm:hidden" />
 								{g.label}
 							</button>
@@ -157,7 +157,7 @@ const placesSchema = {
 				<header id="spoudastiriaGroupHeader" class="flex items-center gap-3 max-sm:gap-2.5 px-1" aria-live="polite">
 					<span
 						id="spoudastiriaGroupIcon"
-						class="grid size-12 max-sm:size-10 shrink-0 place-items-center rounded-2xl bg-red-900 text-amber-400 shadow-md shadow-red-900/30">
+						class="grid size-12 max-sm:size-10 shrink-0 place-items-center rounded-2xl bg-red-900 text-ivory-deep shadow-md shadow-red-900/30">
 						<Icon name="church" class="text-lg" />
 					</span>
 					<div class="flex flex-col gap-y-0.5">
@@ -194,7 +194,7 @@ const placesSchema = {
 										}>
 										{!l.image && <Icon name="church" class="text-5xl text-red-50/60" />}
 									</div>
-									<span class="absolute left-3 top-3 rounded-full border border-amber-400/50 bg-red-950/80 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm">
+									<span class="absolute left-3 top-3 rounded-full border border-ivory-deep/50 bg-red-950/80 px-3 py-1 text-xs font-semibold text-ivory backdrop-blur-sm">
 										{badgeLabel(l)}
 									</span>
 								</div>
@@ -258,7 +258,7 @@ const placesSchema = {
 
 			<!-- Τελικό κάλεσμα -->
 			<section
-				class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border border-amber-400/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-10 shadow-xl shadow-red-900/30 max-sm:px-4">
+				class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border border-ivory-deep/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-10 shadow-xl shadow-red-900/30 max-sm:px-4">
 				<h2 class="text-center text-[2.25vw] max-sm:text-2xl font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
 					Αναζητάτε το πλησιέστερο σπουδαστήριο;
 				</h2>
@@ -269,14 +269,14 @@ const placesSchema = {
 				<div class="flex flex-row flex-wrap justify-center gap-4 pt-1">
 					<a
 						href="/epikoinonia"
-						class="inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-						<Icon name="phone" class="text-amber-400" />
+						class="inline-flex items-center gap-2.5 rounded-full border-2 border-ivory-deep/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-ivory hover:bg-ivory-deep hover:text-red-950 hover:shadow-xl">
+						<Icon name="phone" class="text-ivory-deep" />
 						Επικοινωνία
 					</a>
 					<a
 						href="/eggrafes"
-						class="inline-flex items-center gap-2.5 rounded-full border-2 border-amber-400/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400 hover:text-red-950 hover:shadow-xl">
-						<Icon name="edit" class="text-amber-400" />
+						class="inline-flex items-center gap-2.5 rounded-full border-2 border-ivory-deep/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-ivory hover:bg-ivory-deep hover:text-red-950 hover:shadow-xl">
+						<Icon name="edit" class="text-ivory-deep" />
 						Εγγραφές
 					</a>
 				</div>
@@ -297,7 +297,7 @@ const placesSchema = {
 				<img id="locationModalImage" class="absolute inset-0 h-full w-full object-cover" alt="" />
 				<div class="absolute inset-0 bg-linear-to-t from-black/75 via-black/25 to-transparent"></div>
 				<div class="absolute bottom-4 left-6 right-16 max-sm:left-4">
-					<p id="locationModalBadge" class="text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">Σπουδαστήριο Σχολής</p>
+					<p id="locationModalBadge" class="text-xs font-semibold uppercase tracking-[0.15em] text-ivory">Σπουδαστήριο Σχολής</p>
 					<h2
 						id="locationModalTitle"
 						class="mt-1 font-anaktoria font-bold text-2xl max-sm:text-xl leading-snug text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)] [word-break:break-word]">
@@ -308,7 +308,7 @@ const placesSchema = {
 					type="button"
 					id="locationModalClose"
 					aria-label="Κλείσιμο λεπτομερειών"
-					class="absolute border-red-800 border-2 right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/40 text-red-50 backdrop-blur-sm transition-colors duration-200 hover:bg-red-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400">
+					class="absolute border-red-800 border-2 right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/40 text-red-50 backdrop-blur-sm transition-colors duration-200 hover:bg-red-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory-deep">
 					<Icon name="close" class="text-xl" />
 				</button>
 			</div>

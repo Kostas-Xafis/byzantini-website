@@ -221,6 +221,19 @@ export default function PupilsPage() {
 
 	let searchInput!: HTMLInputElement;
 	let bodyRef: HTMLDivElement | undefined;
+	let resultsList: HTMLDivElement | undefined;
+
+	// «/» focuses the search from anywhere on the page (not while typing in a field or with a dialog open).
+	const onSlash = (e: KeyboardEvent) => {
+		if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+		const target = e.target as HTMLElement | null;
+		if (target?.closest("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
+		e.preventDefault();
+		searchInput?.focus();
+		searchInput?.select();
+	};
+	document.addEventListener("keydown", onSlash);
+	onCleanup(() => document.removeEventListener("keydown", onSlash));
 
 	/**
 	 * The page is a 100dvh shell whose middle section scrolls on its own (like
@@ -603,7 +616,7 @@ export default function PupilsPage() {
 	// top-tools / scrolling data / bottom-tools grid. On small screens the shell
 	// releases the height and the page scrolls normally, like the tables do.
 	return (
-		<div class="flex h-full w-full flex-col overflow-hidden p-6 text-ink max-sm:h-auto max-sm:grid max-sm:grid-rows-[20%_75%_5%] max-sm:p-3">
+		<div class="flex h-full w-full flex-col overflow-hidden p-6 text-ink max-sm:h-auto max-sm:overflow-visible max-sm:p-3">
 			{/* ---- pinned top: title + search ---- */}
 			<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-y-4">
 				{/* ---- landing heading ---- */}
@@ -617,7 +630,7 @@ export default function PupilsPage() {
 				{/* ---- search ---- */}
 				<div
 					role="search"
-					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-brand bg-surface px-4 py-2 shadow-md shadow-shade">
+					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line bg-surface px-4 py-2 shadow-md shadow-shade transition-[border-color,box-shadow] focus-within:border-accent-ink focus-within:ring-4 focus-within:ring-accent-ink/10">
 					<Icon name="search" class="text-accent-ink" />
 					<input
 						ref={searchInput}
@@ -627,7 +640,7 @@ export default function PupilsPage() {
 						spellcheck="false"
 						aria-label="Αναζήτηση μαθητή"
 						placeholder="Αναζήτηση…"
-						class="min-w-0 flex-1 bg-transparent font-didact text-xl max-sm:text-lg text-ink placeholder:text-ink-muted/70 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
+						class="min-w-48 flex-1 bg-transparent font-didact text-xl max-sm:text-lg text-ink placeholder:text-ink-muted/70 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
 						value={query()}
 						onInput={(e) => setQuery(e.currentTarget.value)}
 						onKeyDown={(e) => {
@@ -640,8 +653,23 @@ export default function PupilsPage() {
 								clearTimeout(debounceTimer);
 								startSearch(0);
 							}
+							// ↓ moves into the result list (↑/↓ walk it, see the list's onKeyDown).
+							if (e.key === "ArrowDown" && selectedId() === null) {
+								const first = resultsList?.querySelector<HTMLButtonElement>("button[data-result]");
+								if (first) {
+									e.preventDefault();
+									first.focus();
+								}
+							}
 						}}
 					/>
+					<Show when={!query() && !searching()}>
+						<kbd
+							title="Πατήστε / για αναζήτηση από οπουδήποτε στη σελίδα"
+							class="rounded-md border border-line bg-surface-muted px-1.5 font-didact text-sm text-ink-muted max-sm:hidden">
+							/
+						</kbd>
+					</Show>
 					<Show when={searching()}>
 						<Icon name="spinner" class="text-accent-ink" spin />
 					</Show>
@@ -676,19 +704,14 @@ export default function PupilsPage() {
 						/>
 						Μόνο προς έλεγχο
 					</label>
-					<Show when={selectedId() !== null}>
-						<button
-							type="button"
-							onClick={backToSearch}
-							class="rounded-md border border-brand px-3 py-1 font-didact text-base transition-colors hover:bg-accent-soft">
-							Πίσω στην αναζήτηση
-						</button>
-					</Show>
 				</div>
 			</div>
 
 			{/* ---- scrolling body: results or the open record ---- */}
-			<div id="pupilsScroller" ref={bodyRef} class="mx-auto mt-6 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-scroll max-sm:mt-4">
+			<div
+				id="pupilsScroller"
+				ref={bodyRef}
+				class="mx-auto mt-6 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-auto max-sm:mt-4 max-sm:overflow-visible">
 				{/* ---- result list ---- */}
 				<Show when={selectedId() === null}>
 					<div class="grid gap-y-4">
@@ -699,7 +722,18 @@ export default function PupilsPage() {
 									<Spinner />
 								</div>
 							}>
-							<div class="grid gap-y-2">
+							<div
+								class="grid gap-y-2"
+								ref={resultsList}
+								onKeyDown={(e) => {
+									if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+									const buttons = [...(resultsList?.querySelectorAll<HTMLButtonElement>("button[data-result]") ?? [])];
+									const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
+									if (at === -1) return;
+									e.preventDefault();
+									if (e.key === "ArrowUp" && at === 0) searchInput.focus();
+									else buttons[Math.min(buttons.length - 1, Math.max(0, at + (e.key === "ArrowDown" ? 1 : -1)))]?.focus();
+								}}>
 								<Show when={results() && results()!.rows.length === 0}>
 									<p class="py-10 text-center text-xl text-ink-muted">
 										<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
@@ -711,9 +745,15 @@ export default function PupilsPage() {
 									{(row) => (
 										<button
 											type="button"
+											data-result
 											onClick={() => openPupil(row.id)}
-											class="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-line bg-surface px-4 py-3 text-left shadow-sm shadow-shade transition-colors hover:border-accent-ink/40 hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
-											<span class="rounded-md bg-accent-soft px-2 py-0.5 font-didact text-xl font-bold tabular-nums text-accent-ink">
+											class="group grid w-full grid-cols-[auto_auto_1fr_auto] items-center gap-x-4 rounded-xl border border-line bg-surface px-4 py-3 text-left shadow-sm shadow-shade transition-colors hover:border-accent-ink/40 hover:bg-accent-soft focus-visible:border-accent-ink focus-visible:ring-4 focus-visible:ring-accent-ink/15 focus-visible:outline-hidden max-sm:grid-cols-[auto_1fr_auto] max-sm:gap-x-3 max-sm:px-3">
+											<span
+												aria-hidden="true"
+												class="grid size-11 place-items-center rounded-full bg-brand font-anaktoria text-lg font-bold text-brand-ink max-sm:hidden">
+												{initials(row.last_name, row.first_name)}
+											</span>
+											<span class="min-w-14 rounded-md bg-accent-soft px-2 py-0.5 text-center font-didact text-lg font-bold tabular-nums text-accent-ink">
 												{amLabel(row)}
 											</span>
 											<span class="grid min-w-0">
@@ -758,18 +798,42 @@ export default function PupilsPage() {
 						{(data) => (
 							<div class="grid w-full gap-y-4">
 								{/* header + actions */}
-								<div class="flex flex-wrap items-center justify-between gap-3">
-									<div class="grid gap-y-1">
-										<h1 class="font-anaktoria text-4xl leading-tight max-sm:text-3xl">
-											{data().pupil.last_name} {data().pupil.first_name}
-										</h1>
-										<p class="flex flex-wrap items-center gap-x-2 font-didact text-lg text-ink-muted">
-											<Show when={data().pupil.needs_review}>
-												<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
-													χρειάζεται έλεγχο
+								<div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4 shadow-md shadow-shade">
+									<div class="flex min-w-0 items-center gap-x-3">
+										<button
+											type="button"
+											onClick={backToSearch}
+											aria-label="Πίσω στην αναζήτηση"
+											title="Πίσω στην αναζήτηση"
+											class="grid size-10 shrink-0 place-items-center rounded-full text-accent-ink transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
+											<Icon name="arrow-left" class="text-xl" />
+										</button>
+										<span
+											aria-hidden="true"
+											class="grid size-14 shrink-0 place-items-center rounded-full bg-brand font-anaktoria text-2xl font-bold text-brand-ink max-sm:hidden">
+											{initials(data().pupil.last_name, data().pupil.first_name)}
+										</span>
+										<div class="grid min-w-0 gap-y-1">
+											<h1 class="font-anaktoria text-4xl leading-tight max-sm:text-3xl">
+												{data().pupil.last_name} {data().pupil.first_name}
+											</h1>
+											<p class="flex flex-wrap items-center gap-1.5 font-didact text-sm text-ink-muted">
+												<span class="rounded-full bg-accent-soft px-2.5 py-0.5 font-semibold tabular-nums text-accent-ink">
+													ΑΜ {amLabel(data().pupil)}
 												</span>
-											</Show>
-										</p>
+												<span class="rounded-full bg-ink/5 px-2.5 py-0.5">
+													{countLabel(data().enrollments.length, "εγγραφή", "εγγραφές")}
+												</span>
+												<For each={availableMusicTypes(data().enrollments)}>
+													{(classId) => <span class="rounded-full bg-ink/5 px-2.5 py-0.5">{musicLabel(classId)}</span>}
+												</For>
+												<Show when={data().pupil.needs_review}>
+													<span class="rounded-full bg-amber-200 px-2.5 py-0.5 font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+														χρειάζεται έλεγχο
+													</span>
+												</Show>
+											</p>
+										</div>
 									</div>
 									<TableControlsGroup prefix={PREFIX}>
 										<TableControl prefix={PREFIX} action={editAction} />
@@ -824,7 +888,7 @@ export default function PupilsPage() {
 									<div class="grid h-max gap-y-3">
 										<section class="grid h-max gap-y-3 rounded-xl border border-line bg-surface p-4 shadow-md shadow-shade">
 											<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
-											<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-ink-muted [&_dd]:tabular-nums [&_dt]:underline [&_dd]:underline-offset-1">
+											<dl class="grid grid-cols-[auto_1fr] gap-x-4 text-base [&>dt]:border-t [&>dt]:border-line [&>dt]:py-2 [&>dt]:text-sm [&>dt]:text-ink-muted [&>dd]:border-t [&>dd]:border-line [&>dd]:py-2 [&>dd]:tabular-nums [&>dt:first-of-type]:border-t-0 [&>dd:first-of-type]:border-t-0">
 												<dt>Επώνυμο:</dt>
 												<dd>{data().pupil.last_name || "-"}</dd>
 												<dt>Όνομα:</dt>
@@ -846,14 +910,15 @@ export default function PupilsPage() {
 													</Show>
 												</dd>
 												<dt>Τηλέφωνα:</dt>
-												<dd>
-													{data().pupil.telephone || "-"}
-													<br />
-													{data().pupil.cellphone || "-"}
+												<dd class="grid">
+													<ContactLink kind="tel" value={data().pupil.telephone} />
+													<ContactLink kind="tel" value={data().pupil.cellphone} />
 												</dd>
 												<dt>Email:</dt>
-												<dd class="break-all">{data().pupil.email || "-"}</dd>
-												<dt class="pt-1">Σύνδεσμος:</dt>
+												<dd class="break-all">
+													<ContactLink kind="mailto" value={data().pupil.email} />
+												</dd>
+												<dt>Σύνδεσμος:</dt>
 												<dd>
 													<Show when={data().pupil.registration_url} fallback="-">
 														<a
@@ -1056,8 +1121,10 @@ export default function PupilsPage() {
 						class="rounded-md border border-brand px-3 py-1 font-didact text-base transition-colors hover:bg-accent-soft disabled:opacity-40 disabled:hover:bg-transparent">
 						Προηγούμενη
 					</button>
-					<span class="font-didact text-base text-ink-muted">
-						Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
+					<span class="font-didact text-base text-ink-muted tabular-nums">
+						{page() * PAGE_SIZE + 1}–{Math.min((page() + 1) * PAGE_SIZE, results()!.total)} από {results()!.total}
+						<span class="mx-2 opacity-50">·</span>
+						σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
 					</span>
 					<button
 						type="button"
@@ -1076,4 +1143,22 @@ export default function PupilsPage() {
 
 function emptyAction(type: ActionEnum, icon: ActionIcon) {
 	return { type, icon };
+}
+
+/** Initials for the avatar: «Παπαδόπουλος Γιώργος» → «ΠΓ». */
+function initials(last: string | null | undefined, first: string | null | undefined) {
+	return ((last?.trim()[0] ?? "") + (first?.trim()[0] ?? "")).toUpperCase() || "?";
+}
+
+/** A phone number or email as a link (tap to call / write), or «-» when empty. */
+function ContactLink(props: { kind: "tel" | "mailto"; value: string | null | undefined }) {
+	return (
+		<Show when={props.value} fallback={<span>-</span>}>
+			<a
+				href={`${props.kind}:${props.kind === "tel" ? props.value!.replace(/\s+/g, "") : props.value}`}
+				class="w-max max-w-full text-accent-ink underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-hidden">
+				{props.value}
+			</a>
+		</Show>
+	);
 }
