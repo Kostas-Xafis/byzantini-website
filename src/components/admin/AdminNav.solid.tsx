@@ -130,14 +130,14 @@ export default function AdminNav(props: RouterProps) {
 							forceURLChange("/");
 						}}>
 						<img
-							src="/logo.png"
+							src="/logo.svg"
 							alt="Λογότυπο Σχολής"
 							class="h-full w-full object-contain brightness-0 invert contrast-125 drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
 						/>
 					</a>
 					{/* <!-- 50% width - 40px (50% of img) - 2px offset --> */}
 					<div class="w-[70px] max-sm:w-[50px] aspect-square absolute top-[2px] blur-xl opacity-40 z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px] pointer-events-none">
-						<img src="/logo.png" alt="" aria-hidden="true" class="h-full w-full object-contain brightness-0" />
+						<img src="/logo.svg" alt="" aria-hidden="true" class="h-full w-full object-contain brightness-0" />
 					</div>
 					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
 						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
