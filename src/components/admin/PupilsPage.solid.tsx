@@ -1,5 +1,5 @@
 import { customEvent } from "@_types/custom-events";
-import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
+import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, TeacherClasses, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
@@ -91,6 +91,18 @@ function pupilInputs(pupil: Pupils): Record<string, InputProps> {
 /** The instruments a music type is taught with (Βυζαντινή has none). */
 const instrumentsForClassId = (instruments: Instruments[], classId: number) => instruments.filter((instrument) => instrument.type === MusicTypeArr[classId]);
 
+/**
+ * The teachers who teach `classId` (`teacher_classes`), by name. `keepId` stays listed even if it no longer teaches
+ * that music type, so editing an old enrollment never silently drops its teacher. Without the class links (they
+ * failed to load) every teacher is offered, as before.
+ */
+function teachersForClassId(teachers: Teachers[], teacherClasses: TeacherClasses[], classId: number, keepId?: number) {
+	const teaching = new Set(teacherClasses.filter((link) => link.class_id === classId).map((link) => link.teacher_id));
+	return teachers
+		.filter((teacher) => teacher.id >= 0 && (!teacherClasses.length || teaching.has(teacher.id) || teacher.id === keepId))
+		.sort((a, b) => a.fullname.localeCompare(b.fullname, "el"));
+}
+
 /** Rewrites a select's options in place, keeping `Input`'s blank first option. */
 function setSelectOptions(select: HTMLSelectElement | null | undefined, options: { value: string | number; label: string }[]) {
 	select?.replaceChildren(new Option("", "undefined"), ...options.map((option) => new Option(option.label, String(option.value))));
@@ -108,9 +120,14 @@ function setSelectOptions(select: HTMLSelectElement | null | undefined, options:
  *
  * `defaults.id` set = editing that enrollment.
  */
-function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defaults: Partial<PupilEnrollments>): Record<string, InputProps> {
+function enrollmentInputs(
+	teachers: Teachers[],
+	teacherClasses: TeacherClasses[],
+	instruments: Instruments[],
+	defaults: Partial<PupilEnrollments>,
+): Record<string, InputProps> {
 	const defaultClassId = defaults.class_id ?? 0;
-	const teacherList = teachers.filter((teacher) => teacher.id >= 0).sort((a, b) => a.fullname.localeCompare(b.fullname, "el"));
+	const teacherList = teachersForClassId(teachers, teacherClasses, defaultClassId, defaults.teacher_id);
 	const instrumentList = instrumentsForClassId(instruments, defaultClassId);
 
 	return {
@@ -146,6 +163,17 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 				);
 				// Όργανο is a Παραδοσιακή/Ευρωπαϊκή field only (see `Input.listeners`).
 				instrumentSelect?.dispatchEvent(customEvent("enable_input", classId !== 0));
+				// Only the teachers of the chosen music type; the current choice survives the switch when it still fits.
+				const teacherSelect = form?.querySelector("select[name='teacher_id']") as any as HTMLSelectElement;
+				const currentTeacher = teacherSelect?.value;
+				setSelectOptions(
+					teacherSelect,
+					teachersForClassId(teachers, teacherClasses, classId, defaults.teacher_id).map((teacher) => ({
+						value: teacher.id,
+						label: teacher.fullname,
+					})),
+				);
+				if (teacherSelect && [...teacherSelect.options].some((option) => option.value === currentTeacher)) teacherSelect.value = currentTeacher;
 			},
 		},
 		teacher_id: {
@@ -215,6 +243,7 @@ export default function PupilsPage() {
 
 	// reference data for the enroll form
 	const [teachers, setTeachers] = createSignal<Teachers[]>([]);
+	const [teacherClasses, setTeacherClasses] = createSignal<TeacherClasses[]>([]);
 	const [instruments, setInstruments] = createSignal<Instruments[]>([]);
 
 	const PAGE_SIZE = 20;
@@ -434,8 +463,13 @@ export default function PupilsPage() {
 		// reference data (cached store is not needed here — plain signals)
 		void (async () => {
 			try {
-				const [teachersRes, instrumentsRes] = await Promise.all([apiHook(API.Teachers.getByFullnames), apiHook(API.Instruments.get)]);
+				const [teachersRes, classesRes, instrumentsRes] = await Promise.all([
+					apiHook(API.Teachers.getByFullnames),
+					apiHook(API.Teachers.getClasses),
+					apiHook(API.Instruments.get),
+				]);
 				if ("data" in teachersRes) setTeachers(teachersRes.data ?? []);
+				if ("data" in classesRes) setTeacherClasses(classesRes.data ?? []);
 				if ("data" in instrumentsRes) setInstruments(instrumentsRes.data ?? []);
 			} catch {
 				/* the forms degrade to free-text ids; search still works */
@@ -523,7 +557,7 @@ export default function PupilsPage() {
 		if (!data) return emptyAction(ActionEnum.ADD, ActionIcon.ADD);
 		const defaultClass = activeMusic() ?? availableMusicTypes(data.enrollments)[0] ?? 0;
 		const defaults: Partial<PupilEnrollments> = { class_id: defaultClass, registration_year: "" };
-		const inputs = new InputFields(enrollmentInputs(teachers(), instruments(), defaults));
+		const inputs = new InputFields(enrollmentInputs(teachers(), teacherClasses(), instruments(), defaults));
 
 		return {
 			type: ActionEnum.ADD,
@@ -561,7 +595,7 @@ export default function PupilsPage() {
 		const data = record();
 		const enrollment = editingEnrollment();
 		if (!data || !enrollment) return emptyAction(ActionEnum.MODIFY, ActionIcon.MODIFY);
-		const inputs = enrollmentInputs(teachers(), instruments(), enrollment);
+		const inputs = enrollmentInputs(teachers(), teacherClasses(), instruments(), enrollment);
 		return {
 			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
