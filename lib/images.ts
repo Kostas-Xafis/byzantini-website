@@ -84,3 +84,23 @@ export const compressImageForThumb = async (source: ArrayBuffer, originalContent
 		contentType: result.contentType(),
 	};
 };
+
+/**
+ * A WebP copy of `source` at most `width` pixels wide (never upscaled), for the resized teacher photos served by
+ * the public catch-all. When the result would not be smaller (an already small photo) the source itself is returned,
+ * so the caller can store it as the variant all the same. `null` means no variant can be made — the binding is
+ * missing (`bun test`) or the input has no dimensions — and the caller serves the original.
+ */
+export const resizeImageToWidth = async (source: ArrayBuffer, sourceType: string, width: number): Promise<ThumbResult | null> => {
+	const images = runtimeEnv?.IMAGES as ImagesBinding | undefined;
+	if (!images) return null;
+	const info = await images.info(bufferToStream(source));
+	if (!("width" in info) || !info.width) return null;
+	const result = await images
+		.input(bufferToStream(source))
+		.transform({ width: Math.min(width, info.width), fit: "scale-down" })
+		.output({ format: "image/webp", quality: 80 });
+	const bytes = await result.response().arrayBuffer();
+	if (bytes.byteLength >= source.byteLength) return { bytes: source, contentType: sourceType };
+	return { bytes, contentType: result.contentType() };
+};

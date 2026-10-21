@@ -4,7 +4,8 @@ import { Random as R } from "@lib/random";
 import { type APIResponse } from "@lib/routes/index.client";
 import { expect, test } from "bun:test";
 import { z } from "astro/zod";
-import { expectBody, getJson, useTestAPI } from "../testHelpers";
+import { fileBaseName } from "@lib/bucket/fileNames";
+import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers";
 
 function locationsTest() {
 	const location = {
@@ -41,6 +42,11 @@ function locationsTest() {
 		const text = await getJson<APIResponse["Locations.fileUpload"]>(res);
 		expectBody(text, "Image uploaded successfully");
 	});
+	const storedImage = async () => {
+		const json = await getJson<APIResponse["Locations.getById"]>(await useTestAPI("Locations.getById", { RequestObject: [newLocationId as number] }));
+		expectBody(json, z_LocationsResponse);
+		return json.data.image ?? null;
+	};
 	test("--locations-- #3", async () => {
 		const res = await useTestAPI("Locations.getById", {
 			RequestObject: [newLocationId as number],
@@ -48,6 +54,20 @@ function locationsTest() {
 
 		const json = await getJson<APIResponse["Locations.getById"]>(res);
 		expectBody(json, z_LocationsResponse);
+	});
+	test("--locations-- #3b a re-upload gets a new versioned name and replaces the previous file", async () => {
+		const first = await storedImage();
+		expect(first).toMatch(/^Sample Location-[0-9a-z]{8}\.png$/);
+		await Bun.sleep(5);
+
+		const res = await useTestAPI("Locations.fileUpload", { UrlArgs: { id: newLocationId as number }, RequestObject: Bun.file("./public/logo.png") });
+		expectBody(await getJson<APIResponse["Locations.fileUpload"]>(res), "Image uploaded successfully");
+
+		const second = await storedImage();
+		expect(second).not.toBe(first);
+		expect(fileBaseName(second as string)).toBe("Sample Location");
+		expect(await fetchBucketFile(`spoudastiria/${second}`)).not.toBeNull();
+		expect(await fetchBucketFile(`spoudastiria/${first}`)).toBeNull();
 	});
 	test("--locations-- #4", async () => {
 		const updatedLocation = {
@@ -61,6 +81,11 @@ function locationsTest() {
 
 		const text = await getJson<APIResponse["Locations.update"]>(res);
 		expectBody(text, "Location updated successfully");
+	});
+	test("--locations-- #4b a renamed location's image follows the new name", async () => {
+		const image = await storedImage();
+		expect(image).toMatch(/^Updated Location-[0-9a-z]{8}\.png$/);
+		expect(await fetchBucketFile(`spoudastiria/${image}`)).not.toBeNull();
 	});
 	test("--locations-- #5", async () => {
 		const res = await useTestAPI("Locations.delete", {

@@ -722,7 +722,9 @@ export function RegistrationForm() {
 		console.log("[onFormInputsChange] triggered and with value: ", el.value);
 		let mutation: Partial<PupilRegistrationForm>;
 		if (el.name === "class_year") {
-			document.querySelector("[name='teacher_id']")?.dispatchEvent(customEvent("enable_input", !(el.value === "Υπό Κατάταξη")));
+			// Only this form's teacher field (its own Input listens for the event).
+			const teacherSelect = el.form ? el.form.querySelector("[name='teacher_id']") : document.querySelector("[name='teacher_id']");
+			teacherSelect?.dispatchEvent(customEvent("enable_input", !(el.value === "Υπό Κατάταξη")));
 			mutation = { class_year: el.value };
 			// Reset the teacher_id also
 			if (el.value === "Υπό Κατάταξη") {

@@ -40,7 +40,8 @@ export function shortName(name: string, max = 28) {
 
 /**
  * Single-file field of the admin modals. The files live in a `FileHandler` registered as `prefix + name`; the modal's
- * submit reads it (`FileHandler.getHandler`) to upload the new file and delete the replaced/removed stored one.
+ * submit reads it (`FileHandler.getHandler`) to upload the new file (the upload route itself deletes the file it
+ * replaces, once the new one is stored) and to delete a removed stored file (`getRemovedFiles`).
  * The dialog unmounts its content when it closes, so every opening starts from the stored value again.
  */
 export default function FileInput(props: FileInputProps) {

@@ -106,11 +106,17 @@ export class FileProxy<T extends Record<string, any>> {
 		return `FileProxy(${this.#name}, isProxy=${this.#isFileProxy}, markedForDeletion=${this.#markForDeletion}, metadata=${JSON.stringify(this.#metadata)})`;
 	}
 
-	async toImageUrl(): Promise<string> {
+	/**
+	 * A displayable URL of the file: an object URL of an image, or the first page of a PDF. A stored (proxy) file has
+	 * no data here, so it needs `storedUrl` — where it is served from (e.g. `/kathigites/cv/<name>` for a CV).
+	 */
+	async toImageUrl(storedUrl?: string): Promise<string> {
 		let file = this.getFile();
 		let type: string;
-		if (this.#isFileProxy && this.#name.endsWith(".pdf")) {
-			const pdf = await (await fetch("/kathigites/cv/" + this.#name)).arrayBuffer();
+		if (this.#isFileProxy && storedUrl && this.#name.toLowerCase().endsWith(".pdf")) {
+			const res = await fetch(storedUrl);
+			if (!res.ok) throw Error("File not found");
+			const pdf = await res.arrayBuffer();
 			type = "application/pdf";
 			file = new File([pdf], this.#name, { type });
 		} else if (file) {
@@ -219,8 +225,18 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	getNewFiles() {
 		return this.files.filter((f: FileProxy<Metadata>) => !f.isProxy());
 	}
+	/** Stored files the user removed or replaced (in a multi-file input, a file re-added under the same name replaces it). */
 	getDeletedFiles() {
 		return this.initialFileProxies.filter((f: FileProxy<Metadata>) => f.isProxy() && f.isMarkedForDeletion());
+	}
+	/**
+	 * Stored files of a single-file input to delete on submit: the removed one only. A REPLACED file is not listed —
+	 * the upload routes store the new file, point the record at it and delete the previous file themselves, so a
+	 * failed upload never leaves the record without its file. (Multi-file inputs: same as `getDeletedFiles`.)
+	 */
+	getRemovedFiles() {
+		if (this.isSingleFile && this.getNewFiles().length > 0) return [];
+		return this.getDeletedFiles();
 	}
 	getInitialFiles() {
 		return this.initialFileProxies.filter((f: FileProxy<Metadata>) => f.isProxy() && !f.isMarkedForDeletion());

@@ -31,6 +31,39 @@ export function isInlineType(contentType: string | undefined): boolean {
 	return INLINE_TYPES.has(type) || type.startsWith("font/");
 }
 
+/**
+ * Resized teacher photos (`/kathigites/picture/<file>?w=<width>`): the catch-all serves a WebP variant generated
+ * once on the Images binding and stored under `kathigites/thumbs/w<width>/<file>`. That folder is NOT public — its
+ * files are reachable only through the `?w=` URL of a picture that still exists. A new upload gets a new file name,
+ * so a thumbnail is never stale.
+ */
+export const THUMB_SOURCE_PREFIX = "kathigites/picture/";
+/** The only widths generated (any other request is rounded up to the next one, capped at the largest). */
+export const THUMB_WIDTHS = [320, 480, 640] as const;
+/** Source types that are resized (GIF stays the original: it may be animated). */
+const THUMB_SOURCE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+
+/** The allowed width for a `?w=` value, or `null` when it is not a positive integer. */
+export function thumbnailWidth(raw: string | null): number | null {
+	if (!raw || !/^\d{1,5}$/.test(raw)) return null;
+	const width = Number(raw);
+	if (width <= 0) return null;
+	return THUMB_WIDTHS.find((w) => w >= width) ?? THUMB_WIDTHS[THUMB_WIDTHS.length - 1];
+}
+
+/** The bucket key of a public picture's thumbnail, or `null` when the key has no thumbnails. */
+export function thumbnailKey(key: string, width: number): string | null {
+	if (!key.startsWith(THUMB_SOURCE_PREFIX) || !isPublicBucketKey(key)) return null;
+	const name = key.slice(THUMB_SOURCE_PREFIX.length);
+	if (name.includes("/") || !(THUMB_WIDTHS as readonly number[]).includes(width)) return null;
+	return `kathigites/thumbs/w${width}/${name}`;
+}
+
+/** Whether a stored picture of this type is resized (otherwise the original is served). */
+export function isThumbSourceType(contentType: string | undefined): boolean {
+	return THUMB_SOURCE_TYPES.has((contentType ?? "").split(";")[0].trim().toLowerCase());
+}
+
 /** Raster image types accepted by the admin uploads (SVG is not: it can carry script). */
 export const UPLOAD_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
 /** Largest accepted upload (images, CVs). */

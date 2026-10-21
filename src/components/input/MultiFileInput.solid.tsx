@@ -20,7 +20,8 @@ export type MultiFileInputProps = {
 
 /**
  * Multi-file field of the admin modals (announcement photos). Same contract as `FileInput`: the files live in the
- * `FileHandler` registered as `prefix + name`; the modal's submit uploads `getNewFiles()` and deletes `getDeletedFiles()`.
+ * `FileHandler` registered as `prefix + name`; the modal's submit uploads `getNewFiles()` first and only then deletes
+ * `getRemovedFiles()`, so a failed upload never costs a stored file.
  */
 export default function MultiFileInput(props: MultiFileInputProps) {
 	const { name, value: initFiles = [], prefix, required, icon, disabled, fileExtension, metadata, filePreview } = props;

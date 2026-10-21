@@ -263,8 +263,9 @@ export const fileUpload = async (fileHandler: FileHandler<TeachersMetadata>, api
 		UrlArgs: { id },
 	});
 };
+/** Deletes a REMOVED stored file. A replaced one is left to `fileUpload` (the route deletes it once the new file is stored). */
 export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: APIHook) => {
-	const deletedFile = fileHandler.getDeletedFiles().at(0);
+	const deletedFile = fileHandler.getRemovedFiles().at(0);
 	if (!deletedFile) {
 		return;
 	}
@@ -280,9 +281,9 @@ export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: 
 export function picturePreview(file: FileProxy<TeachersMetadata>) {
 	return filePreviewImage(file, (f) => `/kathigites/picture/${f.getName()}`, { alt: "Φωτογραφία", top: true });
 }
-// The first page of the CV (a stored CV is fetched and rendered too — `toImageUrl` handles both).
+// The first page of the CV (a stored CV is fetched from its public URL and rendered too).
 export function cvPreview(file: FileProxy<TeachersMetadata>) {
-	return filePreviewImage(file, undefined, { alt: "Βιογραφικό", top: true });
+	return filePreviewImage(file, (f) => `/kathigites/cv/${f.getName()}`, { alt: "Βιογραφικό", top: true });
 }
 
 export const PREFIX = "teachers";

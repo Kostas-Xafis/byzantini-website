@@ -124,9 +124,11 @@ export default function AnnouncementsTable() {
 	createAPIResource(API.Announcements.get, undefined, { cache: setStore });
 	createAPIResource(API.Announcements.getImages, undefined, { cache: setStore });
 
-	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>) {
+	/** Uploads the handler's new files; resolves to the names that failed (their stored namesakes must stay). */
+	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>): Promise<Set<string>> {
 		const photos = fileHandler.getNewFiles();
-		if (photos.length === 0) return;
+		const failedNames = new Set<string>();
+		if (photos.length === 0) return failedNames;
 		let failed = 0;
 		const uploadQueue = photos.map((fileProxy) => {
 			assertNotNull(fileProxy);
@@ -138,6 +140,7 @@ export default function AnnouncementsTable() {
 				const { type: fileType } = file;
 				if (!isUploadImageType(fileType)) {
 					failed++;
+					failedNames.add(name);
 					pushAlert(createAlert("error", `Μη υποστηριζόμενος τύπος αρχείου: ${name} (μόνο JPG, PNG, WebP ή GIF)`));
 					return;
 				}
@@ -154,6 +157,7 @@ export default function AnnouncementsTable() {
 				} catch (e) {
 					console.error(e);
 					failed++;
+					failedNames.add(name);
 					pushAlert(createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`));
 				}
 			};
@@ -171,10 +175,16 @@ export default function AnnouncementsTable() {
 			else if (failed < total) progress.warning(`Ανέβηκαν ${total - failed} από ${total} φωτογραφίες.`);
 			else progress.dismiss();
 		}
+		return failedNames;
 	}
 
-	async function imagesDelete(fileHandler: FileHandler<AnnouncementImageMetadata>) {
-		const deletedFiles = fileHandler.getDeletedFiles();
+	/**
+	 * Deletes the stored photos the user removed or replaced — called AFTER the uploads, so a replacement never leaves
+	 * the announcement without its photo: a replaced main image is not even listed (`getRemovedFiles`; Announcements.
+	 * postImage swaps the main row itself), and a photo whose same-named replacement failed to upload (`keep`) stays.
+	 */
+	async function imagesDelete(fileHandler: FileHandler<AnnouncementImageMetadata>, keep: Set<string> = new Set()) {
+		const deletedFiles = fileHandler.getRemovedFiles().filter((f) => !keep.has(f.getName()));
 
 		if (deletedFiles.length === 0) return;
 
@@ -283,9 +293,9 @@ export default function AnnouncementsTable() {
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "mainImage");
 			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "photos");
 
-			await Promise.all([imagesDelete(mainImageHandler), imagesDelete(photosHandler)]);
-
-			await Promise.all([imagesUpload(mainImageHandler), imagesUpload(photosHandler)]);
+			// Upload first, delete after: a failed upload keeps the stored photo it was meant to replace.
+			const [mainFailed, photosFailed] = await Promise.all([imagesUpload(mainImageHandler), imagesUpload(photosHandler)]);
+			await Promise.all([imagesDelete(mainImageHandler, mainFailed), imagesDelete(photosHandler, photosFailed)]);
 			setAnnouncementHydrate({ action: ActionEnum.MODIFY, id: data.id, isMultiple: false });
 			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};

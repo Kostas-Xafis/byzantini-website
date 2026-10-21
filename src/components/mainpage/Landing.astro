@@ -8,7 +8,9 @@ const schoolYear = currentSchoolYearShort();
 ---
 
 <main id="welcome-page" class="relative min-h-dvh supports-[height:1svh]:min-h-svh flex flex-col">
-	<img src="/church_low.jpg" class="hidden" fetchpriority="high" alt="" />
+	<!-- One hero image: AVIF sized to the viewport (preloaded; the CSS below picks the same file, jpg for browsers without AVIF). -->
+	<link rel="preload" as="image" href="/church-772.avif" type="image/avif" media="(max-width: 800px)" fetchpriority="high" />
+	<link rel="preload" as="image" href="/church-1545.avif" type="image/avif" media="(min-width: 801px)" fetchpriority="high" />
 	<!--
 		One grid for the three hero blocks: the title (with the state-recognition strip under it) on the left, the
 		registrations card on the right, both sitting on the same baseline above the «Χαιρετισμός» link. Below lg
@@ -77,9 +79,16 @@ const schoolYear = currentSchoolYearShort();
 		#welcome-page {
 			background:
 				linear-gradient(to bottom left, rgba(12 10 9 / 0.45), rgba(12 10 9 / 0.88)), linear-gradient(to top, rgba(12 10 9 / 0.55), transparent 45%),
-				url("/church.jpg"), url("/church_low.jpg");
+				image-set(url("/church-1545.avif") type("image/avif"), url("/church.jpg") type("image/jpeg"));
 			background-size: cover;
 			background-position: center;
+		}
+		@media (max-width: 800px) {
+			#welcome-page {
+				background-image:
+					linear-gradient(to bottom left, rgba(12 10 9 / 0.45), rgba(12 10 9 / 0.88)), linear-gradient(to top, rgba(12 10 9 / 0.55), transparent 45%),
+					image-set(url("/church-772.avif") type("image/avif"), url("/church_low.jpg") type("image/jpeg"));
+			}
 		}
 		#hero-title > h1,
 		#hero-title > h3 {
@@ -90,8 +99,8 @@ const schoolYear = currentSchoolYearShort();
 		#hero-title h3 span {
 			text-shadow: -1px 6px 6px rgba(12 10 9 / 0.6);
 		}
-		#hero-title > h1 > span:hover + span,
-		#hero-title > h3 > span:hover + span {
+		#hero-title > h1 > span > span:hover + span,
+		#hero-title > h3 > span > span:hover + span {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(127 29 29 / 1) 10%, rgb(254, 202, 202));
 			background-clip: text;
@@ -99,8 +108,8 @@ const schoolYear = currentSchoolYearShort();
 			color: transparent;
 		}
 
-		#hero-title > h1 > span:has(+ span:hover),
-		#hero-title > h3 > span:has(+ span:hover) {
+		#hero-title > h1 > span > span:has(+ span:hover),
+		#hero-title > h3 > span > span:has(+ span:hover) {
 			text-shadow: none;
 			background: linear-gradient(to right, rgb(254, 202, 202), rgb(127 29 29 / 1) 90%);
 			background-clip: text;
@@ -207,8 +216,17 @@ const schoolYear = currentSchoolYearShort();
 	document.querySelectorAll("[data-school-year-short]").forEach((el) => (el.textContent = currentSchoolYearShort()));
 	onElementMount("#hero-title > h1", () => {
 		const heads = [...document.querySelectorAll("#hero-title > h1, #hero-title > h3")] as HTMLElement[];
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		heads.forEach((head, i) => {
 			let txt = head.innerText;
+			// Screen readers read the words, not the per-letter spans below.
+			head.setAttribute("aria-label", txt.replace(/\s+/g, " ").trim());
+			if (reduceMotion) {
+				// No letter animation: show the heading as it is.
+				head.style.opacity = "1";
+				head.style.transform = "none";
+				return;
+			}
 			const txtArr = txt.split("");
 			txtArr.forEach((char, j) => {
 				if (char === "\n") {
@@ -224,7 +242,7 @@ const schoolYear = currentSchoolYearShort();
 				}ms">${txtArr[j]}</span>`;
 			});
 			txt = txtArr.join("");
-			head.innerHTML = txt;
+			head.innerHTML = `<span aria-hidden="true">${txt}</span>`;
 			head.style.opacity = "1";
 			head.style.setProperty("animation", `fadeInParent 0.5s ease-in forwards ${i * 50}ms`);
 		});

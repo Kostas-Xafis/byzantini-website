@@ -11,8 +11,9 @@ type PreviewOptions = {
 /**
  * Preview element for the admin file inputs (`filePreview` of a file/multifile field).
  *
- * - A stored file (proxy) loads from `storedUrl`, with a cache-busting query so a file that was just replaced under the
- *   same name does not show the old picture. Without `storedUrl` the proxy renders itself (`toImageUrl`, e.g. a CV's PDF).
+ * - A stored file (proxy) loads from `storedUrl`, with a cache-busting query for files stored before uploads got versioned
+ *   names (a file replaced under the same name must not show the old picture). A stored PDF is fetched from `storedUrl`
+ *   and its first page rendered (`toImageUrl`).
  * - A new file is rendered locally: an object URL (revoked once loaded) or a PDF's first page.
  *
  * The element is returned at once and filled in when ready — no lookup by id after a timeout, so the preview cannot miss
@@ -25,10 +26,11 @@ export function filePreviewImage<T extends AnyRecord>(file: FileProxy<T>, stored
 	img.className = "h-full w-full object-cover" + (options.top ? " object-top" : "");
 	img.addEventListener("error", () => img.replaceWith(previewFallback(file.getName())), { once: true });
 
-	if (file.isProxy() && storedUrl) {
-		img.src = storedUrl(file) + "?v=" + Date.now();
+	const stored = file.isProxy() && storedUrl ? storedUrl(file) : undefined;
+	if (stored && !file.getName().toLowerCase().endsWith(".pdf")) {
+		img.src = stored + "?v=" + Date.now();
 	} else {
-		file.toImageUrl()
+		file.toImageUrl(stored)
 			.then((src) => {
 				img.src = src;
 				if (src.startsWith("blob:")) img.addEventListener("load", () => URL.revokeObjectURL(src), { once: true });
