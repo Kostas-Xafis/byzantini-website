@@ -505,10 +505,20 @@ export const pupilsRoutes = {
 				if (holder) throw APIError.conflict(`Ο σύνδεσμος εγγραφής χρησιμοποιείται ήδη από άλλον μαθητή (id ${holder.id})`);
 			}
 			const values = columns.map((column) => (fields as Record<string, unknown>)[column]);
-			await T.executeQuery(
-				`UPDATE pupils SET ${columns.map((column) => `${column} = ?`).join(", ")}, updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000 WHERE id = ?`,
-				[...values, id],
-			);
+			// The edit form sends no needs_review: re-derive it from the new ΑΜ and note, so a
+			// pupil who got a ΑΜ and an emptied «Σημείωση ελέγχου» leaves the review list.
+			const assignments = columns.map((column) => `${column} = ?`);
+			if (fields.needs_review === undefined && (fields.am !== undefined || fields.review_note !== undefined)) {
+				const am = fields.am !== undefined ? "?" : "am";
+				const note = fields.review_note !== undefined ? "?" : "review_note";
+				assignments.push(`needs_review = CASE WHEN ${am} IS NULL OR ${note} <> '' THEN 1 ELSE 0 END`);
+				if (fields.am !== undefined) values.push(fields.am);
+				if (fields.review_note !== undefined) values.push(fields.review_note);
+			}
+			await T.executeQuery(`UPDATE pupils SET ${assignments.join(", ")}, updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000 WHERE id = ?`, [
+				...values,
+				id,
+			]);
 			return "Επιτυχής ενημέρωση μαθητή";
 		}, "Σφάλμα κατά την ενημέρωση του μαθητή"),
 	),

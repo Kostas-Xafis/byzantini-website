@@ -353,6 +353,22 @@ function pupilsTest() {
 		expect(after.last_name).not.toBe("Δεν-γράφεται");
 	});
 
+	// The Μαθητολόγιο edit form sends am + review_note but never needs_review.
+	test("--pupils-- #13e update re-derives needs_review from the ΑΜ and the review note", async () => {
+		const read = async () => (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } }))).data.pupil;
+		const before = await read();
+		try {
+			await useTestAPI("Pupils.update", { RequestObject: { id: pupilId!, review_note: "δοκιμαστική σημείωση" } });
+			expect((await read()).needs_review).toBe(true);
+			await useTestAPI("Pupils.update", { RequestObject: { id: pupilId!, am: before.am, review_note: "" } });
+			expect((await read()).needs_review).toBe(false);
+		} finally {
+			await useTestAPI("Pupils.update", {
+				RequestObject: { id: pupilId!, review_note: before.review_note, needs_review: before.needs_review },
+			});
+		}
+	});
+
 	test("--pupils-- #13d update answers 404 for an unknown pupil instead of a silent no-op", async () => {
 		const res = await useTestAPI("Pupils.update", { RequestObject: { id: 999999, last_name: "Κανείς" } });
 		expect(res.status).toBe(404);
