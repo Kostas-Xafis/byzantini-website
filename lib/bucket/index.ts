@@ -52,20 +52,27 @@ export class Bucket {
 	}
 
 	/**
-	 * Renames `srcFile` to `destFile`: writes the copy first and deletes the source only once the copy is stored, so a
-	 * failed write never loses the file. The copy keeps the source's `httpMetadata` (content type as uploaded, caching)
-	 * and `customMetadata`. Resolves to the new object, or `null` when the source does not exist; moving a key onto
-	 * itself is a no-op (copy-then-delete would delete the only copy).
+	 * Copies `srcFile` to `destFile`, keeping the source's `httpMetadata` (content type as uploaded, caching) and
+	 * `customMetadata`. Resolves to the new object, or `null` when the source does not exist; copying a key onto itself
+	 * is a no-op.
 	 */
-	static async move(srcFile: string, destFile: string): Promise<R2Object | null> {
+	static async copy(srcFile: string, destFile: string): Promise<R2Object | null> {
 		const S3 = Bucket.getS3Bucket();
 		if (srcFile === destFile) return S3.head(srcFile);
 
 		const file = await S3.get(srcFile);
 		if (!file) return null;
+		return S3.put(destFile, await file.arrayBuffer(), { httpMetadata: file.httpMetadata, customMetadata: file.customMetadata });
+	}
 
-		const moved = await S3.put(destFile, await file.arrayBuffer(), { httpMetadata: file.httpMetadata, customMetadata: file.customMetadata });
-		await S3.delete(srcFile);
+	/**
+	 * Renames `srcFile` to `destFile`: writes the copy first (`copy`) and deletes the source only once the copy is
+	 * stored, so a failed write never loses the file. Resolves to the new object, or `null` when the source does not
+	 * exist; moving a key onto itself is a no-op (copy-then-delete would delete the only copy).
+	 */
+	static async move(srcFile: string, destFile: string): Promise<R2Object | null> {
+		const moved = await Bucket.copy(srcFile, destFile);
+		if (moved && srcFile !== destFile) await Bucket.getS3Bucket().delete(srcFile);
 		return moved;
 	}
 }

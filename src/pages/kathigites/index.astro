@@ -4,6 +4,7 @@ import type { Instruments } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
+import { THUMB_WIDTHS } from "@lib/bucket/publicFiles";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { teacherTitleByGender } from "@utilities/text";
 
@@ -66,6 +67,8 @@ const musicOnly = [
 
 const imgSrc = "kathigites/picture/";
 const cvSrc = "kathigites/cv/";
+// Resized photo served by the public catch-all (`?w=`, src/pages/[...slug].ts); encoded so srcset stays parseable.
+const thumbSrc = (picture: string, width: number) => `${imgSrc}${encodeURIComponent(picture)}?w=${width}`;
 const onlineLabel = "Διαδικτυακά Μαθήματα";
 
 // "Βυζαντινής και Παραδοσιακής Μουσικής" (thin spaces, like the original)
@@ -150,15 +153,27 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 			<div
 				id="teachersToolbar"
 				class="sticky top-0 z-20 -mx-2 px-2 py-3 flex flex-wrap items-center justify-between gap-3 bg-[#fbf6f2]/90 backdrop-blur-md max-sm:py-2">
-				<nav id="btsContainer" aria-label="Κατηγορίες μαθημάτων" class="max-sm:w-full">
-					<div class="flex items-center gap-1 rounded-full bg-red-900 p-1 shadow-md shadow-red-900/25 max-sm:w-full">
+				<div id="btsContainer" class="max-sm:w-full">
+					<div
+						role="tablist"
+						aria-label="Κατηγορίες μαθημάτων"
+						class="flex items-center gap-1 rounded-full bg-red-900 p-1 shadow-md shadow-red-900/25 max-sm:w-full">
 						{
 							music.map(([str, type], ind) => (
-								<div id={type} data-show={ind === 0 ? "true" : undefined} data-type={type} class="group/btn relative min-w-0 max-sm:flex-1">
+								<div
+									role="presentation"
+									data-show={ind === 0 ? "true" : undefined}
+									data-type={type}
+									class="group/btn relative min-w-0 max-sm:flex-1">
 									<button
-										class="flex items-center justify-center gap-2 w-full rounded-full px-[clamp(0.875rem,1.1vw,1.375rem)] py-2 max-sm:px-2 max-sm:py-1.5 text-[clamp(0.9375rem,1vw,1.125rem)] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 group-data-[show=true]/btn:bg-ivory group-data-[show=true]/btn:text-red-900 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-sm"
-										data-type={type}
-										aria-pressed={ind === 0 ? "true" : "false"}>
+										type="button"
+										role="tab"
+										id={"tab-" + type}
+										aria-controls="teachersContainer"
+										aria-selected={ind === 0 ? "true" : "false"}
+										tabindex={ind === 0 ? 0 : -1}
+										class="flex items-center justify-center gap-2 w-full rounded-full px-[clamp(0.875rem,1.1vw,1.375rem)] py-2 max-sm:px-2 max-sm:py-1.5 text-[clamp(0.9375rem,1vw,1.125rem)] max-sm:text-sm font-medium text-red-50 whitespace-nowrap transition-colors duration-300 ease-in-out hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory group-data-[show=true]/btn:bg-ivory group-data-[show=true]/btn:text-red-900 group-data-[show=true]/btn:font-semibold group-data-[show=true]/btn:shadow-sm"
+										data-type={type}>
 										<span class="max-xs:hidden">{str}</span>
 										<span class="hidden max-xs:inline">{str.replace(" Μουσική", "")}</span>
 										<span class="rounded-full bg-black/20 px-1.5 text-xs font-semibold tabular-nums group-data-[show=true]/btn:bg-red-900/10 max-xs:hidden">
@@ -169,7 +184,7 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 							))
 						}
 					</div>
-				</nav>
+				</div>
 				<label class="relative w-[clamp(16rem,24vw,22rem)] max-sm:w-full">
 					<span class="sr-only">Αναζήτηση καθηγητή</span>
 					<Icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-red-900/60" />
@@ -185,7 +200,10 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 
 			<div
 				id="teachersContainer"
-				class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16.5rem),1fr))] gap-6 max-sm:grid-cols-2 max-sm:gap-3 max-2xs:grid-cols-1">
+				role="tabpanel"
+				aria-labelledby="tab-byz"
+				tabindex="0"
+				class="rounded-2xl outline-offset-4 focus-visible:outline-2 focus-visible:outline-red-900 grid grid-cols-[repeat(auto-fill,minmax(min(100%,16.5rem),1fr))] gap-6 max-sm:grid-cols-2 max-sm:gap-3 max-2xs:grid-cols-1">
 				{
 					teachers.map(([teachersByType, type]) => {
 						return teachersByType.map((teacher, position) => {
@@ -218,7 +236,9 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 									<div class="relative aspect-4/5 overflow-hidden bg-red-950">
 										{teacher.picture ? (
 											<img
-												src={imgSrc + teacher.picture}
+												src={thumbSrc(teacher.picture, 480)}
+												srcset={THUMB_WIDTHS.map((w) => `${thumbSrc(teacher.picture!, w)} ${w}w`).join(", ")}
+												sizes="(max-width: 359.98px) 100vw, (max-width: 639.98px) 50vw, 380px"
 												width={240}
 												height={300}
 												alt={"Φωτογραφία Καθηγητή " + teacher.fullname}
@@ -355,32 +375,42 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 		eur: "Καθηγητές Ευρωπαϊκής Μουσικής",
 	};
 	const hashes: Record<string, string> = { byz: "Βυζαντινή Μουσική", par: "Παραδοσιακή Μουσική", eur: "Ευρωπαϊκή Μουσική" };
-	const currentType = () => (["byz", "par", "eur"] as const).find((t) => page.classList.contains(t)) ?? "byz";
+	type MusicType = "byz" | "par" | "eur";
+	const tabs = [...document.querySelectorAll<HTMLButtonElement>("#btsContainer [role=tab]")];
+	// The selected category: set at once on a click/key, while the page itself switches after the fade-out.
+	let selected: MusicType = (["byz", "par", "eur"] as const).find((t) => page.classList.contains(t)) ?? "byz";
+	let switchTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const normalize = (str: string) => str.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
 
 	// Hides the cards that do not match the search, inside the active category only.
 	function applyFilter() {
 		const query = normalize(search.value);
-		const type = currentType();
 		let visible = 0;
 		container.querySelectorAll<HTMLElement>(".teacher-card").forEach((card) => {
 			const match = !query || (card.dataset.search ?? "").includes(query);
 			card.toggleAttribute("data-filtered", !match);
-			if (match && card.dataset.type === type) visible++;
+			if (match && card.dataset.type === selected) visible++;
 		});
 		empty.hidden = visible > 0;
 	}
 
-	function selectType(type: "byz" | "par" | "eur", { updateHash = true } = {}) {
-		if (type === currentType()) return;
+	function selectType(type: MusicType, { updateHash = true } = {}) {
+		if (type === selected) return;
+		selected = type;
+		// Tab state (roving tabindex) follows immediately; the look switches with the panel.
+		tabs.forEach((tab) => {
+			const active = tab.dataset.type === type;
+			tab.setAttribute("aria-selected", String(active));
+			tab.tabIndex = active ? 0 : -1;
+		});
+		container.setAttribute("aria-labelledby", "tab-" + type);
 		container.classList.add("switching");
-		setTimeout(() => {
-			document.querySelectorAll<HTMLElement>("#btsContainer [data-type]:not(button)").forEach((wrapper) => {
-				const active = wrapper.dataset.type === type;
-				if (active) wrapper.setAttribute("data-show", "true");
+		clearTimeout(switchTimer);
+		switchTimer = setTimeout(() => {
+			document.querySelectorAll<HTMLElement>("#btsContainer [role=presentation][data-type]").forEach((wrapper) => {
+				if (wrapper.dataset.type === type) wrapper.setAttribute("data-show", "true");
 				else wrapper.removeAttribute("data-show");
-				wrapper.querySelector("button")?.setAttribute("aria-pressed", String(active));
 			});
 			page.classList.remove("byz", "par", "eur");
 			page.classList.add(type);
@@ -393,14 +423,36 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 		}, 200);
 	}
 
-	document.querySelectorAll<HTMLButtonElement>("#btsContainer button[data-type]").forEach((btn) => {
-		btn.addEventListener("click", () => selectType(btn.dataset.type as "byz" | "par" | "eur"));
+	tabs.forEach((tab, index) => {
+		tab.addEventListener("click", () => selectType(tab.dataset.type as MusicType));
+		// ←/→ move between the tabs (wrapping), Home/End jump to the first/last; the focused tab is selected.
+		tab.addEventListener("keydown", (e) => {
+			const last = tabs.length - 1;
+			const next =
+				e.key === "ArrowRight"
+					? index === last
+						? 0
+						: index + 1
+					: e.key === "ArrowLeft"
+						? index === 0
+							? last
+							: index - 1
+						: e.key === "Home"
+							? 0
+							: e.key === "End"
+								? last
+								: null;
+			if (next === null) return;
+			e.preventDefault();
+			tabs[next].focus();
+			selectType(tabs[next].dataset.type as MusicType);
+		});
 	});
 	search.addEventListener("input", applyFilter);
 
 	if (window.location.hash) {
 		const type = decodeURI(window.location.hash.slice(1));
 		const match = Object.entries(hashes).find(([, label]) => label === type);
-		if (match) selectType(match[0] as "byz" | "par" | "eur", { updateHash: false });
+		if (match) selectType(match[0] as MusicType, { updateHash: false });
 	}
 </script>

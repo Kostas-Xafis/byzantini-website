@@ -230,7 +230,8 @@ const { title } = Astro.props;
 			}
 
 			.animate-shake ~ button:first-of-type,
-			.animate-shake button {
+			.animate-shake button,
+			button.animate-shake {
 				animation: ShakeAnimation 0.6s ease-in-out;
 			}
 			@keyframes fadeInRight {

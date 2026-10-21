@@ -187,8 +187,9 @@ export default function LocationsTable() {
 			UrlArgs: { id: newFile.getMetadata().location_id },
 		});
 	};
+	// Only a REMOVED image is deleted here; a replaced one is deleted by Locations.fileUpload once the new file is stored.
 	const fileDelete = (fileHandler: FileHandler<LocationsMetadata>) => {
-		const deletedFile = fileHandler.getDeletedFiles().at(0);
+		const deletedFile = fileHandler.getRemovedFiles().at(0);
 		if (!deletedFile) return;
 		return apiHook(API.Locations.fileDelete, {
 			UrlArgs: {

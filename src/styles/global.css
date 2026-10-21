@@ -135,7 +135,8 @@
 }
 
 /*
- * Fields inside the dashboard modals (`.modal-form`, Modal.solid.tsx). The shared input controls (src/components/input)
+ * Fields inside the dashboard modals (`.modal-form`, Modal.solid.tsx; also the «Καταγραφή Ερωτημάτων» filter bar, so
+ * the dashboard's field look stays one). The shared input controls (src/components/input)
  * keep their public-form look everywhere else; in a modal each field becomes one flat, token-coloured box with its
  * label on the border and a brand focus ring, instead of a shadowed input inside a second outlined box.
  * Unlayered on purpose: it must beat the controls' own utility classes (which live in @layer utilities).

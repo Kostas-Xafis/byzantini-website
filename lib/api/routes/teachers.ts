@@ -1,7 +1,8 @@
 import { z } from "astro/zod";
 import type { TeacherClasses, TeacherInstruments, TeacherLocations, Teachers } from "@_types/entities";
 import { Bucket } from "@lib/bucket";
-import { isUploadImageType, MAX_UPLOAD_BYTES } from "@lib/bucket/publicFiles";
+import { extensionOfType, fileBaseName, safeBaseName, splitFileName, versionedFileName } from "@lib/bucket/fileNames";
+import { isUploadImageType, MAX_UPLOAD_BYTES, THUMB_WIDTHS, thumbnailKey } from "@lib/bucket/publicFiles";
 import { executeQuery } from "@lib/utils.server";
 import { z_BlobUpload, z_IdArray, z_PublicTeacher, z_TeacherClassesResponse, z_TeacherInstruments, z_TeacherLocations, z_Teachers } from "@lib/api/schemas";
 import { APIError } from "./APIError";
@@ -15,6 +16,18 @@ import { authenticateMiddleware } from "./middleware/authenticate";
 
 const bucketPicturePrefix = "kathigites/picture/";
 const bucketCVPrefix = "kathigites/cv/";
+
+/**
+ * Deletes the on-demand thumbnails (`kathigites/thumbs/w<N>/<name>`) of a picture that was deleted, replaced or
+ * renamed. Best-effort: a missing or failing thumbnail delete never fails the request (a stale thumbnail is only
+ * orphaned — its key embeds the old versioned name, which nothing links to any more).
+ */
+async function deletePictureThumbs(picture: string | null | undefined) {
+	if (!picture) return;
+	const keys = THUMB_WIDTHS.map((w) => thumbnailKey(bucketPicturePrefix + picture, w)).filter((k): k is string => k !== null);
+	const results = await Promise.allSettled(keys.map((key) => Bucket.delete(key)));
+	for (const r of results) if (r.status === "rejected") console.warn("Teacher thumbnail delete failed:", r.reason);
+}
 
 const positiveInt = (message = "Μη έγκυρος θετικός ακέραιος") => z.number().int().min(0, message);
 
@@ -174,24 +187,21 @@ export const teachersRoutes = {
 				const blob = body;
 				if (blob.size > MAX_UPLOAD_BYTES) throw new APIError(HTTP.PAYLOAD_TOO_LARGE, "Το αρχείο είναι πολύ μεγάλο (έως 10 MB)");
 				const filetype = blob.type;
-				const data = await blob.arrayBuffer();
+				const column = filetype === "application/pdf" ? "cv" : isUploadImageType(filetype) ? "picture" : null;
+				if (!column) throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
+				const prefix = column === "cv" ? bucketCVPrefix : bucketPicturePrefix;
 
-				const filename = teacher.fullname + "." + filetype.split("/")[1];
-
-				if (filetype === "application/pdf") {
-					const link = bucketCVPrefix + filename;
-
-					await Bucket.put(data, link, filetype);
-					await executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [filename, id]);
-					return "Pdf uploaded successfully";
-				} else if (isUploadImageType(filetype)) {
-					const link = bucketPicturePrefix + filename;
-
-					await Bucket.put(data, link, filetype);
-					await executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [filename, id]);
-					return "Image uploaded successfully";
+				// Replace safely: store the new file under a fresh versioned name, point the row at it, and only then
+				// delete the previous file — a failed upload leaves the old one in place.
+				const filename = versionedFileName(teacher.fullname, extensionOfType(filetype));
+				await Bucket.put(await blob.arrayBuffer(), prefix + filename, filetype);
+				await executeQuery(`UPDATE teachers SET ${column} = ? WHERE id = ?`, [filename, id]);
+				const previous = teacher[column];
+				if (previous && previous !== filename) {
+					await Bucket.delete(prefix + previous);
+					if (column === "picture") await deletePictureThumbs(previous);
 				}
-				throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
+				return column === "cv" ? "Pdf uploaded successfully" : "Image uploaded successfully";
 			}, "Σφάλμα κατά την αποθήκευση του αρχείου"),
 	),
 	fileRename: new APIServer({ method: "PUT", path: "/teachers/file/rename/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
@@ -200,19 +210,21 @@ export const teachersRoutes = {
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
 			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
 
-			const oldNameCV = teacher.cv && teacher.cv.split(".")[0];
-			const oldNameImg = teacher.picture && teacher.picture.split(".")[0];
-			const newName = teacher.fullname;
-			if (teacher.cv && oldNameCV !== newName) {
-				const newFileName = newName + "." + teacher.cv.split(".").at(-1);
-				await Bucket.move(bucketCVPrefix + teacher.cv, bucketCVPrefix + newFileName);
-				await T.executeQuery(`UPDATE teachers SET cv = ? WHERE id = ?`, [newFileName, id]);
-			}
-			if (teacher.picture && oldNameImg !== newName) {
-				const imageFileType = teacher.picture.split(".").at(-1) as string;
-				const newFileName = newName + "." + imageFileType;
-				await Bucket.move(bucketPicturePrefix + teacher.picture, bucketPicturePrefix + newFileName);
-				await T.executeQuery(`UPDATE teachers SET picture = ? WHERE id = ?`, [newFileName, id]);
+			// Files follow the teacher's name (`<fullname>-<version>.<ext>`); a renamed teacher's files get the new name
+			// with a fresh version. Copy first, point the row at the copy, then delete the old key — a failure at any step
+			// leaves the row on a file that exists.
+			const newName = safeBaseName(teacher.fullname);
+			for (const [column, prefix] of [
+				["cv", bucketCVPrefix],
+				["picture", bucketPicturePrefix],
+			] as const) {
+				const current = teacher[column];
+				if (!current || fileBaseName(current) === newName) continue;
+				const newFileName = versionedFileName(newName, splitFileName(current).ext);
+				if (!(await Bucket.copy(prefix + current, prefix + newFileName))) continue;
+				await T.executeQuery(`UPDATE teachers SET ${column} = ? WHERE id = ? AND ${column} = ?`, [newFileName, id, current]);
+				await Bucket.delete(prefix + current);
+				if (column === "picture") await deletePictureThumbs(current);
 			}
 			return "Files renamed successfully";
 		}, "Σφάλμα κατά τη μετονομασία των αρχείων"),
@@ -228,6 +240,7 @@ export const teachersRoutes = {
 			} else if (body.type === "picture") {
 				if (teacher.picture) await Bucket.delete(bucketPicturePrefix + teacher.picture);
 				await T.executeQuery(`UPDATE teachers SET picture = NULL WHERE id = ?`, [body.id]);
+				await deletePictureThumbs(teacher.picture);
 				return "Image deleted successfully";
 			}
 			throw APIError.badRequest("Μη υποστηριζόμενος τύπος αρχείου");
@@ -245,6 +258,7 @@ export const teachersRoutes = {
 			for (const file of files) {
 				if (file.cv) await Bucket.delete(bucketCVPrefix + file.cv);
 				if (file.picture) await Bucket.delete(bucketPicturePrefix + file.picture);
+				await deletePictureThumbs(file.picture);
 			}
 			await T.executeQuery(`DELETE FROM teachers WHERE id IN (???)`, ids);
 			return "Teacher/s deleted successfully";

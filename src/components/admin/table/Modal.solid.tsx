@@ -52,8 +52,10 @@ const submitWrapper = (
 		} catch (error: any) {
 			console.error(error);
 			pushAlert(createAlert("error", "Σφάλμα: ", error.message));
-			form.classList.add("animate-shake");
-			setTimeout(() => form.classList.remove("animate-shake"), 500);
+			// The submit button sits in the footer, outside the <form> (owned through `form=`): shake it directly.
+			const submit = [...form.elements].find((el): el is HTMLButtonElement => el instanceof HTMLButtonElement && el.type === "submit");
+			submit?.classList.add("animate-shake");
+			setTimeout(() => submit?.classList.remove("animate-shake"), 600);
 		}
 	};
 };

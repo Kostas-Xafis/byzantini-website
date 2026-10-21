@@ -10,13 +10,13 @@ import type { APIHook } from "./helpers";
 
 export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
-		const submit = async function (fd: FormData) {
+		const submit = async function (fd: FormData, form?: HTMLFormElement) {
 			const data: Omit<Instruments, "id"> = {
 				name: fd.get("name") as string,
 				type: (fd.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur",
 				isInstrument: !!(
 					Number(
-						[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='isInstrument']`)].filter(
+						[...((form ?? document) as ParentNode).querySelectorAll<HTMLButtonElement>(`button[data-specifier='isInstrument']`)].filter(
 							(i) => i.dataset.selected === "true",
 						)[0].dataset.value as string,
 					) - 1

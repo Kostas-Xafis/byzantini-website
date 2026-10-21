@@ -4,7 +4,7 @@ import type { PartialBy } from "@_types/helpers";
 import type { FileProxy } from "@lib/fileHandling.client";
 import type { IconName } from "@lib/icons";
 import { AnimTimeline } from "@utilities/dom";
-import { Index, Show, createSignal, onMount, type JSX } from "solid-js";
+import { Index, Show, createSignal, createUniqueId, onMount, type JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
@@ -176,14 +176,20 @@ export default function Input(props: InputProps) {
 	if (type === "custom") return <>{props.render?.()}</>;
 
 	let [isShown, setIsShown] = createSignal(show);
+	// The tooltip describes its control for screen readers (it is only displayed while the field has focus).
+	const tooltipId = tooltip ? `tooltip-${createUniqueId()}` : undefined;
+
+	// The field's own wrapper: lookups stay inside it, so two forms (or a form and a modal) with the same field
+	// names never reach each other's controls — and it works before the router inserts the page into the document.
+	let wrapperEl!: HTMLElement;
 
 	if (listeners) {
 		onMount(() => {
-			const selector = document.querySelector(`[name='${name}']`);
+			const selector = wrapperEl.querySelector(`[name='${name}']`);
 			if (!selector) return;
 			selector.addEventListener("enable_input", ((e: CustomEvents["enable_input"]) => {
 				if (isShown() === e.detail) return;
-				const sParent = selector.parentElement as HTMLElement;
+				const sParent = wrapperEl;
 				const action = e.detail ? "fadeIn" : "fadeOut";
 				const atl = new AnimTimeline();
 				atl.step(() => {
@@ -230,6 +236,7 @@ export default function Input(props: InputProps) {
 		// The label wraps its control, which is what links them — an explicit `for` without a matching id would break it.
 		<Dynamic
 			component={wrapper}
+			ref={(el: HTMLElement) => (wrapperEl = el)}
 			role={wrapper === "div" ? "group" : undefined}
 			aria-label={wrapper === "div" ? label : undefined}
 			class={
@@ -251,6 +258,7 @@ export default function Input(props: InputProps) {
 					type={type}
 					name={name}
 					aria-required={required ? "true" : undefined}
+					aria-describedby={tooltipId}
 					autocomplete={autocomplete}
 					inputmode={inputMode}
 					placeholder={(placeholder as string) || ""}
@@ -280,6 +288,7 @@ export default function Input(props: InputProps) {
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
 					aria-required={required ? "true" : undefined}
+					aria-describedby={tooltipId}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
 					onchange={onchange}
@@ -311,13 +320,14 @@ export default function Input(props: InputProps) {
 									data-value={selectItem().value}
 									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 									onClick={(e: MouseEvent) => {
+										const button = e.currentTarget as HTMLButtonElement;
 										if (multiselectOnce) {
-											const buttons = document.querySelectorAll(`button[data-specifier=${name}][data-selected='true']`);
-											buttons.forEach((button) => {
-												button.setAttribute("data-selected", "false");
+											// Only this field's own options — never a same-named multiselect elsewhere on the page.
+											button.parentElement?.querySelectorAll("button[data-selected='true']").forEach((other) => {
+												other.setAttribute("data-selected", "false");
 											});
 										}
-										const button = e.currentTarget as HTMLButtonElement;
+										// With `multiselectOnce` the clicked option was just cleared too, so it always ends up selected.
 										button.setAttribute("data-selected", button.getAttribute("data-selected") === "true" ? "false" : "true");
 									}}
 									type="button">
@@ -360,6 +370,7 @@ export default function Input(props: InputProps) {
 					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
 					aria-required={required ? "true" : undefined}
+					aria-describedby={tooltipId}
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
@@ -378,7 +389,7 @@ export default function Input(props: InputProps) {
 				{required ? <Icon name="asterisk" class="absolute bg-transparent left-[0.5ch] top-1 text-xs" /> : <></>}
 			</p>
 			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
-			{tooltip ? <Tooltip {...tooltip} /> : <></>}
+			{tooltip ? <Tooltip {...tooltip} id={tooltipId} /> : <></>}
 		</Dynamic>
 	);
 }

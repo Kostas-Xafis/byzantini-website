@@ -60,9 +60,11 @@ export default function DateInput(props: DateInputProps) {
 		if (!disabled) {
 			let finalDate = new Date(hasValue ? (value as number) : Date.now());
 			datepicker = new AirDatepicker(dateInput, {
+				// Air Datepicker's tokens: `MM` is the month, `mm` the minutes ("dd-mm-yyyy" flashed «13-00-1981»).
+				// Same dd/mm/yyyy text as `formatDateToMarineTime`, which ExtendedFormData.date parses.
 				view: "days",
 				firstDay: 0,
-				dateFormat: "dd-mm-yyyy",
+				dateFormat: "dd/MM/yyyy",
 				autoClose: false,
 				isMobile: document.body.clientWidth < 768,
 				selectedDates: hasValue ? [value] : false,
@@ -72,7 +74,7 @@ export default function DateInput(props: DateInputProps) {
 						finalDate.setDate(date.getDate());
 						datepicker.update(
 							{
-								dateFormat: "dd-mm-yyyy",
+								dateFormat: "dd/MM/yyyy",
 								minView: "months",
 								view: "months",
 								selectedDates: [finalDate.getTime()],
@@ -84,7 +86,7 @@ export default function DateInput(props: DateInputProps) {
 						finalDate.setMonth(date.getMonth());
 						datepicker.update(
 							{
-								dateFormat: "dd-mm-yyyy",
+								dateFormat: "dd/MM/yyyy",
 								minView: "years",
 								view: "years",
 								selectedDates: [finalDate.getTime()],
@@ -96,7 +98,7 @@ export default function DateInput(props: DateInputProps) {
 						finalDate.setFullYear(date.getFullYear());
 						datepicker.update(
 							{
-								dateFormat: "dd-mm-yyyy",
+								dateFormat: "dd/MM/yyyy",
 								minView: "days",
 								view: "days",
 								selectedDates: [finalDate.getTime()],

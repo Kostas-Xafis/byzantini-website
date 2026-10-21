@@ -3,8 +3,11 @@ import sitemap from "@astrojs/sitemap";
 import solidJs from "@astrojs/solid-js";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+import { fileURLToPath } from "node:url";
 
 const unmappedRoutes = (page) => page.includes("admin") || page.includes("login") || page.includes("oauth2callback") || page.includes("unsubscribe");
+// This checkout's own root. When the project runs from inside .claude/worktrees/<name>/, a "**/.claude/**" glob would match every file.
+const root = fileURLToPath(new URL(".", import.meta.url));
 const productionSite = "https://musicschool-metamorfosi.gr";
 // Pages-specific branch/URL logic removed — the Worker is the single deploy target now.
 const site = productionSite;
@@ -47,8 +50,8 @@ export default defineConfig({
 					"**/notAssets/**",
 					"**/dist/**",
 					"**/.wrangler/**",
-					// Other agent sessions' git worktrees live here: their half-done edits must not reload this server.
-					"**/.claude/**",
+					// Other agent sessions' git worktrees live here (this checkout's .claude only): their half-done edits must not reload this server.
+					`${root}.claude/**`,
 					"**/wrangler.jsonc",
 					"**/services/**",
 					"**/emailWorker/**",

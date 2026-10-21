@@ -197,12 +197,16 @@ export default function PupilFeesDialog(props: Props) {
 			onClose={props.onClose}
 			labelledBy={TITLE_ID}
 			closeOnBackdrop={() => !busy()}
-			backdropClass="modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] dark:bg-[rgb(0_0_0_/_0.6)] grid drop-shadow-[-1px_1px_2px_rgba(0,0,0,0.25)] backdrop-blur-sm"
-			class="relative grid max-h-[90vh] w-[min(1200px,95vw)] grid-rows-[max-content_1fr] gap-y-4 place-self-center rounded-md bg-surface p-6 font-didact text-ink shadow-lg shadow-shade focus-visible:outline-hidden max-sm:max-h-[85dvh] max-sm:p-3">
-			<div class="grid gap-y-3 pr-8">
-				<h2 id={TITLE_ID} class="font-anaktoria text-3xl max-sm:text-2xl">
-					Δίδακτρα μαθητή
-				</h2>
+			// Same frame as the table modals (table/Modal.solid.tsx): backdrop, panel, header with its close button.
+			backdropClass="modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] dark:bg-[rgb(0_0_0_/_0.6)] grid backdrop-blur-sm p-4 max-sm:p-2"
+			class="relative grid max-h-[min(92dvh,60rem)] w-[min(75rem,95vw)] grid-rows-[max-content_1fr] place-self-center overflow-hidden rounded-2xl border border-line bg-surface font-didact text-ink shadow-2xl shadow-black/30 focus-visible:outline-hidden max-sm:mt-20 max-sm:max-h-[calc(100dvh-6rem)]">
+			<div class="grid gap-y-3 border-b border-line px-6 py-4 max-sm:px-4 max-sm:py-3">
+				<div class="flex items-center gap-x-3">
+					<h2 id={TITLE_ID} class="min-w-0 flex-1 font-anaktoria text-3xl leading-tight max-sm:text-2xl">
+						Δίδακτρα μαθητή
+					</h2>
+					<DialogCloseButton class="size-9 shrink-0 text-lg" onClick={props.onClose} />
+				</div>
 				<div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
 					<span class="font-semibold">
 						{props.pupil.name} <span class="font-normal text-ink-muted">(ΑΜ {props.pupil.am})</span>
@@ -212,7 +216,7 @@ export default function PupilFeesDialog(props: Props) {
 						<select
 							value={year()}
 							onChange={(e) => setYear(e.currentTarget.value)}
-							class="rounded-md border-2 border-ink-muted bg-surface px-2 py-1 text-lg">
+							class="rounded-lg border border-line bg-surface px-2 py-1 text-lg text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 							<For each={yearOptions()}>{(option) => <option value={option}>{option}</option>}</For>
 						</select>
 					</label>
@@ -223,7 +227,9 @@ export default function PupilFeesDialog(props: Props) {
 				</div>
 			</div>
 
-			<div class="grid min-h-0 gap-y-4 overflow-y-auto" aria-busy={loading() || busy() ? "true" : "false"}>
+			<div
+				class="grid min-h-0 auto-rows-max gap-y-4 overflow-y-auto overscroll-contain px-6 py-5 max-sm:px-3 max-sm:py-4"
+				aria-busy={loading() || busy() ? "true" : "false"}>
 				<Show
 					when={rows().length > 0}
 					fallback={<p class="py-10 text-center text-lg text-ink-muted">Δεν υπάρχουν εγγραφές για το σχολικό έτος {year()}.</p>}>
@@ -383,7 +389,7 @@ export default function PupilFeesDialog(props: Props) {
 						type="button"
 						disabled={busy() || owing().length === 0}
 						onClick={settleAll}
-						class="rounded-md bg-emerald-700 px-4 py-2 text-lg text-white shadow-md transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+						class="rounded-lg bg-emerald-700 px-5 py-2 text-lg font-semibold text-white shadow-md transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
 						<Icon name="check-double" class="mr-2" />
 						Εξόφληση όλων
 					</button>
@@ -392,7 +398,6 @@ export default function PupilFeesDialog(props: Props) {
 					<Spinner />
 				</Show>
 			</div>
-			<DialogCloseButton class="absolute top-4 right-4 h-6 w-6 text-xl max-sm:h-8 max-sm:w-8 max-sm:text-lg" onClick={props.onClose} />
 		</Dialog>
 	);
 }
