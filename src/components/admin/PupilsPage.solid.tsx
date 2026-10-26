@@ -301,14 +301,10 @@ export default function PupilsPage() {
 	let bodyRef: HTMLDivElement | undefined;
 
 	/**
-	 * The page is a 100dvh shell whose middle section scrolls on its own (like
-	 * `Table`'s data container), so the document never grows: reset that scroller,
-	 * and the window too for the mobile layout where the page flows normally.
+	 * The page is a viewport-tall shell whose middle section scrolls on its own (like
+	 * `Table`'s data container), so the document never grows: reset that scroller.
 	 */
-	const scrollToTop = () => {
-		bodyRef?.scrollTo({ top: 0, behavior: "smooth" });
-		window.scrollTo({ top: 0, behavior: "smooth" });
-	};
+	const scrollToTop = () => bodyRef?.scrollTo({ top: 0, behavior: "smooth" });
 
 	/** Paging keeps the list start in view (the rows scroll, the page does not). */
 	const goToPage = (nextPage: number) => {
@@ -762,22 +758,23 @@ export default function PupilsPage() {
 	// Shell: the admin content cell is already exactly one viewport tall
 	// (#AdminPage: 100dvh grid rows), so the page fills it and scrolls its MIDDLE
 	// section instead of growing the document — same shape as `Table`'s
-	// top-tools / scrolling data / bottom-tools grid. On small screens the shell
-	// releases the height and the page flows (and scrolls) normally.
+	// top-tools / scrolling data / bottom-tools grid. Phones get the same shape (the
+	// heading just shrinks), so the pager stays on screen below the scrolling list.
 	return (
-		<div class="flex h-full w-full flex-col overflow-hidden p-6 font-didact text-red-950 max-sm:h-auto max-sm:overflow-visible max-sm:p-3 dark:text-red-50">
+		<div class="flex h-full w-full flex-col overflow-hidden p-6 font-didact text-red-950 max-sm:p-3 dark:text-red-50">
 			{/* ---- pinned top: title + search ---- */}
 			<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-y-3">
 				{/* ---- landing heading ---- */}
 				<Show when={selectedId() === null}>
-					<div class="grid justify-items-center gap-y-2 pt-[5vh] pb-3 text-center max-sm:pt-2">
+					<div class="grid justify-items-center gap-y-2 pt-[5vh] pb-3 text-center max-sm:gap-y-0 max-sm:pt-0 max-sm:pb-1">
 						<span
 							class="grid size-14 place-items-center rounded-2xl bg-red-900 text-2xl text-white shadow-md shadow-red-900/20 max-sm:hidden"
 							aria-hidden="true">
 							<i class="fa-solid fa-address-book"></i>
 						</span>
-						<h1 class="font-anaktoria text-5xl max-sm:text-4xl">Μαθητολόγιο</h1>
-						<p class={"max-w-2xl text-lg " + MUTED}>Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το ονοματεπώνυμο.</p>
+						<h1 class="font-anaktoria text-5xl max-sm:text-3xl">Μαθητολόγιο</h1>
+						{/* phones: the search placeholder says the same, the list needs the room */}
+						<p class={"max-w-2xl text-lg max-sm:hidden " + MUTED}>Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το ονοματεπώνυμο.</p>
 					</div>
 				</Show>
 
@@ -872,7 +869,7 @@ export default function PupilsPage() {
 			<div
 				id="pupilsScroller"
 				ref={bodyRef}
-				class="mx-auto mt-4 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-auto px-0.5 pb-4 max-sm:mt-3 max-sm:overflow-visible">
+				class="mx-auto mt-4 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-auto px-0.5 pb-4 max-sm:mt-2 max-sm:pb-2">
 				{/* ---- result list ---- */}
 				<Show when={selectedId() === null}>
 					<Show
@@ -1380,19 +1377,25 @@ export default function PupilsPage() {
 
 			{/* ---- pinned bottom: pagination (list only) ---- */}
 			<Show when={selectedId() === null && results() && results()!.total > PAGE_SIZE}>
-				<nav aria-label="Σελίδες αποτελεσμάτων" class="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-center gap-x-3 pt-3">
-					<button type="button" disabled={page() === 0} onClick={() => goToPage(page() - 1)} class={BTN_SECONDARY + " py-1.5"}>
+				<nav
+					aria-label="Σελίδες αποτελεσμάτων"
+					class="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-center gap-x-3 pt-3 max-sm:justify-between max-sm:gap-x-2 max-sm:pt-2">
+					<button
+						type="button"
+						disabled={page() === 0}
+						onClick={() => goToPage(page() - 1)}
+						class={BTN_SECONDARY + " py-1.5 max-sm:px-2.5 max-sm:text-sm"}>
 						<i class="fa-solid fa-chevron-left text-sm" aria-hidden="true"></i>
 						Προηγούμενη
 					</button>
-					<span class={"text-base tabular-nums " + MUTED}>
+					<span class={"whitespace-nowrap text-base tabular-nums max-sm:text-sm " + MUTED}>
 						Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
 					</span>
 					<button
 						type="button"
 						disabled={(page() + 1) * PAGE_SIZE >= results()!.total}
 						onClick={() => goToPage(page() + 1)}
-						class={BTN_SECONDARY + " py-1.5"}>
+						class={BTN_SECONDARY + " py-1.5 max-sm:px-2.5 max-sm:text-sm"}>
 						Επόμενη
 						<i class="fa-solid fa-chevron-right text-sm" aria-hidden="true"></i>
 					</button>

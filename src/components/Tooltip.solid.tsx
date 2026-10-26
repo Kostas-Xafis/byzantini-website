@@ -73,26 +73,21 @@ export default function Tooltip(props: TooltipProps) {
 				}></li>
 		</ul>
 	) : (
+		// A compact popover just under the field, never wider than it — so it stays on screen on phones too.
 		<ul
 			class={
-				"absolute h-max p-8 pt-6 bg-red-100 dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-md top-[calc(100%_+_2rem)] left-[-50%] grid-rows-[max-content_1fr] grid grid-flow-col auto-cols-[25ch] gap-4" +
+				"absolute inset-x-1 top-[calc(100%_+_0.6rem)] grid h-max gap-y-1 rounded-xl bg-red-50 px-3 py-2.5 font-didact text-sm text-red-950 shadow-lg shadow-black/15 ring-1 ring-red-900/15 dark:bg-neutral-800 dark:text-red-50 dark:shadow-black/40 dark:ring-white/10" +
 				" opacity-[0.0001] z-[-100] transition-opacity duration-300 group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:z-[5000] group-[:not(:focus-within)]/tooltip:duration-0 group-[:not(:focus-within)]/tooltip:opacity-[0.0001]"
 			}>
-			<li class="justify-self-center" style={{ "grid-column": "1 / 3" }}>
-				<i class="fa-solid fa-circle-info text-[clamp(1.5rem,2.2vw,2.5rem)] text-red-900 dark:text-red-300"></i>
-			</li>
+			<li
+				aria-hidden="true"
+				class="absolute -top-1.5 left-5 size-3 rotate-45 border-t border-l border-red-900/15 bg-red-50 dark:border-white/10 dark:bg-neutral-800"></li>
 			{props.message.map((message) => (
-				<li class="text-[clamp(0.875rem,1.25vw,1.5rem)] drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
-					<i class="fa-solid fa-circle-chevron-right text-[clamp(0.875rem,1.25vw,1.5rem)] pr-4 text-red-900 dark:text-red-300 drop-shadow-none"></i>
-					{message}
+				<li class="relative flex items-start gap-x-2">
+					<i class="fa-solid fa-circle-info mt-0.5 text-red-900 dark:text-red-300" aria-hidden="true"></i>
+					<span>{message}</span>
 				</li>
 			))}
-			<li
-				class={
-					"absolute top-[-25px] left-[calc(50%_-_25px)] border-[25px] border-red-100 dark:border-gray-800 border-l-transparent border-r-transparent border-t-0" +
-					" after:absolute after:top-[0px] after:left-[calc(50%_-_26px)] after:border-[26px] after:border-gray-500 dark:after:border-gray-700 after:border-l-transparent after:border-r-transparent after:border-t-0 after:blur-[2px] after:-z-10" +
-					" before:absolute before:h-[5px] before:w-[100px] before:bottom-[-30px] before:translate-x-[-50%] before:bg-red-100 dark:before:bg-dark"
-				}></li>
 		</ul>
 	);
 }
