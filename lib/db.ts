@@ -63,8 +63,9 @@ export async function dbExec<T = undefined>(query: string, args: QueryArguments 
 
 const queryLogger = async ({ id, query, args }: Transaction["queryHistory"][number], err = false) => {
 	query.length > 400 && (query = query.slice(0, 397) + "...");
-	// sys_users writes carry session ids and password hashes — never store their values.
-	let argStr = /\bsys_users\b/i.test(query) ? '"[redacted]"' : JSON.stringify(Array.isArray(args) ? args : objectToArrayFromQuery(args, query));
+	// sys_users / sys_user_sessions / sys_user_identities carry session ids, password hashes and
+	// provider account ids — never store their values.
+	let argStr = /\bsys_user/i.test(query) ? '"[redacted]"' : JSON.stringify(Array.isArray(args) ? args : objectToArrayFromQuery(args, query));
 	argStr.length > 400 && (argStr = argStr.slice(0, 397) + "...");
 	try {
 		await getDb()

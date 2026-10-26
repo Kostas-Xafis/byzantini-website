@@ -1,5 +1,7 @@
 import { onBackdropClick, trapFocus, type InitialFocus } from "@utilities/focusTrap";
 import { Show, onCleanup, onMount, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import Icon from "@components/other/Icon.solid";
 
 export type DialogProps = {
 	/** Mounts the dialog (and starts the focus trap) while true. */
@@ -37,9 +39,13 @@ export type DialogProps = {
  * (pass its id as `labelledBy`) and close button (use `DialogCloseButton`).
  */
 export default function Dialog(props: DialogProps) {
+	// Portalled to <body>: rendered in place, the backdrop's z-index only counted inside the page's own stacking
+	// context, so the admin sidebar (its logo) stayed above the blur.
 	return (
 		<Show when={props.open}>
-			<DialogInner {...props} />
+			<Portal>
+				<DialogInner {...props} />
+			</Portal>
 		</Show>
 	);
 }
@@ -100,11 +106,11 @@ export function DialogCloseButton(props: { onClick: (e: MouseEvent) => void; cla
 			aria-label={props.label ?? "Κλείσιμο"}
 			title={props.label ?? "Κλείσιμο"}
 			class={
-				"flex items-center justify-center aspect-square rounded-xl text-gray-700 dark:text-gray-200 bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-300 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 closeBtn " +
+				"flex items-center justify-center aspect-square rounded-xl text-ink-muted bg-ink/5 hover:bg-ink/15 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink closeBtn " +
 				(props.class ?? "")
 			}
 			onClick={(e) => props.onClick(e)}>
-			<i class="w-full fa-solid fa-xmark" aria-hidden="true"></i>
+			<Icon name="close" />
 		</button>
 	);
 }

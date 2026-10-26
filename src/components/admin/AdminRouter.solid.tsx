@@ -1,4 +1,10 @@
+import type { Permission } from "@lib/auth/roles";
 import { Route, Router } from "@solidjs/router";
+import { Show, type Component } from "solid-js";
+import { useCurrentUser } from "./currentUser";
+import AccountPage from "./AccountPage.solid.tsx";
+import ActivityPage from "./ActivityPage.solid.tsx";
+import ErrorsPage from "./ErrorsPage.solid.tsx";
 import AdminPage from "./AdminPage.solid.tsx";
 import AnnouncementsTable from "./AnnouncementsTable.solid.tsx";
 import BooksTable from "./BooksTable.solid.tsx";
@@ -12,6 +18,31 @@ import SettingsPage from "./SettingsPage.solid";
 import SysUsersTable from "./SysUsersTable.solid.tsx";
 import TeachersTable from "./TeachersTable.solid.tsx";
 import TotalsTable from "./TotalsTable.solid.tsx";
+import Icon from "@components/other/Icon.solid";
+
+/**
+ * A page only some roles may open (lib/auth/roles.ts). The nav already hides its link and the API refuses
+ * its data; this covers a typed or bookmarked URL with a clear message instead of an error toast.
+ */
+const restricted = (permission: Permission, Page: Component) => () => {
+	const user = useCurrentUser();
+	return (
+		<Show when={user()}>
+			<Show
+				when={user()!.permissions[permission]}
+				fallback={
+					<div class="grid h-full place-items-center p-8 text-center text-ink">
+						<div class="grid gap-2">
+							<Icon name="lock" class="text-3xl text-accent-ink" />
+							<p class="text-lg font-bold">Δεν έχετε πρόσβαση σε αυτή τη σελίδα.</p>
+						</div>
+					</div>
+				}>
+				<Page />
+			</Show>
+		</Show>
+	);
+};
 
 export default function AdminRouter() {
 	return (
@@ -26,8 +57,11 @@ export default function AdminRouter() {
 				<Route path="/admin/teachers" component={TeachersTable} />
 				<Route path="/admin/locations" component={LocationsTable} />
 				<Route path="/admin/announcements" component={AnnouncementsTable} />
+				<Route path="/admin/account" component={AccountPage} />
 				<Route path="/admin/sysusers" component={SysUsersTable} />
-				<Route path="/admin/query-logs" component={QueryLogsTable} />
+				<Route path="/admin/activity" component={restricted("activityLog", ActivityPage)} />
+				<Route path="/admin/query-logs" component={restricted("queryLogs", QueryLogsTable)} />
+				<Route path="/admin/errors" component={restricted("queryLogs", ErrorsPage)} />
 				<Route path="/admin/settings" component={SettingsPage} />
 				<Route
 					path="/admin/*"

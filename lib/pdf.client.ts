@@ -1,3 +1,4 @@
+import { onSessionExpired } from "@lib/auth/sessionExpiry.client";
 import type { JoinedEnrollments } from "@_types/entities";
 import type { PDFRequest } from "../services/pdfWorker/src/types";
 import { asyncQueue } from "@utilities/AsyncQueue";
@@ -58,6 +59,7 @@ export class PDF {
 			},
 			body: JSON.stringify(body),
 		});
+		if (response.status === 401) onSessionExpired();
 		const isPdf = response.ok && (response.headers.get("Content-Type") ?? "").startsWith("application/pdf");
 		if (!isPdf) {
 			await readAPIResponse(response);

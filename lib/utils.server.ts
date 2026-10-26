@@ -25,7 +25,6 @@ export const MIMETypeMap: Record<string, string> = {
 	pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 	txt: "text/plain",
 };
-export const ImageMIMEType = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/jpg", "image/svg+xml", "image/webp"];
 
 //  ---------------------- DATABASE UTILS ----------------------  \\
 

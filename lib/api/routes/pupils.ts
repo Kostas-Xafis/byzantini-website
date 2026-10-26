@@ -226,6 +226,13 @@ const z_SettleYear = z.object({
 	payment_date: z.number().int().min(0, "Μη έγκυρη ημερομηνία πληρωμής"),
 });
 const z_SettleYearResponse = z.object({ updated: z.array(z.number().int()) });
+const z_DashboardSummary = z.object({
+	school_year: z.string(),
+	needs_review: z.number().int(),
+	owing: z.object({ enrollments: z.number().int(), pupils: z.number().int(), amount: z.number() }),
+	new_online: z.number().int(),
+});
+
 /** Removes a pupil from the Μαθητολόγιο, with all their enrollments. */
 const z_PupilDelete = z.object({
 	id: z.number().int().min(1, "Μη έγκυρο id"),
@@ -476,10 +483,20 @@ export const pupilsRoutes = {
 				if (holder) throw APIError.conflict(`Ο σύνδεσμος εγγραφής χρησιμοποιείται ήδη από άλλον μαθητή (id ${holder.id})`);
 			}
 			const values = columns.map((column) => (fields as Record<string, unknown>)[column]);
-			await T.executeQuery(
-				`UPDATE pupils SET ${columns.map((column) => `${column} = ?`).join(", ")}, updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000 WHERE id = ?`,
-				[...values, id],
-			);
+			// The edit form sends no needs_review: re-derive it from the new ΑΜ and note, so a
+			// pupil who got a ΑΜ and an emptied «Σημείωση ελέγχου» leaves the review list.
+			const assignments = columns.map((column) => `${column} = ?`);
+			if (fields.needs_review === undefined && (fields.am !== undefined || fields.review_note !== undefined)) {
+				const am = fields.am !== undefined ? "?" : "am";
+				const note = fields.review_note !== undefined ? "?" : "review_note";
+				assignments.push(`needs_review = CASE WHEN ${am} IS NULL OR ${note} <> '' THEN 1 ELSE 0 END`);
+				if (fields.am !== undefined) values.push(fields.am);
+				if (fields.review_note !== undefined) values.push(fields.review_note);
+			}
+			await T.executeQuery(`UPDATE pupils SET ${assignments.join(", ")}, updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000 WHERE id = ?`, [
+				...values,
+				id,
+			]);
 			return "Επιτυχής ενημέρωση μαθητή";
 		}, "Σφάλμα κατά την ενημέρωση του μαθητή"),
 	),
@@ -956,6 +973,43 @@ export const pupilsRoutes = {
 			const [row] = await executeQuery<{ total: number }>("SELECT amount AS total FROM total_enrollments");
 			return row ?? { total: 0 };
 		}),
+	),
+
+	/**
+	 * «Αρχική» dashboard: what needs the secretariat's attention, in one statement.
+	 * `since` (epoch ms) is the admin's previous visit — the client remembers it per device;
+	 * `new_online` counts public-form enrollments after it. `owing` covers the current school
+	 * year (`currentSchoolYearStart`) only.
+	 */
+	dashboardSummary: new APIServer(
+		{ method: "GET", path: "/pupils/dashboard/[since:number]", responseSchema: z_DashboardSummary },
+		[authenticateMiddleware],
+		({ params }) =>
+			handlerResult(async () => {
+				const schoolYear = schoolYearOf(currentSchoolYearStart());
+				const [row] = await executeQuery<{
+					needs_review: number;
+					owing_enrollments: number;
+					owing_pupils: number;
+					owing_amount: number | null;
+					new_online: number;
+				}>(
+					`SELECT
+						(SELECT COUNT(*) FROM pupils WHERE needs_review = 1) AS needs_review,
+						COUNT(*) AS owing_enrollments,
+						COUNT(DISTINCT pupil_id) AS owing_pupils,
+						SUM(total_payment - payment_amount) AS owing_amount,
+						(SELECT COUNT(*) FROM pupil_enrollments WHERE source = 'form' AND date > ?) AS new_online
+					FROM pupil_enrollments WHERE registration_year = ? AND payment_amount < total_payment`,
+					[params.since, schoolYear],
+				);
+				return {
+					school_year: schoolYear,
+					needs_review: row?.needs_review ?? 0,
+					owing: { enrollments: row?.owing_enrollments ?? 0, pupils: row?.owing_pupils ?? 0, amount: row?.owing_amount ?? 0 },
+					new_online: row?.new_online ?? 0,
+				};
+			}, "Σφάλμα κατά την ανάκτηση της σύνοψης"),
 	),
 
 	/**

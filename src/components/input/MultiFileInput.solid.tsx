@@ -1,176 +1,169 @@
-import type { CustomEvents } from "@_types/custom-events";
-import { For, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createSignal, onCleanup } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
 import type { AnyRecord, DOMElement } from "@_types/global";
-import { CloseButton } from "../admin/table/CloseButton.solid";
+import { toast } from "../admin/toast";
+import { acceptHint, shortName } from "./FileInput.solid";
 
 export type MultiFileInputProps = {
 	name: string;
 	prefix: string;
 	value?: [string, AnyRecord][];
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	fileExtension?: string;
 	metadata?: AnyRecord[];
 	filePreview?: (file: FileProxy<AnyRecord>) => DOMElement;
 };
 
+/**
+ * Multi-file field of the admin modals (announcement photos). Same contract as `FileInput`: the files live in the
+ * `FileHandler` registered as `prefix + name`; the modal's submit uploads `getNewFiles()` first and only then deletes
+ * `getRemovedFiles()`, so a failed upload never costs a stored file.
+ */
 export default function MultiFileInput(props: MultiFileInputProps) {
-	const { name, value: initFiles = [], prefix, required, iconClasses, disabled, fileExtension, metadata, filePreview } = props;
+	const { name, value: initFiles = [], prefix, required, icon, disabled, fileExtension, metadata, filePreview } = props;
+	let input!: HTMLInputElement;
 
-	const [input, setInput] = createSignal<HTMLInputElement>();
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: false,
 		files: initFiles.map(([name, metadata]) => FileHandler.createFileProxy(name, { metadata })),
 		metadata: metadata || {},
 	});
-	const [fileList, setFileList] = createSignal(fileHandler.getFiles().map((f) => [f, f.getMetadata()])); // Need to be a signal to update the component
-	const setFiles = () => {
-		setFileList(fileHandler.getFiles().map((f) => [f, f.getMetadata()]));
+	onCleanup(() => fileHandler.unregister());
+
+	// A fresh array on every change so <For> re-renders (the handler mutates its own list).
+	const [files, setFiles] = createSignal<FileProxy<AnyRecord>[]>(fileHandler.getFiles().slice());
+	const sync = () => setFiles(fileHandler.getFiles().slice());
+	const [dragging, setDragging] = createSignal(false);
+
+	const pick = () => !disabled && input.click();
+	const add = (list: FileList | null | undefined) => {
+		if (!list?.length) return;
+		const all = Array.from(list);
+		const ok = all.filter((f) => FileHandler.accepts(f, fileExtension));
+		const rejected = all.length - ok.length;
+		if (rejected)
+			toast.warning(
+				rejected === 1 ? `Ένα αρχείο δεν είναι αποδεκτού τύπου (${acceptHint(fileExtension)}).` : `${rejected} αρχεία δεν είναι αποδεκτού τύπου.`,
+				{
+					title: "Μη αποδεκτά αρχεία",
+				},
+			);
+		fileHandler.addFiles(ok);
+		sync();
+	};
+	const remove = (index: number) => {
+		fileHandler.removeFile(index);
+		sync();
 	};
 
-	// const onAllowDrop = (e: DragEvent) => {
-	// 	e.preventDefault();
-	// 	e.stopPropagation();
-	// };
-
-	// const onDropImageContainer = (e: DragEvent) => {
-	// 	e.preventDefault();
-	// 	e.stopPropagation();
-	// 	const sfileIdx = e.dataTransfer?.getData("fileIdx");
-	// 	if (!sfileIdx) return;
-	// 	const dropFileIdx = parseInt(sfileIdx);
-	// 	const currentFileIdx = parseInt((e.target as HTMLElement).dataset["file-idx"] || "");
-	// 	const file = fileHandler.getFile(dropFileIdx);
-	// 	if (!file) return;
-	// 	let files = fileHandler.getFiles();
-	// 	// Insert the dropped file at the new index and all the other files will be shifted to the right
-	// 	files.splice(currentFileIdx, 0, file);
-	// 	// Remove the file from the old index
-	// 	files = files.filter((_, idx) => idx !== dropFileIdx);
-	// 	setFiles();
-	// };
-
-	// const onDragOver = (e: DragEvent) => {
-	// 	if (!e.dataTransfer) throw new Error("No dataTransfer");
-	// 	e.preventDefault();
-	// 	const fileIdx = (e.target as HTMLElement).dataset["file-idx"];
-	// 	e.dataTransfer.dropEffect = "move";
-	// 	e.dataTransfer.setData("fileIdx", "" + fileIdx);
-	// };
-
-	const onFileClick = (e: MouseEvent) => {
-		e.stopPropagation();
-		e.preventDefault();
-		if (e.target === document.querySelector(`[data-name='${name}'] > .fileContainer`) || e.target === document.querySelector("#multifileDropZone"))
-			input()?.click();
-	};
-	const onFileChange = async (_: Event) => {
-		const files = input()?.files;
-		if (!files) return;
-		fileHandler.addFiles(files);
-		setFiles();
-	};
-	const onFileRemove = (fileId: number = 0) => {
-		fileHandler.removeFile(fileId);
-		setFiles();
-	};
-	onMount(() => {
-		const fileDiv = document.querySelector("#multifileDropZone") as HTMLElement;
-		fileHandler.mountDragAndDrop(fileDiv, {
-			enterEvent: (e) => {
-				fileDiv.classList.add("bg-gray-600", "z-10", "unblur");
-			},
-			leaveEvent: (e) => {
-				fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
-			},
-			dropEvent: (e) => {
-				fileDiv.classList.remove("bg-gray-600", "z-10", "unblur");
-				setFiles();
-			},
-		});
-	});
-
-	const onModalClose = (e: CustomEvents["modal_close"]) => {
-		const modalPrefix = e.detail.prefix;
-		if (modalPrefix !== prefix) return;
-		if (prefix.includes("ADD")) {
-			fileHandler.removeFile(0);
-			setFileList([]);
-		}
-	};
-	onMount(() => document.addEventListener("modal_close", onModalClose));
-	onCleanup(() => document.removeEventListener("modal_close", onModalClose));
+	let depth = 0;
+	const hasFiles = (e: DragEvent) => !disabled && !!e.dataTransfer?.types.includes("Files");
 
 	return (
-		<>
-			<div
-				data-name={name}
-				onclick={onFileClick}
-				class="relative peer peer-[:is(.show)]/file:hidden show w-[95%] h-[85%] justify-self-center self-center font-didact border-dashed border-2 border-gray-600 dark:border-gray-400 rounded-md cursor-pointer z-10 overflow-y-auto">
-				<div
-					id="multifileDropZone"
-					class={
-						"absolute inset-0 grid items-center" +
-						((fileList().length > 0 && " -z-10 blur-[2px]") || " hover:bg-gray-600 dark:hover:bg-gray-700 group/file")
-					}>
-					<div class="flex flex-col items-center z-[-1] group-hover/file:z-[0]">
-						<i class={"text-5xl text-gray-400 group-hover/file:text-gray-50  " + (iconClasses || "")}></i>
-						<p class="text-2xl text-gray-400  group-hover/file:text-gray-50">Drag&thinsp; & Drop</p>
-					</div>
-				</div>
-				<div class="fileContainer flex flex-row flex-wrap w-full justify-evenly gap-2 gap-y-4 p-2 self-start">
-					<For each={fileList()}>
-						{([file, _], index) => (
-							<div
-								// draggable
-								// ondragover={(e) => onDragOver(e)}
-								// ondrop={(e) => onDropImageContainer(e)}
-								// ondragenter={(e) => onAllowDrop(e)}
-								// data-file-idx={index()}
-								style={{ "word-break": "break-all" }}
-								class="relative flex flex-row items-end h-[250px] w-[275px] gap-x-2 border-[2px] border-gray-600 dark:border-gray-400 rounded-lg cursor-default overflow-hidden z-[1]">
-								{filePreview && (
-									<div class="absolute flex -z-10 inset-0 w-full h-full place-self-center rounded-md overflow-hidden">
-										{filePreview(file as FileProxy<AnyRecord>)}
+		<div
+			data-name={name}
+			onDragEnter={(e) => {
+				if (!hasFiles(e)) return;
+				e.preventDefault();
+				depth++;
+				setDragging(true);
+			}}
+			onDragOver={(e) => {
+				if (!hasFiles(e)) return;
+				e.preventDefault();
+				e.dataTransfer!.dropEffect = "copy";
+			}}
+			onDragLeave={() => {
+				depth = Math.max(0, depth - 1);
+				if (depth === 0) setDragging(false);
+			}}
+			onDrop={(e) => {
+				e.preventDefault();
+				depth = 0;
+				setDragging(false);
+				if (!disabled) add(e.dataTransfer?.files);
+			}}
+			class={
+				"file-field relative z-10 m-2 min-h-56 max-h-112 overflow-y-auto rounded-lg border-2 border-dashed p-3 transition-colors " +
+				(dragging() ? "border-accent-ink bg-accent-soft" : "border-line")
+			}>
+			<Show when={files().length > 0}>
+				<p class="mb-2 font-didact text-sm text-ink-muted">
+					{files().length === 1 ? "1 αρχείο" : `${files().length} αρχεία`}
+					<Show when={files().some((f) => !f.isProxy())}> · {files().filter((f) => !f.isProxy()).length} νέα</Show>
+				</p>
+			</Show>
+			<ul class="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
+				<For each={files()}>
+					{(file, index) => (
+						<li class="group/tile relative flex h-44 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-sm">
+							<div class="relative min-h-0 flex-1 bg-surface-muted">
+								{filePreview ? (
+									filePreview(file)
+								) : (
+									<div class="grid h-full place-items-center text-ink-muted">
+										<Icon name="file-image" class="text-4xl opacity-60" />
 									</div>
 								)}
-
-								<div class="flex flex-col h-max pb-2 items-center w-full rounded-b-[0.575rem] bg-[rgb(255,255,255,0.55)] dark:bg-[rgb(26,26,26,0.7)] text-red-950 dark:text-red-50 backdrop-blur-[3px]">
-									<p>
-										{(file.getName().length > 20 ? file.getName().slice(0, 12) + " ... " + file.getName().slice(-7) : file.getName()) || ""}
-									</p>
-									<CloseButton
-										label="Αφαίρεση αρχείου"
-										onClick={() => onFileRemove(index())}
-										classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
-								</div>
+								<Show when={!file.isProxy()}>
+									<span class="absolute left-1.5 top-1.5 rounded-full bg-brand px-1.5 py-px text-2xs font-semibold text-brand-ink">Νέο</span>
+								</Show>
+								<button
+									type="button"
+									onClick={() => remove(index())}
+									disabled={disabled}
+									title="Αφαίρεση"
+									aria-label={`Αφαίρεση ${file.getName()}`}
+									class="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-black/55 text-white opacity-0 shadow transition-opacity group-hover/tile:opacity-100 focus-visible:opacity-100 hover:bg-red-700 max-sm:opacity-100">
+									<Icon name="close" class="text-sm" />
+								</button>
 							</div>
-						)}
-					</For>
+							<p class="truncate px-2 py-1 font-didact text-xs text-ink" title={file.getName()}>
+								{shortName(file.getName(), 22)}
+							</p>
+						</li>
+					)}
+				</For>
+				<li>
+					<button
+						type="button"
+						onClick={pick}
+						disabled={disabled}
+						class={
+							"flex w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-line px-3 text-center font-didact text-ink-muted transition-colors hover:border-accent-ink/60 hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-accent-ink " +
+							(files().length ? "h-44" : "h-48")
+						}>
+						<Icon name={files().length ? "plus" : (icon ?? "images")} class="text-3xl opacity-70" />
+						<span class="text-sm leading-snug">{files().length ? "Προσθήκη αρχείων" : "Σύρετε αρχεία εδώ ή επιλέξτε"}</span>
+						<Show when={fileExtension}>
+							<span class="text-xs opacity-80">{acceptHint(fileExtension)}</span>
+						</Show>
+					</button>
+				</li>
+			</ul>
+			<Show when={dragging()}>
+				<div class="pointer-events-none absolute inset-0 grid place-items-center bg-accent-soft/90 font-didact text-lg font-semibold text-accent-ink">
+					Αφήστε τα αρχεία εδώ
 				</div>
-			</div>
+			</Show>
 			<input
-				ref={(el) => setInput(el)}
+				ref={input}
 				class="hidden"
 				type="file"
 				name={name}
 				required={required || false}
-				readOnly={disabled || false}
-				onchange={onFileChange}
+				disabled={disabled || false}
+				onChange={() => {
+					add(input.files);
+					input.value = "";
+				}}
 				accept={fileExtension || undefined}
 				multiple
 			/>
-			<style>
-				{`.show {
-						display: flex;
-					}
-					.unblur {
-						filter: blur(0);
-					}
-					`}
-			</style>
-		</>
+		</div>
 	);
 }

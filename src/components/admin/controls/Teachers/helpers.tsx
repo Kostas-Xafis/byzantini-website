@@ -1,9 +1,8 @@
 import type { ClassType, Teachers as FullTeachers, Instruments, Locations, TeacherClasses, TeacherInstruments, TeacherLocations } from "@_types/entities";
 import type { APIClient } from "@hooks/useAPIClient.solid";
+import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
-import { Random } from "@lib/random";
 import { API } from "@routes/index.client";
-import { sleep } from "@utilities/sleep";
 import { type Props as InputProps } from "../../../input/Input.solid";
 
 export type TeachersMetadata = { teacher_id: number; type: "cv" | "picture" };
@@ -78,37 +77,37 @@ export const TeachersInputs = (
 			name: "id",
 			label: "Id",
 			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
+			icon: "hash",
 		},
 		fullname: {
 			name: "fullname",
 			label: "Ονοματεπώνυμο",
 			type: "text",
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 		},
 		amka: {
 			name: "amka",
 			label: "ΑΜΚΑ",
 			type: "text",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 		},
 		email: {
 			name: "email",
 			label: "Email",
 			type: "email",
-			iconClasses: "fa-solid fa-envelope",
+			icon: "mail",
 		},
 		telephone: {
 			name: "telephone",
 			label: "Τηλέφωνο",
 			type: "text",
-			iconClasses: "fa-solid fa-phone",
+			icon: "phone",
 		},
 		gender: {
 			name: "gender",
 			label: "Φύλο",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-venus-mars",
+			icon: "gender",
 			multiselectOnce: true,
 			multiselectList: [
 				{ value: 0, label: "Άρρεν", selected: teacher?.gender === "M" },
@@ -127,34 +126,34 @@ export const TeachersInputs = (
 				};
 			}),
 			multiselectOnce: true,
-			iconClasses: "fa-solid fa-user-graduate",
+			icon: "student",
 		},
 		ae_byz: {
 			name: "ae-byz",
 			label: "Αρ.Έγκρισης Βυζαντινής",
 			type: "text",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 			value: teacherRegNumber.find((p) => p.class_id === 0)?.registration_number || "",
 		},
 		ae_par: {
 			name: "ae-par",
 			label: "Αρ.Έγκρισης Παραδοσιακής",
 			type: "text",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 			value: teacherRegNumber.find((p) => p.class_id === 1)?.registration_number || "",
 		},
 		ae_eur: {
 			name: "ae-eur",
 			label: "Αρ.Έγκρισης Ευρωπαϊκής",
 			type: "text",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 			value: teacherRegNumber.find((p) => p.class_id === 2)?.registration_number || "",
 		},
 		priority_byz: {
 			name: "priority_byz",
 			label: "Προτεραιότητα Βυζαντινής",
 			type: "number",
-			iconClasses: "fa-solid fa-arrow-up-9-1",
+			icon: "sort-numeric",
 			value: teacherPriorities.find((p) => p.class_id === 0)?.priority || "",
 			minmax: [1, 1000],
 		},
@@ -162,7 +161,7 @@ export const TeachersInputs = (
 			name: "priority_par",
 			label: "Προτεραιότητα Παραδοσιακής",
 			type: "number",
-			iconClasses: "fa-solid fa-arrow-up-9-1",
+			icon: "sort-numeric",
 			value: teacherPriorities.find((p) => p.class_id === 1)?.priority || "",
 			minmax: [1, 1000],
 		},
@@ -170,7 +169,7 @@ export const TeachersInputs = (
 			name: "priority_eur",
 			label: "Προτεραιότητα Ευρωπαϊκής",
 			type: "number",
-			iconClasses: "fa-solid fa-arrow-up-9-1",
+			icon: "sort-numeric",
 			value: teacherPriorities.find((p) => p.class_id === 2)?.priority || "",
 			minmax: [1, 1000],
 		},
@@ -178,7 +177,7 @@ export const TeachersInputs = (
 			name: "picture",
 			label: "Φωτογραφία",
 			type: "file",
-			iconClasses: "fa-regular fa-file-image",
+			icon: "file-image",
 			fileExtension: "image/*",
 			value: teacher?.picture || undefined,
 		},
@@ -186,7 +185,7 @@ export const TeachersInputs = (
 			name: "cv",
 			label: "Βιογραφικό",
 			type: "file",
-			iconClasses: "fa-solid fa-file-pdf",
+			icon: "file-pdf",
 			fileExtension: ".pdf",
 			value: teacher?.cv || undefined,
 		},
@@ -194,13 +193,13 @@ export const TeachersInputs = (
 			name: "linktree",
 			label: "Σύνδεσμος",
 			type: "text",
-			iconClasses: "fa-solid fa-link",
+			icon: "link",
 		},
 		visible: {
 			name: "visible",
 			label: "Εμφάνιση",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-eye",
+			icon: "eye",
 			multiselectList: [
 				{ value: 1, label: "Ναι", selected: !!teacher?.visible },
 				{ value: 0, label: "Όχι", selected: !teacher?.visible },
@@ -211,7 +210,7 @@ export const TeachersInputs = (
 			name: "online",
 			label: "Ηλεκτρ. Μάθημα",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-laptop",
+			icon: "laptop",
 			multiselectList: [
 				{ value: 1, label: "Ναι", selected: !!teacher?.online },
 				{ value: 0, label: "Όχι", selected: !teacher?.online },
@@ -222,28 +221,28 @@ export const TeachersInputs = (
 			name: "teacherLocations",
 			label: "Τοποθεσίες",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-map-location-dot",
+			icon: "map",
 			multiselectList: multiselectLocations,
 		},
 		teacherClasses: {
 			name: "teacherClasses",
 			label: "Μαθήματα",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-chalkboard-teacher",
+			icon: "teacher",
 			multiselectList: multiselectClasses,
 		},
 		teacherInstrumentsTraditional: {
 			name: "teacherInstrumentsTraditional",
 			label: "Παραδοσιακή Μουσική",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-guitar",
+			icon: "guitar",
 			multiselectList: multiselectInstrumentsTraditional,
 		},
 		teacherInstrumentsEuropean: {
 			name: "teacherInstrumentsEuropean",
 			label: "Ευρωπαϊκή Μουσική",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-guitar",
+			icon: "guitar",
 			multiselectList: multiselectInstrumentsEuropean,
 		},
 	};
@@ -264,8 +263,9 @@ export const fileUpload = async (fileHandler: FileHandler<TeachersMetadata>, api
 		UrlArgs: { id },
 	});
 };
+/** Deletes a REMOVED stored file. A replaced one is left to `fileUpload` (the route deletes it once the new file is stored). */
 export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: APIHook) => {
-	const deletedFile = fileHandler.getDeletedFiles().at(0);
+	const deletedFile = fileHandler.getRemovedFiles().at(0);
 	if (!deletedFile) {
 		return;
 	}
@@ -279,51 +279,11 @@ export const fileDelete = (fileHandler: FileHandler<TeachersMetadata>, apiHook: 
 };
 
 export function picturePreview(file: FileProxy<TeachersMetadata>) {
-	const id = Random.string(12, "hex");
-
-	(async function () {
-		await sleep(10);
-		const src = !file.isProxy() ? await file.toImageUrl() : `/kathigites/picture/${file.getName()}`;
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	})();
-
-	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
+	return filePreviewImage(file, (f) => `/kathigites/picture/${f.getName()}`, { alt: "Φωτογραφία", top: true });
 }
+// The first page of the CV (a stored CV is fetched from its public URL and rendered too).
 export function cvPreview(file: FileProxy<TeachersMetadata>) {
-	const id = Random.string(12, "hex");
-
-	(async function () {
-		const src = await file.toImageUrl();
-		const canvas = document.querySelector(`canvas[data-id="${id}"]`) as HTMLCanvasElement;
-		if (!canvas) return;
-
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
-
-		const img = new Image();
-		img.onload = function () {
-			// Set canvas size to match the container
-			const rect = canvas.getBoundingClientRect();
-			canvas.width = rect.width;
-			canvas.height = rect.height;
-
-			// Calculate scaled dimensions (0.85x scale)
-			const scale = 0.6;
-			const scaledWidth = img.width * scale;
-			const scaledHeight = img.height * scale;
-
-			// Calculate position to align to top-left corner
-			const x = -50; // Left alignment
-			const y = -50; // Top alignment
-
-			// Clear canvas and draw scaled image
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-		};
-		img.src = src;
-	})();
-
-	return <canvas data-id={id} class="w-full overflow-hidden" style="object-fit: cover;" />;
+	return filePreviewImage(file, (f) => `/kathigites/cv/${f.getName()}`, { alt: "Βιογραφικό", top: true });
 }
 
 export const PREFIX = "teachers";

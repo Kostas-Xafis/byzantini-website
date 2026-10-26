@@ -40,6 +40,16 @@
   id lists use `z_IdArray` (never empty). Middleware runs before body validation.
 - Middleware is attached per route via the `APIServer` middleware array
   (`authenticateMiddleware` from `lib/api/routes/middleware/authenticate.ts`).
+  Handlers get the signed-in admin with `currentSession(cookies)` — sessions
+  live in `sys_user_sessions` (one row per device, SHA-256 of the cookie), not
+  on `sys_users`.
+- Admin sign-in (AGENTS.md "Admin authentication"): PBKDF2 passwords
+  (`lib/auth/passwords.ts`), providers Google/Apple/Microsoft via `arctic`
+  (`lib/auth/providers.ts`, enabled by their env vars), matched on
+  `sys_user_identities (provider, subject)` — never by email. OAuth state is
+  the HMAC-signed `oauth_flow` cookie; callbacks land on
+  `src/pages/oauth2callback/[...provider].astro`. `src/middleware.ts` replaces
+  Astro's `checkOrigin` (exempts Apple's cross-site form POST).
 - Validation is Zod, declared on the route instance (`schema` for requests,
   `responseSchema` for the `{ data }` payload).
 
@@ -79,15 +89,47 @@
   `.dev.vars`). Non-prefixed `.env.production` keys are never inlined.
 - Client `VITE_`/`PUBLIC_` vars come from Vite-native `.env` files
   (gitignored).
-- Owner (super-admin) email belongs in `@env/ownerEmail` (`OWNER_EMAIL`,
-  `isOwnerEmail(...)`), backed by `VITE_OWNER_EMAIL` (inlined into client AND
-  server bundles; hardcoded fallback in the module). Owner-only UI (global
-  search, query-logs link, user deletion) must go through this module.
+- Access is role-based (`sys_users.role`: `sysadmin` · `owner` · `secretary`,
+  `lib/auth/roles.ts`). Restricted routes use `requirePermission("<permission>")`
+  after `authenticateMiddleware`; the UI hides features via
+  `Authentication.me().permissions`. Never gate features by email.
+- Every successful data change by a signed-in admin is logged to
+  `sys_activity` («Ιστορικό ενεργειών») — only endpoints listed in
+  `lib/activity/labels.ts`; add new mutating routes there with a Greek label.
+- Unexpected server errors are recorded in `sys_errors` («Σφάλματα»,
+  `/admin/errors`, sysadmin) via `APIServer.onServerError`; the emails worker's
+  cron emails the sysadmins a digest (`services/emailWorker/src/errorDigest.ts`).
+  `GET /api/health` is the uptime-monitor target.
+- A 401 in the dashboard sends the admin to `/login?…&expired=1` and back
+  (`lib/auth/sessionExpiry.client.ts`); password reset is
+  `/login/forgot` → `/login/reset/<token>` (`Authentication.*PasswordReset`).
+- Admin invites store only the link's SHA-256 (`sys_user_register_links.id`);
+  pending ones are listed, resent and revoked under the admins table
+  (`SysUsers.getInvites` / `resendInvite` / `revokeInvite`).
+- Admin colours are tokens in `src/styles/global.css` (`bg-surface`,
+  `text-ink`, `border-line`, `bg-brand`, `text-accent-ink`, `shadow-shade`,
+  `text-danger`, …, dark values on `.dark`) — use them instead of
+  `bg-white dark:bg-dark` pairs or new hex values. All of `src/components/admin`
+  is on them and the `html.dark .bg-white` patch is gone, so a new `bg-white`
+  stays white in dark mode (brand logos included). Status colours,
+  `AdminNav` and the shared `input/*` controls keep their own `dark:` pairs.
+- Tailwind classes are canonical (what IntelliSense suggests: `h-dvh`, `z-1000`,
+  `bg-linear-to-r`, `important!` at the end), not arbitrary values; its
+  `cssConflict` warnings on `dark:`/`group-*` pairs are false positives.
+- Icons: the project's own inline-SVG set in `lib/icons.ts` (typed `IconName`),
+  rendered with `<Icon name="…" />` (`src/components/other/Icon.solid.tsx` /
+  `Icon.astro`) or `createIcon()` for hand-built DOM. No Font Awesome / icon
+  fonts; new glyphs are drawn on the same 24×24 grid.
 - Storage abstraction is `Bucket` (`lib/bucket/index.ts`): always the
   Cloudflare R2 binding `S3_BUCKET` — real R2 in production, miniflare-emulated
   locally (`.wrangler/state/v3/r2`, wiped+seeded from prod by
   `bun run replicate:bucket`; restart the dev server afterwards). No
-  `bucket:serve` / HTTP store anymore.
+  `bucket:serve` / HTTP store anymore. The public catch-all serves only the
+  prefixes in `lib/bucket/publicFiles.ts`; inline-script JSON uses
+  `jsonForScript` (`lib/utilities/safeJson.ts`). Security headers + the
+  dashboard's strict CSP live in `lib/utilities/securityHeaders.ts` (mirrored
+  in `public/_headers`); new third-party origins in the admin go into
+  `STRICT_CSP`.
 - **Worker↔worker calls use service bindings, never HTTP URLs.** The site's
   `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`) and
   `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
@@ -140,7 +182,7 @@
   alias, called by path); `typescript` stays 6.0.3 for `astro check` and
   editors (TS 7 has no classic JS API). Keep tsconfigs TS 7-valid.
 - Database maintenance helpers: `bun run dev:clean` removes the rows the API
-  suite writes to the local dev DB.
+  and e2e suites write to the local dev DB.
 - Fees (docs/FEES.md): «Υπό Κατάταξη» is the enrollment `evaluation` status, not
   a class year; prices come from versioned catalogs = settings + price rules
   (`fee_catalogs` + `fee_catalog_rules`, `FeeCatalog.*`),
@@ -148,12 +190,21 @@
   enrollment write. `bun run fees:backfill` (dry run by default, `--apply`)
   fills the 2026-2027 fees.
 - Pupils that still need attention are reviewed in the admin Μαθητολόγιο page
-  (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»).
+  (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου», deep link
+  `/admin/pupils?review=1`). The «Αρχική» dashboard's attention tiles come from
+  `Pupils.dashboardSummary` (review count, unpaid fees of the current year, new
+  online enrollments since the admin's previous visit).
 - Tests use API helpers in `tests/testHelpers.ts` (`useTestAPI(...)`); env comes
   from `tests/.env.test`, 10s per-test timeout; they need the dev server (and,
   for the sysusers suite, which sends the invite email, the emails worker
   running locally on 8788; for the pdf suite, the PDF worker on 8787 started
   before the dev server).
+- End-to-end smoke tests: `bun run e2e` (Playwright on Bun, `e2e/`, not part of
+  `bun run test`; Chromium at 1280 and 375 px). Needs the dev server
+  (`E2E_BASE_URL`, default `http://e2e.localhost:4321`, its own cookie host), the emails worker and
+  tests/.env.test; browsers via `bunx playwright install chromium`. Browser
+  sign-ins use throwaway `e2e.*@example.com` admins that the fixtures delete;
+  see `e2e/README.md`.
 - PDF output is checked against golden SHA-256 hashes
   (`services/pdfWorker/tests/fixtures/golden.json`, dummy fixtures only) by the
   worker suite and `tests/api/pdf.test.ts`. Regenerate only after an intended

@@ -4,6 +4,7 @@ import { createAlert, pushAlert } from "../Alert.solid";
 import { For, type Setter } from "solid-js";
 import { findHighlightRanges } from "./searchMatch";
 import { SortDirection } from "./Table.solid";
+import Icon from "@components/other/Icon.solid";
 
 export type CellValue = "string" | "number" | "date" | "link" | "boolean" | "copy";
 
@@ -155,7 +156,7 @@ export default function Row(props: Props) {
 				class={
 					"row max-sm:text-sm" +
 					(header
-						? " header absolute top-0 left-0 right-0 shadow-md shadow-gray-500 dark:shadow-gray-700 rounded-t-xl before:content-[none] hover:shadow-gray-500 dark:hover:shadow-gray-700 before:!bg-white dark:before:!bg-[rgb(26_26_26)] border-b-2 border-b-red-900 dark:border-b-red-800"
+						? " header absolute top-0 left-0 right-0 rounded-t-2xl before:content-[none] bg-surface-muted text-accent-ink font-bold border-b-2 border-b-brand"
 						: "")
 				}>
 				{hasSelectBox && (
@@ -167,13 +168,9 @@ export default function Row(props: Props) {
 							type="button"
 							aria-label={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
 							title={header ? "Επιλογή όλων των εγγραφών" : "Επιλογή εγγραφής"}
-							class="rounded focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300">
-							<i
-								aria-hidden="true"
-								class={"selectBox fa-regular fa-square group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
-							<i
-								aria-hidden="true"
-								class={"selectBox fa-solid fa-square-check group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")}></i>
+							class="rounded focus-visible:outline-2 focus-visible:outline-accent-ink">
+							<Icon name="checkbox" class={"selectBox group-[:is(.selected)]/checkbox:hidden" + (header ? " text-2xl" : "")} />
+							<Icon name="checkbox-checked" class={"selectBox group-[:is(:not(.selected))]/checkbox:hidden" + (header ? " text-2xl" : "")} />
 						</button>
 					</div>
 				)}
@@ -186,7 +183,7 @@ export default function Row(props: Props) {
 							if (type === "link") {
 								return (
 									<a href={item as string} target="_blank" class="grid grid-cols-[auto_auto] place-items-center underline underline-offset-1">
-										<i class="fa-solid fa-up-right-from-square text-red-900 dark:text-red-300"></i>
+										<Icon name="external-link" class="text-accent-ink" />
 									</a>
 								);
 							}
@@ -197,7 +194,7 @@ export default function Row(props: Props) {
 											type="button"
 											class="text-xl leading-none transition-transform duration-150 hover:scale-110 focus-visible:outline-hidden"
 											onClick={(e) => copyCellValue(e, String(item))}>
-											<i class="fa-regular fa-copy text-red-900 dark:text-red-300"></i>
+											<Icon name="copy" class="text-accent-ink" />
 											<span class="sr-only">Αντιγραφή αναγνωριστικού</span>
 										</button>
 									</div>
@@ -233,22 +230,28 @@ export default function Row(props: Props) {
 								class={
 									"cell" +
 									(header
-										? " group/head grid h-full items-center data-[asc]:bg-red-900 data-[desc]:bg-red-900 dark:data-[asc]:bg-red-800 dark:data-[desc]:bg-red-800 data-[asc]:text-white data-[desc]:text-white"
+										? " group/head grid h-full items-center cursor-pointer select-none rounded-md hover:bg-accent-soft data-asc:bg-brand data-desc:bg-brand data-asc:text-brand-ink data-desc:text-brand-ink"
 										: "")
 								}
 								data-col-ind={header && colIndex()}
 								onClick={onClickSort}>
 								{header ? (
 									<>
-										<span class="max-sm:text-base group-data-[asc]/head:pr-[1.5ch] group-data-[desc]/head:pr-[1.5ch]">{item}</span>
-										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-up hidden group-data-[asc]/head:flex"></i>
-										<i class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] fa-solid fa-chevron-down hidden group-data-[desc]/head:flex"></i>
+										<span class="max-sm:text-base group-data-asc/head:pr-[1.5ch] group-data-desc/head:pr-[1.5ch]">{item}</span>
+										<Icon
+											name="chevron-up"
+											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-asc/head:flex"
+										/>
+										<Icon
+											name="chevron-down"
+											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-desc/head:flex"
+										/>
 									</>
 								) : highlightedParts ? (
 									<>
 										{highlightedParts.map((part) =>
 											part.highlight ? (
-												<mark class="rounded-[2px] bg-yellow-300/80 px-[1px] dark:bg-yellow-500/80">{part.text}</mark>
+												<mark class="rounded-xs bg-yellow-300/80 px-px dark:bg-yellow-500/80">{part.text}</mark>
 											) : (
 												part.text
 											),

@@ -14,6 +14,7 @@ import { createStore } from "solid-js/store";
 import Input, { type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
 import Spinner from "../other/Spinner.solid";
+import Icon from "@components/other/Icon.solid";
 
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
@@ -29,7 +30,7 @@ const genericInputs: Record<
 		type: "text",
 		value: "000",
 		required: true,
-		iconClasses: "fa-solid fa-id-card",
+		icon: "id-card",
 		tooltip: {
 			message: [
 				"Για νέες εγγραφές: Ο αριθμός μητρώου είναι 000. ",
@@ -45,7 +46,7 @@ const genericInputs: Record<
 		inputMode: "numeric",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-id-card",
+		icon: "id-card",
 		tooltip: {
 			message: ["Συμπληρώνετε τον Αριθμό Μητρώου Κοινωνικής Ασφάλισης (ΑΜΚΑ) σας.", "Ο ΑΜΚΑ αποτελείται από 11 ψηφία."],
 			position: isPhone ? "top" : "right",
@@ -57,7 +58,7 @@ const genericInputs: Record<
 		autocomplete: "family-name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
+		icon: "user",
 		tooltip: {
 			message: ["Συμπληρώνετε τα στοιχεία σας με πεζά γράμματα και το πρώτο κεφαλαίο (π.χ. Παπαδόπουλος Αντώνης)."],
 			position: isPhone ? "top" : "left",
@@ -69,7 +70,7 @@ const genericInputs: Record<
 		autocomplete: "given-name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
+		icon: "user",
 		tooltip: {
 			message: ["Συμπληρώνετε τα στοιχεία σας όπως ακριβώς αναγράφονται στην ταυτότητά σας."],
 			position: isPhone ? "top" : "right",
@@ -80,14 +81,14 @@ const genericInputs: Record<
 		name: "fathers_name",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-user",
+		icon: "user",
 	},
 	telephone: {
 		label: "Τηλέφωνο",
 		name: "telephone",
 		autocomplete: "tel",
 		type: "tel",
-		iconClasses: "fa-solid fa-phone",
+		icon: "phone",
 	},
 	cellphone: {
 		label: "Κινητό",
@@ -95,7 +96,7 @@ const genericInputs: Record<
 		autocomplete: "tel",
 		type: "tel",
 		required: true,
-		iconClasses: "fa-solid fa-mobile-screen",
+		icon: "smartphone",
 	},
 	email: {
 		label: "Email",
@@ -103,14 +104,14 @@ const genericInputs: Record<
 		autocomplete: "email",
 		type: "email",
 		required: true,
-		iconClasses: "fa-solid fa-envelope",
+		icon: "mail",
 	},
 	birth_date: {
 		label: "Ημερομηνία Γέννησης",
 		name: "birth_date",
 		type: "date",
 		required: true,
-		iconClasses: "fa-regular fa-calendar-days",
+		icon: "calendar",
 	},
 	road: {
 		label: "Οδός",
@@ -118,14 +119,14 @@ const genericInputs: Record<
 		autocomplete: "street-address",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-location-dot",
+		icon: "map-pin",
 	},
 	number: {
 		label: "Αριθμός",
 		name: "number",
 		type: "number",
 		required: true,
-		iconClasses: "fa-solid fa-hashtag",
+		icon: "hash",
 	},
 	tk: {
 		label: "Τ.Κ.",
@@ -134,7 +135,7 @@ const genericInputs: Record<
 		inputMode: "numeric",
 		type: "number",
 		required: true,
-		iconClasses: "fa-solid fa-hashtag",
+		icon: "hash",
 	},
 	region: {
 		label: "Δήμος/Περιοχή",
@@ -142,14 +143,14 @@ const genericInputs: Record<
 		autocomplete: "address-level2",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-tree-city",
+		icon: "city",
 	},
 	registration_year: {
 		label: "Σχολικό Έτος",
 		name: "registration_year",
 		type: "text",
 		required: true,
-		iconClasses: "fa-solid fa-calendar-days",
+		icon: "calendar",
 		disabled: true,
 		blurDisabled: false,
 		// The school year being registered for (rolls over on 1 July — see lib/pupils/years.ts).
@@ -197,7 +198,7 @@ const inputsByMusicType = (musicType: MusicType, store: APIResourceStore, regDat
 			name: "teacher_id",
 			type: "select",
 			required: true,
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 			selectList: teachers.map((t) => t.fullname),
 			valueList: teachers.map((t) => t.id),
 			value: regData.teacher_id,
@@ -221,7 +222,7 @@ const inputsByMusicType = (musicType: MusicType, store: APIResourceStore, regDat
 		instrumentsInput = {
 			label: "Όργανα-Μαθήματα",
 			name: "instruments-all",
-			iconClasses: "fa-solid fa-guitar",
+			icon: "guitar",
 			type: "select",
 			required: true,
 			selectList: instruments?.map((i) => i.name),
@@ -236,7 +237,7 @@ const inputsByMusicType = (musicType: MusicType, store: APIResourceStore, regDat
 		name: "class_year",
 		type: "select",
 		required: true,
-		iconClasses: "fa-solid fa-graduation-cap",
+		icon: "graduation-cap",
 		selectList: classYearsByMusicType[musicType],
 		valueLiteral: true,
 		value: regData.class_year || "",
@@ -390,8 +391,8 @@ function emptyRequiredFields(form: HTMLFormElement) {
 function OutOfWindowNotice(props: { schoolYear: string; class?: string }) {
 	return (
 		<p role="note" class={"rounded-md border border-amber-300 bg-amber-50 px-4 py-3 font-didact text-base text-amber-950 " + (props.class ?? "")}>
-			<i class="fa-solid fa-circle-info mr-2" aria-hidden="true"></i>Η επίσημη περίοδος εγγραφών για το σχολικό έτος {props.schoolYear} είναι από{" "}
-			{REGISTRATION_WINDOW_LABEL}. Αιτήσεις που υποβάλλονται εκτός αυτής της περιόδου γίνονται δεκτές και εξετάζονται από τη Γραμματεία της Σχολής.
+			<Icon name="info" class="mr-2" />Η επίσημη περίοδος εγγραφών για το σχολικό έτος {props.schoolYear} είναι από {REGISTRATION_WINDOW_LABEL}. Αιτήσεις
+			που υποβάλλονται εκτός αυτής της περιόδου γίνονται δεκτές και εξετάζονται από τη Γραμματεία της Σχολής.
 		</p>
 	);
 }
@@ -721,7 +722,9 @@ export function RegistrationForm() {
 		console.log("[onFormInputsChange] triggered and with value: ", el.value);
 		let mutation: Partial<PupilRegistrationForm>;
 		if (el.name === "class_year") {
-			document.querySelector("[name='teacher_id']")?.dispatchEvent(customEvent("enable_input", !(el.value === "Υπό Κατάταξη")));
+			// Only this form's teacher field (its own Input listens for the event).
+			const teacherSelect = el.form ? el.form.querySelector("[name='teacher_id']") : document.querySelector("[name='teacher_id']");
+			teacherSelect?.dispatchEvent(customEvent("enable_input", !(el.value === "Υπό Κατάταξη")));
 			mutation = { class_year: el.value };
 			// Reset the teacher_id also
 			if (el.value === "Υπό Κατάταξη") {
@@ -745,12 +748,12 @@ export function RegistrationForm() {
 				{/* MAIN PAGE - USER HASN'T SELECTED A FORM YET (or went Back to the picker) */}
 				<div
 					id="registrationPicker"
-					class="w-full max-sm:w-[calc(100dvw_-_4.25rem)] h-full max-sm:h-[calc(100dvh_-_4.25rem)] place-items-center font-didact">
+					class="w-full max-sm:w-[calc(100dvw-4.25rem)] h-full max-sm:h-[calc(100dvh-4.25rem)] place-items-center font-didact">
 					<h1 class="sr-only">Εγγραφές στη Σχολή Βυζαντινής & Παραδοσιακής Μουσικής</h1>
 					<div id="firstSelect" class="h-full w-full flex flex-row place-items-center overflow-hidden max-sm:flex-col">
 						<For each={btns}>
 							{([str, type]) => (
-								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,_black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
+								<div class="group/select relative h-full w-full grid before:absolute before:-z-10 before:inset-0 before:bg-[radial-gradient(transparent_-30%,black)] before:transition-transform before:duration-500 hover:before:scale-125 focus-within:before:scale-125 overflow-hidden">
 									<div
 										id={type}
 										class="glass w-max place-self-center rounded-lg shadow-gray-700 transition-colors duration-500 ease-in-out group-hover/select:bg-red-900/80 group-hover/select:shadow-md group-focus-within/select:bg-red-900/80 group-focus-within/select:shadow-md">
@@ -831,7 +834,7 @@ export function RegistrationForm() {
 										role="alert"
 										data-submit-error
 										class="col-span-full justify-self-center max-w-[60ch] rounded-md bg-red-100 px-4 py-3 font-didact text-base text-red-900">
-										<i class="fa-solid fa-circle-exclamation mr-2" aria-hidden="true"></i>
+										<Icon name="alert-circle" class="mr-2" />
 										{submitError()}
 									</p>
 								</Show>
@@ -843,7 +846,7 @@ export function RegistrationForm() {
 										</div>
 									}>
 									<button
-										class="col-span-full w-max font-didact place-self-center text-[1.75rem] font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
+										class="col-span-full w-max font-didact place-self-center text-2.5xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg group-[:is(.animate-shake)]/form:from-red-600 group-[:is(.animate-shake)]/form:to-red-700"
 										type="submit">
 										Εγγραφή
 									</button>
@@ -896,7 +899,7 @@ export function RegistrationForm() {
 
 									<Show when={lookupError()}>
 										<p role="alert" class="rounded-md bg-red-100 px-3 py-2 font-didact text-sm text-red-900">
-											<i class="fa-solid fa-circle-exclamation mr-2" aria-hidden="true"></i>
+											<Icon name="alert-circle" class="mr-2" />
 											{lookupError()}
 										</p>
 									</Show>
@@ -910,7 +913,7 @@ export function RegistrationForm() {
 										}>
 										<button
 											type="submit"
-											class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
+											class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
 											Ανάκτηση στοιχείων
 										</button>
 									</Show>
@@ -937,7 +940,7 @@ export function RegistrationForm() {
 					</div>
 					<nav
 						id="registrationSelect"
-						class={"fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-[1001]" + (step() === "form" ? "" : " hidden")}
+						class={"fixed left-1/2 bottom-[max(1.25rem,2.5vh)] -translate-x-1/2 z-1001" + (step() === "form" ? "" : " hidden")}
 						aria-label="Κατηγορίες μαθημάτων">
 						<div class="flex items-center gap-[0.2rem] rounded-full bg-red-900/90 backdrop-blur-md px-[0.4rem] py-[0.4rem] max-sm:px-[0.3rem] max-sm:py-[0.3rem] shadow-[0_12px_32px_-8px_rgba(127,29,29,0.65)]">
 							<For each={btns}>

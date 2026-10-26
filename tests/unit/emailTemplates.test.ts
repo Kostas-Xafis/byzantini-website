@@ -78,3 +78,13 @@ test("the Β' Έτος Διπλώματος variant resolves to the byzantine fi
 	expect(siteTemplates.get("byzantineBDiploma")).toBe("epitixis/epitixis_eggrafi_byzantine_b_diploma.html");
 	expect(siteTemplates.get("byzantineE")).toBe("epitixis/epitixis_eggrafi_byzantine_e.html");
 });
+
+test("the admin emails (invite, password reset) name templates the worker builds", () => {
+	const routes = ["lib/api/routes/sysusers.ts", "lib/api/routes/authentication.ts"].map((file) => readFileSync(path.join(repoRoot, file), "utf8"));
+	const names = routes.flatMap((source) => [...source.matchAll(/htmlTemplateName:\s*"([^"]+)"/g)].map((m) => m[1]!));
+	expect(names).toEqual(["sysuser_register_link.html", "sysuser_password_reset.html"]);
+	for (const name of names) {
+		expect(registryTemplates.has(name), `${name} is not in the worker's registry`).toBe(true);
+		expect(existsSync(path.join(builtTemplatesDir, name)), `${name} was never built`).toBe(true);
+	}
+});

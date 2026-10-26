@@ -1,41 +1,48 @@
-import { isOwnerEmail } from "@env/ownerEmail";
 import { A, useLocation, type RouterProps } from "@solidjs/router";
 import { sleep } from "@utilities/sleep";
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import type { Permission } from "@lib/auth/roles";
+import { useCurrentUser } from "./currentUser";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 
-type NavLink = { name: string; url: string; force: boolean; icon: string };
+/** `permission`: only admins whose role has it see the link (lib/auth/roles.ts). */
+type NavLink = { name: string; url: string; force: boolean; icon: IconName; permission?: Permission };
 type NavSection = { title: string | null; links: NavLink[] };
 
 const sections: NavSection[] = [
 	{
 		title: null,
-		links: [{ name: "Αρχική", url: "/admin", force: false, icon: "fa-solid fa-house" }],
+		links: [{ name: "Αρχική", url: "/admin", force: false, icon: "home" }],
 	},
 	{
 		title: "Σχολή",
 		links: [
-			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "fa-solid fa-clipboard-list" },
-			{ name: "Μαθητολόγιο", url: "/admin/pupils", force: false, icon: "fa-solid fa-address-book" },
-			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "fa-solid fa-chalkboard-user" },
-			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "fa-solid fa-location-dot" },
-			{ name: "Βιβλία", url: "/admin/books", force: false, icon: "fa-solid fa-book" },
-			{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false, icon: "fa-solid fa-bullhorn" },
+			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "clipboard-list" },
+			{ name: "Μαθητολόγιο", url: "/admin/pupils", force: false, icon: "address-book" },
+			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "teacher" },
+			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "map-pin" },
+			{ name: "Βιβλία", url: "/admin/books", force: false, icon: "book" },
+			{ name: "Ανακοινώσεις", url: "/admin/announcements", force: false, icon: "megaphone" },
 		],
 	},
 	{
 		title: "Οικονομικά",
 		links: [
-			{ name: "Οφειλές Μαθητών", url: "/admin/payments", force: false, icon: "fa-solid fa-hand-holding-dollar" },
-			{ name: "Οφειλές Σχολής", url: "/admin/payoffs", force: false, icon: "fa-solid fa-file-invoice-dollar" },
+			{ name: "Οφειλές Μαθητών", url: "/admin/payments", force: false, icon: "hand-coins" },
+			{ name: "Οφειλές Σχολής", url: "/admin/payoffs", force: false, icon: "invoice" },
 		],
 	},
 	{
 		title: "Σύστημα",
 		links: [
-			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "fa-solid fa-users-gear" },
-			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "fa-solid fa-database" },
-			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "fa-solid fa-gear" },
-			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "fa-solid fa-right-from-bracket" },
+			{ name: "Ο λογαριασμός μου", url: "/admin/account", force: false, icon: "user-shield" },
+			{ name: "Διαχειριστές", url: "/admin/sysusers", force: false, icon: "users-gear" },
+			{ name: "Ιστορικό ενεργειών", url: "/admin/activity", force: false, icon: "history", permission: "activityLog" },
+			{ name: "Καταγραφή Ερωτημάτων", url: "/admin/query-logs", force: false, icon: "database", permission: "queryLogs" },
+			{ name: "Σφάλματα", url: "/admin/errors", force: false, icon: "warning", permission: "queryLogs" },
+			{ name: "Ρυθμίσεις", url: "/admin/settings", force: false, icon: "settings" },
+			{ name: "Έξοδος", url: "/admin/logout", force: true, icon: "log-out" },
 		],
 	},
 ];
@@ -71,12 +78,7 @@ const measureIndicator = (list: HTMLDivElement | undefined) => {
 };
 
 export default function AdminNav(props: RouterProps) {
-	type StoredSysUser = {
-		email?: string | null;
-		avatar_url?: string | null;
-	};
-	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as StoredSysUser;
-	const isOwner = () => isOwnerEmail(user.email);
+	const user = useCurrentUser();
 
 	const location = useLocation();
 
@@ -86,7 +88,7 @@ export default function AdminNav(props: RouterProps) {
 		sections
 			.map((section) => ({
 				...section,
-				links: section.links.filter((link) => link.url !== "/admin/query-logs" || isOwner()),
+				links: section.links.filter((link) => !link.permission || user()?.permissions[link.permission] === true),
 			}))
 			.filter((section) => section.links.length > 0),
 	);
@@ -122,26 +124,28 @@ export default function AdminNav(props: RouterProps) {
 				<div class="relative grid justify-items-center content-start gap-y-2 font-anaktoria">
 					<a
 						href="/"
-						class="w-[70px] max-sm:w-[50px] row-span-full aspect-square z-20 relative"
+						class="w-17.5 max-sm:w-12.5 row-span-full aspect-square z-20 relative"
 						onClick={(e) => {
 							e.preventDefault(); // prevent router from changing url
 							forceURLChange("/");
 						}}>
 						<img
-							src="/logo.png"
+							src="/logo.svg"
 							alt="Λογότυπο Σχολής"
 							class="h-full w-full object-contain brightness-0 invert contrast-125 drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
 						/>
 					</a>
 					{/* <!-- 50% width - 40px (50% of img) - 2px offset --> */}
-					<div class="w-[70px] max-sm:w-[50px] aspect-square absolute top-[2px] blur-xl opacity-40 z-10 left-[calc(50%_-_35px_-_2px)] max-sm:left-[calc(50%_-_26px)] max-sm:top-[1px] pointer-events-none">
-						<img src="/logo.png" alt="" aria-hidden="true" class="h-full w-full object-contain brightness-0" />
+					<div class="w-17.5 max-sm:w-12.5 aspect-square absolute top-0.5 blur-xl opacity-40 z-10 left-[calc(50%-35px-2px)] max-sm:left-[calc(50%-26px)] max-sm:top-px pointer-events-none">
+						<img src="/logo.svg" alt="" aria-hidden="true" class="h-full w-full object-contain brightness-0" />
 					</div>
-					<div class="max-sm:hidden w-[170px] px-2 flex items-center justify-center gap-2">
-						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-[10px] text-red-900 dark:text-red-100 shadow-md shadow-black/30">
-							{user.avatar_url ? <img src={user.avatar_url} alt="Avatar" class="h-full w-full object-cover" /> : <i class="fa-solid fa-user"></i>}
+					<div class="max-sm:hidden w-42.5 px-2 flex items-center justify-center gap-2">
+						<div class="h-7 w-7 shrink-0 rounded-full border border-red-100 bg-red-200 dark:bg-red-900 overflow-hidden grid place-items-center text-2xs text-red-900 dark:text-red-100 shadow-md shadow-black/30">
+							<Show when={user()?.avatar_url} fallback={<Icon name="user" />}>
+								{(avatar) => <img src={avatar()} alt="" referrerPolicy="no-referrer" class="h-full w-full object-cover" />}
+							</Show>
 						</div>
-						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{user.email}</p>
+						<p class="text-left text-sm leading-4 text-red-100 dark:text-red-200 break-all">{user()?.email}</p>
 					</div>
 				</div>
 				<div ref={desktopListEl} class="relative h-full grid auto-rows-min grid-cols-1 grid-flow-row self-start pt-4 content-start max-sm:hidden">
@@ -167,7 +171,7 @@ export default function AdminNav(props: RouterProps) {
 											aria-current={isActive(link.url) ? "page" : undefined}
 											class={linkBaseClasses + (isActive(link.url) ? linkActiveClasses : "")}
 											onClick={(link.force && (() => forceURLChange(link.url))) || undefined}>
-											<i class={`${link.icon} w-5 text-center text-base text-red-200/90`} aria-hidden="true"></i>
+											<Icon name={link.icon} class="w-5 text-base text-red-200/90" />
 											<p class="font-bold font-anaktoria text-lg text-red-50">{link.name}</p>
 										</A>
 									)}
@@ -183,16 +187,19 @@ export default function AdminNav(props: RouterProps) {
 					<button
 						type="button"
 						aria-controls="burgerNavMenu"
-						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-has-checked/nav:translate-x-[calc(50%_-_7px)]">
+						class="relative self-center w-max text-center text-xl leading-6 font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] transition-transform group-has-checked/nav:translate-x-[calc(50%-7px)]">
 						{/* 7px = 1/2 of 14px = 0.875rem */}
-						<i class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%_-_0.5rem)] fa-solid fa-bars text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"></i>
+						<Icon
+							name="menu"
+							class="absolute text-sm top-[50%] translate-y-[-50%] left-0 translate-x-[calc(-100%-0.5rem)] text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]"
+						/>
 						<span class="opacity-100 transition-opacity group-has-checked/nav:opacity-0 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.75)]">
 							{currentPage()}
 						</span>
 					</button>
 					<div
 						id="burgerNavMenu"
-						class="flex invisible opacity-0 pointer-events-none transition-[opacity,visibility] duration-300 group-has-checked/nav:visible group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto fixed top-[3.5rem] left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 gap-0.5 overflow-y-auto flex-col w-full z-[5000]">
+						class="flex invisible opacity-0 pointer-events-none transition-[opacity,visibility] duration-300 group-has-checked/nav:visible group-has-checked/nav:opacity-100 group-has-checked/nav:pointer-events-auto fixed top-14 left-0 right-0 max-h-[calc(100dvh-3.5rem)] h-dvh bg-red-900 dark:bg-red-950 gap-0.5 overflow-y-auto flex-col w-full z-5000">
 						<For each={visibleSections()}>
 							{(section) => (
 								<div>
@@ -215,7 +222,7 @@ export default function AdminNav(props: RouterProps) {
 												}
 												href={link.url}>
 												<p class="px-2 font-bold font-anaktoria text-red-50 whitespace-nowrap drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)] text-center text-xl">
-													<i class={`${link.icon} mr-2 text-base text-red-200/90`} aria-hidden="true"></i>
+													<Icon name={link.icon} class="mr-2 text-base text-red-200/90" />
 													{link.name}
 												</p>
 											</A>

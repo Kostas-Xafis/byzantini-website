@@ -72,6 +72,7 @@ Core loop:
 | Worker gates | `bun run services:typecheck` · `bun run services:test` | both workers' typechecks; the pdfWorker's golden-PDF suite and the emailWorker's offline campaign suite (never sends) |
 | Tests | `bun run test` | site suite (`tests/` only); needs the dev server (the sysusers suite also needs the emails worker running locally — `createRegisterLink` sends the invite; the pdf suite needs the PDF worker started **before** the dev server); env from tests/.env.test, 10s per test timeout |
 | Format | `bun run format` | prettier (tabs, width 160) over source dirs — see note below |
+| E2E smoke tests | `bun run e2e` | Playwright (Chromium, 1280 + 375 px) in `e2e/`, **not** part of `bun run test`; needs the dev server (`E2E_BASE_URL`, default `http://e2e.localhost:4321` — a host of its own, since cookies ignore the port), the emails worker and tests/.env.test; once per machine `bunx playwright install chromium`; see e2e/README.md |
 | Format check | `bun run format:check` | fails on the existing repo; use on files you touch only |
 
 Database tooling (wrangler D1 commands — local dev database is the miniflare
@@ -85,7 +86,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Export prod DB | `bun run db:replicate` | `wrangler d1 export` (remote) |
 | Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
-| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` writes to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions) and re-derives `total_enrollments`; dry-run by default |
+| Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins, activity-log rows of throwaway `@example.com` admins / test fixtures) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this
@@ -197,8 +198,9 @@ or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
 - **Wrangler persistence is config-relative**: with `--config dist/server/wrangler.json`
   local state lands in `dist/server/.wrangler` unless `--persist-to .wrangler/state`
   is passed (`scripts/cf.ts` passes it).
-- **Astro `security.checkOrigin`** rejects form/multipart POSTs without an
-  `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
+- **Cross-site form check** (Astro's `security.checkOrigin` rule, now applied by
+  `src/middleware.ts` so Apple's callback can be exempted) rejects form/multipart
+  POSTs without an `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
 - Running `bun run build` while `bun run dev` is up repoints
   `.wrangler/deploy/config.json` at `dist/server`; restart the dev server after.
 - `bun run astro-check` reports 15 pre-existing errors (Links shareImage alt,
@@ -249,9 +251,129 @@ The person data that used to live on `registrations` is split into two tables
   updateEnrollment/deleteEnrollments`) — never write `total_payment` of a
   pinned enrollment by hand except as a manual price (`fee_manual`).
 - The secretaries resolve the remaining review cases in the admin
-  Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»);
-  `bun run dev:clean` removes the fixtures the API suite writes to the local
-  dev DB.
+  Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»;
+  deep link `/admin/pupils?review=1`); `bun run dev:clean` removes the
+  fixtures the API suite writes to the local dev DB.
+- **«Αρχική» dashboard** (`TotalsTable.solid.tsx`): «Χρειάζονται προσοχή»
+  tiles from `Pupils.dashboardSummary` (`GET /pupils/dashboard/<since>`, one
+  statement): pupils to review, unpaid fees of the current school year
+  (`payment_amount < total_payment`), public-form enrollments after `since`.
+  `since` is the admin's previous visit, remembered per device in
+  `localStorage` (`admin-dashboard-visits`; a new visit starts after 30 min
+  away, the first one counts the last 7 days).
+
+## Admin authentication (sign-in, sessions, providers)
+
+Migration `0008_auth_identities_sessions.sql`; code in `lib/auth/` (server-only
+except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
+
+- **Sessions** (`lib/auth/sessions.ts`): one `sys_user_sessions` row per
+  device; the HttpOnly `session_id` cookie holds a random token and the table
+  stores only its **SHA-256** (`id`). Signing in on a second device never
+  signs the first out; logout ends only the current device. A per-isolate
+  cache (60 s) keeps lookups cheap — a revoked session dies everywhere within
+  that window. `sys_users` no longer has `session_id`/`session_exp_date`;
+  routes get the admin with `currentSession(cookies)` (`middleware/authenticate.ts`),
+  never by querying a session column.
+- **Passwords** (`lib/auth/passwords.ts`): PBKDF2-SHA256, format
+  `pbkdf2$<iterations>$<salt>$<hash>` (workerd caps iterations at 100 000).
+  Legacy `<sha256>:<salt>` hashes (SHA-256 over password + `SECRET` + salt)
+  still verify and are re-hashed on the next sign-in — **do not rotate
+  `SECRET` until every admin has signed in once** after 0008, or their legacy
+  hashes stop verifying. `password = ''` means "no password"
+  (provider-only admin). New passwords: ≥ 8 chars (`z_NewPassword`).
+- **Providers** (`lib/auth/providers.ts`, on `arctic`): Google, Apple,
+  Microsoft — each enabled only when its env vars are set (`types/env.ts`).
+  Accounts are matched on `sys_user_identities (provider, subject)`, never on
+  the email the provider reports (Microsoft's `email` is unverified; Apple may
+  give a private-relay address). The only email match left is the one-time
+  adoption of **pre-0008 Google admins** (`sys_users.google_email_match = 1`,
+  verified Google email); connecting or disconnecting Google clears it.
+- **OAuth flow**: `Authentication.oauthStart` (`intent`: `login` | `signup`
+  with an invite `link` | `link` = connect to the signed-in admin) sets the
+  HMAC-signed `oauth_flow` cookie (`lib/auth/oauthFlow.ts`; carries state,
+  PKCE verifier, admin id, redirect) → provider →
+  `src/pages/oauth2callback/[...provider].astro` (`/oauth2callback` for
+  Google — the URI registered in Google Cloud — `/oauth2callback/<id>` for the
+  others) → in-process `Authentication.oauthCallback` (`dispatchAPI` in
+  `useAPI.server.ts` forwards its `Set-Cookie`). The page continues with a
+  script, not a 302: the session cookie is `SameSite=Strict` and would not be
+  sent on a redirect chain that started on the provider's site. Apple returns
+  with a **cross-site form POST**, so Astro's `security.checkOrigin` is off and
+  `src/middleware.ts` (`lib/utilities/originCheck.ts`) applies the same rule
+  with that one path exempted; Apple's flow cookie is `SameSite=None; Secure`.
+- **«Ο λογαριασμός μου»** (`/admin/account`, `AccountPage.solid.tsx`): connect /
+  disconnect providers (the last way in cannot be removed), set or change the
+  password (only the new one, twice — the current password is never asked or
+  shown, by owner decision), list and sign out devices. A password change signs out every other device. The signed-in admin
+  in the UI comes from `Authentication.me` (`src/components/admin/currentUser.ts`),
+  not `localStorage` (the old `sys_user` key is removed on sight).
+- **Ended sessions** (`lib/auth/sessionExpiry.client.ts`): any 401 in the
+  dashboard (`apiCall`, `lib/pdf.client.ts`) and a re-check whenever the tab
+  becomes visible again (`AdminLayout`) send the admin to
+  `/login?redirect_url=…&expired=1` («Η συνεδρία σας έληξε»), and back to the
+  same page after signing in. `admin/[...slug].astro` adds `expired=1` when a
+  stale cookie is present.
+- **«Ξεχάσατε τον κωδικό;»** (`/login/forgot` → email →
+  `/login/reset/<token>`): `Authentication.requestPasswordReset` (same answer
+  whether or not the email is an admin; rate-limited), `validatePasswordReset`,
+  `resetPassword` (one-time: `DELETE … RETURNING`; signs every device out and
+  this one in). Links last 1 hour; `sys_user_password_resets` stores only the
+  token's SHA-256 (0008). Email template `sysuser_password_reset.html`
+  (`services/emailWorker/render/emails/SysuserPasswordReset.tsx`) — **publish it
+  with `bun run templates:build --prod` before deploying**, or reset emails fail
+  (the page still answers the generic message; the error is logged).
+- **Admin invites** (`SysUsers.createRegisterLink`, «Διαχειριστές»): a 24-hour
+  link bound to the invited email, used up on signup. `sys_user_register_links`
+  (recreated in 0008) stores only the link's **SHA-256** (`id`) plus `email`,
+  `invited_by`, `created_at`, `expires_at`; one pending invite per email (a new
+  invite replaces the old link). «Εκκρεμείς προσκλήσεις» under the admins table
+  (shown only while some exist): `SysUsers.getInvites` (unexpired, never the
+  link), `resendInvite` (new link + another 24 h; the old link dies) and
+  `revokeInvite` (by email) — open to every admin, like inviting. Invites sent
+  before 0008 are dropped by the migration: re-send them after deploying.
+- **Roles** (`lib/auth/roles.ts`, client-safe; `sys_users.role` in 0008):
+  `sysadmin` (the maintainer) · `owner` (the school's owner) · `secretary`
+  (the secretariat). `PERMISSIONS` lists the only restricted features —
+  `queryLogs` (sysadmin), `feeCatalog`, `activityLog` and `deleteAdmins` (sysadmin + owner),
+  `manageRoles` (sysadmin); **everything else is open to every signed-in
+  admin**. Routes enforce them with `requirePermission("…")` after
+  `authenticateMiddleware`; the UI reads `Authentication.me().permissions` to
+  hide what an admin cannot use (`restricted(...)` in `AdminRouter` for typed
+  URLs). Every new account (invite, password or provider signup) is a
+  `secretary`; roles change only through `SysUsers.setRole` (sysadmin, never
+  one's own role). Only a sysadmin may delete a sysadmin and at least one
+  always remains. The role is cached with the session (60 s per isolate).
+  To add a restricted feature: a `PERMISSIONS` entry + `requirePermission` on
+  its routes + a `permissions.<name>` check in the UI.
+- **Activity log** («Ιστορικό ενεργειών», `/admin/activity`, sysadmin + owner):
+  `APIServer.afterWrite` (installed by the registry, which also sets each
+  route's `endpoint` key) calls `lib/activity/record.server.ts` after every
+  successful non-GET request; only endpoints listed in
+  `lib/activity/labels.ts` (`ACTIVITY_LABELS`, Greek labels) by a signed-in
+  admin are written to `sys_activity` (0008) with the admin's email, the label
+  and a short target summary (ids, a title/name — never passwords or whole
+  bodies). Rows are kept 2 years. **Adding a route that changes data? Add it
+  to `ACTIVITY_LABELS`** (`tests/unit/activity.test.ts` checks every entry is
+  a real non-GET route). Routes: `Activity.list` (cursor + admin/category
+  filters), `Activity.admins`. `query_logs` stays the raw SQL trace (sysadmin).
+- **«Σφάλματα»** (`/admin/errors`, sysadmin; docs/ERROR_ALERTING.md): every
+  5xx the API answers (and a failed `afterWrite`) reaches
+  `APIServer.onServerError` → `lib/errors/record.server.ts` → `sys_errors`
+  (0008; one row per distinct error, counted; messages scrubbed by
+  `lib/errors/describe.ts` — never bodies, cookies or query strings); crashed
+  pages are recorded by `src/middleware.ts`. The emails worker's cron
+  (`*/15`, `services/emailWorker/src/errorDigest.ts`, its own `DB` binding to
+  production `byzantini-db`) emails the **sysadmins** what is new, marks it
+  notified and prunes rows after 90 days. `GET /api/health` (public) is for the
+  external uptime monitor. Routes: `Errors.list`/`Errors.delete`, `Health.get`.
+- **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
+  production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
+  `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
+  `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` (the `.p8` PEM; Apple needs a paid
+  developer account and does not accept `localhost` redirect URIs);
+  `MICROSOFT_CLIENT_ID/SECRET` (+ optional `MICROSOFT_TENANT`, default
+  `common`).
 
 ## Env, storage and external services
 
@@ -261,7 +383,8 @@ The person data that used to live on `registrations` is split into two tables
   (memoised, frozen) with the runtime env, runtime wins, values are **not
   coerced** (strings stay strings). Bindings (`DB`, `S3_BUCKET`,
   `EMAIL_SERVICE`, ...) come from `runtimeEnv` / the handler `env`. **Site dev values live in `.env`** (gitignored, auto-loaded by
-  Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_MAPS_KEY`,
+  Bun/Vite): `SECRET`, `GOOGLE_CLIENT_ID/SECRET` (+ optional `APPLE_*`,
+  `MICROSOFT_*` — see Admin authentication), `GOOGLE_MAPS_KEY`,
   `AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN`, `PDF_SERVICE_AUTH_TOKEN`.
   The public-route rate limiter (`lib/api/routes/middleware/rateLimit.ts`) skips
   loopback clients, so local dev and `bun run test` are never throttled; set
@@ -274,12 +397,9 @@ The person data that used to live on `registrations` is split into two tables
   also mirrors the prod token pairs for archival/recovery — only
   `VITE_`/`PUBLIC_` keys are ever inlined client-side; non-prefixed keys are
   NOT inlined into the worker (runtime reads them from the CF secret).
-- Owner (super-admin) email: use `@env/ownerEmail` (`OWNER_EMAIL`,
-  `isOwnerEmail(...)`) — backed by `VITE_OWNER_EMAIL` (same var inlines into
-  client AND server bundles; hardcoded fallback in the module) and set in
-  `.env`/`.env.production`. Never hardcode the owner email in features;
-  owner-only UI (global search, query-logs link, user deletion) goes through
-  this module.
+- Who may do what is decided by **roles** (`sys_users.role`, see Admin
+  authentication), never by comparing emails. The old `@env/ownerEmail` /
+  `VITE_OWNER_EMAIL` is gone (the variable may stay in `.env`; nothing reads it).
 - Storage goes through `Bucket` (`lib/bucket/index.ts`) — always the R2
   binding `S3_BUCKET`: real R2 in production, miniflare-emulated locally
   (`.wrangler/state/v3/r2`). Dev data comes from `bun run replicate:bucket`,
@@ -289,6 +409,25 @@ The person data that used to live on `registrations` is split into two tables
   context-free (`Bucket.put(data, key, type)`); `list` paginates past 1000
   keys; `move` copies first, deletes the source only after, keeps the source's
   metadata and is a no-op onto the same key.
+- **Public files** (`src/pages/[...slug].ts`, rules in `lib/bucket/publicFiles.ts`):
+  the catch-all serves only bucket-root files and `PUBLIC_BUCKET_PREFIXES`
+  (`anakoinoseis/images/`, `kathigites/`, `spoudastiria/`, `choir/`,
+  `emails/files/`) — `html_templates/` / `pdf_templates/` and anything new are
+  404 until added there. Stored Content-Type + `nosniff`; only raster images,
+  PDFs and fonts inline, everything else a sandboxed attachment. Admin uploads
+  accept JPEG/PNG/WebP/GIF (+ PDF for CVs) up to 10 MB — no SVG.
+- **Security headers** (`lib/utilities/securityHeaders.ts`, applied in
+  `src/middleware.ts`; prerendered pages get the same from `public/_headers`,
+  kept in sync by `tests/unit/securityHeaders.test.ts`): nosniff,
+  Referrer-Policy, Permissions-Policy, frame protection and HSTS everywhere;
+  an enforced CSP on `/admin`, `/login`, `/oauth2callback` that lists exactly
+  what they load (jsDelivr, cdnjs, Google Fonts, Cloudflare analytics,
+  https avatars, blob:/data:). **Loading something new from another origin in
+  the dashboard? Add it to `STRICT_CSP`** (and regenerate `public/_headers`'
+  `/login/*` line) — otherwise the browser blocks it. Headers a route sets
+  itself win.
+- JSON inside an inline `<script>` (JSON-LD, page data) goes through
+  `jsonForScript` (`lib/utilities/safeJson.ts`), never bare `JSON.stringify`.
 - **Worker↔worker calls go through service bindings, never HTTP URLs**: the
   site's `wrangler.jsonc` declares `EMAIL_SERVICE` (`byzantini-website-emails`)
   and `PDF_SERVICE` (`byzantini-website-pdf-gen`) at top level and under each
@@ -366,6 +505,39 @@ The person data that used to live on `registrations` is split into two tables
 - User-facing text is Greek — preserve existing Greek labels and wording; add
   Greek for new UI strings, do not translate existing ones.
 - Solid components use `.solid.tsx`, Astro components use `.astro`.
+- **Dashboard colours are tokens** (`src/styles/global.css` `@theme`, dark values
+  in the `.dark` block below it): `bg-page`, `bg-surface`, `bg-surface-muted`,
+  `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand` /
+  `text-brand-ink` / `bg-brand-hover`, `bg-accent-soft`, `text-accent-ink`
+  (brand red as text/icon/outline — pale in dark), `shadow-shade`, `text-danger`.
+  Use them in admin UI instead of `bg-white dark:bg-dark`-style pairs or new hex
+  values: one class, both themes. Everything under `src/components/admin` is on
+  them (`bg-white` is gone from the admin; `AdminLayout`'s old
+  `html.dark .bg-white` patch is deleted — a new `bg-white` would now stay white
+  in dark mode). Left on their own `dark:` pairs on purpose: status colours
+  (green/amber/blue/sky/violet toasts, badges, notes), the modal backdrop, the
+  admin sidebar (`AdminNav`), and the shared `input/*` controls, whose light look
+  must stay identical on the public form (only their surface uses `bg-surface`).
+  Anything that must stay white in both themes (brand logos) is plain `bg-white`
+  (nothing repaints it any more).
+- **Tailwind classes are canonical**: write what IntelliSense suggests
+  (`h-dvh`, `z-1000`, `bg-linear-to-r`, `p-0.75`, `mask-contain`, `important!`
+  at the end) rather than arbitrary values (`h-[100dvh]`, `z-[1000]`, …) — both
+  compile to the same CSS. Its `cssConflict` warnings on `dark:`/`group-*` pairs
+  (`bg-red-100 dark:bg-dark`) are false positives: selector variants don't
+  conflict.
+- **Icons are the project's own inline-SVG set** (Font Awesome is gone):
+  `lib/icons.ts` (`ICONS`: name → 24×24 markup, one stroke, `currentColor`;
+  typed `IconName`, so a typo fails `typecheck`) rendered by
+  `<Icon name="…" />` — `src/components/other/Icon.solid.tsx` / `Icon.astro`
+  (decorative by default, `title` → `role="img"`; `spin` for spinners;
+  `size` defaults to `1em`, so `text-*` sizes it like a glyph). Hand-built DOM
+  uses `createIcon(name, { class })`. Icon props in data are `IconName`
+  (input `icon`, `ActionIcon`, nav links, `Panel` cards). The base `.icon`
+  rule (inline-block, content-box, text-like `vertical-align`) is in
+  `global.css`'s base layer, so `hidden`/`flex`/`size-*` utilities win. Need
+  a new glyph? Draw it on the same grid in `lib/icons.ts` (no third-party
+  icon paths except CC0 brand marks); never reintroduce an icon font.
 
 ## Tests
 
@@ -380,6 +552,23 @@ The person data that used to live on `registrations` is split into two tables
   endpoint.
 - `TEST_EMAIL` / `TEST_PASSWORD` come from the test env files — never hardcode
   them.
+- **End-to-end smoke tests** (`e2e/`, Playwright, `bun run e2e` — kept out of
+  `bun run test`): admin password sign-in → «Αρχική», an ended session →
+  `/login?…&expired=1` and back, what a secretary / an owner sees, the public
+  registration form (empty submit, new student ΑΜ 000) and the public navbar at
+  1024/1366 px. Projects `desktop` (1280 px, everything) and `phone` (375 px,
+  titles tagged `@phone`). The runner runs on Bun (`bunx --bun playwright test`).
+  Needs the dev server (`E2E_BASE_URL`, default `http://e2e.localhost:4321`:
+  cookies ignore the port, so the suite's admin sessions stay off `localhost`), the
+  emails worker (invites) and tests/.env.test. The harness admin acts only
+  through the API: every browser sign-in is a throwaway `e2e.<role>.*@example.com`
+  admin (invite → signup → `setRole`) deleted when the test ends
+  (`e2e/support/fixtures.ts`, with its activity-log rows); every test also fails
+  on a CSP violation in its page (report it, never loosen the policy for it); the registration test's «Δοκιμαστικός Μαθητής»
+  (orphan row, ΑΜΚΑ 99…, `pupils.test.e2e.*@example.com`) is deleted too, and
+  `bun run dev:clean` catches both. `e2e/` is typechecked by `bun run typecheck`.
+  Do not edit `package.json`/`tsconfig.json` while the Astro dev server runs:
+  its restart fails and every request answers 500 until it is restarted.
 - **PDF golden hashes**: the PDF worker's output is a pure function of the
   request (no metadata timestamps; the printed school year comes from
   `registration_year`), so each dummy fixture in

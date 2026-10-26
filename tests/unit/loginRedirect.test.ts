@@ -3,19 +3,10 @@
  * takes a logged-out admin from a shared deep link (e.g.
  * `/admin/pupils?q=παπαδόπουλος`) through the sign-in screen and back.
  *
- * Pure functions plus a tiny cookie jar standing in for `document.cookie`, so
- * these tests need no dev server, no DB and no env file.
+ * Pure functions, so these tests need no dev server, no DB and no env file.
  */
-import { afterAll, beforeEach, expect, test } from "bun:test";
-import {
-	ADMIN_HOME,
-	buildLoginUrl,
-	currentRedirectTarget,
-	isSafeRedirectTarget,
-	readRedirectTarget,
-	rememberRedirectTarget,
-	takeRedirectTarget,
-} from "@utilities/redirect";
+import { expect, test } from "bun:test";
+import { ADMIN_HOME, buildLoginUrl, currentRedirectTarget, isExpiredLogin, isSafeRedirectTarget, readRedirectTarget } from "@utilities/redirect";
 
 // ---------------------------------------------------------------------------
 // `?redirect_url=` parsing / validation
@@ -105,69 +96,12 @@ test("a deep link survives the whole guard → login → target round trip", () 
 	expect(restored).toContain("col=1");
 });
 
-// ---------------------------------------------------------------------------
-// The Google detour (cookie handoff, read via document.cookie on the callback)
-// ---------------------------------------------------------------------------
-
-/** Minimal browser-like cookie jar: honours `expires`, enough for setCookie/getCookie/deleteCookie. */
-class FakeCookieJar {
-	private jar = new Map<string, string>();
-
-	clear() {
-		this.jar.clear();
-	}
-
-	get cookie(): string {
-		return [...this.jar].map(([name, value]) => `${name}=${value}`).join("; ");
-	}
-
-	set cookie(raw: string) {
-		const [pair] = raw.split(";");
-		const eq = pair.indexOf("=");
-		const name = pair.slice(0, eq);
-		const value = pair.slice(eq + 1);
-		const expires = /expires=([^;]+)/i.exec(raw)?.[1];
-		if (expires && new Date(expires).getTime() <= Date.now()) this.jar.delete(name);
-		else this.jar.set(name, value);
-	}
-}
-
-const originalDocument = (globalThis as any).document;
-const jar = new FakeCookieJar();
-(globalThis as any).document = {
-	get cookie() {
-		return jar.cookie;
-	},
-	set cookie(raw: string) {
-		jar.cookie = raw;
-	},
-};
-
-beforeEach(() => {
-	jar.clear();
-});
-afterAll(() => {
-	(globalThis as any).document = originalDocument;
-});
-
-test("rememberRedirectTarget / takeRedirectTarget hand the target to the OAuth callback", () => {
+test("an expired session adds `expired=1` without disturbing the target", () => {
 	const target = "/admin/pupils?q=παπαδόπουλος&pupil=706";
-	rememberRedirectTarget(target);
-	expect(jar.cookie).toContain("login_redirect_url=");
-	expect(takeRedirectTarget()).toBe(target);
-	// consumed — a later Google sign-in must not reuse it
-	expect(takeRedirectTarget()).toBeNull();
-});
-
-test("rememberRedirectTarget stores nothing when there is nothing to store", () => {
-	rememberRedirectTarget(null);
-	rememberRedirectTarget(ADMIN_HOME);
-	rememberRedirectTarget("//evil.example");
-	expect(takeRedirectTarget()).toBeNull();
-});
-
-test("takeRedirectTarget survives a corrupt or unsafe cookie", () => {
-	rememberRedirectTarget("/admin/books?search=x");
-	(globalThis as any).document.cookie = "login_redirect_url=%E0%A4%A; path=/";
-	expect(takeRedirectTarget()).toBeNull();
+	const loginUrl = buildLoginUrl(target, { expired: true });
+	const search = loginUrl.slice(loginUrl.indexOf("?"));
+	expect(readRedirectTarget(search)).toBe(target);
+	expect(isExpiredLogin(search)).toBe(true);
+	expect(buildLoginUrl(ADMIN_HOME, { expired: true })).toBe("/login?expired=1");
+	expect(isExpiredLogin(buildLoginUrl(target))).toBe(false);
 });

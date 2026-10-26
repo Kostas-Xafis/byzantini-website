@@ -76,6 +76,25 @@ export class APIServer<
 > extends APIRoute<M, P, O, R> {
 	readonly handler: Handler<P, O>;
 	readonly middleware: MiddlewareFunction[] = [];
+	/** The endpoint key (`Books.post`), set by the registry (`lib/api/routes/index.ts`). */
+	endpoint?: string;
+
+	/**
+	 * Called after every successful non-GET request (the registry installs the activity log,
+	 * `lib/activity/record.server.ts`). It never fails or delays the answer beyond its own await: errors
+	 * are logged and swallowed.
+	 */
+	static afterWrite?: (write: { route: APIServer; params: Record<string, string | number>; body: unknown; cookies: ServerCookies }) => Promise<void>;
+
+	/**
+	 * Hook for unexpected failures — every 5xx `handle` answers, plus a failed `afterWrite` — installed by the
+	 * registry (`lib/errors/record.server.ts`, the «Σφάλματα» log). Awaited before the answer leaves, so the
+	 * Workers runtime cannot cancel it; it must not throw.
+	 */
+	static onServerError?: (failure: { route: APIServer; request: Request; status: number; error: unknown }) => Promise<void>;
+
+	/** The error behind a 500 built by `errorResponse` / `validateResponse`, for `onServerError`. */
+	private static failures = new WeakMap<Response, unknown>();
 
 	constructor(route: APIRouteOptions<M, P, O, R>, handler?: Handler<P, O>);
 	constructor(route: APIRouteOptions<M, P, O, R>, middleware: MiddlewareFunction[], handler: Handler<P, O>);
@@ -106,6 +125,7 @@ export class APIServer<
 			params: Record<string, string | number>;
 		} | null;
 		if (!match) {
+			await discardBody(request);
 			const allowed = this.allowedMethods(path);
 			if (allowed.length === 0) return this.jsonError(ROUTE_NOT_FOUND_MESSAGE, HTTP.NOT_FOUND);
 			const response = this.jsonError(METHOD_NOT_ALLOWED_MESSAGE, HTTP.METHOD_NOT_ALLOWED);
@@ -116,11 +136,30 @@ export class APIServer<
 		const { route, params } = match;
 		const context = `${method} ${path}`;
 		const cookies = new ServerCookies(request);
+		// Every answer leaves through here: a 5xx is reported to `onServerError` first.
+		const finish = async (response: Response) => {
+			if (response.status >= 500 && this.onServerError) {
+				// A route that answers a 5xx itself (e.g. an upstream worker failed) has no exception: keep its public message.
+				let error = this.failures.get(response);
+				if (error === undefined) {
+					const body = (await response
+						.clone()
+						.json()
+						.catch(() => null)) as { error?: string } | null;
+					error = new Error(`HTTP ${response.status}${body?.error ? `: ${body.error}` : ""}`);
+				}
+				await this.onServerError({ route, request, status: response.status, error }).catch(() => {});
+			}
+			return response;
+		};
 		try {
 			// Middleware first: an anonymous or rate-limited caller is turned away before its body is read.
 			for (const middleware of route.middleware) {
 				const result = await middleware({ route, request, cookies });
-				if (result instanceof Response) return this.validateResponse(cookies.apply(result), route.responseSchema, context);
+				if (result instanceof Response) {
+					await discardBody(request);
+					return await finish(await this.validateResponse(cookies.apply(result), route.responseSchema, context));
+				}
 			}
 
 			// Body parsing — ALWAYS (a schemaless handler still receives it, typed `unknown`)
@@ -151,10 +190,16 @@ export class APIServer<
 				cookies,
 				env: runtimeEnv,
 			} as never);
-			return await this.validateResponse(cookies.apply(response), route.responseSchema, context);
+			if (method !== "GET" && response.ok && this.afterWrite) {
+				await this.afterWrite({ route, params, body, cookies }).catch(async (error) => {
+					console.error(`[api] ${context}: afterWrite failed`, error);
+					await this.onServerError?.({ route, request, status: response.status, error: new Error("afterWrite failed", { cause: error }) });
+				});
+			}
+			return await finish(await this.validateResponse(cookies.apply(response), route.responseSchema, context));
 		} catch (error) {
 			// Handlers without `handlerResult`, middleware and body/response parsing end up here.
-			return cookies.apply(this.errorResponse(error, SERVER_ERROR_MESSAGE, context));
+			return await finish(cookies.apply(this.errorResponse(error, SERVER_ERROR_MESSAGE, context)));
 		}
 	}
 
@@ -180,7 +225,9 @@ export class APIServer<
 			return this.json({ error: INVALID_BODY_MESSAGE, details: treeifyError(error) }, HTTP.BAD_REQUEST);
 		}
 		console.error(`[api] ${context ?? publicMessage}:`, error);
-		return this.jsonError(publicMessage, HTTP.INTERNAL_SERVER_ERROR);
+		const response = this.jsonError(publicMessage, HTTP.INTERNAL_SERVER_ERROR);
+		this.failures.set(response, error);
+		return response;
 	}
 
 	/**
@@ -234,7 +281,9 @@ export class APIServer<
 		const result = await schema.safeParseAsync(payload);
 		if (!result.success) {
 			console.error(`[api] ${context}: response does not match its schema`, JSON.stringify(treeifyError(result.error)));
-			return this.jsonError(SERVER_ERROR_MESSAGE, HTTP.INTERNAL_SERVER_ERROR);
+			const failed = this.jsonError(SERVER_ERROR_MESSAGE, HTTP.INTERNAL_SERVER_ERROR);
+			this.failures.set(failed, new Error("The response does not match its schema"));
+			return failed;
 		}
 		const serialized = JSON.stringify(wrapped ? { data: result.data } : result.data);
 		return new Response(serialized, { status: response.status, headers: response.headers });
@@ -285,6 +334,7 @@ export const HTTP = {
 	METHOD_NOT_ALLOWED: 405,
 	CONFLICT: 409,
 	GONE: 410,
+	PAYLOAD_TOO_LARGE: 413,
 	UNSUPPORTED_MEDIA_TYPE: 415,
 	UNPROCESSABLE_ENTITY: 422,
 	TOO_MANY_REQUESTS: 429,
@@ -296,6 +346,17 @@ export const HTTP = {
 } as const;
 
 export type HTTPStatus = (typeof HTTP)[keyof typeof HTTP];
+
+/**
+ * Reads to the end a request body the route never read (unknown path, wrong method, refused by
+ * middleware). In local dev, miniflare forwards even a body-less DELETE as a body stream; answering
+ * without consuming it left the connection unusable and the NEXT request on it failed with "socket
+ * connection was closed unexpectedly" (~6% of requests after a body-less DELETE that got a 401).
+ * `body.cancel()` does not fix it; reading does. The client has already sent the bytes either way.
+ */
+async function discardBody(request: Request) {
+	if (request.body && !request.bodyUsed) await request.arrayBuffer().catch(() => {});
+}
 
 /**
  * Handler-result helper mirroring the old `execTryCatch` semantics:

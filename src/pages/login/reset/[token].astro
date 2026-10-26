@@ -1,0 +1,79 @@
+---
+import SigninCard from "@components/auth/SigninCard.astro";
+import Input from "@components/input/Input.astro";
+import { useAPI } from "@hooks/useAPI.server";
+import SigninLayout from "@layouts/SigninLayout.astro";
+export const prerender = false;
+
+// The one-time link from the «Ξέχασα τον κωδικό» email (Authentication.requestPasswordReset).
+const token = Astro.params.token ?? "";
+const res = token ? await useAPI("Authentication.validatePasswordReset", { UrlArgs: { token } }, Astro).catch(() => null) : null;
+const email = res?.data?.isValid ? res.data.email : undefined;
+Astro.response.headers.set("Referrer-Policy", "no-referrer");
+Astro.response.headers.set("Cache-Control", "no-store");
+---
+
+<SigninLayout title="Νέος κωδικός" noindex>
+	<SigninCard title="Νέος κωδικός">
+		{
+			email ? (
+				<>
+					<form id="resetForm" class="grid gap-y-6" data-token={token}>
+						{/* Lets password managers file the new password under the right account. */}
+						<input type="email" name="username" autocomplete="username" value={email} class="hidden" readonly />
+						<Input type="email" name="email" label="Email" icon="mail" value={email} disabled />
+						<div class="grid gap-1">
+							<Input type="password" name="password" label="Νέος κωδικός" icon="lock" required />
+							<p class="px-4 text-sm text-gray-600 dark:text-gray-300">Τουλάχιστον 8 χαρακτήρες.</p>
+						</div>
+						<Input type="password" name="confirm" label="Επιβεβαίωση" icon="lock" required />
+						<button
+							class="py-2 text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 disabled:opacity-60 disabled:cursor-wait"
+							type="submit">
+							Ορισμός κωδικού
+						</button>
+					</form>
+					<p id="resetError" role="alert" class="hidden max-w-[30ch] justify-self-center text-center text-base text-red-700 dark:text-red-300" />
+				</>
+			) : (
+				<>
+					<p class="max-w-[30ch] justify-self-center text-center text-base text-gray-700 dark:text-gray-300">
+						Ο σύνδεσμος έληξε ή έχει ήδη χρησιμοποιηθεί. Οι σύνδεσμοι επαναφοράς ισχύουν για 1 ώρα και μία φορά.
+					</p>
+					<a
+						href="/login/forgot"
+						class="justify-self-center rounded-lg bg-red-900 px-5 py-2 font-bold text-red-50 hover:bg-red-950 dark:bg-red-800 dark:hover:bg-red-700">
+						Νέος σύνδεσμος
+					</a>
+				</>
+			)
+		}
+	</SigninCard>
+</SigninLayout>
+<script>
+	import { apiCall } from "@hooks/apiCall";
+
+	const form = document.getElementById("resetForm") as HTMLFormElement | null;
+	const errorEl = document.getElementById("resetError");
+	form?.addEventListener("submit", async (e) => {
+		e.preventDefault();
+		const data = new FormData(form);
+		const password = data.get("password") as string;
+		const fail = (message: string) => {
+			errorEl!.textContent = message;
+			errorEl!.classList.remove("hidden");
+		};
+		if (password.length < 8) return fail("Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες");
+		if (password !== data.get("confirm")) return fail("Οι δύο κωδικοί δεν ταιριάζουν");
+		const button = form.querySelector("button")!;
+		button.disabled = true;
+		try {
+			await apiCall("Authentication.resetPassword", { UrlArgs: { token: form.dataset.token! }, RequestObject: { password } });
+			// Signed in by the reset; every other device was signed out.
+			window.location.replace("/admin");
+		} catch (error) {
+			fail(error instanceof Error ? error.message : "Προέκυψε σφάλμα. Δοκιμάστε ξανά.");
+			button.disabled = false;
+		}
+	});
+</script>

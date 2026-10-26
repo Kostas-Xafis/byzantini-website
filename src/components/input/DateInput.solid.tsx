@@ -1,8 +1,9 @@
 import AirDatepicker from "air-datepicker";
-import { onCleanup, onMount } from "solid-js";
+import { Show, onCleanup, onMount } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
 import { setFocusFixed } from "@utilities/dom";
 import { sleep } from "@utilities/sleep";
-import { FIELD_CONTROL, FIELD_ICON } from "./styles";
 
 const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 
@@ -28,14 +29,14 @@ type DateInputProps = {
 	prefix: string;
 	value?: number;
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	blurDisabled?: boolean;
 	minmax?: [number, number];
 };
 
 export default function DateInput(props: DateInputProps) {
-	const { name, value, required, iconClasses, disabled, blurDisabled = true } = props;
+	const { name, value, required, icon, disabled, blurDisabled = true } = props;
 	let datepicker: AirDatepicker<HTMLInputElement> | undefined;
 	let disposed = false;
 	// The component's own input (a ref, not a document lookup): the router renders a page before inserting it
@@ -59,9 +60,11 @@ export default function DateInput(props: DateInputProps) {
 		if (!disabled) {
 			let finalDate = new Date(hasValue ? (value as number) : Date.now());
 			datepicker = new AirDatepicker(dateInput, {
+				// Air Datepicker's tokens: `MM` is the month, `mm` the minutes ("dd-mm-yyyy" flashed «13-00-1981»).
+				// Same dd/mm/yyyy text as `formatDateToMarineTime`, which ExtendedFormData.date parses.
 				view: "days",
 				firstDay: 0,
-				dateFormat: "dd-mm-yyyy",
+				dateFormat: "dd/MM/yyyy",
 				autoClose: false,
 				isMobile: document.body.clientWidth < 768,
 				selectedDates: hasValue ? [value] : false,
@@ -71,7 +74,7 @@ export default function DateInput(props: DateInputProps) {
 						finalDate.setDate(date.getDate());
 						datepicker.update(
 							{
-								dateFormat: "dd-mm-yyyy",
+								dateFormat: "dd/MM/yyyy",
 								minView: "months",
 								view: "months",
 								selectedDates: [finalDate.getTime()],
@@ -83,7 +86,7 @@ export default function DateInput(props: DateInputProps) {
 						finalDate.setMonth(date.getMonth());
 						datepicker.update(
 							{
-								dateFormat: "dd-mm-yyyy",
+								dateFormat: "dd/MM/yyyy",
 								minView: "years",
 								view: "years",
 								selectedDates: [finalDate.getTime()],
@@ -95,7 +98,7 @@ export default function DateInput(props: DateInputProps) {
 						finalDate.setFullYear(date.getFullYear());
 						datepicker.update(
 							{
-								dateFormat: "dd-mm-yyyy",
+								dateFormat: "dd/MM/yyyy",
 								minView: "days",
 								view: "days",
 								selectedDates: [finalDate.getTime()],
@@ -138,9 +141,18 @@ export default function DateInput(props: DateInputProps) {
 
 	return (
 		<>
+			<Show when={icon}>
+				<Icon
+					name={icon!}
+					class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+				/>
+			</Show>
 			<input
 				ref={dateInput}
-				class={FIELD_CONTROL + " cursor-pointer" + (disabled && blurDisabled ? " blur-[1px]" : "")}
+				class={
+					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg outline-hidden! z-10" +
+					(disabled && blurDisabled ? " blur-[1px]" : "")
+				}
 				type="text"
 				readOnly={true}
 				value={(value && formatDateToMarineTime(value as number)) || ""}
@@ -152,7 +164,6 @@ export default function DateInput(props: DateInputProps) {
 					required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 				}
 			/>
-			<i class={FIELD_ICON + " " + (iconClasses || "")} aria-hidden="true"></i>
 		</>
 	);
 }

@@ -5,6 +5,8 @@
  * Greek validation messages preserved.
  */
 import { z } from "astro/zod";
+import { ROLES } from "@lib/auth/roles";
+import { isSafeFileName, UPLOAD_IMAGE_TYPES } from "@lib/bucket/publicFiles";
 
 const looseBoolean = (message = "Μη έγκυρο loose boolean") =>
 	z.union([z.boolean(), z.literal(0), z.literal(1)], { message }).transform((v) => v === true || v === 1);
@@ -44,21 +46,79 @@ export const z_Wholesalers = z.object({
 export const z_SysUsers = z.object({
 	id: positiveInt("Μη έγκυρο id"),
 	email: z.email("Μη έγκυρο email"),
-	password: z.string().min(1, "Μη έγκυρος κωδικός"),
-	session_id: z.string().min(1, "Μη έγκυρο session_id"),
-	session_exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης session"),
+	/** PBKDF2 hash (`lib/auth/passwords.ts`); '' when the admin has no password (provider-only account). */
+	password: z.string(),
+	/** Pre-0008 admins: the first Google sign-in with their verified email adopts that Google account. */
+	google_email_match: looseBoolean(),
+	/** lib/auth/roles.ts (migration 0008). */
+	role: z.enum(ROLES, "Μη έγκυρος ρόλος"),
 });
 
-export const z_SysUserRegisterLink = z.object({
-	link: z.string().min(1, "Μη έγκυρος σύνδεσμος"),
-	exp_date: positiveInt("Μη έγκυρη ημερομηνία λήξης"),
-	/** The invited email — the account created from the link must use it (migration 0004). */
-	email: z.email("Μη έγκυρο email").nullable(),
+/** Sign-in providers an admin can connect (`lib/auth/providers.ts`). */
+export const z_AuthProviderId = z.enum(["google", "apple", "microsoft"], "Άγνωστος πάροχος σύνδεσης");
+
+/** One signed-in device (migration 0008). `id` is the SHA-256 of the session cookie, never the cookie itself. */
+export const z_SysUserSession = z.object({
+	id: z.string().min(1),
+	user_id: positiveInt("Μη έγκυρο id"),
+	method: z.string(),
+	created_at: positiveInt(),
+	last_seen_at: positiveInt(),
+	expires_at: positiveInt(),
+	user_agent: z.string().nullable(),
 });
+
+/** An external account connected to an admin (migration 0008). Sign-in matches (provider, subject). */
+export const z_SysUserIdentity = z.object({
+	id: positiveInt("Μη έγκυρο id"),
+	user_id: positiveInt("Μη έγκυρο id"),
+	provider: z_AuthProviderId,
+	subject: z.string().min(1),
+	email: z.string().nullable(),
+	avatar_url: z.string().nullable(),
+	created_at: positiveInt(),
+	last_used_at: positiveInt().nullable(),
+});
+
+/** «Σφάλματα» row (migration 0008): one distinct unexpected server error, counted. */
+export const z_SysError = z.object({
+	id: positiveInt(),
+	source: z.string(),
+	status: z.number().int(),
+	error_name: z.string(),
+	message: z.string(),
+	host: z.string(),
+	count: positiveInt(),
+	first_seen_at: positiveInt(),
+	last_seen_at: positiveInt(),
+	notified_at: positiveInt().nullable(),
+});
+
+/** A pending admin invite (migration 0008). `id` is the SHA-256 of the emailed link — never the link itself. */
+export const z_SysUserRegisterLink = z.object({
+	id: z.string().min(1),
+	/** The invited email — the account created from the link must use it. */
+	email: z.email("Μη έγκυρο email"),
+	/** Email of the admin who sent (or last resent) the invite. */
+	invited_by: z.string().nullable(),
+	created_at: positiveInt(),
+	expires_at: positiveInt("Μη έγκυρη ημερομηνία λήξης"),
+});
+
+/** «Εκκρεμείς προσκλήσεις» row: everything but the hashed link. */
+export const z_PendingInvite = z_SysUserRegisterLink.omit({ id: true });
 
 export const z_LoginCredentials = z.object({
 	email: z.email("Μη έγκυρο email"),
 	password: z.string().min(1, "Μη έγκυρος κωδικός"),
+});
+
+/** A password an admin chooses (signup, change). The upper bound keeps PBKDF2 input sane. */
+export const z_NewPassword = z.string().min(8, "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες").max(256, "Ο κωδικός είναι πολύ μεγάλος");
+
+export const z_SignupCredentials = z.object({
+	email: z.email("Μη έγκυρο email"),
+	password: z_NewPassword,
 });
 
 export const z_Teachers = z.object({
@@ -351,12 +411,13 @@ export const z_BlobUpload = z.custom<Blob>((v) => typeof (v as any)?.arrayBuffer
 
 /** File/blob fields used by multipart image uploads.*/
 export const z_AnnouncementImageUpload = z.object({
-	name: z.string("Μη έγκυρο όνομα"),
+	// Part of the bucket key and the public URL: one path segment.
+	name: z.string("Μη έγκυρο όνομα").refine(isSafeFileName, "Μη έγκυρο όνομα αρχείου"),
 	announcement_id: positiveInt("Μη έγκυρο announcement_id"),
 	is_main: looseBoolean("Μη έγκυρη κύρια εικόνα"),
 	id: positiveInt("Μη έγκυρο id").optional(),
 	fileData: z_BlobUpload,
-	fileType: z.string("Μη έγκυρος τύπος αρχείου"),
+	fileType: z.enum(UPLOAD_IMAGE_TYPES, "Μη υποστηριζόμενος τύπος αρχείου"),
 });
 
 /**

@@ -1,0 +1,41 @@
+---
+import { PROVIDER_ICONS } from "@lib/auth/providerIcons";
+import type { ProviderInfo } from "@lib/auth/providers";
+
+/**
+ * One button per enabled sign-in provider (lib/auth/providers.ts), shown above the email/password form
+ * with an «ή με email» divider under them. The page's script handles the clicks through
+ * `[data-provider]`, so the same markup serves sign-in and invite signup.
+ */
+export interface Props {
+	providers: ProviderInfo[];
+	/** "Είσοδος" or "Εγγραφή". */
+	verb: string;
+}
+const { providers, verb } = Astro.props;
+---
+
+{
+	providers.length > 0 && (
+		<div class="grid gap-6 w-full">
+			<div class="grid gap-3">
+				{providers.map((provider) => (
+					<button
+						data-provider={provider.id}
+						class="group/provider relative flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-5 py-3 text-lg font-medium text-gray-800 shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:bg-gray-50 hover:shadow-md active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 disabled:cursor-wait disabled:opacity-60 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+						type="button">
+						<span class="grid h-6 w-6 place-items-center" aria-hidden="true" set:html={PROVIDER_ICONS[provider.id] ?? ""} />
+						<span>
+							{verb} με {provider.label}
+						</span>
+					</button>
+				))}
+			</div>
+			<div class="flex items-center gap-4" aria-hidden="true">
+				<div class="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+				<span class="text-gray-500 dark:text-gray-300 text-sm">ή με email</span>
+				<div class="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+			</div>
+		</div>
+	)
+}

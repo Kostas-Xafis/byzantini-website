@@ -1,18 +1,20 @@
 ---
-const lessons = [
+import Icon from "@components/other/Icon.astro";
+import type { IconName } from "@lib/icons";
+const lessons: { name: string; icon: IconName; text: string }[] = [
 	{
 		name: "Βυζαντινή Μουσική",
-		icon: "fa-church",
+		icon: "church",
 		text: "Σπούδασε στη Σχολή μας την ιερά τέχνη του Ιωάννου του Δαμασκηνού και του Ρωμανού του Μελωδού. Απόκτησε Πτυχίο και Δίπλωμα Βυζαντινής Μουσικής αναγνωρισμένο από το κράτος και γίνε θεματοφύλακας της ελληνορθόδοξης μουσικής μας παραδόσεως.",
 	},
 	{
 		name: "Παραδοσιακή Μουσική",
-		icon: "fa-guitar",
+		icon: "guitar",
 		text: `Από το 2022 με σχετικό ΦΕΚ  προστέθηκαν επισήμως στη Σχολή μας Τμήματα παραδοσιακής μουσικής. Πλέον, δίνεται σε όλους η ευκαιρία, ανεξαρτήτως ηλικίας, να εντρυφήσουν στα νάματα της εθνικής μας παραδοσιακής μουσικής, με τα οποία γαλουχήθηκαν γενεές γενεών.`,
 	},
 	{
 		name: "Ευρωπαϊκή Μουσική",
-		icon: "fa-music",
+		icon: "music",
 		text: `Στη Σχολή μας λειτουργεί τμήμα Ευρωπαϊκής μουσικής. Απευθύνεται τόσο στους μαθητές βυζαντινής μουσικής, όσο και σε υποψήφιους μαθητές σε μουσικά σχολεία και υποψήφιους φοιτητές σε τμήματα Μουσικών Σπουδών ΑΕΙ.`,
 	},
 ];
@@ -33,9 +35,9 @@ const lessons = [
 		lessons.map((l) => (
 			<div class="lessonCard group/lesson relative h-full rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2vw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
 				<h3 class="absolute inset-0 text-center text-[2vw] max-sm:text-lg font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%-1vw)] max-sm:translate-y-[calc(50%-0.65rem)] group-[:is(.show)]/lesson:translate-y-3 group-hover/lesson:translate-y-3">
-					<i
-						class={`fa-solid ${l.icon} pr-2.5 text-[1.35vw] max-sm:text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover/lesson:scale-125`}
-						aria-hidden="true"
+					<Icon
+						name={l.icon}
+						class="mr-2.5 text-[1.35vw] max-sm:text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover/lesson:scale-125"
 					/>
 					{l.name}
 				</h3>

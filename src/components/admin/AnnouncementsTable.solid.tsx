@@ -1,15 +1,15 @@
+import { isUploadImageType } from "@lib/bucket/publicFiles";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
-import { Random } from "@lib/random";
 import { API } from "@routes/index.client";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { ExtendedFormData } from "@utilities/forms";
 import { deepCopy } from "@utilities/objects";
-import { sleep } from "@utilities/sleep";
 import { isSafeURLPath } from "@utilities/url";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -31,45 +31,45 @@ const AnnouncementsInputs = (): Omit<Record<keyof Announcements | "images" | "ma
 			name: "id",
 			label: "Id",
 			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
+			icon: "hash",
 		},
 		title: {
 			name: "title",
 			label: "Τίτλος",
 			type: "text",
-			iconClasses: "fa-solid fa-heading",
+			icon: "heading",
 		},
 		date: {
 			name: "date",
 			label: "Ημερομηνία",
 			type: "date",
-			iconClasses: "fa-solid fa-calendar-days",
+			icon: "calendar",
 		},
 		content: {
 			type: "textarea",
 			name: "content",
 			label: "Περιεχόμενο",
-			iconClasses: "fa-solid fa-paragraph",
+			icon: "paragraph",
 		},
 		mainImage: {
 			type: "file",
 			name: "mainImage",
 			label: "Κεντρική Φωτογραφία",
-			iconClasses: "fa-solid fa-image",
+			icon: "image",
 			fileExtension: "image/*",
 		},
 		links: {
 			type: "textarea",
 			name: "links",
 			label: "Σύνδεσμοι YouTube",
-			iconClasses: "fa-brands fa-youtube",
+			icon: "youtube",
 			placeholder: "https://youtube.com/watch?v=...\nhttps://youtu.be/...\n.\n.\n.",
 		},
 		images: {
 			type: "multifile",
 			name: "photos",
 			label: "Φωτογραφίες",
-			iconClasses: "fa-solid fa-images",
+			icon: "images",
 			fileExtension: "image/*",
 		},
 	};
@@ -99,13 +99,7 @@ const columnNames: ColumnType<AnnouncementTable> = {
 function assertNotNull<T>(value: T): asserts value is NonNullable<typeof value> {}
 
 function imagePreview(file: FileProxy<AnnouncementImageMetadata>) {
-	const id = Random.string(12, "hex");
-	(async function () {
-		await sleep(10);
-		const src = !file.isProxy() ? await file.toImageUrl() : `/anakoinoseis/images/${file.getMetadata().announcement_id}/thumb_${file.getName()}`;
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	})();
-	return <img data-id={id} alt={file.getName()} class="object-cover w-full overflow-hidden" />;
+	return filePreviewImage(file, (f) => `/anakoinoseis/images/${f.getMetadata().announcement_id}/thumb_${f.getName()}`);
 }
 
 type AnnouncementImageMetadata = { is_main: boolean; announcement_id: number; id: number };
@@ -130,9 +124,11 @@ export default function AnnouncementsTable() {
 	createAPIResource(API.Announcements.get, undefined, { cache: setStore });
 	createAPIResource(API.Announcements.getImages, undefined, { cache: setStore });
 
-	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>) {
+	/** Uploads the handler's new files; resolves to the names that failed (their stored namesakes must stay). */
+	async function imagesUpload(fileHandler: FileHandler<AnnouncementImageMetadata>): Promise<Set<string>> {
 		const photos = fileHandler.getNewFiles();
-		if (photos.length === 0) return;
+		const failedNames = new Set<string>();
+		if (photos.length === 0) return failedNames;
 		let failed = 0;
 		const uploadQueue = photos.map((fileProxy) => {
 			assertNotNull(fileProxy);
@@ -142,6 +138,12 @@ export default function AnnouncementsTable() {
 				const metadata = fileProxy.getMetadata();
 				const name = fileProxy.getName();
 				const { type: fileType } = file;
+				if (!isUploadImageType(fileType)) {
+					failed++;
+					failedNames.add(name);
+					pushAlert(createAlert("error", `Μη υποστηριζόμενος τύπος αρχείου: ${name} (μόνο JPG, PNG, WebP ή GIF)`));
+					return;
+				}
 				try {
 					await apiHook(API.Announcements.postImage, {
 						RequestObject: {
@@ -155,6 +157,7 @@ export default function AnnouncementsTable() {
 				} catch (e) {
 					console.error(e);
 					failed++;
+					failedNames.add(name);
 					pushAlert(createAlert("error", `Σφάλμα κατά το ανέβασμα της φωτογραφίας: ${name}`));
 				}
 			};
@@ -172,10 +175,16 @@ export default function AnnouncementsTable() {
 			else if (failed < total) progress.warning(`Ανέβηκαν ${total - failed} από ${total} φωτογραφίες.`);
 			else progress.dismiss();
 		}
+		return failedNames;
 	}
 
-	async function imagesDelete(fileHandler: FileHandler<AnnouncementImageMetadata>) {
-		const deletedFiles = fileHandler.getDeletedFiles();
+	/**
+	 * Deletes the stored photos the user removed or replaced — called AFTER the uploads, so a replacement never leaves
+	 * the announcement without its photo: a replaced main image is not even listed (`getRemovedFiles`; Announcements.
+	 * postImage swaps the main row itself), and a photo whose same-named replacement failed to upload (`keep`) stays.
+	 */
+	async function imagesDelete(fileHandler: FileHandler<AnnouncementImageMetadata>, keep: Set<string> = new Set()) {
+		const deletedFiles = fileHandler.getRemovedFiles().filter((f) => !keep.has(f.getName()));
 
 		if (deletedFiles.length === 0) return;
 
@@ -284,9 +293,9 @@ export default function AnnouncementsTable() {
 			const mainImageHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "mainImage");
 			const photosHandler = FileHandler.getHandler<AnnouncementImageMetadata>(PREFIX + ActionEnum.MODIFY + "photos");
 
-			await Promise.all([imagesDelete(mainImageHandler), imagesDelete(photosHandler)]);
-
-			await Promise.all([imagesUpload(mainImageHandler), imagesUpload(photosHandler)]);
+			// Upload first, delete after: a failed upload keeps the stored photo it was meant to replace.
+			const [mainFailed, photosFailed] = await Promise.all([imagesUpload(mainImageHandler), imagesUpload(photosHandler)]);
+			await Promise.all([imagesDelete(mainImageHandler, mainFailed), imagesDelete(photosHandler, photosFailed)]);
 			setAnnouncementHydrate({ action: ActionEnum.MODIFY, id: data.id, isMultiple: false });
 			pushAlert(createAlert("success", "Η ανακοίνωση ενημερώθηκε επιτυχώς"));
 		};

@@ -1,5 +1,6 @@
 import { buildAPIRequest, readAPIResponse, type APICallResult } from "@lib/api/transport";
 import { APIEndpoints, type APIArgs, type APIEndpointNames, type APIResponse } from "@routes/index.client";
+import { onSessionExpired } from "@lib/auth/sessionExpiry.client";
 import { getOriginFromContext } from "@utilities/url";
 
 export { APIRequestError, validationMessages, type APICallResult, type ValidationTree } from "@lib/api/transport";
@@ -30,5 +31,8 @@ export const apiCall = async <T extends APIEndpointNames>(endpoint: T, req?: API
 	// Client-only usage, so the origin always comes from the window location.
 	const { path, init } = buildAPIRequest(APIEndpoints[endpoint], req);
 	const response = await fetch(`${getOriginFromContext()}/api${path}`, init);
+	// The session ended while the dashboard was open: off to sign in (and back). Signing out answers 401
+	// for an already-ended session too, and handles that itself.
+	if (response.status === 401 && endpoint !== "Authentication.userLogout") onSessionExpired();
 	return readAPIResponse<APIResponse[T]>(response);
 };

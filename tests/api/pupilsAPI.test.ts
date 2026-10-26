@@ -14,48 +14,41 @@
  * a real pupil on every run).
  */
 import { z_PupilEnrollments, z_Pupils } from "@lib/api/schemas";
+import { currentSchoolYear } from "@lib/pupils/years";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { Database } from "bun:sqlite";
 import { afterAll, expect, test } from "bun:test";
-import { existsSync, readdirSync, statSync } from "node:fs";
-import path from "node:path";
 import { z } from "astro/zod";
 import { rawAPI } from "../rawAPI.ts";
+import { TEST_AM_RANGE, uniqueTestAm, withLocalDb } from "../localDb.ts";
 import { expectBody, getJson, testEnv, useTestAPI } from "../testHelpers.ts";
 
 // ---------------------------------------------------------------------------
-// Enrollment bookkeeping: record every id that exists before the run, delete
-// anything created during it afterwards. Best-effort (skipped if the local dev
-// DB is not reachable), and never touches rows it did not create.
+// Bookkeeping: record every enrollment and pupil that exists before the run,
+// delete what the run created afterwards (only the «Δοκιμαστικός Μαθητής»
+// fixtures, never anything else). Best-effort: skipped if the local dev DB is
+// not reachable. Leftover test pupils used to pile up in the test ΑΜ range
+// between `dev:clean`s and made random test ΑΜs collide (see uniqueTestAm).
 // ---------------------------------------------------------------------------
-const D1_DIR = path.resolve(import.meta.dir, "../../.wrangler/state/v3/d1/miniflare-D1DatabaseObject");
-
-function withLocalDb<T>(fn: (db: Database) => T): T | null {
-	if (!existsSync(D1_DIR)) return null;
-	const files = readdirSync(D1_DIR)
-		.filter((name) => name.endsWith(".sqlite") && !name.startsWith("metadata"))
-		.map((name) => path.join(D1_DIR, name))
-		.filter((file) => statSync(file).size > 0);
-	if (files.length === 0) return null;
-	const db = new Database(files[0]!);
-	try {
-		return fn(db);
-	} finally {
-		db.close();
-	}
-}
-
-const enrollmentIdsBefore = new Set<number>(
-	withLocalDb((db) => (db.query("SELECT id FROM pupil_enrollments").all() as { id: number }[]).map((row) => row.id)) ?? [],
-);
+const ids = (db: Database, table: string) => (db.query(`SELECT id FROM ${table}`).all() as { id: number }[]).map((row) => row.id);
+const enrollmentIdsBefore = new Set<number>(withLocalDb((db) => ids(db, "pupil_enrollments")) ?? []);
+const pupilIdsBefore = new Set<number>(withLocalDb((db) => ids(db, "pupils")) ?? []);
 
 afterAll(() => {
 	withLocalDb((db) => {
-		const now = db.query("SELECT id FROM pupil_enrollments").all() as { id: number }[];
-		const created = now.map((row) => row.id).filter((id) => !enrollmentIdsBefore.has(id));
-		if (created.length === 0) return;
-		db.run(`DELETE FROM pupil_enrollments WHERE id IN (${created.map(() => "?").join(",")})`, created);
+		const marks = (list: number[]) => list.map(() => "?").join(",");
+		const fixtures = (
+			db.query("SELECT id FROM pupils WHERE am BETWEEN ? AND ? AND last_name = 'Μαθητής' AND first_name = 'Δοκιμαστικός'").all(...TEST_AM_RANGE) as {
+				id: number;
+			}[]
+		)
+			.map((row) => row.id)
+			.filter((id) => !pupilIdsBefore.has(id));
+		if (fixtures.length) db.run(`DELETE FROM pupil_enrollments WHERE pupil_id IN (${marks(fixtures)})`, fixtures);
+		const created = ids(db, "pupil_enrollments").filter((id) => !enrollmentIdsBefore.has(id));
+		if (created.length) db.run(`DELETE FROM pupil_enrollments WHERE id IN (${marks(created)})`, created);
+		if (fixtures.length) db.run(`DELETE FROM pupils WHERE id IN (${marks(fixtures)})`, fixtures);
 		db.run("UPDATE total_enrollments SET amount = (SELECT COUNT(*) FROM pupil_enrollments)");
 	});
 });
@@ -167,6 +160,38 @@ function pupilsTest() {
 		expect(years.data).toContain("2025-2026");
 		expect(total.data.total).toBeGreaterThan(1000);
 		expect(typeof byYear.data[2025]).toBe("number");
+	});
+
+	test("--pupils-- #10b dashboardSummary matches the local database", async () => {
+		const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
+		const res = await useTestAPI("Pupils.dashboardSummary", { UrlArgs: { since } });
+		const json = await getJson<APIResponse["Pupils.dashboardSummary"]>(res);
+		expect(json.data.school_year).toBe(currentSchoolYear());
+		expect(json.data.owing.amount).toBeGreaterThanOrEqual(0);
+		const expected = withLocalDb(
+			(db) =>
+				db
+					.query(
+						`SELECT (SELECT COUNT(*) FROM pupils WHERE needs_review = 1) AS needs_review,
+							COUNT(*) AS enrollments, COUNT(DISTINCT pupil_id) AS pupils, COALESCE(SUM(total_payment - payment_amount), 0) AS amount,
+							(SELECT COUNT(*) FROM pupil_enrollments WHERE source = 'form' AND date > ?) AS new_online
+						FROM pupil_enrollments WHERE registration_year = ? AND payment_amount < total_payment`,
+					)
+					.get(since, currentSchoolYear()) as { needs_review: number; enrollments: number; pupils: number; amount: number; new_online: number },
+		);
+		if (!expected) return; // no local dev DB to compare with
+		expect(json.data.needs_review).toBe(expected.needs_review);
+		expect(json.data.owing).toEqual({ enrollments: expected.enrollments, pupils: expected.pupils, amount: expected.amount });
+		expect(json.data.new_online).toBe(expected.new_online);
+
+		// a later `since` can only count fewer new online enrollments
+		const later = await getJson<APIResponse["Pupils.dashboardSummary"]>(await useTestAPI("Pupils.dashboardSummary", { UrlArgs: { since: Date.now() } }));
+		expect(later.data.new_online).toBeLessThanOrEqual(json.data.new_online);
+	});
+
+	test("--pupils-- #10c dashboardSummary requires a session", async () => {
+		const res = await rawAPI("GET", `/pupils/dashboard/${Date.now()}`);
+		expect(res.status).toBe(401);
 	});
 
 	test("--pupils-- #11 getEnrollmentsByYear returns the joined legacy-compatible row", async () => {
@@ -328,6 +353,22 @@ function pupilsTest() {
 		expect(after.last_name).not.toBe("Δεν-γράφεται");
 	});
 
+	// The Μαθητολόγιο edit form sends am + review_note but never needs_review.
+	test("--pupils-- #13e update re-derives needs_review from the ΑΜ and the review note", async () => {
+		const read = async () => (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId! } }))).data.pupil;
+		const before = await read();
+		try {
+			await useTestAPI("Pupils.update", { RequestObject: { id: pupilId!, review_note: "δοκιμαστική σημείωση" } });
+			expect((await read()).needs_review).toBe(true);
+			await useTestAPI("Pupils.update", { RequestObject: { id: pupilId!, am: before.am, review_note: "" } });
+			expect((await read()).needs_review).toBe(false);
+		} finally {
+			await useTestAPI("Pupils.update", {
+				RequestObject: { id: pupilId!, review_note: before.review_note, needs_review: before.needs_review },
+			});
+		}
+	});
+
 	test("--pupils-- #13d update answers 404 for an unknown pupil instead of a silent no-op", async () => {
 		const res = await useTestAPI("Pupils.update", { RequestObject: { id: 999999, last_name: "Κανείς" } });
 		expect(res.status).toBe(404);
@@ -420,7 +461,7 @@ function pupilsTest() {
 	let reRegistrationPupilId: number | null = null;
 
 	test("--pupils-- #17 public post creates a pupil + enrollment (new ΑΜ)", async () => {
-		createdAm = R.int(9000, 9999);
+		createdAm = uniqueTestAm();
 		const res = await useTestAPI(
 			"Pupils.post",
 			{
@@ -584,7 +625,7 @@ function pupilsTest() {
 	});
 
 	test("--pupils-- #20d a record without ΑΜΚΑ (2023-24) is claimed by surname + birth date, then locked to that ΑΜΚΑ", async () => {
-		const am = String(R.int(9000, 9999));
+		const am = String(uniqueTestAm());
 		const birth_date = Date.UTC(2001, 4, 12);
 		const form = (overrides: Record<string, unknown>) =>
 			useTestAPI(
@@ -639,7 +680,7 @@ function pupilsTest() {
 
 	test("--pupils-- #20e the public form cannot set promotion, a foreign class year or a far school year", async () => {
 		const base = {
-			am: String(R.int(9000, 9999)),
+			am: String(uniqueTestAm()),
 			amka: "44444444444",
 			first_name: "Δοκιμαστικός",
 			last_name: "Μαθητής",

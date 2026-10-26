@@ -4,6 +4,7 @@ import { createStore } from "solid-js/store";
 import type { InputFields, Props as InputProps } from "../../input/Input.solid";
 import Modal, { setGlobalOpen } from "./Modal.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./TableControlTypes";
+import Icon from "@components/other/Icon.solid";
 
 export type Action = {
 	inputs: InputFields<Record<string, InputProps>> | Record<string, InputProps>;
@@ -63,10 +64,8 @@ export function TableControl(props: Props) {
 					aria-disabled="true"
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
-					class={
-						"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-neutral-500 dark:text-neutral-400 opacity-50 cursor-not-allowed blur-[1px]"
-					}>
-					<i aria-hidden="true" class={"text-lg max-sm:text-base " + (tableAction.action.icon || ActionIcon.ADD)}></i>
+					class={"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-ink-muted opacity-35 cursor-not-allowed"}>
+					<Icon name={tableAction.action.icon || ActionIcon.ADD} class="text-lg max-sm:text-base" />
 				</button>
 			}>
 			<>
@@ -75,16 +74,14 @@ export function TableControl(props: Props) {
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
 					class={
-						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl transition-colors duration-300 hover:bg-red-200 dark:hover:bg-red-900/70 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-red-900 dark:focus-visible:outline-red-300"
+						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-ink"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
-					<i
-						aria-hidden="true"
+					<Icon
+						name={tableAction.action.icon || ActionIcon.ADD}
 						style={{ "backface-visibility": "hidden" }}
-						class={
-							"text-lg max-sm:text-base will-change-transform transition-transform duration-150 ease-[cubic-bezier(0,.85,.43,.64)] group-hover/ctrlBtn:scale-[1.096] origin-center " +
-							(tableAction.action.icon || ActionIcon.ADD)
-						}></i>
+						class="text-lg max-sm:text-base will-change-transform transition-transform duration-150 ease-[cubic-bezier(0,.85,.43,.64)] group-hover/ctrlBtn:scale-[1.096] origin-center"
+					/>
 				</button>
 				<Modal prefix={prefix} actionStore={tableAction as { action: Action }} />
 			</>
@@ -96,7 +93,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 	return (
 		<div
 			data-prefix={props.prefix}
-			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center shadow-md shadow-gray-500 bg-white dark:shadow-gray-700 dark:bg-dark rounded-xl bg-transparent text-red-950 dark:text-red-50">
+			class="w-max place-self-center h-min grid auto-cols-auto grid-flow-col items-center divide-x divide-line rounded-xl border border-line bg-surface text-ink shadow-sm shadow-shade">
 			{props.children}
 		</div>
 	);
@@ -104,7 +101,7 @@ export function TableControlsGroup(props: { prefix: string; children: Element | 
 
 export function TopTableGroup(props: { children: Element | JSX.Element }) {
 	return (
-		<div style={{ "grid-area": "top_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1001]">
+		<div style={{ "grid-area": "top_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-1001">
 			{props.children}
 		</div>
 	);
@@ -112,7 +109,7 @@ export function TopTableGroup(props: { children: Element | JSX.Element }) {
 
 export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 	return (
-		<div style={{ "grid-area": "bottom_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-[1000]">
+		<div style={{ "grid-area": "bottom_tools" }} class="flex flex-row flex-wrap max-sm:gap-y-4 w-full justify-evenly z-1000">
 			{props.children}
 		</div>
 	);
@@ -120,9 +117,7 @@ export function BottomTableGroup(props: { children: Element | JSX.Element }) {
 
 export function LeftTableGroup(props: { children?: Element | JSX.Element }) {
 	return (
-		<div
-			style={{ "grid-area": "left_tools" }}
-			class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-[1000]">
+		<div style={{ "grid-area": "left_tools" }} class="flex flex-col justify-self-center self-center translate-y-[-50%] items-center w-full gap-y-12 z-1000">
 			{props.children}
 		</div>
 	);

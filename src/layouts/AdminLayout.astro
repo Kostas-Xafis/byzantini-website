@@ -43,7 +43,7 @@ const { title } = Astro.props;
 					grid-template-columns: 180px 1fr;
 					grid-template-rows: 100%;
 					height: 100dvh;
-					background: rgb(252, 240, 240);
+					background: var(--color-page);
 				}
 				label,
 				button {
@@ -66,7 +66,7 @@ const { title } = Astro.props;
 					background-color: #1a1a1a;
 				}
 				html.dark #AdminPage {
-					background: #1a1a1a;
+					background: var(--color-page);
 				}
 				html.dark p,
 				html.dark a,
@@ -79,9 +79,6 @@ const { title } = Astro.props;
 				html.dark select {
 					background-color: #2d2d2d;
 					color: #f6f6f6;
-				}
-				html.dark .bg-white {
-					background-color: #242424;
 				}
 				html.dark .text-gray-600,
 				html.dark .text-gray-500 {
@@ -99,47 +96,65 @@ const { title } = Astro.props;
 			}
 
 			#AdminPage,
-			#AdminPage * {
+			#AdminPage *,
+			[role="dialog"],
+			[role="dialog"] * {
 				scrollbar-width: thin;
 				scrollbar-color: rgba(127, 29, 29, 0.55) rgba(127, 29, 29, 0.1);
 			}
 			#AdminPage::-webkit-scrollbar,
-			#AdminPage *::-webkit-scrollbar {
+			#AdminPage *::-webkit-scrollbar,
+			[role="dialog"]::-webkit-scrollbar,
+			[role="dialog"] *::-webkit-scrollbar {
 				width: 10px;
 				height: 10px;
 			}
 			#AdminPage::-webkit-scrollbar-track,
-			#AdminPage *::-webkit-scrollbar-track {
+			#AdminPage *::-webkit-scrollbar-track,
+			[role="dialog"]::-webkit-scrollbar-track,
+			[role="dialog"] *::-webkit-scrollbar-track {
 				background: rgba(127, 29, 29, 0.1);
 				border-radius: 999px;
 			}
 			#AdminPage::-webkit-scrollbar-thumb,
-			#AdminPage *::-webkit-scrollbar-thumb {
+			#AdminPage *::-webkit-scrollbar-thumb,
+			[role="dialog"]::-webkit-scrollbar-thumb,
+			[role="dialog"] *::-webkit-scrollbar-thumb {
 				background: rgba(127, 29, 29, 0.55);
 				border-radius: 999px;
 				border: 2px solid rgba(255, 255, 255, 0);
 				background-clip: padding-box;
 			}
 			#AdminPage::-webkit-scrollbar-thumb:hover,
-			#AdminPage *::-webkit-scrollbar-thumb:hover {
+			#AdminPage *::-webkit-scrollbar-thumb:hover,
+			[role="dialog"]::-webkit-scrollbar-thumb:hover,
+			[role="dialog"] *::-webkit-scrollbar-thumb:hover {
 				background: rgba(127, 29, 29, 0.75);
 			}
 
 			html.dark #AdminPage,
-			html.dark #AdminPage * {
+			html.dark #AdminPage *,
+			html.dark [role="dialog"],
+			html.dark [role="dialog"] * {
 				scrollbar-color: rgba(148, 163, 184, 0.55) rgba(51, 65, 85, 0.35);
 			}
 			html.dark #AdminPage::-webkit-scrollbar-track,
-			html.dark #AdminPage *::-webkit-scrollbar-track {
+			html.dark #AdminPage *::-webkit-scrollbar-track,
+			html.dark [role="dialog"]::-webkit-scrollbar-track,
+			html.dark [role="dialog"] *::-webkit-scrollbar-track {
 				background: rgba(51, 65, 85, 0.35);
 			}
 			html.dark #AdminPage::-webkit-scrollbar-thumb,
-			html.dark #AdminPage *::-webkit-scrollbar-thumb {
+			html.dark #AdminPage *::-webkit-scrollbar-thumb,
+			html.dark [role="dialog"]::-webkit-scrollbar-thumb,
+			html.dark [role="dialog"] *::-webkit-scrollbar-thumb {
 				background: rgba(148, 163, 184, 0.55);
 				border-color: rgba(26, 26, 26, 0);
 			}
 			html.dark #AdminPage::-webkit-scrollbar-thumb:hover,
-			html.dark #AdminPage *::-webkit-scrollbar-thumb:hover {
+			html.dark #AdminPage *::-webkit-scrollbar-thumb:hover,
+			html.dark [role="dialog"]::-webkit-scrollbar-thumb:hover,
+			html.dark [role="dialog"] *::-webkit-scrollbar-thumb:hover {
 				background: rgba(203, 213, 225, 0.7);
 			}
 			input[type="number"] {
@@ -215,7 +230,8 @@ const { title } = Astro.props;
 			}
 
 			.animate-shake ~ button:first-of-type,
-			.animate-shake button {
+			.animate-shake button,
+			button.animate-shake {
 				animation: ShakeAnimation 0.6s ease-in-out;
 			}
 			@keyframes fadeInRight {
@@ -285,25 +301,17 @@ const { title } = Astro.props;
 	</head>
 	<body class="box-border p-0">
 		<script>
-			import { apiCall, APIRequestError } from "@hooks/apiCall";
+			import { apiCall } from "@hooks/apiCall";
+			import { watchSession } from "@lib/auth/sessionExpiry.client";
 			import { API } from "@routes/index.client";
-			import { buildLoginUrl, currentRedirectTarget } from "@utilities/redirect";
 
-			// The server already validated the session before sending this page (`admin/[...slug].astro`); this is
-			// the fallback for a session that expires while the panel is open. Only a definitive "not signed in"
-			// answer (401 or `isValid: false`) leaves the page — a network error or 5xx must not log the admin out.
-			const toLogin = () => {
-				// Hand the requested URL (deep links such as /admin/pupils?q=… carry the search query in the
-				// query string) to the sign-in screen so the admin lands back on it instead of the dashboard home.
-				window.location.href = buildLoginUrl(currentRedirectTarget());
-			};
-			try {
+			// The server already validated the session before sending this page (`admin/[...slug].astro`); this
+			// catches a session that ends while the panel is open — now, and whenever the tab is shown again.
+			// A 401 makes `apiCall` send the admin to sign in (and back); a network error or 5xx keeps the page.
+			watchSession(async () => {
 				const res = await apiCall(API.Authentication.authenticateSession);
-				if ("data" in res && res.data?.isValid === false) toLogin();
-			} catch (e) {
-				if (e instanceof APIRequestError && e.status === 401) toLogin();
-				else console.warn("[admin] session check failed, staying on the page:", e);
-			}
+				return !("data" in res) || res.data?.isValid !== false;
+			});
 		</script>
 		<slot />
 		<DatepickerCSS />

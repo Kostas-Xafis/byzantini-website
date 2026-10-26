@@ -1,7 +1,11 @@
+import { recordActivity } from "@lib/activity/record.server";
+import { recordServerError } from "@lib/errors/record.server";
+import { activityRoutes } from "./activity";
 import { announcementsRoutes } from "./announcements";
 import { authenticationRoutes } from "./authentication";
 import { booksRoutes } from "./books";
 import { emailSubscriptionsRoutes } from "./emailSubscriptions";
+import { errorsRoutes, healthRoutes } from "./errors";
 import { feeCatalogRoutes } from "./feeCatalog";
 import { instrumentsRoutes } from "./instruments";
 import { locationsRoutes } from "./locations";
@@ -15,7 +19,7 @@ import { sysusersRoutes } from "./sysusers";
 import { teachersRoutes } from "./teachers";
 import { wholesalersRoutes } from "./wholesalers";
 import type { APIEndpointNames, APIRouteInstance } from "../types";
-import type { APIServer } from "./APIServer";
+import { APIServer } from "./APIServer";
 
 /**
  * Route registry — SERVER ONLY.
@@ -46,10 +50,22 @@ export const routeGroups = {
 	Announcements: announcementsRoutes,
 	SettingsBackup: settingsBackupRoutes,
 	Authentication: authenticationRoutes,
+	Activity: activityRoutes,
+	Errors: errorsRoutes,
+	Health: healthRoutes,
 } as const;
 
 /** Any registered route instance, whatever its generics. */
 type AnyAPIServer = APIServer<any, any, any, any>;
+
+// Every route learns its endpoint key (for the activity log), and successful changes are recorded.
+for (const [group, routes] of Object.entries(routeGroups)) {
+	for (const [name, route] of Object.entries(routes)) (route as AnyAPIServer).endpoint = `${group}.${name}`;
+}
+APIServer.afterWrite = recordActivity;
+// Unexpected failures go to the «Σφάλματα» log (and from there to the sysadmin's digest).
+APIServer.onServerError = ({ route, request, status, error }) =>
+	recordServerError({ source: route.endpoint ?? `${route.method} ${route.path}`, status, error, host: new URL(request.url).host });
 
 /**
  * Every registered route as `[endpoint key, instance]`, in registry order — what the client contract

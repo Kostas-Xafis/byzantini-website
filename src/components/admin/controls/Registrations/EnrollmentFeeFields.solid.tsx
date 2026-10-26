@@ -2,6 +2,7 @@ import { EVALUATION_BADGE, EVALUATION_LABEL, placementClassYearsForClassId } fro
 import { type APIResponse } from "@routes/index.client";
 import type { ExtendedFormData } from "@utilities/forms";
 import { Index, Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
+import Icon from "@components/other/Icon.solid";
 
 /*
  * Enrollment form pieces for the fees (docs/FEES.md §3, §5), rendered inside the generic `Modal` through an
@@ -29,7 +30,7 @@ export function FeeManualMarker(props: { compact?: boolean }) {
 		<span
 			title="Ειδική τιμή: ορίστηκε χειροκίνητα, δεν επανυπολογίζεται"
 			class="inline-flex items-center gap-x-1 whitespace-nowrap rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-900 dark:bg-sky-900/50 dark:text-sky-100">
-			<i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>
+			<Icon name="hand-coins" />
 			{props.compact ? <span class="sr-only">Ειδική τιμή</span> : "Ειδική τιμή"}
 		</span>
 	);
@@ -47,10 +48,9 @@ export function EvaluationBadge() {
 }
 
 const inputClass =
-	"w-full cursor-pointer rounded-xl border border-gray-300 bg-white px-3 py-2.5 font-didact text-lg text-red-950 transition-[border-color,box-shadow] hover:border-gray-400 focus:border-red-800 focus:ring-4 focus:ring-red-800/10 focus-visible:outline-hidden aria-invalid:border-amber-500 dark:border-neutral-600 dark:bg-dark dark:text-red-50 dark:hover:border-neutral-500 dark:focus:border-red-400 dark:focus:ring-red-400/15";
+	"w-full rounded-md border-2 border-ink-muted bg-surface px-3 py-2 font-didact text-lg text-ink shadow-md shadow-shade focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink";
 
-const fieldsetClass =
-	"col-span-full grid gap-4 rounded-xl border border-gray-300 bg-gray-50/70 px-4 pt-2 pb-4 font-didact text-red-950 dark:border-neutral-600 dark:bg-neutral-800/30 dark:text-red-50";
+const fieldsetClass = "col-span-full grid gap-4 rounded-lg border-2 border-accent-ink/30 p-4 font-didact text-ink";
 
 let uidSeq = 0;
 const nextUid = (prefix: string) => `${prefix}-${++uidSeq}`;
@@ -118,7 +118,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 
 	return (
 		<fieldset ref={root} class={fieldsetClass}>
-			<legend class="rounded-md px-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Κατάταξη</legend>
+			<legend class="px-2 text-xl">Κατάταξη</legend>
 			<div class="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
 				<label class="flex cursor-pointer items-center gap-x-3 self-center text-lg">
 					<input
@@ -127,12 +127,12 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 						value="true"
 						checked={evaluation()}
 						onChange={(e) => setEvaluation(e.currentTarget.checked)}
-						class="size-5 cursor-pointer accent-red-900 dark:accent-red-500"
+						class="size-5 cursor-pointer accent-brand"
 					/>
 					{EVALUATION_LABEL}
 				</label>
 				<label class="grid gap-y-1 text-base">
-					<span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Έτος Φοίτησης</span>
+					<span>Έτος Φοίτησης</span>
 					<select
 						name="class_year"
 						class={inputClass}
@@ -150,7 +150,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 							)}
 						</Index>
 					</select>
-					<span id={`${uid}-hint`} class="text-sm text-gray-600 dark:text-gray-300">
+					<span id={`${uid}-hint`} class="text-sm text-ink-muted">
 						<Show when={!classYear()} fallback={evaluation() ? `Τοποθετήθηκε μετά από κατάταξη (${EVALUATION_BADGE})` : ""}>
 							{evaluation() ? "Αναμένει κατάταξη — επιλέξτε έτος για να τοποθετηθεί" : "Απαιτείται έτος φοίτησης"}
 						</Show>

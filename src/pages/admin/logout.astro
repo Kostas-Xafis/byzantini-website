@@ -1,10 +1,8 @@
 ---
-import { getSessionId } from "@utilities/authentication";
 import SigninLayout from "@layouts/SigninLayout.astro";
 export const prerender = false;
 
-const sid = getSessionId(Astro);
-if (!sid) return Astro.redirect("/admin");
+if (!Astro.cookies.get("session_id")?.value) return Astro.redirect("/login");
 ---
 
 <SigninLayout title="Αποσύνδεση">
@@ -14,6 +12,7 @@ if (!sid) return Astro.redirect("/admin");
 		try {
 			// The server clears the HttpOnly session cookie.
 			await apiCall("Authentication.userLogout");
+			localStorage.removeItem("sys_user"); // pre-0008 copy of the signed-in admin
 			document.location.pathname = "/login";
 		} catch (e) {
 			document.location.pathname = "/admin";

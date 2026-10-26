@@ -106,11 +106,17 @@ export class FileProxy<T extends Record<string, any>> {
 		return `FileProxy(${this.#name}, isProxy=${this.#isFileProxy}, markedForDeletion=${this.#markForDeletion}, metadata=${JSON.stringify(this.#metadata)})`;
 	}
 
-	async toImageUrl(): Promise<string> {
+	/**
+	 * A displayable URL of the file: an object URL of an image, or the first page of a PDF. A stored (proxy) file has
+	 * no data here, so it needs `storedUrl` — where it is served from (e.g. `/kathigites/cv/<name>` for a CV).
+	 */
+	async toImageUrl(storedUrl?: string): Promise<string> {
 		let file = this.getFile();
 		let type: string;
-		if (this.#isFileProxy && this.#name.endsWith(".pdf")) {
-			const pdf = await (await fetch("/kathigites/cv/" + this.#name)).arrayBuffer();
+		if (this.#isFileProxy && storedUrl && this.#name.toLowerCase().endsWith(".pdf")) {
+			const res = await fetch(storedUrl);
+			if (!res.ok) throw Error("File not found");
+			const pdf = await res.arrayBuffer();
 			type = "application/pdf";
 			file = new File([pdf], this.#name, { type });
 		} else if (file) {
@@ -131,23 +137,35 @@ export class FileProxy<T extends Record<string, any>> {
 // The file / multifile input is generating a filehandler class, that a component can consume to get the files or delete previously uploaded ones.
 export class FileHandler<Metadata extends Record<string, any>> {
 	private static AllFiles: Record<string, FileHandler<any>> = {};
+	private prefix: string;
 	private files: FileProxy<Metadata>[] = [];
 	private metadata: Metadata;
 	private initialFileProxies: FileProxy<Metadata>[] = [];
 	private isSingleFile: boolean = false;
 
-	constructor(prefix: string, config: Constructor<Metadata> = { isSingleFile: false, files: [], metadata: {} as Metadata }) {
-		FileHandler.AllFiles[prefix] = this;
+	/**
+	 * Registers the handler under `prefix` (the input's modal prefix + field name) so the modal's submit can find it
+	 * with `FileHandler.getHandler(prefix)`. Pass `register: false` for a throwaway handler.
+	 * Proxies without a name (an empty DB column) are dropped: they are not files.
+	 */
+	constructor(
+		prefix: string,
+		config: Constructor<Metadata> = { isSingleFile: false, files: [], metadata: {} as Metadata },
+		{ register = true }: { register?: boolean } = {},
+	) {
+		this.prefix = prefix;
+		if (register) FileHandler.AllFiles[prefix] = this;
 
 		this.metadata = config.metadata || ({} as Metadata);
 		this.isSingleFile = config.isSingleFile;
-		if (!config.isSingleFile && Array.isArray(config.files)) {
-			this.files = config.files.slice();
-			this.initialFileProxies = config.files.slice();
-		} else if (config.isSingleFile && config.file) {
-			this.files = [config.file];
-			this.initialFileProxies = [config.file];
-		}
+		const initial = (config.isSingleFile ? (config.file ? [config.file] : []) : (config.files ?? [])).filter((f) => f.getName() !== "");
+		this.files = initial.slice();
+		this.initialFileProxies = initial.slice();
+	}
+
+	/** Removes the handler from the registry — only if it is still the registered one (a newer input may have replaced it). */
+	unregister() {
+		if (FileHandler.AllFiles[this.prefix] === this) delete FileHandler.AllFiles[this.prefix];
 	}
 
 	addFiles(files: File[] | FileList, metadata?: Metadata) {
@@ -156,6 +174,10 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		const proxyFiles = Array.from(files).map((file) => FileHandler.createFileProxy<Metadata>(file.name, { file, metadata: metadata || this.metadata }));
 		// console.log("Adding files: ", proxyFiles);
 		if (this.isSingleFile) {
+			// Replacing the stored file must delete it on submit, or the old upload is left behind (or, for an
+			// announcement, stays a second "main" image next to the new one).
+			const previous = this.files[0];
+			if (previous?.isProxy()) this.markAsDeleteFileProxy(previous);
 			this.files = [proxyFiles[0]];
 			return;
 		}
@@ -177,7 +199,7 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		this.files = this.files.concat(newFiles);
 	}
 	removeFile(index: number, force: boolean = false): void {
-		if (index < 0 || index >= this.files.length) throw Error("Index out of bounds");
+		if (index < 0 || index >= this.files.length) return;
 
 		const file = this.files[index];
 		if (file.isProxy()) {
@@ -203,8 +225,18 @@ export class FileHandler<Metadata extends Record<string, any>> {
 	getNewFiles() {
 		return this.files.filter((f: FileProxy<Metadata>) => !f.isProxy());
 	}
+	/** Stored files the user removed or replaced (in a multi-file input, a file re-added under the same name replaces it). */
 	getDeletedFiles() {
 		return this.initialFileProxies.filter((f: FileProxy<Metadata>) => f.isProxy() && f.isMarkedForDeletion());
+	}
+	/**
+	 * Stored files of a single-file input to delete on submit: the removed one only. A REPLACED file is not listed —
+	 * the upload routes store the new file, point the record at it and delete the previous file themselves, so a
+	 * failed upload never leaves the record without its file. (Multi-file inputs: same as `getDeletedFiles`.)
+	 */
+	getRemovedFiles() {
+		if (this.isSingleFile && this.getNewFiles().length > 0) return [];
+		return this.getDeletedFiles();
 	}
 	getInitialFiles() {
 		return this.initialFileProxies.filter((f: FileProxy<Metadata>) => f.isProxy() && !f.isMarkedForDeletion());
@@ -270,6 +302,21 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		if (FileHandler.AllFiles[prefix] == null) return [];
 		return FileHandler.AllFiles[prefix].getInitialFiles();
 	}
+	/**
+	 * Whether `file` satisfies an `accept` list (".pdf", "image/*", "image/png", …) — the browser enforces `accept`
+	 * only in its file picker, never for dropped files. An empty list accepts everything.
+	 */
+	static accepts(file: File, accept?: string) {
+		if (!accept) return true;
+		const name = file.name.toLowerCase();
+		const type = file.type.toLowerCase();
+		return accept
+			.split(",")
+			.map((a) => a.trim().toLowerCase())
+			.filter(Boolean)
+			.some((a) => (a.startsWith(".") ? name.endsWith(a) : a.endsWith("/*") ? type.startsWith(a.slice(0, -1)) : type === a));
+	}
+
 	static createFileProxy<K extends Record<string, any>>(
 		name?: string,
 		{ file = null, metadata = {} as K }: { isProxy?: boolean; file?: File | null; metadata?: K } = {},
@@ -280,16 +327,24 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		// console.log("Created FileProxy: ", fileProxy);
 		return fileProxy;
 	}
-	static getHandler<Metadata extends Record<string, any>>(prefix: string) {
-		return FileHandler.AllFiles[prefix] as FileHandler<Metadata>;
+	/**
+	 * The handler of a mounted file input. A field that never mounted (hidden, or not part of this modal) gets an
+	 * empty, unregistered handler, so the submit code can call it unconditionally (it uploads and deletes nothing).
+	 */
+	static getHandler<Metadata extends Record<string, any>>(prefix: string): FileHandler<Metadata> {
+		return (
+			(FileHandler.AllFiles[prefix] as FileHandler<Metadata> | undefined) ??
+			new FileHandler<Metadata>(prefix, { isSingleFile: false }, { register: false })
+		);
 	}
 
 	private static downloadBlob(blob: Blob | null, name: string) {
 		if (!blob) return;
-		let a = document.createElement("a");
+		const a = document.createElement("a");
 		a.href = URL.createObjectURL(blob);
 		a.download = name;
 		a.click();
+		setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
 	}
 
 	async downloadFile(index: number) {
@@ -304,32 +359,18 @@ export class FileHandler<Metadata extends Record<string, any>> {
 		FileHandler.downloadBlob(await FileHandler.fileToBlob(file), name);
 	}
 
+	/** The new (not yet uploaded) file at `index`; an empty Blob for a stored proxy or a missing index. A File is a Blob already. */
 	fileToBlob(index: number): Promise<Blob> {
 		const fProxy = this.files[index];
 		if (!fProxy || !fProxy.getName() || fProxy.isProxy()) return Promise.resolve(new Blob([]));
 		const file = fProxy.getFile();
 		if (!file) throw Error("File not found");
-
-		return new Promise((res) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				if (reader.result) res(new Blob([reader.result], { type: file.type }));
-				else res(new Blob([]));
-			};
-			reader.readAsArrayBuffer(file);
-		});
+		return Promise.resolve(file);
 	}
 
 	static fileToBlob(file?: File | null): Promise<Blob> {
 		if (!file || !file.name) return Promise.resolve(new Blob([]));
-		return new Promise((res) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				if (reader.result) res(new Blob([reader.result], { type: file.type }));
-				else res(new Blob([]));
-			};
-			reader.readAsArrayBuffer(file);
-		});
+		return Promise.resolve(file);
 	}
 
 	static async fileToUint8Array(file?: File | null): Promise<Uint8Array | null> {

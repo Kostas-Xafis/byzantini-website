@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
 import Spinner from "@components/other/Spinner.astro";
@@ -116,7 +117,7 @@ const videoSchemas = links
 	{videoSchemas.map((video) => <JsonLd data={video} key={video.embedUrl} />)}
 	<div
 		id="readingProgressBar"
-		class="pointer-events-none fixed left-0 right-0 z-[999] h-[3px]"
+		class="pointer-events-none fixed left-0 right-0 z-999 h-0.75"
 		role="progressbar"
 		aria-label="Πρόοδος ανάγνωσης"
 		aria-valuemin="0"
@@ -133,31 +134,31 @@ const videoSchemas = links
 		<a
 			href="/sxoli/anakoinoseis"
 			class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
-			<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+			<Icon name="arrow-left" />
 			Οι Ανακοινώσεις
 		</a>
 
 		<h1
-			class="max-w-[60ch] text-center text-4xl max-sm:text-2xl font-bold text-red-900 font-anaktoria break-words drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
+			class="max-w-[60ch] text-center text-4xl max-sm:text-2xl font-bold text-red-900 font-anaktoria wrap-break-word drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
 			{announcement.title}
 		</h1>
 
 		<div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
 			<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
-				<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+				<Icon name="calendar" />
 				<time datetime={new Date(announcement.date).toISOString()}>
 					{formatDate(announcement.date)}
 				</time>
 			</span>
 			<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
-				<i class="fa-solid fa-eye" aria-hidden="true"></i>
+				<Icon name="eye" />
 				{announcement.views}
 				{announcement.views === 1 ? "προβολή" : "προβολές"}
 			</span>
 			{
 				isRecent(announcement.date) && (
 					<span
-						class="inline-flex items-center rounded-md bg-amber-400/95 px-2.5 py-1 text-sm max-sm:text-xs font-bold text-amber-950"
+						class="inline-flex items-center rounded-md bg-ivory-deep/95 px-2.5 py-1 text-sm max-sm:text-xs font-bold text-red-900"
 						aria-label="Νέα ανακοίνωση">
 						Νέο
 					</span>
@@ -165,7 +166,7 @@ const videoSchemas = links
 			}
 		</div>
 
-		<div class="imgLoader group/img relative w-full max-w-[780px]">
+		<div class="imgLoader group/img relative w-full max-w-195">
 			<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-xs bg-red-50/40 backdrop-blur-[2px]">
 				<Spinner />
 			</div>
@@ -178,7 +179,7 @@ const videoSchemas = links
 					alt={announcement.title}
 					width="780"
 					height="640"
-					class="w-full max-h-[clamp(0px,100vh,640px)] max-sm:max-h-[420px] object-cover"
+					class="w-full max-h-[clamp(0px,100vh,640px)] max-sm:max-h-105 object-cover"
 				/>
 			</div>
 		</div>
@@ -209,7 +210,7 @@ const videoSchemas = links
 
 		{
 			links.length > 0 && (
-				<div class="flex w-full max-w-[720px] flex-col items-center gap-y-4 mt-2">
+				<div class="flex w-full max-w-180 flex-col items-center gap-y-4 mt-2">
 					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Βίντεο</h2>
 					<div class="flex w-full flex-wrap items-center justify-center gap-6">
 						{links.map((link) => {
@@ -222,7 +223,7 @@ const videoSchemas = links
 							if (ytId) {
 								return (
 									<div
-										class="videoWrap group/video relative w-full max-w-[720px] aspect-video overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600"
+										class="videoWrap group/video relative w-full max-w-180 aspect-video overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600"
 										data-video-id={ytId}>
 										<button
 											type="button"
@@ -238,7 +239,7 @@ const videoSchemas = links
 											/>
 											<span class="absolute inset-0 grid place-items-center bg-black/20 transition-colors duration-300 hover:bg-black/10">
 												<span class="grid place-items-center w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full bg-red-900 text-red-50 text-2xl max-sm:text-xl shadow-lg transition-transform duration-300 group-hover/video:scale-110">
-													<i class="fa-solid fa-play" aria-hidden="true" />
+													<Icon name="play" />
 												</span>
 											</span>
 										</button>
@@ -256,7 +257,7 @@ const videoSchemas = links
 								);
 							}
 							return (
-								<div class="imgLoader group/img relative w-full max-w-[720px] aspect-video">
+								<div class="imgLoader group/img relative w-full max-w-180 aspect-video">
 									<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 rounded-xs">
 										<Spinner />
 									</div>
@@ -285,14 +286,14 @@ const videoSchemas = links
 					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Φωτογραφίες</h2>
 					<div class="flex w-full flex-wrap items-center justify-center gap-6">
 						{announcement.images.map((image, i) => (
-							<div class="imgLoader group/img relative w-[400px] max-w-[85vw] h-[320px]" data-imgIndex={i}>
+							<div class="imgLoader group/img relative w-100 max-w-[85vw] h-80" data-imgIndex={i}>
 								<div class="hidden group-[:is(.loading)]/img:block absolute inset-0">
 									<Spinner />
 								</div>
 								<button
 									type="button"
 									aria-label={`Προβολή φωτογραφίας ${i + 1} από ${announcement.images.length}`}
-									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-xs border-2 border-red-900 transition-shadow hover:shadow-lg !shadow-slate-800 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-xs border-2 border-red-900 transition-shadow hover:shadow-lg shadow-slate-800! focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
 									<img
 										data-src={imgThumbSrc + image.name}
 										alt={announcement.title}
@@ -312,14 +313,14 @@ const videoSchemas = links
 	<div
 		id="imageCarouselContainer"
 		role="presentation"
-		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-[1000]" + " hidden"}>
+		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-1000" + " hidden"}>
 		<div
 			id="imageCarouselPanel"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="imageCarouselTitle"
 			tabindex="-1"
-			class="relative grid grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-[4px] focus-visible:outline-hidden">
+			class="relative grid grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-xs focus-visible:outline-hidden">
 			<h2 id="imageCarouselTitle" class="sr-only">Φωτογραφίες: {announcement.title}</h2>
 			<p id="imageCarouselStatus" class="sr-only" aria-live="polite"></p>
 			<div class="absolute top-2 right-3 flex flex-row justify-end">
@@ -329,19 +330,19 @@ const videoSchemas = links
 					aria-label="Κλείσιμο"
 					title="Κλείσιμο"
 					class="rounded-xl text-2xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-					<i class="fa-solid fa-xmark text-white hover:text-red-100" aria-hidden="true"></i>
+					<Icon name="close" class="text-white hover:text-red-100" />
 				</button>
 			</div>
-			<div id="imageCarousel" data-index="0" class="max-h-[calc(95dvh_-_24px)] grid grid-rows-[calc(95dvh_-_79px),76px] justify-items-center gap-y-2">
+			<div id="imageCarousel" data-index="0" class="max-h-[calc(95dvh-24px)] grid grid-rows-[calc(95dvh-79px),76px] justify-items-center gap-y-2">
 				<div class="imgLoader group/img flex flex-col items-center">
-					<div class="relative max-w-[90dvw] max-h-[calc(95dvh_-_79px)] flex items-center rounded-lg overflow-hidden">
+					<div class="relative max-w-[90dvw] max-h-[calc(95dvh-79px)] flex items-center rounded-lg overflow-hidden">
 						<div class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
 							<Spinner />
 						</div>
 						<img
 							id="mainCarouselImg"
 							alt={announcement.title}
-							class="object-cover h-[clamp(0px,100vh,calc(95dvh_-_79px))] hover:shadow-lg !shadow-red-950"
+							class="object-cover h-[clamp(0px,100vh,calc(95dvh-79px))] hover:shadow-lg shadow-red-950!"
 							data-src={announcement.images[0] ? imgSrc + announcement.images[0].name : ""}
 						/>
 					</div>
@@ -353,14 +354,14 @@ const videoSchemas = links
 						aria-label="Προηγούμενη εικόνα"
 						title="Προηγούμενη εικόνα"
 						class="mr-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:mr-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-						<i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+						<Icon name="chevron-left" />
 					</button>
 					{
 						announcement.images
 							.slice(0, 5)
 							.map((image) => (
 								<img
-									class="w-[60px] aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg !shadow-red-950 cursor-pointer"
+									class="w-15 aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg shadow-red-950! cursor-pointer"
 									alt=""
 									src={imgThumbSrc + image.name}
 								/>
@@ -372,7 +373,7 @@ const videoSchemas = links
 						aria-label="Επόμενη εικόνα"
 						title="Επόμενη εικόνα"
 						class="ml-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:ml-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-						<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+						<Icon name="chevron-right" />
 					</button>
 				</div>
 			</div>

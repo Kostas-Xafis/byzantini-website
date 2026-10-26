@@ -159,9 +159,9 @@ const logoUrl = imageUrl ? new URL(imageUrl, Astro.site ?? Astro.request.url).hr
 			}
 		</style>
 	</head>
-	<body class="box-border relative h-[100dvh] p-0 grid bg-white grid-rows-1 max-sm:overflow-auto">
+	<body class="box-border relative h-dvh p-0 grid bg-white grid-rows-1 max-sm:overflow-auto">
 		<Navbar />
-		<div class="relative w-full h-[100dvh] grid grid-rows-[100%] pt-(--nav-h)">
+		<div class="relative w-full h-dvh grid grid-rows-[100%] pt-(--nav-h)">
 			<slot />
 		</div>
 	</body>

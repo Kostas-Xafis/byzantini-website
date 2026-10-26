@@ -1,10 +1,12 @@
 import { customEvent } from "@_types/custom-events";
-import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, Teachers } from "@_types/entities";
+import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, TeacherClasses, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
+import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
 import { currentSchoolYear } from "@lib/pupils/years";
 import { API, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
+import Icon from "@components/other/Icon.solid";
 import { createComponent, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
@@ -69,14 +71,14 @@ const musicType = (classId: number) => MUSIC_TYPES.find((type) => type.id === cl
 const musicLabel = (classId: number) => musicType(classId)?.label ?? "Άγνωστο";
 
 // ---- shared look ------------------------------------------------------------
-// The admin layout maps `.bg-white` to #242424 in dark mode, so `bg-white` IS the card surface in both themes.
-const CARD = "rounded-2xl border border-gray-200 bg-white shadow-sm shadow-gray-200/60 dark:border-white/10 dark:shadow-none";
+// `bg-surface` (global.css token) is the card surface in both themes: white, #242424 in dark mode.
+const CARD = "rounded-2xl border border-gray-200 bg-surface shadow-sm shadow-gray-200/60 dark:border-white/10 dark:shadow-none";
 const BTN =
 	"inline-flex items-center justify-center gap-x-2 whitespace-nowrap rounded-xl px-3.5 py-2 font-didact text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-800 disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY = BTN + " bg-red-900 text-white! hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-700";
 const BTN_SECONDARY =
 	BTN +
-	" border border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 dark:border-neutral-600 dark:hover:border-neutral-500 dark:hover:bg-neutral-700";
+	" border border-gray-300 bg-surface hover:border-gray-400 hover:bg-gray-50 dark:border-neutral-600 dark:hover:border-neutral-500 dark:hover:bg-neutral-700";
 const BTN_DANGER = BTN + " text-red-700 hover:bg-red-50 dark:text-red-300! dark:hover:bg-red-900/30";
 const ICON_BTN =
 	"inline-grid size-9 place-items-center rounded-lg text-red-900 transition-colors hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-800 dark:text-red-200 dark:hover:bg-red-900/35";
@@ -106,7 +108,7 @@ const ReviewChip = (props: { long?: boolean }) => (
 	<span
 		title="Χρειάζεται έλεγχο"
 		class="inline-flex items-center gap-x-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-semibold text-amber-900 ring-1 ring-amber-300 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-500/40">
-		<i class="fa-solid fa-triangle-exclamation text-xs" aria-hidden="true"></i>
+		<Icon name="warning" class="text-xs" />
 		{props.long ? "χρειάζεται έλεγχο" : "έλεγχος"}
 	</span>
 );
@@ -138,7 +140,7 @@ const countLabel = (count: number, singular: string, plural: string) => `${count
 const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === null ? pupil.orphan_code || "—" : String(pupil.am));
 
 const field = (label: string, name: string, type: InputProps["type"], extra: Partial<InputProps> = {}): InputProps =>
-	({ label, name, type, iconClasses: "fa-solid fa-user", ...extra }) as InputProps;
+	({ label, name, type, icon: "user", ...extra }) as InputProps;
 
 /** Edit form: the pupil's identity and contact details. */
 function pupilInputs(pupil: Pupils): Record<string, InputProps> {
@@ -147,27 +149,39 @@ function pupilInputs(pupil: Pupils): Record<string, InputProps> {
 			label: "Αριθμός Μητρώου",
 			name: "am",
 			type: "number",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 			tooltip: { message: ["Κενό = χωρίς ΑΜ (εκκρεμεί απονομή)."], position: "bottom" },
 		},
-		amka: { label: "ΑΜΚΑ", name: "amka", type: "text", iconClasses: "fa-solid fa-id-card" },
+		amka: { label: "ΑΜΚΑ", name: "amka", type: "text", icon: "id-card" },
 		last_name: field("Επώνυμο", "last_name", "text", { required: true }),
 		first_name: field("Όνομα", "first_name", "text", { required: true }),
 		fathers_name: field("Πατρώνυμο", "fathers_name", "text"),
-		birth_date: { label: "Ημερομηνία Γέννησης", name: "birth_date", type: "date", iconClasses: "fa-regular fa-calendar-days" },
-		road: { label: "Οδός", name: "road", type: "text", iconClasses: "fa-solid fa-location-dot" },
-		number: { label: "Αριθμός", name: "number", type: "number", iconClasses: "fa-solid fa-hashtag" },
-		tk: { label: "Τ.Κ.", name: "tk", type: "number", iconClasses: "fa-solid fa-hashtag" },
-		region: { label: "Δήμος/Περιοχή", name: "region", type: "text", iconClasses: "fa-solid fa-tree-city" },
-		telephone: { label: "Τηλέφωνο", name: "telephone", type: "tel", iconClasses: "fa-solid fa-phone" },
-		cellphone: { label: "Κινητό", name: "cellphone", type: "tel", iconClasses: "fa-solid fa-mobile-screen" },
-		email: { label: "Email", name: "email", type: "email", iconClasses: "fa-solid fa-envelope" },
-		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "text", iconClasses: "fa-solid fa-note-sticky" },
+		birth_date: { label: "Ημερομηνία Γέννησης", name: "birth_date", type: "date", icon: "calendar" },
+		road: { label: "Οδός", name: "road", type: "text", icon: "map-pin" },
+		number: { label: "Αριθμός", name: "number", type: "number", icon: "hash" },
+		tk: { label: "Τ.Κ.", name: "tk", type: "number", icon: "hash" },
+		region: { label: "Δήμος/Περιοχή", name: "region", type: "text", icon: "city" },
+		telephone: { label: "Τηλέφωνο", name: "telephone", type: "tel", icon: "phone" },
+		cellphone: { label: "Κινητό", name: "cellphone", type: "tel", icon: "smartphone" },
+		email: { label: "Email", name: "email", type: "email", icon: "mail" },
+		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "text", icon: "note" },
 	};
 }
 
 /** The instruments a music type is taught with (Βυζαντινή has none). */
 const instrumentsForClassId = (instruments: Instruments[], classId: number) => instruments.filter((instrument) => instrument.type === MusicTypeArr[classId]);
+
+/**
+ * The teachers who teach `classId` (`teacher_classes`), by name. `keepId` stays listed even if it no longer teaches
+ * that music type, so editing an old enrollment never silently drops its teacher. Without the class links (they
+ * failed to load) every teacher is offered, as before.
+ */
+function teachersForClassId(teachers: Teachers[], teacherClasses: TeacherClasses[], classId: number, keepId?: number) {
+	const teaching = new Set(teacherClasses.filter((link) => link.class_id === classId).map((link) => link.teacher_id));
+	return teachers
+		.filter((teacher) => teacher.id >= 0 && (!teacherClasses.length || teaching.has(teacher.id) || teacher.id === keepId))
+		.sort((a, b) => a.fullname.localeCompare(b.fullname, "el"));
+}
 
 /** Rewrites a select's options in place, keeping `Input`'s blank first option. */
 function setSelectOptions(select: HTMLSelectElement | null | undefined, options: { value: string | number; label: string }[]) {
@@ -186,9 +200,14 @@ function setSelectOptions(select: HTMLSelectElement | null | undefined, options:
  *
  * `defaults.id` set = editing that enrollment.
  */
-function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defaults: Partial<PupilEnrollments>): Record<string, InputProps> {
+function enrollmentInputs(
+	teachers: Teachers[],
+	teacherClasses: TeacherClasses[],
+	instruments: Instruments[],
+	defaults: Partial<PupilEnrollments>,
+): Record<string, InputProps> {
 	const defaultClassId = defaults.class_id ?? 0;
-	const teacherList = teachers.filter((teacher) => teacher.id >= 0).sort((a, b) => a.fullname.localeCompare(b.fullname, "el"));
+	const teacherList = teachersForClassId(teachers, teacherClasses, defaultClassId, defaults.teacher_id);
 	const instrumentList = instrumentsForClassId(instruments, defaultClassId);
 
 	return {
@@ -197,7 +216,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			name: "registration_year",
 			type: "text",
 			required: true,
-			iconClasses: "fa-solid fa-calendar-days",
+			icon: "calendar",
 			placeholder: currentSchoolYear(),
 			// Most enrollments added by the secretariat are for the current school year; still editable for past ones.
 			value: defaults.registration_year || currentSchoolYear(),
@@ -207,7 +226,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			name: "class_id",
 			type: "select",
 			required: true,
-			iconClasses: "fa-solid fa-music",
+			icon: "music",
 			selectList: MUSIC_TYPES.map((type) => type.label),
 			valueList: MUSIC_TYPES.map((type) => type.id),
 			value: defaultClassId,
@@ -224,13 +243,24 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 				);
 				// Όργανο is a Παραδοσιακή/Ευρωπαϊκή field only (see `Input.listeners`).
 				instrumentSelect?.dispatchEvent(customEvent("enable_input", classId !== 0));
+				// Only the teachers of the chosen music type; the current choice survives the switch when it still fits.
+				const teacherSelect = form?.querySelector("select[name='teacher_id']") as any as HTMLSelectElement;
+				const currentTeacher = teacherSelect?.value;
+				setSelectOptions(
+					teacherSelect,
+					teachersForClassId(teachers, teacherClasses, classId, defaults.teacher_id).map((teacher) => ({
+						value: teacher.id,
+						label: teacher.fullname,
+					})),
+				);
+				if (teacherSelect && [...teacherSelect.options].some((option) => option.value === currentTeacher)) teacherSelect.value = currentTeacher;
 			},
 		},
 		teacher_id: {
 			label: "Καθηγητής",
 			name: "teacher_id",
 			type: "select",
-			iconClasses: "fa-solid fa-chalkboard-user",
+			icon: "teacher",
 			selectList: teacherList.map((teacher) => teacher.fullname),
 			valueList: teacherList.map((teacher) => teacher.id),
 			value: defaults.teacher_id,
@@ -239,7 +269,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			label: "Όργανο / Μάθημα",
 			name: "instrument_id",
 			type: "select",
-			iconClasses: "fa-solid fa-guitar",
+			icon: "guitar",
 			selectList: instrumentList.map((instrument) => instrument.name),
 			valueList: instrumentList.map((instrument) => instrument.id),
 			show: defaultClassId !== 0,
@@ -261,7 +291,7 @@ function enrollmentInputs(teachers: Teachers[], instruments: Instruments[], defa
 			label: "Προήχθη",
 			name: "pass",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-check",
+			icon: "check",
 			multiselectOnce: true,
 			multiselectList: [
 				{ value: 1, label: "Ναι", selected: !!defaults.pass },
@@ -293,6 +323,7 @@ export default function PupilsPage() {
 
 	// reference data for the enroll form
 	const [teachers, setTeachers] = createSignal<Teachers[]>([]);
+	const [teacherClasses, setTeacherClasses] = createSignal<TeacherClasses[]>([]);
 	const [instruments, setInstruments] = createSignal<Instruments[]>([]);
 
 	const PAGE_SIZE = 20;
@@ -314,7 +345,7 @@ export default function PupilsPage() {
 
 	/**
 	 * Mirror the shareable state into the URL: `?pupil=<id>` for the open record,
-	 * `?q=<query>` for the search. The typed query is component state, so without
+	 * `?q=<query>` for the search, `?review=1` for «Μόνο προς έλεγχο». The typed query is component state, so without
 	 * this it is lost the moment the page remounts (reload, or a detour to another
 	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
 	 *
@@ -323,13 +354,21 @@ export default function PupilsPage() {
 	 * page; everything else replaces. The router's `history.state` (`_depth`) is preserved.
 	 */
 	let pushOnNextSync = false;
+	// The router renders the page before it commits the URL of an in-app navigation, so until then
+	// `window.location` is still the previous page's: read the deep link from the router's location,
+	// and never write onto the previous page's history entry.
+	const location = useLocation();
+	const initialSearch = location.search;
 	const syncUrl = (id: number | null) => {
+		if (window.location.pathname !== untrack(() => location.pathname)) return;
 		const text = untrack(() => query()).trim();
 		const params = new URLSearchParams(window.location.search);
 		if (id === null) params.delete("pupil");
 		else params.set("pupil", String(id));
 		if (text) params.set("q", text);
 		else params.delete("q");
+		if (untrack(needsReviewOnly)) params.set("review", "1");
+		else params.delete("review");
 		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
 		if (next === `${window.location.pathname}${window.location.search}`) return;
 		const state = window.history.state as { _depth?: number; pupilRecord?: number } | null;
@@ -487,8 +526,13 @@ export default function PupilsPage() {
 		// reference data (cached store is not needed here — plain signals)
 		void (async () => {
 			try {
-				const [teachersRes, instrumentsRes] = await Promise.all([apiHook(API.Teachers.getByFullnames), apiHook(API.Instruments.get)]);
+				const [teachersRes, classesRes, instrumentsRes] = await Promise.all([
+					apiHook(API.Teachers.getByFullnames),
+					apiHook(API.Teachers.getClasses),
+					apiHook(API.Instruments.get),
+				]);
 				if ("data" in teachersRes) setTeachers(teachersRes.data ?? []);
+				if ("data" in classesRes) setTeacherClasses(classesRes.data ?? []);
 				if ("data" in instrumentsRes) setInstruments(instrumentsRes.data ?? []);
 			} catch {
 				/* the forms degrade to free-text ids; search still works */
@@ -496,9 +540,11 @@ export default function PupilsPage() {
 		})();
 
 		// deep link: /admin/pupils?pupil=<id> (and/or ?q=<query>)
-		const params = new URLSearchParams(window.location.search);
+		const params = new URLSearchParams(initialSearch);
 		const deepLink = params.get("pupil");
 		const deepQuery = params.get("q");
+		// ?review=1 opens with «Μόνο προς έλεγχο» on (the «Αρχική» dashboard links here)
+		if (params.get("review") === "1") setNeedsReviewOnly(true);
 		if (deepQuery) {
 			setQuery(deepQuery);
 			// the search below already covers the seeded query, so drop the debounce
@@ -574,7 +620,7 @@ export default function PupilsPage() {
 		if (!data) return emptyAction(ActionEnum.ADD, ActionIcon.ADD);
 		const defaultClass = activeMusic() ?? availableMusicTypes(data.enrollments)[0] ?? 0;
 		const defaults: Partial<PupilEnrollments> = { class_id: defaultClass, registration_year: "" };
-		const inputs = new InputFields(enrollmentInputs(teachers(), instruments(), defaults));
+		const inputs = new InputFields(enrollmentInputs(teachers(), teacherClasses(), instruments(), defaults));
 
 		return {
 			type: ActionEnum.ADD,
@@ -632,7 +678,7 @@ export default function PupilsPage() {
 							label: `Διαγραφή του ${pupil.email.trim()} από το newsletter`,
 							name: "unsubscribe",
 							type: "multiselect",
-							iconClasses: "fa-solid fa-envelope",
+							icon: "mail",
 							multiselectOnce: true,
 							tooltip: { message: ["Η διεύθυνση παραμένει αν τη χρησιμοποιεί κι άλλος μαθητής."], position: "top" },
 							multiselectList: [
@@ -660,7 +706,7 @@ export default function PupilsPage() {
 		const data = record();
 		const enrollment = editingEnrollment();
 		if (!data || !enrollment) return emptyAction(ActionEnum.MODIFY, ActionIcon.MODIFY);
-		const inputs = enrollmentInputs(teachers(), instruments(), enrollment);
+		const inputs = enrollmentInputs(teachers(), teacherClasses(), instruments(), enrollment);
 		return {
 			type: ActionEnum.MODIFY,
 			icon: ActionIcon.MODIFY,
@@ -770,7 +816,7 @@ export default function PupilsPage() {
 						<span
 							class="grid size-14 place-items-center rounded-2xl bg-red-900 text-2xl text-white shadow-md shadow-red-900/20 max-sm:hidden"
 							aria-hidden="true">
-							<i class="fa-solid fa-address-book"></i>
+							<Icon name="address-book" />
 						</span>
 						<h1 class="font-anaktoria text-5xl max-sm:text-3xl">Μαθητολόγιο</h1>
 						{/* phones: the search placeholder says the same, the list needs the room */}
@@ -781,8 +827,8 @@ export default function PupilsPage() {
 				{/* ---- search ---- */}
 				<div
 					role="search"
-					class="flex items-center gap-x-3 rounded-2xl border border-gray-300 bg-white px-4 py-3 shadow-sm shadow-gray-200/70 transition-[border-color,box-shadow] focus-within:border-red-800 focus-within:ring-4 focus-within:ring-red-800/10 dark:border-neutral-600 dark:shadow-none dark:focus-within:border-red-400 dark:focus-within:ring-red-400/15">
-					<i class="fa-solid fa-magnifying-glass text-lg text-red-900/70 dark:text-red-200/70" aria-hidden="true"></i>
+					class="flex items-center gap-x-3 rounded-2xl border border-gray-300 bg-surface px-4 py-3 shadow-sm shadow-gray-200/70 transition-[border-color,box-shadow] focus-within:border-red-800 focus-within:ring-4 focus-within:ring-red-800/10 dark:border-neutral-600 dark:shadow-none dark:focus-within:border-red-400 dark:focus-within:ring-red-400/15">
+					<Icon name="search" class="text-lg text-red-900/70 dark:text-red-200/70" />
 					<input
 						ref={searchInput}
 						type="search"
@@ -807,7 +853,7 @@ export default function PupilsPage() {
 						}}
 					/>
 					<Show when={searching()}>
-						<i class="fa-solid fa-circle-notch fa-spin text-red-900 dark:text-red-200" aria-hidden="true"></i>
+						<Icon name="spinner" class="text-red-900 dark:text-red-200" spin />
 					</Show>
 					<Show when={query()}>
 						<button
@@ -821,7 +867,7 @@ export default function PupilsPage() {
 								startSearch(0);
 								searchInput?.focus();
 							}}>
-							<i class="fa-solid fa-xmark text-base leading-none" aria-hidden="true"></i>
+							<Icon name="close" class="text-base leading-none" />
 						</button>
 					</Show>
 				</div>
@@ -843,7 +889,7 @@ export default function PupilsPage() {
 							type="button"
 							onClick={backToSearch}
 							class={BTN + " -ml-2 px-2 py-1 text-red-900 hover:bg-red-100 dark:text-red-200 dark:hover:bg-red-900/30"}>
-							<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+							<Icon name="arrow-left" />
 							Πίσω στα αποτελέσματα
 						</button>
 					</Show>
@@ -857,9 +903,7 @@ export default function PupilsPage() {
 								startSearch(0);
 							}}
 						/>
-						<i
-							class={(needsReviewOnly() ? "fa-solid fa-circle-check" : "fa-regular fa-circle") + " text-amber-600 dark:text-amber-300"}
-							aria-hidden="true"></i>
+						<Icon name={needsReviewOnly() ? "checkbox-checked" : "checkbox"} class="text-amber-600 dark:text-amber-300" />
 						Μόνο προς έλεγχο
 					</label>
 				</div>
@@ -884,7 +928,7 @@ export default function PupilsPage() {
 							fallback={
 								<Show when={results()}>
 									<div class={CARD + " grid justify-items-center gap-y-2 px-6 py-12 text-center"}>
-										<i class={"fa-solid fa-user-slash text-3xl " + MUTED} aria-hidden="true"></i>
+										<Icon name="user-minus" class={"text-3xl " + MUTED} />
 										<p class="text-xl font-semibold">
 											<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
 												Δεν βρέθηκε μαθητής για «{query().trim()}».
@@ -933,9 +977,10 @@ export default function PupilsPage() {
 													<Show when={row.needs_review}>
 														<ReviewChip />
 													</Show>
-													<i
-														class="fa-solid fa-chevron-right text-red-900/40 transition-transform group-hover:translate-x-0.5 group-hover:text-red-900 dark:text-red-200/40 dark:group-hover:text-red-200"
-														aria-hidden="true"></i>
+													<Icon
+														name="chevron-right"
+														class="text-red-900/40 transition-transform group-hover:translate-x-0.5 group-hover:text-red-900 dark:text-red-200/40 dark:group-hover:text-red-200"
+													/>
 												</span>
 											</button>
 										</li>
@@ -982,11 +1027,11 @@ export default function PupilsPage() {
 									</div>
 									<div class="flex flex-wrap items-center gap-2">
 										<button type="button" class={BTN_SECONDARY} onClick={() => openModal(ActionEnum.MODIFY)}>
-											<i class={ActionIcon.MODIFY} aria-hidden="true"></i>
+											<Icon name={ActionIcon.MODIFY} />
 											Επεξεργασία
 										</button>
 										<button type="button" class={BTN_PRIMARY} onClick={() => openModal(ActionEnum.ADD)}>
-											<i class={ActionIcon.ADD} aria-hidden="true"></i>
+											<Icon name={ActionIcon.ADD} />
 											Νέα εγγραφή
 										</button>
 										<button
@@ -995,7 +1040,7 @@ export default function PupilsPage() {
 											onClick={() => openModal(ActionEnum.DELETE)}
 											aria-label="Διαγραφή μαθητή"
 											title="Διαγραφή μαθητή">
-											<i class={ActionIcon.DELETE_USER} aria-hidden="true"></i>
+											<Icon name={ActionIcon.DELETE_USER} />
 											Διαγραφή
 										</button>
 									</div>
@@ -1003,7 +1048,7 @@ export default function PupilsPage() {
 
 								<Show when={data().pupil.review_note}>
 									<p class={CALLOUT_WARN + " flex items-start gap-x-3"}>
-										<i class="fa-solid fa-triangle-exclamation mt-1 text-amber-600 dark:text-amber-300" aria-hidden="true"></i>
+										<Icon name="warning" class="mt-1 text-amber-600 dark:text-amber-300" />
 										<span>
 											<span class="font-semibold">Σημείωση ελέγχου: </span>
 											{data().pupil.review_note}
@@ -1015,7 +1060,7 @@ export default function PupilsPage() {
 								<Show when={awaitingPlacement().length > 0}>
 									<section aria-labelledby="awaiting-placement-title" class={CALLOUT_WARN + " grid gap-y-3"}>
 										<h2 id="awaiting-placement-title" class="flex items-center gap-x-2 font-semibold">
-											<i class="fa-solid fa-hourglass-half text-amber-600 dark:text-amber-300" aria-hidden="true"></i>
+											<Icon name="clock" class="text-amber-600 dark:text-amber-300" />
 											Εγγραφές που αναμένουν κατάταξη
 										</h2>
 										<ul class="grid gap-y-2">
@@ -1103,14 +1148,14 @@ export default function PupilsPage() {
 															rel="noreferrer"
 															title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
 															class={BTN_SECONDARY + " py-1.5 text-sm"}>
-															<i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i>
+															<Icon name="external-link" />
 															Άνοιγμα
 														</a>
 														<button
 															type="button"
 															class={BTN_SECONDARY + " py-1.5 text-sm"}
 															onClick={() => copyRegistrationLink(data().pupil.registration_url)}>
-															<i class="fa-regular fa-copy" aria-hidden="true"></i>
+															<Icon name="copy" />
 															Αντιγραφή
 														</button>
 													</div>
@@ -1175,7 +1220,7 @@ export default function PupilsPage() {
 												</Show>
 											</Show>
 											<button type="button" onClick={() => setFeesOpen(true)} class={BTN_SECONDARY + " w-full"}>
-												<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
+												<Icon name="euro" />
 												Δίδακτρα & πληρωμές
 											</button>
 										</section>
@@ -1234,10 +1279,10 @@ export default function PupilsPage() {
 											when={availableMusicTypes(data().enrollments).length > 0}
 											fallback={
 												<div class="grid justify-items-center gap-y-2 py-10 text-center">
-													<i class={"fa-regular fa-folder-open text-3xl " + MUTED} aria-hidden="true"></i>
+													<Icon name="clipboard-list" class={"text-3xl " + MUTED} />
 													<p class={"text-lg " + MUTED}>Δεν υπάρχουν εγγραφές.</p>
 													<button type="button" class={BTN_PRIMARY} onClick={() => openModal(ActionEnum.ADD)}>
-														<i class={ActionIcon.ADD} aria-hidden="true"></i>
+														<Icon name={ActionIcon.ADD} />
 														Νέα εγγραφή
 													</button>
 												</div>
@@ -1310,7 +1355,7 @@ export default function PupilsPage() {
 																							when={row.pass}
 																							fallback={<span class={"text-sm " + MUTED}>Όχι</span>}>
 																							<span class="inline-flex items-center gap-x-1 rounded-full bg-emerald-100 px-2 py-0.5 text-sm font-semibold text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
-																								<i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+																								<Icon name="check" class="text-xs" />
 																								Ναι
 																							</span>
 																						</Show>
@@ -1322,7 +1367,7 @@ export default function PupilsPage() {
 																							aria-label={`Επεξεργασία εγγραφής ${row.registration_year}`}
 																							title="Επεξεργασία εγγραφής"
 																							class={ICON_BTN}>
-																							<i class={ActionIcon.MODIFY + " text-base"} aria-hidden="true"></i>
+																							<Icon name={ActionIcon.MODIFY} class="text-base" />
 																						</button>
 																					</td>
 																				</tr>
@@ -1385,7 +1430,7 @@ export default function PupilsPage() {
 						disabled={page() === 0}
 						onClick={() => goToPage(page() - 1)}
 						class={BTN_SECONDARY + " py-1.5 max-sm:px-2.5 max-sm:text-sm"}>
-						<i class="fa-solid fa-chevron-left text-sm" aria-hidden="true"></i>
+						<Icon name="chevron-left" class="text-sm" />
 						Προηγούμενη
 					</button>
 					<span class={"whitespace-nowrap text-base tabular-nums max-sm:text-sm " + MUTED}>
@@ -1397,7 +1442,7 @@ export default function PupilsPage() {
 						onClick={() => goToPage(page() + 1)}
 						class={BTN_SECONDARY + " py-1.5 max-sm:px-2.5 max-sm:text-sm"}>
 						Επόμενη
-						<i class="fa-solid fa-chevron-right text-sm" aria-hidden="true"></i>
+						<Icon name="chevron-right" class="text-sm" />
 					</button>
 				</nav>
 			</Show>

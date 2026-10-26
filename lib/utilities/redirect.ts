@@ -1,18 +1,17 @@
-import { deleteCookie, getCookie, setCookie } from "./cookies";
-
 /**
  * Login-return plumbing (`?redirect_url=`).
  *
- * Admin deep links are shareable — `/admin/pupils?q=<query>`, `/admin/books?search=<query>&col=3`,
+ * Admin deep links are shareable — `/admin/pupils?q=<query>` (`&review=1`), `/admin/books?search=<query>&col=3`,
  * `/admin/registrations?year=2024&search=<query>` — but the dashboard guard
  * (`AdminLayout`) sends a logged-out visitor to the bare `/login`, so the query
  * they were sent for was lost and they landed on the dashboard home instead.
  *
  * The gate now remembers the requested URL: `AdminLayout` redirects to
  * `/login?redirect_url=<path+query>` and the login screen navigates back there
- * after a successful sign-in. The Google detour leaves the site and comes back
- * on `/oauth2callback`, which cannot see the login URL, so for that flow the
- * target is parked in a short-lived cookie (`REDIRECT_COOKIE`) instead.
+ * after a successful sign-in. A provider sign-in (Google, Apple, Microsoft)
+ * leaves the site and comes back on `/oauth2callback`, which cannot see the
+ * login URL, so the server keeps the target in the signed OAuth flow cookie
+ * (lib/auth/oauthFlow.ts) and the callback hands it back.
  *
  * Everything a visitor can put in `redirect_url` is attacker-controlled, so
  * targets are validated before they ever reach `window.location`: only
@@ -25,10 +24,8 @@ export const ADMIN_HOME = "/admin";
 export const LOGIN_PATH = "/login";
 /** Query parameter carrying the requested URL through the sign-in screen. */
 export const REDIRECT_PARAM = "redirect_url";
-/** Cookie parking the requested URL across the Google OAuth round trip. */
-export const REDIRECT_COOKIE = "login_redirect_url";
-/** Long enough for a Google detour, short enough not to outlive it. */
-export const REDIRECT_TTL_DAYS = 10 / (24 * 60);
+/** Set when the session ended while the admin was working, so the sign-in screen can say so. */
+export const EXPIRED_PARAM = "expired";
 /** Query strings are not unbounded; real admin deep links are far shorter. */
 const MAX_TARGET_LENGTH = 512;
 
@@ -72,33 +69,12 @@ export function currentRedirectTarget(location: { pathname: string; search: stri
  * `/login?redirect_url=<encoded target>` — or the bare `/login` when there is
  * nothing (valid) to return to.
  */
-export function buildLoginUrl(target?: string | null): string {
-	if (!isSafeRedirectTarget(target) || target === ADMIN_HOME) return LOGIN_PATH;
-	return `${LOGIN_PATH}?${REDIRECT_PARAM}=${encodeURIComponent(target)}`;
+export function buildLoginUrl(target?: string | null, options: { expired?: boolean } = {}): string {
+	const params: string[] = [];
+	if (isSafeRedirectTarget(target) && target !== ADMIN_HOME) params.push(`${REDIRECT_PARAM}=${encodeURIComponent(target)}`);
+	if (options.expired) params.push(`${EXPIRED_PARAM}=1`);
+	return params.length ? `${LOGIN_PATH}?${params.join("&")}` : LOGIN_PATH;
 }
 
-/**
- * Park the requested URL for the Google flow, which returns to
- * `/oauth2callback` without the sign-in URL's query string. Client-only.
- */
-export function rememberRedirectTarget(target?: string | null): void {
-	if (!isSafeRedirectTarget(target) || target === ADMIN_HOME) return;
-	setCookie(REDIRECT_COOKIE, encodeURIComponent(target), REDIRECT_TTL_DAYS);
-}
-
-/**
- * Read and clear the parked URL (see `rememberRedirectTarget`): `null` when
- * there is none, or when it is stale, corrupt or unsafe. Client-only.
- */
-export function takeRedirectTarget(): string | null {
-	const stored = getCookie(REDIRECT_COOKIE);
-	if (!stored) return null;
-	deleteCookie(REDIRECT_COOKIE);
-	let decoded: string;
-	try {
-		decoded = decodeURIComponent(stored);
-	} catch {
-		return null;
-	}
-	return isSafeRedirectTarget(decoded) ? decoded : null;
-}
+/** Whether the sign-in screen was reached because the session ended (`?expired=1`). */
+export const isExpiredLogin = (search: string) => new URLSearchParams(search).get(EXPIRED_PARAM) === "1";

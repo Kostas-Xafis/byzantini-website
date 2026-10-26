@@ -4,10 +4,9 @@ import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { API } from "@routes/index.client";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
+import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
-import { Random } from "@lib/random";
 import type { ExtendedFormData } from "@utilities/forms";
-import { sleep } from "@utilities/sleep";
 import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
@@ -28,62 +27,62 @@ const LocationsInputs = (location?: Locations): Record<keyof Locations, InputPro
 			name: "id",
 			label: "Id",
 			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
+			icon: "hash",
 		},
 		name: {
 			name: "name",
 			label: "Όνομα Παραρτήματος",
 			type: "text",
-			iconClasses: "fa-solid fa-school",
+			icon: "school",
 		},
 		address: {
 			name: "address",
 			label: "Διεύθυνση",
 			type: "text",
-			iconClasses: "fa-solid fa-location-dot",
+			icon: "map-pin",
 		},
 		areacode: {
 			name: "areacode",
 			label: "Ταχ. Κώδικας",
 			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
+			icon: "hash",
 		},
 		municipality: {
 			name: "municipality",
 			label: "Δήμος",
 			type: "text",
-			iconClasses: "fa-solid fa-tree-city",
+			icon: "city",
 		},
 		manager: {
 			name: "manager",
 			label: "Υπεύθυνος",
 			type: "text",
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 		},
 		email: {
 			name: "email",
 			label: "Email",
 			type: "email",
-			iconClasses: "fa-solid fa-envelope",
+			icon: "mail",
 		},
 		telephones: {
 			name: "telephones",
 			label: "Τηλέφωνο",
 			type: "text",
-			iconClasses: "fa-solid fa-phone",
+			icon: "phone",
 		},
 		priority: {
 			name: "priority",
 			label: "Προτεραιότητα",
 			type: "number",
-			iconClasses: "fa-solid fa-arrow-up-9-1",
+			icon: "sort-numeric",
 			minmax: [0, 100],
 		},
 		image: {
 			name: "image",
 			label: "Εικόνα",
 			type: "file",
-			iconClasses: "fa-regular fa-file-image",
+			icon: "file-image",
 			fileExtension: "image/*",
 			value: location?.image,
 		},
@@ -91,28 +90,28 @@ const LocationsInputs = (location?: Locations): Record<keyof Locations, InputPro
 			name: "map",
 			label: "Google Maps",
 			type: "text",
-			iconClasses: "fa-solid fa-map-location-dot",
+			icon: "map",
 			value: location?.map,
 		},
 		link: {
 			name: "link",
 			label: "Ιστοσελίδα",
 			type: "text",
-			iconClasses: "fa-solid fa-link",
+			icon: "link",
 			value: location?.link,
 		},
 		youtube: {
 			name: "youtube",
 			label: "Youtube",
 			type: "text",
-			iconClasses: "fa-brands fa-youtube",
+			icon: "youtube",
 			value: location?.youtube,
 		},
 		partner: {
 			name: "partner",
 			label: "Συνεργαζόμενο Σπουδαστήριο",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-check",
+			icon: "check",
 			multiselectList: [
 				{ value: 1, label: "Ναι", selected: !!location?.partner },
 				{ value: 0, label: "Όχι", selected: !location?.partner },
@@ -157,15 +156,7 @@ const columnNames: ColumnType<LocationsTable> = {
 };
 
 function picturePreview(file: FileProxy<LocationsMetadata>) {
-	const id = Random.string(12, "hex");
-
-	(async function () {
-		await sleep(10);
-		const src = !file.isProxy() ? await file.toImageUrl() : `/spoudastiria/${file.getName()}`;
-		document.querySelector(`img[data-id="${id}"]`)?.setAttribute("src", src);
-	})();
-
-	return <img data-id={id} alt="Φωτογραφία" class="object-cover w-full overflow-hidden" />;
+	return filePreviewImage(file, (f) => `/spoudastiria/${f.getName()}`, { alt: "Φωτογραφία" });
 }
 
 function stripSrcFromIFrame(str: string) {
@@ -196,8 +187,9 @@ export default function LocationsTable() {
 			UrlArgs: { id: newFile.getMetadata().location_id },
 		});
 	};
+	// Only a REMOVED image is deleted here; a replaced one is deleted by Locations.fileUpload once the new file is stored.
 	const fileDelete = (fileHandler: FileHandler<LocationsMetadata>) => {
-		const deletedFile = fileHandler.getDeletedFiles().at(0);
+		const deletedFile = fileHandler.getRemovedFiles().at(0);
 		if (!deletedFile) return;
 		return apiHook(API.Locations.fileDelete, {
 			UrlArgs: {

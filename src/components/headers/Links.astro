@@ -16,7 +16,6 @@ const { title, description, imageURL, canonical, noindex } = Astro.props;
 
 const SITE_NAME = "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής";
 const SITE_URL = (Astro.site ?? new URL(Astro.request.url)).origin;
-const hasBrandIcons = !Astro.url.pathname.includes("login");
 
 // `<title>` uses titleTemplate (suffix added only on non-home pages); OG/Twitter
 // reuse the same composed title for consistency.
@@ -77,6 +76,8 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 		extend={{
 			link: [
 				{ rel: "icon", href: "/logo_small.png" },
+				// Browsers that support SVG favicons prefer this one (brand red, white logo); Safari keeps the PNG.
+				{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 				{ rel: "sitemap", href: "/sitemap-index.xml" },
 				{ rel: "robots", href: "/robots.txt" },
 			],
@@ -103,24 +104,6 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 			src: url("/fonts/ANAKTORIA.OTF");
 		}
 	</style>
-	{
-		/*
-		 * Font Awesome is loaded into the `components` cascade layer (below
-		 * `utilities`): FA sets `display: var(--fa-display, inline-block)` on
-		 * `.fa-solid` with the same specificity as Tailwind's `.hidden`, and in
-		 * Tailwind 4 unlayered CSS would always win over the layered utilities —
-		 * making every FA icon ignore `hidden`/`group-*:flex`.
-		 * (v3 parity: FA's <link> preceded the Astro CSS, so utilities won by
-		 * source order; the layer order statement must precede the @imports.)
-		 */
-	}
-	<style is:inline>
-		@layer properties, theme, base, components, utilities;
-		@import url("/fa/css/fontawesome.min.css") layer(components);
-		@import url("/fa/css/solid.min.css") layer(components);
-		@import url("/fa/css/regular.min.css") layer(components);
-	</style>
-	{hasBrandIcons && <style is:inline>@import url("/fa/css/brands.min.css") layer(components);</style>}
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />

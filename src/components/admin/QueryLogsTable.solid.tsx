@@ -40,13 +40,13 @@ const QueryLogFilterInputs = (): Record<keyof QueryLogFilterFields, InputProps> 
 		name: "startDate",
 		label: "Από",
 		type: "date",
-		iconClasses: "fa-regular fa-calendar-days",
+		icon: "calendar",
 	},
 	endDate: {
 		name: "endDate",
 		label: "Έως",
 		type: "date",
-		iconClasses: "fa-regular fa-calendar-days",
+		icon: "calendar",
 	},
 	limit: {
 		name: "limit",
@@ -54,7 +54,7 @@ const QueryLogFilterInputs = (): Record<keyof QueryLogFilterFields, InputProps> 
 		type: "number",
 		value: DEFAULT_LIMIT,
 		minmax: [1, 5000],
-		iconClasses: "fa-solid fa-hashtag",
+		icon: "hash",
 	},
 });
 
@@ -140,19 +140,19 @@ export default function QueryLogsTable() {
 		return (
 			<form
 				data-prefix={FILTER_FORM_PREFIX}
-				class="grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-md border-[2px] border-red-900 px-4 py-3 dark:border-red-800 max-xl:grid-cols-2 max-sm:grid-cols-1"
+				class="modal-form grid grid-cols-[repeat(3,minmax(16rem,18rem))_auto] items-end justify-center gap-4 rounded-xl border border-line bg-surface px-4 pt-6 pb-4 shadow-sm shadow-shade max-xl:grid-cols-2 max-sm:grid-cols-1"
 				onSubmit={applyFilters}>
 				<For each={Object.values(QueryLogFilterInputs())}>{(inputProps) => <Input {...inputProps} prefix={FILTER_FORM_PREFIX} />}</For>
 				<div class="flex flex-wrap gap-2 self-center max-sm:justify-center">
 					<button
 						type="submit"
-						class="rounded-md bg-red-900 px-4 py-2 text-white shadow-md transition-colors duration-200 hover:bg-red-950 dark:bg-red-800 dark:hover:bg-red-700">
+						class="rounded-lg bg-brand px-5 py-2 font-semibold text-brand-ink shadow-md shadow-shade transition-colors duration-200 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 						Εφαρμογή
 					</button>
 					<button
 						type="button"
 						onClick={resetFilters}
-						class="rounded-md border border-red-900 px-4 py-2 text-red-950 shadow-md transition-colors duration-200 hover:bg-red-100 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/50">
+						class="rounded-lg border border-line px-4 py-2 text-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 						Τελευταία 100
 					</button>
 				</div>

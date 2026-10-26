@@ -10,13 +10,13 @@ import type { APIHook } from "./helpers";
 
 export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiHook: APIHook) {
 	return createMemo((): Action | EmptyAction => {
-		const submit = async function (fd: FormData) {
+		const submit = async function (fd: FormData, form?: HTMLFormElement) {
 			const data: Omit<Instruments, "id"> = {
 				name: fd.get("name") as string,
 				type: (fd.get("type") as string) === "Παραδοσιακή Μουσική" ? "par" : "eur",
 				isInstrument: !!(
 					Number(
-						[...document.querySelectorAll<HTMLInputElement>(`button[data-specifier='isInstrument']`)].filter(
+						[...((form ?? document) as ParentNode).querySelectorAll<HTMLButtonElement>(`button[data-specifier='isInstrument']`)].filter(
 							(i) => i.dataset.selected === "true",
 						)[0].dataset.value as string,
 					) - 1
@@ -36,13 +36,13 @@ export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiH
 					type: "text",
 					name: "name",
 					label: "Όργανο",
-					iconClasses: "fas fa-chalkboard-teacher",
+					icon: "teacher",
 				} as InputProps,
 				type: {
 					type: "select",
 					name: "type",
 					label: "Τύπος Μαθήματος",
-					iconClasses: "fas fa-chalkboard-teacher",
+					icon: "teacher",
 					selectList: ["Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
 					valueLiteral: true,
 				} as InputProps,
@@ -50,7 +50,7 @@ export const onAddInstrument = function (hydrate: CacheMutationsReturnType, apiH
 					type: "multiselect",
 					name: "isInstrument",
 					label: "",
-					iconClasses: "fas fa-guitar",
+					icon: "guitar",
 					multiselectList: [
 						{ label: "Όργανο", value: 2, selected: true },
 						{ label: "Μάθημα", value: 1, selected: false },

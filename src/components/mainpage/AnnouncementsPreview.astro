@@ -1,4 +1,5 @@
 ---
+import Icon from "@components/other/Icon.astro";
 // Προεπισκόπηση των 3 πιο πρόσφατων ανακοινώσεων στο homepage.
 // Η σελίδα είναι prerendered, οπότε τα δεδομένα φορτώνονται client-side
 // από το υπάρχον GET /api/announcements/page (ίδιο endpoint με τη σελίδα ανακοινώσεων).
@@ -23,12 +24,13 @@
 			href="/sxoli/anakoinoseis"
 			class="group inline-flex items-center gap-x-2 rounded-xl border-2 border-red-900 px-[1.25vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.1vw] max-sm:text-base text-red-900 transition-colors hover:bg-red-900 hover:text-red-50">
 			Όλες οι ανακοινώσεις
-			<i class="fa-solid fa-arrow-right text-[0.8vw] max-sm:text-xs transition-transform group-hover:translate-x-1" aria-hidden="true"></i>
+			<Icon name="arrow-right" class="text-[0.8vw] max-sm:text-xs transition-transform group-hover:translate-x-1" />
 		</a>
 	</div>
 </section>
 
 <script>
+	import { createIcon } from "@lib/icons";
 	import { onElementMount } from "@utilities/dom";
 
 	type PageAnnouncement = {
@@ -90,23 +92,18 @@
 			img.className = "w-full h-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]";
 			img.addEventListener("error", () => {
 				media.replaceChildren();
-				const icon = document.createElement("i");
-				icon.className = "fa-solid fa-newspaper text-6xl text-red-900/40";
-				icon.setAttribute("aria-hidden", "true");
+				const icon = createIcon("newspaper", { class: "text-6xl text-red-900/40" });
 				media.classList.add("grid", "place-items-center");
 				media.append(icon);
 			});
 			media.append(img);
 		} else {
 			media.classList.add("grid", "place-items-center");
-			const icon = document.createElement("i");
-			icon.className = "fa-solid fa-newspaper text-6xl text-red-900/40";
-			icon.setAttribute("aria-hidden", "true");
-			media.append(icon);
+			media.append(createIcon("newspaper", { class: "text-6xl text-red-900/40" }));
 		}
 		if (isRecent(a.date)) {
 			const badge = document.createElement("span");
-			badge.className = "absolute top-2 left-2 rounded-md bg-amber-400/95 px-2 py-0.5 text-sm font-bold text-amber-950 shadow-sm";
+			badge.className = "absolute top-2 left-2 rounded-md bg-ivory-deep/95 px-2 py-0.5 text-sm font-bold text-red-900 shadow-sm";
 			badge.textContent = "Νέο";
 			media.append(badge);
 		}

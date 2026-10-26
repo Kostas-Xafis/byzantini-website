@@ -217,8 +217,8 @@ export default function Table(props: Props) {
 		<div
 			id="table"
 			class={
-				"h-[100dvh] pt-[1.5vh] justify-center content-start items-start gap-y-3 z-[1]" +
-				" max-sm:h-max max-sm:mt-0 max-sm:w-[100dvw] max-sm:py-4" +
+				"h-dvh pt-[1.5vh] justify-center content-start items-start gap-y-3 z-1" +
+				" max-sm:h-max max-sm:mt-0 max-sm:w-dvw max-sm:py-4" +
 				((hasControlGroup("bottom") && " grid-rows-[max-content,1fr,max-content]") || " grid-rows-[max-content,1fr]") +
 				(hasControlGroup("left") ? " pr-8" : "")
 			}
@@ -272,8 +272,8 @@ export default function Table(props: Props) {
 					"grid-row": "table",
 				}}
 				class={
-					"relative z-[1000] overflow-x-auto justify-self-center col-[1_/_1] grid auto-rows-[auto_1fr] grid-flow-row shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-lg font-didact border-2 border-red-900 dark:border-red-800" +
-					(hasControlGroup("left") ? " max-w-[100%] max-sm:max-w-[97.5%]" : " max-w-[90%] max-sm:max-w-[92.5%]")
+					"relative z-1000 overflow-x-auto justify-self-center col-[1/1] grid auto-rows-[auto_1fr] grid-flow-row rounded-2xl font-didact border border-line bg-surface text-ink shadow-sm shadow-shade " +
+					(hasControlGroup("left") ? " max-w-full max-sm:max-w-[97.5%]" : " max-w-[90%] max-sm:max-w-[92.5%]")
 				}
 				onMouseMove={move}
 				onMouseDown={startDragging}
@@ -281,7 +281,7 @@ export default function Table(props: Props) {
 				onMouseLeave={stopDragging}
 				onClick={onClickRow}>
 				<Row data={columns} columnTypes={columnTypes} header sortOnClick={setSorted} hasSelectBox={!!props.hasSelectBox} />
-				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-lg dark:bg-dark">
+				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-2xl bg-surface">
 					<For each={readPageData()}>
 						{(item) => {
 							return <Row data={item} columnTypes={columnTypes} hasSelectBox={!!props.hasSelectBox} highlight={searchHighlight()} />;
@@ -328,7 +328,7 @@ export default function Table(props: Props) {
 		transition: box-shadow 0.2s cubic-bezier(0,.8,.43,.64);
 	}
 	/* shorthand for this:
-		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-gray-400 before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
+		relative grid grid-flow-col justify-between justify-items-center items-center h-min px-6 gap-x-2 text-center text-lg max-sm:text-sm bg-transparent hover:shadow-md hover:shadow-shade before:content-[''] before:absolute before:inset-0 before:-z-10 odd:before:bg-gray-100
 	*/
 	.row::before {
 		content: "";
@@ -336,32 +336,25 @@ export default function Table(props: Props) {
 		inset: 0;
 		z-index: -10;
 	}
-	.row:hover {
-		box-shadow: 0 4px 6px -1px #9ca3af, 0 2px 4px -2px #9ca3af, 0 -2px 3px 0px #9ca3af;
+	/* Colours come from the dashboard tokens (src/styles/global.css), so both themes match the panels. */
+	.data-container .row {
+		border-bottom: 1px solid var(--color-line);
 	}
 	.row:nth-child(odd)::before {
-		background-color: rgb(243,244,246);
+		background-color: var(--color-surface-muted);
 	}
 	.row:nth-child(even)::before {
-		background-color: white;
+		background-color: var(--color-surface);
 	}
-	html.dark .row:nth-child(odd)::before {
-		background-color: rgb(38, 38, 38);
+	.data-container .row:hover::before {
+		background-color: var(--color-accent-soft);
 	}
-	html.dark .row:nth-child(even)::before {
-		background-color: rgb(30, 30, 30);
-	}
-
 	.row:is(.selectedRow):nth-child(odd)::before,
 	.row:is(.selectedRow)::before {
-		background-color: rgb(254,202,202);
+		background-color: var(--color-surface-sunken);
 	}
-	html.dark .row:is(.selectedRow):nth-child(odd)::before,
-	html.dark .row:is(.selectedRow)::before {
-		background-color: rgb(68, 30, 30);
-	}
-	.row:is(.selectedRow):hover {
-		box-shadow: 0 4px 6px -1px #6b7280, 0 2px 4px -2px #6b7280, 0 -2px 3px 0px #6b7280;
+	.row:is(.selectedRow) {
+		box-shadow: inset 4px 0 0 var(--color-brand);
 	}
 	.cell {
 		position: relative;
@@ -376,10 +369,7 @@ export default function Table(props: Props) {
 		top: 50%;
 		left: 0;
 		transform: translate(-50%, -50%);
-		color: rgb(55 65 81);
-	}
-	html.dark .selectBox {
-		color: rgb(209 213 219);
+		color: var(--color-ink-muted);
 	}
 	@keyframes ShakeAnimation {
 		0% {

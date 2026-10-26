@@ -19,6 +19,7 @@ import { API } from "@routes/index.client";
 import { For, Show, createMemo, createSignal, createUniqueId, onMount } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { toast } from "./toast";
+import Icon from "@components/other/Icon.solid";
 
 /** FEES.md §2 seed (teacher rules are omitted: their ids are only known to the database) — the template of last resort. */
 const SEED: FeeCatalogInput = {
@@ -170,13 +171,13 @@ function describe(prev: FeeCatalogInput | null, next: FeeCatalogInput, teacherNa
 }
 
 const inputClass =
-	"w-full rounded-md border border-red-900/40 dark:border-red-300/40 bg-white dark:bg-dark dark:text-red-50 px-2 py-1.5 focus-visible:outline-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 aria-[invalid=true]:border-red-600";
+	"w-full rounded-md border border-accent-ink/40 bg-surface px-2 py-1.5 focus-visible:outline-2 focus-visible:outline-accent-ink aria-[invalid=true]:border-danger";
 const buttonClass =
-	"w-fit rounded-md px-4 py-2 font-bold bg-red-900 text-red-50 hover:bg-red-950 disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
+	"w-fit rounded-md px-4 py-2 font-bold bg-brand text-brand-ink hover:bg-brand-hover disabled:opacity-60 disabled:cursor-not-allowed transition-colors";
 const ghostButtonClass =
-	"w-fit rounded-md px-3 py-1.5 font-bold border border-red-900 text-red-900 hover:bg-red-100 dark:border-red-300 dark:text-red-100 dark:hover:bg-red-950 transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
-const errorClass = "text-xs text-red-700 dark:text-red-300";
-const hintClass = "text-xs text-gray-600 dark:text-gray-300";
+	"w-fit rounded-md px-3 py-1.5 font-bold border border-brand text-accent-ink hover:bg-accent-soft transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+const errorClass = "text-xs text-danger";
+const hintClass = "text-xs text-ink-muted";
 const warnClass = "text-xs rounded-md bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100 px-2 py-1";
 
 export default function FeeCatalogEditor() {
@@ -360,7 +361,7 @@ export default function FeeCatalogEditor() {
 		</div>
 	);
 
-	const fieldset = "grid gap-3 rounded-lg border-2 border-red-900/40 dark:border-red-300/40 p-4 min-w-0";
+	const fieldset = "grid gap-3 rounded-lg border-2 border-accent-ink/40 p-4 min-w-0";
 	const legend = "px-2 font-bold";
 
 	const ruleEditor = (row: RuleRow, index: () => number) => {
@@ -370,12 +371,10 @@ export default function FeeCatalogEditor() {
 		const rank = () => feeRuleRank({ class_years: row.mode === "all" ? null : [""], teacher_id: row.teacher === "" ? null : 1 });
 		const setField = <K extends keyof RuleRow>(field: K, value: RuleRow[K]) => edit(() => setForm("rules", index(), field, value as never));
 		return (
-			<fieldset
-				class="grid gap-3 rounded-md border-2 border-red-900/25 dark:border-red-300/25 bg-red-50/70 dark:bg-white/[0.04] p-3 min-w-0"
-				aria-invalid={err() ? "true" : "false"}>
+			<fieldset class="grid gap-3 rounded-md border-2 border-line bg-surface-muted p-3 min-w-0" aria-invalid={err() ? "true" : "false"}>
 				<legend class="px-1 text-sm font-bold">
 					Κανόνας {index() + 1}{" "}
-					<span class="ml-1 rounded-full bg-red-100 dark:bg-red-950 px-2 py-0.5 text-xs font-normal" title="Προτεραιότητα του κανόνα">
+					<span class="ml-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-normal" title="Προτεραιότητα του κανόνα">
 						{BADGES[rank()]}
 					</span>
 				</legend>
@@ -504,7 +503,7 @@ export default function FeeCatalogEditor() {
 					</p>
 				</Show>
 				<button type="button" class={ghostButtonClass} aria-label={`Αφαίρεση κανόνα ${index() + 1}`} onClick={() => removeRule(row.key)}>
-					<i class="fa-solid fa-trash mr-2" aria-hidden="true"></i>
+					<Icon name="trash" class="mr-2" />
 					Αφαίρεση κανόνα
 				</button>
 			</fieldset>
@@ -522,11 +521,11 @@ export default function FeeCatalogEditor() {
 				</Show>
 				<For each={form.rules}>{(row, index) => <Show when={row.class_id === classId}>{ruleEditor(row, index)}</Show>}</For>
 				<button type="button" class={ghostButtonClass} onClick={() => addRule(classId)}>
-					<i class="fa-solid fa-plus mr-2" aria-hidden="true"></i>
+					<Icon name="plus" class="mr-2" />
 					Προσθήκη κανόνα
 				</button>
 
-				<div class="grid gap-2 rounded-md bg-red-50 dark:bg-gray-800 p-3">
+				<div class="grid gap-2 rounded-md bg-accent-soft p-3">
 					<h4 class="text-sm font-bold">Τι ισχύει · {DEPARTMENTS[classId]}</h4>
 					<p class={hintClass}>Τιμή για μαθητή χωρίς ειδική τιμή καθηγητή.</p>
 					<ul class="grid gap-1 text-sm sm:grid-cols-2">
@@ -579,16 +578,8 @@ export default function FeeCatalogEditor() {
 	};
 
 	return (
-		<section
-			class="rounded-xl border-2 border-red-900/30 dark:border-red-300/30 bg-white dark:bg-dark p-5 shadow-md shadow-gray-300 dark:shadow-gray-700 grid gap-4"
-			aria-labelledby="fee-catalog-title">
-			<div class="grid gap-1">
-				<h2 id="fee-catalog-title" class="font-anaktoria text-2xl">
-					Κατάλογος διδάκτρων
-				</h2>
-				<p class="text-sm dark:text-gray-300">Οι τιμές διδάκτρων ανά σχολικό έτος. Κάθε αποθήκευση δημιουργεί νέα έκδοση του καταλόγου.</p>
-			</div>
-
+		// The card and its heading come from the settings page (`PanelCollapsible`).
+		<div class="grid gap-4">
 			<div class="grid gap-1 sm:max-w-xs">
 				<label for={`${uid}-year`} class="text-sm font-bold">
 					Σχολικό έτος
@@ -614,7 +605,7 @@ export default function FeeCatalogEditor() {
 			</div>
 
 			<Show when={loadError()}>
-				<p role="alert" class="text-sm text-red-700 dark:text-red-300">
+				<p role="alert" class="text-sm text-danger">
 					{loadError()}{" "}
 					<button type="button" class="underline" onClick={() => loadYear(year())}>
 						Δοκιμή ξανά
@@ -622,7 +613,7 @@ export default function FeeCatalogEditor() {
 				</p>
 			</Show>
 			<Show when={loading()}>
-				<p class="text-sm dark:text-gray-300" role="status">
+				<p class="text-sm" role="status">
 					Φόρτωση…
 				</p>
 			</Show>
@@ -631,7 +622,7 @@ export default function FeeCatalogEditor() {
 				<Show
 					when={active()}
 					fallback={
-						<p class="text-sm rounded-md bg-red-50 dark:bg-gray-800 p-3">
+						<p class="text-sm rounded-md bg-accent-soft p-3">
 							Το σχολικό έτος {year()} δεν έχει κατάλογο διδάκτρων. Η φόρμα ξεκινά από τις τιμές της πιο πρόσφατης έκδοσης — αποθηκεύστε για να
 							δημιουργήσετε την πρώτη έκδοση.
 						</p>
@@ -681,7 +672,7 @@ export default function FeeCatalogEditor() {
 					<For each={[...FEE_DEPARTMENT_ORDER]}>{(classId) => section(classId)}</For>
 
 					<Show when={confirming()}>
-						<div role="alertdialog" aria-labelledby={`${uid}-confirm`} class="grid gap-3 rounded-lg border-2 border-red-900 p-4">
+						<div role="alertdialog" aria-labelledby={`${uid}-confirm`} class="grid gap-3 rounded-lg border-2 border-brand p-4">
 							<p id={`${uid}-confirm`} class="font-bold">
 								Αποθήκευση νέας έκδοσης για το {year()};
 							</p>
@@ -705,8 +696,8 @@ export default function FeeCatalogEditor() {
 						<p
 							role="note"
 							class="rounded-lg border-2 border-amber-600 bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-50 p-3 text-sm font-bold">
-							<i class="fa-solid fa-triangle-exclamation mr-2" aria-hidden="true"></i>Η νέα έκδοση ισχύει ΜΟΝΟ για τις νέες εγγραφές. Οι
-							υπάρχουσες εγγραφές διατηρούν τις τιμές της έκδοσης με την οποία καταχωρήθηκαν.
+							<Icon name="warning" class="mr-2" />Η νέα έκδοση ισχύει ΜΟΝΟ για τις νέες εγγραφές. Οι υπάρχουσες εγγραφές διατηρούν τις τιμές της
+							έκδοσης με την οποία καταχωρήθηκαν.
 						</p>
 						<button type="submit" class={buttonClass} disabled={!canSave() || confirming()}>
 							Αποθήκευση νέας έκδοσης
@@ -716,7 +707,7 @@ export default function FeeCatalogEditor() {
 
 				<div class="grid gap-2">
 					<h3 class="font-bold">Ιστορικό εκδόσεων</h3>
-					<Show when={versions().length > 0} fallback={<p class="text-sm dark:text-gray-300">Δεν υπάρχουν εκδόσεις για το {year()}.</p>}>
+					<Show when={versions().length > 0} fallback={<p class="text-sm">Δεν υπάρχουν εκδόσεις για το {year()}.</p>}>
 						<ul class="grid gap-2">
 							<For each={versions()}>
 								{(version, i) => {
@@ -724,7 +715,7 @@ export default function FeeCatalogEditor() {
 									const lines = () => describe(previous() ?? null, version, teacherName);
 									return (
 										<li>
-											<details class="rounded-md border border-red-900/40 dark:border-red-300/40 p-2">
+											<details class="rounded-md border border-accent-ink/40 p-2">
 												<summary class="cursor-pointer text-sm">
 													<span class="font-bold">#{version.id}</span> · {formatDate(version.created_at)} ·{" "}
 													{version.created_by ?? "άγνωστος"}
@@ -747,6 +738,6 @@ export default function FeeCatalogEditor() {
 					</Show>
 				</div>
 			</Show>
-		</section>
+		</div>
 	);
 }

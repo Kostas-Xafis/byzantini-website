@@ -1,6 +1,6 @@
 /**
  * Unit tests for lib/bucket/index.ts — `Bucket.list` pagination and the
- * `Bucket.move` contract (copy first, delete after, metadata kept).
+ * `Bucket.copy`/`Bucket.move` contract (copy first, delete after, metadata kept).
  *
  * The R2 binding is replaced by a small in-memory fake through
  * `spyOn(Bucket, "getS3Bucket")`, so these tests need no workerd, no dev
@@ -107,4 +107,17 @@ test("move onto the same key is a no-op (copy-then-delete would delete the only 
 test("move resolves to null and writes nothing when the source is missing", async () => {
 	expect(await Bucket.move("missing.pdf", "other.pdf")).toBeNull();
 	expect(r2.calls).toEqual(["get missing.pdf"]);
+});
+
+test("copy writes the copy with the source's metadata and keeps the source", async () => {
+	const httpMetadata = { contentType: "image/png" };
+	r2.objects.set("spoudastiria/Old-mgz4k2q1.png", { body: bytes("image"), httpMetadata });
+
+	const copied = await Bucket.copy("spoudastiria/Old-mgz4k2q1.png", "spoudastiria/New-mgz4k2q2.png");
+
+	expect(copied?.key).toBe("spoudastiria/New-mgz4k2q2.png");
+	expect(r2.calls).toEqual(["get spoudastiria/Old-mgz4k2q1.png", "put spoudastiria/New-mgz4k2q2.png"]);
+	expect(r2.objects.has("spoudastiria/Old-mgz4k2q1.png")).toBe(true);
+	expect(r2.objects.get("spoudastiria/New-mgz4k2q2.png")!.httpMetadata).toEqual(httpMetadata);
+	expect(await Bucket.copy("missing.png", "other.png")).toBeNull();
 });

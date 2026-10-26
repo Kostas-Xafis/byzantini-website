@@ -2,13 +2,15 @@ import type { CustomEvents } from "@_types/custom-events";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import type { PartialBy } from "@_types/helpers";
 import type { FileProxy } from "@lib/fileHandling.client";
+import type { IconName } from "@lib/icons";
 import { AnimTimeline } from "@utilities/dom";
-import { Index, Show, createSignal, onMount, type JSX } from "solid-js";
+import { Index, Show, createSignal, createUniqueId, onMount, type JSX } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";
 import MultiFileInput, { type MultiFileInputProps } from "./MultiFileInput.solid";
-import { FIELD_CONTROL, FIELD_ICON, FIELD_LABEL, FIELD_OUTLINE } from "./styles";
+import Icon from "@components/other/Icon.solid";
 
 export class InputFields<T extends Record<string, Partial<Props>>> {
 	#inputs: T = {} as T;
@@ -114,7 +116,7 @@ type InputProps = {
 	placeholder?: string | number;
 	value?: string[] | string | number | FileInputProps["value"] | MultiFileInputProps["value"];
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	blurDisabled?: boolean;
 	/** Browser autofill hint for text-like inputs (e.g. "family-name", "postal-code", "off"). */
@@ -153,7 +155,7 @@ export default function Input(props: InputProps) {
 		placeholder,
 		value,
 		required,
-		iconClasses,
+		icon,
 		disabled,
 		blurDisabled = true,
 		autocomplete,
@@ -174,14 +176,20 @@ export default function Input(props: InputProps) {
 	if (type === "custom") return <>{props.render?.()}</>;
 
 	let [isShown, setIsShown] = createSignal(show);
+	// The tooltip describes its control for screen readers (it is only displayed while the field has focus).
+	const tooltipId = tooltip ? `tooltip-${createUniqueId()}` : undefined;
+
+	// The field's own wrapper: lookups stay inside it, so two forms (or a form and a modal) with the same field
+	// names never reach each other's controls — and it works before the router inserts the page into the document.
+	let wrapperEl!: HTMLElement;
 
 	if (listeners) {
 		onMount(() => {
-			const selector = document.querySelector(`[name='${name}']`);
+			const selector = wrapperEl.querySelector(`[name='${name}']`);
 			if (!selector) return;
 			selector.addEventListener("enable_input", ((e: CustomEvents["enable_input"]) => {
 				if (isShown() === e.detail) return;
-				const sParent = selector.parentElement as HTMLElement;
+				const sParent = wrapperEl;
 				const action = e.detail ? "fadeIn" : "fadeOut";
 				const atl = new AnimTimeline();
 				atl.step(() => {
@@ -212,30 +220,45 @@ export default function Input(props: InputProps) {
 			case "textarea":
 				return " col-span-full max-w-full !h-[300px] max-h-[300px]";
 			case "multifile":
-				return " col-span-full max-w-full !h-[400px] max-h-[400px]";
+				return " col-span-full max-w-full! max-h-none";
 			case "file":
-				return ` ${isExt ? "col-span-full" : ""} w-[50%] justify-self-center !h-[300px] max-h-[300px]`;
+				return ` ${isExt ? "col-span-full" : ""} max-h-none`;
 			default:
 				return "";
 		}
 	};
 
+	// Fields made of several buttons (file pickers, multiselect) must not sit inside a <label>: a click anywhere in a
+	// label is forwarded to its first button — the file's «Αφαίρεση», the first option of a multiselect.
+	const wrapper = type === "file" || type === "multifile" || type === "multiselect" ? "div" : "label";
+
 	return (
 		// The label wraps its control, which is what links them — an explicit `for` without a matching id would break it.
-		<label
+		<Dynamic
+			component={wrapper}
+			ref={(el: HTMLElement) => (wrapperEl = el)}
+			role={wrapper === "div" ? "group" : undefined}
+			aria-label={wrapper === "div" ? label : undefined}
 			class={
-				"group/tooltip relative h-min max-h-[200px] max-w-[32ch] max-sm:max-w-[29ch] w-full grid grid-rows-[1fr] text-lg rounded-xl font-didact" +
+				"group/tooltip relative h-min max-h-50 max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
 				getInputSpecific(type) +
 				(disabled && blurDisabled ? " blur-[1px]" : "") +
 				(isShown() ? "" : " hidden")
 			}>
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show when={type !== "date" && type !== "file" && type !== "multiselect" && type !== "multifile" && type !== "select" && type !== "textarea"}>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<input
-					class={FIELD_CONTROL}
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg outline-hidden! z-10"
 					type={type}
 					name={name}
 					aria-required={required ? "true" : undefined}
+					aria-describedby={tooltipId}
 					autocomplete={autocomplete}
 					inputmode={inputMode}
 					placeholder={(placeholder as string) || ""}
@@ -249,17 +272,23 @@ export default function Input(props: InputProps) {
 					}
 					onchange={onchange}
 				/>
-				<i class={FIELD_ICON + " " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
 			<Show when={type === "date"}>
 				<DateInput {...(props as InputProps & { value?: number })} />
 			</Show>
 			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<select
-					class={FIELD_CONTROL + " cursor-pointer"}
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
 					aria-required={required ? "true" : undefined}
+					aria-describedby={tooltipId}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
 					onfocus={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).setAttribute("required", "")}
 					onchange={onchange}
@@ -275,11 +304,13 @@ export default function Input(props: InputProps) {
 						)}
 					</Index>
 				</select>
-				<i class={FIELD_ICON + " " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
 			{/*-------------------------------MULTISELECT INPUT------------------------------------ */}
 			<Show when={type === "multiselect"}>
-				<div class="peer m-1.5 flex max-h-[176px] flex-wrap content-start gap-2 overflow-y-auto rounded-lg bg-white py-2.5 pr-2 pl-10 font-didact text-base text-red-950 z-10 dark:bg-dark dark:text-red-50">
+				<Show when={icon}>
+					<Icon name={icon!} class="absolute text-lg text-gray-500 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]" />
+				</Show>
+				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg overflow-x-hidden z-10">
 					<Index each={multiselectList}>
 						{(selectItem) =>
 							selectItem().value !== null || selectItem().value !== undefined ? (
@@ -287,36 +318,30 @@ export default function Input(props: InputProps) {
 									data-specifier={name}
 									data-selected={selectItem().selected}
 									data-value={selectItem().value}
-									aria-pressed={selectItem().selected ? "true" : "false"}
-									class="group/multiselect inline-flex items-center gap-x-2 rounded-full border border-gray-300 px-3 py-1 text-start transition-colors hover:border-red-800/60 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-800 data-[selected=true]:border-red-900 data-[selected=true]:bg-red-900 data-[selected=true]:text-white dark:border-neutral-600 dark:hover:border-red-400/60 dark:hover:bg-red-900/30 dark:data-[selected=true]:border-red-700 dark:data-[selected=true]:bg-red-800"
+									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
 									onClick={(e: MouseEvent) => {
+										const button = e.currentTarget as HTMLButtonElement;
 										if (multiselectOnce) {
-											const buttons = document.querySelectorAll(`button[data-specifier=${name}][data-selected='true']`);
-											buttons.forEach((button) => {
-												button.setAttribute("data-selected", "false");
-												button.setAttribute("aria-pressed", "false");
+											// Only this field's own options — never a same-named multiselect elsewhere on the page.
+											button.parentElement?.querySelectorAll("button[data-selected='true']").forEach((other) => {
+												other.setAttribute("data-selected", "false");
 											});
 										}
-										const button = e.currentTarget as HTMLButtonElement;
-										const selected = button.getAttribute("data-selected") !== "true";
-										button.setAttribute("data-selected", selected ? "true" : "false");
-										button.setAttribute("aria-pressed", selected ? "true" : "false");
+										// With `multiselectOnce` the clicked option was just cleared too, so it always ends up selected.
+										button.setAttribute("data-selected", button.getAttribute("data-selected") === "true" ? "false" : "true");
 									}}
 									type="button">
-									{/* single choice reads as a radio, multiple choice as checkboxes */}
-									<i
-										class={
-											"text-sm opacity-70 group-data-[selected=true]/multiselect:hidden " +
-											(multiselectOnce ? "fa-regular fa-circle" : "fa-regular fa-square")
-										}
-										aria-hidden="true"></i>
-									<i
-										class={
-											"hidden text-sm group-data-[selected=true]/multiselect:inline-block " +
-											(multiselectOnce ? "fa-solid fa-circle-dot" : "fa-solid fa-square-check")
-										}
-										aria-hidden="true"></i>
-									<span>{selectItem().label}</span>
+									<Icon
+										name="checkbox"
+										class="absolute top-[calc(50%-10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='true'])]/multiselect:hidden"
+									/>
+									<Icon
+										name="checkbox-checked"
+										class="absolute top-[calc(50%-10px)] left-0 text-gray-500 dark:text-gray-300 group-[:is([data-selected='false'])]/multiselect:hidden"
+									/>
+									<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
+										{selectItem().label}
+									</p>
 								</button>
 							) : (
 								<></>
@@ -324,7 +349,6 @@ export default function Input(props: InputProps) {
 						}
 					</Index>
 				</div>
-				<i class={FIELD_ICON + " top-[1.15rem]! " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
 			{/*----------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
@@ -336,10 +360,17 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>
+				<Show when={icon}>
+					<Icon
+						name={icon!}
+						class="absolute text-lg text-gray-500 dark:text-gray-300 top-1/2 -translate-y-1/2 left-6 z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)]"
+					/>
+				</Show>
 				<textarea
-					class={FIELD_CONTROL + " resize-none"}
+					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%-1rem)] bg-surface text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
 					name={name}
 					aria-required={required ? "true" : undefined}
+					aria-describedby={tooltipId}
 					placeholder={(placeholder as string) || ""}
 					value={value === 0 ? "0" : (value as any) || ""}
 					readOnly={disabled || false}
@@ -348,21 +379,17 @@ export default function Input(props: InputProps) {
 						required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
 				/>
-				<i class={FIELD_ICON + " top-[1.15rem]! " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
-			<p class={FIELD_LABEL}>
+			<p
+				class={
+					"absolute w-min bg-surface text-red-950 dark:text-red-50 rounded-t-md left-2 whitespace-nowrap top-[-1.5ch] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10" +
+					(required ? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400" : "")
+				}>
 				{label}
-				{required ? (
-					<span class="ml-0.5 text-red-700 dark:text-red-400" aria-hidden="true">
-						*
-					</span>
-				) : (
-					<></>
-				)}
+				{required ? <Icon name="asterisk" class="absolute bg-transparent left-[0.5ch] top-1 text-xs" /> : <></>}
 			</p>
-			{/* filled like the control (no inset box on translucent cards) — except behind file pickers, whose previews it would cover */}
-			<div class={FIELD_OUTLINE + (type === "file" || type === "multifile" ? "" : " bg-white dark:bg-dark")}></div>
-			{tooltip ? <Tooltip {...tooltip} /> : <></>}
-		</label>
+			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
+			{tooltip ? <Tooltip {...tooltip} id={tooltipId} /> : <></>}
+		</Dynamic>
 	);
 }

@@ -1,39 +1,56 @@
 ---
+import Icon from "@components/other/Icon.astro";
+import ProviderButtons from "@components/auth/ProviderButtons.astro";
 import Input from "@components/input/Input.astro";
 import SigninLayout from "@layouts/SigninLayout.astro";
-export const prerender = true;
+import { enabledProviders } from "@lib/auth/providers";
+import { isSessionValid } from "@lib/auth/sessions";
+import { ADMIN_HOME, isExpiredLogin, readRedirectTarget } from "@utilities/redirect";
+export const prerender = false;
+
+// Already signed in: straight to the dashboard (or the page that sent them here).
+if (await isSessionValid(Astro.cookies.get("session_id")?.value)) {
+	return Astro.redirect(readRedirectTarget(Astro.url.search) ?? ADMIN_HOME);
+}
+const providers = enabledProviders();
+// Sent here because the session ended while the dashboard was open (lib/auth/sessionExpiry.client.ts).
+const expired = isExpiredLogin(Astro.url.search);
 ---
 
 <SigninLayout title="Είσοδος Διαχειριστή" description="Είσοδος στο σύστημα διαχείρισης της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής." noindex>
 	<div
-		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid grid-rows-[100px_min-content_1fr] shadow-lg shadow-gray-700 rounded-md gap-y-12 border border-transparent dark:border-gray-700">
+		class="p-12 max-sm:px-6 h-max place-self-center bg-white dark:bg-dark grid auto-rows-min shadow-lg shadow-gray-700 rounded-md gap-y-8 border border-transparent dark:border-gray-700">
 		<div class="grid justify-center content-center">
 			<a href="/" class="relative">
-				<img class="h-[100px] brightness-150" src="/logo.png" alt="Λογότυπο Σχολής" />
-				<img class="h-[100px] absolute brightness-150 blur-[1px] opacity-40 top-[1px] left-[-2px]" src="/logo.png" alt="Λογότυπο Σχολής" />
+				<img class="h-25 brightness-150" src="/logo.svg" alt="Λογότυπο Σχολής" />
+				<img class="h-25 absolute brightness-150 blur-[1px] opacity-40 top-px -left-0.5" src="/logo.svg" alt="Λογότυπο Σχολής" />
 			</a>
 		</div>
 		<h2 class="text-3xl font-didact text-center text-red-950 dark:text-red-50">Είσοδος Διαχειριστή</h2>
-		<form id="loginForm" action="" method="post" class="group grid grid-rows-3 gap-y-8">
-			<Input type="email" name="email" label="Email" iconClasses="fa-solid fa-envelope" />
-			<Input type="password" name="password" label="Κωδικός" iconClasses="fa-solid fa-lock" required />
+		{
+			expired && (
+				<p
+					role="status"
+					class="max-w-[30ch] justify-self-center rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+					<Icon name="history" class="mr-1" />Η συνεδρία σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε από εκεί που ήσασταν.
+				</p>
+			)
+		}
+		<ProviderButtons providers={providers} verb="Είσοδος" />
+		<form id="loginForm" action="" method="post" class="group grid gap-y-8">
+			<Input type="email" name="email" label="Email" icon="mail" />
+			<div class="grid gap-1">
+				<Input type="password" name="password" label="Κωδικός" icon="lock" required />
+				<a href="/login/forgot" class="justify-self-end px-2 text-sm text-red-900 underline underline-offset-2 dark:text-red-200"
+					>Ξεχάσατε τον κωδικό;</a
+				>
+			</div>
 			<button
-				class="text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
+				class="py-2 text-2xl text-white shadow-lg shadow-gray-400 dark:shadow-gray-700 rounded-lg transition-colors duration-300 bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 dark:focus:bg-green-500 group-[:is(.animate-shake)]:bg-red-600 dark:group-[:is(.animate-shake)]:bg-red-700"
 				type="submit">Είσοδος</button
 			>
 		</form>
-		<div class="flex items-center gap-4 my-4">
-			<div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
-			<span class="text-gray-500 dark:text-gray-300 text-sm">ή</span>
-			<div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
-		</div>
-		<button
-			id="googleLoginBtn"
-			class="w-full flex items-center justify-center gap-3 px-6 py-3 text-lg font-medium text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md dark:shadow-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-lg transition-all duration-300"
-			type="button">
-			<i class="fa-brands fa-google text-xl"></i>
-			<span>Είσοδος με Google</span>
-		</button>
+		<p id="loginError" role="alert" class="hidden max-w-[30ch] justify-self-center text-center text-base text-red-700 dark:text-red-300"></p>
 	</div>
 	<style is:inline>
 		@keyframes ShakeAnimation {
@@ -70,58 +87,53 @@ export const prerender = true;
 </SigninLayout>
 <script>
 	import { apiCall } from "@hooks/apiCall";
-	import { ADMIN_HOME, readRedirectTarget, rememberRedirectTarget } from "@utilities/redirect";
+	import { bindProviderButtons } from "@lib/auth/oauth.client";
+	import { ADMIN_HOME, readRedirectTarget } from "@utilities/redirect";
 
 	// The URL the admin was intercepted on (`?redirect_url=`, set by the
 	// dashboard guard) — null when they simply opened the sign-in screen.
 	// Read once: the query string does not change while this page is open.
 	const redirectTarget = readRedirectTarget(window.location.search);
+	const errorEl = document.getElementById("loginError")!;
+	const showError = (message: string) => {
+		errorEl.textContent = message;
+		errorEl.classList.remove("hidden");
+	};
+	localStorage.removeItem("sys_user"); // pre-0008 copy of the signed-in admin
 
 	let tid: number | null = null;
+	const shake = (form: HTMLFormElement) => {
+		if (tid) {
+			clearTimeout(tid);
+			form.classList.remove("animate-shake");
+			void form.offsetWidth;
+		}
+		form.classList.add("animate-shake");
+		tid = setTimeout(() => {
+			form.classList.remove("animate-shake");
+		}, 1000) as unknown as number;
+	};
+
 	document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
 		const inputs = form.elements as any;
-		const data = {
-			email: inputs.email.value,
-			password: inputs.password.value,
-		};
-		const res = await apiCall("Authentication.userLogin", { RequestObject: data });
-		if ("data" in res && res.data && res.data.isValid) {
-			const { email, avatar_url } = res.data;
-			localStorage.setItem(
-				"sys_user",
-				JSON.stringify({
-					email,
-					avatar_url: avatar_url ?? null,
-				}),
-			);
-			window.location.href = redirectTarget ?? ADMIN_HOME;
-		} else {
-			if (tid) {
-				clearTimeout(tid);
-				form.classList.remove("animate-shake");
-				void form.offsetWidth;
+		try {
+			const res = await apiCall("Authentication.userLogin", {
+				RequestObject: { email: inputs.email.value.trim(), password: inputs.password.value },
+			});
+			if ("data" in res && res.data.isValid) {
+				window.location.href = redirectTarget ?? ADMIN_HOME;
+				return;
 			}
-			form.classList.add("animate-shake");
-			tid = setTimeout(() => {
-				form.classList.remove("animate-shake");
-			}, 1000) as unknown as number;
+			showError("Λάθος email ή κωδικός.");
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "Προέκυψε σφάλμα. Δοκιμάστε ξανά.");
 		}
+		shake(form);
 	});
 
-	// Google login button handler
-	document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
-		try {
-			// Google returns to /oauth2callback, which never sees this page's query
-			// string — park the requested URL so the callback can restore it.
-			rememberRedirectTarget(redirectTarget);
-			const res = await apiCall("Authentication.getGoogleOAuthState", {});
-			if ("data" in res && res.data && res.data.OAuthUrl) {
-				window.location.href = res.data.OAuthUrl;
-			}
-		} catch (error) {
-			console.error("Error initiating Google login:", error);
-		}
-	});
+	// The provider returns to /oauth2callback, which cannot see this page's
+	// query string — the server keeps the requested URL in the signed flow cookie.
+	bindProviderButtons(() => ({ intent: "login", redirect: redirectTarget ?? undefined }), showError);
 </script>

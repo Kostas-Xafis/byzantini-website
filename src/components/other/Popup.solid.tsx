@@ -86,7 +86,7 @@ export default function Popup(props: Props) {
 	const cancelClass = "text-2xl px-6 py-1 shadow-lg shadow-gray-400 rounded-lg transition-colors duration-300 bg-red-300 hover:bg-red-400 focus:bg-red-400";
 
 	return (
-		<div ref={popup} id="popup" class="hide fixed inset-0 w-[100dvw] h-[100dvh] grid place-items-center backdrop-blur-[6px]" role="presentation">
+		<div ref={popup} id="popup" class="hide fixed inset-0 w-dvw h-dvh grid place-items-center backdrop-blur-[6px]" role="presentation">
 			<div
 				ref={panel}
 				role="dialog"
@@ -96,7 +96,7 @@ export default function Popup(props: Props) {
 				tabindex="-1"
 				class="bg-white py-8 px-12 grid grid-cols-1 gap-y-6 justify-items-center rounded-md shadow-xl shadow-gray-600 focus-visible:outline-hidden">
 				{typeof title === "string" ? (
-					<h2 id={TITLE_ID} class="text-3xl font-didact [text-shadow:_-1px_1px_2px_rgb(35,_35,_35,_0.4)]">
+					<h2 id={TITLE_ID} class="text-3xl font-didact [text-shadow:-1px_1px_2px_rgb(35,35,35,0.4)]">
 						{title}
 					</h2>
 				) : (
@@ -150,7 +150,7 @@ export default function Popup(props: Props) {
 							props.onOk?.();
 							hide();
 						}}
-						class="px-8 py-2 text-2xl font-semibold rounded-xl text-red-50 bg-gradient-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
+						class="px-8 py-2 text-2xl font-semibold rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
 						{okButton}
 					</button>
 				) : (

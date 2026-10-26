@@ -1,103 +1,189 @@
-import type { CustomEvents } from "@_types/custom-events";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { CloseButton } from "../admin/table/CloseButton.solid";
+import { Show, createSignal, onCleanup } from "solid-js";
+import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
+import { toast } from "../admin/toast";
 
 export type FileInputProps = {
 	name: string;
 	prefix: string;
 	value?: [string, AnyRecord] | [];
 	required?: boolean;
-	iconClasses?: string;
+	icon?: IconName;
 	disabled?: boolean;
 	fileExtension?: string;
 	metadata?: AnyRecord;
 	filePreview?: (file: FileProxy<AnyRecord>) => DOMElement;
 };
 
+/** Human hint for an `accept` list: ".pdf" → "PDF", "image/*" → "εικόνα". */
+export function acceptHint(accept?: string) {
+	if (!accept) return "";
+	return accept
+		.split(",")
+		.map((a) => a.trim())
+		.filter(Boolean)
+		.map((a) => (a === "image/*" ? "εικόνα" : a.startsWith(".") ? a.slice(1).toUpperCase() : (a.split("/")[1] ?? a).toUpperCase()))
+		.join(", ");
+}
+
+/** Shortens a long file name around its extension: "Ι. Ναός Αγίας Τριάδος Κηφισιάς.jpeg" → "Ι. Ναός Αγίας…ιάς.jpeg". */
+export function shortName(name: string, max = 28) {
+	if (name.length <= max) return name;
+	const dot = name.lastIndexOf(".");
+	const ext = dot > 0 ? name.slice(dot) : "";
+	const base = dot > 0 ? name.slice(0, dot) : name;
+	const keep = max - ext.length - 1;
+	return base.slice(0, Math.ceil(keep * 0.7)) + "…" + base.slice(-Math.floor(keep * 0.3)) + ext;
+}
+
+/**
+ * Single-file field of the admin modals. The files live in a `FileHandler` registered as `prefix + name`; the modal's
+ * submit reads it (`FileHandler.getHandler`) to upload the new file (the upload route itself deletes the file it
+ * replaces, once the new one is stored) and to delete a removed stored file (`getRemovedFiles`).
+ * The dialog unmounts its content when it closes, so every opening starts from the stored value again.
+ */
 export default function FileInput(props: FileInputProps) {
-	const { name, prefix, value, required, iconClasses, disabled, fileExtension, metadata, filePreview } = props;
-	const [input, setInput] = createSignal<HTMLInputElement>();
+	const { name, prefix, value, required, icon, disabled, fileExtension, metadata, filePreview } = props;
+	let input!: HTMLInputElement;
 	const fileHandler = new FileHandler(prefix + name, {
 		isSingleFile: true,
-		file: value ? FileHandler.createFileProxy(value[0], { metadata: value[1] }) : undefined,
+		file: value && value[0] ? FileHandler.createFileProxy(value[0], { metadata: value[1] }) : undefined,
 		metadata: metadata || {},
 	});
-	const [file, setFile] = createSignal<FileProxy<AnyRecord> | null>(fileHandler.getFile(0));
-	const onFileClick = (e: MouseEvent) => {
-		let inp = input();
-		if (inp) inp.click();
-	};
-	const onFileChange = (e: Event) => {
-		const files = input()?.files;
-		if (!files) return;
+	onCleanup(() => fileHandler.unregister());
 
-		fileHandler.addFiles([files[0]]);
+	const [file, setFile] = createSignal<FileProxy<AnyRecord> | null>(fileHandler.getFile(0));
+	const [dragging, setDragging] = createSignal(false);
+
+	const pick = () => !disabled && input.click();
+	const accept = (files: FileList | File[] | null | undefined) => {
+		const picked = files?.[0];
+		if (!picked) return;
+		if (!FileHandler.accepts(picked, fileExtension)) {
+			toast.warning(`Το «${picked.name}» δεν είναι αποδεκτός τύπος αρχείου (${acceptHint(fileExtension)}).`, { title: "Μη αποδεκτό αρχείο" });
+			return;
+		}
+		fileHandler.addFiles([picked]);
 		setFile(fileHandler.getFile(0));
 	};
-
-	const onFileRemove = () => {
-		let inp = input();
-		if (!inp) return;
-		inp.value = "";
+	const onRemove = () => {
+		input.value = "";
 		fileHandler.removeFile(0);
 		setFile(null);
 	};
 
-	const onModalClose = (e: CustomEvents["modal_close"]) => {
-		const modalPrefix = e.detail.prefix;
-		if (modalPrefix !== prefix) return;
-		if (prefix.includes("ADD")) {
-			fileHandler.removeFile(0);
-			setFile(null);
-		}
+	// Counts nested enter/leave pairs so the highlight does not flicker over the children.
+	let depth = 0;
+	const dropHandlers = {
+		onDragEnter: (e: DragEvent) => {
+			if (disabled || !e.dataTransfer?.types.includes("Files")) return;
+			e.preventDefault();
+			depth++;
+			setDragging(true);
+		},
+		onDragOver: (e: DragEvent) => {
+			if (disabled || !e.dataTransfer?.types.includes("Files")) return;
+			e.preventDefault();
+			e.dataTransfer.dropEffect = "copy";
+		},
+		onDragLeave: () => {
+			depth = Math.max(0, depth - 1);
+			if (depth === 0) setDragging(false);
+		},
+		onDrop: (e: DragEvent) => {
+			e.preventDefault();
+			depth = 0;
+			setDragging(false);
+			if (!disabled) accept(e.dataTransfer?.files);
+		},
 	};
-	onMount(() => document.addEventListener("modal_close", onModalClose));
-	onCleanup(() => document.removeEventListener("modal_close", onModalClose));
-
-	const fname = createMemo(() => file()?.getName() || "");
 
 	return (
-		<>
-			<div class="flex justify-center">
-				<div
-					data-file={name}
-					class={
-						" relative peer/file group/file hidden w-[90%] max-w-[30ch] h-[90%] my-3 justify-self-center self-center flex-col items-center justify-end font-didact bg-transparent border-dashed border-2 border-gray-600 dark:border-gray-400 rounded-md overflow-x-hidden z-10" +
-						(fname().length ? " show" : "")
-					}>
-					{filePreview && file() && (
-						<div class="absolute flex -z-10 inset-0 w-[95%] h-[95%] place-self-center rounded-md overflow-hidden">{filePreview(file() as any)}</div>
-					)}
-					<div class="flex flex-col h-max pb-2 items-center w-full bg-[rgb(255,255,255,0.55)] dark:bg-[rgb(26,26,26,0.7)] text-red-950 dark:text-red-50 backdrop-blur-[3px]">
-						<p>{((fname() || "").length > 20 ? fname().slice(0, 12) + " ... " + fname().slice(-7) : fname()) || ""}</p>
-						<CloseButton label="Αφαίρεση αρχείου" onClick={() => onFileRemove()} classes="text-lg w-[1.4rem] h-[1.4rem]"></CloseButton>
-					</div>
+		<div
+			data-file={name}
+			{...dropHandlers}
+			class={
+				"file-field relative z-10 m-2 flex h-56 flex-col overflow-hidden rounded-lg border-2 border-dashed transition-colors " +
+				(dragging() ? "border-accent-ink bg-accent-soft" : file() ? "border-transparent" : "border-line hover:border-accent-ink/60")
+			}>
+			<Show
+				when={file()}
+				fallback={
+					<button
+						type="button"
+						onClick={pick}
+						disabled={disabled}
+						class="flex h-full w-full flex-col items-center justify-center gap-2 px-3 text-center font-didact text-ink-muted focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent-ink">
+						<Icon name={icon ?? "file-image"} class="text-4xl opacity-70" />
+						<span class="text-base leading-snug">
+							Σύρετε το αρχείο εδώ ή <span class="font-semibold text-accent-ink underline underline-offset-2">επιλέξτε</span>
+						</span>
+						<Show when={fileExtension}>
+							<span class="text-xs opacity-80">{acceptHint(fileExtension)}</span>
+						</Show>
+					</button>
+				}>
+				{(current) => (
+					<>
+						<div class="relative min-h-0 flex-1 overflow-hidden rounded-t-md bg-surface-muted">
+							{filePreview ? (
+								filePreview(current())
+							) : (
+								<div class="grid h-full place-items-center text-ink-muted">
+									<Icon name="file-text" class="text-5xl opacity-60" />
+								</div>
+							)}
+							<Show when={!current().isProxy()}>
+								<span class="absolute left-2 top-2 rounded-full bg-brand px-2 py-0.5 text-xs font-semibold text-brand-ink shadow-sm">Νέο</span>
+							</Show>
+						</div>
+						<div class="flex items-center gap-1 rounded-b-md border border-t-0 border-line bg-surface px-2 py-1.5 font-didact">
+							<p class="min-w-0 flex-1 truncate text-sm text-ink" title={current().getName()}>
+								{shortName(current().getName())}
+							</p>
+							<button
+								type="button"
+								onClick={pick}
+								disabled={disabled}
+								title="Αντικατάσταση"
+								aria-label="Αντικατάσταση αρχείου"
+								class="grid size-8 shrink-0 place-items-center rounded-md text-ink-muted hover:bg-ink/10 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink">
+								<Icon name="edit" />
+							</button>
+							<button
+								type="button"
+								onClick={onRemove}
+								disabled={disabled}
+								title="Αφαίρεση"
+								aria-label="Αφαίρεση αρχείου"
+								class="grid size-8 shrink-0 place-items-center rounded-md text-ink-muted hover:bg-red-600/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-accent-ink">
+								<Icon name="trash" />
+							</button>
+						</div>
+					</>
+				)}
+			</Show>
+			<Show when={dragging()}>
+				<div class="pointer-events-none absolute inset-0 grid place-items-center bg-accent-soft/90 font-didact text-lg font-semibold text-accent-ink">
+					Αφήστε το αρχείο εδώ
 				</div>
-				<div
-					data-name={name}
-					onclick={onFileClick}
-					class="peer peer-[:is(.show)]/file:hidden show group/file w-[90%] h-[90%] my-3 py-3 justify-self-center self-center flex flex-col justify-center items-center font-didact border-dashed border-2 border-gray-600 dark:border-gray-400 rounded-md cursor-pointer hover:bg-gray-600 dark:hover:bg-gray-700 z-10">
-					<i class={"text-4xl text-gray-400 group-hover/file:text-gray-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " + (iconClasses || "")}></i>
-					<p class="text-xl text-gray-400  group-hover/file:text-gray-50">Drag&Drop</p>
-				</div>
-				<input
-					ref={setInput}
-					class="hidden"
-					type="file"
-					name={name}
-					required={required || false}
-					readOnly={disabled || false}
-					onchange={onFileChange}
-					accept={fileExtension || undefined}
-				/>
-				<style>
-					{`.show {
-					display: flex;
-				}`}
-				</style>
-			</div>
-		</>
+			</Show>
+			<input
+				ref={input}
+				class="hidden"
+				type="file"
+				name={name}
+				required={required || false}
+				disabled={disabled || false}
+				onChange={() => {
+					accept(input.files);
+					// Cleared so choosing the same file again still fires `change`; the file itself lives in the handler.
+					input.value = "";
+				}}
+				accept={fileExtension || undefined}
+			/>
+		</div>
 	);
 }

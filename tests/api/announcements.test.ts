@@ -103,6 +103,43 @@ function announcementsTest() {
 		expectBody(json, z.array(z_AnnouncementImages));
 		expect(json.data).toHaveLength(5);
 	});
+	test(
+		"--announcements-- #4b a new main image replaces the previous one (one main row, old files deleted)",
+		async () => {
+			const imagesOf = async () =>
+				(
+					await getJson<APIResponse["Announcements.getImagesById"]>(
+						await useTestAPI("Announcements.getImagesById", { UrlArgs: { id: newAnnouncementId as number } }),
+					)
+				).data;
+			const before = await imagesOf();
+			const oldMain = before.find((i) => i.is_main);
+			expect(oldMain).toBeDefined();
+			// Stored names are versioned: `<base>-<base36>.<ext>`, never the uploaded name itself.
+			expect(oldMain!.name).not.toBe(mainImage);
+
+			const fileType = MIMETypeMap[mainImage.split(".").pop() as string];
+			const data = new File([fs.readFileSync(path.join(process.cwd(), "notAssets", mainImage))], mainImage, { type: fileType });
+			const res = await useTestAPI("Announcements.postImage", {
+				RequestObject: { name: mainImage, announcement_id: newAnnouncementId as number, is_main: true, fileType, fileData: data },
+			});
+			const json = await getJson<APIResponse["Announcements.postImage"]>(res);
+			expectBody(json, z.object({ insertId: z.number() }));
+
+			const after = await imagesOf();
+			expect(after).toHaveLength(before.length);
+			const mains = after.filter((i) => i.is_main);
+			expect(mains).toHaveLength(1);
+			expect(mains[0].id).toBe(json.data.insertId);
+			expect(mains[0].name).not.toBe(oldMain!.name);
+			const folder = `anakoinoseis/images/${newAnnouncementId}/`;
+			expect(await fetchBucketFile(folder + mains[0].name)).not.toBeNull();
+			expect(await fetchBucketFile(folder + oldMain!.name)).toBeNull();
+			expect(await fetchBucketFile(folder + "thumb_" + oldMain!.name)).toBeNull();
+			newImageIds = newImageIds.filter((id) => id !== oldMain!.id).concat(json.data.insertId);
+		},
+		{ timeout: 20000 },
+	);
 	test("--announcements-- #5", async () => {
 		// Defensive: `R.uniqueItems([], ...)` spins forever (and blocks the
 		// event loop, so even the test timeout can't fire) — fail loudly if the

@@ -1,25 +1,12 @@
-import { isOwnerEmail } from "@env/ownerEmail";
 import type { RouterProps } from "@solidjs/router";
-import { Show } from "solid-js";
 import AdminNav from "./AdminNav.solid";
 import AlertStack from "./Alert.solid";
-import GlobalSearch from "./GlobalSearch.solid";
 
 export default function AdminPage(props: RouterProps) {
-	// Owner-only feature (see @env/ownerEmail): the admin session stores the
-	// logged-in user locally, so the same state the nav uses is available here.
-	// Read inside the component — this module is also imported during SSR.
-	const user = JSON.parse(localStorage.getItem("sys_user") || "{}") as { email?: string | null };
-
 	return (
-		<div
-			id="AdminPage"
-			class="box-border p-0 grid overflow-y-hidden max-sm:grid-cols-1 max-sm:grid-rows-[max-content_minmax(0,1fr)] max-sm:h-dvh dark:bg-[#19070a]!">
+		<div id="AdminPage" class="box-border p-0 grid overflow-y-hidden max-sm:grid-cols-1 max-sm:grid-rows-[max-content_minmax(0,1fr)] max-sm:h-dvh bg-page">
 			<AdminNav {...props} />
 			<AlertStack />
-			<Show when={isOwnerEmail(user.email)}>
-				<GlobalSearch />
-			</Show>
 		</div>
 	);
 }

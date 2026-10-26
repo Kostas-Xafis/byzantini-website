@@ -30,19 +30,23 @@ async function setSessionId() {
 		);
 
 		const body = await getJson<APIResponse["Authentication.userLogin"]>(response);
-		expect(body).toBeDefined();
-		const data = body.data;
-		expect(data).toBeDefined();
-		expect(data.isValid).toBe(true);
-		if (data.isValid) {
-			session_id = data.session_id;
-		}
+		expect(body?.data?.isValid).toBe(true);
+		// The token only travels in the HttpOnly cookie, never in the body.
+		session_id = sessionCookieOf(response) ?? "";
+		expect(session_id).not.toBe("");
 	} finally {
 		// Always release the lock: previously a failed login left `collectingId`
 		// stuck at `true` and every later test spun here until its timeout.
 		collectingId = false;
 	}
 }
+/** The `session_id` value a response sets (sign-in, signup), or undefined. */
+export function sessionCookieOf(response: Response): string | undefined {
+	const cookie = response.headers.getSetCookie().find((c) => c.startsWith("session_id="));
+	const value = cookie?.split(";")[0].slice("session_id=".length);
+	return value || undefined;
+}
+
 // testing purposes version — Phase 4 envelope: server returns `{ data }` | `{ message }` | `{ error }`
 export const useTestAPI = async <T extends APIEndpointNames>(endpoint: T, req?: APIArgs[T], getSessionId = true) => {
 	try {

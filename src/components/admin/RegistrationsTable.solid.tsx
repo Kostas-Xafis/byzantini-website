@@ -27,6 +27,7 @@ import {
 import { PREFIX } from "./controls/Registrations/helpers";
 import type { JoinedEnrollments } from "@_types/entities";
 import { EVALUATION_BADGE } from "@lib/classYears";
+import { createIcon } from "@lib/icons";
 import { toggleCheckbox } from "./table/Row.solid";
 
 const PAID_LABEL = "Πληρωμένη";
@@ -76,9 +77,7 @@ const setFeeCues = (row: HTMLElement, registration: JoinedEnrollments) => {
 		marker.setAttribute(FEE_DECOR, "");
 		marker.title = "Ειδική τιμή: ορίστηκε χειροκίνητα";
 		marker.className = "ml-1 inline-block text-sm text-sky-800 dark:text-sky-200";
-		const icon = document.createElement("i");
-		icon.className = "fa-solid fa-hand-holding-dollar";
-		icon.setAttribute("aria-hidden", "true");
+		const icon = createIcon("hand-coins");
 		const text = document.createElement("span");
 		text.className = "sr-only";
 		text.textContent = "Ειδική τιμή";
@@ -291,7 +290,7 @@ export default function RegistrationsTable() {
 										<div class="pb-2 flex items-center gap-x-4">
 											<select
 												aria-label="Σχολική χρονιά"
-												class="px-2 py-1 border border-red-950 text-xl text-red-950 rounded-md transition-colors duration-200 hover:bg-red-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:focus-visible:outline-red-300 dark:border-red-700 dark:text-red-50 dark:hover:bg-red-800"
+												class="px-2 py-1 border border-ink text-xl text-ink rounded-md transition-colors duration-200 hover:bg-brand hover:text-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
 												onChange={(e) => {
 													const value = e.currentTarget.value;
 													if (value === "") return;

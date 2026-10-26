@@ -2,13 +2,16 @@ import { z } from "astro/zod";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import type { SitemapItem } from "@_types/global";
 import { Bucket } from "@lib/bucket";
+import { extensionOfType, fileBaseName, splitFileName, versionedFileName } from "@lib/bucket/fileNames";
+import { MAX_UPLOAD_BYTES } from "@lib/bucket/publicFiles";
+import { getDb } from "@lib/db";
 import { compressImageForThumb } from "@lib/images";
 import { asyncQueue } from "@utilities/AsyncQueue";
 import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements, z_IdArray } from "@lib/api/schemas";
 import { APIError } from "./APIError";
-import { APIServer, handlerResult } from "./APIServer";
+import { APIServer, handlerResult, HTTP } from "./APIServer";
 import { authenticateMiddleware } from "./middleware/authenticate";
 
 /**
@@ -232,17 +235,49 @@ export const announcementsRoutes = {
 		[authenticateMiddleware],
 		({ body, request }) =>
 			handlerResult(async () => {
-				const { announcement_id, fileData, fileType, name: fileName } = body;
+				const { announcement_id, fileData, fileType, is_main } = body;
+				if (fileData.size > MAX_UPLOAD_BYTES) throw new APIError(HTTP.PAYLOAD_TOO_LARGE, "Το αρχείο είναι πολύ μεγάλο (έως 10 MB)");
+				const [announcement] = await executeQuery<Pick<Announcements, "id">>("SELECT id FROM announcements WHERE id = ?", [announcement_id]);
+				if (!announcement) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
 
-				const { insertId } = await executeQuery(`INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (???)`, body);
-				const bucketFileName = bucketPrefix + `${announcement_id}/` + fileName;
+				// A fresh versioned name per upload: re-uploading "photo.jpg" never overwrites (or shares a key with) a
+				// stored photo, so replacing one is upload-new-then-delete-old on the client.
+				const fileName = versionedFileName(fileBaseName(body.name), splitFileName(body.name).ext || extensionOfType(fileType));
+				const folder = bucketPrefix + `${announcement_id}/`;
+
+				// Files first: a failed upload leaves no row behind.
 				const fileBytes = await fileData.arrayBuffer();
-				await Bucket.put(fileBytes, bucketFileName, fileType);
+				await Bucket.put(fileBytes, folder + fileName, fileType);
 				// Thumbnail is generated in-process via the Cloudflare Images binding
 				// (retired the external dockerized image-compression service).
 				const thumb = await compressImageForThumb(fileBytes, fileType);
-				const thumbFileName = bucketPrefix + `${announcement_id}/thumb_` + fileName;
-				await Bucket.put(thumb.bytes, thumbFileName, thumb.contentType);
+				await Bucket.put(thumb.bytes, folder + "thumb_" + fileName, thumb.contentType);
+
+				// A new main image replaces the previous one in ONE batch (delete the old main row(s) + insert the new
+				// one): never two main images, and never none if the upload failed above.
+				const db = getDb();
+				const insert = db
+					.prepare("INSERT INTO announcement_images (announcement_id, name, is_main) VALUES (?, ?, ?)")
+					.bind(announcement_id, fileName, is_main ? 1 : 0);
+				let replaced: Pick<AnnouncementImages, "name">[] = [];
+				let insertId: number;
+				try {
+					if (is_main) {
+						const [removed, inserted] = await db.batch<Pick<AnnouncementImages, "name">>([
+							db.prepare("DELETE FROM announcement_images WHERE announcement_id = ? AND is_main = 1 RETURNING name").bind(announcement_id),
+							insert,
+						]);
+						replaced = removed.results;
+						insertId = Number(inserted.meta.last_row_id);
+					} else {
+						insertId = Number((await insert.run()).meta.last_row_id);
+					}
+				} catch (e) {
+					await Promise.allSettled([Bucket.delete(folder + fileName), Bucket.delete(folder + "thumb_" + fileName)]);
+					throw e;
+				}
+				// The replaced main image's files go only after the new row is in place.
+				await Promise.all(replaced.flatMap(({ name }) => [Bucket.delete(folder + name), Bucket.delete(folder + "thumb_" + name)]));
 				return { insertId };
 			}, "Σφάλμα κατά την προσθήκη της εικόνας"),
 	),

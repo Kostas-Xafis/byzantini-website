@@ -50,37 +50,37 @@ export const RegistrationsInputs = (
 			name: "id",
 			label: "Id",
 			type: "number",
-			iconClasses: "fa-solid fa-hashtag",
+			icon: "hash",
 		},
 		am: {
 			label: "Αριθμός Μητρώου",
 			name: "am",
 			type: "text",
-			iconClasses: "fa-solid fa-id-card",
+			icon: "id-card",
 		},
 		last_name: {
 			label: "Επώνυμο",
 			name: "last_name",
 			type: "text",
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 		},
 		first_name: {
 			label: "Όνομα",
 			name: "first_name",
 			type: "text",
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 		},
 		fathers_name: {
 			label: "Πατρώνυμο",
 			name: "fathers_name",
 			type: "text",
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 		},
 		registration_year: {
 			label: "Σχολικό Έτος",
 			name: "registration_year",
 			type: "text",
-			iconClasses: "fa-solid fa-calendar-days",
+			icon: "calendar",
 			value: "2023-2024",
 		},
 		class_id: {
@@ -89,7 +89,7 @@ export const RegistrationsInputs = (
 			type: "select",
 			selectList: ["Βυζαντινή Μουσική", "Παραδοσιακή Μουσική", "Ευρωπαϊκή Μουσική"],
 			// The class-year list of «Κατάταξη & Δίδακτρα» follows this select (EnrollmentFeeFields listens to the form).
-			iconClasses: "fa-solid fa-graduation-cap",
+			icon: "graduation-cap",
 		},
 		teacher_id: {
 			label: "Καθηγητής",
@@ -97,7 +97,7 @@ export const RegistrationsInputs = (
 			type: "select",
 			selectList: sortTeachers.map((t) => t.fullname),
 			valueList: sortTeachers.map((t) => t.id),
-			iconClasses: "fa-solid fa-user",
+			icon: "user",
 		},
 		instrument_id: {
 			label: "Όργανο",
@@ -105,7 +105,7 @@ export const RegistrationsInputs = (
 			type: "select",
 			selectList: instruments.map((i) => i.name),
 			valueList: instruments.map((i) => i.id),
-			iconClasses: "fa-solid fa-guitar",
+			icon: "guitar",
 		},
 		// «Κατάταξη»: the evaluation checkbox and the class-year select (renders the class_year control).
 		evaluation: {
@@ -124,7 +124,7 @@ export const RegistrationsInputs = (
 			label: "Ημερομηνία Εγγραφής",
 			name: "date",
 			type: "date",
-			iconClasses: "fa-regular fa-calendar-day",
+			icon: "calendar",
 		},
 		// Fees and payments live in the «Δίδακτρα μαθητή» dialog (Μαθητολόγιο); the editor resends the stored values.
 		payment_amount: { label: "Ποσό Πληρωμής", name: "payment_amount", type: "hidden" },
@@ -134,7 +134,7 @@ export const RegistrationsInputs = (
 			label: "Προήχθη",
 			name: "pass",
 			type: "multiselect",
-			iconClasses: "fa-solid fa-check",
+			icon: "check",
 			multiselectOnce: true,
 			multiselectList: [
 				{ value: 1, label: "Ναι", selected: !!student?.pass },
@@ -150,7 +150,7 @@ export const RegistrationsInputs = (
 			label: "URL Εγγραφής",
 			name: "registration_url",
 			type: "hidden",
-			iconClasses: "fa-solid fa-link",
+			icon: "link",
 		},
 	};
 };

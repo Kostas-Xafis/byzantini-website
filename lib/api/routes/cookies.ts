@@ -9,6 +9,8 @@ export const COOKIE_EXPIRES = 7; // days — matches the app's 7-day sessions
 
 export const COOKIE = {
 	sessionId: "session_id",
+	/** Signed state of an OAuth round trip (lib/auth/oauthFlow.ts), 10 minutes. */
+	oauthFlow: "oauth_flow",
 } as const;
 export type CookieName = (typeof COOKIE)[keyof typeof COOKIE];
 

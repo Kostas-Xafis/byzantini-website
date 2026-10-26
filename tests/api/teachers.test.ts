@@ -3,6 +3,7 @@ import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { expect, test } from "bun:test";
 import { z } from "astro/zod";
+import { fileBaseName } from "@lib/bucket/fileNames";
 import { expectBody, fetchBucketFile, getJson, testEnv, useTestAPI } from "../testHelpers.ts";
 
 const areBuffersEqual = (first: ArrayBuffer, second: ArrayBuffer) => {
@@ -74,6 +75,31 @@ function teachersTest() {
 			throw new Error("Uploaded teacher CV content does not match the source file");
 		}
 	});
+	test("--teachers-- #2b uploads refuse SVG and oversized files", async () => {
+		const svg = new Blob(['<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'], { type: "image/svg+xml" });
+		expect((await useTestAPI("Teachers.fileUpload", { UrlArgs: { id: newTeacherId as number }, RequestObject: svg })).status).toBe(415);
+		const huge = new Blob([new Uint8Array(10 * 1024 * 1024 + 1)], { type: "image/png" });
+		expect((await useTestAPI("Teachers.fileUpload", { UrlArgs: { id: newTeacherId as number }, RequestObject: huge })).status).toBe(413);
+	});
+	test("--teachers-- #2c a re-upload gets a new versioned name and replaces the previous file", async () => {
+		const cvOf = async () =>
+			(await getJson<APIResponse["Teachers.getById"]>(await useTestAPI("Teachers.getById", { RequestObject: [newTeacherId as number] }))).data.cv;
+		const first = await cvOf();
+		expect(first).toMatch(/^John Doe-[0-9a-z]{8}\.pdf$/);
+		await Bun.sleep(5);
+
+		const res = await useTestAPI("Teachers.fileUpload", {
+			UrlArgs: { id: newTeacherId as number },
+			RequestObject: Bun.file("./notAssets/pdf_templates/byz_template.pdf"),
+		});
+		expectBody(await getJson<APIResponse["Teachers.fileUpload"]>(res), "Pdf uploaded successfully");
+
+		const second = await cvOf();
+		expect(second).not.toBe(first);
+		expect(fileBaseName(second as string)).toBe("John Doe");
+		expect(await fetchBucketFile(`kathigites/cv/${second}`)).not.toBeNull();
+		expect(await fetchBucketFile(`kathigites/cv/${first}`)).toBeNull();
+	});
 	test("--teachers-- #3", async () => {
 		const res = await useTestAPI("Teachers.fileRename", {
 			UrlArgs: { id: newTeacherId as number },
@@ -81,6 +107,23 @@ function teachersTest() {
 
 		const json = await getJson<APIResponse["Teachers.fileRename"]>(res);
 		expectBody(json, "Files renamed successfully");
+	});
+	test("--teachers-- #3b a renamed teacher's files follow the new name", async () => {
+		const cvOf = async () =>
+			(await getJson<APIResponse["Teachers.getById"]>(await useTestAPI("Teachers.getById", { RequestObject: [newTeacherId as number] }))).data.cv;
+		const before = await cvOf();
+		const update = await useTestAPI("Teachers.update", { RequestObject: { ...teacher, id: newTeacherId as number, fullname: "Jane Doe" } });
+		expect(update.status).toBe(200);
+
+		expectBody(
+			await getJson<APIResponse["Teachers.fileRename"]>(await useTestAPI("Teachers.fileRename", { UrlArgs: { id: newTeacherId as number } })),
+			"Files renamed successfully",
+		);
+
+		const after = await cvOf();
+		expect(after).toMatch(/^Jane Doe-[0-9a-z]{8}\.pdf$/);
+		expect(await fetchBucketFile(`kathigites/cv/${after}`)).not.toBeNull();
+		expect(await fetchBucketFile(`kathigites/cv/${before}`)).toBeNull();
 	});
 	test("--teachers-- #4", async () => {
 		const beforeDeleteRes = await useTestAPI("Teachers.getById", {

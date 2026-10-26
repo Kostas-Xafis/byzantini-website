@@ -1,11 +1,13 @@
 ---
+import Icon from "@components/other/Icon.astro";
+import type { IconName } from "@lib/icons";
 // Ενότητα «Εκδηλώσεις & Χορωδία» — εικόνες από το bucket (λέγονται μέσω του
 // catch-all [...]slug.ts). Αντικαταστήστε με νεότερες φωτογραφίες όταν υπάρχουν.
-const events = [
-	{ text: "Συναυλίες και εκδηλώσεις", icon: "fa-solid fa-microphone-lines" },
-	{ text: "Αγιασμοί έναρξης μαθημάτων", icon: "fa-solid fa-dove" },
-	{ text: "Κάλαντα Χριστουγέννων και Πρωτοχρονιάς", icon: "fa-solid fa-star" },
-	{ text: "Σεμινάρια και μουσικά εργαστήρια", icon: "fa-solid fa-guitar" },
+const events: { text: string; icon: IconName }[] = [
+	{ text: "Συναυλίες και εκδηλώσεις", icon: "microphone" },
+	{ text: "Αγιασμοί έναρξης μαθημάτων", icon: "dove" },
+	{ text: "Κάλαντα Χριστουγέννων και Πρωτοχρονιάς", icon: "star" },
+	{ text: "Σεμινάρια και μουσικά εργαστήρια", icon: "guitar" },
 ];
 ---
 
@@ -13,7 +15,7 @@ const events = [
 	id="events-choir"
 	class="relative w-full grid grid-cols-2 max-sm:grid-cols-1 gap-[2.5vw] max-sm:gap-8 items-center px-[3vw] py-[5vh] max-sm:px-4 max-sm:py-10">
 	<div
-		class="grid grid-cols-[1.5fr_1fr_1fr] grid-rows-2 aspect-[1.9] gap-[0.75vw] max-sm:aspect-auto max-sm:grid-cols-2 max-sm:grid-rows-[auto_auto_auto] max-sm:gap-3">
+		class="grid grid-cols-[1.5fr_1fr] grid-rows-2 aspect-[1.9] gap-[0.75vw] max-sm:aspect-auto max-sm:grid-cols-2 max-sm:grid-rows-[auto_auto_auto] max-sm:gap-3">
 		<img
 			src="/choir/choir_2.jpg"
 			alt="Συναυλία της χορωδίας «Άδοντες & Ψάλλοντες» στα σκαλιά του Ι.Ν. Μεταμορφώσεως"
@@ -24,15 +26,6 @@ const events = [
 			class="row-span-2 max-sm:row-span-1 max-sm:col-span-2 max-sm:aspect-video max-sm:h-auto h-full w-full rounded-xl border-2 border-red-900 object-cover shadow-md shadow-red-900/20 transition-transform duration-500 hover:scale-[1.02]"
 		/>
 		<img
-			src="/emails/files/Ανακοίνωση Έναρξης Μαθηματων 2026.jpg"
-			alt="Ανακοίνωση έναρξης μαθημάτων 2026"
-			width="800"
-			height="460"
-			loading="lazy"
-			decoding="async"
-			class="h-full w-full max-sm:aspect-4/3 max-sm:h-auto rounded-xl border-2 border-red-900 object-cover object-top shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
-		/>
-		<img
 			src="/choir/choir_3.jpg"
 			alt="Αναμνηστική φωτογραφία της χορωδίας μπροστά στο εικονοστάσι του ναού"
 			width="1536"
@@ -40,15 +33,6 @@ const events = [
 			loading="lazy"
 			decoding="async"
 			class="h-full w-full max-sm:aspect-4/3 max-sm:h-auto rounded-xl border-2 border-red-900 object-cover shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
-		/>
-		<img
-			src="/poster.jpg"
-			alt="Αφίσα με τα διδασκόμενα τμήματα της Σχολής"
-			width="800"
-			height="1130"
-			loading="lazy"
-			decoding="async"
-			class="h-full w-full max-sm:aspect-4/3 max-sm:h-auto rounded-xl border-2 border-red-900 object-cover object-top shadow-md shadow-red-900/10 transition-transform duration-500 hover:scale-[1.02]"
 		/>
 		<img
 			src="/choir/choir_4.jpg"
@@ -74,7 +58,7 @@ const events = [
 			{
 				events.map((e) => (
 					<li class="flex items-center gap-x-2.5 font-didact text-[0.95vw] max-sm:text-sm text-gray-700">
-						<i class={`${e.icon} w-5 text-center text-red-900 max-sm:text-sm`} aria-hidden="true" />
+						<Icon name={e.icon} class="w-5 text-red-900 max-sm:text-sm" />
 						<span>{e.text}</span>
 					</li>
 				))
@@ -85,7 +69,7 @@ const events = [
 				href="/sxoli/xorodia"
 				class="inline-flex items-center gap-x-2 rounded-xl bg-red-900 px-[1.25vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.1vw] max-sm:text-base text-red-50 shadow-md shadow-red-900/30 transition-colors hover:bg-red-950">
 				Γνωρίστε τη χορωδία
-				<i class="fa-solid fa-chevron-right text-[0.8vw] max-sm:text-xs" aria-hidden="true"></i>
+				<Icon name="chevron-right" class="text-[0.8vw] max-sm:text-xs" />
 			</a>
 		</div>
 	</div>

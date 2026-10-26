@@ -3,6 +3,7 @@ import { batch, createEffect, createMemo, createSignal, For, onCleanup, Show } f
 import type { SetStoreFunction } from "solid-js/store";
 import type { CellValue } from "./table/Row.solid";
 import { ALL_COLUMNS } from "./table/searchMatch";
+import Icon from "@components/other/Icon.solid";
 
 export type SearchColumn = {
 	columnName: string;
@@ -94,11 +95,11 @@ export function SearchTable(props: SearchTableProps) {
 	const hasActiveQuery = () => !!props.searchQuery.value;
 
 	return (
-		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-lg border-2 border-red-900 bg-white/50 px-3 max-sm:mx-4 py-1.5 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark dark:shadow-gray-700">
-			<i class="fa-solid fa-magnifying-glass text-red-900 drop-shadow-md dark:text-red-200" aria-hidden="true"></i>
+		<div class="flex flex-wrap items-center justify-center gap-x-2 max-sm:gap-y-2 rounded-xl border border-line bg-surface px-3 max-sm:mx-4 py-1.5 shadow-sm shadow-shade">
+			<Icon name="search" class="text-accent-ink" />
 			<select
 				aria-label="Στήλη αναζήτησης"
-				class="max-w-[14rem] cursor-pointer rounded-md bg-red-300 px-2 py-1 text-sm font-bold text-red-900 shadow-md focus-visible:outline-hidden dark:bg-red-900 dark:text-red-50 dark:shadow-gray-800"
+				class="max-w-56 cursor-pointer rounded-lg bg-accent-soft px-2 py-1 text-sm font-bold text-accent-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
 				onChange={(e) => {
 					const colName = e.currentTarget.value;
 					const next = allColumns().find((c) => c.columnName === colName);
@@ -116,7 +117,7 @@ export function SearchTable(props: SearchTableProps) {
 				</For>
 			</select>
 			<input
-				class="w-48 max-sm:w-40 rounded-md bg-white px-3 py-1.5 font-didact text-base text-red-950 shadow-md shadow-gray-300 focus:shadow-lg focus-visible:outline-hidden dark:bg-dark dark:text-red-50 dark:shadow-gray-700"
+				class="w-48 max-sm:w-40 rounded-lg border border-line bg-surface-muted px-3 py-1.5 font-didact text-base text-ink focus-visible:outline-hidden focus:ring-2 focus:ring-brand/30"
 				type="text"
 				name="search"
 				autocomplete="off"
@@ -140,7 +141,7 @@ export function SearchTable(props: SearchTableProps) {
 				}}
 			/>
 			<Show when={hasActiveQuery() || value()}>
-				<span class="whitespace-nowrap font-didact text-sm text-red-950 dark:text-red-100" aria-live="polite">
+				<span class="whitespace-nowrap font-didact text-sm text-ink" aria-live="polite">
 					{props.resultsCount?.() ?? 0}
 					{props.totalCount ? <span class="opacity-70"> / {props.totalCount()}</span> : null}
 				</span>
@@ -149,9 +150,9 @@ export function SearchTable(props: SearchTableProps) {
 				<button
 					type="button"
 					aria-label="Καθαρισμός αναζήτησης"
-					class="grid h-6 w-6 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/70"
+					class="grid h-6 w-6 place-items-center rounded-full text-accent-ink transition-colors hover:bg-accent-soft"
 					onClick={clear}>
-					<i class="fa-solid fa-xmark text-sm leading-none" aria-hidden="true"></i>
+					<Icon name="close" class="text-sm leading-none" />
 				</button>
 			</Show>
 		</div>
