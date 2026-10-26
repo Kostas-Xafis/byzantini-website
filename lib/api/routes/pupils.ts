@@ -1,6 +1,7 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
 import { z_IdArray, z_JoinedEnrollments, z_PupilRegistrationForm, z_PupilSearchResponse, z_PupilWithEnrollments } from "@lib/api/schemas";
-import { normalizeKey, normalizePhone, normalizeText, parseAm } from "@lib/pupils/normalize";
+import { normalizeKey, normalizeText, parseAm } from "@lib/pupils/normalize";
+import { rankPupils } from "@lib/pupils/search";
 import { classYearsByMusicType, isEvaluationClassYear, MusicTypeArr } from "@lib/classYears";
 import { computeYearFees, orderForFees } from "@lib/fees";
 import {
@@ -13,6 +14,7 @@ import {
 	type PupilYear,
 } from "@lib/fees/recalculate.server";
 import { ALL_YEARS, currentSchoolYearStart, schoolYearOf } from "@lib/pupils/years";
+import { getDb, logQuery } from "@lib/db";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
@@ -230,6 +232,14 @@ const z_DashboardSummary = z.object({
 	owing: z.object({ enrollments: z.number().int(), pupils: z.number().int(), amount: z.number() }),
 	new_online: z.number().int(),
 });
+
+/** Removes a pupil from the Μαθητολόγιο, with all their enrollments. */
+const z_PupilDelete = z.object({
+	id: z.number().int().min(1, "Μη έγκυρο id"),
+	/** Also remove the pupil's email from the newsletter (kept when another pupil still uses it). */
+	unsubscribe: z.boolean().optional(),
+});
+const z_PupilDeleteResponse = z.object({ enrollments: z.number().int(), unsubscribed: z.boolean() });
 const z_FeePreviewResponse = z.object({
 	/** The active catalog of the school year (what a new enrollment would pin), or null. */
 	active_catalog_id: z.number().int().nullable(),
@@ -376,28 +386,9 @@ function splitJoined(row: Record<string, unknown>): { enrollment: EnrollmentRow;
 	return { enrollment: row as unknown as EnrollmentRow, pupil: { ...row, id: row.pupil_id } as unknown as PupilRow };
 }
 
-/** Accent/case-insensitive haystack for one pupil search row. */
-function searchHaystack(pupil: Pupils & { enrollment_count?: number }): string {
-	return normalizeKey(
-		[
-			pupil.am === null ? "" : String(pupil.am),
-			pupil.orphan_code,
-			pupil.split_from_am ?? "",
-			pupil.last_name,
-			pupil.first_name,
-			pupil.fathers_name,
-			pupil.email,
-			pupil.amka,
-			pupil.region,
-			pupil.telephone,
-			pupil.cellphone,
-		].join(" "),
-	);
-}
-
 export const pupilsRoutes = {
 	// ---------------------------------------------------------------------
-	// Μαθητολόγιο search (server-side, accent-insensitive, paginated)
+	// Μαθητολόγιο search (server-side, paginated): ΑΜ or name, ranked — see lib/pupils/search.ts
 	// ---------------------------------------------------------------------
 	search: new APIServer(
 		{ method: "POST", path: "/pupils/search", schema: z_Search, responseSchema: z_PupilSearchResponse },
@@ -406,7 +397,7 @@ export const pupilsRoutes = {
 			handlerResult(async () => {
 				const { query, class_id, needs_review, page = 0, pageSize = 50 } = body;
 
-				const pupils = await executeQuery<Pupils>(`SELECT * FROM pupils ORDER BY last_name COLLATE NOCASE ASC, first_name COLLATE NOCASE ASC`);
+				const pupils = await executeQuery<Pupils>(`SELECT * FROM pupils`);
 				const summary = await executeQuery<{ pupil_id: number; enrollment_count: number; last_year: string; music_types: string }>(
 					`SELECT pupil_id, COUNT(*) AS enrollment_count, MAX(registration_year) AS last_year,
 					GROUP_CONCAT(DISTINCT class_id) AS music_types
@@ -414,9 +405,7 @@ export const pupilsRoutes = {
 				);
 				const byPupil = new Map(summary.map((row) => [row.pupil_id, row]));
 
-				const q = normalizeKey(query);
-				const digits = normalizePhone(query);
-				let rows = pupils.map((pupil) => {
+				let rows = rankPupils(pupils, query).map((pupil) => {
 					const stats = byPupil.get(pupil.id);
 					return {
 						id: pupil.id,
@@ -435,20 +424,9 @@ export const pupilsRoutes = {
 						enrollment_count: stats?.enrollment_count ?? 0,
 						last_registration_year: stats?.last_year ?? "",
 						music_types: stats?.music_types ?? "",
-						// internal, stripped below
-						haystack: searchHaystack(pupil),
 					};
 				});
 
-				if (q) {
-					rows = rows.filter((row) => {
-						if (row.haystack.includes(q)) return true;
-						// ΑΜΚΑ / phone are numeric: compare digits too ('69 73…' finds the pupil)
-						if (digits && (normalizePhone(row.cellphone) === digits || normalizePhone(row.telephone) === digits || row.amka === digits))
-							return true;
-						return false;
-					});
-				}
 				if (class_id !== undefined) {
 					rows = rows.filter((row) => row.music_types.split(",").includes(String(class_id)));
 				}
@@ -456,7 +434,7 @@ export const pupilsRoutes = {
 
 				const total = rows.length;
 				const start = page * pageSize;
-				const pageRows = rows.slice(start, start + pageSize).map(({ haystack, ...row }) => row);
+				const pageRows = rows.slice(start, start + pageSize);
 				return { rows: pageRows, total, page, pageSize };
 			}, "Σφάλμα κατά την αναζήτηση μαθητών"),
 	),
@@ -521,6 +499,44 @@ export const pupilsRoutes = {
 			]);
 			return "Επιτυχής ενημέρωση μαθητή";
 		}, "Σφάλμα κατά την ενημέρωση του μαθητή"),
+	),
+
+	/**
+	 * Deletes a pupil and everything that hangs off them: the enrollment history (fees and payments
+	 * live on those rows), the `total_enrollments` counter share and — with `unsubscribe` — the
+	 * newsletter subscription of their email, unless another pupil still uses that address. One
+	 * `db.batch`, so a failure leaves the pupil untouched (D1 has no rollback). Their permanent
+	 * re-registration link stops working.
+	 */
+	delete: new APIServer(
+		{ method: "DELETE", path: "/pupils", schema: z_PupilDelete, responseSchema: z_PupilDeleteResponse },
+		[authenticateMiddleware],
+		({ body }) =>
+			handlerResult(async () => {
+				const { id, unsubscribe = false } = body;
+				const [pupil] = await executeQuery<Pick<Pupils, "id" | "email">>("SELECT id, email FROM pupils WHERE id = ?", [id]);
+				if (!pupil) throw APIError.notFound("Ο μαθητής δεν βρέθηκε");
+
+				const statements: [string, unknown[]][] = [
+					// Before the enrollments go, so the subquery still counts them.
+					["UPDATE total_enrollments SET amount = amount - (SELECT COUNT(*) FROM pupil_enrollments WHERE pupil_id = ?)", [id]],
+					["DELETE FROM pupil_enrollments WHERE pupil_id = ?", [id]],
+					["DELETE FROM pupils WHERE id = ?", [id]],
+				];
+				const email = pupil.email.trim();
+				if (unsubscribe && email) {
+					// After the pupil row is gone: any pupil left with this address keeps the subscription.
+					statements.push([
+						"DELETE FROM email_subscriptions WHERE email = ? AND NOT EXISTS (SELECT 1 FROM pupils WHERE LOWER(TRIM(email)) = LOWER(?))",
+						[pupil.email, email],
+					]);
+				}
+
+				const db = getDb();
+				const results = await db.batch(statements.map(([sql, args]) => db.prepare(sql).bind(...args)));
+				for (const [sql, args] of statements) await logQuery(sql, args);
+				return { enrollments: results[1].meta.changes ?? 0, unsubscribed: (results[3]?.meta.changes ?? 0) > 0 };
+			}, "Σφάλμα κατά τη διαγραφή του μαθητή"),
 	),
 
 	/**

@@ -11,6 +11,7 @@ export const ACTIVITY_LABELS: Record<string, string> = {
 	"Pupils.enroll": "Προσθήκη εγγραφής σε μαθητή",
 	"Pupils.updateEnrollment": "Επεξεργασία εγγραφής",
 	"Pupils.deleteEnrollments": "Διαγραφή εγγραφών",
+	"Pupils.delete": "Διαγραφή μαθητή",
 	"Pupils.settleYear": "Εξόφληση διδάκτρων έτους",
 
 	"Payments.post": "Νέα οφειλή μαθητή",

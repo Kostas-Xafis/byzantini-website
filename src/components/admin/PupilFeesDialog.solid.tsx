@@ -3,6 +3,7 @@ import { apiCall } from "@hooks/apiCall";
 import { classYearLabel, EVALUATION_LABEL } from "@lib/classYears";
 import { currentSchoolYear } from "@lib/pupils/years";
 import { API } from "@routes/index.client";
+import Icon from "@components/other/Icon.solid";
 import { For, Show, createEffect, createMemo, createSignal, on } from "solid-js";
 import Dialog, { DialogCloseButton } from "../other/Dialog.solid";
 import Spinner from "../other/Spinner.solid";
@@ -19,7 +20,6 @@ import {
 	todayTimestamp,
 	type PreviewRow,
 } from "./controls/Registrations/EnrollmentFeeFields.solid";
-import Icon from "@components/other/Icon.solid";
 
 /**
  * «Δίδακτρα μαθητή» — one school year of a pupil at a glance (Μαθητολόγιο): every registration in discount
@@ -49,9 +49,10 @@ type FeeRow = { enrollment: PupilEnrollments; preview: PreviewRow | null };
 const TITLE_ID = "pupil-fees-title";
 
 const cellInput =
-	"w-28 rounded-md border-2 border-ink-muted bg-surface px-2 py-1 font-didact text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink";
+	"w-28 rounded-lg border border-gray-300 bg-surface px-2.5 py-1.5 font-didact text-base text-red-950 transition-[border-color,box-shadow] hover:border-gray-400 focus:border-red-800 focus:ring-4 focus:ring-red-800/10 focus-visible:outline-hidden dark:border-neutral-600 dark:bg-dark dark:text-red-50 dark:focus:border-red-400 dark:focus:ring-red-400/15";
 const smallButton =
-	"whitespace-nowrap rounded-md border border-brand px-2 py-1 text-sm transition-colors hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+	"inline-flex items-center gap-x-1.5 whitespace-nowrap rounded-lg border border-gray-300 px-2.5 py-1 text-sm font-semibold transition-colors hover:border-gray-400 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:border-neutral-600 dark:hover:bg-neutral-700";
+const MUTED = "text-gray-500 dark:text-gray-400";
 
 const sortYearsDesc = (years: Iterable<string>) => [...new Set(years)].sort((a, b) => b.localeCompare(a));
 
@@ -197,50 +198,58 @@ export default function PupilFeesDialog(props: Props) {
 			onClose={props.onClose}
 			labelledBy={TITLE_ID}
 			closeOnBackdrop={() => !busy()}
-			// Same frame as the table modals (table/Modal.solid.tsx): backdrop, panel, header with its close button.
-			backdropClass="modal fixed z-[5000] inset-0 w-full h-full bg-[rgb(120_120_120_/_0.35)] dark:bg-[rgb(0_0_0_/_0.6)] grid backdrop-blur-sm p-4 max-sm:p-2"
-			class="relative grid max-h-[min(92dvh,60rem)] w-[min(75rem,95vw)] grid-rows-[max-content_1fr] place-self-center overflow-hidden rounded-2xl border border-line bg-surface font-didact text-ink shadow-2xl shadow-black/30 focus-visible:outline-hidden max-sm:mt-20 max-sm:max-h-[calc(100dvh-6rem)]">
-			<div class="grid gap-y-3 border-b border-line px-6 py-4 max-sm:px-4 max-sm:py-3">
-				<div class="flex items-center gap-x-3">
-					<h2 id={TITLE_ID} class="min-w-0 flex-1 font-anaktoria text-3xl leading-tight max-sm:text-2xl">
+			backdropClass="modal fixed z-[5000] inset-0 grid h-full w-full bg-black/35 p-4 backdrop-blur-[3px] dark:bg-black/60"
+			class="relative flex max-h-[90vh] w-[min(1200px,95vw)] flex-col place-self-center overflow-hidden rounded-2xl bg-surface font-didact text-red-950 shadow-2xl shadow-black/25 ring-1 ring-black/5 focus-visible:outline-hidden max-sm:max-h-[85dvh] dark:bg-dark dark:text-red-50 dark:shadow-black/60 dark:ring-white/10">
+			<header class="flex flex-wrap items-center gap-x-3 gap-y-3 border-b border-gray-200 px-6 py-4 max-sm:px-4 dark:border-neutral-700/70">
+				<span
+					class="grid size-10 shrink-0 place-items-center rounded-xl bg-red-50 text-lg text-red-900 dark:bg-red-900/25 dark:text-red-200"
+					aria-hidden="true">
+					<Icon name="euro" />
+				</span>
+				<div class="grid min-w-0 flex-1">
+					<h2 id={TITLE_ID} class="font-anaktoria text-3xl leading-tight max-sm:text-2xl">
 						Δίδακτρα μαθητή
 					</h2>
-					<DialogCloseButton class="size-9 shrink-0 text-lg" onClick={props.onClose} />
-				</div>
-				<div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
-					<span class="font-semibold">
-						{props.pupil.name} <span class="font-normal text-ink-muted">(ΑΜ {props.pupil.am})</span>
+					<span class={"text-base " + MUTED}>
+						<span class="font-semibold text-red-950 dark:text-red-50">{props.pupil.name}</span> · ΑΜ {props.pupil.am}
 					</span>
-					<label class="flex items-center gap-x-2">
-						Σχολικό έτος
-						<select
-							value={year()}
-							onChange={(e) => setYear(e.currentTarget.value)}
-							class="rounded-lg border border-line bg-surface px-2 py-1 text-lg text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
-							<For each={yearOptions()}>{(option) => <option value={option}>{option}</option>}</For>
-						</select>
-					</label>
-					<Show when={loading() || busy()}>
-						<Icon name="spinner" class="text-accent-ink" spin />
-						<span class="sr-only">Φόρτωση…</span>
-					</Show>
 				</div>
-			</div>
+				<label class="flex items-center gap-x-2 text-base">
+					<span class={MUTED}>Σχολικό έτος</span>
+					<select
+						value={year()}
+						onChange={(e) => setYear(e.currentTarget.value)}
+						class="cursor-pointer rounded-lg border border-gray-300 bg-surface px-2.5 py-1.5 text-base font-semibold tabular-nums transition-[border-color,box-shadow] hover:border-gray-400 focus:border-red-800 focus:ring-4 focus:ring-red-800/10 focus-visible:outline-hidden dark:border-neutral-600 dark:bg-dark dark:focus:border-red-400">
+						<For each={yearOptions()}>{(option) => <option value={option}>{option}</option>}</For>
+					</select>
+				</label>
+				<Show when={loading() || busy()}>
+					<Icon name="spinner" class="text-red-900 dark:text-red-200" spin />
+					<span class="sr-only">Φόρτωση…</span>
+				</Show>
+				<DialogCloseButton class="size-9 shrink-0 text-lg" onClick={props.onClose} />
+			</header>
 
-			<div
-				class="grid min-h-0 auto-rows-max gap-y-4 overflow-y-auto overscroll-contain px-6 py-5 max-sm:px-3 max-sm:py-4"
-				aria-busy={loading() || busy() ? "true" : "false"}>
+			<div class="grid min-h-0 flex-1 gap-y-4 overflow-y-auto px-6 py-5 max-sm:px-4" aria-busy={loading() || busy() ? "true" : "false"}>
 				<Show
 					when={rows().length > 0}
-					fallback={<p class="py-10 text-center text-lg text-ink-muted">Δεν υπάρχουν εγγραφές για το σχολικό έτος {year()}.</p>}>
+					fallback={
+						<div class="grid justify-items-center gap-y-2 py-10 text-center">
+							<Icon name="clipboard-list" class={"text-3xl " + MUTED} />
+							<p class={"text-lg " + MUTED}>Δεν υπάρχουν εγγραφές για το σχολικό έτος {year()}.</p>
+						</div>
+					}>
 					<Show when={previewError()}>
-						<p class="text-base text-danger">{previewError()}</p>
+						<p class="text-base text-red-700 dark:text-red-300">{previewError()}</p>
 					</Show>
-					<div class="overflow-x-auto">
-						<table class="w-full min-w-240 border-collapse text-base">
+					<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+						<table class="w-full min-w-[960px] border-collapse text-base">
 							<caption class="sr-only">Εγγραφές και δίδακτρα του σχολικού έτους {year()}, με τη σειρά των εκπτώσεων</caption>
 							<thead>
-								<tr class="bg-accent-soft text-left [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-semibold">
+								<tr
+									class={
+										"bg-gray-50 text-left align-bottom text-sm dark:bg-white/[0.04] [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold " + MUTED
+									}>
 									<th scope="col">Τμήμα / Όργανο</th>
 									<th scope="col">Τάξη</th>
 									<th scope="col">Καθηγητής</th>
@@ -266,18 +275,18 @@ export default function PupilFeesDialog(props: Props) {
 									</th>
 								</tr>
 							</thead>
-							<tbody>
+							<tbody class="divide-y divide-gray-100 dark:divide-white/5">
 								<For each={rows()}>
 									{({ enrollment, preview: fee }) => {
 										const balance = () => enrollment.total_payment - enrollment.payment_amount;
 										const pinned = enrollment.fee_catalog_id !== null;
 										return (
 											<>
-												<tr class="border-t border-line align-top [&>td]:px-2 [&>td]:py-2">
-													<th scope="row" class="px-2 py-2 text-left font-normal">
+												<tr class="align-top transition-colors hover:bg-red-50/40 dark:hover:bg-white/[0.03] [&>td]:px-3 [&>td]:py-2.5">
+													<th scope="row" class="px-3 py-2.5 text-left font-normal">
 														<span class="font-semibold">{DEPARTMENTS[enrollment.class_id] ?? "-"}</span>
 														<br />
-														<span class="text-ink-muted">{instrumentName(enrollment.instrument_id)}</span>
+														<span class={"text-sm " + MUTED}>{instrumentName(enrollment.instrument_id)}</span>
 													</th>
 													<td class="whitespace-nowrap">
 														<Show
@@ -290,7 +299,7 @@ export default function PupilFeesDialog(props: Props) {
 																	</Show>
 																</>
 															}>
-															<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+															<span class="rounded-full bg-amber-100 px-2 py-0.5 text-sm font-semibold text-amber-900 ring-1 ring-amber-300 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-500/40">
 																{EVALUATION_LABEL}
 															</span>
 														</Show>
@@ -332,7 +341,7 @@ export default function PupilFeesDialog(props: Props) {
 																aria-controls={`fees-edit-${enrollment.id}`}
 																aria-label={`Επεξεργασία τιμής και πληρωμής: ${rowTitle(enrollment)}`}
 																onClick={() => setEditingId(editingId() === enrollment.id ? null : enrollment.id)}>
-																<Icon name="edit" class="mr-1" />
+																<Icon name="edit" />
 																Επεξεργασία
 															</button>
 															<button
@@ -341,15 +350,15 @@ export default function PupilFeesDialog(props: Props) {
 																disabled={busy() || balance() <= 0}
 																aria-label={`Εξόφληση: ${rowTitle(enrollment)}`}
 																onClick={() => settleOne(enrollment)}>
-																<Icon name="check-double" class="mr-1" />
+																<Icon name="check-double" />
 																Εξόφληση
 															</button>
 														</div>
 													</td>
 												</tr>
 												<Show when={editingId() === enrollment.id}>
-													<tr id={`fees-edit-${enrollment.id}`} class="bg-surface-muted">
-														<td colSpan={11} class="px-2 py-3">
+													<tr id={`fees-edit-${enrollment.id}`} class="bg-red-50/50 dark:bg-white/[0.04]">
+														<td colSpan={11} class="px-3 py-4">
 															<RowEditor
 																enrollment={enrollment}
 																catalogTotal={pinned ? (fee?.catalog_total ?? null) : null}
@@ -371,17 +380,21 @@ export default function PupilFeesDialog(props: Props) {
 
 				{/* totals */}
 				<div class="flex flex-wrap items-end justify-between gap-4">
-					<dl class="grid min-w-65 grid-cols-[auto_auto] gap-x-8 gap-y-1 rounded-lg bg-accent-soft px-4 py-3 text-lg [&_dd]:text-right [&_dd]:tabular-nums [&_dt]:text-ink-muted">
+					<dl class="grid min-w-[280px] grid-cols-[auto_auto] gap-x-10 gap-y-1.5 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-base dark:border-white/10 dark:bg-white/[0.04] [&_dd]:text-right [&_dd]:tabular-nums [&_dt]:text-gray-600 dark:[&_dt]:text-gray-300">
 						<dt>Δίδακτρα τμημάτων</dt>
 						<dd>{euro(totals().classes)}</dd>
 						<dt>Τέλη κατάταξης</dt>
 						<dd>{euro(totals().evaluation)}</dd>
-						<dt class="border-t border-line pt-1 font-semibold text-ink!">Γενικό σύνολο</dt>
-						<dd class="border-t border-line pt-1 font-semibold">{euro(totals().total)}</dd>
+						<dt class="border-t border-gray-200 pt-1.5 font-semibold text-red-950! dark:border-white/10 dark:text-red-50!">Γενικό σύνολο</dt>
+						<dd class="border-t border-gray-200 pt-1.5 font-semibold dark:border-white/10">{euro(totals().total)}</dd>
 						<dt>Πληρώθηκαν</dt>
 						<dd>{euro(totals().paid)}</dd>
-						<dt class="font-semibold text-ink!">Υπόλοιπο</dt>
-						<dd class={"font-semibold " + (totals().balance > 0 ? "text-amber-800 dark:text-amber-300" : "text-emerald-800 dark:text-emerald-300")}>
+						<dt class="text-lg font-semibold text-red-950! dark:text-red-50!">Υπόλοιπο</dt>
+						<dd
+							class={
+								"text-lg font-semibold " +
+								(totals().balance > 0 ? "text-amber-800 dark:text-amber-300" : "text-emerald-800 dark:text-emerald-300")
+							}>
 							{euro(totals().balance)}
 						</dd>
 					</dl>
@@ -389,8 +402,8 @@ export default function PupilFeesDialog(props: Props) {
 						type="button"
 						disabled={busy() || owing().length === 0}
 						onClick={settleAll}
-						class="rounded-lg bg-emerald-700 px-5 py-2 text-lg font-semibold text-white shadow-md transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
-						<Icon name="check-double" class="mr-2" />
+						class="inline-flex items-center gap-x-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-lg font-semibold text-white! shadow-sm transition-colors hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+						<Icon name="check-double" />
 						Εξόφληση όλων
 					</button>
 				</div>
@@ -442,7 +455,10 @@ function RowEditor(props: {
 	};
 
 	return (
-		<form class="flex flex-wrap items-end gap-4" onSubmit={save} aria-label="Τιμή και πληρωμή εγγραφής">
+		<form
+			class="flex flex-wrap items-end gap-4 [&_label>span]:font-semibold [&_label>span]:text-gray-600 dark:[&_label>span]:text-gray-300"
+			onSubmit={save}
+			aria-label="Τιμή και πληρωμή εγγραφής">
 			<label class="grid gap-y-1 text-sm">
 				<span class="flex items-center gap-x-2">
 					Σύνολο (€)
@@ -472,7 +488,7 @@ function RowEditor(props: {
 						setTouched(true);
 						if (props.catalogTotal !== null) setTotal(props.catalogTotal);
 					}}>
-					<Icon name="undo" class="mr-1" />
+					<Icon name="undo" />
 					Επαναφορά τιμής καταλόγου
 					<Show when={props.catalogTotal !== null}> ({euro(props.catalogTotal!)})</Show>
 				</button>
@@ -493,14 +509,14 @@ function RowEditor(props: {
 				<span>Ημερομηνία πληρωμής</span>
 				<input type="date" class={cellInput + " w-40"} value={date()} onInput={(e) => setDate(e.currentTarget.value)} />
 			</label>
-			<p class="text-sm" id={`${uid}-balance`} aria-live="polite">
+			<p class="self-center rounded-lg bg-surface px-3 py-1.5 text-sm ring-1 ring-gray-200 dark:ring-white/10" id={`${uid}-balance`} aria-live="polite">
 				Υπόλοιπο: <span class="font-semibold tabular-nums">{euro(Math.max(total() - paid(), 0))}</span>
 			</p>
 			<div class="flex gap-2">
 				<button
 					type="submit"
 					disabled={props.busy}
-					class="rounded-md bg-green-600 px-3 py-1 text-base text-white transition-colors hover:bg-green-700 disabled:opacity-40 dark:bg-green-600 dark:hover:bg-green-500">
+					class="rounded-lg bg-emerald-700 px-3.5 py-1.5 text-base font-semibold text-white! transition-colors hover:bg-emerald-800 disabled:opacity-40 dark:bg-emerald-600 dark:hover:bg-emerald-500">
 					Αποθήκευση
 				</button>
 				<button type="button" class={smallButton} onClick={props.onCancel}>
