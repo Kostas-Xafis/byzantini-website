@@ -897,7 +897,9 @@ export default function PupilsPage() {
 									</div>
 								</Show>
 							}>
-							<ul class={CARD + " divide-y divide-gray-100 overflow-hidden dark:divide-white/5"}>
+							{/* shrink-0: as a flex item with overflow-hidden (for the rounded corners) the list would
+							    otherwise shrink to the scroller's height and clip its rows, leaving nothing to scroll */}
+							<ul class={CARD + " shrink-0 divide-y divide-gray-100 overflow-hidden dark:divide-white/5"}>
 								<For each={results()?.rows ?? []}>
 									{(row) => (
 										<li>
