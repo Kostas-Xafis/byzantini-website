@@ -5,7 +5,7 @@ import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears"
 import { currentSchoolYear } from "@lib/pupils/years";
 import { API, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
-import { createComponent, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack } from "solid-js";
+import { createComponent, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
@@ -14,8 +14,8 @@ import { EnrollmentPlacementFields, EvaluationBadge, FeeManualMarker, readPlacem
 import { storedPaymentFields } from "./controls/Registrations/helpers";
 import PupilFeesDialog from "./PupilFeesDialog.solid";
 import Modal, { setGlobalOpen } from "./table/Modal.solid";
-import { ActionEnum, ActionIcon } from "./table/TableControlTypes";
-import { TableControl, TableControlsGroup, type Action } from "./table/TableControls.solid";
+import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
+import type { Action } from "./table/TableControls.solid";
 
 /**
  * Μαθητολόγιο — the pupil register.
@@ -42,12 +42,92 @@ const PREFIX = "pupils";
 const ENROLLMENT_PREFIX = "pupils-enrollment";
 
 const MUSIC_TYPES = [
-	{ id: 0, label: "Βυζαντινή Μουσική" },
-	{ id: 1, label: "Παραδοσιακή Μουσική" },
-	{ id: 2, label: "Ευρωπαϊκή Μουσική" },
+	{
+		id: 0,
+		label: "Βυζαντινή Μουσική",
+		short: "Βυζαντινή",
+		chip: "bg-red-100 text-red-900 dark:bg-red-900/45 dark:text-red-100",
+		dot: "bg-red-700 dark:bg-red-400",
+	},
+	{
+		id: 1,
+		label: "Παραδοσιακή Μουσική",
+		short: "Παραδοσιακή",
+		chip: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/45 dark:text-emerald-100",
+		dot: "bg-emerald-600 dark:bg-emerald-400",
+	},
+	{
+		id: 2,
+		label: "Ευρωπαϊκή Μουσική",
+		short: "Ευρωπαϊκή",
+		chip: "bg-sky-100 text-sky-900 dark:bg-sky-900/45 dark:text-sky-100",
+		dot: "bg-sky-600 dark:bg-sky-400",
+	},
 ] as const;
 
-const musicLabel = (classId: number) => MUSIC_TYPES.find((type) => type.id === classId)?.label ?? "Άγνωστο";
+const musicType = (classId: number) => MUSIC_TYPES.find((type) => type.id === classId);
+const musicLabel = (classId: number) => musicType(classId)?.label ?? "Άγνωστο";
+
+// ---- shared look ------------------------------------------------------------
+// The admin layout maps `.bg-white` to #242424 in dark mode, so `bg-white` IS the card surface in both themes.
+const CARD = "rounded-2xl border border-gray-200 bg-white shadow-sm shadow-gray-200/60 dark:border-white/10 dark:shadow-none";
+const BTN =
+	"inline-flex items-center justify-center gap-x-2 whitespace-nowrap rounded-xl px-3.5 py-2 font-didact text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-800 disabled:cursor-not-allowed disabled:opacity-50";
+const BTN_PRIMARY = BTN + " bg-red-900 text-white! hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-700";
+const BTN_SECONDARY =
+	BTN +
+	" border border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 dark:border-neutral-600 dark:hover:border-neutral-500 dark:hover:bg-neutral-700";
+const BTN_DANGER = BTN + " text-red-700 hover:bg-red-50 dark:text-red-300! dark:hover:bg-red-900/30";
+const ICON_BTN =
+	"inline-grid size-9 place-items-center rounded-lg text-red-900 transition-colors hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-800 dark:text-red-200 dark:hover:bg-red-900/35";
+const MUTED = "text-gray-500 dark:text-gray-400";
+const CALLOUT_WARN = "rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-base dark:border-amber-500/40 dark:bg-amber-900/20";
+
+/** Department chip with its colour dot. */
+function MusicChip(props: { classId: number; count?: number; size?: "sm" | "md" }) {
+	const type = () => musicType(props.classId);
+	return (
+		<span
+			class={
+				"inline-flex items-center gap-x-1.5 rounded-full font-semibold " +
+				(props.size === "sm" ? "px-2 py-0.5 text-xs " : "px-2.5 py-1 text-sm ") +
+				(type()?.chip ?? "bg-gray-100 text-gray-800")
+			}>
+			<span class={"size-1.5 shrink-0 rounded-full " + (type()?.dot ?? "bg-gray-500")} aria-hidden="true"></span>
+			{type()?.short ?? "Άγνωστο"}
+			<Show when={props.count !== undefined}>
+				<span class="tabular-nums opacity-70">{props.count}</span>
+			</Show>
+		</span>
+	);
+}
+
+const ReviewChip = (props: { long?: boolean }) => (
+	<span
+		title="Χρειάζεται έλεγχο"
+		class="inline-flex items-center gap-x-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-semibold text-amber-900 ring-1 ring-amber-300 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-500/40">
+		<i class="fa-solid fa-triangle-exclamation text-xs" aria-hidden="true"></i>
+		{props.long ? "χρειάζεται έλεγχο" : "έλεγχος"}
+	</span>
+);
+
+/** One «label: value» line of the details card. */
+const Detail = (props: { label: string; children: JSX.Element }) => (
+	<div class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 py-1">
+		<dt class={"text-sm " + MUTED}>{props.label}</dt>
+		<dd class="min-w-0 break-words text-base">{props.children}</dd>
+	</div>
+);
+
+const DetailGroup = (props: { title: string; children: JSX.Element }) => (
+	<div class="grid gap-y-1 border-t border-gray-100 pt-3 first:border-t-0 first:pt-0 dark:border-white/5">
+		<h3 class={"pb-1 text-xs font-bold tracking-wider " + MUTED}>{props.title}</h3>
+		<dl>{props.children}</dl>
+	</div>
+);
+
+const initials = (pupil: Pick<Pupils, "last_name" | "first_name">) =>
+	`${pupil.last_name.trim().charAt(0)}${pupil.first_name.trim().charAt(0)}`.toLocaleUpperCase("el");
 
 const formatDate = (value: number | null | undefined) => (value ? new Date(value).toLocaleDateString("el-GR") : "-");
 
@@ -68,7 +148,7 @@ function pupilInputs(pupil: Pupils): Record<string, InputProps> {
 			name: "am",
 			type: "number",
 			iconClasses: "fa-solid fa-id-card",
-			tooltip: { message: ["Κενό = χωρίς ΑΜ (εκκρεμεί απονομή)."], position: "top" },
+			tooltip: { message: ["Κενό = χωρίς ΑΜ (εκκρεμεί απονομή)."], position: "bottom" },
 		},
 		amka: { label: "ΑΜΚΑ", name: "amka", type: "text", iconClasses: "fa-solid fa-id-card" },
 		last_name: field("Επώνυμο", "last_name", "text", { required: true }),
@@ -530,6 +610,54 @@ export default function PupilsPage() {
 		};
 	});
 
+	/** Deletes the open pupil with their whole history (one batch on the server), then returns to the list. */
+	const deleteAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
+		const data = record();
+		if (!data) return emptyAction(ActionEnum.DELETE, ActionIcon.DELETE_USER);
+		const { pupil, enrollments } = data;
+		const paid = enrollments.reduce((sum, enrollment) => sum + (enrollment.payment_amount || 0), 0);
+		const summary = [
+			`${pupil.last_name} ${pupil.first_name} — ΑΜ ${amLabel(pupil)}`,
+			`Θα διαγραφούν ${countLabel(enrollments.length, "εγγραφή", "εγγραφές")} του ιστορικού, μαζί με τα δίδακτρα και τις πληρωμές τους.`,
+		];
+		if (paid > 0) summary.push(`Καταχωρημένες πληρωμές που θα χαθούν: ${paid} €`);
+		summary.push("Ο σύνδεσμος επανεγγραφής του μαθητή θα πάψει να λειτουργεί.", "Η ενέργεια δεν αναιρείται.");
+
+		return {
+			type: ActionEnum.DELETE,
+			icon: ActionIcon.DELETE_USER,
+			label: "Διαγραφή μαθητή",
+			headerText: "Διαγραφή Μαθητή",
+			submitText: "Διαγραφή",
+			summary,
+			inputs: pupil.email.trim()
+				? {
+						unsubscribe: {
+							label: `Διαγραφή του ${pupil.email.trim()} από το newsletter`,
+							name: "unsubscribe",
+							type: "multiselect",
+							iconClasses: "fa-solid fa-envelope",
+							multiselectOnce: true,
+							tooltip: { message: ["Η διεύθυνση παραμένει αν τη χρησιμοποιεί κι άλλος μαθητής."], position: "top" },
+							multiselectList: [
+								{ value: 1, label: "Ναι", selected: true },
+								{ value: 0, label: "Όχι", selected: false },
+							],
+						},
+					}
+				: {},
+			onSubmit: async (form: ExtendedFormData<{ unsubscribe: boolean }>) => {
+				const unsubscribe = pupil.email.trim() ? form.multiSelect("unsubscribe", "boolean", { single: true }) : false;
+				const res = await apiHook(API.Pupils.delete, { RequestObject: { id: pupil.id, unsubscribe } });
+				if (!("data" in res)) return;
+				const removed = res.data.unsubscribed ? " και το email από το newsletter" : "";
+				pushAlert(createAlert("success", `Διαγράφηκε ο μαθητής ${pupil.last_name} ${pupil.first_name}${removed}`));
+				backToSearch();
+				void runSearch(page());
+			},
+		};
+	});
+
 	// ---- edit one history row (also how the review flow places «Υπό Κατάταξη» rows) ----
 	const [editingEnrollment, setEditingEnrollment] = createSignal<PupilEnrollments | null>(null);
 	const editEnrollmentAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
@@ -584,40 +712,89 @@ export default function PupilsPage() {
 			.sort((a, b) => b.registration_year.localeCompare(a.registration_year)),
 	);
 
+	/** One modal per record action (edit / enroll / delete), opened by the header buttons. */
+	const modalStore = (action: () => Action | EmptyAction) => {
+		const [store, setStore] = createStore<{ action: Action }>({ action: action() as Action });
+		createEffect(() => setStore({ action: action() as Action }));
+		return store;
+	};
+	const editStore = modalStore(editAction);
+	const enrollStore = modalStore(enrollAction);
+	const deleteStore = modalStore(deleteAction);
+	const openModal = (type: ActionEnum) => setGlobalOpen(PREFIX + type, true);
+
+	/** Fees at a glance: the current school year, or the newest the pupil has (as the fees dialog opens). */
+	const feeSummary = createMemo(() => {
+		const enrollments = record()?.enrollments ?? [];
+		const years = [...new Set(enrollments.map((enrollment) => enrollment.registration_year))].sort((a, b) => b.localeCompare(a));
+		const current = currentSchoolYear();
+		const year = years.includes(current) || years.length === 0 ? current : years[0]!;
+		const rows = enrollments.filter((enrollment) => enrollment.registration_year === year);
+		const total = rows.reduce((sum, row) => sum + row.total_payment, 0);
+		const paid = rows.reduce((sum, row) => sum + row.payment_amount, 0);
+		return { year, count: rows.length, total, paid, balance: total - paid };
+	});
+
+	const registrationLink = (url: string) => `${window.location.origin}/eggrafes/?regid=${encodeURIComponent(url)}`;
+	const copyRegistrationLink = async (url: string) => {
+		try {
+			await navigator.clipboard.writeText(registrationLink(url));
+			pushAlert(createAlert("success", "Ο σύνδεσμος επανεγγραφής αντιγράφηκε"));
+		} catch {
+			pushAlert(createAlert("error", "Η αντιγραφή απέτυχε"));
+		}
+	};
+
+	/** Paid / total of one history row, coloured by what is still owed. */
+	const paymentCell = (row: PupilEnrollments) => (
+		<Show when={row.total_payment > 0 || row.payment_amount > 0} fallback={<span class={MUTED}>—</span>}>
+			<span
+				class={
+					"font-semibold " +
+					(row.payment_amount >= row.total_payment ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300")
+				}>
+				{row.payment_amount} / {row.total_payment} €
+			</span>
+		</Show>
+	);
+
 	// ---- render -------------------------------------------------------------
 	// Shell: the admin content cell is already exactly one viewport tall
 	// (#AdminPage: 100dvh grid rows), so the page fills it and scrolls its MIDDLE
 	// section instead of growing the document — same shape as `Table`'s
 	// top-tools / scrolling data / bottom-tools grid. On small screens the shell
-	// releases the height and the page scrolls normally, like the tables do.
+	// releases the height and the page flows (and scrolls) normally.
 	return (
-		<div class="flex h-full w-full flex-col overflow-hidden p-6 text-red-950 max-sm:h-auto max-sm:grid max-sm:grid-rows-[20%_75%_5%] max-sm:p-3 dark:text-red-50">
+		<div class="flex h-full w-full flex-col overflow-hidden p-6 font-didact text-red-950 max-sm:h-auto max-sm:overflow-visible max-sm:p-3 dark:text-red-50">
 			{/* ---- pinned top: title + search ---- */}
-			<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-y-4">
+			<div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-y-3">
 				{/* ---- landing heading ---- */}
 				<Show when={selectedId() === null}>
-					<div class="grid justify-items-center gap-y-2 pt-[6vh] pb-2 text-center max-sm:pt-2">
+					<div class="grid justify-items-center gap-y-2 pt-[5vh] pb-3 text-center max-sm:pt-2">
+						<span
+							class="grid size-14 place-items-center rounded-2xl bg-red-900 text-2xl text-white shadow-md shadow-red-900/20 max-sm:hidden"
+							aria-hidden="true">
+							<i class="fa-solid fa-address-book"></i>
+						</span>
 						<h1 class="font-anaktoria text-5xl max-sm:text-4xl">Μαθητολόγιο</h1>
-						<p class="max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-							Αναζητήστε μαθητή με ΑΜ, ονοματεπώνυμο, ΑΜΚΑ, τηλέφωνο, email ή περιοχή.
-						</p>
+						<p class={"max-w-2xl text-lg " + MUTED}>Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το ονοματεπώνυμο.</p>
 					</div>
 				</Show>
 
 				{/* ---- search ---- */}
 				<div
 					role="search"
-					class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 shadow-md shadow-gray-300 dark:border-red-800 dark:bg-dark dark:shadow-gray-700">
-					<i class="fa-solid fa-magnifying-glass text-red-900 dark:text-red-200" aria-hidden="true"></i>
+					class="flex items-center gap-x-3 rounded-2xl border border-gray-300 bg-white px-4 py-3 shadow-sm shadow-gray-200/70 transition-[border-color,box-shadow] focus-within:border-red-800 focus-within:ring-4 focus-within:ring-red-800/10 dark:border-neutral-600 dark:shadow-none dark:focus-within:border-red-400 dark:focus-within:ring-red-400/15">
+					<i class="fa-solid fa-magnifying-glass text-lg text-red-900/70 dark:text-red-200/70" aria-hidden="true"></i>
 					<input
 						ref={searchInput}
 						type="search"
 						name="pupil-search"
 						autocomplete="off"
 						spellcheck="false"
-						aria-label="Αναζήτηση μαθητή"
-						placeholder="Αναζήτηση…"
-						class="min-w-0 flex-1 bg-transparent font-didact text-xl max-sm:text-lg text-red-950 dark:text-red-50 placeholder:text-gray-400 focus-visible:outline-hidden [&::-webkit-search-cancel-button]:appearance-none"
+						aria-label="Αναζήτηση μαθητή με ΑΜ ή ονοματεπώνυμο"
+						placeholder="ΑΜ ή ονοματεπώνυμο…"
+						class="min-w-0 flex-1 bg-transparent text-xl text-red-950 placeholder:text-gray-400 focus-visible:outline-hidden max-sm:text-lg dark:text-red-50 dark:placeholder:text-gray-500 [&::-webkit-search-cancel-button]:appearance-none"
 						value={query()}
 						onInput={(e) => setQuery(e.currentTarget.value)}
 						onKeyDown={(e) => {
@@ -639,7 +816,8 @@ export default function PupilsPage() {
 						<button
 							type="button"
 							aria-label="Καθαρισμός αναζήτησης"
-							class="grid h-6 w-6 shrink-0 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-200 dark:text-red-200 dark:hover:bg-red-900/70"
+							title="Καθαρισμός"
+							class="grid size-8 shrink-0 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-100 dark:text-red-200 dark:hover:bg-red-900/40"
 							onClick={() => {
 								setQuery("");
 								clearTimeout(debounceTimer);
@@ -649,91 +827,124 @@ export default function PupilsPage() {
 							<i class="fa-solid fa-xmark text-base leading-none" aria-hidden="true"></i>
 						</button>
 					</Show>
-					<Show when={results()}>
-						<span class="whitespace-nowrap font-didact text-base text-gray-600 dark:text-gray-300" aria-live="polite">
-							{countLabel(results()!.total, "μαθητής", "μαθητές")}
-						</span>
+				</div>
+
+				{/* ---- toolbar: back / result count + the review filter ---- */}
+				<div class="flex flex-wrap items-center justify-between gap-2 px-1">
+					<Show
+						when={selectedId() !== null}
+						fallback={
+							<span class={"text-base " + MUTED} aria-live="polite">
+								<Show when={results()}>
+									<Show when={query().trim()} fallback={countLabel(results()!.total, "μαθητής", "μαθητές")}>
+										{countLabel(results()!.total, "αποτέλεσμα", "αποτελέσματα")} για «{query().trim()}»
+									</Show>
+								</Show>
+							</span>
+						}>
+						<button
+							type="button"
+							onClick={backToSearch}
+							class={BTN + " -ml-2 px-2 py-1 text-red-900 hover:bg-red-100 dark:text-red-200 dark:hover:bg-red-900/30"}>
+							<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+							Πίσω στα αποτελέσματα
+						</button>
 					</Show>
-					<label class="flex cursor-pointer items-center gap-x-2 whitespace-nowrap font-didact text-base text-gray-700 dark:text-gray-200">
+					<label class="inline-flex cursor-pointer items-center gap-x-2 rounded-full border border-gray-300 px-3 py-1 text-sm font-semibold transition-colors select-none focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-red-800 hover:border-amber-400 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-100 has-[:checked]:text-amber-900 dark:border-neutral-600 dark:has-[:checked]:border-amber-500/60 dark:has-[:checked]:bg-amber-900/40 dark:has-[:checked]:text-amber-100">
 						<input
 							type="checkbox"
-							class="size-4 cursor-pointer accent-red-900 dark:accent-red-500"
+							class="sr-only"
 							checked={needsReviewOnly()}
 							onChange={(e) => {
 								setNeedsReviewOnly(e.currentTarget.checked);
 								startSearch(0);
 							}}
 						/>
+						<i
+							class={(needsReviewOnly() ? "fa-solid fa-circle-check" : "fa-regular fa-circle") + " text-amber-600 dark:text-amber-300"}
+							aria-hidden="true"></i>
 						Μόνο προς έλεγχο
 					</label>
-					<Show when={selectedId() !== null}>
-						<button
-							type="button"
-							onClick={backToSearch}
-							class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/35">
-							Πίσω στην αναζήτηση
-						</button>
-					</Show>
 				</div>
 			</div>
 
 			{/* ---- scrolling body: results or the open record ---- */}
-			<div id="pupilsScroller" ref={bodyRef} class="mx-auto mt-6 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-scroll max-sm:mt-4">
+			<div
+				id="pupilsScroller"
+				ref={bodyRef}
+				class="mx-auto mt-4 flex w-full max-w-5xl min-h-0 flex-1 flex-col gap-y-4 overflow-y-auto px-0.5 pb-4 max-sm:mt-3 max-sm:overflow-visible">
 				{/* ---- result list ---- */}
 				<Show when={selectedId() === null}>
-					<div class="grid gap-y-4">
+					<Show
+						when={!searching() || results()}
+						fallback={
+							<div class="py-10">
+								<Spinner />
+							</div>
+						}>
 						<Show
-							when={!searching() || results()}
+							when={(results()?.rows.length ?? 0) > 0}
 							fallback={
-								<div class="py-10">
-									<Spinner />
-								</div>
-							}>
-							<div class="grid gap-y-2">
-								<Show when={results() && results()!.rows.length === 0}>
-									<p class="py-10 text-center text-xl text-gray-600 dark:text-gray-300">
-										<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
-											Δεν βρέθηκε μαθητής για «{query().trim()}».
-										</Show>
-									</p>
+								<Show when={results()}>
+									<div class={CARD + " grid justify-items-center gap-y-2 px-6 py-12 text-center"}>
+										<i class={"fa-solid fa-user-slash text-3xl " + MUTED} aria-hidden="true"></i>
+										<p class="text-xl font-semibold">
+											<Show when={query().trim()} fallback="Δεν βρέθηκαν μαθητές.">
+												Δεν βρέθηκε μαθητής για «{query().trim()}».
+											</Show>
+										</p>
+										<p class={"text-base " + MUTED}>Δοκιμάστε τον ΑΜ ή τα πρώτα γράμματα του επωνύμου.</p>
+									</div>
 								</Show>
+							}>
+							<ul class={CARD + " divide-y divide-gray-100 overflow-hidden dark:divide-white/5"}>
 								<For each={results()?.rows ?? []}>
 									{(row) => (
-										<button
-											type="button"
-											onClick={() => openPupil(row.id)}
-											class="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-lg border border-red-900/20 bg-white px-4 py-3 text-left shadow-sm shadow-gray-200 transition-colors hover:border-red-900/40 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-800/50 dark:bg-dark dark:shadow-gray-800 dark:hover:border-red-700/70 dark:hover:bg-red-900/25">
-											<span class="rounded-md bg-red-50 px-2 py-0.5 font-didact text-xl font-bold tabular-nums text-red-900 dark:bg-red-900/40 dark:text-red-100">
-												{amLabel(row)}
-											</span>
-											<span class="grid min-w-0">
-												<span class="truncate text-xl font-semibold">
-													{row.last_name} {row.first_name}
-													<Show when={row.fathers_name}>
-														{" "}
-														<span class="font-normal text-gray-500 dark:text-gray-400">({row.fathers_name})</span>
-													</Show>
+										<li>
+											<button
+												type="button"
+												onClick={() => openPupil(row.id)}
+												class="group grid w-full grid-cols-[4.75rem_1fr_auto] items-center gap-x-4 px-4 py-3 text-left transition-colors hover:bg-red-50/70 focus-visible:bg-red-50 focus-visible:outline-hidden max-sm:grid-cols-[3.75rem_1fr_auto] max-sm:gap-x-3 max-sm:px-3 dark:hover:bg-white/[0.04] dark:focus-visible:bg-white/[0.06]">
+												<span
+													class={
+														"whitespace-nowrap rounded-lg bg-red-50 px-1.5 py-1 text-center font-bold tabular-nums text-red-900 ring-1 ring-red-900/10 dark:bg-red-900/30 dark:text-red-100 dark:ring-red-300/15 " +
+														// review codes ('000-Ο43') are longer than any ΑΜ
+														(row.am === null ? "text-sm leading-7" : "text-lg")
+													}>
+													{amLabel(row)}
 												</span>
-												<span class="truncate text-base text-gray-600 dark:text-gray-300">{resultMeta(row)}</span>
-											</span>
-											<span class="flex items-center gap-x-2">
-												<Show when={row.needs_review}>
-													<span
-														title="Χρειάζεται έλεγχο"
-														class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
-														έλεγχος
+												<span class="grid min-w-0 gap-y-1">
+													<span class="truncate text-lg">
+														<span class="font-semibold">{row.last_name}</span> {row.first_name}
+														<Show when={row.fathers_name}>
+															<span class={"text-base " + MUTED}> · {row.fathers_name}</span>
+														</Show>
 													</span>
-												</Show>
-												<i
-													class="fa-solid fa-chevron-right text-red-900/60 transition-transform group-hover:translate-x-0.5 dark:text-red-200/60"
-													aria-hidden="true"></i>
-											</span>
-										</button>
+													<span class={"flex flex-wrap items-center gap-x-2 gap-y-1 text-sm " + MUTED}>
+														<For each={row.music_types.split(",").filter(Boolean)}>
+															{(id) => <MusicChip classId={Number(id)} size="sm" />}
+														</For>
+														<span>
+															{countLabel(row.enrollment_count, "εγγραφή", "εγγραφές")}
+															<Show when={row.last_registration_year}> · τελευταία {row.last_registration_year}</Show>
+														</span>
+													</span>
+												</span>
+												<span class="flex items-center gap-x-3">
+													<Show when={row.needs_review}>
+														<ReviewChip />
+													</Show>
+													<i
+														class="fa-solid fa-chevron-right text-red-900/40 transition-transform group-hover:translate-x-0.5 group-hover:text-red-900 dark:text-red-200/40 dark:group-hover:text-red-200"
+														aria-hidden="true"></i>
+												</span>
+											</button>
+										</li>
 									)}
 								</For>
-							</div>
+							</ul>
 						</Show>
-					</div>
+					</Show>
 				</Show>
 
 				{/* ---- record ---- */}
@@ -749,52 +960,76 @@ export default function PupilsPage() {
 						}>
 						{(data) => (
 							<div class="grid w-full gap-y-4">
-								{/* header + actions */}
-								<div class="flex flex-wrap items-center justify-between gap-3">
-									<div class="grid gap-y-1">
+								{/* header: who + actions */}
+								<section class={CARD + " flex flex-wrap items-center gap-4 p-5 max-sm:p-4"}>
+									<span
+										class="grid size-16 shrink-0 place-items-center rounded-2xl bg-red-900 font-anaktoria text-2xl text-white shadow-md shadow-red-900/25 max-sm:size-12 max-sm:text-xl"
+										aria-hidden="true">
+										{initials(data().pupil)}
+									</span>
+									<div class="grid min-w-0 flex-1 gap-y-2">
 										<h1 class="font-anaktoria text-4xl leading-tight max-sm:text-3xl">
 											{data().pupil.last_name} {data().pupil.first_name}
 										</h1>
-										<p class="flex flex-wrap items-center gap-x-2 font-didact text-lg text-gray-600 dark:text-gray-300">
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-sm font-semibold tabular-nums ring-1 ring-gray-200 dark:bg-white/5 dark:ring-white/10">
+												ΑΜ {amLabel(data().pupil)}
+											</span>
+											<For each={availableMusicTypes(data().enrollments)}>{(classId) => <MusicChip classId={classId} />}</For>
 											<Show when={data().pupil.needs_review}>
-												<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
-													χρειάζεται έλεγχο
-												</span>
+												<ReviewChip long />
 											</Show>
-										</p>
+										</div>
 									</div>
-									<TableControlsGroup prefix={PREFIX}>
-										<TableControl prefix={PREFIX} action={editAction} />
-										<TableControl prefix={PREFIX} action={enrollAction} />
-									</TableControlsGroup>
-								</div>
+									<div class="flex flex-wrap items-center gap-2">
+										<button type="button" class={BTN_SECONDARY} onClick={() => openModal(ActionEnum.MODIFY)}>
+											<i class={ActionIcon.MODIFY} aria-hidden="true"></i>
+											Επεξεργασία
+										</button>
+										<button type="button" class={BTN_PRIMARY} onClick={() => openModal(ActionEnum.ADD)}>
+											<i class={ActionIcon.ADD} aria-hidden="true"></i>
+											Νέα εγγραφή
+										</button>
+										<button
+											type="button"
+											class={BTN_DANGER}
+											onClick={() => openModal(ActionEnum.DELETE)}
+											aria-label="Διαγραφή μαθητή"
+											title="Διαγραφή μαθητή">
+											<i class={ActionIcon.DELETE_USER} aria-hidden="true"></i>
+											Διαγραφή
+										</button>
+									</div>
+								</section>
 
 								<Show when={data().pupil.review_note}>
-									<p class="rounded-lg border border-amber-400 bg-amber-50 px-4 py-2 text-base dark:border-amber-600 dark:bg-amber-900/25">
-										<i class="fa-solid fa-triangle-exclamation mr-2 text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
-										{data().pupil.review_note}
+									<p class={CALLOUT_WARN + " flex items-start gap-x-3"}>
+										<i class="fa-solid fa-triangle-exclamation mt-1 text-amber-600 dark:text-amber-300" aria-hidden="true"></i>
+										<span>
+											<span class="font-semibold">Σημείωση ελέγχου: </span>
+											{data().pupil.review_note}
+										</span>
 									</p>
 								</Show>
 
 								{/* «Υπό Κατάταξη» rows awaiting a class year — one click opens the editor with the select empty. */}
 								<Show when={awaitingPlacement().length > 0}>
-									<section
-										aria-labelledby="awaiting-placement-title"
-										class="grid gap-y-2 rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 text-base dark:border-amber-600 dark:bg-amber-900/25">
-										<h2 id="awaiting-placement-title" class="font-semibold">
+									<section aria-labelledby="awaiting-placement-title" class={CALLOUT_WARN + " grid gap-y-3"}>
+										<h2 id="awaiting-placement-title" class="flex items-center gap-x-2 font-semibold">
+											<i class="fa-solid fa-hourglass-half text-amber-600 dark:text-amber-300" aria-hidden="true"></i>
 											Εγγραφές που αναμένουν κατάταξη
 										</h2>
-										<ul class="grid gap-y-1">
+										<ul class="grid gap-y-2">
 											<For each={awaitingPlacement()}>
 												{(enrollment) => (
-													<li class="flex flex-wrap items-center gap-x-3 gap-y-1">
-														<span class="tabular-nums">{enrollment.registration_year}</span>
-														<span>{musicLabel(enrollment.class_id)}</span>
-														<span class="text-gray-600 dark:text-gray-300">{teacherName(enrollment.teacher_id)}</span>
+													<li class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-white/70 px-3 py-2 dark:bg-black/20">
+														<span class="font-semibold tabular-nums">{enrollment.registration_year}</span>
+														<MusicChip classId={enrollment.class_id} size="sm" />
+														<span class={MUTED}>{teacherName(enrollment.teacher_id)}</span>
 														<button
 															type="button"
 															onClick={() => openEnrollmentEditor(enrollment)}
-															class="rounded-md border border-red-900 px-3 py-0.5 font-didact text-base transition-colors hover:bg-red-100 dark:border-red-700 dark:hover:bg-red-900/35">
+															class={BTN_SECONDARY + " ml-auto py-1 text-sm"}>
 															Ορισμός έτους φοίτησης
 															<span class="sr-only">
 																{" "}
@@ -805,197 +1040,289 @@ export default function PupilsPage() {
 												)}
 											</For>
 										</ul>
-										<p class="text-gray-600 dark:text-gray-300">
+										<p class={"text-sm " + MUTED}>
 											Όταν τοποθετηθούν όλες, καθαρίστε τη «Σημείωση ελέγχου» από την επεξεργασία στοιχείων μαθητή.
 										</p>
 									</section>
 								</Show>
 
-								<div class="grid grid-cols-[minmax(260px,1fr)_2fr] gap-4 max-lg:grid-cols-1">
+								<div class="grid grid-cols-[minmax(280px,1fr)_2.1fr] items-start gap-4 max-lg:grid-cols-1">
 									{/* ---- left: personal information + the pupil's fees ---- */}
-									<div class="grid h-max gap-y-3">
-										<section class="grid h-max gap-y-3 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
-											<h2 class="font-anaktoria text-2xl">Στοιχεία Μαθητή</h2>
-											<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-base [&_dt]:text-gray-600 [&_dd]:tabular-nums dark:[&_dt]:text-gray-300 [&_dt]:underline [&_dd]:underline-offset-1">
-												<dt>Επώνυμο:</dt>
-												<dd>{data().pupil.last_name || "-"}</dd>
-												<dt>Όνομα:</dt>
-												<dd>{data().pupil.first_name || "-"}</dd>
-												<dt>ΑΜ:</dt>
-												<dd class="font-semibold">{amLabel(data().pupil)}</dd>
-												<dt>ΑΜΚΑ:</dt>
-												<dd class="tabular-nums">{data().pupil.amka || "-"}</dd>
-												<dt>Πατρώνυμο:</dt>
-												<dd>{data().pupil.fathers_name || "-"}</dd>
-												<dt>Γέννηση:</dt>
-												<dd>{formatDate(data().pupil.birth_date)}</dd>
-												<dt>Διεύθυνση:</dt>
-												<dd>
-													{data().pupil.road} {data().pupil.number}
-													<Show when={data().pupil.region}>
-														<br />
-														{data().pupil.tk} {data().pupil.region}
+									<div class="grid gap-y-4">
+										<section class={CARD + " grid gap-y-3 p-5"} aria-labelledby="pupil-details-title">
+											<h2 id="pupil-details-title" class="font-anaktoria text-2xl">
+												Στοιχεία μαθητή
+											</h2>
+											<DetailGroup title="ΤΑΥΤΟΤΗΤΑ">
+												<Detail label="ΑΜ">
+													<span class="font-semibold tabular-nums">{amLabel(data().pupil)}</span>
+												</Detail>
+												<Detail label="ΑΜΚΑ">
+													<span class="tabular-nums">{data().pupil.amka || "—"}</span>
+												</Detail>
+												<Detail label="Πατρώνυμο">{data().pupil.fathers_name || "—"}</Detail>
+												<Detail label="Γέννηση">{formatDate(data().pupil.birth_date)}</Detail>
+											</DetailGroup>
+											<DetailGroup title="ΕΠΙΚΟΙΝΩΝΙΑ">
+												<Detail label="Κινητό">
+													<Show when={data().pupil.cellphone} fallback="—">
+														<a class="tabular-nums hover:underline" href={`tel:${data().pupil.cellphone}`}>
+															{data().pupil.cellphone}
+														</a>
 													</Show>
-												</dd>
-												<dt>Τηλέφωνα:</dt>
-												<dd>
-													{data().pupil.telephone || "-"}
-													<br />
-													{data().pupil.cellphone || "-"}
-												</dd>
-												<dt>Email:</dt>
-												<dd class="break-all">{data().pupil.email || "-"}</dd>
-												<dt class="pt-1">Σύνδεσμος:</dt>
-												<dd>
-													<Show when={data().pupil.registration_url} fallback="-">
+												</Detail>
+												<Detail label="Τηλέφωνο">
+													<Show when={data().pupil.telephone && data().pupil.telephone !== "-"} fallback="—">
+														<a class="tabular-nums hover:underline" href={`tel:${data().pupil.telephone}`}>
+															{data().pupil.telephone}
+														</a>
+													</Show>
+												</Detail>
+												<Detail label="Email">
+													<Show when={data().pupil.email} fallback="—">
+														<a class="break-all hover:underline" href={`mailto:${data().pupil.email}`}>
+															{data().pupil.email}
+														</a>
+													</Show>
+												</Detail>
+												<Detail label="Διεύθυνση">
+													<Show when={data().pupil.road || data().pupil.region} fallback="—">
+														{data().pupil.road} {data().pupil.number || ""}
+														<Show when={data().pupil.region}>
+															<br />
+															{data().pupil.tk || ""} {data().pupil.region}
+														</Show>
+													</Show>
+												</Detail>
+											</DetailGroup>
+											<Show when={data().pupil.registration_url}>
+												<DetailGroup title="ΣΥΝΔΕΣΜΟΣ ΕΠΑΝΕΓΓΡΑΦΗΣ">
+													<div class="flex flex-wrap gap-2 pt-1">
 														<a
-															href={`/eggrafes/?regid=${encodeURIComponent(data().pupil.registration_url)}`}
+															href={registrationLink(data().pupil.registration_url)}
 															target="_blank"
 															rel="noreferrer"
 															title="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-															aria-label="Άνοιγμα της φόρμας εγγραφής σε νέα καρτέλα"
-															class="inline-grid h-7 w-7 place-items-center rounded-md border border-red-900/40 text-red-900 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/35">
-															<i class="fa-solid fa-up-right-from-square text-base" aria-hidden="true"></i>
+															class={BTN_SECONDARY + " py-1.5 text-sm"}>
+															<i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i>
+															Άνοιγμα
 														</a>
-													</Show>
-												</dd>
-											</dl>
+														<button
+															type="button"
+															class={BTN_SECONDARY + " py-1.5 text-sm"}
+															onClick={() => copyRegistrationLink(data().pupil.registration_url)}>
+															<i class="fa-regular fa-copy" aria-hidden="true"></i>
+															Αντιγραφή
+														</button>
+													</div>
+												</DetailGroup>
+											</Show>
 										</section>
-										<button
-											type="button"
-											onClick={() => setFeesOpen(true)}
-											class="flex w-full items-center justify-center gap-x-2 rounded-xl border-2 border-red-900 bg-white px-4 py-2 font-didact text-lg font-semibold text-red-900 shadow-md shadow-gray-300 transition-colors hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:border-red-700 dark:bg-dark dark:text-red-100 dark:shadow-gray-700 dark:hover:bg-red-900/35">
-											<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
-											Δίδακτρα
-										</button>
+
+										<section class={CARD + " grid gap-y-3 p-5"} aria-labelledby="pupil-fees-title">
+											<div class="flex items-baseline justify-between gap-x-2">
+												<h2 id="pupil-fees-title" class="font-anaktoria text-2xl">
+													Δίδακτρα
+												</h2>
+												<span class={"text-sm tabular-nums " + MUTED}>{feeSummary().year}</span>
+											</div>
+											<Show
+												when={feeSummary().count > 0}
+												fallback={<p class={"text-base " + MUTED}>Καμία εγγραφή για το {feeSummary().year}.</p>}>
+												<dl class="grid grid-cols-3 gap-2 text-center">
+													<div class="rounded-xl bg-gray-50 px-2 py-2 dark:bg-white/5">
+														<dt class={"text-xs " + MUTED}>Σύνολο</dt>
+														<dd class="text-lg font-semibold tabular-nums">{feeSummary().total} €</dd>
+													</div>
+													<div class="rounded-xl bg-gray-50 px-2 py-2 dark:bg-white/5">
+														<dt class={"text-xs " + MUTED}>Πληρώθηκαν</dt>
+														<dd class="text-lg font-semibold tabular-nums">{feeSummary().paid} €</dd>
+													</div>
+													<div
+														class={
+															"rounded-xl px-2 py-2 " +
+															(feeSummary().balance > 0
+																? "bg-amber-50 dark:bg-amber-900/25"
+																: "bg-emerald-50 dark:bg-emerald-900/25")
+														}>
+														<dt class={"text-xs " + MUTED}>Υπόλοιπο</dt>
+														<dd
+															class={
+																"text-lg font-semibold tabular-nums " +
+																(feeSummary().balance > 0
+																	? "text-amber-800 dark:text-amber-200"
+																	: "text-emerald-800 dark:text-emerald-200")
+															}>
+															{feeSummary().balance} €
+														</dd>
+													</div>
+												</dl>
+												<Show when={feeSummary().total > 0}>
+													<div
+														class="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10"
+														role="progressbar"
+														aria-label="Πληρωμένο ποσοστό διδάκτρων"
+														aria-valuemin={0}
+														aria-valuemax={100}
+														aria-valuenow={Math.round(
+															(Math.min(feeSummary().paid, feeSummary().total) / feeSummary().total) * 100,
+														)}>
+														<div
+															class="h-full rounded-full bg-emerald-600 transition-[width] dark:bg-emerald-400"
+															style={{
+																width: `${(Math.min(feeSummary().paid, feeSummary().total) / feeSummary().total) * 100}%`,
+															}}></div>
+													</div>
+												</Show>
+											</Show>
+											<button type="button" onClick={() => setFeesOpen(true)} class={BTN_SECONDARY + " w-full"}>
+												<i class="fa-solid fa-euro-sign" aria-hidden="true"></i>
+												Δίδακτρα & πληρωμές
+											</button>
+										</section>
 									</div>
 
 									{/* ---- right: music types + history ---- */}
-									<section class="grid h-max gap-y-4 rounded-xl border border-red-900/20 bg-white p-4 shadow-md shadow-gray-300 dark:border-red-800/50 dark:bg-dark dark:shadow-gray-700">
+									<section class={CARD + " grid gap-y-4 p-5 max-sm:p-4"} aria-labelledby="pupil-history-title">
+										<div class="flex flex-wrap items-center justify-between gap-3">
+											<h2 id="pupil-history-title" class="font-anaktoria text-2xl">
+												Ιστορικό εγγραφών
+											</h2>
+											<Show when={availableMusicTypes(data().enrollments).length > 0}>
+												{/* tabs — only the departments this pupil ever enrolled in */}
+												<div
+													role="tablist"
+													aria-label="Μουσικές"
+													class="inline-flex flex-wrap gap-1 rounded-xl bg-gray-100 p-1 dark:bg-black/25"
+													onKeyDown={(event) => {
+														if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+														const tabs = availableMusicTypes(data().enrollments);
+														const current = Math.max(tabs.indexOf(activeMusic() ?? tabs[0]), 0);
+														const next = (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+														event.preventDefault();
+														setActiveMusic(tabs[next]);
+														const tabButtons = (event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>(
+															"[role='tab']",
+														);
+														tabButtons[next]?.focus();
+													}}>
+													<For each={availableMusicTypes(data().enrollments)}>
+														{(classId) => (
+															<button
+																type="button"
+																role="tab"
+																aria-selected={activeMusic() === classId ? "true" : "false"}
+																tabIndex={activeMusic() === classId ? 0 : -1}
+																onClick={() => setActiveMusic(classId)}
+																class={
+																	"inline-flex items-center gap-x-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-red-800 " +
+																	(activeMusic() === classId
+																		? "bg-[#fff] shadow-sm dark:bg-neutral-700"
+																		: "text-gray-600 hover:bg-white/60 dark:text-gray-300! dark:hover:bg-white/5")
+																}>
+																<span
+																	class={"size-2 rounded-full " + (musicType(classId)?.dot ?? "")}
+																	aria-hidden="true"></span>
+																{musicType(classId)?.short}
+																<span class="tabular-nums opacity-60">{enrollmentsFor(classId).length}</span>
+															</button>
+														)}
+													</For>
+												</div>
+											</Show>
+										</div>
 										<Show
 											when={availableMusicTypes(data().enrollments).length > 0}
-											fallback={<p class="text-gray-600 dark:text-gray-300">Δεν υπάρχουν εγγραφές.</p>}>
-											{/* tabs — only the departments this pupil ever enrolled in */}
-											<div
-												role="tablist"
-												aria-label="Μουσικές"
-												class="flex flex-wrap gap-2"
-												onKeyDown={(event) => {
-													if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-													const tabs = availableMusicTypes(data().enrollments);
-													const current = Math.max(tabs.indexOf(activeMusic() ?? tabs[0]), 0);
-													const next = (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
-													event.preventDefault();
-													setActiveMusic(tabs[next]);
-													const tabButtons = (event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>("[role='tab']");
-													tabButtons[next]?.focus();
-												}}>
-												<For each={availableMusicTypes(data().enrollments)}>
-													{(classId) => (
-														<button
-															type="button"
-															role="tab"
-															aria-selected={activeMusic() === classId ? "true" : "false"}
-															tabIndex={activeMusic() === classId ? 0 : -1}
-															onClick={() => setActiveMusic(classId)}
-															class={
-																"rounded-full px-4 py-1.5 font-didact text-base font-semibold transition-colors " +
-																(activeMusic() === classId
-																	? "bg-red-900 text-red-50 dark:bg-red-800"
-																	: "border border-red-900 text-red-900 hover:bg-red-50 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/35")
-															}>
-															{musicLabel(classId)}
-															<span class="ml-2 opacity-70">{enrollmentsFor(classId).length}</span>
-														</button>
-													)}
-												</For>
-											</div>
-
+											fallback={
+												<div class="grid justify-items-center gap-y-2 py-10 text-center">
+													<i class={"fa-regular fa-folder-open text-3xl " + MUTED} aria-hidden="true"></i>
+													<p class={"text-lg " + MUTED}>Δεν υπάρχουν εγγραφές.</p>
+													<button type="button" class={BTN_PRIMARY} onClick={() => openModal(ActionEnum.ADD)}>
+														<i class={ActionIcon.ADD} aria-hidden="true"></i>
+														Νέα εγγραφή
+													</button>
+												</div>
+											}>
 											{/* history for the active department, grouped by instrument/class */}
-											<div class="grid gap-y-4">
+											<div class="grid gap-y-5">
 												<For each={instrumentGroups()}>
 													{(group) => (
-														<div class="grid gap-y-1">
+														<div class="grid gap-y-2">
 															<p class="flex flex-wrap items-baseline gap-x-2">
-																<span class="font-anaktoria text-xl">{group.name}</span>
-																<span class="font-didact text-base text-gray-500 dark:text-gray-400">
-																	{countLabel(group.rows.length, "εγγραφή", "εγγραφές")}
-																</span>
+																<span class="text-lg font-semibold">{group.name}</span>
+																<span class={"text-sm " + MUTED}>{countLabel(group.rows.length, "εγγραφή", "εγγραφές")}</span>
 															</p>
-															<div class="overflow-x-auto">
-																<table class="w-full border-collapse font-didact text-base">
+															<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+																<table class="w-full border-collapse text-base">
 																	<thead>
-																		<tr class="bg-red-50 text-left dark:bg-red-900/25">
-																			<th scope="col" class="px-2 py-1.5 font-semibold">
-																				Έτος
-																			</th>
-																			<th scope="col" class="px-2 py-1.5 font-semibold">
-																				Τάξη
-																			</th>
-																			<th scope="col" class="px-2 py-1.5 font-semibold">
-																				Καθηγητής
-																			</th>
-																			<th scope="col" class="px-2 py-1.5 text-right font-semibold">
+																		<tr
+																			class={
+																				"bg-gray-50 text-left text-sm dark:bg-white/[0.04] [&>th]:px-3 [&>th]:py-2 [&>th]:font-semibold " +
+																				MUTED
+																			}>
+																			<th scope="col">Έτος</th>
+																			<th scope="col">Τάξη</th>
+																			<th scope="col">Καθηγητής</th>
+																			<th scope="col" class="text-right">
 																				Πληρωμή
 																			</th>
-																			<th scope="col" class="px-2 py-1.5 text-center font-semibold">
+																			<th scope="col" class="text-center">
 																				Προήχθη
 																			</th>
-																			<th scope="col" class="px-2 py-1.5 text-center font-semibold">
+																			<th scope="col">
 																				<span class="sr-only">Ενέργειες</span>
 																			</th>
 																		</tr>
 																	</thead>
-																	<tbody>
+																	<tbody class="divide-y divide-gray-100 dark:divide-white/5">
 																		<For each={group.rows}>
 																			{(row) => (
-																				<tr class="border-t border-red-900/10 transition-colors hover:bg-red-50/60 dark:border-red-800/40 dark:hover:bg-red-900/15">
-																					<td class="whitespace-nowrap px-2 py-1.5 tabular-nums">
+																				<tr class="transition-colors hover:bg-red-50/50 dark:hover:bg-white/[0.03] [&>td]:px-3 [&>td]:py-2">
+																					<td class="whitespace-nowrap font-semibold tabular-nums">
 																						{row.registration_year}
 																					</td>
-																					<td class="whitespace-nowrap px-2 py-1.5">
+																					<td class="whitespace-nowrap">
 																						<Show
 																							when={row.evaluation && !row.class_year}
 																							fallback={
 																								<>
-																									{classYearLabel(row.class_year, row.evaluation) || "-"}
+																									{classYearLabel(row.class_year, row.evaluation) || "—"}
 																									<Show when={row.evaluation}>
 																										<EvaluationBadge />
 																									</Show>
 																								</>
 																							}>
-																							<span class="rounded-full bg-amber-200 px-2 py-0.5 text-sm font-bold text-amber-900 dark:bg-amber-700 dark:text-amber-50">
+																							<span class="rounded-full bg-amber-100 px-2 py-0.5 text-sm font-semibold text-amber-900 ring-1 ring-amber-300 dark:bg-amber-900/40 dark:text-amber-100 dark:ring-amber-500/40">
 																								{EVALUATION_LABEL}
 																							</span>
 																						</Show>
 																					</td>
-																					<td class="px-2 py-1.5">{teacherName(row.teacher_id)}</td>
-																					<td class="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
-																						{row.payment_amount} / {row.total_payment} €
+																					<td>{teacherName(row.teacher_id)}</td>
+																					<td class="whitespace-nowrap text-right tabular-nums">
+																						{paymentCell(row)}
 																						<Show when={row.fee_manual}>
 																							<span class="ml-1">
 																								<FeeManualMarker compact />
 																							</span>
 																						</Show>
 																					</td>
-																					<td class="px-2 py-1.5 text-center">
-																						<span
-																							class={
-																								"rounded-full px-2 py-0.5 text-sm font-semibold " +
-																								(row.pass
-																									? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100"
-																									: "bg-gray-200 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200")
-																							}>
-																							{row.pass ? "Ναι" : "Όχι"}
-																						</span>
+																					<td class="text-center">
+																						<Show
+																							when={row.pass}
+																							fallback={<span class={"text-sm " + MUTED}>Όχι</span>}>
+																							<span class="inline-flex items-center gap-x-1 rounded-full bg-emerald-100 px-2 py-0.5 text-sm font-semibold text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
+																								<i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+																								Ναι
+																							</span>
+																						</Show>
 																					</td>
-																					<td class="whitespace-nowrap px-2 py-1.5 text-center">
+																					<td class="w-0 text-right">
 																						<button
 																							type="button"
 																							onClick={() => openEnrollmentEditor(row)}
 																							aria-label={`Επεξεργασία εγγραφής ${row.registration_year}`}
 																							title="Επεξεργασία εγγραφής"
-																							class="inline-grid h-8 w-8 place-items-center rounded-md text-red-900 transition-colors hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-900/40 focus-visible:outline-hidden dark:text-red-200 dark:hover:bg-red-900/35">
+																							class={ICON_BTN}>
 																							<i class={ActionIcon.MODIFY + " text-base"} aria-hidden="true"></i>
 																						</button>
 																					</td>
@@ -1033,6 +1360,17 @@ export default function PupilsPage() {
 				)}
 			</Show>
 
+			{/* record actions (header buttons) */}
+			<Show when={"inputs" in editAction()}>
+				<Modal prefix={PREFIX} actionStore={editStore} />
+			</Show>
+			<Show when={"inputs" in enrollAction()}>
+				<Modal prefix={PREFIX} actionStore={enrollStore} />
+			</Show>
+			<Show when={"inputs" in deleteAction()}>
+				<Modal prefix={PREFIX} actionStore={deleteStore} />
+			</Show>
+
 			{/* per-row enrollment editor (opened from the history rows / the awaiting-placement list) */}
 			<Show when={"inputs" in editEnrollmentAction()}>
 				<Modal prefix={ENROLLMENT_PREFIX} actionStore={editEnrollmentStore} />
@@ -1040,25 +1378,23 @@ export default function PupilsPage() {
 
 			{/* ---- pinned bottom: pagination (list only) ---- */}
 			<Show when={selectedId() === null && results() && results()!.total > PAGE_SIZE}>
-				<div class="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-center gap-x-4 pt-4">
-					<button
-						type="button"
-						disabled={page() === 0}
-						onClick={() => goToPage(page() - 1)}
-						class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+				<nav aria-label="Σελίδες αποτελεσμάτων" class="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-center gap-x-3 pt-3">
+					<button type="button" disabled={page() === 0} onClick={() => goToPage(page() - 1)} class={BTN_SECONDARY + " py-1.5"}>
+						<i class="fa-solid fa-chevron-left text-sm" aria-hidden="true"></i>
 						Προηγούμενη
 					</button>
-					<span class="font-didact text-base text-gray-600 dark:text-gray-300">
+					<span class={"text-base tabular-nums " + MUTED}>
 						Σελίδα {page() + 1} / {Math.max(1, Math.ceil(results()!.total / PAGE_SIZE))}
 					</span>
 					<button
 						type="button"
 						disabled={(page() + 1) * PAGE_SIZE >= results()!.total}
 						onClick={() => goToPage(page() + 1)}
-						class="rounded-md border border-red-900 px-3 py-1 font-didact text-base transition-colors hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-700 dark:hover:bg-red-900/35 dark:disabled:hover:bg-transparent">
+						class={BTN_SECONDARY + " py-1.5"}>
 						Επόμενη
+						<i class="fa-solid fa-chevron-right text-sm" aria-hidden="true"></i>
 					</button>
-				</div>
+				</nav>
 			</Show>
 		</div>
 	);

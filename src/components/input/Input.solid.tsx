@@ -8,6 +8,7 @@ import Tooltip, { type TooltipProps } from "../Tooltip.solid";
 import DateInput from "./DateInput.solid";
 import FileInput, { type FileInputProps } from "./FileInput.solid";
 import MultiFileInput, { type MultiFileInputProps } from "./MultiFileInput.solid";
+import { FIELD_CONTROL, FIELD_ICON, FIELD_LABEL, FIELD_OUTLINE } from "./styles";
 
 export class InputFields<T extends Record<string, Partial<Props>>> {
 	#inputs: T = {} as T;
@@ -223,20 +224,15 @@ export default function Input(props: InputProps) {
 		// The label wraps its control, which is what links them — an explicit `for` without a matching id would break it.
 		<label
 			class={
-				"group/tooltip relative h-min max-h-[200px] max-w-[30ch] max-sm:max-w-[27.5ch] w-full grid grid-rows-[1fr] text-xl rounded-md font-didact" +
+				"group/tooltip relative h-min max-h-[200px] max-w-[32ch] max-sm:max-w-[29ch] w-full grid grid-rows-[1fr] text-lg rounded-xl font-didact" +
 				getInputSpecific(type) +
 				(disabled && blurDisabled ? " blur-[1px]" : "") +
 				(isShown() ? "" : " hidden")
 			}>
 			{/*--------------------------------GENERIC INPUT--------------------------------------- */}
 			<Show when={type !== "date" && type !== "file" && type !== "multiselect" && type !== "multifile" && type !== "select" && type !== "textarea"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
 				<input
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10"
+					class={FIELD_CONTROL}
 					type={type}
 					name={name}
 					aria-required={required ? "true" : undefined}
@@ -253,19 +249,15 @@ export default function Input(props: InputProps) {
 					}
 					onchange={onchange}
 				/>
+				<i class={FIELD_ICON + " " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
 			<Show when={type === "date"}>
 				<DateInput {...(props as InputProps & { value?: number })} />
 			</Show>
 			{/*---------------------------------SELECT INPUT--------------------------------------- */}
 			<Show when={type === "select"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
 				<select
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
+					class={FIELD_CONTROL + " cursor-pointer"}
 					name={name}
 					aria-required={required ? "true" : undefined}
 					onblur={(e: FocusEvent) => required && (e.currentTarget as HTMLElement).removeAttribute("required")}
@@ -283,15 +275,11 @@ export default function Input(props: InputProps) {
 						)}
 					</Index>
 				</select>
+				<i class={FIELD_ICON + " " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
 			{/*-------------------------------MULTISELECT INPUT------------------------------------ */}
 			<Show when={type === "multiselect"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
-				<div class="m-2 pl-8 py-3 text-xl font-didact max-w-[calc(30ch-1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg overflow-x-hidden z-10">
+				<div class="peer m-1.5 flex max-h-[176px] flex-wrap content-start gap-2 overflow-y-auto rounded-lg bg-white py-2.5 pr-2 pl-10 font-didact text-base text-red-950 z-10 dark:bg-dark dark:text-red-50">
 					<Index each={multiselectList}>
 						{(selectItem) =>
 							selectItem().value !== null || selectItem().value !== undefined ? (
@@ -299,23 +287,36 @@ export default function Input(props: InputProps) {
 									data-specifier={name}
 									data-selected={selectItem().selected}
 									data-value={selectItem().value}
-									class="group/multiselect ml-4 relative grid grid-cols-[20px_1fr] items-center justify-center"
+									aria-pressed={selectItem().selected ? "true" : "false"}
+									class="group/multiselect inline-flex items-center gap-x-2 rounded-full border border-gray-300 px-3 py-1 text-start transition-colors hover:border-red-800/60 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-800 data-[selected=true]:border-red-900 data-[selected=true]:bg-red-900 data-[selected=true]:text-white dark:border-neutral-600 dark:hover:border-red-400/60 dark:hover:bg-red-900/30 dark:data-[selected=true]:border-red-700 dark:data-[selected=true]:bg-red-800"
 									onClick={(e: MouseEvent) => {
 										if (multiselectOnce) {
 											const buttons = document.querySelectorAll(`button[data-specifier=${name}][data-selected='true']`);
 											buttons.forEach((button) => {
 												button.setAttribute("data-selected", "false");
+												button.setAttribute("aria-pressed", "false");
 											});
 										}
 										const button = e.currentTarget as HTMLButtonElement;
-										button.setAttribute("data-selected", button.getAttribute("data-selected") === "true" ? "false" : "true");
+										const selected = button.getAttribute("data-selected") !== "true";
+										button.setAttribute("data-selected", selected ? "true" : "false");
+										button.setAttribute("aria-pressed", selected ? "true" : "false");
 									}}
 									type="button">
-									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-regular fa-square group-[:is([data-selected='true'])]/multiselect:hidden"></i>
-									<i class="absolute top-[calc(50%_-_10px)] left-0 width-[20px] text-gray-500 dark:text-gray-300 fa-solid fa-square-check group-[:is([data-selected='false'])]/multiselect:hidden"></i>
-									<p class="p-2 font-didact text-start" style={{ "grid-column": "2 / 3" }}>
-										{selectItem().label}
-									</p>
+									{/* single choice reads as a radio, multiple choice as checkboxes */}
+									<i
+										class={
+											"text-sm opacity-70 group-data-[selected=true]/multiselect:hidden " +
+											(multiselectOnce ? "fa-regular fa-circle" : "fa-regular fa-square")
+										}
+										aria-hidden="true"></i>
+									<i
+										class={
+											"hidden text-sm group-data-[selected=true]/multiselect:inline-block " +
+											(multiselectOnce ? "fa-solid fa-circle-dot" : "fa-solid fa-square-check")
+										}
+										aria-hidden="true"></i>
+									<span>{selectItem().label}</span>
 								</button>
 							) : (
 								<></>
@@ -323,6 +324,7 @@ export default function Input(props: InputProps) {
 						}
 					</Index>
 				</div>
+				<i class={FIELD_ICON + " top-[1.15rem]! " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
 			{/*----------------------------------FILE INPUT---------------------------------------- */}
 			<Show when={type === "file"}>
@@ -334,13 +336,8 @@ export default function Input(props: InputProps) {
 			</Show>
 			{/*--------------------------------TEXTAREA INPUT---------------------------------------- */}
 			<Show when={type === "textarea"}>
-				<i
-					class={
-						"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-						(iconClasses || "")
-					}></i>
 				<textarea
-					class="peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg focus-visible:outline-hidden z-10"
+					class={FIELD_CONTROL + " resize-none"}
 					name={name}
 					aria-required={required ? "true" : undefined}
 					placeholder={(placeholder as string) || ""}
@@ -351,16 +348,20 @@ export default function Input(props: InputProps) {
 						required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 					}
 				/>
+				<i class={FIELD_ICON + " top-[1.15rem]! " + (iconClasses || "")} aria-hidden="true"></i>
 			</Show>
-			<p
-				class={
-					"absolute w-min bg-white dark:bg-dark text-red-950 dark:text-red-50 rounded-t-md left-2 whitespace-nowrap -top-[calc(1ch_*_1.5)] px-[0.5ch] peer-[:not(:focus-within):invalid]:text-red-400 z-10" +
-					(required ? " pl-[1.1rem] peer-[:not(:focus-within):invalid]:border-red-400" : "")
-				}>
+			<p class={FIELD_LABEL}>
 				{label}
-				{required ? <i class="absolute bg-transparent left-[0.5ch] top-0.5 text-xs fa-regular fa-asterisk" /> : <></>}
+				{required ? (
+					<span class="ml-0.5 text-red-700 dark:text-red-400" aria-hidden="true">
+						*
+					</span>
+				) : (
+					<></>
+				)}
 			</p>
-			<div class="absolute inset-0 w-full h-full rounded-md border-2 border-gray-800 dark:border-gray-500 peer-[:not(:focus-within):invalid]:border-red-400"></div>
+			{/* filled like the control (no inset box on translucent cards) — except behind file pickers, whose previews it would cover */}
+			<div class={FIELD_OUTLINE + (type === "file" || type === "multifile" ? "" : " bg-white dark:bg-dark")}></div>
 			{tooltip ? <Tooltip {...tooltip} /> : <></>}
 		</label>
 	);

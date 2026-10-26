@@ -2,6 +2,7 @@ import AirDatepicker from "air-datepicker";
 import { onCleanup, onMount } from "solid-js";
 import { setFocusFixed } from "@utilities/dom";
 import { sleep } from "@utilities/sleep";
+import { FIELD_CONTROL, FIELD_ICON } from "./styles";
 
 const days = ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 
@@ -137,17 +138,9 @@ export default function DateInput(props: DateInputProps) {
 
 	return (
 		<>
-			<i
-				class={
-					"absolute w-min text-lg text-gray-500 dark:text-gray-300 top-[calc(50%_-_14px)] left-[1.5rem] z-20 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.2)] " +
-					(iconClasses || "")
-				}></i>
 			<input
 				ref={dateInput}
-				class={
-					"peer m-2 px-12 max-sm:pr-2 py-3 text-xl font-didact w-[calc(100%_-_1rem)] bg-white dark:bg-dark text-red-950 dark:text-red-50 shadow-md shadow-gray-400 dark:shadow-gray-700 rounded-md focus:shadow-gray-500 dark:focus:shadow-gray-700 focus:shadow-lg !outline-hidden z-10" +
-					(disabled && blurDisabled ? " blur-[1px]" : "")
-				}
+				class={FIELD_CONTROL + " cursor-pointer" + (disabled && blurDisabled ? " blur-[1px]" : "")}
 				type="text"
 				readOnly={true}
 				value={(value && formatDateToMarineTime(value as number)) || ""}
@@ -159,6 +152,7 @@ export default function DateInput(props: DateInputProps) {
 					required && (e.currentTarget as HTMLInputElement).value === "" && (e.currentTarget as HTMLElement).setAttribute("required", "")
 				}
 			/>
+			<i class={FIELD_ICON + " " + (iconClasses || "")} aria-hidden="true"></i>
 		</>
 	);
 }

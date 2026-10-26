@@ -716,6 +716,100 @@ function pupilsTest() {
 		expect(res.status).toBe(400);
 		expect(JSON.stringify((await res.json()).details)).toContain("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
 	});
+
+	// ------------------------------------------------------------------
+	// Pupil deletion (each test creates — and removes — its own pupils)
+	// ------------------------------------------------------------------
+	const createTestPupil = async (email: string) => {
+		const res = await useTestAPI(
+			"Pupils.post",
+			{
+				RequestObject: {
+					am: String(R.int(9000, 9999)),
+					amka: "55555555555",
+					first_name: "Διαγραφή",
+					last_name: "Μαθητής",
+					fathers_name: "Δοκιμαστικός",
+					birth_date: Date.UTC(2001, 2, 3),
+					road: "Δοκιμαστική",
+					number: 1,
+					tk: 10000,
+					region: "Δοκιμή",
+					telephone: "-",
+					cellphone: "6900000005",
+					email,
+					registration_year: "2026-2027",
+					class_year: "Α' Έτος",
+					class_id: 0,
+					teacher_id: -1,
+					instrument_id: 0,
+					date: Date.now(),
+					pass: false,
+				},
+			},
+			false,
+		);
+		return (await getJson<APIResponse["Pupils.post"]>(res)).data.pupilId;
+	};
+	const subscriptionToken = async (email: string) =>
+		(
+			await getJson<APIResponse["EmailSubscriptions.getSubscriptionToken"]>(
+				await useTestAPI("EmailSubscriptions.getSubscriptionToken", { RequestObject: { email } }, false),
+			)
+		).data.token;
+	const totalEnrollments = async () => (await getJson<APIResponse["Pupils.getTotal"]>(await useTestAPI("Pupils.getTotal"))).data.total;
+
+	test("--pupils-- #25 delete removes the pupil, their whole history and their newsletter subscription", async () => {
+		const email = `pupils.test.${R.hex(4)}@example.com`;
+		const id = await createTestPupil(email);
+		await useTestAPI("Pupils.enroll", {
+			RequestObject: {
+				pupil_id: id,
+				registration_year: "2025-2026",
+				class_id: 0,
+				class_year: "Α' Έτος",
+				teacher_id: -1,
+				instrument_id: 0,
+				date: Date.now(),
+				pass: true,
+			},
+		});
+		expect(await subscriptionToken(email)).not.toBeNull();
+		const totalBefore = await totalEnrollments();
+
+		const res = await useTestAPI("Pupils.delete", { RequestObject: { id, unsubscribe: true } });
+		const json = await getJson<APIResponse["Pupils.delete"]>(res);
+		expectBody(json, z.object({ enrollments: z.literal(2), unsubscribed: z.literal(true) }));
+
+		expect((await useTestAPI("Pupils.get", { UrlArgs: { id } })).status).toBe(404);
+		expect(await totalEnrollments()).toBe(totalBefore - 2);
+		expect(await subscriptionToken(email)).toBeNull();
+		const orphans = withLocalDb((db) => db.query("SELECT COUNT(*) AS c FROM pupil_enrollments WHERE pupil_id = ?").get(id) as { c: number });
+		if (orphans) expect(orphans.c).toBe(0);
+	});
+
+	test("--pupils-- #26 delete keeps a newsletter address another pupil still uses, or when not asked to", async () => {
+		const email = `pupils.test.${R.hex(4)}@example.com`;
+		const first = await createTestPupil(email);
+		const second = await createTestPupil(email);
+
+		const kept = await getJson<APIResponse["Pupils.delete"]>(await useTestAPI("Pupils.delete", { RequestObject: { id: first, unsubscribe: true } }));
+		expect(kept.data.unsubscribed).toBe(false);
+		expect(await subscriptionToken(email)).not.toBeNull();
+
+		const notAsked = await getJson<APIResponse["Pupils.delete"]>(await useTestAPI("Pupils.delete", { RequestObject: { id: second } }));
+		expect(notAsked.data.unsubscribed).toBe(false);
+		expect(await subscriptionToken(email)).not.toBeNull();
+		// the address is no longer any pupil's — drop it the way dev:clean would
+		withLocalDb((db) => db.run("DELETE FROM email_subscriptions WHERE email = ?", [email]));
+	});
+
+	test("--pupils-- #27 delete answers 404 for an unknown pupil and 401 without a session", async () => {
+		const res = await useTestAPI("Pupils.delete", { RequestObject: { id: 999_999_999 } });
+		expect(res.status).toBe(404);
+		const anonymous = await rawAPI("DELETE", "/pupils", { id: 1 });
+		expect(anonymous.status).toBe(401);
+	});
 }
 
 pupilsTest();

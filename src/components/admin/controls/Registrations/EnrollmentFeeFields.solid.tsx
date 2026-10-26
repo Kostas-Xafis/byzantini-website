@@ -47,9 +47,10 @@ export function EvaluationBadge() {
 }
 
 const inputClass =
-	"w-full rounded-md border-2 border-gray-800 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-md shadow-gray-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 dark:border-gray-500 dark:bg-dark dark:text-red-50 dark:shadow-gray-700 dark:focus-visible:outline-red-300";
+	"w-full cursor-pointer rounded-xl border border-gray-300 bg-white px-3 py-2.5 font-didact text-lg text-red-950 transition-[border-color,box-shadow] hover:border-gray-400 focus:border-red-800 focus:ring-4 focus:ring-red-800/10 focus-visible:outline-hidden aria-invalid:border-amber-500 dark:border-neutral-600 dark:bg-dark dark:text-red-50 dark:hover:border-neutral-500 dark:focus:border-red-400 dark:focus:ring-red-400/15";
 
-const fieldsetClass = "col-span-full grid gap-4 rounded-lg border-2 border-red-900/30 p-4 font-didact text-red-950 dark:border-red-800/60 dark:text-red-50";
+const fieldsetClass =
+	"col-span-full grid gap-4 rounded-xl border border-gray-300 bg-gray-50/70 px-4 pt-2 pb-4 font-didact text-red-950 dark:border-neutral-600 dark:bg-neutral-800/30 dark:text-red-50";
 
 let uidSeq = 0;
 const nextUid = (prefix: string) => `${prefix}-${++uidSeq}`;
@@ -117,7 +118,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 
 	return (
 		<fieldset ref={root} class={fieldsetClass}>
-			<legend class="px-2 text-xl">Κατάταξη</legend>
+			<legend class="rounded-md px-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Κατάταξη</legend>
 			<div class="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
 				<label class="flex cursor-pointer items-center gap-x-3 self-center text-lg">
 					<input
@@ -131,7 +132,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 					{EVALUATION_LABEL}
 				</label>
 				<label class="grid gap-y-1 text-base">
-					<span>Έτος Φοίτησης</span>
+					<span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Έτος Φοίτησης</span>
 					<select
 						name="class_year"
 						class={inputClass}
