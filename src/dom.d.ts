@@ -10,8 +10,8 @@ declare global {
 	// Better alternative that covers all elements and not just Document
 	interface GlobalEventHandlersEventMap {
 		hydrate: CustomEvent<undefined>;
-		open_carousel: CustomEvent<{ index: number }>;
-		close_carousel: CustomEvent<undefined>;
+		/** Opens the photo viewer (src/components/other/PhotoViewer.astro) at a photo. */
+		photo_viewer_open: CustomEvent<{ index: number }>;
 		modify_selections: CustomEvent<TypeEffect>;
 		modal_close: CustomEvent<{ prefix: string }>;
 		/** Admin toasts (src/components/admin/toast.ts → <AlertStack />). */
