@@ -32,10 +32,7 @@ const genericInputs: Record<
 		required: true,
 		icon: "id-card",
 		tooltip: {
-			message: [
-				"Για νέες εγγραφές: Ο αριθμός μητρώου είναι 000. ",
-				"Για επανεγγραφές: Αναζητήστε τον αριθμό μητρώου στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής.",
-			],
+			message: ["Αναζητήστε τον αριθμό μητρώου στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής."],
 			position: isPhone ? "top" : "left",
 		},
 	},
@@ -364,6 +361,12 @@ async function loadRegistrationId(apiHook: APIClient) {
 	}
 }
 
+/** The lookup found nobody: with an ΑΜ, the pair did not match; without one, no pupil without ΑΜ has that ΑΜΚΑ. */
+const notFoundMessage = (am: number | undefined) =>
+	am === undefined
+		? "Δεν βρέθηκε μαθητής χωρίς αριθμό μητρώου με αυτόν τον ΑΜΚΑ. Αν έχετε αριθμό μητρώου, συμπληρώστε τον· αλλιώς δηλώστε νέα εγγραφή."
+		: "Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.";
+
 /**
  * Turns a failed request into a message for the family filling the form: invalid fields (the server's
  * per-field validation messages), a rejected request (4xx), a server failure (5xx / a response that is
@@ -413,6 +416,10 @@ export function RegistrationForm() {
 	const [submitError, setSubmitError] = createSignal("");
 	// Set once the pupil is found by ΑΜ + ΑΜΚΑ: those two are then locked so the identification cannot be undone by editing them.
 	const [identified, setIdentified] = createSignal(false);
+	// The pupil has no ΑΜ: "new student" was chosen, or a pupil who registered as new before and was not given one
+	// yet was found by ΑΜΚΑ (or their ?regid link). The form then shows no ΑΜ field and sends the '000' placeholder:
+	// the server matches such a pupil by ΑΜΚΑ, or creates one without ΑΜ, flagged for the secretaries to assign it.
+	const [withoutAm, setWithoutAm] = createSignal(false);
 	// Set once the identification step is done — by ΑΜ + ΑΜΚΑ, "new student" or the permanent ?regid link. From
 	// then on the form is mounted (and keeps what was typed while hidden) and every department goes straight to it.
 	const [identityResolved, setIdentityResolved] = createSignal(false);
@@ -515,6 +522,7 @@ export function RegistrationForm() {
 			return { ...prev, ...regData };
 		});
 		// The permanent link already identifies the pupil — skip the lookup step.
+		setWithoutAm(!regData.am);
 		setIdentityResolved(true);
 		goTo({ step: "form", type: MusicTypeArr[regData.class_id] });
 	});
@@ -527,13 +535,19 @@ export function RegistrationForm() {
 		goTo({ step: "form", type });
 	};
 
-	/** Returning student: ΑΜ + ΑΜΚΑ must both match, then prefill from the record. */
+	/**
+	 * Returning student: ΑΜ + ΑΜΚΑ must both match, then prefill from the record. A pupil who registered as new and
+	 * has no ΑΜ yet leaves it empty (or types the '000' they registered with): the ΑΜΚΑ alone then finds them.
+	 */
 	const onLookup = async (e: Event) => {
 		e.preventDefault();
-		const am = Number(lookupAm().trim());
+		const typedAm = lookupAm().trim();
+		// The first run of digits ('000-Ο12' → '000'); none typed, or only zeros, means "no ΑΜ".
+		const amDigits = typedAm.match(/\d+/)?.[0] ?? "";
+		const am = Number(amDigits) > 0 ? Number(amDigits) : undefined;
 		const amka = lookupAmka().trim();
-		if (!Number.isInteger(am) || am <= 0) {
-			setLookupError("Συμπληρώστε τον αριθμό μητρώου σας.");
+		if (typedAm && !amDigits) {
+			setLookupError("Ο αριθμός μητρώου αποτελείται μόνο από ψηφία. Αν δεν έχετε αριθμό μητρώου, αφήστε το πεδίο κενό.");
 			return;
 		}
 		if (amka.length !== 11) {
@@ -545,7 +559,7 @@ export function RegistrationForm() {
 		try {
 			const res = await apiHook(API.Pupils.getByAm, { RequestObject: { am, amka } });
 			if (!("data" in res) || !res.data) {
-				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
+				setLookupError(notFoundMessage(am));
 				return;
 			}
 			const { pupil } = res.data;
@@ -562,13 +576,14 @@ export function RegistrationForm() {
 				instrument_id: -1,
 			}));
 			// Keep the department the family picked — they may be enrolling in a different one this year.
+			setWithoutAm(pupil.am === null);
 			setIdentified(true);
 			setIdentityResolved(true);
 			goTo({ step: "form", type: musicType() });
 		} catch (err) {
 			// Only a 404 means "no such pupil" — anything else must not push the family onto the new-student path.
 			if (err instanceof APIRequestError && err.status === 404) {
-				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.");
+				setLookupError(notFoundMessage(am));
 			} else {
 				setLookupError(describeError(err));
 			}
@@ -577,7 +592,7 @@ export function RegistrationForm() {
 		}
 	};
 
-	/** New student: blank form, ΑΜ defaults to the '000' placeholder. */
+	/** New student: blank form without an ΑΜ field; they are registered with the '000' placeholder. */
 	const onNewStudent = () => {
 		setRegistrationData((prev) => ({
 			...prev,
@@ -601,6 +616,7 @@ export function RegistrationForm() {
 		}));
 		setLookupError("");
 		setIdentified(false);
+		setWithoutAm(true);
 		setIdentityResolved(true);
 		goTo({ step: "form", type: musicType() });
 	};
@@ -633,7 +649,7 @@ export function RegistrationForm() {
 		const data: PupilRegistrationForm = {
 			last_name: formData.string("last_name"),
 			first_name: formData.string("first_name"),
-			am: formData.string("am"),
+			am: withoutAm() ? "000" : formData.string("am"),
 			amka: formData.string("amka"),
 			fathers_name: formData.string("fathers_name"),
 			telephone: formData.string("telephone", "-"),
@@ -654,11 +670,6 @@ export function RegistrationForm() {
 		};
 		setRegistrationData(data);
 		try {
-			if (data.am.startsWith("0") && data.class_year !== "Υπό Κατάταξη" && data.class_year !== "Α' Προκαταρκτική" && data.class_year !== "Α' Έτος") {
-				throw Error(
-					"Ο αριθμός μητρώου δεν μπορεί να είναι 000 ή να ξεκινάει με 0. Αν δεν γνωρίζετε τον ΑΜ, θα τον βρείτε σε προσωπικό email, αλλιώς επικοινωνήστε με τη Γραμματεία της Σχολής.",
-				);
-			}
 			if (data.amka.length !== 11) {
 				throw Error("Ο ΑΜΚΑ αποτελείται μόνο από 11 ψηφία.");
 			}
@@ -814,6 +825,8 @@ export function RegistrationForm() {
 									<OutOfWindowNotice schoolYear={schoolYearShort} class="col-span-full justify-self-center max-w-[60ch]" />
 								</Show>
 								{Object.values(genericInputs).map((input) => {
+									// A pupil without ΑΜ (new, or not given one yet) has nothing to fill in: the field is not shown at all.
+									if (input.name === "am" && withoutAm()) return null;
 									// After the ΑΜ + ΑΜΚΑ lookup those two are read-only (still submitted).
 									const locked = identified() && (input.name === "am" || input.name === "amka");
 									return (
@@ -875,6 +888,7 @@ export function RegistrationForm() {
 										<span class="font-didact text-sm font-semibold text-red-950">Αριθμός Μητρώου</span>
 										<input
 											name="lookup-am"
+											aria-describedby="lookup-am-hint"
 											type="text"
 											inputmode="numeric"
 											autocomplete="off"
@@ -882,6 +896,9 @@ export function RegistrationForm() {
 											value={lookupAm()}
 											onInput={(e) => setLookupAm(e.currentTarget.value)}
 										/>
+										<span id="lookup-am-hint" class="font-didact text-sm text-red-950/70">
+											Αν εγγραφήκατε ως νέος μαθητής και δεν σας έχει δοθεί ακόμη αριθμός μητρώου, αφήστε το κενό.
+										</span>
 									</label>
 									<label class="grid gap-y-1">
 										<span class="font-didact text-sm font-semibold text-red-950">ΑΜΚΑ</span>
@@ -986,6 +1003,7 @@ export function RegistrationForm() {
 					// picker and goes through the identification again.
 					setIdentityResolved(false);
 					setIdentified(false);
+					setWithoutAm(false);
 					setLookupAm("");
 					setLookupAmka("");
 					setMusicType(MusicType.None);

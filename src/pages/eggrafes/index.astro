@@ -1,6 +1,5 @@
 ---
 import JsonLd from "@components/seo/JsonLd.astro";
-import DatepickerCSS from "@components/DatepickerCSS.astro";
 import { RegistrationForm } from "@components/registrations/RegistrationForm.solid";
 import Layout from "@layouts/Layout.astro";
 import { breadcrumbsSchema, SCHOOL } from "@utilities/schema";
@@ -59,5 +58,4 @@ const breadcrumbs = breadcrumbsSchema([
 	<JsonLd data={faqSchema} />
 	<JsonLd data={breadcrumbs} />
 	<RegistrationForm client:idle client:only="solid-js" />
-	<DatepickerCSS />
 </Layout>

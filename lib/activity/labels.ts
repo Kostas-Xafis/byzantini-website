@@ -7,6 +7,7 @@
  */
 export const ACTIVITY_LABELS: Record<string, string> = {
 	"Pupils.post": "Νέα εγγραφή μαθητή",
+	"Pupils.create": "Προσθήκη μαθητή στο Μαθητολόγιο",
 	"Pupils.update": "Επεξεργασία στοιχείων μαθητή",
 	"Pupils.enroll": "Προσθήκη εγγραφής σε μαθητή",
 	"Pupils.updateEnrollment": "Επεξεργασία εγγραφής",

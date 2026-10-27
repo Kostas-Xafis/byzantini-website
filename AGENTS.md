@@ -236,9 +236,22 @@ The person data that used to live on `registrations` is split into two tables
   (`lib/api/routes/emailSubscriptions.ts`) but keep their public paths
   (`/registrations/email-*`) — those URLs are inside already-sent emails.
 - The public form (`RegistrationForm.solid.tsx`) is a three-step flow: pick a
-  music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student" with
-  `ΑΜ = 000`) → the form. The identification happens ONCE; switching department
-  afterwards must not send the user back through it.
+  music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student") → the
+  form. A new student's form has NO ΑΜ field (it confused families and the
+  secretariat); the form sends the `000` placeholder, so the server creates a
+  pupil without ΑΜ, flagged for review. The identification happens ONCE;
+  switching department afterwards must not send the user back through it.
+- **Pupils without ΑΜ** (`am IS NULL`, `000-Ο…`) are identified by **ΑΜΚΑ
+  alone**: `Pupils.getByAm` without `am` matches only `am IS NULL AND amka = ?`
+  (a pupil with an ΑΜ always needs both), and `Pupils.post` reuses the
+  ΑΜΚΑ-matched pupil without ΑΜ on their next registration instead of creating
+  another orphan (`tests/api/pupilsWithoutAm.test.ts`).
+- **«Νέος μαθητής»** in the Μαθητολόγιο (`Pupils.create`, every admin): adds a
+  pupil by hand (ΑΜ optional — without one it gets the next `000-Ο…` code and
+  `needs_review`; a taken ΑΜ or ΑΜΚΑ is a 409), e.g. to fill in the years
+  before the online register. Their enrollments are added with «Νέα εγγραφή»,
+  whose «Ημερομηνία Εγγραφής» defaults to today and takes the real day for a
+  past year (years without a fee catalog are not priced).
 - **Fees (Δίδακτρα, docs/FEES.md)**: «Υπό Κατάταξη» is the `evaluation`
   status (`class_year = ''` until placement; display via `classYearLabel`
   in `lib/classYears.ts`), not a class year. Prices come from the versioned
@@ -511,6 +524,13 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - User-facing text is Greek — preserve existing Greek labels and wording; add
   Greek for new UI strings, do not translate existing ones.
 - Solid components use `.solid.tsx`, Astro components use `.astro`.
+- **Date fields** (`type: "date"` → `src/components/input/DateInput.solid.tsx`)
+  are a ηη/μμ/εεεε text field (auto slashes, impossible dates refused through
+  `setCustomValidity`) plus a calendar button that opens the browser's own
+  picker on a hidden `<input type="date">`; read them with
+  `ExtendedFormData.date()`. Helpers in `lib/utilities/forms.ts`. Never a bare
+  visible `<input type="date">` (it shows the browser's locale order, mm/dd in
+  an English browser) and never a datepicker library (air-datepicker is gone).
 - **Dashboard colours are tokens** (`src/styles/global.css` `@theme`, dark values
   in the `.dark` block below it): `bg-page`, `bg-surface`, `bg-surface-muted`,
   `bg-surface-sunken`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand` /
@@ -561,7 +581,7 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - **End-to-end smoke tests** (`e2e/`, Playwright, `bun run e2e` — kept out of
   `bun run test`): admin password sign-in → «Αρχική», an ended session →
   `/login?…&expired=1` and back, what a secretary / an owner sees, the public
-  registration form (empty submit, new student ΑΜ 000) and the public navbar at
+  registration form (empty submit, new student without an ΑΜ field) and the public navbar at
   1024/1366 px. Projects `desktop` (1280 px, everything) and `phone` (375 px,
   titles tagged `@phone`). The runner runs on Bun (`bunx --bun playwright test`).
   Needs the dev server (`E2E_BASE_URL`, default `http://e2e.localhost:4321`:

@@ -59,6 +59,9 @@
   `registrations` table was dropped.
 - `pupils.am` is an INTEGER and NULL for review cases (`orphan_code` `000-Ο1`…,
   `split_from_am` `111-Σ1`…); `registration_url` on the pupil is permanent.
+- A pupil without ΑΜ is identified by ΑΜΚΑ alone (`Pupils.getByAm` without
+  `am`); one with an ΑΜ always needs both. The public form has no ΑΜ field for
+  new students. Admins add pupils by hand with `Pupils.create` («Νέος μαθητής»).
 - Routes are `Pupils.*`; enrollment listings return the JOINED row
   (`z_JoinedEnrollments`) which keeps the old `registrations` wire shape (with
   `am` as a string) for the admin table and the PDF/Excel exports.
@@ -116,6 +119,9 @@
 - Tailwind classes are canonical (what IntelliSense suggests: `h-dvh`, `z-1000`,
   `bg-linear-to-r`, `important!` at the end), not arbitrary values; its
   `cssConflict` warnings on `dark:`/`group-*` pairs are false positives.
+- Date fields (`DateInput.solid.tsx`) are ηη/μμ/εεεε text + the browser's own
+  picker behind a calendar button; read with `ExtendedFormData.date()`. No
+  datepicker library, no visible `<input type="date">` (locale order).
 - Icons: the project's own inline-SVG set in `lib/icons.ts` (typed `IconName`),
   rendered with `<Icon name="…" />` (`src/components/other/Icon.solid.tsx` /
   `Icon.astro`) or `createIcon()` for hand-built DOM. No Font Awesome / icon

@@ -6,7 +6,7 @@ A few browser tests against a running dev server (docs/IMPROVEMENTS.md T3). They
 | Spec | What it covers |
 | --- | --- |
 | `admin.spec.ts` | password sign-in → «Αρχική» with the «Χρειάζονται προσοχή» tiles; a wrong password; an ended session (a 401 inside the dashboard and a full page load with a dead cookie) → `/login?…&expired=1` «Η συνεδρία σας έληξε» → back to the same page; roles (a secretary has no activity log / query logs / fee catalog and a typed restricted URL shows «Δεν έχετε πρόσβαση»; an owner has the activity log and the fee catalog, not the query logs) |
-| `registration.spec.ts` | `/eggrafes`: an empty submit lists the required fields and sends nothing; a new student (ΑΜ 000) registers successfully |
+| `registration.spec.ts` | `/eggrafes`: an empty submit lists the required fields and sends nothing; a new student (no ΑΜ field, sent as 000) registers successfully |
 | `navbar.spec.ts` | the public navbar at 1024 px (burger menu) and 1366 px (every link in the bar) — B8 |
 
 Projects: `desktop` (Chromium, 1280 px) runs everything; `phone` (Chromium, 375 px) runs the tests whose
