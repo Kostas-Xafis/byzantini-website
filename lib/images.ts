@@ -1,5 +1,6 @@
-import type { ImageOutputOptions, ImagesBinding, ReadableStream as WorkersReadableStream } from "@cloudflare/workers-types";
+import type { ImageOutputOptions, ImagesBinding, ImageTransformer, ReadableStream as WorkersReadableStream } from "@cloudflare/workers-types";
 import { runtimeEnv } from "@env/runtime";
+import { orientationTransforms, readJpegOrientation, swapsAxes, withUprightOrientation, type OrientationTransform } from "@lib/imageOrientation";
 
 /**
  * Cloudflare Images-backed thumbnail generation.
@@ -38,6 +39,21 @@ const bufferToStream = (bytes: ArrayBuffer): WorkersReadableStream<Uint8Array> =
 		},
 	}) as unknown as WorkersReadableStream<Uint8Array>;
 
+/**
+ * A phone photo's EXIF orientation as explicit transforms: `bytes` is a copy whose tag says "upright" (so the
+ * image service never turns it on its own — production would, the local emulation would not, and `info()` reports
+ * the stored pixels in both), `transforms` turn it upright and `swap` says the upright width is the stored height.
+ */
+const uprightSource = (source: ArrayBuffer): { bytes: ArrayBuffer; transforms: OrientationTransform[]; swap: boolean } => {
+	const tag = readJpegOrientation(new Uint8Array(source));
+	if (!tag || tag.orientation === 1) return { bytes: source, transforms: [], swap: false };
+	return { bytes: withUprightOrientation(source, tag), transforms: orientationTransforms(tag.orientation), swap: swapsAxes(tag.orientation) };
+};
+
+/** Starts a transform chain on `bytes` with the upright transforms already applied. */
+const uprightChain = (images: ImagesBinding, { bytes, transforms }: ReturnType<typeof uprightSource>): ImageTransformer =>
+	transforms.reduce((chain, transform) => chain.transform(transform), images.input(bufferToStream(bytes)));
+
 const imagesBinding = (): ImagesBinding => {
 	const images = runtimeEnv?.IMAGES as ImagesBinding | undefined;
 	if (!images) throw new Error("Η υπηρεσία επεξεργασίας εικόνων (IMAGES binding) δεν είναι διαθέσιμη");
@@ -54,6 +70,8 @@ const imagesBinding = (): ImagesBinding => {
  *   factor; the output format follows the input format (as sharp did).
  * - `fit: "scale-down"` intentionally avoids the old service's accidental
  *   upscaling of images just above the 40 KB threshold.
+ * - Phone photos come out upright (EXIF orientation applied — the old service
+ *   dropped it, leaving portrait thumbnails sideways).
  * - SVG and other dimension-less inputs are returned as-is.
  */
 export const compressImageForThumb = async (source: ArrayBuffer, originalContentType: string): Promise<ThumbResult> => {
@@ -62,7 +80,8 @@ export const compressImageForThumb = async (source: ArrayBuffer, originalContent
 	}
 
 	const images = imagesBinding();
-	const info = await images.info(bufferToStream(source));
+	const upright = uprightSource(source);
+	const info = await images.info(bufferToStream(upright.bytes));
 	const outputFormat = OUTPUT_FORMATS[info.format];
 	// SVG carries no width/height; unknown formats have no output mapping.
 	if (!outputFormat || !("width" in info) || !info.width || !info.height) {
@@ -70,11 +89,12 @@ export const compressImageForThumb = async (source: ArrayBuffer, originalContent
 	}
 
 	const shrinkFactor = Math.sqrt(source.byteLength / THUMB_MAX_BYTES) / 2;
-	const result = await images
-		.input(bufferToStream(source))
+	const { swap } = upright;
+	const result = await uprightChain(images, upright)
 		.transform({
-			width: Math.floor(info.width / shrinkFactor),
-			height: Math.floor(info.height / shrinkFactor),
+			// `width` / `height` refer to the photo after it was turned upright.
+			width: Math.floor((swap ? info.height : info.width) / shrinkFactor),
+			height: Math.floor((swap ? info.width : info.height) / shrinkFactor),
 			fit: "scale-down",
 		})
 		.output({ format: outputFormat, quality: 80 }); // sharp's default JPEG quality
@@ -94,11 +114,11 @@ export const compressImageForThumb = async (source: ArrayBuffer, originalContent
 export const resizeImageToWidth = async (source: ArrayBuffer, sourceType: string, width: number): Promise<ThumbResult | null> => {
 	const images = runtimeEnv?.IMAGES as ImagesBinding | undefined;
 	if (!images) return null;
-	const info = await images.info(bufferToStream(source));
-	if (!("width" in info) || !info.width) return null;
-	const result = await images
-		.input(bufferToStream(source))
-		.transform({ width: Math.min(width, info.width), fit: "scale-down" })
+	const upright = uprightSource(source);
+	const info = await images.info(bufferToStream(upright.bytes));
+	if (!("width" in info) || !info.width || !info.height) return null;
+	const result = await uprightChain(images, upright)
+		.transform({ width: Math.min(width, upright.swap ? info.height : info.width), fit: "scale-down" })
 		.output({ format: "image/webp", quality: 80 });
 	const bytes = await result.response().arrayBuffer();
 	if (bytes.byteLength >= source.byteLength) return { bytes: source, contentType: sourceType };
