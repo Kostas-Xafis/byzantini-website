@@ -8,12 +8,12 @@ import Icon from "@components/other/Icon.astro";
  * or a `#foto-N` link (1-based; the address follows the photo shown, so a photo can be shared and
  * the browser's Back button closes the viewer). Arrows / swipe move between photos (looping), the
  * film strip jumps, double-click / double-tap / wheel / pinch zoom, dragging pans a zoomed photo,
- * swiping down closes. The small thumbnail shows at once (blurred) while the full image loads, and
- * the neighbours on both sides are always loaded in advance.
+ * swiping down closes. Only real photos are shown, and they load a few at a time: the photo on screen
+ * first, then its two neighbours, then the film strip's photos as they scroll into view.
  */
 export interface Props {
-	/** Full-size and thumbnail URL of every photo, in gallery order. */
-	photos: { src: string; thumb: string }[];
+	/** Every photo, in gallery order. */
+	photos: { src: string }[];
 	/** Shown in the top bar; also the dialog's accessible name and the photos' alt text. */
 	title: string;
 }
@@ -37,8 +37,11 @@ const { photos, title } = Astro.props;
 					{[0, 1, 2].map(() => (
 						<div class="pv-slide">
 							<div class="pv-zoom">
-								<img class="pv-thumb" alt="" aria-hidden="true" draggable="false" />
-								<img class="pv-full" alt="" draggable="false" />
+								<img class="pv-photo" alt="" draggable="false" />
+								<span class="pv-spinner">
+									<Icon name="spinner" spin />
+								</span>
+								<p class="pv-error">Η φωτογραφία δεν φορτώθηκε.</p>
 							</div>
 						</div>
 					))}
@@ -73,8 +76,8 @@ const { photos, title } = Astro.props;
 			<div class="pv-bar pv-bottom">
 				<div class="pv-strip">
 					{photos.map((photo, i) => (
-						<button type="button" class="pv-thumbBtn" data-index={i} aria-label={`Φωτογραφία ${i + 1} από ${photos.length}`}>
-							<img data-src={photo.thumb} alt="" draggable="false" />
+						<button type="button" class="pv-stripItem" data-index={i} aria-label={`Φωτογραφία ${i + 1} από ${photos.length}`}>
+							<img data-src={photo.src} alt="" decoding="async" draggable="false" />
 						</button>
 					))}
 				</div>
@@ -164,23 +167,39 @@ const { photos, title } = Astro.props;
 		object-fit: contain;
 		pointer-events: none;
 	}
-	.pv-thumb {
-		filter: blur(12px);
-		transition: opacity 0.3s ease 0.15s;
-	}
-	.pv-full {
+	.pv-photo {
 		opacity: 0;
 		transition: opacity 0.3s ease;
 	}
-	.pv-loaded .pv-full {
+	.pv-loaded .pv-photo {
 		opacity: 1;
 	}
-	.pv-loaded .pv-thumb {
-		opacity: 0;
+	.pv-spinner,
+	.pv-error {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		display: none;
+		translate: -50% -50%;
+		color: rgb(255 255 255 / 0.75);
 	}
-	/* The full image failed: the sharp-enough thumbnail is better than a blur. */
-	.pv-failed .pv-thumb {
-		filter: none;
+	.pv-spinner {
+		font-size: 2rem;
+	}
+	/* Only a photo that takes a moment shows the spinner; a cached one appears without it. */
+	.pv-slide:not(.pv-loaded, .pv-failed) .pv-spinner {
+		display: block;
+		animation: pv-appear 0.2s ease 0.35s both;
+	}
+	.pv-failed .pv-error {
+		display: block;
+		white-space: nowrap;
+		font-size: 0.95rem;
+	}
+	@keyframes pv-appear {
+		from {
+			opacity: 0;
+		}
 	}
 
 	/* ── Chrome: top bar, side arrows, film strip ── */
@@ -293,7 +312,7 @@ const { photos, title } = Astro.props;
 	.pv-strip::-webkit-scrollbar {
 		display: none;
 	}
-	.pv-thumbBtn {
+	.pv-stripItem {
 		flex: 0 0 auto;
 		width: 4.5rem;
 		height: 3.25rem;
@@ -306,21 +325,26 @@ const { photos, title } = Astro.props;
 			opacity 0.2s ease,
 			box-shadow 0.2s ease;
 	}
-	.pv-thumbBtn img {
+	.pv-stripItem img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		opacity: 0;
+		transition: opacity 0.3s ease;
 	}
-	.pv-thumbBtn:hover {
+	.pv-stripItem.pv-in img {
+		opacity: 1;
+	}
+	.pv-stripItem:hover {
 		opacity: 0.85;
 	}
-	.pv-thumbBtn[aria-current="true"] {
+	.pv-stripItem[aria-current="true"] {
 		opacity: 1;
 		box-shadow: 0 0 0 2px #fff;
 	}
 	.pv-btn:focus-visible,
 	.pv-arrow:focus-visible,
-	.pv-thumbBtn:focus-visible {
+	.pv-stripItem:focus-visible {
 		outline: 2px solid #fecaca;
 		outline-offset: 2px;
 	}
@@ -370,7 +394,7 @@ const { photos, title } = Astro.props;
 			width: 2.5rem;
 			height: 2.5rem;
 		}
-		.pv-thumbBtn {
+		.pv-stripItem {
 			width: 3.5rem;
 			height: 2.6rem;
 		}
@@ -387,7 +411,7 @@ const { photos, title } = Astro.props;
 <script>
 	import { prefersReducedMotion, trapFocus } from "@utilities/focusTrap";
 
-	type Photo = { src: string; thumb: string };
+	type Photo = { src: string };
 
 	const HASH = /^#foto-(\d+)$/;
 	const MAX_SCALE = 4;
@@ -411,7 +435,7 @@ const { photos, title } = Astro.props;
 		const zoomBtn = root.querySelector("[data-pv='zoom']") as HTMLElement;
 		const stripBtn = root.querySelector("[data-pv='strip']") as HTMLElement;
 		const strip = root.querySelector(".pv-strip") as HTMLElement;
-		const thumbs = [...strip.querySelectorAll<HTMLButtonElement>(".pv-thumbBtn")];
+		const stripItems = [...strip.querySelectorAll<HTMLButtonElement>(".pv-stripItem")];
 
 		let current = 0;
 		let isOpen = false;
@@ -421,18 +445,56 @@ const { photos, title } = Astro.props;
 
 		// ---------------- Slides ----------------
 
+		// Photos load a few at a time: the one on screen first, its two neighbours once it is in (so they
+		// are ready before the next swipe), then the film strip. Holding an arrow key down therefore never
+		// queues up photos that are only flown past.
+		const photoOf = (slide: HTMLElement) => slide.querySelector(".pv-photo") as HTMLImageElement;
+		const isSettled = (slide: HTMLElement) => slide.classList.contains("pv-loaded") || slide.classList.contains("pv-failed");
+
+		/** Points a slide at a photo without downloading it yet (`load` does that). */
 		function fill(slide: HTMLElement, index: number) {
 			const i = wrap(index);
-			const [thumb, full] = slide.querySelectorAll("img");
+			const img = photoOf(slide);
 			slide.classList.remove("pv-loaded", "pv-failed");
-			thumb.src = photos[i].thumb;
-			full.alt = `${title} — φωτογραφία ${i + 1} από ${n}`;
-			full.onload = () => slide.classList.add("pv-loaded");
-			full.onerror = () => slide.classList.add("pv-failed");
-			full.src = photos[i].src;
-			if (full.complete && full.naturalWidth) slide.classList.add("pv-loaded");
+			slide.dataset.src = photos[i].src;
+			img.alt = `${title} — φωτογραφία ${i + 1} από ${n}`;
+			img.onload = () => settle(slide, "pv-loaded");
+			img.onerror = () => settle(slide, "pv-failed");
+			if (img.getAttribute("src") !== photos[i].src)
+				img.removeAttribute("src"); // also cancels a download in flight
+			else if (img.complete) slide.classList.add(img.naturalWidth ? "pv-loaded" : "pv-failed"); // loadCurrent() takes it from here
 		}
-		const fillAll = () => [-1, 0, 1].forEach((d, k) => fill(slides[k], current + d));
+
+		function load(slide: HTMLElement) {
+			const img = photoOf(slide);
+			const src = slide.dataset.src;
+			if (!src || img.getAttribute("src") === src) return;
+			img.src = src;
+			if (img.complete) settle(slide, img.naturalWidth ? "pv-loaded" : "pv-failed"); // already in the cache
+		}
+
+		function settle(slide: HTMLElement, state: "pv-loaded" | "pv-failed") {
+			slide.classList.add(state);
+			if (slide === slides[1]) afterCurrent();
+		}
+
+		/** Loads the photo on screen; everything else waits for it. */
+		function loadCurrent() {
+			load(slides[1]);
+			if (isSettled(slides[1])) afterCurrent();
+		}
+
+		function afterCurrent() {
+			if (!isOpen) return;
+			load(slides[0]);
+			load(slides[2]);
+			pumpStrip();
+		}
+
+		const fillAll = () => {
+			[-1, 0, 1].forEach((d, k) => fill(slides[k], current + d));
+			loadCurrent();
+		};
 
 		function setTrack(offsetPx: number, animate: boolean) {
 			track.classList.toggle("pv-animate", animate && !prefersReducedMotion());
@@ -443,9 +505,13 @@ const { photos, title } = Astro.props;
 			counter.textContent = `${i + 1} / ${n}`;
 			status.textContent = `Φωτογραφία ${i + 1} από ${n}`;
 			original.href = photos[i].src;
-			thumbs.forEach((t, k) => t.setAttribute("aria-current", String(k === i)));
-			const t = thumbs[i];
-			if (t) strip.scrollTo({ left: t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+			stripItems.forEach((t, k) => t.setAttribute("aria-current", String(k === i)));
+			const t = stripItems[i];
+			if (t && isOpen) {
+				const left = clamp(t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, 0, strip.scrollWidth - strip.clientWidth);
+				strip.scrollTo({ left, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+				queueStripWindow(left); // where the strip is heading, not where it is mid-scroll
+			}
 			if (isOpen) history.replaceState(history.state, "", `#foto-${i + 1}`);
 		}
 
@@ -458,6 +524,7 @@ const { photos, title } = Astro.props;
 			finishSlide?.();
 			resetZoom(false);
 			const target = wrap(current + dir);
+			load(dir === 1 ? slides[2] : slides[0]); // normally already loaded; if not, start it during the slide
 			updateChrome(target);
 			let timer = 0;
 			const finish = () => {
@@ -477,6 +544,7 @@ const { photos, title } = Astro.props;
 					fill(slides[0], current - 1);
 				}
 				setTrack(0, false);
+				loadCurrent();
 			};
 			const onEnd = (e: TransitionEvent) => e.target === track && finish();
 			finishSlide = finish;
@@ -521,11 +589,11 @@ const { photos, title } = Astro.props;
 		function geometry() {
 			const box = zoomBox();
 			const slideRect = slides[1].getBoundingClientRect();
-			const [thumb, full] = box.querySelectorAll("img");
+			const img = photoOf(slides[1]);
 			const w = box.clientWidth;
 			const h = box.clientHeight;
-			const nw = full.naturalWidth || thumb.naturalWidth || w;
-			const nh = full.naturalHeight || thumb.naturalHeight || h;
+			const nw = img.naturalWidth || w;
+			const nh = img.naturalHeight || h;
 			const fit = Math.min(w / nw, h / nh);
 			return { cx: slideRect.left + box.offsetLeft + w / 2, cy: slideRect.top + box.offsetTop + h / 2, w, h, pw: nw * fit, ph: nh * fit };
 		}
@@ -714,8 +782,8 @@ const { photos, title } = Astro.props;
 
 		root.addEventListener("click", (e) => {
 			const target = e.target as Element;
-			const thumb = target.closest<HTMLElement>(".pv-thumbBtn");
-			if (thumb) return show(Number(thumb.dataset.index));
+			const item = target.closest<HTMLElement>(".pv-stripItem");
+			if (item) return show(Number(item.dataset.index));
 			switch (target.closest<HTMLElement>("[data-pv]")?.dataset.pv) {
 				case "prev":
 					return go(-1);
@@ -728,7 +796,7 @@ const { photos, title } = Astro.props;
 				case "strip": {
 					const hidden = root.classList.toggle("pv-nostrip");
 					stripBtn.setAttribute("aria-pressed", String(!hidden));
-					return;
+					return pumpStrip();
 				}
 			}
 		});
@@ -764,16 +832,51 @@ const { photos, title } = Astro.props;
 			e.preventDefault();
 		}
 
+		// ---------------- Film strip: real photos, loaded only near the visible part ----------------
+
+		const STRIP_PARALLEL = 3;
+		const stripWaiting = new Set<HTMLButtonElement>(); // in or near view, not requested yet
+		let stripInFlight = 0;
+
+		/** Queues the strip photos in view at `left` (default: where it is now), plus one beyond each edge. */
+		function queueStripWindow(left = strip.scrollLeft) {
+			const margin = stripItems[0]?.offsetWidth ?? 0;
+			for (const item of stripItems) {
+				const near = item.offsetLeft + item.offsetWidth > left - margin && item.offsetLeft < left + strip.clientWidth + margin;
+				if (near && !item.querySelector("img")?.getAttribute("src")) stripWaiting.add(item);
+				else stripWaiting.delete(item);
+			}
+			pumpStrip();
+		}
+		strip.addEventListener("scroll", () => isOpen && queueStripWindow(), { passive: true });
+
+		/** Requests the waiting strip photos closest to the current one, a few at a time, after the main photo. */
+		function pumpStrip() {
+			if (!isOpen || root.classList.contains("pv-nostrip") || !isSettled(slides[1])) return;
+			const byDistance = [...stripWaiting].sort((a, b) => Math.abs(Number(a.dataset.index) - current) - Math.abs(Number(b.dataset.index) - current));
+			for (const item of byDistance) {
+				if (stripInFlight >= STRIP_PARALLEL) break;
+				stripWaiting.delete(item);
+				stripInFlight++;
+				const img = item.querySelector("img") as HTMLImageElement;
+				const done = () => {
+					img.onload = img.onerror = null;
+					stripInFlight--;
+					item.classList.add("pv-in");
+					pumpStrip();
+				};
+				img.onload = done;
+				img.onerror = done;
+				img.src = img.dataset.src as string;
+			}
+		}
+
 		// ---------------- Open / close (with the browser history) ----------------
 
 		function open(index: number, pushHistory: boolean) {
 			if (isOpen) return show(index);
 			isOpen = true;
 			current = wrap(index);
-			thumbs.forEach((t) => {
-				const img = t.querySelector("img") as HTMLImageElement;
-				if (!img.getAttribute("src")) img.src = img.dataset.src as string;
-			});
 			root.classList.remove("hidden", "pv-chromeless");
 			root.style.removeProperty("--pv-fade");
 			setTrack(0, false);
