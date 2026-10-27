@@ -81,6 +81,13 @@
 - Query logging is built-in (`query_logs` writes from `lib/db.ts`); avoid
   bypassing wrappers.
 
+## Public sub-pages and SEO
+
+- Page URLs end with `/` (canonical + 301 in `src/middleware.ts`); sitemaps are only the routes `src/pages/sitemap-*.xml.ts`.
+- `/mathimata/` and `/odigoi/` are preview-only drafts: `draftPagesEnabled()` (`lib/content/drafts.server.ts`, var `DRAFT_PAGES=1` on preview) gates the pages and every link to them.
+- Sub-pages (`src/components/subpages/`): `/kathigites/<slug>/`, `/spoudastiria/<slug>/`, `/mathimata/<course>/`, `/odigoi/<slug>/`; slugs from `lib/utilities/slug.ts`.
+- Teacher bios (`teachers.bio`): 150–200 words, professional facts only, never the whole CV — new teacher: `docs/TEACHER_BIOS.md`. Course/guide copy: `lib/content/*`, claims to verify in `docs/SEO_CONTENT_REVIEW.md`.
+
 ## Env, storage, and external services
 - Server-side env comes from `cloudflare:workers` (`lib/env/runtime.ts`
   bridge); read vars/secrets with `getEnv()` (`lib/env/env.ts`: one memoised

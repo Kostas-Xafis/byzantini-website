@@ -52,7 +52,7 @@ const fileDeleteReq = z.object({
 });
 
 // Columns safe to serve without a session (mirror of z_PublicTeacher): never ΑΜΚΑ, phone or email.
-const publicTeacherColumns = "id, fullname, picture, cv, linktree, gender, title, visible, online";
+const publicTeacherColumns = "id, fullname, picture, cv, linktree, bio, gender, title, visible, online";
 type PublicTeacher = Omit<Teachers, "amka" | "email" | "telephone">;
 
 export const teachersRoutes = {
@@ -122,7 +122,7 @@ export const teachersRoutes = {
 		({ body }) =>
 			handlerResult(async (T) => {
 				const { insertId } = await T.executeQuery(
-					`INSERT INTO teachers (fullname, amka, email, telephone, linktree, gender, title, visible, online) VALUES (???)`,
+					`INSERT INTO teachers (fullname, amka, email, telephone, linktree, bio, gender, title, visible, online) VALUES (???)`,
 					body,
 				);
 				for (const class_id of body.teacherClasses) {
@@ -147,7 +147,7 @@ export const teachersRoutes = {
 	update: new APIServer({ method: "PUT", path: "/teachers", schema: updateReq }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			await T.executeQuery(
-				`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, gender=?, title=?, visible=?, online=? WHERE id=?`,
+				`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, bio=?, gender=?, title=?, visible=?, online=? WHERE id=?`,
 				body,
 			);
 

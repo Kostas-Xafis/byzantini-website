@@ -1,29 +1,34 @@
 ---
 import Icon from "@components/other/Icon.astro";
+
+// No «Μαθήματα» item while the course pages (/mathimata/) are drafts under review (lib/content/drafts.server.ts) — not
+// even on preview, where they are reached by URL. When they are published, add it back after «Η Σχολή μας»:
+// { name: "Μαθήματα", url: "/mathimata/", expand: [{ name: "Όλα τα τμήματα", url: "" }, { name: "Βυζαντινή Μουσική",
+//   url: "vyzantini-mousiki/" }, { name: "Παραδοσιακή Μουσική", url: "paradosiaki-mousiki/" }, { name: "Ευρωπαϊκή Μουσική", url: "evropaiki-mousiki/" }] },
 const links = [
 	{ name: "Αρχική", url: "/" },
 	{
 		name: "Η Σχολή μας",
-		url: "/sxoli",
+		url: "/sxoli/",
 		expand: [
 			{
 				name: "Διοικητικό Συμβούλιο",
-				url: "/dioikitiko-symvoulio",
+				url: "dioikitiko-symvoulio/",
 			},
 			{
 				name: "Ανακοινώσεις",
-				url: "/anakoinoseis",
+				url: "anakoinoseis/",
 			},
 			{
 				name: "Χορωδία",
-				url: "/xorodia",
+				url: "xorodia/",
 			},
 		],
 	},
-	{ name: "Εγγραφές", url: "/eggrafes" },
-	{ name: "Καθηγητές", url: "/kathigites" },
-	{ name: "Σπουδαστήρια", url: "/spoudastiria" },
-	{ name: "Επικοινωνία", url: "/epikoinonia" },
+	{ name: "Εγγραφές", url: "/eggrafes/" },
+	{ name: "Καθηγητές", url: "/kathigites/" },
+	{ name: "Σπουδαστήρια", url: "/spoudastiria/" },
+	{ name: "Επικοινωνία", url: "/epikoinonia/" },
 ];
 
 const highlight = (url: string) => {

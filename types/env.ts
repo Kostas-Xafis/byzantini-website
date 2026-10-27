@@ -26,6 +26,8 @@ export type EnvTypes = {
 	MICROSOFT_TENANT?: string;
 	AUTOMATED_EMAILS_SERVICE_AUTH_TOKEN?: string;
 	PDF_SERVICE_AUTH_TOKEN?: string;
+	/** "1" on the preview worker (set by `scripts/cf.ts deploy:preview`): serve the draft pages (lib/content/drafts.server.ts). Never set in production. */
+	DRAFT_PAGES?: string;
 };
 
 /** `getEnv()` under `bun test` (tests/testHelpers.ts `testEnv`): `process.env` with tests/.env.test loaded, all strings. */

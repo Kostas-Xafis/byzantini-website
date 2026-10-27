@@ -6,15 +6,13 @@ import JsonLd from "@components/seo/JsonLd.astro";
 import Layout from "@layouts/Layout.astro";
 import { breadcrumbsSchema } from "@utilities/schema";
 import { unescapeNewlines } from "@utilities/text";
+import { announcementPath } from "@utilities/announcementUrl";
 export const prerender = false;
 
 const announcements = (await useAPI(API.Announcements.getForPage, undefined, Astro)).data || [];
 
 const imgThumbSrc = (a: PageAnnouncement) => "/anakoinoseis/images/" + a.id + "/thumb_" + a.main_image;
-// Announcement URLs must be safe in every path: stripped commas (cloudflare
-// rejects %2C before the app ever sees it). Kept in sync with the [slug]
-// page, the api lookup and the sitemap generator.
-const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
+const detailHref = (a: PageAnnouncement) => announcementPath(a.title);
 const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
 const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
 
@@ -35,7 +33,7 @@ const excerpt = (content: string, max = 220) => {
 	<JsonLd
 		data={breadcrumbsSchema([
 			{ name: "Αρχική", url: "/" },
-			{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
+			{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis/" },
 		])}
 	/>
 	<main id="announcementsPage" class="w-full h-full overflow-y-auto flex flex-col font-didact gap-y-10 px-10 py-8 max-sm:px-4 max-sm:py-6 max-sm:pb-24">

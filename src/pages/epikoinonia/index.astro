@@ -63,12 +63,12 @@ const faqs = [
 	{
 		q: "Πώς κάνω εγγραφή στη Σχολή;",
 		a: "Οι εγγραφές ολοκληρώνονται ηλεκτρονικά μέσα από τη σελίδα «Εγγραφές» ή με την υποβολή της αίτησης στη γραμματεία της Σχολής. Για αναλυτικές οδηγίες και προθεσμίες επικοινωνήστε μαζί μας τηλεφωνικά ή με e-mail.",
-		link: { name: "Σελίδα Εγγραφών", url: "/eggrafes" },
+		link: { name: "Σελίδα Εγγραφών", url: "/eggrafes/" },
 	},
 	{
 		q: "Πού πραγματοποιούνται τα μαθήματα;",
 		a: "Βασική έδρα είναι ο Ι. Ναός Μεταμορφώσεως του Σωτήρος στη Μεταμόρφωση, ενώ μαθήματα διεξάγονται και στα σπουδαστήρια της Σχολής σε πολλές περιοχές της Αττικής, καθώς και σε συνεργαζόμενες σχολές.",
-		link: { name: "Σπουδαστήρια & Παραρτήματα", url: "/spoudastiria" },
+		link: { name: "Σπουδαστήρια & Παραρτήματα", url: "/spoudastiria/" },
 	},
 	{
 		q: "Ποια τμήματα λειτουργούν στη Σχολή;",
@@ -78,12 +78,12 @@ const faqs = [
 	{
 		q: "Πώς ενημερώνομαι για ανακοινώσεις και εκδηλώσεις;",
 		a: "Όλα τα νέα της Σχολής — εκδηλώσεις, συναυλίες, εξετάσεις και αγιασμοί — αναρτώνται στη σελίδα «Ανακοινώσεις» και στα μέσα κοινωνικής δικτύωσης της Σχολής.",
-		link: { name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
+		link: { name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis/" },
 	},
 	{
 		q: "Υπάρχει χορωδία στη Σχολή;",
 		a: "Ναι, η χορωδία «Άδοντες & Ψάλλοντες» της Σχολής συμμετέχει σε ιερές ακολουθίες, εκδηλώσεις και συναυλίες. Όσοι ενδιαφέρονται μπορούν να δηλώσουν συμμετοχή στη γραμματεία.",
-		link: { name: "Χορωδία", url: "/sxoli/xorodia" },
+		link: { name: "Χορωδία", url: "/sxoli/xorodia/" },
 	},
 ] as const;
 
@@ -104,7 +104,7 @@ const contactPageSchema = {
 	"@context": "https://schema.org",
 	"@type": "ContactPage",
 	name: "Επικοινωνία",
-	url: `${SCHOOL.url}/epikoinonia`,
+	url: `${SCHOOL.url}/epikoinonia/`,
 	description: "Στοιχεία επικοινωνίας της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής Μεταμόρφωσης: τηλέφωνα, e-mail, διεύθυνση, ωράριο και σπουδαστήρια.",
 	inLanguage: "el",
 	mainEntity: { "@id": SCHOOL_ID },
@@ -126,7 +126,7 @@ const contactPageSchema = {
 	<JsonLd
 		data={breadcrumbsSchema([
 			{ name: "Αρχική", url: "/" },
-			{ name: "Επικοινωνία", url: "/epikoinonia" },
+			{ name: "Επικοινωνία", url: "/epikoinonia/" },
 		])}
 	/>
 	<JsonLd data={contactPageSchema} />
@@ -283,7 +283,7 @@ const contactPageSchema = {
 						</li>
 					</ul>
 					<a
-						href="/sxoli/dioikitiko-symvoulio"
+						href="/sxoli/dioikitiko-symvoulio/"
 						class="mt-auto inline-flex w-max items-center gap-2 rounded-full border-2 border-red-900 px-4 py-1.5 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
 						<Icon name="chevrons-right" class="text-sm" />
 						Στοιχεία διοίκησης
@@ -344,7 +344,7 @@ const contactPageSchema = {
 					</p>
 				</div>
 				<a
-					href="/spoudastiria"
+					href="/spoudastiria/"
 					class="shrink-0 inline-flex items-center gap-2 rounded-full border-2 border-red-900 px-6 py-2.5 font-semibold text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50">
 					<Icon name="map-pin" />
 					Όλα τα σπουδαστήρια
@@ -439,7 +439,7 @@ const contactPageSchema = {
 					Στείλτε e-mail
 				</a>
 				<a
-					href="/eggrafes"
+					href="/eggrafes/"
 					class="group/link inline-flex items-center gap-2.5 rounded-full border-2 border-ivory-deep/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-ivory hover:bg-ivory-deep hover:text-red-950 hover:shadow-xl">
 					<Icon name="edit" class="text-ivory-deep transition-colors duration-300 group-hover/link:text-red-950" />
 					Εγγραφές

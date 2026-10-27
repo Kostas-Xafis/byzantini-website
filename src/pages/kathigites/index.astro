@@ -6,6 +6,7 @@ import { API, useAPI } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
 import { THUMB_WIDTHS } from "@lib/bucket/publicFiles";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import { teacherPath, teacherSlugs } from "@utilities/slug";
 import { teacherTitleByGender } from "@utilities/text";
 
 export const prerender = false;
@@ -65,8 +66,9 @@ const musicOnly = [
 	["Ευρωπαϊκής", MusicType.European],
 ] as const;
 
-const imgSrc = "kathigites/picture/";
-const cvSrc = "kathigites/cv/";
+// Root-absolute: the page lives at /kathigites/, so a relative "kathigites/…" would resolve to /kathigites/kathigites/….
+const imgSrc = "/kathigites/picture/";
+const cvSrc = "/kathigites/cv/";
 // Resized photo served by the public catch-all (`?w=`, src/pages/[...slug].ts); encoded so srcset stays parseable.
 const thumbSrc = (picture: string, width: number) => `${imgSrc}${encodeURIComponent(picture)}?w=${width}`;
 const onlineLabel = "Διαδικτυακά Μαθήματα";
@@ -95,10 +97,13 @@ const monogram = (fullname: string) => {
 // Structured data: one ItemList of Person entries (deduplicated by teacher id,
 // a teacher may teach in more than one department).
 const schemaTeachers = [...new Map([...byz_teachers, ...par_teachers, ...eur_teachers].map((t) => [t.id, t])).values()];
+// Each teacher's own page (/kathigites/<slug>/), same slugs as the page route and the sitemap.
+const slugs = teacherSlugs(schemaTeachers);
+const profileHref = (id: number) => teacherPath(slugs.get(id)!);
 const teachersSchema = {
 	"@context": "https://schema.org",
 	"@type": "ItemList",
-	"@id": `${SCHOOL.url}/kathigites#teachers`,
+	"@id": `${SCHOOL.url}/kathigites/#teachers`,
 	name: "Καθηγητές και δάσκαλοι της Σχολής",
 	itemListElement: schemaTeachers.map((teacher, index) => ({
 		"@type": "ListItem",
@@ -106,16 +111,17 @@ const teachersSchema = {
 		item: {
 			"@type": "Person",
 			name: teacher.fullname,
+			url: `${SCHOOL.url}${profileHref(teacher.id)}`,
 			jobTitle: teacherTitleByGender(teacher.title, teacher.gender),
 			...(teacher.linktree ? { sameAs: [teacher.linktree] } : {}),
-			...(teacher.picture ? { image: `${SCHOOL.url}/${imgSrc}${teacher.picture}` } : {}),
+			...(teacher.picture ? { image: `${SCHOOL.url}${imgSrc}${teacher.picture}` } : {}),
 			worksFor: { "@id": SCHOOL_ID },
 		},
 	})),
 };
 const breadcrumbs = breadcrumbsSchema([
 	{ name: "Αρχική", url: "/" },
-	{ name: "Καθηγητές", url: "/kathigites" },
+	{ name: "Καθηγητές", url: "/kathigites/" },
 ]);
 // Accent-insensitive search text for the client-side filter ("Βυζαντινή" matches "βυζαντινη").
 const searchKey = (...parts: string[]) => parts.join(" ").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -216,7 +222,8 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 								.filter((i) => i.teacher_id === teacher.id)
 								?.map((i) => instruments.find((inst) => inst.id === i.instrument_id) as Instruments);
 							const t_instruments = t_instrument_list.map((i) => i.name);
-							if (t_classes_str.includes("Βυζαντινής") && t_classes_str.includes("Παραδοσιακής")) t_instruments?.push("Βυζαντινή Μουσική");
+							// Byzantine music is a department, not an instrument row: show it as a tag for everyone who teaches it.
+							if (t_classes_str.includes("Βυζαντινής") && !t_instruments.includes("Βυζαντινή Μουσική")) t_instruments.push("Βυζαντινή Μουσική");
 							t_instruments?.sort();
 							const showCls =
 								(type === MusicType.Byzantine ? " group-[:is(.byz)]/type:flex" : "") +
@@ -261,7 +268,12 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 										) : null}
 										<div class="absolute inset-x-0 bottom-0 px-4 pb-3.5 max-sm:px-2.5 max-sm:pb-2.5">
 											<h2 class="font-anaktoria font-bold text-[1.4rem] max-sm:text-base leading-tight text-red-50 [word-break:break-word] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-												{teacher.fullname}
+												{/* Stretched over the photo: the whole picture opens the teacher's page. */}
+												<a
+													href={profileHref(teacher.id)}
+													class="text-red-50 decoration-ivory/70 underline-offset-4 after:absolute after:inset-0 hover:underline focus-visible:outline-hidden focus-visible:after:outline-2 focus-visible:after:-outline-offset-4 focus-visible:after:outline-ivory">
+													{teacher.fullname}
+												</a>
 											</h2>
 											<p class="mt-0.5 text-sm max-sm:text-2xs leading-snug text-ivory/90">
 												{teacherTitleByGender(teacher.title, teacher.gender)} {classesStr(t_classes_str)}
@@ -288,8 +300,11 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 												))}
 											</ul>
 										)}
-										{teacher.cv || teacher.linktree ? (
+										{
 											<div class="mt-auto flex flex-wrap gap-2 pt-1 max-sm:gap-1.5">
+												<a href={profileHref(teacher.id)} class="teacher-link">
+													<Icon name="user" /> Προφίλ
+												</a>
 												{teacher.cv ? (
 													<a target="_blank" rel="noopener" href={cvSrc + teacher.cv} class="teacher-link">
 														<Icon name="file-text" /> Βιογραφικό
@@ -301,7 +316,7 @@ const counts = { byz: byz_teachers.length, par: par_teachers.length, eur: eur_te
 													</a>
 												) : null}
 											</div>
-										) : null}
+										}
 									</div>
 								</article>
 							);

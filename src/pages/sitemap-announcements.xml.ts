@@ -1,48 +1,25 @@
 import type { Announcements } from "@_types/entities";
-import { Bucket } from "@lib/bucket";
 import { executeQuery } from "@lib/utils.server";
+import { announcementPath } from "@utilities/announcementUrl";
+import { urlsetXml, xmlResponse } from "@utilities/sitemap";
 import type { APIContext } from "astro";
 
-// Announcements sitemap — same format as the admin-maintained
-// sitemap-announcements.xml, but generated from the database on request so it
-// works in every environment (dev, preview, production). Falls back to
-// the admin-maintained bucket copy when the database is unreachable, and only
-// then to a valid empty urlset (never a 404).
+// One URL per announcement, generated from the database on request (the announcement's own date is its lastmod).
+// If the database is unreachable the answer is a 503 — an empty urlset would tell Google every announcement is gone.
 export const prerender = false;
-
-const XML_HEADERS = {
-	"Content-Type": "application/xml; charset=utf-8",
-	"Cache-Control": "public, max-age=3600",
-};
-
-const xmlEscape = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
 
 export async function GET(ctx: APIContext) {
 	const origin = (ctx.site ?? new URL(ctx.request.url)).origin;
-	let urlsXml = "";
 	try {
-		const announcements = await executeQuery<Announcements>("SELECT id, title, date FROM announcements ORDER BY date DESC");
-		urlsXml = announcements
-			.map((announcement) => {
-				// Announcement URLs drop commas (platform rejects %2C), matching
-				// the list links and the [slug] lookup.
-				const loc = xmlEscape(`${origin}/sxoli/anakoinoseis/${announcement.title.replaceAll(",", "").replaceAll(" ", "%20")}`);
-				return `  <url><loc>${loc}</loc><lastmod>${new Date(announcement.date).toISOString()}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>`;
-			})
-			.join("\n");
+		const announcements = await executeQuery<Pick<Announcements, "title" | "date">>("SELECT title, date FROM announcements ORDER BY date DESC");
+		return xmlResponse(
+			urlsetXml(
+				origin,
+				announcements.map((a) => ({ path: announcementPath(a.title), lastmod: a.date })),
+			),
+		);
 	} catch (error) {
 		console.error("sitemap-announcements: db query failed", error);
-		try {
-			// Secondary source: the admin-maintained bucket copy.
-			const bucketSitemap = await Bucket.get("sitemap-announcements.xml");
-			if (bucketSitemap) {
-				return new Response(await bucketSitemap.arrayBuffer(), { headers: XML_HEADERS });
-			}
-		} catch (bucketError) {
-			console.error("sitemap-announcements: bucket fallback failed", bucketError);
-		}
-		// Last resort: valid empty urlset, never a 404.
+		return new Response("Service Unavailable", { status: 503, headers: { "Retry-After": "300", "Cache-Control": "no-store" } });
 	}
-	const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlsXml}\n</urlset>`;
-	return new Response(xml, { headers: XML_HEADERS });
 }

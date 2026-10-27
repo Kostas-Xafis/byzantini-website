@@ -1,0 +1,260 @@
+---
+// One page per study centre (/spoudastiria/<slug>/): address, contacts, map, what is
+// taught there and by whom. Photos of the centres live at /spoudastiria/<file> too
+// (one path segment, so this route wins over the bucket catch-all) — those requests
+// are handed straight back to the catch-all.
+import Icon from "@components/other/Icon.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import Breadcrumbs from "@components/subpages/Breadcrumbs.astro";
+import CtaBand from "@components/subpages/CtaBand.astro";
+import SubpageShell from "@components/subpages/SubpageShell.astro";
+import TeacherChip from "@components/subpages/TeacherChip.astro";
+import {
+	CLASS_NAME,
+	CLASS_TYPES,
+	departmentHref,
+	classesPhrase,
+	directionsHref,
+	formatAddress,
+	hasValidMap,
+	loadDirectory,
+	locationBadge,
+	locationImage,
+	phonesOf,
+} from "@components/subpages/directory";
+import Layout from "@layouts/Layout.astro";
+import { SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import type { APIContext } from "astro";
+import { GET as servePublicFile } from "../[...slug].ts";
+
+export const prerender = false;
+
+const { slug = "" } = Astro.params;
+if (/\.[a-z0-9]{2,5}$/i.test(slug)) {
+	return servePublicFile({ params: { slug: `spoudastiria/${slug}` }, url: Astro.url, rewrite: (p: string) => Astro.rewrite(p) } as unknown as APIContext);
+}
+
+const { locations, byId } = await loadDirectory(Astro);
+const location = locations.find((l) => l.slug === slug);
+if (!location) return Astro.rewrite("/404");
+
+const url = `${SCHOOL.url}${location.href}`;
+const teachers = location.teacherIds
+	.map((id) => byId.get(id))
+	.filter((t) => !!t)
+	.sort((a, b) => a.fullname.localeCompare(b.fullname, "el"));
+const classes = CLASS_TYPES.filter((c) => teachers.some((t) => t.classes.includes(c)));
+const subjects = [...new Set(teachers.flatMap((t) => t.instruments.map((i) => i.name)))].sort((a, b) => a.localeCompare(b, "el"));
+const phones = phonesOf(location);
+const badge = locationBadge(location);
+const address = formatAddress(location);
+const image = location.image ? locationImage(location.image) : undefined;
+const others = locations.filter((l) => l.id !== location.id);
+
+const title = `${location.name} – Μαθήματα Μουσικής`;
+const description = (() => {
+	const what = classes.length ? `Μαθήματα ${classesPhrase(classes)}` : "Μαθήματα μουσικής";
+	const text = `${what} στο ${badge === "Έδρα Σχολής" ? "κεντρικό σπουδαστήριο" : "σπουδαστήριο"} ${location.name}, ${address}. Καθηγητές, τηλέφωνα, χάρτης και εγγραφές.`;
+	return text.length <= 160 ? text : text.slice(0, 157).replace(/\s+\S*$/, "") + "…";
+})();
+
+const placeSchema = {
+	"@context": "https://schema.org",
+	"@type": "Place",
+	"@id": `${url}#place`,
+	name: location.name,
+	url,
+	address: {
+		"@type": "PostalAddress",
+		streetAddress: location.address.trim(),
+		...(location.areacode > 0 ? { postalCode: String(location.areacode) } : {}),
+		addressLocality: location.municipality.trim(),
+		addressCountry: "GR",
+	},
+	...(phones.length ? { telephone: phones } : {}),
+	...(image ? { image: `${SCHOOL.url}${image}` } : {}),
+	...(hasValidMap(location) ? { hasMap: location.map } : {}),
+	...(location.partner ? {} : { containedInPlace: { "@id": SCHOOL_ID } }),
+};
+const pill =
+	"inline-flex items-center gap-2 rounded-full px-4 py-2 text-base max-sm:text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900";
+---
+
+<Layout title={title} description={description} imageUrl={image}>
+	<JsonLd data={placeSchema} />
+	<SubpageShell>
+		<Breadcrumbs
+			items={[
+				{ name: "Αρχική", url: "/" },
+				{ name: "Σπουδαστήρια", url: "/spoudastiria/" },
+				{ name: location.name, url: location.href },
+			]}
+		/>
+
+		<!-- Φωτογραφία + στοιχεία -->
+		<section class="grid gap-8 max-sm:gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-stretch">
+			<div
+				class="relative min-h-72 max-sm:min-h-56 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] ring-1 ring-red-900/15 shadow-[0_22px_48px_-22px_rgba(69,10,10,0.55)]">
+				{
+					image ? (
+						<img src={image} alt={location.name} fetchpriority="high" class="absolute inset-0 h-full w-full object-cover" />
+					) : (
+						<span class="absolute inset-0 grid place-items-center text-ivory/40">
+							<Icon name="church" class="text-8xl" />
+						</span>
+					)
+				}
+				<span
+					class="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-ivory/95 px-3 py-1 text-sm font-bold text-red-900 shadow-sm backdrop-blur-sm">
+					<Icon name={location.partner ? "handshake" : "church"} />
+					{badge}
+				</span>
+			</div>
+
+			<div class="flex flex-col gap-y-5 rounded-2xl bg-white p-8 max-sm:p-5 ring-1 ring-red-900/10 shadow-[0_18px_50px_-24px_rgba(69,10,10,0.35)]">
+				<h1
+					class="font-anaktoria font-bold text-[clamp(1.9rem,2.8vw,2.75rem)] max-sm:text-[1.65rem] leading-tight text-red-900 text-balance [word-break:break-word]">
+					{location.name}
+				</h1>
+				{
+					classes.length > 0 && (
+						<ul class="flex flex-wrap gap-2" aria-label="Τμήματα">
+							{classes.map((c) => (
+								<li>
+									<a href={departmentHref(c)} class={pill + " bg-red-900 py-1! text-sm! text-red-50 hover:bg-red-950"}>
+										<Icon name={c === "byz" ? "church" : c === "par" ? "guitar" : "music"} class="text-ivory-deep" />
+										{CLASS_NAME[c]}
+									</a>
+								</li>
+							))}
+						</ul>
+					)
+				}
+				<dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+					<div class="flex flex-col gap-y-1 sm:col-span-2">
+						<dt class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Διεύθυνση</dt>
+						<dd class="flex items-start gap-2 text-lg max-sm:text-base text-red-950">
+							<Icon name="map-pin" class="mt-1 shrink-0 text-red-900/70" />
+							{address}
+						</dd>
+					</div>
+					{
+						location.manager?.trim() && (
+							<div class="flex flex-col gap-y-1">
+								<dt class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Υπεύθυνος</dt>
+								<dd class="text-base text-red-950">{location.manager}</dd>
+							</div>
+						)
+					}
+					{
+						location.email && (
+							<div class="flex flex-col gap-y-1 min-w-0">
+								<dt class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">Email</dt>
+								<dd class="text-base">
+									<a
+										href={"mailto:" + location.email}
+										class="break-all text-red-900 underline decoration-red-900/30 underline-offset-2 hover:decoration-red-900">
+										{location.email}
+									</a>
+								</dd>
+							</div>
+						)
+					}
+				</dl>
+				<div class="mt-auto flex flex-wrap gap-2.5 pt-2">
+					{
+						phones.map((phone) => (
+							<a href={"tel:" + phone.replace(/\s+/g, "")} class={pill + " bg-red-50 text-red-900 ring-1 ring-red-900/15 hover:bg-red-100"}>
+								<Icon name="phone" /> {phone}
+							</a>
+						))
+					}
+					<a
+						href={directionsHref(location)}
+						target="_blank"
+						rel="noopener"
+						class={pill + " bg-red-900 text-red-50 shadow-md shadow-red-900/30 hover:bg-red-950"}>
+						<Icon name="directions" /> Οδηγίες
+					</a>
+				</div>
+			</div>
+		</section>
+
+		{
+			(subjects.length > 0 || hasValidMap(location)) && (
+				<section class="grid gap-8 max-sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+					<div class="flex flex-col gap-y-4">
+						<h2 class="sub-heading">Τι διδάσκεται εδώ</h2>
+						{classes.length > 0 && (
+							<p class="sub-prose">
+								Στο σπουδαστήριο λειτουργούν μαθήματα {classesPhrase(classes)}
+								{teachers.length > 0 && <Fragment>, με {teachers.length === 1 ? "έναν καθηγητή" : `${teachers.length} καθηγητές`}</Fragment>}.
+								Για το ωράριο των τμημάτων επικοινωνήστε με τη γραμματεία της Σχολής.
+							</p>
+						)}
+						{subjects.length > 0 && (
+							<ul class="flex flex-wrap gap-2">
+								{subjects.map((s) => (
+									<li class="rounded-full bg-white px-4 py-1.5 text-base max-sm:text-sm font-medium text-red-900 ring-1 ring-red-900/15 shadow-sm shadow-red-950/5">
+										{s}
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+					{hasValidMap(location) && (
+						<div class="min-h-80 max-sm:min-h-64 overflow-hidden rounded-2xl ring-1 ring-red-900/15 shadow-[0_18px_50px_-24px_rgba(69,10,10,0.35)]">
+							<iframe
+								src={location.map}
+								title={"Χάρτης: " + location.name}
+								loading="lazy"
+								referrerpolicy="no-referrer-when-downgrade"
+								allowfullscreen
+								class="h-full min-h-80 max-sm:min-h-64 w-full border-0"
+							/>
+						</div>
+					)}
+				</section>
+			)
+		}
+
+		{
+			teachers.length > 0 && (
+				<section aria-labelledby="teachers-title" class="flex flex-col gap-y-4">
+					<h2 id="teachers-title" class="sub-heading">
+						Καθηγητές του σπουδαστηρίου
+					</h2>
+					<div class="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))]">
+						{teachers.map((t) => (
+							<TeacherChip teacher={t} />
+						))}
+					</div>
+				</section>
+			)
+		}
+
+		{
+			others.length > 0 && (
+				<section aria-labelledby="others-title" class="flex flex-col gap-y-4">
+					<h2 id="others-title" class="sub-heading">
+						Άλλα σπουδαστήρια
+					</h2>
+					<ul class="flex flex-wrap gap-2">
+						{others.map((l) => (
+							<li>
+								<a
+									href={l.href}
+									class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-red-950 ring-1 ring-red-900/15 shadow-sm shadow-red-950/5 transition-colors hover:bg-red-900 hover:text-red-50">
+									<Icon name="map-pin" class="text-[0.9em] opacity-70" />
+									{l.name}
+								</a>
+							</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
+
+		<CtaBand title="Εγγραφή στη Σχολή" />
+	</SubpageShell>
+</Layout>

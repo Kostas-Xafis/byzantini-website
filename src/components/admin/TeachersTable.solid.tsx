@@ -17,7 +17,7 @@ import { INSTRUMENTS_PREFIX, PREFIX, type TeacherJoins } from "./controls/Teache
 import { toggleCheckboxes } from "./table/Row.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 
-type TeachersTableType = Omit<FullTeachers, "instruments"> & {
+type TeachersTableType = Omit<FullTeachers, "instruments" | "bio"> & {
 	priority_byz: number;
 	priority_par: number;
 	priority_eur: number;

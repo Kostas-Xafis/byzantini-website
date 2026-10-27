@@ -1,0 +1,115 @@
+---
+// Guides (/odigoi/<slug>/): evergreen articles for people taking their first steps
+// (lib/content/guides.ts). Server-rendered only because they are preview-only drafts for now.
+import Icon from "@components/other/Icon.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import Breadcrumbs from "@components/subpages/Breadcrumbs.astro";
+import ContentSections from "@components/subpages/ContentSections.astro";
+import CtaBand from "@components/subpages/CtaBand.astro";
+import FaqList from "@components/subpages/FaqList.astro";
+import LinkCard from "@components/subpages/LinkCard.astro";
+import PageHero from "@components/subpages/PageHero.astro";
+import SubpageShell from "@components/subpages/SubpageShell.astro";
+import Toc from "@components/subpages/Toc.astro";
+import { COURSE_LOOK, coursePath, guidePath } from "@components/subpages/courseMeta";
+import DraftNotice from "@components/subpages/DraftNotice.astro";
+import Layout from "@layouts/Layout.astro";
+import { draftPagesEnabled } from "@lib/content/drafts.server";
+import { COURSES } from "@lib/content/courses";
+import { GUIDES } from "@lib/content/guides";
+import { plainInline } from "@lib/content/inline";
+import { SCHOOL, SCHOOL_ID } from "@utilities/schema";
+
+export const prerender = false;
+
+// Draft under review: preview only (lib/content/drafts.server.ts).
+if (!draftPagesEnabled()) return Astro.rewrite("/404");
+const guide = GUIDES.find((g) => g.slug === Astro.params.slug);
+if (!guide) return Astro.rewrite("/404");
+const url = `${SCHOOL.url}${guidePath(guide.slug)}`;
+const updated = new Date(guide.updated);
+const updatedLabel = updated.toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+const others = GUIDES.filter((g) => g.slug !== guide.slug);
+const toc = [...guide.sections.map((s) => ({ id: s.id, label: s.heading })), ...(guide.faq?.length ? [{ id: "faq", label: "Συχνές ερωτήσεις" }] : [])];
+
+const articleSchema = {
+	"@context": "https://schema.org",
+	"@type": "Article",
+	"@id": `${url}#article`,
+	headline: guide.title,
+	description: guide.description,
+	inLanguage: "el",
+	url,
+	mainEntityOfPage: url,
+	dateModified: guide.updated,
+	image: `${SCHOOL.url}/og-image.jpg`,
+	author: { "@id": SCHOOL_ID },
+	publisher: { "@id": SCHOOL_ID },
+};
+---
+
+<Layout noindex title={guide.seoTitle} description={guide.description}>
+	<JsonLd data={articleSchema} />
+	<SubpageShell>
+		<DraftNotice />
+		<Breadcrumbs
+			items={[
+				{ name: "Αρχική", url: "/" },
+				{ name: "Οδηγοί", url: "/odigoi/" },
+				{ name: guide.title, url: guidePath(guide.slug) },
+			]}
+		/>
+		<PageHero eyebrow="Οδηγός" title={guide.title} lead={plainInline(guide.lead)} image="/byz.jpg">
+			<p class="flex items-center gap-1.5 pt-1 text-sm text-red-100/80">
+				<Icon name="calendar" /> Ενημερώθηκε: <time datetime={guide.updated}>{updatedLabel}</time>
+			</p>
+		</PageHero>
+
+		<div class="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
+			<Toc items={toc} />
+			<div class="flex min-w-0 flex-col gap-y-12 max-sm:gap-y-9">
+				<ContentSections sections={guide.sections} />
+				{guide.faq && <FaqList items={guide.faq} />}
+			</div>
+		</div>
+
+		{
+			guide.related.length > 0 && (
+				<section aria-labelledby="related-title" class="flex flex-col gap-y-4">
+					<h2 id="related-title" class="sub-heading">
+						Τα μαθήματα της Σχολής
+					</h2>
+					<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						{guide.related.map((s) => (
+							<LinkCard
+								href={coursePath(s)}
+								title={COURSES[s].title}
+								text={COURSES[s].description}
+								eyebrow={COURSE_LOOK[s].short}
+								icon={COURSE_LOOK[s].icon}
+								image={COURSE_LOOK[s].image}
+							/>
+						))}
+					</div>
+				</section>
+			)
+		}
+
+		{
+			others.length > 0 && (
+				<section aria-labelledby="more-title" class="flex flex-col gap-y-4">
+					<h2 id="more-title" class="sub-heading">
+						Περισσότεροι οδηγοί
+					</h2>
+					<div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+						{others.map((g) => (
+							<LinkCard href={guidePath(g.slug)} title={g.title} text={g.description} eyebrow="Οδηγός" icon="book" />
+						))}
+					</div>
+				</section>
+			)
+		}
+
+		<CtaBand />
+	</SubpageShell>
+</Layout>

@@ -394,6 +394,55 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   `MICROSOFT_CLIENT_ID/SECRET` (+ optional `MICROSOFT_TENANT`, default
   `common`).
 
+## Public sub-pages and SEO
+
+- **URLs end with a slash.** Every public HTML page's canonical form is
+  `/path/` (`Links.astro` normalises canonical/`og:url`); `src/middleware.ts`
+  301s GET/HEAD page requests without it (`lib/utilities/trailingSlash.ts` —
+  not `/api`, `/admin`, `/login`, `/oauth2callback`, `/unsubscribe` or paths
+  with a file extension). Prerendered pages get Cloudflare's own 307. Write
+  internal links with the slash. Old announcement URLs (e.g. with commas) 301
+  to `announcementPath` (`lib/utilities/announcementUrl.ts`).
+- **Sitemaps are the dynamic routes only** (`src/pages/sitemap-*.xml.ts`,
+  helpers `lib/utilities/sitemap.ts`): `sitemap-0.xml` lists the static pages,
+  the course pages and guides, one URL per visible teacher and per study
+  centre; announcements have their own. A new public page goes into
+  `PUBLIC_PAGES` there. `lastmod` only where a real date exists.
+- **Sub-pages** (shared parts in `src/components/subpages/`, one data loader
+  `directory.ts`): `/kathigites/<slug>/` (teacher: short bio, subjects, study
+  centres, colleagues; `ProfilePage`), `/spoudastiria/<slug>/` (study centre;
+  `Place`), `/mathimata/` + `/mathimata/<course>/` (departments; `Course`,
+  `FAQPage`), `/odigoi/` + `/odigoi/<slug>/` (prerendered guides; `Article`).
+  Slugs are Greek→Latin from the name (`lib/utilities/slug.ts`; a repeated
+  name gets `-<id>`), never stored — renaming a teacher or centre changes its
+  URL. `/spoudastiria/[slug].astro` also receives the centres' photos
+  (`/spoudastiria/<file>`) and hands them back to the bucket catch-all.
+- **Teacher bios** (`teachers.bio`, migration 0009; admin field «Σύντομο
+  βιογραφικό»): 150–200 words of professional facts only — never the whole CV
+  and nothing personal (owner's privacy rule). The CV PDFs answer with
+  `Link: <…/kathigites/<slug>/>; rel="canonical"` (`lib/bucket/cvCanonical.ts`).
+  Initial bios: `scripts/data/teacherBios.json` + `scripts/teacherBios.ts`.
+  **A new teacher needs a bio? Follow `docs/TEACHER_BIOS.md`** (rules, style,
+  steps; `--only <id>`, production SQL only fills an empty bio).
+- **The course pages and guides are drafts — preview only** until the school
+  signs off the copy (`docs/SEO_CONTENT_REVIEW.md`): `draftPagesEnabled()`
+  (`lib/content/drafts.server.ts`) is true in local dev and on the preview
+  worker (`scripts/cf.ts deploy:preview` sets the var `DRAFT_PAGES=1`), false in
+  production. Preview and production deploy the **same build**, so the gate is
+  runtime: those pages are server-rendered and answer 404 in production
+  (`noindex` + a «Πρόχειρη σελίδα» banner on preview), and every link to them
+  checks it — the department pills
+  (`departmentHref`, else the `/kathigites/#<τμήμα>` tab), the sitemap entries;
+  the prerendered homepage cards and `public/llms.txt` leave them out, and the
+  navbar has no «Μαθήματα» item at all, not even on preview. To publish: remove
+  the gate and its uses, re-add the llms.txt entries and the navbar item
+  (kept as a comment in `Navbar.astro`).
+- **Editorial copy** for the course pages and guides lives in
+  `lib/content/courses.ts` / `guides.ts` (shapes in `types.ts`; inline marks
+  `**bold**` and `[label](/path/)` only, rendered by `lib/content/inline.ts`).
+  School-specific claims are listed for the school to verify in
+  `docs/SEO_CONTENT_REVIEW.md` — keep it in step when the copy changes.
+
 ## Env, storage and external services
 
 - Server-side env comes from the `cloudflare:workers` env module

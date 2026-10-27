@@ -1,0 +1,43 @@
+---
+// /odigoi/: index of the guides.
+import Breadcrumbs from "@components/subpages/Breadcrumbs.astro";
+import CtaBand from "@components/subpages/CtaBand.astro";
+import LinkCard from "@components/subpages/LinkCard.astro";
+import PageHero from "@components/subpages/PageHero.astro";
+import SubpageShell from "@components/subpages/SubpageShell.astro";
+import { guidePath } from "@components/subpages/courseMeta";
+import DraftNotice from "@components/subpages/DraftNotice.astro";
+import Layout from "@layouts/Layout.astro";
+import { draftPagesEnabled } from "@lib/content/drafts.server";
+import { GUIDES } from "@lib/content/guides";
+
+export const prerender = false;
+
+// Draft under review: preview only (lib/content/drafts.server.ts).
+if (!draftPagesEnabled()) return Astro.rewrite("/404");
+---
+
+<Layout
+	noindex
+	title="Οδηγοί Βυζαντινής Μουσικής"
+	description="Οδηγοί της Σχολής Βυζαντινής & Παραδοσιακής Μουσικής για όσους ξεκινούν: πώς αρχίζει κανείς τη ψαλτική, οι οκτώ ήχοι, το πτυχίο και το δίπλωμα βυζαντινής μουσικής.">
+	<SubpageShell width="narrow">
+		<DraftNotice />
+		<Breadcrumbs
+			items={[
+				{ name: "Αρχική", url: "/" },
+				{ name: "Οδηγοί", url: "/odigoi/" },
+			]}
+		/>
+		<PageHero
+			eyebrow="Για νέους μαθητές"
+			title="Οδηγοί Βυζαντινής Μουσικής"
+			lead="Σύντομα κείμενα της Σχολής για όσους κάνουν τα πρώτα τους βήματα στη βυζαντινή μουσική και για τους γονείς τους."
+			image="/byz.jpg"
+		/>
+		<div class="grid gap-5 sm:grid-cols-2">
+			{GUIDES.map((g) => <LinkCard href={guidePath(g.slug)} title={g.title} text={g.description} eyebrow="Οδηγός" icon="book" />)}
+		</div>
+		<CtaBand />
+	</SubpageShell>
+</Layout>

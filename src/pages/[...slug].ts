@@ -1,6 +1,9 @@
 import { Bucket } from "@lib/bucket";
+import { canonicalLinkHeader, CV_PREFIX, cvCanonicalPath, type CvTeacher } from "@lib/bucket/cvCanonical";
 import { isInlineType, isPublicBucketKey, isThumbSourceType, thumbnailKey, thumbnailWidth } from "@lib/bucket/publicFiles";
 import { resizeImageToWidth } from "@lib/images";
+import { executeQuery } from "@lib/utils.server";
+import { SCHOOL } from "@utilities/schema";
 import type { APIContext } from "astro";
 export const prerender = false;
 
@@ -40,9 +43,22 @@ export async function GET(ctx: APIContext) {
 			headers.set("Content-Disposition", "attachment");
 			headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
 		}
+		// Always the production origin, like every other canonical/JSON-LD URL (endpoints get no `ctx.site` on the worker).
+		if (url.startsWith(CV_PREFIX)) await setCvCanonical(headers, url, SCHOOL.url);
 		return new Response(await file.arrayBuffer(), { status: 200, headers });
 	} catch {
 		return ctx.rewrite("/404");
+	}
+}
+
+/** A teacher's CV PDF names the teacher's page as its canonical URL. Best effort: a failed lookup never breaks the PDF. */
+async function setCvCanonical(headers: Headers, key: string, origin: string) {
+	try {
+		const teachers = await executeQuery<CvTeacher>("SELECT id, fullname, cv FROM teachers WHERE visible = 1");
+		const path = cvCanonicalPath(key, teachers);
+		if (path) headers.set("Link", canonicalLinkHeader(path, origin));
+	} catch (error) {
+		console.warn("CV canonical lookup failed for", key, error);
 	}
 }
 

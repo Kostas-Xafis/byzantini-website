@@ -141,6 +141,13 @@ export const z_Teachers = z.object({
 		.nullable()
 		.transform((v) => v ?? undefined)
 		.optional(),
+	/** Short public biography (150-200 words of professional facts), shown on the teacher's page. */
+	bio: z
+		.string("Μη έγκυρο σύντομο βιογραφικό")
+		.max(3000, "Το σύντομο βιογραφικό είναι πολύ μεγάλο")
+		.nullable()
+		.transform((v) => v || undefined)
+		.optional(),
 	gender: z.union([z.literal("M"), z.literal("F")], { message: "Μη έγκυρο φύλο" }),
 	title: z.union([z.literal(0), z.literal(1), z.literal(2)], { message: "Μη έγκυρος τίτλος δασκάλου" }), // 0: Καθηγητής, 1: Δάσκαλος, 2: Επιμελητής
 	visible: looseBoolean("Μη έγκυρη ορατότητα"),
@@ -154,6 +161,7 @@ export const z_PublicTeacher = z_Teachers.pick({
 	picture: true,
 	cv: true,
 	linktree: true,
+	bio: true,
 	gender: true,
 	title: true,
 	visible: true,

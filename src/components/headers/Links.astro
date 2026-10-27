@@ -2,6 +2,7 @@
 import "../../styles/global.css";
 import { isProduction } from "@lib/utils.server.ts";
 import { DEVELOPER } from "@utilities/schema";
+import { canonicalPath } from "@utilities/trailingSlash";
 import { SEO } from "astro-seo";
 
 export interface Props {
@@ -21,8 +22,14 @@ const SITE_URL = (Astro.site ?? new URL(Astro.request.url)).origin;
 // reuse the same composed title for consistency.
 const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
 const pageDescription = description || "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Ι.Ν. Μεταμορφώσεως του Σωτήρος, Δήμου Μεταμορφώσεως";
-// Canonical is the clean URL: no query strings (?regid=…) and no fragments.
-const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE_URL).href;
+// Canonical is the clean URL: no query strings (?regid=…), no fragments, and — like every public page — a trailing
+// slash (files such as /logo.png keep theirs; see lib/utilities/trailingSlash.ts). A `canonical` override gets the same treatment.
+const canonicalUrl = (() => {
+	const url = new URL(canonical || Astro.url.pathname, SITE_URL);
+	url.pathname = canonicalPath(url.pathname);
+	if (canonical) url.hash = "";
+	return url.href;
+})();
 
 // Default social share image (1200x630) unless the page provides its own.
 const defaultShareImage = {

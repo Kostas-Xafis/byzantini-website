@@ -1,0 +1,15 @@
+---
+// Banner on the draft pages (lib/content/drafts.server.ts): they are visible only on the preview site,
+// for the school to review before they go public.
+import Icon from "@components/other/Icon.astro";
+---
+
+<aside
+	role="note"
+	class="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3.5 text-amber-950 shadow-sm max-sm:px-4 max-sm:text-sm">
+	<Icon name="warning" class="mt-0.5 shrink-0 text-lg text-amber-600" />
+	<p class="leading-relaxed text-amber-950">
+		<strong class="font-semibold">Πρόχειρη σελίδα, υπό έλεγχο.</strong> Εμφανίζεται μόνο στη δοκιμαστική έκδοση του ιστοτόπου, ώστε η Σχολή να ελέγξει και να
+		διορθώσει το περιεχόμενο πριν δημοσιευτεί.
+	</p>
+</aside>

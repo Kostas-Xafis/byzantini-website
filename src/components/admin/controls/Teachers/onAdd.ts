@@ -28,6 +28,7 @@ export const onAdd = function (hydrate: CacheMutationsReturnType, store: Partial
 				email: fd.string("email"),
 				telephone: fd.string("telephone"),
 				linktree: fd.string("linktree"),
+				bio: fd.string("bio", ""),
 				gender: fd.multiSelect("gender", "boolean", { single: true }) ? "F" : "M",
 				title: fd.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
 				visible: fd.multiSelect("visible", "boolean", { single: true }),

@@ -1,0 +1,45 @@
+---
+// "Σε αυτή τη σελίδα": sticky in-page navigation beside long content (desktop only;
+// on smaller screens the sections simply follow one another).
+export interface Props {
+	items: { id: string; label: string }[];
+}
+const { items } = Astro.props;
+---
+
+<nav aria-label="Σε αυτή τη σελίδα" class="max-lg:hidden">
+	<div class="sticky top-6 flex flex-col gap-y-3 rounded-2xl bg-white/70 p-5 ring-1 ring-red-900/10 backdrop-blur-sm">
+		<p class="text-xs font-semibold uppercase tracking-[0.14em] text-red-900/60">Σε αυτή τη σελίδα</p>
+		<ol class="flex flex-col gap-y-0.5 border-l-2 border-red-900/10">
+			{
+				items.map((item) => (
+					<li>
+						<a
+							href={"#" + item.id}
+							class="toc-link -ml-0.5 block border-l-2 border-transparent py-1.5 pl-3.5 text-[0.9375rem] leading-snug text-neutral-600 transition-colors hover:border-red-900/40 hover:text-red-900 data-active:border-red-900 data-active:font-semibold data-active:text-red-900">
+							{item.label}
+						</a>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+</nav>
+
+<script>
+	// Highlights the section currently in view.
+	const links = [...document.querySelectorAll<HTMLAnchorElement>(".toc-link")];
+	const targets = links.map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1)))).filter((el): el is HTMLElement => !!el);
+	if (targets.length && "IntersectionObserver" in window) {
+		const visible = new Set<string>();
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id);
+				const current = targets.find((t) => visible.has(t.id))?.id;
+				if (current) links.forEach((a) => a.toggleAttribute("data-active", a.hash === "#" + current));
+			},
+			{ rootMargin: "-10% 0px -65% 0px" },
+		);
+		targets.forEach((t) => observer.observe(t));
+	}
+</script>

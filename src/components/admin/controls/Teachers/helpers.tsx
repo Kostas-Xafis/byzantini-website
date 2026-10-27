@@ -4,6 +4,8 @@ import { filePreviewImage } from "@components/input/filePreview";
 import { FileHandler, FileProxy } from "@lib/fileHandling.client";
 import { API } from "@routes/index.client";
 import { type Props as InputProps } from "../../../input/Input.solid";
+import { createComponent } from "solid-js";
+import { TeacherBioField } from "./TeacherBioField.solid";
 
 export type TeachersMetadata = { teacher_id: number; type: "cv" | "picture" };
 
@@ -194,6 +196,12 @@ export const TeachersInputs = (
 			label: "Σύνδεσμος",
 			type: "text",
 			icon: "link",
+		},
+		bio: {
+			name: "bio",
+			label: "Σύντομο βιογραφικό",
+			type: "custom",
+			render: () => createComponent(TeacherBioField, { value: teacher?.bio }),
 		},
 		visible: {
 			name: "visible",
