@@ -1,7 +1,7 @@
 /**
  * Framework-agnostic accessible-dialog helpers, shared by the Solid `Dialog`
  * component (src/components/other/Dialog.solid.tsx), the legacy Popup and the
- * Astro `<script>` dialogs (announcement carousel, spoudastiria).
+ * Astro `<script>` dialogs (announcement photo viewer, spoudastiria).
  *
  * `trapFocus(panel, opts)` gives an already-visible dialog panel:
  *  - `role="dialog"` + `aria-modal="true"` (unless the caller set a role),

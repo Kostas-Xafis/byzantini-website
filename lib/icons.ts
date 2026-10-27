@@ -119,6 +119,8 @@ export const ICONS = {
 	pen: `<path d="m15.5 4.5 4 4-11 11-5 1 1-5z"/><path d="m13.5 6.5 4 4"/>`,
 	trash: `<path d="M4 6.5h16M9.5 6.5v-2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2"/><path d="m6 6.5 1 13a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5l1-13"/><path d="M10 10.5v6M14 10.5v6"/>`,
 	search: `<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>`,
+	"zoom-in": `<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"/>`,
+	"zoom-out": `<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M7.5 10.5h6"/>`,
 	download: `<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M4.5 19.5h15"/>`,
 	"cloud-download": `<path d="M7.5 17.5h-1a4 4 0 0 1-.5-7.97 6 6 0 0 1 11.6-1.5A4.5 4.5 0 0 1 17.5 17h-1"/><path d="M12 11v9M9 17l3 3 3-3"/>`,
 	printer: `<path d="M7 9V3.5h10V9"/><path d="M7 17.5H5a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4.5a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v7H7z"/>`,

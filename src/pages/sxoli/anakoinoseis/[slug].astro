@@ -3,6 +3,7 @@ import Icon from "@components/other/Icon.astro";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
 import JsonLd from "@components/seo/JsonLd.astro";
 import Spinner from "@components/other/Spinner.astro";
+import PhotoViewer from "@components/other/PhotoViewer.astro";
 import Layout from "@layouts/Layout.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
@@ -63,6 +64,44 @@ const links = announcement.links
 // The server wraps bare URLs in <a href='...'>...</a> when saving; render them as
 // real links without using set:html (content stays text, only links become anchors).
 const contentAnchorPattern = /<a href='([^']+)'>([^<]*)<\/a>/g;
+type Segment = { text: string; href?: string };
+const toSegments = (line: string): Segment[] => {
+	const parts = line.split(contentAnchorPattern); // [text, href, label, text, ...]
+	const segments: Segment[] = [];
+	for (let i = 0; i < parts.length; i += 3) {
+		if (parts[i]) segments.push({ text: parts[i] });
+		if (i + 1 < parts.length) segments.push({ href: parts[i + 1], text: parts[i + 2] });
+	}
+	return segments;
+};
+
+// The editor is plain text: consecutive lines starting with a dash ("- Νίκη Κεραμέως…")
+// are the secretaries' lists, so they render as one <ul> instead of dashed paragraphs.
+const LIST_ITEM = /^[-–•]\s*/;
+type Block = { kind: "p"; segments: Segment[] } | { kind: "ul"; items: Segment[][] };
+const blocks: Block[] = [];
+for (const p of paragraphs) {
+	if (LIST_ITEM.test(p)) {
+		const item = toSegments(p.replace(LIST_ITEM, ""));
+		const last = blocks.at(-1);
+		if (last?.kind === "ul") last.items.push(item);
+		else blocks.push({ kind: "ul", items: [item] });
+	} else {
+		blocks.push({ kind: "p", segments: toSegments(p) });
+	}
+}
+// A drop cap only suits a real opening paragraph, not a one-line note or a link.
+const leadHasDropCap = blocks[0]?.kind === "p" && !blocks[0].segments[0]?.href && paragraphs[0].length >= 100;
+
+// Photos: a strip right after the lead breaks up the text; the full gallery follows
+// the article. Up to 4 photos the strip is the whole gallery, so it isn't repeated.
+const photos = announcement.images;
+const STRIP_SIZE = 4;
+const showStrip = photos.length > 0 && blocks.length > 1;
+const showGallery = photos.length > 0 && !(showStrip && photos.length <= STRIP_SIZE);
+const stripPhotos = photos.length <= STRIP_SIZE ? photos : photos.slice(0, STRIP_SIZE);
+const morePhotos = photos.length - STRIP_SIZE + 1; // shown on the last strip tile ("+N")
+const stripAspect = stripPhotos.length === 1 ? "aspect-video" : stripPhotos.length === 2 ? "aspect-4/3" : "aspect-square sm:aspect-4/3";
 
 // Meta description: first ~155 characters of the announcement text.
 const announcementDescription = paragraphs
@@ -109,6 +148,21 @@ const videoSchemas = links
 		publisher: { "@type": "Organization", "@id": SCHOOL_ID },
 		inLanguage: "el-GR",
 	}));
+
+// Older / newer announcement for the footer (the list is newest first). Optional:
+// a failure here only hides the links, never the announcement.
+const allAnnouncements = await useAPI(API.Announcements.getForPage, undefined, Astro)
+	.then((res) => res.data || [])
+	.catch(() => []);
+const index = allAnnouncements.findIndex((a) => a.id === announcement.id);
+const newer = index > 0 ? allAnnouncements[index - 1] : undefined;
+const older = index >= 0 ? allAnnouncements[index + 1] : undefined;
+// Kept in sync with the list page, the api lookup and the sitemap generator.
+const detailHref = (a: { title: string }) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
+const neighbours = [
+	older && { a: older, label: "Παλαιότερη", icon: "arrow-left" as const, align: "" },
+	newer && { a: newer, label: "Νεότερη", icon: "arrow-right" as const, align: "sm:col-start-2 sm:flex-row-reverse sm:text-right" },
+].filter((n) => !!n);
 ---
 
 <Layout title={announcement.title} description={announcementDescription} imageUrl={imgThumbSrc + mainImg.name}>
@@ -130,121 +184,223 @@ const videoSchemas = links
 	<section
 		id="announcementSection"
 		data-announcement-id={announcement.id}
-		class="relative flex flex-col items-center gap-y-6 overflow-auto px-10 py-10 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
-		<a
-			href="/sxoli/anakoinoseis"
-			class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
-			<Icon name="arrow-left" />
-			Οι Ανακοινώσεις
-		</a>
+		class="relative flex flex-col items-center overflow-auto px-10 py-10 max-sm:px-4 max-sm:py-6 max-sm:pb-24">
+		<div class="flex w-full max-w-5xl flex-col items-center gap-y-10 max-sm:gap-y-7">
+			<header class="flex w-full flex-col items-center gap-y-5 max-sm:gap-y-4">
+				<a
+					href="/sxoli/anakoinoseis"
+					class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+					<Icon name="arrow-left" />
+					Οι Ανακοινώσεις
+				</a>
 
-		<h1
-			class="max-w-[60ch] text-center text-4xl max-sm:text-2xl font-bold text-red-900 font-anaktoria wrap-break-word drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
-			{announcement.title}
-		</h1>
+				<h1
+					class="max-w-[30ch] text-center text-4xl max-sm:text-2xl leading-tight font-bold text-red-900 font-anaktoria wrap-break-word drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.25)]">
+					{announcement.title}
+				</h1>
 
-		<div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-			<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
-				<Icon name="calendar" />
-				<time datetime={new Date(announcement.date).toISOString()}>
-					{formatDate(announcement.date)}
-				</time>
-			</span>
-			<span class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
-				<Icon name="eye" />
-				{announcement.views}
-				{announcement.views === 1 ? "προβολή" : "προβολές"}
-			</span>
-			{
-				isRecent(announcement.date) && (
-					<span
-						class="inline-flex items-center rounded-md bg-ivory-deep/95 px-2.5 py-1 text-sm max-sm:text-xs font-bold text-red-900"
-						aria-label="Νέα ανακοίνωση">
-						Νέο
+				<div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+					<span class="inline-flex items-center gap-1.5 rounded-md bg-red-900 px-2.5 py-1 text-sm max-sm:text-xs text-red-50">
+						<Icon name="calendar" />
+						<time datetime={new Date(announcement.date).toISOString()}>
+							{formatDate(announcement.date)}
+						</time>
 					</span>
+					<span
+						class="inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900">
+						<Icon name="eye" />
+						{`${announcement.views} ${announcement.views === 1 ? "προβολή" : "προβολές"}`}
+					</span>
+					{
+						photos.length > 0 && (
+							<a
+								href="#announcementPhotos"
+								class="photosJump inline-flex items-center gap-1.5 rounded-md border border-red-900/30 bg-red-900/10 px-2.5 py-1 text-sm max-sm:text-xs text-red-900 transition-colors hover:bg-red-900/20">
+								<Icon name="images" />
+								{photos.length} {photos.length === 1 ? "φωτογραφία" : "φωτογραφίες"}
+							</a>
+						)
+					}
+					{
+						isRecent(announcement.date) && (
+							<span
+								class="inline-flex items-center rounded-md bg-ivory-deep/95 px-2.5 py-1 text-sm max-sm:text-xs font-bold text-red-900"
+								aria-label="Νέα ανακοίνωση">
+								Νέο
+							</span>
+						)
+					}
+				</div>
+			</header>
+
+			<div class="imgLoader group/img relative w-full max-w-195">
+				<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-xl bg-red-50/40 backdrop-blur-[2px]">
+					<Spinner />
+				</div>
+				<div class="w-full overflow-hidden rounded-xl bg-red-900/5 shadow-[0_22px_48px_-22px_rgba(69,10,10,0.55)] ring-1 ring-red-900/10">
+					<img
+						id="posterImg"
+						fetchpriority="high"
+						data-src={imgSrc + mainImg.name}
+						src={imgSrc + mainImg.name}
+						alt={announcement.title}
+						width="780"
+						height="640"
+						class="w-full max-h-[clamp(0px,100vh,640px)] max-sm:max-h-105 object-cover"
+					/>
+				</div>
+			</div>
+
+			{
+				blocks.length > 0 && (
+					<article class="w-full max-w-3xl rounded-2xl bg-white px-14 pt-12 pb-10 max-md:px-8 max-sm:px-5 max-sm:pt-7 max-sm:pb-6 text-lg max-sm:text-base leading-[1.8] max-sm:leading-relaxed text-ink shadow-[0_18px_50px_-20px_rgba(69,10,10,0.35)] ring-1 ring-red-900/10">
+						{blocks.map((block, bi) => (
+							<Fragment>
+								{block.kind === "p" ? (
+									<p
+										class:list={[
+											"mb-5 last:mb-0",
+											bi === 0 && "text-xl max-sm:text-lg leading-[1.7] text-red-950",
+											bi === 0 &&
+												leadHasDropCap &&
+												"first-letter:float-left first-letter:mt-1.5 first-letter:mr-2.5 first-letter:font-anaktoria first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:font-bold first-letter:text-red-900",
+										]}>
+										{block.segments.map((s) =>
+											s.href ? (
+												<a
+													href={s.href}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="text-red-800 underline decoration-1 underline-offset-2 hover:text-red-950 wrap-anywhere">
+													{s.text}
+												</a>
+											) : (
+												s.text
+											),
+										)}
+									</p>
+								) : (
+									<ul class="mb-5 last:mb-0 flex flex-col gap-y-1.5">
+										{block.items.map((item) => (
+											<li class="relative pl-7 before:absolute before:left-1.5 before:top-[0.72em] before:size-1.75 before:rotate-45 before:bg-red-900/80">
+												{item.map((s) =>
+													s.href ? (
+														<a
+															href={s.href}
+															target="_blank"
+															rel="noopener noreferrer"
+															class="text-red-800 underline decoration-1 underline-offset-2 hover:text-red-950 wrap-anywhere">
+															{s.text}
+														</a>
+													) : (
+														s.text
+													),
+												)}
+											</li>
+										))}
+									</ul>
+								)}
+								{bi === 0 && showStrip && (
+									<div
+										id={showGallery ? undefined : "announcementPhotos"}
+										class="photoStrip my-8 max-sm:my-6 grid gap-2 sm:gap-3"
+										style={`grid-template-columns: repeat(${stripPhotos.length}, minmax(0, 1fr))`}>
+										{stripPhotos.map((image, i) => {
+											const isMore = showGallery && i === stripPhotos.length - 1;
+											return (
+												<button
+													type="button"
+													data-img-index={isMore ? undefined : i}
+													data-more={isMore ? "" : undefined}
+													aria-label={
+														isMore ? `Όλες οι φωτογραφίες (${photos.length})` : `Προβολή φωτογραφίας ${i + 1} από ${photos.length}`
+													}
+													class={`imgLoader photoTile group/img relative ${stripAspect} overflow-hidden rounded-lg bg-red-900/8 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2`}>
+													<img
+														data-src={imgThumbSrc + image.name}
+														alt=""
+														class="absolute inset-0 size-full object-cover opacity-0 transition-[opacity,transform] duration-500 group-[.loaded]/img:opacity-100 group-hover/img:scale-105"
+													/>
+													{isMore && (
+														<span class="absolute inset-0 grid place-content-center bg-red-950/60 text-center text-red-50 transition-colors group-hover/img:bg-red-950/50">
+															<span class="text-2xl max-sm:text-lg font-bold leading-none">+{morePhotos}</span>
+															<span class="mt-1 text-sm max-sm:hidden">φωτογραφίες</span>
+														</span>
+													)}
+												</button>
+											);
+										})}
+									</div>
+								)}
+							</Fragment>
+						))}
+					</article>
 				)
 			}
-		</div>
 
-		<div class="imgLoader group/img relative w-full max-w-195">
-			<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 z-10 grid place-items-center rounded-xs bg-red-50/40 backdrop-blur-[2px]">
-				<Spinner />
-			</div>
-			<div class="group-[:is(.loaded)]/img:block w-full overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600">
-				<img
-					id="posterImg"
-					fetchpriority="high"
-					data-src={imgSrc + mainImg.name}
-					src={imgSrc + mainImg.name}
-					alt={announcement.title}
-					width="780"
-					height="640"
-					class="w-full max-h-[clamp(0px,100vh,640px)] max-sm:max-h-105 object-cover"
-				/>
-			</div>
-		</div>
-
-		{
-			paragraphs.length > 0 && (
-				<article class="w-full max-w-[75ch] mt-2 text-xl max-sm:text-base leading-relaxed">
-					{paragraphs.map((p) => (
-						<p class="pb-4 last:pb-0">
-							{p.split(contentAnchorPattern).map((part, i, arr) =>
-								i % 3 === 1 ? (
-									<a
-										href={part}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="text-red-800 underline decoration-1 underline-offset-2 hover:text-red-950">
-										{arr[i + 1]}
-									</a>
-								) : i % 3 === 2 ? null : (
-									part
-								),
-							)}
-						</p>
-					))}
-				</article>
-			)
-		}
-
-		{
-			links.length > 0 && (
-				<div class="flex w-full max-w-180 flex-col items-center gap-y-4 mt-2">
-					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Βίντεο</h2>
-					<div class="flex w-full flex-wrap items-center justify-center gap-6">
-						{links.map((link) => {
-							const ytId = youtubeId(link);
-							// YouTube embeds use a click-to-play facade with a real, high-res
-							// thumbnail. Loading the player while hidden makes YouTube pick its
-							// tiny 120x90 `default.jpg` poster; showing the thumbnail ourselves
-							// guarantees sharp quality (up to 1280x720) and defers the heavy
-							// player until the user actually wants to watch.
-							if (ytId) {
-								return (
-									<div
-										class="videoWrap group/video relative w-full max-w-180 aspect-video overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600"
-										data-video-id={ytId}>
-										<button
-											type="button"
-											class="videoPoster absolute inset-0 w-full h-full cursor-pointer"
-											data-embed-src={link + (link.includes("?") ? "&" : "?") + "autoplay=1"}
-											aria-label="Αναπαραγωγή βίντεο">
-											<img
-												src={`https://i.ytimg.com/vi/${ytId}/maxresdefault.jpg`}
-												alt="Προεπισκόπηση βίντεο"
-												loading="lazy"
-												decoding="async"
-												class="w-full h-full object-cover"
-											/>
-											<span class="absolute inset-0 grid place-items-center bg-black/20 transition-colors duration-300 hover:bg-black/10">
-												<span class="grid place-items-center w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full bg-red-900 text-red-50 text-2xl max-sm:text-xl shadow-lg transition-transform duration-300 group-hover/video:scale-110">
-													<Icon name="play" />
+			{
+				links.length > 0 && (
+					<div class="flex w-full max-w-4xl flex-col items-center gap-y-5">
+						<h2 class="sectionHeading">
+							<span>{links.length === 1 ? "Βίντεο" : `Βίντεο (${links.length})`}</span>
+						</h2>
+						<div class={"grid w-full gap-5 max-sm:gap-4" + (links.length === 1 ? " max-w-195" : " sm:grid-cols-2")}>
+							{links.map((link, li) => {
+								const ytId = youtubeId(link);
+								// An odd count leads with one large video, the rest pair up below it.
+								const featured = links.length > 1 && links.length % 2 === 1 && li === 0 ? " sm:col-span-2" : "";
+								// YouTube embeds use a click-to-play facade with a real, high-res
+								// thumbnail. Loading the player while hidden makes YouTube pick its
+								// tiny 120x90 `default.jpg` poster; showing the thumbnail ourselves
+								// guarantees sharp quality (up to 1280x720) and defers the heavy
+								// player until the user actually wants to watch.
+								if (ytId) {
+									return (
+										<div
+											class={
+												"videoWrap group/video relative w-full aspect-video overflow-hidden rounded-xl bg-red-950 shadow-[0_16px_36px_-18px_rgba(69,10,10,0.6)]" +
+												featured
+											}
+											data-video-id={ytId}>
+											<button
+												type="button"
+												class="videoPoster absolute inset-0 w-full h-full cursor-pointer"
+												data-embed-src={link + (link.includes("?") ? "&" : "?") + "autoplay=1"}
+												aria-label="Αναπαραγωγή βίντεο">
+												<img
+													src={`https://i.ytimg.com/vi/${ytId}/maxresdefault.jpg`}
+													alt="Προεπισκόπηση βίντεο"
+													loading="lazy"
+													decoding="async"
+													class="w-full h-full object-cover"
+												/>
+												<span class="absolute inset-0 grid place-items-center bg-black/20 transition-colors duration-300 hover:bg-black/10">
+													<span class="grid place-items-center w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full bg-red-900 text-red-50 text-2xl max-sm:text-xl shadow-lg transition-transform duration-300 group-hover/video:scale-110">
+														<Icon name="play" />
+													</span>
 												</span>
-											</span>
-										</button>
-										<div class="videoFrame hidden w-full h-full">
+											</button>
+											<div class="videoFrame hidden w-full h-full">
+												<iframe
+													title="Βίντεο ανακοίνωσης"
+													class="w-full h-full"
+													frameborder="0"
+													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+													referrerpolicy="strict-origin-when-cross-origin"
+													allowfullscreen
+												/>
+											</div>
+										</div>
+									);
+								}
+								return (
+									<div class={"imgLoader group/img relative w-full aspect-video" + featured}>
+										<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 rounded-xl">
+											<Spinner />
+										</div>
+										<div class="hidden group-[:is(.loaded)]/img:block w-full h-full overflow-hidden rounded-xl bg-red-950 shadow-[0_16px_36px_-18px_rgba(69,10,10,0.6)]">
 											<iframe
+												data-src={link}
 												title="Βίντεο ανακοίνωσης"
 												class="w-full h-full"
 												frameborder="0"
@@ -255,144 +411,144 @@ const videoSchemas = links
 										</div>
 									</div>
 								);
-							}
-							return (
-								<div class="imgLoader group/img relative w-full max-w-180 aspect-video">
-									<div class="hidden group-[:is(.loading)]/img:block absolute inset-0 rounded-xs">
-										<Spinner />
-									</div>
-									<div class="hidden group-[:is(.loaded)]/img:block w-full h-full overflow-hidden rounded-xs border-2 border-red-900 shadow-md shadow-slate-600">
-										<iframe
-											data-src={link}
-											title="Βίντεο ανακοίνωσης"
-											class="w-full h-full"
-											frameborder="0"
-											allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-											referrerpolicy="strict-origin-when-cross-origin"
-											allowfullscreen
-										/>
-									</div>
-								</div>
-							);
-						})}
+							})}
+						</div>
 					</div>
-				</div>
-			)
-		}
+				)
+			}
 
-		{
-			announcement.images.length > 0 && (
-				<div id="imgContainer" class="flex w-full flex-col items-center gap-y-4 mt-2">
-					<h2 class="text-2xl font-anaktoria font-bold text-red-900">Φωτογραφίες</h2>
-					<div class="flex w-full flex-wrap items-center justify-center gap-6">
-						{announcement.images.map((image, i) => (
-							<div class="imgLoader group/img relative w-100 max-w-[85vw] h-80" data-imgIndex={i}>
-								<div class="hidden group-[:is(.loading)]/img:block absolute inset-0">
-									<Spinner />
-								</div>
+			{
+				showGallery && (
+					<div id="announcementPhotos" class="flex w-full flex-col items-center gap-y-5 scroll-mt-6">
+						<h2 class="sectionHeading">
+							<span>Φωτογραφίες ({photos.length})</span>
+						</h2>
+						<div id="imgContainer" class="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+							{photos.map((image, i) => (
 								<button
 									type="button"
-									aria-label={`Προβολή φωτογραφίας ${i + 1} από ${announcement.images.length}`}
-									class="hidden group-[:is(.loaded)]/img:block w-full h-full cursor-pointer overflow-hidden rounded-xs border-2 border-red-900 transition-shadow hover:shadow-lg shadow-slate-800! focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+									data-img-index={i}
+									aria-label={`Προβολή φωτογραφίας ${i + 1} από ${photos.length}`}
+									class:list={[
+										"imgLoader photoTile group/img relative overflow-hidden rounded-lg bg-red-900/8 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2",
+										"aspect-4/3",
+										i === 0 && photos.length > 2 && "col-span-2 row-span-2 self-stretch",
+									]}>
 									<img
 										data-src={imgThumbSrc + image.name}
 										alt={announcement.title}
 										width="400"
 										height="320"
-										class="w-full h-full object-cover"
+										class="absolute inset-0 size-full object-cover opacity-0 transition-[opacity,transform] duration-500 group-[.loaded]/img:opacity-100 group-hover/img:scale-105"
 									/>
 								</button>
-							</div>
-						))}
+							))}
+						</div>
 					</div>
-				</div>
-			)
-		}
+				)
+			}
+
+			<footer class="flex w-full max-w-4xl flex-col items-center gap-y-6 border-t border-red-900/15 pt-8 max-sm:pt-6">
+				{
+					neighbours.length > 0 && (
+						<nav aria-label="Άλλες ανακοινώσεις" class="grid w-full gap-4 sm:grid-cols-2">
+							{neighbours.map((n) => (
+								<a
+									href={detailHref(n.a)}
+									class={`group/nb flex items-center gap-4 rounded-xl bg-white p-3 pr-5 ring-1 ring-red-900/10 shadow-[0_10px_30px_-18px_rgba(69,10,10,0.45)] transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_-16px_rgba(69,10,10,0.5)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 ${n.align}`}>
+									<span class="relative grid size-20 max-sm:size-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-red-900/8">
+										{n.a.main_image ? (
+											<img
+												src={"/anakoinoseis/images/" + n.a.id + "/thumb_" + n.a.main_image}
+												alt=""
+												width="80"
+												height="80"
+												loading="lazy"
+												decoding="async"
+												class="size-full object-cover"
+											/>
+										) : (
+											<Icon name="megaphone" class="text-2xl text-red-900/50" />
+										)}
+									</span>
+									<span class="flex min-w-0 flex-col gap-1">
+										<span
+											class={
+												"inline-flex items-center gap-1.5 text-sm text-red-900/75" + (n.icon === "arrow-right" ? " sm:self-end" : "")
+											}>
+											{n.icon === "arrow-left" && (
+												<Icon name="arrow-left" class="transition-transform duration-300 group-hover/nb:-translate-x-0.5" />
+											)}
+											{n.label} ανακοίνωση
+											{n.icon === "arrow-right" && (
+												<Icon name="arrow-right" class="transition-transform duration-300 group-hover/nb:translate-x-0.5" />
+											)}
+										</span>
+										<span class="font-anaktoria text-lg max-sm:text-base font-bold leading-snug text-red-900 line-clamp-2">
+											{n.a.title}
+										</span>
+									</span>
+								</a>
+							))}
+						</nav>
+					)
+				}
+				<a
+					href="/sxoli/anakoinoseis"
+					class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-4 py-2 text-lg max-sm:text-base text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
+					<Icon name="newspaper" />
+					Όλες οι ανακοινώσεις
+				</a>
+			</footer>
+		</div>
 	</section>
 
-	<div
-		id="imageCarouselContainer"
-		role="presentation"
-		class={"max-sm:hidden fixed inset-0 py-4 bg-[rgba(40,10,10,0.4)] backdrop-blur-[3px] grid place-content-center z-1000" + " hidden"}>
-		<div
-			id="imageCarouselPanel"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="imageCarouselTitle"
-			tabindex="-1"
-			class="relative grid grid-rows-[min-content,1fr] justify-center items-center p-8 bg-[rgba(40,10,10,0.875)] rounded-md shadow-lg shadow-[rgba(40,10,10,1)] backdrop-blur-xs focus-visible:outline-hidden">
-			<h2 id="imageCarouselTitle" class="sr-only">Φωτογραφίες: {announcement.title}</h2>
-			<p id="imageCarouselStatus" class="sr-only" aria-live="polite"></p>
-			<div class="absolute top-2 right-3 flex flex-row justify-end">
-				<button
-					id="carouselClose"
-					type="button"
-					aria-label="Κλείσιμο"
-					title="Κλείσιμο"
-					class="rounded-xl text-2xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-					<Icon name="close" class="text-white hover:text-red-100" />
-				</button>
-			</div>
-			<div id="imageCarousel" data-index="0" class="max-h-[calc(95dvh-24px)] grid grid-rows-[calc(95dvh-79px),76px] justify-items-center gap-y-2">
-				<div class="imgLoader group/img flex flex-col items-center">
-					<div class="relative max-w-[90dvw] max-h-[calc(95dvh-79px)] flex items-center rounded-lg overflow-hidden">
-						<div class="absolute inset-0 hidden group-[:is(.loading)]/img:flex items-center backdrop-blur-sm">
-							<Spinner />
-						</div>
-						<img
-							id="mainCarouselImg"
-							alt={announcement.title}
-							class="object-cover h-[clamp(0px,100vh,calc(95dvh-79px))] hover:shadow-lg shadow-red-950!"
-							data-src={announcement.images[0] ? imgSrc + announcement.images[0].name : ""}
-						/>
-					</div>
-				</div>
-				<div id="thumbContainer" class="flex flex-row gap-x-4 items-center self-center">
-					<button
-						type="button"
-						data-direction="left"
-						aria-label="Προηγούμενη εικόνα"
-						title="Προηγούμενη εικόνα"
-						class="mr-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:mr-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-						<Icon name="chevron-left" />
-					</button>
-					{
-						announcement.images
-							.slice(0, 5)
-							.map((image) => (
-								<img
-									class="w-15 aspect-square object-cover h-full rounded-md overflow-hidden opacity-60 transition-opacity duration-300 hover:opacity-90 hover:shadow-lg shadow-red-950! cursor-pointer"
-									alt=""
-									src={imgThumbSrc + image.name}
-								/>
-							))
-					}
-					<button
-						type="button"
-						data-direction="right"
-						aria-label="Επόμενη εικόνα"
-						title="Επόμενη εικόνα"
-						class="ml-8 px-2 rounded-md font-bold text-2xl text-white hover:text-red-100 max-sm:text-xs max-sm:ml-2 max-3xs:text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-100">
-						<Icon name="chevron-right" />
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
+	<PhotoViewer photos={photos.map((img) => ({ src: imgSrc + img.name }))} title={announcement.title} />
 
 	<style>
 		body {
-			background: radial-gradient(circle at 50% -50%, rgb(234 212 212), transparent);
+			/* An explicit base colour: with only a gradient the page fades into the browser's canvas, which is dark in a dark-themed browser. */
+			background: #fff radial-gradient(circle at 50% -50%, rgb(234 212 212), transparent);
 		}
-		#imgContainer button {
-			transition: box-shadow 0.2s cubic-bezier(0, 0.8, 0.43, 0.64);
+		#announcementSection {
+			scroll-behavior: smooth;
+		}
+		@media (prefers-reduced-motion: reduce) {
+			#announcementSection {
+				scroll-behavior: auto;
+			}
+		}
+		/* Section title between two hairlines that fade out towards the edges. */
+		.sectionHeading {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			width: 100%;
+			font-family: var(--font-anaktoria);
+			font-size: 1.625rem;
+			font-weight: 700;
+			color: var(--color-red-900);
+			text-align: center;
+		}
+		.sectionHeading::before,
+		.sectionHeading::after {
+			content: "";
+			flex: 1;
+			height: 1px;
+			background: linear-gradient(to right, transparent, rgb(127 29 29 / 0.35));
+		}
+		.sectionHeading::after {
+			background: linear-gradient(to left, transparent, rgb(127 29 29 / 0.35));
+		}
+		@media (max-width: 639px) {
+			.sectionHeading {
+				font-size: 1.375rem;
+			}
 		}
 	</style>
 
 	<script>
 		import { onElementMount } from "@utilities/dom";
-		import { onBackdropClick, trapFocus } from "@utilities/focusTrap";
-		import { sleep } from "@utilities/sleep";
 
 		onElementMount("#announcementSection", async (section) => {
 			const loaders = [...section.querySelectorAll(".imgLoader")] as HTMLElement[];
@@ -485,21 +641,16 @@ const videoSchemas = links
 				});
 			}, 6000);
 
-			// ------- Gallery clicks: carousel on desktop, full image in a new tab on mobile -------
-			section
-				.querySelector("#imgContainer")
-				?.querySelectorAll(".imgLoader")
-				.forEach((container) => {
-					container.addEventListener("click", () => {
-						const index = Number((container as HTMLElement).dataset.imgindex ?? 0);
-						if (window.matchMedia("(max-width: 639px)").matches) {
-							const img = container.querySelector("img") as HTMLImageElement | null;
-							if (img?.src) window.open(img.src.replace("thumb_", ""), "_blank");
-						} else {
-							document.dispatchEvent(new CustomEvent("open_carousel", { detail: { index } }));
-						}
-					});
+			// ------- Photo clicks (strip + gallery) open the photo viewer -------
+			section.querySelectorAll<HTMLElement>("[data-img-index]").forEach((tile) => {
+				tile.addEventListener("click", () => {
+					document.dispatchEvent(new CustomEvent("photo_viewer_open", { detail: { index: Number(tile.dataset.imgIndex ?? 0) } }));
 				});
+			});
+			// The "+N" strip tile leads to the full gallery below the article.
+			section.querySelector("[data-more]")?.addEventListener("click", () => {
+				section.querySelector("#announcementPhotos")?.scrollIntoView({ block: "start" });
+			});
 
 			// ------- Video facade: high-res thumbnail, click-to-play embed -------
 			section.querySelectorAll("[data-video-id] img").forEach((img) => {
@@ -523,126 +674,6 @@ const videoSchemas = links
 				});
 			});
 		});
-
-		// ------- Image carousel (desktop only) -------
-		function setupCarousel() {
-			const imgSrcArr = ([...document.querySelectorAll("#imgContainer img")] as HTMLImageElement[]).map((img) =>
-				(img.dataset.src as string).split("/").pop()?.replace("thumb_", ""),
-			) as string[];
-			if (!imgSrcArr.length) return;
-
-			const announcementId = (document.querySelector("section[data-announcement-id]") as HTMLElement).dataset.announcementId as string;
-			const imgSrc = "/anakoinoseis/images/" + announcementId + "/";
-			const imgThumbSrc = "/anakoinoseis/images/" + announcementId + "/thumb_";
-
-			const carousel = document.querySelector("#imageCarousel") as HTMLElement;
-			const mainCarouselImg = document.querySelector("#mainCarouselImg") as HTMLImageElement;
-			const thumbContainer = document.querySelector("#thumbContainer") as HTMLElement;
-			const thumbCarouselImgs = [...thumbContainer.querySelectorAll("img")];
-			const totalLength = imgSrcArr.length;
-			const carouselLength = Math.min(5, totalLength);
-			let currIndex = Number(carousel.dataset.index || 0);
-
-			function transitionToNextImage(nextIndex: number) {
-				const imgLoader = carousel.querySelector(".imgLoader") as HTMLElement;
-				const started = Date.now();
-				let done = false;
-				const finish = async () => {
-					if (done) return;
-					done = true;
-					await sleep(Math.max(0, 250 - (Date.now() - started))); // avoid flicker
-					imgLoader.classList.remove("loading");
-					imgLoader.classList.add("loaded");
-				};
-				mainCarouselImg.addEventListener("load", finish, { once: true });
-				mainCarouselImg.addEventListener("error", finish, { once: true });
-				imgLoader.classList.add("loading");
-				imgLoader.classList.remove("loaded");
-				mainCarouselImg.src = imgSrc + imgSrcArr[nextIndex];
-			}
-			function updateThumbs() {
-				if (totalLength <= 5) return;
-				for (let i = 0; i < carouselLength; i++) {
-					const nextIndex = (currIndex + i - 2 + totalLength) % totalLength;
-					thumbCarouselImgs[i].src = imgThumbSrc + imgSrcArr[nextIndex];
-				}
-			}
-			function carouselShift(direction: "left" | "right") {
-				currIndex = (currIndex + (direction === "left" ? -1 : 1) + totalLength) % totalLength;
-				transitionToNextImage(currIndex);
-				updateThumbs();
-			}
-			function carouselGoto(index: number) {
-				currIndex = index;
-				transitionToNextImage(currIndex);
-				updateThumbs();
-			}
-
-			const carouselContainer = document.querySelector("#imageCarouselContainer") as HTMLElement;
-			const carouselPanel = document.querySelector("#imageCarouselPanel") as HTMLElement;
-			const carouselStatus = document.querySelector("#imageCarouselStatus") as HTMLElement;
-			const isOpen = () => !carouselContainer.classList.contains("hidden");
-			let releaseTrap: (() => void) | undefined;
-
-			// Keeps data-index and the screen-reader announcement in sync with the current image.
-			const syncIndex = () => {
-				carousel.dataset.index = currIndex.toString();
-				carouselStatus.textContent = `Εικόνα ${currIndex + 1} από ${totalLength}`;
-			};
-			const shift = (direction: "left" | "right") => {
-				carouselShift(direction);
-				syncIndex();
-			};
-
-			carouselPanel.querySelector("button[data-direction='left']")?.addEventListener("click", () => shift("left"));
-			carouselPanel.querySelector("button[data-direction='right']")?.addEventListener("click", () => shift("right"));
-			thumbCarouselImgs.forEach((thumb, i) => {
-				thumb.addEventListener("click", () => {
-					const index = totalLength <= 5 ? i : (currIndex + i - 2 + totalLength) % totalLength;
-					carouselGoto(index);
-					syncIndex();
-				});
-			});
-
-			const closeCarousel = () => {
-				if (!isOpen()) return;
-				carouselContainer.classList.add("hidden");
-				releaseTrap?.(); // unlocks scrolling and returns focus to the gallery image that opened it
-				releaseTrap = undefined;
-			};
-
-			document.addEventListener("open_carousel", (e) => {
-				carouselGoto(Number((e as CustomEvent).detail.index ?? 0));
-				syncIndex();
-				if (isOpen()) return;
-				carouselContainer.classList.remove("hidden");
-				releaseTrap = trapFocus(carouselPanel, {
-					onEscape: closeCarousel,
-					initialFocus: "button[data-direction='right']",
-				});
-			});
-			document.addEventListener("close_carousel", closeCarousel);
-			// Arrow keys only while the carousel is open (Escape is handled by the focus trap).
-			document.addEventListener("keydown", (e) => {
-				if (!isOpen() || e.altKey || e.ctrlKey || e.metaKey) return;
-				if (e.key === "ArrowLeft") {
-					e.preventDefault();
-					shift("left");
-				} else if (e.key === "ArrowRight") {
-					e.preventDefault();
-					shift("right");
-				}
-			});
-			onBackdropClick(carouselContainer, closeCarousel);
-
-			onElementMount("#carouselClose", (el) => {
-				el.addEventListener("click", () => {
-					document.dispatchEvent(new CustomEvent("close_carousel"));
-				});
-			});
-		}
-
-		window.matchMedia("(min-width: 640px)").matches && setupCarousel();
 
 		// ------- Reading progress bar: thin bar tucked right under the navbar -------
 		onElementMount("#announcementSection", (section) => {

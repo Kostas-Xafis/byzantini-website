@@ -1,0 +1,934 @@
+---
+import Icon from "@components/other/Icon.astro";
+
+/**
+ * Full-screen photo viewer (announcement galleries), the same on desktop and phones.
+ *
+ * Open it with `document.dispatchEvent(new CustomEvent("photo_viewer_open", { detail: { index } }))`
+ * or a `#foto-N` link (1-based; the address follows the photo shown, so a photo can be shared and
+ * the browser's Back button closes the viewer). Arrows / swipe move between photos (looping), the
+ * film strip jumps, double-click / double-tap / wheel / pinch zoom, dragging pans a zoomed photo,
+ * swiping down closes. Only real photos are shown, and they load a few at a time: the photo on screen
+ * first, then its two neighbours, then the film strip's photos as they scroll into view.
+ */
+export interface Props {
+	/** Every photo, in gallery order. */
+	photos: { src: string }[];
+	/** Shown in the top bar; also the dialog's accessible name and the photos' alt text. */
+	title: string;
+}
+
+const { photos, title } = Astro.props;
+---
+
+{
+	photos.length > 0 && (
+		<div
+			id="photoViewer"
+			class="pv hidden"
+			role="dialog"
+			aria-modal="true"
+			aria-label={`Φωτογραφίες: ${title}`}
+			tabindex="-1"
+			data-photos={JSON.stringify(photos)}
+			data-title={title}>
+			<div class="pv-stage">
+				<div class="pv-track">
+					{[0, 1, 2].map(() => (
+						<div class="pv-slide">
+							<div class="pv-zoom">
+								<img class="pv-photo" alt="" draggable="false" />
+								<span class="pv-spinner">
+									<Icon name="spinner" spin />
+								</span>
+								<p class="pv-error">Η φωτογραφία δεν φορτώθηκε.</p>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+
+			<div class="pv-bar pv-top">
+				<span class="pv-counter" aria-hidden="true" />
+				<span class="pv-title">{title}</span>
+				<button type="button" class="pv-btn" data-pv="zoom" aria-label="Μεγέθυνση" title="Μεγέθυνση (διπλό κλικ)">
+					<Icon name="zoom-in" class="pv-icon-zoom-in" />
+					<Icon name="zoom-out" class="pv-icon-zoom-out" />
+				</button>
+				<button type="button" class="pv-btn pv-strip-toggle" data-pv="strip" aria-pressed="true" aria-label="Μικρογραφίες" title="Μικρογραφίες">
+					<Icon name="images" />
+				</button>
+				<a class="pv-btn" data-pv="original" target="_blank" rel="noopener" aria-label="Άνοιγμα πρωτοτύπου σε νέα καρτέλα" title="Άνοιγμα πρωτοτύπου">
+					<Icon name="external-link" />
+				</a>
+				<button type="button" class="pv-btn" data-pv="close" aria-label="Κλείσιμο" title="Κλείσιμο (Esc)">
+					<Icon name="close" />
+				</button>
+			</div>
+
+			<button type="button" class="pv-arrow pv-prev" data-pv="prev" aria-label="Προηγούμενη φωτογραφία" title="Προηγούμενη (←)">
+				<Icon name="chevron-left" />
+			</button>
+			<button type="button" class="pv-arrow pv-next" data-pv="next" aria-label="Επόμενη φωτογραφία" title="Επόμενη (→)">
+				<Icon name="chevron-right" />
+			</button>
+
+			<div class="pv-bar pv-bottom">
+				<div class="pv-strip">
+					{photos.map((photo, i) => (
+						<button type="button" class="pv-stripItem" data-index={i} aria-label={`Φωτογραφία ${i + 1} από ${photos.length}`}>
+							<img data-src={photo.src} alt="" decoding="async" draggable="false" />
+						</button>
+					))}
+				</div>
+			</div>
+
+			<p class="pv-status sr-only" aria-live="polite" />
+		</div>
+	)
+}
+
+<style is:global>
+	.pv {
+		--pv-top: 4.5rem;
+		--pv-side: 5.5rem;
+		--pv-bottom: 6.25rem;
+		position: fixed;
+		inset: 0;
+		z-index: 1100;
+		color: #fff;
+		background: rgb(16 7 8 / var(--pv-fade, 1));
+		overscroll-behavior: contain;
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-tap-highlight-color: transparent;
+		opacity: 0;
+		transition:
+			opacity 0.22s ease,
+			background-color 0.22s ease;
+	}
+	.pv.pv-open {
+		opacity: 1;
+	}
+	.pv:focus-visible {
+		outline: none;
+	}
+	.pv-nostrip,
+	.pv-single {
+		--pv-bottom: 1.5rem;
+	}
+	.pv-chromeless {
+		--pv-top: 0px;
+		--pv-bottom: 0px;
+	}
+
+	/* ── Photos: a 3-slide track (previous · current · next) shifted by one slide width ── */
+	.pv-stage {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		touch-action: none;
+	}
+	.pv-track {
+		display: flex;
+		height: 100%;
+		transform: translate3d(-100%, 0, 0);
+		will-change: transform;
+	}
+	.pv-track.pv-animate {
+		transition: transform 0.32s cubic-bezier(0.22, 0.8, 0.3, 1);
+	}
+	.pv-slide {
+		position: relative;
+		flex: 0 0 100%;
+		height: 100%;
+		overflow: hidden;
+		transition: transform 0.25s ease;
+	}
+	.pv:not(.pv-open) .pv-slide {
+		transform: scale(0.97);
+	}
+	.pv-zoom {
+		position: absolute;
+		inset: var(--pv-top) var(--pv-side) var(--pv-bottom);
+		transform-origin: 50% 50%;
+		transition: inset 0.25s ease;
+	}
+	.pv-zoom.pv-animate {
+		transition:
+			transform 0.25s ease,
+			inset 0.25s ease;
+	}
+	.pv-zoom img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		pointer-events: none;
+	}
+	.pv-photo {
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.pv-loaded .pv-photo {
+		opacity: 1;
+	}
+	.pv-spinner,
+	.pv-error {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		display: none;
+		translate: -50% -50%;
+		color: rgb(255 255 255 / 0.75);
+	}
+	.pv-spinner {
+		font-size: 2rem;
+	}
+	/* Only a photo that takes a moment shows the spinner; a cached one appears without it. */
+	.pv-slide:not(.pv-loaded, .pv-failed) .pv-spinner {
+		display: block;
+		animation: pv-appear 0.2s ease 0.35s both;
+	}
+	.pv-failed .pv-error {
+		display: block;
+		white-space: nowrap;
+		font-size: 0.95rem;
+	}
+	@keyframes pv-appear {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* ── Chrome: top bar, side arrows, film strip ── */
+	.pv-bar {
+		position: absolute;
+		inset-inline: 0;
+		z-index: 2;
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease;
+	}
+	.pv-top {
+		top: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.75rem;
+		background: linear-gradient(rgb(0 0 0 / 0.55), transparent);
+	}
+	.pv-counter {
+		flex-shrink: 0;
+		padding: 0.2rem 0.65rem;
+		border-radius: 999px;
+		background: rgb(255 255 255 / 0.12);
+		font-size: 0.95rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.pv-title {
+		flex: 1;
+		min-width: 0;
+		margin-inline: 0.5rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.95rem;
+		color: rgb(255 255 255 / 0.75);
+	}
+	.pv-btn {
+		display: grid;
+		flex-shrink: 0;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		border-radius: 999px;
+		font-size: 1.25rem;
+		color: #fff;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+	}
+	.pv-btn:hover {
+		background: rgb(255 255 255 / 0.14);
+	}
+	.pv-strip-toggle[aria-pressed="true"] {
+		background: rgb(255 255 255 / 0.12);
+	}
+	.pv-icon-zoom-out,
+	.pv-zoomed .pv-icon-zoom-in {
+		display: none;
+	}
+	.pv-zoomed .pv-icon-zoom-out {
+		display: inline-block;
+	}
+	.pv-arrow {
+		position: absolute;
+		top: 50%;
+		z-index: 2;
+		display: grid;
+		place-items: center;
+		width: 3.25rem;
+		height: 3.25rem;
+		border-radius: 999px;
+		translate: 0 -50%;
+		background: rgb(0 0 0 / 0.35);
+		font-size: 1.6rem;
+		color: #fff;
+		cursor: pointer;
+		transition:
+			opacity 0.3s ease,
+			background-color 0.2s ease;
+	}
+	.pv-arrow:hover {
+		background: rgb(127 29 29 / 0.9);
+	}
+	.pv-prev {
+		left: 1rem;
+	}
+	.pv-next {
+		right: 1rem;
+	}
+	/* The arrows step aside while the mouse rests (never while one has keyboard focus). */
+	.pv-idle .pv-arrow:not(:focus-visible) {
+		opacity: 0;
+	}
+	.pv-bottom {
+		bottom: 0;
+		padding: 0.75rem 1rem max(0.75rem, env(safe-area-inset-bottom));
+		background: linear-gradient(transparent, rgb(0 0 0 / 0.55));
+	}
+	.pv-strip {
+		position: relative;
+		display: flex;
+		justify-content: safe center;
+		gap: 0.5rem;
+		padding: 4px;
+		overflow-x: auto;
+		scrollbar-width: none;
+		touch-action: pan-x;
+	}
+	.pv-strip::-webkit-scrollbar {
+		display: none;
+	}
+	.pv-stripItem {
+		flex: 0 0 auto;
+		width: 4.5rem;
+		height: 3.25rem;
+		overflow: hidden;
+		border-radius: 0.4rem;
+		background: rgb(255 255 255 / 0.08);
+		opacity: 0.5;
+		cursor: pointer;
+		transition:
+			opacity 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+	.pv-stripItem img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.pv-stripItem.pv-in img {
+		opacity: 1;
+	}
+	.pv-stripItem:hover {
+		opacity: 0.85;
+	}
+	.pv-stripItem[aria-current="true"] {
+		opacity: 1;
+		box-shadow: 0 0 0 2px #fff;
+	}
+	.pv-btn:focus-visible,
+	.pv-arrow:focus-visible,
+	.pv-stripItem:focus-visible {
+		outline: 2px solid #fecaca;
+		outline-offset: 2px;
+	}
+	.pv-nostrip .pv-bottom {
+		opacity: 0;
+		pointer-events: none;
+		transform: translateY(100%);
+	}
+	.pv-chromeless .pv-bar,
+	.pv-chromeless .pv-arrow {
+		opacity: 0;
+		pointer-events: none;
+	}
+	.pv-single .pv-arrow,
+	.pv-single .pv-bottom,
+	.pv-single .pv-strip-toggle {
+		display: none;
+	}
+
+	/* Touch screens swipe instead of using arrows. */
+	@media (pointer: coarse) {
+		.pv-arrow {
+			display: none;
+		}
+	}
+	@media (max-width: 639px) {
+		.pv {
+			--pv-top: 3.75rem;
+			--pv-side: 0px;
+			--pv-bottom: 5rem;
+		}
+		.pv-nostrip,
+		.pv-single {
+			--pv-bottom: 0px;
+		}
+		.pv-chromeless {
+			--pv-top: 0px;
+		}
+		.pv-top {
+			padding-inline: 0.5rem;
+		}
+		.pv-title {
+			font-size: 0.85rem;
+			margin-inline: 0.25rem;
+		}
+		.pv-btn {
+			width: 2.5rem;
+			height: 2.5rem;
+		}
+		.pv-stripItem {
+			width: 3.5rem;
+			height: 2.6rem;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.pv,
+		.pv * {
+			transition-duration: 0s !important;
+			transition-delay: 0s !important;
+		}
+	}
+</style>
+
+<script>
+	import { prefersReducedMotion, trapFocus } from "@utilities/focusTrap";
+
+	type Photo = { src: string };
+
+	const HASH = /^#foto-(\d+)$/;
+	const MAX_SCALE = 4;
+	const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+	const root = document.querySelector<HTMLElement>("#photoViewer");
+	if (root) setupViewer(root);
+
+	function setupViewer(root: HTMLElement) {
+		const photos = JSON.parse(root.dataset.photos || "[]") as Photo[];
+		const title = root.dataset.title ?? "";
+		const n = photos.length;
+		const wrap = (i: number) => ((i % n) + n) % n;
+
+		const stage = root.querySelector(".pv-stage") as HTMLElement;
+		const track = root.querySelector(".pv-track") as HTMLElement;
+		let slides = [...track.children] as HTMLElement[]; // always [previous, current, next]
+		const counter = root.querySelector(".pv-counter") as HTMLElement;
+		const status = root.querySelector(".pv-status") as HTMLElement;
+		const original = root.querySelector("[data-pv='original']") as HTMLAnchorElement;
+		const zoomBtn = root.querySelector("[data-pv='zoom']") as HTMLElement;
+		const stripBtn = root.querySelector("[data-pv='strip']") as HTMLElement;
+		const strip = root.querySelector(".pv-strip") as HTMLElement;
+		const stripItems = [...strip.querySelectorAll<HTMLButtonElement>(".pv-stripItem")];
+
+		let current = 0;
+		let isOpen = false;
+		let pushedHistory = false;
+		let releaseTrap: (() => void) | undefined;
+		if (n < 2) root.classList.add("pv-single");
+
+		// ---------------- Slides ----------------
+
+		// Photos load a few at a time: the one on screen first, its two neighbours once it is in (so they
+		// are ready before the next swipe), then the film strip. Holding an arrow key down therefore never
+		// queues up photos that are only flown past.
+		const photoOf = (slide: HTMLElement) => slide.querySelector(".pv-photo") as HTMLImageElement;
+		const isSettled = (slide: HTMLElement) => slide.classList.contains("pv-loaded") || slide.classList.contains("pv-failed");
+
+		/** Points a slide at a photo without downloading it yet (`load` does that). */
+		function fill(slide: HTMLElement, index: number) {
+			const i = wrap(index);
+			const img = photoOf(slide);
+			slide.classList.remove("pv-loaded", "pv-failed");
+			slide.dataset.src = photos[i].src;
+			img.alt = `${title} — φωτογραφία ${i + 1} από ${n}`;
+			img.onload = () => settle(slide, "pv-loaded");
+			img.onerror = () => settle(slide, "pv-failed");
+			if (img.getAttribute("src") !== photos[i].src)
+				img.removeAttribute("src"); // also cancels a download in flight
+			else if (img.complete) slide.classList.add(img.naturalWidth ? "pv-loaded" : "pv-failed"); // loadCurrent() takes it from here
+		}
+
+		function load(slide: HTMLElement) {
+			const img = photoOf(slide);
+			const src = slide.dataset.src;
+			if (!src || img.getAttribute("src") === src) return;
+			img.src = src;
+			if (img.complete) settle(slide, img.naturalWidth ? "pv-loaded" : "pv-failed"); // already in the cache
+		}
+
+		function settle(slide: HTMLElement, state: "pv-loaded" | "pv-failed") {
+			slide.classList.add(state);
+			if (slide === slides[1]) afterCurrent();
+		}
+
+		/** Loads the photo on screen; everything else waits for it. */
+		function loadCurrent() {
+			load(slides[1]);
+			if (isSettled(slides[1])) afterCurrent();
+		}
+
+		function afterCurrent() {
+			if (!isOpen) return;
+			load(slides[0]);
+			load(slides[2]);
+			pumpStrip();
+		}
+
+		const fillAll = () => {
+			[-1, 0, 1].forEach((d, k) => fill(slides[k], current + d));
+			loadCurrent();
+		};
+
+		function setTrack(offsetPx: number, animate: boolean) {
+			track.classList.toggle("pv-animate", animate && !prefersReducedMotion());
+			track.style.transform = `translate3d(calc(-100% + ${offsetPx}px), 0, 0)`;
+		}
+
+		function updateChrome(i: number) {
+			counter.textContent = `${i + 1} / ${n}`;
+			status.textContent = `Φωτογραφία ${i + 1} από ${n}`;
+			original.href = photos[i].src;
+			stripItems.forEach((t, k) => t.setAttribute("aria-current", String(k === i)));
+			const t = stripItems[i];
+			if (t && isOpen) {
+				const left = clamp(t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, 0, strip.scrollWidth - strip.clientWidth);
+				strip.scrollTo({ left, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+				queueStripWindow(left); // where the strip is heading, not where it is mid-scroll
+			}
+			if (isOpen) history.replaceState(history.state, "", `#foto-${i + 1}`);
+		}
+
+		// Completes a running slide animation at once (a second arrow press mid-slide).
+		let finishSlide: (() => void) | null = null;
+
+		/** Slides to the next (1) or previous (-1) photo; the track keeps both neighbours loaded. */
+		function go(dir: 1 | -1) {
+			if (n < 2) return;
+			finishSlide?.();
+			resetZoom(false);
+			const target = wrap(current + dir);
+			load(dir === 1 ? slides[2] : slides[0]); // normally already loaded; if not, start it during the slide
+			updateChrome(target);
+			let timer = 0;
+			const finish = () => {
+				if (finishSlide !== finish) return;
+				finishSlide = null;
+				track.removeEventListener("transitionend", onEnd);
+				clearTimeout(timer);
+				current = target;
+				// Rotate the slide that left the screen to the far side and load the new neighbour into it.
+				if (dir === 1) {
+					track.appendChild(slides[0]);
+					slides = [slides[1], slides[2], slides[0]];
+					fill(slides[2], current + 1);
+				} else {
+					track.insertBefore(slides[2], slides[0]);
+					slides = [slides[2], slides[0], slides[1]];
+					fill(slides[0], current - 1);
+				}
+				setTrack(0, false);
+				loadCurrent();
+			};
+			const onEnd = (e: TransitionEvent) => e.target === track && finish();
+			finishSlide = finish;
+			if (prefersReducedMotion()) return finish();
+			track.addEventListener("transitionend", onEnd);
+			timer = window.setTimeout(finish, 450);
+			setTrack(-dir * stage.clientWidth, true);
+		}
+
+		/** Shows any photo: a neighbour slides in, a farther one (film strip, Home/End) fades in. */
+		function show(index: number) {
+			index = wrap(index);
+			if (index === current && !finishSlide) return;
+			if (index === wrap(current + 1)) return go(1);
+			if (index === wrap(current - 1)) return go(-1);
+			finishSlide?.();
+			resetZoom(false);
+			current = index;
+			updateChrome(current);
+			fillAll();
+			slides[1].animate([{ opacity: 0 }, { opacity: 1 }], { duration: prefersReducedMotion() ? 0 : 220, easing: "ease-out" });
+		}
+
+		// ---------------- Zoom & pan (the current slide) ----------------
+
+		let scale = 1;
+		let tx = 0;
+		let ty = 0;
+		const zoomBox = () => slides[1].querySelector(".pv-zoom") as HTMLElement;
+
+		function applyZoom(animate: boolean) {
+			const box = zoomBox();
+			box.classList.toggle("pv-animate", animate && !prefersReducedMotion());
+			box.style.transform = scale === 1 ? "" : `translate3d(${tx}px, ${ty}px, 0) scale(${scale})`;
+			root.classList.toggle("pv-zoomed", scale > 1);
+			const label = scale > 1 ? "Σμίκρυνση" : "Μεγέθυνση";
+			zoomBtn.setAttribute("aria-label", label);
+			zoomBtn.title = scale > 1 ? label : "Μεγέθυνση (διπλό κλικ)";
+		}
+
+		/** The zoom box's untransformed centre (screen coordinates), size, and the photo's size inside it at scale 1. */
+		function geometry() {
+			const box = zoomBox();
+			const slideRect = slides[1].getBoundingClientRect();
+			const img = photoOf(slides[1]);
+			const w = box.clientWidth;
+			const h = box.clientHeight;
+			const nw = img.naturalWidth || w;
+			const nh = img.naturalHeight || h;
+			const fit = Math.min(w / nw, h / nh);
+			return { cx: slideRect.left + box.offsetLeft + w / 2, cy: slideRect.top + box.offsetTop + h / 2, w, h, pw: nw * fit, ph: nh * fit };
+		}
+
+		function clampPan() {
+			const { w, h, pw, ph } = geometry();
+			const maxX = Math.max(0, (pw * scale - w) / 2);
+			const maxY = Math.max(0, (ph * scale - h) / 2);
+			tx = clamp(tx, -maxX, maxX);
+			ty = clamp(ty, -maxY, maxY);
+		}
+
+		/** Zooms to `next`, keeping the point under (clientX, clientY) — default the centre — in place. */
+		function zoomTo(next: number, clientX?: number, clientY?: number, animate = true) {
+			next = clamp(next, 1, MAX_SCALE);
+			const { cx, cy } = geometry();
+			const px = (clientX ?? cx) - cx;
+			const py = (clientY ?? cy) - cy;
+			tx = px - (next / scale) * (px - tx);
+			ty = py - (next / scale) * (py - ty);
+			scale = next;
+			if (scale === 1) tx = ty = 0;
+			clampPan();
+			applyZoom(animate);
+		}
+
+		function resetZoom(animate: boolean) {
+			scale = 1;
+			tx = ty = 0;
+			applyZoom(animate);
+		}
+
+		function isOnPhoto(x: number, y: number) {
+			const { cx, cy, pw, ph } = geometry();
+			return Math.abs(x - cx - tx) <= (pw * scale) / 2 && Math.abs(y - cy - ty) <= (ph * scale) / 2;
+		}
+
+		// ---------------- Gestures ----------------
+
+		type Gesture =
+			| { kind: "pending" | "swipe" | "dismiss" | "pan" | "none"; x0: number; y0: number; t0: number; tx0: number; ty0: number; dx: number; dy: number }
+			| { kind: "pinch"; dist0: number; scale0: number };
+		const pointers = new Map<number, { x: number; y: number }>();
+		let gesture: Gesture | null = null;
+
+		const pinchPoints = () => {
+			const [a, b] = [...pointers.values()];
+			return { dist: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+		};
+
+		function resetDismiss(animate: boolean) {
+			root.style.removeProperty("--pv-fade");
+			applyZoom(animate);
+		}
+
+		stage.addEventListener("pointerdown", (e) => {
+			if (e.pointerType === "mouse" && e.button !== 0) return;
+			try {
+				stage.setPointerCapture(e.pointerId);
+			} catch {} // a pointer that already ended (rare); the gesture still works without capture
+			pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+			if (pointers.size === 2) {
+				// A second finger turns any swipe into a pinch.
+				if (gesture && gesture.kind === "swipe") setTrack(0, true);
+				if (gesture && gesture.kind === "dismiss") resetDismiss(false);
+				gesture = { kind: "pinch", dist0: pinchPoints().dist, scale0: scale };
+				return;
+			}
+			if (pointers.size > 2) return;
+			const kind = scale > 1 ? "pan" : "pending";
+			gesture = { kind, x0: e.clientX, y0: e.clientY, t0: performance.now(), tx0: tx, ty0: ty, dx: 0, dy: 0 };
+		});
+
+		stage.addEventListener("pointermove", (e) => {
+			if (!pointers.has(e.pointerId)) return;
+			pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+			if (!gesture) return;
+			if (gesture.kind === "pinch") {
+				if (pointers.size < 2) return;
+				const { dist, mx, my } = pinchPoints();
+				zoomTo(gesture.scale0 * (dist / gesture.dist0), mx, my, false);
+				return;
+			}
+			if (gesture.kind === "none") return;
+			const g = gesture;
+			g.dx = e.clientX - g.x0;
+			g.dy = e.clientY - g.y0;
+			if (g.kind === "pending" && Math.hypot(g.dx, g.dy) > 8) {
+				// Sideways swipes change photo, a downward one closes; an upward drag does nothing.
+				g.kind = Math.abs(g.dx) > Math.abs(g.dy) ? "swipe" : g.dy > 0 ? "dismiss" : "none";
+				if (g.kind === "swipe") finishSlide?.();
+			}
+			if (g.kind === "swipe" && n > 1) setTrack(g.dx, false);
+			else if (g.kind === "dismiss") {
+				const box = zoomBox();
+				box.classList.remove("pv-animate");
+				box.style.transform = `translate3d(0, ${Math.max(0, g.dy)}px, 0) scale(${1 - Math.min(g.dy / 2000, 0.12)})`;
+				root.style.setProperty("--pv-fade", String(1 - Math.min(Math.max(0, g.dy) / 400, 0.75)));
+			} else if (g.kind === "pan") {
+				tx = g.tx0 + g.dx;
+				ty = g.ty0 + g.dy;
+				clampPan();
+				applyZoom(false);
+			}
+		});
+
+		const endPointer = (e: PointerEvent) => {
+			if (!pointers.delete(e.pointerId)) return;
+			const g = gesture;
+			if (!g) return;
+			if (g.kind === "pinch") {
+				if (pointers.size > 0) return;
+				gesture = null;
+				if (scale < 1.05) resetZoom(true);
+				return;
+			}
+			gesture = null;
+			if (g.kind === "none" || e.type === "pointercancel") {
+				if (g.kind === "swipe") setTrack(0, true);
+				if (g.kind === "dismiss") resetDismiss(true);
+				return;
+			}
+			const dt = Math.max(1, performance.now() - g.t0);
+			if (g.kind === "swipe") {
+				const fast = Math.abs(g.dx / dt) > 0.45;
+				if (n > 1 && (Math.abs(g.dx) > stage.clientWidth * 0.18 || fast)) go(g.dx < 0 ? 1 : -1);
+				else setTrack(0, true);
+			} else if (g.kind === "dismiss") {
+				if (g.dy > 110 || g.dy / dt > 0.5) requestClose();
+				else resetDismiss(true);
+			} else if (g.kind === "pending" || (g.kind === "pan" && Math.hypot(g.dx, g.dy) < 8)) {
+				onTap(e);
+			}
+		};
+		stage.addEventListener("pointerup", endPointer);
+		stage.addEventListener("pointercancel", endPointer);
+
+		// Double tap / double click zooms; a single tap shows or hides the chrome (touch), a single click
+		// beside the photo closes the viewer (mouse). Singles wait a moment to rule out a double.
+		let lastTap = { t: 0, x: 0, y: 0 };
+		let tapTimer = 0;
+		function onTap(e: PointerEvent) {
+			const now = performance.now();
+			clearTimeout(tapTimer);
+			if (now - lastTap.t < 300 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30) {
+				lastTap.t = 0;
+				if (scale > 1) resetZoom(true);
+				else zoomTo(2.5, e.clientX, e.clientY, true);
+				return;
+			}
+			lastTap = { t: now, x: e.clientX, y: e.clientY };
+			const touch = e.pointerType !== "mouse";
+			const onPhoto = isOnPhoto(e.clientX, e.clientY);
+			tapTimer = window.setTimeout(() => {
+				if (touch) root.classList.toggle("pv-chromeless");
+				else if (!onPhoto && scale === 1) requestClose();
+			}, 300);
+		}
+
+		stage.addEventListener(
+			"wheel",
+			(e) => {
+				e.preventDefault();
+				// Trackpad pinches arrive as ctrl+wheel with small deltas; mouse wheels as larger steps.
+				zoomTo(scale * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.002)), e.clientX, e.clientY, false);
+			},
+			{ passive: false },
+		);
+
+		// The side arrows step aside while the mouse rests.
+		let idleTimer = 0;
+		root.addEventListener("pointermove", (e) => {
+			if (e.pointerType !== "mouse") return;
+			root.classList.remove("pv-idle");
+			clearTimeout(idleTimer);
+			idleTimer = window.setTimeout(() => root.classList.add("pv-idle"), 2500);
+		});
+
+		window.addEventListener("resize", () => {
+			if (!isOpen || scale === 1) return;
+			clampPan();
+			applyZoom(false);
+		});
+
+		// ---------------- Buttons & keys ----------------
+
+		root.addEventListener("click", (e) => {
+			const target = e.target as Element;
+			const item = target.closest<HTMLElement>(".pv-stripItem");
+			if (item) return show(Number(item.dataset.index));
+			switch (target.closest<HTMLElement>("[data-pv]")?.dataset.pv) {
+				case "prev":
+					return go(-1);
+				case "next":
+					return go(1);
+				case "close":
+					return requestClose();
+				case "zoom":
+					return scale > 1 ? resetZoom(true) : zoomTo(2, undefined, undefined, true);
+				case "strip": {
+					const hidden = root.classList.toggle("pv-nostrip");
+					stripBtn.setAttribute("aria-pressed", String(!hidden));
+					return pumpStrip();
+				}
+			}
+		});
+
+		function onKey(e: KeyboardEvent) {
+			if (e.altKey || e.ctrlKey || e.metaKey) return;
+			switch (e.key) {
+				case "ArrowLeft":
+					go(-1);
+					break;
+				case "ArrowRight":
+					go(1);
+					break;
+				case "Home":
+					show(0);
+					break;
+				case "End":
+					show(n - 1);
+					break;
+				case "+":
+				case "=":
+					zoomTo(scale * 1.5);
+					break;
+				case "-":
+					zoomTo(scale / 1.5);
+					break;
+				case "0":
+					resetZoom(true);
+					break;
+				default:
+					return;
+			}
+			e.preventDefault();
+		}
+
+		// ---------------- Film strip: real photos, loaded only near the visible part ----------------
+
+		const STRIP_PARALLEL = 3;
+		const stripWaiting = new Set<HTMLButtonElement>(); // in or near view, not requested yet
+		let stripInFlight = 0;
+
+		/** Queues the strip photos in view at `left` (default: where it is now), plus one beyond each edge. */
+		function queueStripWindow(left = strip.scrollLeft) {
+			const margin = stripItems[0]?.offsetWidth ?? 0;
+			for (const item of stripItems) {
+				const near = item.offsetLeft + item.offsetWidth > left - margin && item.offsetLeft < left + strip.clientWidth + margin;
+				if (near && !item.querySelector("img")?.getAttribute("src")) stripWaiting.add(item);
+				else stripWaiting.delete(item);
+			}
+			pumpStrip();
+		}
+		strip.addEventListener("scroll", () => isOpen && queueStripWindow(), { passive: true });
+
+		/** Requests the waiting strip photos closest to the current one, a few at a time, after the main photo. */
+		function pumpStrip() {
+			if (!isOpen || root.classList.contains("pv-nostrip") || !isSettled(slides[1])) return;
+			const byDistance = [...stripWaiting].sort((a, b) => Math.abs(Number(a.dataset.index) - current) - Math.abs(Number(b.dataset.index) - current));
+			for (const item of byDistance) {
+				if (stripInFlight >= STRIP_PARALLEL) break;
+				stripWaiting.delete(item);
+				stripInFlight++;
+				const img = item.querySelector("img") as HTMLImageElement;
+				const done = () => {
+					img.onload = img.onerror = null;
+					stripInFlight--;
+					item.classList.add("pv-in");
+					pumpStrip();
+				};
+				img.onload = done;
+				img.onerror = done;
+				img.src = img.dataset.src as string;
+			}
+		}
+
+		// ---------------- Open / close (with the browser history) ----------------
+
+		function open(index: number, pushHistory: boolean) {
+			if (isOpen) return show(index);
+			isOpen = true;
+			current = wrap(index);
+			root.classList.remove("hidden", "pv-chromeless");
+			root.style.removeProperty("--pv-fade");
+			setTrack(0, false);
+			resetZoom(false);
+			fillAll();
+			if (pushHistory) history.pushState({ ...history.state, photoViewer: true }, "", `#foto-${current + 1}`);
+			pushedHistory = pushHistory;
+			updateChrome(current);
+			void root.offsetWidth; // commit the hidden state first, so the fade-in transition runs
+			root.classList.add("pv-open");
+			releaseTrap = trapFocus(root, { onEscape: requestClose, initialFocus: "container" });
+			document.addEventListener("keydown", onKey);
+		}
+
+		function close() {
+			if (!isOpen) return;
+			isOpen = false;
+			finishSlide?.();
+			clearTimeout(tapTimer);
+			document.removeEventListener("keydown", onKey);
+			root.classList.remove("pv-open");
+			releaseTrap?.(); // unlocks scrolling and returns focus to the photo that opened the viewer
+			releaseTrap = undefined;
+			const hide = () => {
+				if (isOpen) return;
+				root.classList.add("hidden");
+				resetZoom(false);
+				root.style.removeProperty("--pv-fade");
+			};
+			if (prefersReducedMotion()) hide();
+			else setTimeout(hide, 220);
+		}
+
+		/** Closing goes through the history entry the viewer added, so Back and ✕ behave the same. */
+		function requestClose() {
+			if (pushedHistory && history.state?.photoViewer) history.back();
+			else {
+				history.replaceState(history.state, "", location.pathname + location.search);
+				close();
+			}
+		}
+
+		window.addEventListener("popstate", () => {
+			const match = location.hash.match(HASH);
+			if (!match) close();
+			else if (isOpen) show(Number(match[1]) - 1);
+			else open(Number(match[1]) - 1, false);
+		});
+		document.addEventListener("photo_viewer_open", (e) => open(e.detail.index, true));
+
+		// A shared #foto-N link opens the viewer straight away.
+		const initial = location.hash.match(HASH);
+		if (initial) open(clamp(Number(initial[1]) - 1, 0, n - 1), false);
+	}
+</script>
