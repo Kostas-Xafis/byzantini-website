@@ -1,9 +1,6 @@
-/** `acceptHint` / `shortName` of FileInput.solid.tsx (importing the module only loads Solid; nothing renders). */
-import { expect, mock, test } from "bun:test";
-
-// The component's imports reach pdf.client (a jsDelivr URL import bun test cannot resolve); stub it.
-mock.module("../../lib/pdf.client", () => ({ PDF: {} }));
-const { acceptHint, shortName } = await import("../../src/components/input/FileInput.solid");
+/** `acceptHint` / `shortName` of the file fields (src/components/input/fileNames.ts — plain TS, no Solid/JSX). */
+import { expect, test } from "bun:test";
+import { acceptHint, shortName } from "../../src/components/input/fileNames";
 
 test("acceptHint turns an accept list into a Greek/short hint", () => {
 	expect(acceptHint(undefined)).toBe("");

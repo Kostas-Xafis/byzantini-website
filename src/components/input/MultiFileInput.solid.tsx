@@ -4,7 +4,7 @@ import type { IconName } from "@lib/icons";
 import { FileHandler, type FileProxy } from "@lib/fileHandling.client";
 import type { AnyRecord, DOMElement } from "@_types/global";
 import { toast } from "../admin/toast";
-import { acceptHint, shortName } from "./FileInput.solid";
+import { acceptHint, shortName } from "./fileNames";
 
 export type MultiFileInputProps = {
 	name: string;

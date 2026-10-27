@@ -13,7 +13,7 @@ import {
 	type FeeEnrollmentRow,
 	type PupilYear,
 } from "@lib/fees/recalculate.server";
-import { ALL_YEARS, currentSchoolYearStart, schoolYearOf } from "@lib/pupils/years";
+import { ALL_YEARS, currentSchoolYearStart, sameDayCutoff, schoolWeekAndMonthStart, schoolYearOf } from "@lib/pupils/years";
 import { getDb, logQuery } from "@lib/db";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
@@ -231,6 +231,24 @@ const z_DashboardSummary = z.object({
 	needs_review: z.number().int(),
 	owing: z.object({ enrollments: z.number().int(), pupils: z.number().int(), amount: z.number() }),
 	new_online: z.number().int(),
+});
+const z_DashboardYears = z.object({
+	/** The current school year ("2026-2027"), the last entry of `years`. */
+	school_year: z.string(),
+	/** Enrollments dated this week (from Monday) / this month, Greek time. */
+	week: z.number().int(),
+	month: z.number().int(),
+	/** Every school year from the first one on record to the current one, oldest first. */
+	years: z.array(
+		z.object({
+			school_year: z.string(),
+			total: z.number().int(),
+			/** Enrollments per music type, indexed by `class_id` (0 Βυζαντινή, 1 Παραδοσιακή, 2 Ευρωπαϊκή). */
+			by_class: z.array(z.number().int()),
+			/** Enrollments that year had by today's calendar date (`sameDayCutoff`); the whole year so far for the current one. */
+			to_date: z.number().int(),
+		}),
+	),
 });
 
 /** Removes a pupil from the Μαθητολόγιο, with all their enrollments. */
@@ -1010,6 +1028,55 @@ export const pupilsRoutes = {
 					new_online: row?.new_online ?? 0,
 				};
 			}, "Σφάλμα κατά την ανάκτηση της σύνοψης"),
+	),
+
+	/**
+	 * «Αρχική» dashboard: enrollments per school year and music type, each year's count on today's date
+	 * (so a running year is compared with the same point of the previous ones, not with their final
+	 * totals), and this week's / month's new enrollments.
+	 */
+	dashboardYears: new APIServer({ method: "GET", path: "/pupils/dashboard/years", responseSchema: z_DashboardYears }, [authenticateMiddleware], () =>
+		handlerResult(async () => {
+			const now = new Date();
+			const current = currentSchoolYearStart(now);
+			const [first] = await executeQuery<{ start: number | null }>(
+				"SELECT MIN(CAST(substr(registration_year, 1, 4) AS INTEGER)) AS start FROM pupil_enrollments",
+			);
+			const firstStart = Math.min(first?.start ?? current, current);
+			const starts = Array.from({ length: current - firstStart + 1 }, (_, i) => firstStart + i);
+			const cutoffs = starts.flatMap((start) => [schoolYearOf(start), sameDayCutoff(current - start, now)]);
+			const { week, month } = schoolWeekAndMonthStart(now);
+			const rows = await executeQuery<{
+				registration_year: string;
+				class_id: number | null;
+				total: number;
+				to_date: number;
+				week: number;
+				month: number;
+			}>(
+				`WITH cutoffs(registration_year, cutoff) AS (VALUES ${starts.map(() => "(?, ?)").join(", ")})
+					SELECT c.registration_year, e.class_id, COUNT(e.id) AS total, COALESCE(SUM(e.date < c.cutoff), 0) AS to_date,
+						(SELECT COUNT(*) FROM pupil_enrollments WHERE date >= ?) AS week,
+						(SELECT COUNT(*) FROM pupil_enrollments WHERE date >= ?) AS month
+					FROM cutoffs c LEFT JOIN pupil_enrollments e ON e.registration_year = c.registration_year
+					GROUP BY c.registration_year, e.class_id`,
+				[...cutoffs, week, month],
+			);
+			const years = starts.map((start) => {
+				const schoolYear = schoolYearOf(start);
+				const byClass = [0, 0, 0];
+				let total = 0;
+				let toDate = 0;
+				for (const row of rows) {
+					if (row.registration_year !== schoolYear || row.class_id === null) continue;
+					byClass[row.class_id] = (byClass[row.class_id] ?? 0) + row.total;
+					total += row.total;
+					toDate += row.to_date;
+				}
+				return { school_year: schoolYear, total, by_class: byClass, to_date: toDate };
+			});
+			return { school_year: schoolYearOf(current), week: rows[0]?.week ?? 0, month: rows[0]?.month ?? 0, years };
+		}, "Σφάλμα κατά την ανάκτηση των στατιστικών εγγραφών"),
 	),
 
 	/**

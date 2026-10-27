@@ -6,7 +6,10 @@ import {
 	currentSchoolYearStart,
 	isRegistrationWindowOpen,
 	REGISTRATION_WINDOW_LABEL,
+	sameDayCutoff,
 	schoolDateParts,
+	schoolDayStart,
+	schoolWeekAndMonthStart,
 } from "@lib/pupils/years";
 
 /** A wall-clock time in Greece (EEST, UTC+3, from late March to late October; EET, UTC+2, otherwise). */
@@ -72,5 +75,43 @@ describe("registration window", () => {
 	test("the window boundary follows Greek time, not UTC", () => {
 		// 31 August 21:30 UTC is 1 September 00:30 in Athens.
 		expect(isRegistrationWindowOpen(new Date("2026-08-31T21:30:00Z"))).toBe(true);
+	});
+});
+
+describe("dashboard date windows", () => {
+	test("schoolDayStart is Greek midnight in summer and winter time", () => {
+		expect(schoolDayStart(2026, 10, 27)).toBe(Date.parse("2026-10-27T00:00:00+02:00"));
+		expect(schoolDayStart(2026, 7, 15)).toBe(Date.parse("2026-07-15T00:00:00+03:00"));
+	});
+
+	test("schoolDayStart on the days the clocks change", () => {
+		// EEST ends at 04:00 on 25 October 2026 and begins at 03:00 on 29 March 2026: midnight keeps the old offset
+		expect(schoolDayStart(2026, 10, 25)).toBe(Date.parse("2026-10-25T00:00:00+03:00"));
+		expect(schoolDayStart(2026, 10, 26)).toBe(Date.parse("2026-10-26T00:00:00+02:00"));
+		expect(schoolDayStart(2026, 3, 29)).toBe(Date.parse("2026-03-29T00:00:00+02:00"));
+		expect(schoolDayStart(2026, 3, 30)).toBe(Date.parse("2026-03-30T00:00:00+03:00"));
+	});
+
+	test("schoolDayStart lets the day overflow into the next or previous month", () => {
+		expect(schoolDayStart(2026, 10, 32)).toBe(Date.parse("2026-11-01T00:00:00+02:00"));
+		expect(schoolDayStart(2026, 11, 0)).toBe(Date.parse("2026-10-31T00:00:00+02:00"));
+	});
+
+	test("the week starts on Monday and the month on the 1st, in Greek time", () => {
+		// Tuesday 27 October 2026
+		const { week, month } = schoolWeekAndMonthStart(athens("2026-10-27T15:00:00", "+02:00"));
+		expect(week).toBe(Date.parse("2026-10-26T00:00:00+02:00"));
+		expect(month).toBe(Date.parse("2026-10-01T00:00:00+03:00"));
+		// a Sunday still belongs to the week that began the Monday before
+		expect(schoolWeekAndMonthStart(athens("2026-11-01T23:00:00", "+02:00")).week).toBe(Date.parse("2026-10-26T00:00:00+02:00"));
+		// Sunday 22:30 UTC is already Monday in Athens
+		expect(schoolWeekAndMonthStart(new Date("2026-11-01T22:30:00Z")).week).toBe(Date.parse("2026-11-02T00:00:00+02:00"));
+	});
+
+	test("sameDayCutoff ends today's date the given number of years back", () => {
+		const now = athens("2026-10-27T15:00:00", "+02:00");
+		expect(sameDayCutoff(0, now)).toBe(Date.parse("2026-10-28T00:00:00+02:00"));
+		expect(sameDayCutoff(1, now)).toBe(Date.parse("2025-10-28T00:00:00+02:00"));
+		expect(sameDayCutoff(3, now)).toBe(Date.parse("2023-10-28T00:00:00+03:00"));
 	});
 });

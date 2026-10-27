@@ -1,28 +1,11 @@
-import { createAPIResource, type APIResourceStore } from "@hooks/createAPIResource.solid";
-import { API } from "@routes/index.client";
-import { loadScript } from "@utilities/scripts";
-import { Show, createEffect, createMemo, createSignal, onCleanup, onMount, type JSX } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createAPIResource } from "@hooks/createAPIResource.solid";
+import { API, type APIResponse } from "@routes/index.client";
+import { useNavigate } from "@solidjs/router";
+import { For, Show, createMemo, createSignal, type JSX } from "solid-js";
 import Spinner from "../other/Spinner.solid";
-import { cardClass } from "./Panel.solid";
+import { cardClass, primaryButtonClass } from "./Panel.solid";
 import Icon from "@components/other/Icon.solid";
 import type { IconName } from "@lib/icons";
-
-type TotalsTable = {
-	total_registrations: number;
-};
-
-const firstYear = 2023;
-const SCHOOL_YEAR_START_MONTH = 7; // August (0-indexed)
-const SCHOOL_YEAR_START_DAY = 25;
-
-const getAcademicYearStart = (date = new Date()) => {
-	const month = date.getMonth();
-	const day = date.getDate();
-	const year = date.getFullYear();
-	const hasStartedCurrentSchoolYear = month > SCHOOL_YEAR_START_MONTH || (month === SCHOOL_YEAR_START_MONTH && day >= SCHOOL_YEAR_START_DAY);
-	return hasStartedCurrentSchoolYear ? year : year - 1;
-};
 
 /*
  * «Από την τελευταία σας επίσκεψη»: the dashboard remembers, per device, when it was last opened.
@@ -49,6 +32,22 @@ function trackVisit(now = Date.now()): number | null {
 
 const formatEuro = (amount: number) => new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(amount);
 const formatVisit = (time: number) => new Date(time).toLocaleString("el-GR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const formatCount = (n: number) => new Intl.NumberFormat("el-GR").format(n);
+const formatChange = (percent: number) => new Intl.NumberFormat("el-GR", { maximumFractionDigits: 1, signDisplay: "exceptZero" }).format(percent) + "%";
+/** "2026-2027" → "26-27" */
+const shortYear = (schoolYear: string) => `${schoolYear.slice(2, 4)}-${schoolYear.slice(-2)}`;
+/** Percentage change, or null when there is nothing to compare with. */
+const change = (now: number, before: number | undefined) => (before ? ((now - before) / before) * 100 : null);
+
+/**
+ * Music types in `class_id` order. The bar colours are a categorical palette checked for colour-blind
+ * separation on both card surfaces (white / #242424); the chart's labels never wear them.
+ */
+const MUSIC_TYPES = [
+	{ label: "Βυζαντινή", bar: "bg-red-700 dark:bg-red-500" },
+	{ label: "Παραδοσιακή", bar: "bg-emerald-600" },
+	{ label: "Ευρωπαϊκή", bar: "bg-sky-600" },
+] as const;
 
 /** A dashboard tile that opens the list behind its number. */
 function AttentionTile(props: { href: string; icon: IconName; title: string; value: JSX.Element; detail: JSX.Element; calm: boolean }) {
@@ -74,278 +73,348 @@ function AttentionTile(props: { href: string; icon: IconName; title: string; val
 	);
 }
 
-const currentAcademicYear = getAcademicYearStart();
-const years = new Array<number>(Math.max(currentAcademicYear - firstYear + 1, 1)).fill(1).map((_, i) => firstYear + i);
+/** A signed percentage with its direction spelled out by the arrow and the sign, not only the colour. */
+function Change(props: { percent: number; class?: string }) {
+	return (
+		<span
+			class={
+				"inline-flex items-center gap-0.5 font-semibold tabular-nums " +
+				(props.percent > 0 ? "text-emerald-700 dark:text-emerald-400" : props.percent < 0 ? "text-danger" : "text-ink-muted") +
+				(props.class ? ` ${props.class}` : "")
+			}>
+			<Show when={props.percent !== 0}>
+				<Icon name={props.percent > 0 ? "chevron-up" : "chevron-down"} class="text-[0.85em]" />
+			</Show>
+			{formatChange(props.percent)}
+		</span>
+	);
+}
+
+type DashboardYears = APIResponse["Pupils.dashboardYears"];
+
+/** The running school year: its total so far against the previous year on the same date. */
+function CurrentYearCard(props: { data: DashboardYears }) {
+	const current = () => props.data.years.at(-1);
+	const previous = () => props.data.years.at(-2);
+	const monthLabel = new Date().toLocaleDateString("el-GR", { month: "long" });
+	return (
+		<section class={`${cardClass} p-4 grid content-start gap-1`} aria-labelledby="dashboard-current-year">
+			<h2 id="dashboard-current-year" class="text-lg font-bold">
+				Σχολικό έτος {props.data.school_year.slice(0, 5)}
+				{props.data.school_year.slice(-2)}
+			</h2>
+			<p class="mt-1 flex items-baseline gap-2">
+				<span class="text-5xl font-bold tabular-nums">{formatCount(current()?.total ?? 0)}</span>
+				<span class="text-ink-muted">{current()?.total === 1 ? "εγγραφή" : "εγγραφές"} μέχρι σήμερα</span>
+			</p>
+			<Show when={previous()} fallback={<p class="text-sm text-ink-muted">Δεν υπάρχει προηγούμενο έτος για σύγκριση</p>}>
+				{(prev) => (
+					<p class="text-sm text-ink-muted">
+						<Show when={prev().to_date > 0} fallback="Πέρυσι δεν υπήρχαν εγγραφές αυτή την ημερομηνία">
+							<Change percent={change(current()?.total ?? 0, prev().to_date) ?? 0} /> σε σχέση με πέρυσι τέτοια μέρα (
+							{formatCount(prev().to_date)})
+						</Show>
+					</p>
+				)}
+			</Show>
+			<dl class="mt-3 pt-3 border-t border-line grid grid-cols-2 gap-4">
+				<div>
+					<dt class="text-sm text-ink-muted">Αυτή την εβδομάδα</dt>
+					<dd class="text-2xl font-bold tabular-nums">{formatCount(props.data.week)}</dd>
+				</div>
+				<div>
+					<dt class="text-sm text-ink-muted">Τον {monthLabel}</dt>
+					<dd class="text-2xl font-bold tabular-nums">{formatCount(props.data.month)}</dd>
+				</div>
+			</dl>
+		</section>
+	);
+}
+
+/** Opens the Μαθητολόγιο with the query already searched (`/admin/pupils?q=`), plus the pages used daily. */
+function PupilSearchCard(props: { schoolYear: string }) {
+	const navigate = useNavigate();
+	const [query, setQuery] = createSignal("");
+	const links: { href: string; icon: IconName; label: string }[] = [
+		{ href: `/admin/registrations?year=${props.schoolYear.slice(0, 4)}`, icon: "clipboard-list", label: `Εγγραφές ${shortYear(props.schoolYear)}` },
+		{ href: "/admin/pupils", icon: "address-book", label: "Μαθητολόγιο" },
+		{ href: "/admin/announcements", icon: "megaphone", label: "Ανακοινώσεις" },
+		{ href: "/admin/teachers", icon: "teacher", label: "Καθηγητές" },
+	];
+	return (
+		<section class={`${cardClass} p-4 grid content-start gap-3`} aria-labelledby="dashboard-pupil-search">
+			<h2 id="dashboard-pupil-search" class="text-lg font-bold">
+				Βρείτε μαθητή
+			</h2>
+			<form
+				role="search"
+				class="flex gap-2"
+				onSubmit={(e) => {
+					e.preventDefault();
+					const text = query().trim();
+					navigate(text ? `/admin/pupils?q=${encodeURIComponent(text)}` : "/admin/pupils");
+				}}>
+				<label class="flex-1 min-w-0 flex items-center gap-2 rounded-lg border border-line bg-surface-muted px-3 focus-within:ring-2 focus-within:ring-accent-ink/40">
+					<Icon name="search" class="text-ink-muted" />
+					<input
+						type="search"
+						name="q"
+						autocomplete="off"
+						spellcheck={false}
+						aria-label="Αναζήτηση μαθητή με ΑΜ ή ονοματεπώνυμο"
+						placeholder="ΑΜ ή ονοματεπώνυμο…"
+						class="min-w-0 flex-1 bg-transparent py-2 text-ink placeholder:text-ink-muted focus-visible:outline-hidden"
+						value={query()}
+						onInput={(e) => setQuery(e.currentTarget.value)}
+					/>
+				</label>
+				<button type="submit" class={`${primaryButtonClass} shrink-0 max-sm:px-3`} aria-label="Αναζήτηση">
+					<Icon name="arrow-right" class="sm:hidden" />
+					<span class="max-sm:hidden">Αναζήτηση</span>
+				</button>
+			</form>
+			<nav aria-label="Συντομεύσεις" class="mt-1 pt-3 border-t border-line grid grid-cols-2 gap-2">
+				<For each={links}>
+					{(link) => (
+						<a
+							href={link.href}
+							class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent-ink transition-colors">
+							<Icon name={link.icon} class="text-accent-ink" />
+							{link.label}
+						</a>
+					)}
+				</For>
+			</nav>
+		</section>
+	);
+}
+
+/**
+ * Enrollments per school year as horizontal bars stacked by music type, newest first. The running year
+ * carries a marker at the previous year's count on the same date — its fair comparison — and only
+ * completed years show a full-year change.
+ */
+function YearsChart(props: { data: DashboardYears }) {
+	const rows = createMemo(() => {
+		const years = props.data.years;
+		return years
+			.map((year, i) => {
+				const previous = years[i - 1];
+				const running = i === years.length - 1;
+				return { ...year, running, previous, yoy: running ? null : change(year.total, previous?.total) };
+			})
+			.reverse();
+	});
+	const scale = createMemo(() => Math.max(1, ...props.data.years.map((year) => year.total)));
+	const percentOf = (n: number) => `${(n / scale()) * 100}%`;
+	const comparison = () => rows()[0]?.previous;
+	const [hovered, setHovered] = createSignal<{ year: string; classId: number } | null>(null);
+
+	return (
+		<section class={`${cardClass} p-4`} aria-labelledby="dashboard-years">
+			<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+				<h2 id="dashboard-years" class="text-lg font-bold">
+					Εγγραφές ανά σχολικό έτος
+				</h2>
+				<ul class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-muted" aria-label="Υπόμνημα">
+					<For each={MUSIC_TYPES}>
+						{(type) => (
+							<li class="flex items-center gap-1.5">
+								<span class={`size-2.5 rounded-full ${type.bar}`} aria-hidden="true" />
+								{type.label}
+							</li>
+						)}
+					</For>
+					<Show when={comparison()}>
+						<li class="flex items-center gap-1.5">
+							<span class="h-3.5 w-0.5 rounded-full bg-ink" aria-hidden="true" />
+							Πέρυσι τέτοια μέρα
+						</li>
+					</Show>
+				</ul>
+			</div>
+			<div class="mt-5 grid gap-4">
+				<For each={rows()}>
+					{(row) => {
+						const segments = MUSIC_TYPES.map((type, classId) => ({ ...type, classId, count: row.by_class[classId] ?? 0 })).filter(
+							(s) => s.count > 0,
+						);
+						const offsetOf = (index: number) => segments.slice(0, index).reduce((sum, s) => sum + s.count, 0);
+						const description =
+							`${shortYear(row.school_year)}: ${formatCount(row.total)} εγγραφές — ` +
+							segments.map((s) => `${s.label} ${formatCount(s.count)}`).join(", ");
+						return (
+							<div class="min-h-9 grid grid-cols-[3.75rem_1fr_6.5rem] max-sm:grid-cols-[4rem_1fr_4.5rem] items-center gap-x-3">
+								<div class="leading-tight">
+									<p class="font-semibold tabular-nums">{shortYear(row.school_year)}</p>
+									<Show when={row.running}>
+										<p class="text-xs text-ink-muted whitespace-nowrap">σε εξέλιξη</p>
+									</Show>
+								</div>
+								<div class="relative h-5" role="img" aria-label={description}>
+									<div class="flex h-full gap-0.5" style={{ width: percentOf(row.total) }}>
+										<For each={segments}>
+											{(segment) => (
+												<div
+													class={`h-full min-w-0.5 last:rounded-e transition-opacity ${segment.bar}`}
+													classList={{
+														"opacity-40":
+															!!hovered() && !(hovered()?.year === row.school_year && hovered()?.classId === segment.classId),
+													}}
+													style={{ "flex-grow": segment.count, "flex-basis": 0 }}
+													onPointerEnter={() => setHovered({ year: row.school_year, classId: segment.classId })}
+													onPointerLeave={() => setHovered(null)}
+												/>
+											)}
+										</For>
+									</div>
+									<Show when={row.running && row.previous}>
+										{(prev) => (
+											<span
+												class="pointer-events-none absolute -top-1 -bottom-1 w-0.5 -translate-x-1/2 rounded-full bg-ink ring-2 ring-surface"
+												style={{ left: percentOf(prev().to_date) }}
+												aria-hidden="true"
+											/>
+										)}
+									</Show>
+									<For each={segments}>
+										{(segment, index) => (
+											<Show when={hovered()?.year === row.school_year && hovered()?.classId === segment.classId}>
+												<div
+													class="pointer-events-none absolute bottom-full z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink shadow-md shadow-shade"
+													style={{ left: percentOf(offsetOf(index()) + segment.count / 2) }}
+													aria-hidden="true">
+													<span class="font-semibold">{segment.label}</span> · {formatCount(segment.count)} (
+													{Math.round((segment.count / row.total) * 100)}%)
+												</div>
+											</Show>
+										)}
+									</For>
+								</div>
+								<p class="text-end leading-tight">
+									<span class="font-semibold tabular-nums">{formatCount(row.total)}</span>
+									<Show when={row.yoy !== null}>
+										<span class="block text-xs" title="Σε σχέση με το προηγούμενο σχολικό έτος">
+											<Change percent={row.yoy!} />
+										</span>
+									</Show>
+								</p>
+							</div>
+						);
+					}}
+				</For>
+			</div>
+			<details class="mt-5 text-sm">
+				<summary class="cursor-pointer w-fit text-ink-muted hover:text-ink">Προβολή ως πίνακας</summary>
+				<div class="mt-3 overflow-x-auto">
+					<table class="w-full text-end tabular-nums">
+						<thead class="text-ink-muted">
+							<tr class="border-b border-line">
+								<th scope="col" class="py-1.5 pe-3 text-start font-semibold">
+									Σχολικό έτος
+								</th>
+								<For each={MUSIC_TYPES}>
+									{(type) => (
+										<th scope="col" class="py-1.5 px-3 font-semibold">
+											{type.label}
+										</th>
+									)}
+								</For>
+								<th scope="col" class="py-1.5 px-3 font-semibold">
+									Σύνολο
+								</th>
+								<th scope="col" class="py-1.5 ps-3 font-semibold">
+									Μέχρι τέτοια μέρα
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<For each={rows()}>
+								{(row) => (
+									<tr class="border-b border-line last:border-0">
+										<th scope="row" class="py-1.5 pe-3 text-start font-semibold">
+											{shortYear(row.school_year)}
+										</th>
+										<For each={MUSIC_TYPES}>{(_, classId) => <td class="py-1.5 px-3">{formatCount(row.by_class[classId()] ?? 0)}</td>}</For>
+										<td class="py-1.5 px-3 font-semibold">{formatCount(row.total)}</td>
+										<td class="py-1.5 ps-3">{formatCount(row.to_date)}</td>
+									</tr>
+								)}
+							</For>
+						</tbody>
+					</table>
+				</div>
+			</details>
+		</section>
+	);
+}
 
 export default function TotalsTable() {
-	const [store, setStore] = createStore<APIResourceStore>({});
-	let growthCanvas: HTMLCanvasElement | undefined;
-	let growthChartInstance: { destroy: () => void } | null = null;
-	const [isDarkMode, setIsDarkMode] = createSignal(false);
-	let themeObserver: MutationObserver | undefined;
-
-	onMount(() => {
-		const root = document.documentElement;
-		setIsDarkMode(root.classList.contains("dark"));
-		themeObserver = new MutationObserver(() => {
-			setIsDarkMode(root.classList.contains("dark"));
-		});
-		themeObserver.observe(root, { attributes: true, attributeFilter: ["class"] });
-	});
-
-	// The listing route takes the school year as a string token (see lib/pupils/years.ts).
-	const initialRegistrationsArgs = { UrlArgs: { year: String(getAcademicYearStart()) } };
-	createAPIResource(API.Pupils.getTotalByYear, undefined, { cache: setStore });
-	createAPIResource(API.Pupils.getEnrollmentsByYear, () => initialRegistrationsArgs, { cache: setStore });
+	const [yearStats] = createAPIResource(API.Pupils.dashboardYears);
 	// Re-fetched on every mount, so edits made elsewhere show up when the admin comes back here.
 	const previousVisit = trackVisit();
 	const since = previousVisit ?? Date.now() - FALLBACK_WINDOW_MS;
 	const [attention] = createAPIResource(API.Pupils.dashboardSummary, () => ({ UrlArgs: { since } }));
 
-	const growthChart = createMemo(() => {
-		const totals = store[API.Pupils.getTotalByYear];
-		if (!totals) return { labels: [] as string[], values: [] as number[], lastValue: 0 };
-
-		const values = years.map((year) => totals[year] || 0);
-		const labels = years.map((year) => `${year.toString().slice(-2)}-${(year + 1).toString().slice(-2)}`);
-		return { labels, values, lastValue: values.at(-1) || 0 };
-	});
-
-	const recentGrowth = createMemo(() => {
-		const { labels, values } = growthChart();
-		if (!labels.length) return [] as { label: string; total: number; yoy: number | null }[];
-
-		const start = Math.max(labels.length - 3, 0);
-		const items = labels.slice(start).map((label, idx) => {
-			const valueIndex = start + idx;
-			const total = values[valueIndex] || 0;
-			const prev = values[valueIndex - 1];
-			const yoy =
-				typeof prev === "number" && prev > 0 ? ((total - prev) / prev) * 100 : typeof prev === "number" && prev === 0 ? (total > 0 ? 100 : 0) : null;
-
-			return { label, total, yoy };
-		});
-
-		return items.reverse();
-	});
-
-	createEffect(async () => {
-		const chartData = growthChart();
-		const darkMode = isDarkMode();
-		if (!growthCanvas || !chartData.labels.length) return;
-
-		await loadScript("https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js", () => !!(window as any).Chart);
-
-		const Chart = (window as any).Chart;
-		const ctx = growthCanvas.getContext("2d");
-		if (!Chart || !ctx) return;
-
-		if (growthChartInstance) growthChartInstance.destroy();
-
-		growthChartInstance = new Chart(ctx, {
-			type: "line",
-			data: {
-				labels: chartData.labels,
-				datasets: [
-					{
-						label: "Σύνολο εγγραφών",
-						data: chartData.values,
-						borderColor: darkMode ? "rgb(248, 113, 113)" : "rgb(127, 29, 29)",
-						backgroundColor: darkMode ? "rgba(248, 113, 113, 0.2)" : "rgba(127, 29, 29, 0.15)",
-						pointBackgroundColor: darkMode ? "rgb(252, 165, 165)" : "rgb(127, 29, 29)",
-						pointBorderColor: darkMode ? "rgb(26,26,26)" : "rgb(255,255,255)",
-						pointRadius: 3,
-						tension: 0.3,
-						fill: true,
-					},
-				],
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: {
-						display: false,
-					},
-					tooltip: {
-						displayColors: false,
-						backgroundColor: darkMode ? "rgba(17, 24, 39, 0.95)" : "rgba(127, 29, 29, 0.95)",
-						titleColor: "rgb(254, 242, 242)",
-						bodyColor: "rgb(254, 242, 242)",
-						callbacks: {
-							title: (items: any[]) => `Σχολικό έτος ${items[0]?.label || ""}`,
-							label: (ctx: any) => `${ctx.parsed?.y ?? 0} εγγραφές`,
-						},
-					},
-				},
-				scales: {
-					x: {
-						grid: { display: false },
-						ticks: {
-							color: darkMode ? "rgba(248, 250, 252, 0.92)" : "rgba(127, 29, 29, 0.8)",
-						},
-					},
-					y: {
-						beginAtZero: true,
-						grid: {
-							color: darkMode ? "rgba(148, 163, 184, 0.22)" : "rgba(127, 29, 29, 0.08)",
-						},
-						ticks: {
-							precision: 0,
-							color: darkMode ? "rgba(248, 250, 252, 0.92)" : "rgba(127, 29, 29, 0.8)",
-						},
-					},
-				},
-			},
-		});
-	});
-
-	onCleanup(() => {
-		if (themeObserver) themeObserver.disconnect();
-		if (growthChartInstance) growthChartInstance.destroy();
-	});
-
-	const summary = createMemo(() => {
-		const registrations = store[API.Pupils.getEnrollmentsByYear] || [];
-		const now = new Date();
-
-		const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-		monthStart.setHours(0, 0, 0, 0);
-		const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-		nextMonthStart.setHours(0, 0, 0, 0);
-
-		const mondayOffset = (now.getDay() + 6) % 7;
-		const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
-		weekStart.setHours(0, 0, 0, 0);
-		const nextWeekStart = new Date(weekStart);
-		nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-
-		const monthCount = registrations.filter((reg) => reg.date >= monthStart.getTime() && reg.date < nextMonthStart.getTime()).length;
-		const weekCount = registrations.filter((reg) => reg.date >= weekStart.getTime() && reg.date < nextWeekStart.getTime()).length;
-
-		const monthLabel = now.toLocaleDateString("el-GR", { month: "long", year: "numeric" });
-		return {
-			weekCount,
-			monthCount,
-			monthLabel: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
-		};
-	});
-
 	return (
-		<Show when={store[API.Pupils.getTotalByYear]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
-			<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-ink">
-				<Show when={!attention.error && attention()}>
-					{(data) => {
-						const yearStart = data().school_year.slice(0, 4);
-						const shortYear = `${yearStart}-${data().school_year.slice(-2)}`;
-						return (
-							<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Χρειάζονται προσοχή">
-								<h2 class="font-anaktoria text-2xl text-ink">Χρειάζονται προσοχή</h2>
-								<div class="grid grid-cols-3 max-lg:grid-cols-1 gap-4">
-									<AttentionTile
-										href="/admin/pupils?review=1"
-										icon="clipboard-check"
-										title="Προς έλεγχο"
-										value={data().needs_review}
-										detail={data().needs_review === 1 ? "μαθητής στο Μαθητολόγιο" : "μαθητές στο Μαθητολόγιο"}
-										calm={data().needs_review === 0}
-									/>
-									<AttentionTile
-										href={`/admin/registrations?year=${yearStart}`}
-										icon="euro"
-										title={`Οφειλές ${shortYear}`}
-										value={formatEuro(data().owing.amount)}
-										detail={
-											data().owing.enrollments === 0
-												? "Δεν υπάρχουν ανεξόφλητες εγγραφές"
-												: `${data().owing.enrollments} ${data().owing.enrollments === 1 ? "εγγραφή" : "εγγραφές"} · ${data().owing.pupils} ${data().owing.pupils === 1 ? "μαθητής" : "μαθητές"}`
-										}
-										calm={data().owing.enrollments === 0}
-									/>
-									<AttentionTile
-										href={`/admin/registrations?year=${yearStart}`}
-										icon="globe"
-										title="Νέες online εγγραφές"
-										value={data().new_online}
-										detail={
-											previousVisit === null
-												? "τις τελευταίες 7 ημέρες"
-												: `από την τελευταία σας επίσκεψη (${formatVisit(previousVisit)})`
-										}
-										calm={data().new_online === 0}
-									/>
-								</div>
-							</section>
-						);
-					}}
-				</Show>
-				<div class="w-full max-w-5xl justify-self-center grid grid-cols-2 max-md:grid-cols-1 gap-4">
-					<div class={`${cardClass} p-4`}>
-						<p class="text-lg font-bold tracking-wide text-accent-ink/80">Αυτή την εβδομάδα</p>
-						<p class="text-3xl font-bold text-accent-ink mt-1">{summary().weekCount}</p>
-						<p class="text-sm text-ink-muted mt-1">Νέες εγγραφές</p>
-					</div>
-					<div class={`${cardClass} p-4`}>
-						<p class="text-lg font-bold tracking-wide text-accent-ink/80">Αυτόν τον μήνα</p>
-						<p class="text-3xl font-bold text-accent-ink mt-1">{summary().monthCount}</p>
-						<p class="text-sm text-ink-muted mt-1">{summary().monthLabel}</p>
-					</div>
-				</div>
-				<div class={`w-full max-w-5xl justify-self-center ${cardClass} p-4`}>
-					<p class="text-xl font-bold tracking-wide text-accent-ink/80">Γρήγορες ενέργειες</p>
-					<div class="mt-3 grid grid-cols-2 max-sm:grid-cols-1 gap-2 h-max">
-						<a
-							href="/admin/registrations"
-							class="text-center px-3 py-2 text-lg rounded-md bg-brand text-brand-ink hover:bg-brand-hover transition-colors">
-							Εγγραφές
-						</a>
-						<a
-							href="/admin/announcements"
-							class="text-center px-3 py-2 text-lg rounded-md bg-brand text-brand-ink hover:bg-brand-hover transition-colors">
-							Ανακοινώσεις
-						</a>
-						<a
-							href="/admin/payments"
-							class="text-center px-3 py-2 text-lg rounded-md border border-brand text-accent-ink hover:bg-accent-soft transition-colors">
-							Οφειλές
-						</a>
-						<a
-							href="/admin/teachers"
-							class="text-center px-3 py-2 text-lg rounded-md border border-brand text-accent-ink hover:bg-accent-soft transition-colors">
-							Καθηγητές
-						</a>
-					</div>
-				</div>
-				<div class={`w-full max-w-5xl justify-self-center ${cardClass} p-4`}>
-					<div class="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-						<p class="text-lg font-semibold tracking-wide text-accent-ink/80">Εξέλιξη συνολικών εγγραφών</p>
-						<p class="text-sm text-ink-muted">Τελευταίο έτος: {growthChart().lastValue}</p>
-					</div>
-					<div class="mt-3 grid grid-cols-[minmax(320px,440px)_1fr] max-md:grid-cols-1 gap-4 items-start">
-						<div class="w-full max-w-110 h-47.5 self-center">
-							<canvas ref={growthCanvas}></canvas>
-						</div>
-						<div class="grid grid-cols-1 gap-2">
-							<p class="text-sm font-semibold text-accent-ink/80">Τελευταία 3 σχολικά έτη</p>
-							{recentGrowth().map((item) => (
-								<div class="rounded-md border border-line bg-surface-muted px-3 py-2 flex items-center justify-between gap-3">
-									<div>
-										<p class="text-sm font-semibold text-accent-ink">{item.label}</p>
-										<p class="text-xs text-ink-muted">{item.total} εγγραφές</p>
+		<Show when={!yearStats.error && yearStats()} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
+			{(stats) => (
+				<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-ink">
+					<Show when={!attention.error && attention()}>
+						{(data) => {
+							const yearStart = data().school_year.slice(0, 4);
+							const shortYear = `${yearStart}-${data().school_year.slice(-2)}`;
+							return (
+								<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Χρειάζονται προσοχή">
+									<h2 class="font-anaktoria text-2xl text-ink">Χρειάζονται προσοχή</h2>
+									<div class="grid grid-cols-3 max-lg:grid-cols-1 gap-4">
+										<AttentionTile
+											href="/admin/pupils?review=1"
+											icon="clipboard-check"
+											title="Προς έλεγχο"
+											value={data().needs_review}
+											detail={data().needs_review === 1 ? "μαθητής στο Μαθητολόγιο" : "μαθητές στο Μαθητολόγιο"}
+											calm={data().needs_review === 0}
+										/>
+										<AttentionTile
+											href={`/admin/registrations?year=${yearStart}`}
+											icon="euro"
+											title={`Οφειλές ${shortYear}`}
+											value={formatEuro(data().owing.amount)}
+											detail={
+												data().owing.enrollments === 0
+													? "Δεν υπάρχουν ανεξόφλητες εγγραφές"
+													: `${data().owing.enrollments} ${data().owing.enrollments === 1 ? "εγγραφή" : "εγγραφές"} · ${data().owing.pupils} ${data().owing.pupils === 1 ? "μαθητής" : "μαθητές"}`
+											}
+											calm={data().owing.enrollments === 0}
+										/>
+										<AttentionTile
+											href={`/admin/registrations?year=${yearStart}`}
+											icon="globe"
+											title="Νέες online εγγραφές"
+											value={data().new_online}
+											detail={
+												previousVisit === null
+													? "τις τελευταίες 7 ημέρες"
+													: `από την τελευταία σας επίσκεψη (${formatVisit(previousVisit)})`
+											}
+											calm={data().new_online === 0}
+										/>
 									</div>
-									<p
-										class={
-											"text-sm font-semibold " +
-											(item.yoy === null ? "text-ink-muted" : item.yoy >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-danger")
-										}>
-										{item.yoy === null ? "—" : `${item.yoy >= 0 ? "+" : ""}${item.yoy.toFixed(1)}%`}
-									</p>
-								</div>
-							))}
+								</section>
+							);
+						}}
+					</Show>
+					<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Εγγραφές">
+						<h2 class="font-anaktoria text-2xl text-ink">Εγγραφές</h2>
+						<div class="grid grid-cols-2 max-md:grid-cols-1 gap-4">
+							<CurrentYearCard data={stats()} />
+							<PupilSearchCard schoolYear={stats().school_year} />
 						</div>
-					</div>
+						<YearsChart data={stats()} />
+					</section>
 				</div>
-			</div>
+			)}
 		</Show>
 	);
 }
