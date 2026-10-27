@@ -5,6 +5,7 @@ import { z } from "astro/zod";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
 import { MIMETypeMap } from "@lib/utils.server.ts";
+import { announcementPath } from "@utilities/announcementUrl";
 import { z_AnnouncementImages, z_Announcements } from "@lib/api/schemas";
 import { expectBody, fetchBucketFile, getJson, useTestAPI } from "../testHelpers.ts";
 
@@ -84,7 +85,7 @@ function announcementsTest() {
 		expect(sitemap).not.toBeNull();
 
 		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-		expect(sitemapStr).toContain(announcement.title.replaceAll(" ", "%20"));
+		expect(sitemapStr).toContain(announcementPath(announcement.title));
 	});
 	test("--announcements-- #2", async () => {
 		const res = await useTestAPI("Announcements.getById", {
@@ -178,8 +179,8 @@ function announcementsTest() {
 		expect(sitemap).not.toBeNull();
 
 		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-		expect(sitemapStr).toContain(newTitle.replaceAll(" ", "%20"));
-		expect(sitemapStr).not.toContain(announcement.title.replaceAll(" ", "%20"));
+		expect(sitemapStr).toContain(announcementPath(newTitle));
+		expect(sitemapStr).not.toContain(announcementPath(announcement.title));
 	});
 	test("--announcements-- #8", async () => {
 		const res = await useTestAPI("Announcements.delete", {
@@ -193,7 +194,7 @@ function announcementsTest() {
 		expect(sitemap).not.toBeNull();
 
 		const sitemapStr = new TextDecoder().decode(sitemap as ArrayBuffer);
-		expect(sitemapStr).not.toContain(newTitle.replaceAll(" ", "%20"));
+		expect(sitemapStr).not.toContain(announcementPath(newTitle));
 	});
 }
 

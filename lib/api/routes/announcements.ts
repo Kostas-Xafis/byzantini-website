@@ -1,13 +1,11 @@
 import { z } from "astro/zod";
 import type { AnnouncementImages, Announcements } from "@_types/entities";
-import type { SitemapItem } from "@_types/global";
 import { Bucket } from "@lib/bucket";
 import { extensionOfType, fileBaseName, splitFileName, versionedFileName } from "@lib/bucket/fileNames";
 import { MAX_UPLOAD_BYTES } from "@lib/bucket/publicFiles";
 import { getDb } from "@lib/db";
 import { compressImageForThumb } from "@lib/images";
 import { asyncQueue } from "@utilities/AsyncQueue";
-import { XMLBuilder, XMLParser, type X2jOptions } from "fast-xml-parser";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z_AnnouncementImageUpload, z_AnnouncementImages, z_Announcements, z_IdArray } from "@lib/api/schemas";
 import { APIError } from "./APIError";
@@ -24,82 +22,6 @@ import { authenticateMiddleware } from "./middleware/authenticate";
  */
 
 const bucketPrefix = "anakoinoseis/images/";
-const xmlopts: X2jOptions = {
-	ignoreAttributes: false,
-	attributeNamePrefix: "@",
-	isArray: (tagName) => {
-		return tagName === "url";
-	},
-};
-
-/** Context needed by the sitemap helpers (the request gives the site origin). */
-type SitemapCtx = { request: Request };
-
-async function getSitemapXml() {
-	const sitemap = await Bucket.get("sitemap-announcements.xml");
-	// Self-initialize: with an empty (dev/local) bucket the file may be missing;
-	// in production the file always exists, so this path stays untouched.
-	if (!sitemap) return { urlset: {} };
-	const bytes = await sitemap.arrayBuffer();
-	return new XMLParser(xmlopts).parse(new TextDecoder().decode(bytes));
-}
-
-function jsonToXml(json: any) {
-	return new XMLBuilder({ ...xmlopts, format: true } as any).build(json) as string;
-}
-
-// Announcement URLs drop commas (the platform router rejects %2C), matching
-// the site's links, the [slug] lookup and the sitemap route.
-const urlTitle = (title: string) => title.replaceAll(",", "").replaceAll(" ", "%20");
-
-async function insertAnnouncementToSitemap({ request }: SitemapCtx, announcement: Omit<Announcements, "id" | "views">) {
-	const jsonSitemap = await getSitemapXml();
-	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
-	const newUrl = {
-		loc: `${new URL(request.url).origin}/sxoli/anakoinoseis/${urlTitle(announcement.title)}`,
-		lastmod: new Date(announcement.date).toISOString(),
-		changefreq: "monthly",
-		priority: "1.0",
-	};
-	urls.push(newUrl);
-
-	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	return Bucket.put(jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
-}
-
-async function updateAnnouncementFromSitemap({ request }: SitemapCtx, title: string, newTitle: string) {
-	const jsonSitemap = await getSitemapXml();
-	title = urlTitle(title);
-	newTitle = urlTitle(newTitle);
-
-	const urls = (jsonSitemap.urlset?.url || []) as SitemapItem[];
-	const url = urls.find((url) => url.loc.endsWith(title));
-	if (!url)
-		return insertAnnouncementToSitemap(
-			{ request },
-			{
-				title: newTitle,
-				content: "",
-				date: Date.now(),
-				links: "",
-			},
-		);
-	url.lastmod = new Date().toISOString();
-	url.loc = `${new URL(request.url).origin}/sxoli/anakoinoseis/${newTitle}`;
-
-	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	return Bucket.put(jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
-}
-
-async function removeAnnouncementFromSitemap(titles: string[]) {
-	const jsonSitemap = await getSitemapXml();
-	titles = titles.map(urlTitle);
-
-	let urls = ((jsonSitemap.urlset?.url || []) as SitemapItem[]).filter((url) => !titles.some((title) => url.loc.endsWith(title)));
-
-	jsonSitemap.urlset = { ...jsonSitemap.urlset, url: urls };
-	return Bucket.put(jsonToXml(jsonSitemap), "sitemap-announcements.xml", "application/xml");
-}
 
 // ---- Local types & group-specific request/response schemas ----
 export type PageAnnouncement = Announcements & { main_image: string; total_images: number };
@@ -183,31 +105,25 @@ export const announcementsRoutes = {
 			return { ...announcement, images };
 		}, "Η ανακοίνωση δεν βρέθηκε"),
 	),
-	post: new APIServer(
-		{ method: "POST", path: "/announcements", schema: postReq, responseSchema: insertResponse },
-		[authenticateMiddleware],
-		({ body, request }) =>
-			handlerResult(async (T) => {
-				body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
-				body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
-				const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
-				await insertAnnouncementToSitemap({ request }, body);
-				return { insertId };
-			}, "Σφάλμα κατά την προσθήκη της ανακοίνωσης"),
+	post: new APIServer({ method: "POST", path: "/announcements", schema: postReq, responseSchema: insertResponse }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async (T) => {
+			body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
+			body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
+			const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
+			return { insertId };
+		}, "Σφάλμα κατά την προσθήκη της ανακοίνωσης"),
 	),
-	update: new APIServer({ method: "PUT", path: "/announcements", schema: updateReq }, [authenticateMiddleware], ({ body, request }) =>
+	update: new APIServer({ method: "PUT", path: "/announcements", schema: updateReq }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const [existing] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
 			if (!existing) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
-			const oldTitle = existing.title;
 			body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 			body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
 			await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
-			await updateAnnouncementFromSitemap({ request }, oldTitle, body.title);
 			return "Announcement updated successfully";
 		}, "Σφάλμα κατά την ενημέρωση της ανακοίνωσης"),
 	),
-	delete: new APIServer({ method: "DELETE", path: "/announcements", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
+	delete: new APIServer({ method: "DELETE", path: "/announcements", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const ids = body;
 			const announcements = await T.executeQuery<Announcements>(`SELECT * FROM announcements WHERE id IN (${questionMarks(ids)})`, ids);
@@ -226,7 +142,6 @@ export const announcementsRoutes = {
 			await asyncQueue(deletionJobs, {
 				maxJobs: 10,
 			});
-			await removeAnnouncementFromSitemap(announcements.map(({ title }) => title));
 			return "Announcement/s deleted successfully";
 		}, "Σφάλμα κατά τη διαγραφή των ανακοινώσεων"),
 	),

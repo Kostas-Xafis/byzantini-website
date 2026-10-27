@@ -1,23 +1,31 @@
 ---
 import Icon from "@components/other/Icon.astro";
 import type { IconName } from "@lib/icons";
-const lessons: { name: string; icon: IconName; text: string }[] = [
+import { draftPagesEnabled } from "@lib/content/drafts.server";
+const lessons: { name: string; icon: IconName; href: string; text: string }[] = [
 	{
 		name: "Βυζαντινή Μουσική",
 		icon: "church",
+		href: "/mathimata/vyzantini-mousiki/",
 		text: "Σπούδασε στη Σχολή μας την ιερά τέχνη του Ιωάννου του Δαμασκηνού και του Ρωμανού του Μελωδού. Απόκτησε Πτυχίο και Δίπλωμα Βυζαντινής Μουσικής αναγνωρισμένο από το κράτος και γίνε θεματοφύλακας της ελληνορθόδοξης μουσικής μας παραδόσεως.",
 	},
 	{
 		name: "Παραδοσιακή Μουσική",
 		icon: "guitar",
+		href: "/mathimata/paradosiaki-mousiki/",
 		text: `Από το 2022 με σχετικό ΦΕΚ  προστέθηκαν επισήμως στη Σχολή μας Τμήματα παραδοσιακής μουσικής. Πλέον, δίνεται σε όλους η ευκαιρία, ανεξαρτήτως ηλικίας, να εντρυφήσουν στα νάματα της εθνικής μας παραδοσιακής μουσικής, με τα οποία γαλουχήθηκαν γενεές γενεών.`,
 	},
 	{
 		name: "Ευρωπαϊκή Μουσική",
 		icon: "music",
+		href: "/mathimata/evropaiki-mousiki/",
 		text: `Στη Σχολή μας λειτουργεί τμήμα Ευρωπαϊκής μουσικής. Απευθύνεται τόσο στους μαθητές βυζαντινής μουσικής, όσο και σε υποψήφιους μαθητές σε μουσικά σχολεία και υποψήφιους φοιτητές σε τμήματα Μουσικών Σπουδών ΑΕΙ.`,
 	},
 ];
+// The cards link to the course pages, which are preview-only drafts for now (lib/content/drafts.server.ts). The homepage
+// is prerendered, so until they are published the cards stay plain (the gate is decided at build time).
+const linked = draftPagesEnabled();
+const Card = linked ? "a" : "div";
 ---
 
 <section
@@ -33,7 +41,9 @@ const lessons: { name: string; icon: IconName; text: string }[] = [
 	</p>
 	{
 		lessons.map((l) => (
-			<div class="lessonCard group/lesson relative h-full rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2vw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
+			<Card
+				href={linked ? l.href : undefined}
+				class="lessonCard group/lesson relative block h-full rounded-lg shadow-lg border-2 border-red-900 shadow-gray-400 p-[2vw] overflow-hidden after:blur-[2px] after:scale-105 after:bg-center after:absolute after:inset-0 after:-z-10 after:bg-cover">
 				<h3 class="absolute inset-0 text-center text-[2vw] max-sm:text-lg font-bold font-anaktoria text-red-50 transition-transform duration-300 translate-y-[calc(50%-1vw)] max-sm:translate-y-[calc(50%-0.65rem)] group-[:is(.show)]/lesson:translate-y-3 group-hover/lesson:translate-y-3">
 					<Icon
 						name={l.icon}
@@ -43,8 +53,13 @@ const lessons: { name: string; icon: IconName; text: string }[] = [
 				</h3>
 				<p class="text-[1.15vw] text-justify whitespace-pre-line max-sm:text-sm font-didact text-red-50 place-self-center pt-12 max-sm:px-2 max-sm:pb-4 transition-opacity duration-100 opacity-[0.0001] group-[:is(.show)]/lesson:opacity-100 group-hover/lesson:opacity-100 group-[:is(.show)]/lesson:duration-500 group-hover/lesson:duration-500">
 					{l.text}
+					{linked && (
+						<span class="mt-3 flex items-center justify-end gap-1.5 font-bold text-red-50">
+							Δείτε το τμήμα <Icon name="arrow-right" />
+						</span>
+					)}
 				</p>
-			</div>
+			</Card>
 		))
 	}
 	<style is:inline>

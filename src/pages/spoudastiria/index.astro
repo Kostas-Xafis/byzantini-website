@@ -5,6 +5,7 @@ import { useAPI, API } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { jsonForScript } from "@utilities/safeJson";
+import { locationPath, locationSlugs } from "@utilities/slug";
 import type { Locations, TeacherLocations } from "@_types/entities";
 
 export const prerender = false;
@@ -25,6 +26,9 @@ try {
 } catch (error) {
 	console.error("Σελίδα Σπουδαστήρια: αποτυχία φόρτωσης σχέσεων καθηγητών-σπουδαστηρίων.", error);
 }
+// Each centre's own page (/spoudastiria/<slug>/), same slugs as the page route and the sitemap.
+const slugs = locationSlugs(_locations);
+const pageHref = (id: number) => locationPath(slugs.get(id)!);
 type LocationWithTeachers = Locations & { teacherCount: number };
 const locationsWithTeachers: LocationWithTeachers[] = _locations.map((l) => ({
 	...l,
@@ -72,7 +76,7 @@ const directionsHref = (l: Locations) =>
 const placesSchema = {
 	"@context": "https://schema.org",
 	"@type": "ItemList",
-	"@id": `${SCHOOL.url}/spoudastiria#locations`,
+	"@id": `${SCHOOL.url}/spoudastiria/#locations`,
 	name: "Σπουδαστήρια και συνεργαζόμενες σχολές",
 	itemListElement: _locations.map((l, index) => ({
 		"@type": "ListItem",
@@ -80,6 +84,7 @@ const placesSchema = {
 		item: {
 			"@type": "Place",
 			name: l.name,
+			url: `${SCHOOL.url}${pageHref(l.id)}`,
 			address: {
 				"@type": "PostalAddress",
 				streetAddress: l.address.trim(),
@@ -100,7 +105,7 @@ const placesSchema = {
 	<JsonLd
 		data={breadcrumbsSchema([
 			{ name: "Αρχική", url: "/" },
-			{ name: "Σπουδαστήρια", url: "/spoudastiria" },
+			{ name: "Σπουδαστήρια", url: "/spoudastiria/" },
 		])}
 	/>
 	<JsonLd data={placesSchema} />
@@ -199,7 +204,11 @@ const placesSchema = {
 									</span>
 								</div>
 								<div class="flex flex-1 flex-col gap-y-3 p-5 max-sm:p-4">
-									<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">{l.name}</h3>
+									<h3 class="font-anaktoria font-bold text-xl max-sm:text-lg leading-snug text-red-900 [word-break:break-word]">
+										<a href={pageHref(l.id)} class="text-red-900 decoration-red-900/40 underline-offset-4 hover:underline">
+											{l.name}
+										</a>
+									</h3>
 									<p class="text-base max-sm:text-sm leading-relaxed">
 										<Icon name="map-pin" class="pr-2 text-red-900/70" />
 										{formatAddress(l)}
@@ -233,12 +242,18 @@ const placesSchema = {
 										</a>
 									)}
 									<div class="mt-auto flex flex-row flex-wrap gap-2 pt-2">
+										<a
+											href={pageHref(l.id)}
+											class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 bg-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-50 transition-colors duration-200 hover:bg-red-950">
+											<Icon name="info" />
+											Σελίδα σπουδαστηρίου
+										</a>
 										<button
 											type="button"
 											data-open-location={l.id}
 											class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3.5 py-1.5 text-sm max-sm:text-xs font-semibold text-red-900 transition-colors duration-200 hover:bg-red-900 hover:text-red-50">
 											<Icon name="map" />
-											Χάρτης & λεπτομέρειες
+											Χάρτης
 										</button>
 										<a
 											target="_blank"
@@ -268,13 +283,13 @@ const placesSchema = {
 				</p>
 				<div class="flex flex-row flex-wrap justify-center gap-4 pt-1">
 					<a
-						href="/epikoinonia"
+						href="/epikoinonia/"
 						class="inline-flex items-center gap-2.5 rounded-full border-2 border-ivory-deep/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-ivory hover:bg-ivory-deep hover:text-red-950 hover:shadow-xl">
 						<Icon name="phone" class="text-ivory-deep" />
 						Επικοινωνία
 					</a>
 					<a
-						href="/eggrafes"
+						href="/eggrafes/"
 						class="inline-flex items-center gap-2.5 rounded-full border-2 border-ivory-deep/70 bg-red-950/60 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-ivory hover:bg-ivory-deep hover:text-red-950 hover:shadow-xl">
 						<Icon name="edit" class="text-ivory-deep" />
 						Εγγραφές

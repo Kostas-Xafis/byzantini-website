@@ -1,0 +1,37 @@
+---
+// Burgundy hero card shared by the sub-pages (same family as the /kathigites header):
+// a softly blurred photo behind an eyebrow pill, the h1, an optional lead and a slot
+// for chips or buttons.
+export interface Props {
+	eyebrow?: string;
+	title: string;
+	lead?: string;
+	image?: string;
+	imageAlt?: string;
+	align?: "center" | "left";
+}
+const { eyebrow, title, lead, image = "/church_low.jpg", align = "center" } = Astro.props;
+const centered = align === "center";
+---
+
+<header class="relative shrink-0 overflow-hidden rounded-2xl border-2 border-red-900 bg-red-950 shadow-xl shadow-red-900/30 max-sm:rounded-xl">
+	<img src={image} alt="" class="absolute inset-0 h-full w-full object-cover opacity-30 blur-[2px] scale-105" />
+	<div class="absolute inset-0 bg-linear-to-t from-red-950/80 via-red-950/30 to-red-950/10"></div>
+	<div
+		class={"relative flex flex-col gap-y-3 px-10 py-10 max-sm:px-4 max-sm:py-7 " +
+			(centered ? "items-center text-center" : "items-start text-left max-sm:items-center max-sm:text-center")}>
+		{
+			eyebrow && (
+				<p class="rounded-full border border-ivory/35 bg-black/30 px-4 py-1 text-sm max-sm:text-xs font-semibold tracking-wide text-ivory backdrop-blur-[2px]">
+					{eyebrow}
+				</p>
+			)
+		}
+		<h1
+			class="max-w-[24ch] font-anaktoria font-bold text-[clamp(2rem,3.4vw,3.5rem)] max-sm:text-[1.85rem] leading-tight text-red-50 text-balance drop-shadow-[-1px_2px_1px_rgba(0,0,0,0.35)]">
+			{title}
+		</h1>
+		{lead && <p class="max-w-[62ch] text-lg max-sm:text-base leading-relaxed text-red-50/90 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.4)]">{lead}</p>}
+		<slot />
+	</div>
+</header>

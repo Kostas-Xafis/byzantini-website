@@ -1,0 +1,33 @@
+---
+// Visible breadcrumb trail + its BreadcrumbList JSON-LD (one source for both).
+import Icon from "@components/other/Icon.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import { breadcrumbsSchema } from "@utilities/schema";
+
+export interface Props {
+	items: { name: string; url: string }[];
+}
+const { items } = Astro.props;
+---
+
+<JsonLd data={breadcrumbsSchema(items)} />
+<nav aria-label="Διαδρομή" class="text-sm max-sm:text-xs text-red-950/70">
+	<ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+		{
+			items.map((item, i) => (
+				<li class="flex items-center gap-x-1.5 min-w-0">
+					{i > 0 && <Icon name="chevron-right" class="shrink-0 text-[0.8em] text-red-900/40" />}
+					{i === items.length - 1 ? (
+						<span aria-current="page" class="truncate font-semibold text-red-900">
+							{item.name}
+						</span>
+					) : (
+						<a href={item.url} class="truncate text-red-950/70 underline-offset-2 transition-colors hover:text-red-900 hover:underline">
+							{item.name}
+						</a>
+					)}
+				</li>
+			))
+		}
+	</ol>
+</nav>

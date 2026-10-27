@@ -1,0 +1,118 @@
+---
+// /mathimata/: the three departments side by side, plus the guides — the page for
+// broad searches («μαθήματα μουσικής μεταμόρφωση», «ωδείο μεταμόρφωση»).
+import Icon from "@components/other/Icon.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import Breadcrumbs from "@components/subpages/Breadcrumbs.astro";
+import CtaBand from "@components/subpages/CtaBand.astro";
+import LinkCard from "@components/subpages/LinkCard.astro";
+import PageHero from "@components/subpages/PageHero.astro";
+import SubpageShell from "@components/subpages/SubpageShell.astro";
+import { COURSE_LOOK, COURSE_ORDER, coursePath, guidePath } from "@components/subpages/courseMeta";
+import DraftNotice from "@components/subpages/DraftNotice.astro";
+import Layout from "@layouts/Layout.astro";
+import { draftPagesEnabled } from "@lib/content/drafts.server";
+import { COURSES } from "@lib/content/courses";
+import { GUIDES } from "@lib/content/guides";
+import { plainInline } from "@lib/content/inline";
+import { SCHOOL } from "@utilities/schema";
+
+export const prerender = false;
+
+// Draft under review: preview only (lib/content/drafts.server.ts).
+if (!draftPagesEnabled()) return Astro.rewrite("/404");
+
+const courses = COURSE_ORDER.map((s) => COURSES[s]);
+const listSchema = {
+	"@context": "https://schema.org",
+	"@type": "ItemList",
+	name: "Τμήματα της Σχολής",
+	itemListElement: courses.map((c, i) => ({ "@type": "ListItem", position: i + 1, url: `${SCHOOL.url}${coursePath(c.slug)}`, name: c.title })),
+};
+---
+
+<Layout
+	noindex
+	title="Μαθήματα Μουσικής στη Μεταμόρφωση"
+	description="Μαθήματα βυζαντινής, παραδοσιακής και ευρωπαϊκής μουσικής στη Μεταμόρφωση και σε σπουδαστήρια της Ι. Μητρόπολης Κηφισίας: τμήματα, όργανα, καθηγητές, εγγραφές.">
+	<JsonLd data={listSchema} />
+	<SubpageShell>
+		<DraftNotice />
+		<Breadcrumbs
+			items={[
+				{ name: "Αρχική", url: "/" },
+				{ name: "Μαθήματα", url: "/mathimata/" },
+			]}
+		/>
+		<PageHero
+			eyebrow="Τα τμήματα της Σχολής"
+			title="Μαθήματα Μουσικής στη Μεταμόρφωση"
+			lead="Βυζαντινή ψαλτική, παραδοσιακό τραγούδι και όργανα, ευρωπαϊκή μουσική: τρία τμήματα για κάθε ηλικία, στην έδρα της Σχολής στη Μεταμόρφωση και σε σπουδαστήρια σε ναούς της Ι. Μητρόπολης Κηφισίας."
+		/>
+
+		<section aria-label="Τμήματα" class="grid gap-6 lg:grid-cols-3">
+			{
+				courses.map((c) => (
+					<a
+						href={coursePath(c.slug)}
+						class="group/dept flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-red-900/10 shadow-[0_18px_50px_-24px_rgba(69,10,10,0.4)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_26px_60px_-24px_rgba(69,10,10,0.55)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900">
+						<span class="relative block aspect-16/10 overflow-hidden bg-red-950">
+							<img
+								src={COURSE_LOOK[c.slug].image}
+								alt=""
+								class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/dept:scale-[1.05]"
+							/>
+							<span class="absolute inset-0 bg-linear-to-t from-red-950/90 via-red-950/30 to-transparent" />
+							<span class="absolute inset-x-0 bottom-0 flex items-center gap-2.5 px-6 pb-4">
+								<span class="grid size-10 place-items-center rounded-full bg-ivory/95 text-red-900 shadow-md">
+									<Icon name={COURSE_LOOK[c.slug].icon} />
+								</span>
+								<span class="font-anaktoria text-2xl font-bold leading-tight text-red-50 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+									{COURSE_LOOK[c.slug].short}
+								</span>
+							</span>
+						</span>
+						<span class="flex flex-1 flex-col gap-y-4 p-6 max-sm:p-5">
+							<span class="text-base leading-relaxed text-neutral-700">{plainInline(c.lead)}</span>
+							{c.facts.length > 0 && (
+								<span class="flex flex-col gap-y-2 border-t border-red-900/10 pt-4">
+									{c.facts.slice(0, 3).map((f) => (
+										<span class="flex flex-col">
+											<span class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">{f.label}</span>
+											<span class="text-sm font-semibold text-red-950">{f.value}</span>
+										</span>
+									))}
+								</span>
+							)}
+							<span class="mt-auto inline-flex items-center gap-1.5 pt-1 font-semibold text-red-900">
+								Δείτε το τμήμα <Icon name="arrow-right" class="transition-transform group-hover/dept:translate-x-1" />
+							</span>
+						</span>
+					</a>
+				))
+			}
+		</section>
+
+		{
+			GUIDES.length > 0 && (
+				<section aria-labelledby="guides-title" class="flex flex-col gap-y-4">
+					<div class="flex flex-wrap items-end justify-between gap-3">
+						<h2 id="guides-title" class="sub-heading">
+							Οδηγοί για νέους μαθητές
+						</h2>
+						<a href="/odigoi/" class="inline-flex items-center gap-1.5 font-semibold text-red-900 underline-offset-4 hover:underline">
+							Όλοι οι οδηγοί <Icon name="arrow-right" />
+						</a>
+					</div>
+					<div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+						{GUIDES.map((g) => (
+							<LinkCard href={guidePath(g.slug)} title={g.title} text={g.description} eyebrow="Οδηγός" icon="book" />
+						))}
+					</div>
+				</section>
+			)
+		}
+
+		<CtaBand />
+	</SubpageShell>
+</Layout>

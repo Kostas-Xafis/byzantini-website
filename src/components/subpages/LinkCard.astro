@@ -1,0 +1,48 @@
+---
+// A titled card that links somewhere (related guides, other departments).
+import Icon from "@components/other/Icon.astro";
+import type { IconName } from "@lib/icons";
+
+export interface Props {
+	href: string;
+	title: string;
+	text?: string;
+	eyebrow?: string;
+	icon?: IconName;
+	image?: string;
+}
+const { href, title, text, eyebrow, icon = "book", image } = Astro.props;
+---
+
+<a
+	href={href}
+	class="group/lc flex h-full flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-red-900/10 shadow-sm shadow-red-950/5 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-red-950/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900">
+	{
+		image && (
+			<span class="relative block aspect-16/9 overflow-hidden bg-red-950">
+				<img
+					src={image}
+					alt=""
+					loading="lazy"
+					decoding="async"
+					class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover/lc:scale-[1.04]"
+				/>
+				<span class="absolute inset-0 bg-linear-to-t from-red-950/60 to-transparent" />
+			</span>
+		)
+	}
+	<span class="flex flex-1 flex-col gap-y-2 p-5 max-sm:p-4">
+		{
+			eyebrow && (
+				<span class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">
+					<Icon name={icon} /> {eyebrow}
+				</span>
+			)
+		}
+		<span class="font-anaktoria text-xl font-bold leading-snug text-red-950 group-hover/lc:text-red-900">{title}</span>
+		{text && <span class="text-[0.9375rem] leading-relaxed text-neutral-600">{text}</span>}
+		<span class="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-red-900">
+			Διαβάστε περισσότερα <Icon name="arrow-right" class="transition-transform group-hover/lc:translate-x-1" />
+		</span>
+	</span>
+</a>

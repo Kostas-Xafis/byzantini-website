@@ -1,11 +1,9 @@
 import cloudflare from "@astrojs/cloudflare";
-import sitemap from "@astrojs/sitemap";
 import solidJs from "@astrojs/solid-js";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import { fileURLToPath } from "node:url";
 
-const unmappedRoutes = (page) => page.includes("admin") || page.includes("login") || page.includes("oauth2callback") || page.includes("unsubscribe");
 // This checkout's own root. When the project runs from inside .claude/worktrees/<name>/, a "**/.claude/**" glob would match every file.
 const root = fileURLToPath(new URL(".", import.meta.url));
 const productionSite = "https://musicschool-metamorfosi.gr";
@@ -16,15 +14,10 @@ const site = productionSite;
 export default defineConfig({
 	site,
 	port: 3000,
-	integrations: [
-		solidJs(),
-		sitemap({
-			filter: (page) => !unmappedRoutes(page),
-			changefreq: "weekly",
-			priority: 1,
-			lastmod: new Date(),
-		}),
-	],
+	// No @astrojs/sitemap: the sitemaps are the dynamic routes src/pages/sitemap-*.xml.ts (docs/IMPROVEMENTS.md P7).
+	// Trailing slashes are not configured here either: `trailingSlash` would also hit /api, the bucket catch-all and the
+	// sitemaps, so the policy is an explicit rule in src/middleware.ts (lib/utilities/trailingSlash.ts).
+	integrations: [solidJs()],
 	adapter: cloudflare(),
 	// Astro Sessions are not used (auth is cookie + D1 sys_users). Disabling
 	// them stops @astrojs/cloudflare from auto-adding the SESSION KV binding.

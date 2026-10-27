@@ -48,6 +48,7 @@ export const onModify = function (hydrate: CacheMutationsReturnType, store: Part
 				email: fd.string("email"),
 				telephone: fd.string("telephone"),
 				linktree: fd.string("linktree"),
+				bio: fd.string("bio", ""),
 				gender: fd.multiSelect("gender", "number", { single: true }) ? "F" : "M",
 				title: fd.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
 				visible: fd.multiSelect("visible", "boolean", { single: true }),

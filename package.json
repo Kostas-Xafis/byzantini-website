@@ -39,14 +39,12 @@
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^14.2.5",
-		"@astrojs/sitemap": "^3.7.3",
 		"@astrojs/solid-js": "^7.0.2",
 		"@solidjs/router": "^0.15.4",
 		"@tailwindcss/vite": "^4.3.3",
 		"arctic": "^3.7.0",
 		"astro": "7.2.9",
 		"astro-seo": "^1.1.0",
-		"fast-xml-parser": "^4.5.4",
 		"solid-js": "^1.9.13",
 		"tailwindcss": "^4.3.3"
 	},

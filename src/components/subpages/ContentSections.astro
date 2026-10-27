@@ -1,0 +1,39 @@
+---
+// Editorial sections (lib/content) as one white reading card: an h2 per section,
+// anchored so the table of contents can jump to it.
+import { renderInline } from "@lib/content/inline";
+import type { ContentSection } from "@lib/content/types";
+
+export interface Props {
+	sections: ContentSection[];
+}
+const { sections } = Astro.props;
+---
+
+<article
+	class="flex flex-col gap-y-12 rounded-2xl bg-white px-12 py-11 max-md:px-7 max-sm:px-4 max-sm:py-7 max-sm:gap-y-9 shadow-[0_18px_50px_-24px_rgba(69,10,10,0.35)] ring-1 ring-red-900/10">
+	{
+		sections.map((section) => (
+			<section id={section.id} aria-labelledby={section.id + "-title"} class="flex flex-col gap-y-4 scroll-mt-6">
+				<h2 id={section.id + "-title"} class="sub-heading">
+					{section.heading}
+				</h2>
+				<div class="sub-prose">
+					{section.blocks.map((block) =>
+						block.type === "p" ? (
+							<p set:html={renderInline(block.text)} />
+						) : block.type === "h3" ? (
+							<h3 set:html={renderInline(block.text)} />
+						) : (
+							<ul>
+								{block.items.map((item) => (
+									<li set:html={renderInline(item)} />
+								))}
+							</ul>
+						),
+					)}
+				</div>
+			</section>
+		))
+	}
+</article>

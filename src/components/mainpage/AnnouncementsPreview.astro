@@ -21,7 +21,7 @@ import Icon from "@components/other/Icon.astro";
 	</div>
 	<div class="flex justify-center">
 		<a
-			href="/sxoli/anakoinoseis"
+			href="/sxoli/anakoinoseis/"
 			class="group inline-flex items-center gap-x-2 rounded-xl border-2 border-red-900 px-[1.25vw] py-[0.6vh] max-sm:px-5 max-sm:py-2 font-anaktoria font-bold text-[1.1vw] max-sm:text-base text-red-900 transition-colors hover:bg-red-900 hover:text-red-50">
 			Όλες οι ανακοινώσεις
 			<Icon name="arrow-right" class="text-[0.8vw] max-sm:text-xs transition-transform group-hover:translate-x-1" />
@@ -32,6 +32,7 @@ import Icon from "@components/other/Icon.astro";
 <script>
 	import { createIcon } from "@lib/icons";
 	import { onElementMount } from "@utilities/dom";
+	import { announcementPath } from "@utilities/announcementUrl";
 
 	type PageAnnouncement = {
 		id: number;
@@ -45,7 +46,7 @@ import Icon from "@components/other/Icon.astro";
 
 	const maxAnnouncements = 3;
 	const list = () => document.querySelector<HTMLElement>("#anakoinoseisPreviewList");
-	const detailHref = (a: PageAnnouncement) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
+	const detailHref = (a: PageAnnouncement) => announcementPath(a.title);
 	const imgSrc = (a: PageAnnouncement) => `/anakoinoseis/images/${a.id}/thumb_${a.main_image}`;
 
 	const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });

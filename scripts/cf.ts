@@ -59,6 +59,8 @@ function generatePreviewDeployConfig(): boolean {
 			r2.bucket_name = "byzantini-bucket-dev";
 		}
 		source.preview_urls = false;
+		// The preview worker also serves the draft pages under review (lib/content/drafts.server.ts); production never does.
+		source.vars = { ...(source.vars ?? {}), DRAFT_PAGES: "1" };
 		fs.writeFileSync("dist/server/wrangler.preview.generated.json", JSON.stringify(source, null, 2));
 		return true;
 	} catch (error) {

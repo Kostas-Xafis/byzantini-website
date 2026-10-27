@@ -1,0 +1,44 @@
+---
+// «Συχνές ερωτήσεις» as native <details> (works without JS, keyboard-friendly)
+// plus the FAQPage JSON-LD built from the same items.
+import Icon from "@components/other/Icon.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import { plainInline, renderInline } from "@lib/content/inline";
+import type { FAQ } from "@lib/content/types";
+
+export interface Props {
+	items: FAQ[];
+	title?: string;
+	id?: string;
+}
+const { items, title = "Συχνές ερωτήσεις", id = "faq" } = Astro.props;
+const faqSchema = {
+	"@context": "https://schema.org",
+	"@type": "FAQPage",
+	mainEntity: items.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: plainInline(f.a) } })),
+};
+---
+
+{
+	items.length > 0 && (
+		<section id={id} aria-labelledby={id + "-title"} class="flex flex-col gap-y-4 scroll-mt-6">
+			<JsonLd data={faqSchema} />
+			<h2 id={id + "-title"} class="sub-heading">
+				{title}
+			</h2>
+			<div class="flex flex-col gap-y-2.5">
+				{items.map((f) => (
+					<details class="faq group/faq rounded-xl bg-white ring-1 ring-red-900/10 shadow-sm shadow-red-950/5 open:shadow-md open:ring-red-900/20 transition-shadow">
+						<summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 max-sm:px-4 max-sm:py-3.5 text-lg max-sm:text-base font-semibold text-red-950 [&::-webkit-details-marker]:hidden">
+							{f.q}
+							<span class="grid size-7 shrink-0 place-items-center rounded-full bg-red-50 text-red-900 ring-1 ring-red-900/10 transition-transform duration-300 group-open/faq:rotate-45">
+								<Icon name="plus" class="text-sm" />
+							</span>
+						</summary>
+						<p class="px-5 pb-5 max-sm:px-4 max-sm:pb-4 -mt-1 text-base leading-relaxed text-neutral-700" set:html={renderInline(f.a)} />
+					</details>
+				))}
+			</div>
+		</section>
+	)
+}

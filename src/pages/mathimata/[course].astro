@@ -1,0 +1,237 @@
+---
+// Department landing pages (/mathimata/<course>/): the editorial copy from
+// lib/content/courses.ts around live data — the department's teachers and the
+// study centres where it is taught.
+import Icon from "@components/other/Icon.astro";
+import JsonLd from "@components/seo/JsonLd.astro";
+import Breadcrumbs from "@components/subpages/Breadcrumbs.astro";
+import ContentSections from "@components/subpages/ContentSections.astro";
+import CtaBand from "@components/subpages/CtaBand.astro";
+import FaqList from "@components/subpages/FaqList.astro";
+import LinkCard from "@components/subpages/LinkCard.astro";
+import PageHero from "@components/subpages/PageHero.astro";
+import SubpageShell from "@components/subpages/SubpageShell.astro";
+import TeacherChip from "@components/subpages/TeacherChip.astro";
+import Toc from "@components/subpages/Toc.astro";
+import { COURSE_LOOK, COURSE_ORDER, coursePath, guidePath } from "@components/subpages/courseMeta";
+import { CLASS_NAME, classesPhrase, loadDirectory } from "@components/subpages/directory";
+import DraftNotice from "@components/subpages/DraftNotice.astro";
+import Layout from "@layouts/Layout.astro";
+import { draftPagesEnabled } from "@lib/content/drafts.server";
+import { COURSES } from "@lib/content/courses";
+import { GUIDES } from "@lib/content/guides";
+import { plainInline } from "@lib/content/inline";
+import type { CourseSlug } from "@lib/content/types";
+import { SCHOOL, SCHOOL_ID } from "@utilities/schema";
+
+export const prerender = false;
+
+// Draft under review: preview only (lib/content/drafts.server.ts).
+if (!draftPagesEnabled()) return Astro.rewrite("/404");
+
+const slug = Astro.params.course as CourseSlug;
+const course = COURSE_ORDER.includes(slug) ? COURSES[slug] : undefined;
+if (!course) return Astro.rewrite("/404");
+
+const look = COURSE_LOOK[course.slug];
+const { ofType, locations } = await loadDirectory(Astro);
+const teachers = ofType(course.classType);
+const SHOWN_TEACHERS = 9;
+const teacherIds = new Set(teachers.map((t) => t.id));
+const where = locations.filter((l) => l.teacherIds.some((id) => teacherIds.has(id)));
+const guides = GUIDES.filter((g) => g.related.includes(course.slug));
+const otherCourses = COURSE_ORDER.filter((s) => s !== course.slug).map((s) => COURSES[s]);
+const url = `${SCHOOL.url}${coursePath(course.slug)}`;
+
+const toc = [
+	...course.sections.map((s) => ({ id: s.id, label: s.heading })),
+	...(course.instruments?.length ? [{ id: "organa", label: "Όργανα και μαθήματα" }] : []),
+	...(teachers.length ? [{ id: "kathigites", label: "Οι καθηγητές" }] : []),
+	...(where.length ? [{ id: "spoudastiria", label: "Τα σπουδαστήρια" }] : []),
+	...(course.faq.length ? [{ id: "faq", label: "Συχνές ερωτήσεις" }] : []),
+];
+
+const courseSchema = {
+	"@context": "https://schema.org",
+	"@type": "Course",
+	"@id": `${url}#course`,
+	name: course.title,
+	description: plainInline(course.lead),
+	url,
+	inLanguage: "el",
+	provider: { "@id": SCHOOL_ID },
+	...(course.instruments?.length ? { teaches: course.instruments.map((i) => i.name) } : {}),
+	hasCourseInstance: {
+		"@type": "CourseInstance",
+		courseMode: "Onsite",
+		location: where.map((l) => ({ "@type": "Place", name: l.name, url: `${SCHOOL.url}${l.href}` })),
+		...(teachers.length ? { instructor: teachers.map((t) => ({ "@type": "Person", name: t.fullname, url: `${SCHOOL.url}${t.href}` })) } : {}),
+	},
+};
+---
+
+<Layout noindex title={course.seoTitle} description={course.description} imageUrl={look.image}>
+	<JsonLd data={courseSchema} />
+	<SubpageShell>
+		<DraftNotice />
+		<Breadcrumbs
+			items={[
+				{ name: "Αρχική", url: "/" },
+				{ name: "Μαθήματα", url: "/mathimata/" },
+				{ name: look.short, url: coursePath(course.slug) },
+			]}
+		/>
+
+		<div class="flex flex-col">
+			<PageHero eyebrow={"Τμήμα " + classesPhrase([course.classType])} title={course.title} lead={plainInline(course.lead)} image={look.image}>
+				<div class="flex flex-wrap justify-center gap-3 pt-3 pb-10 max-sm:pb-6">
+					<a
+						href="/eggrafes/"
+						class="inline-flex items-center gap-2 rounded-full border-2 border-ivory bg-ivory px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-950 shadow-md shadow-red-950/40 transition-all hover:-translate-y-0.5 hover:bg-white">
+						<Icon name="edit" class="text-red-900" /> Εγγραφή
+					</a>
+					{
+						teachers.length > 0 && (
+							<a
+								href="#kathigites"
+								class="inline-flex items-center gap-2 rounded-full border-2 border-ivory-deep/70 bg-red-950/50 px-6 py-2.5 text-lg max-sm:text-base font-bold text-red-50 transition-all hover:-translate-y-0.5 hover:bg-red-950/80">
+								<Icon name="users" class="text-ivory-deep" /> Οι καθηγητές
+							</a>
+						)
+					}
+				</div>
+			</PageHero>
+
+			{
+				course.facts.length > 0 && (
+					<dl class="relative z-10 mx-8 -mt-10 max-sm:mx-2 max-sm:-mt-5 grid gap-px overflow-hidden rounded-2xl bg-red-900/10 ring-1 ring-red-900/10 shadow-[0_18px_40px_-20px_rgba(69,10,10,0.45)] grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]">
+						{course.facts.map((f) => (
+							<div class="flex flex-col gap-y-1 bg-white px-5 py-4 max-sm:px-4 max-sm:py-3">
+								<dt class="text-xs font-semibold uppercase tracking-[0.12em] text-red-900/60">{f.label}</dt>
+								<dd class="text-base font-semibold leading-snug text-red-950">{f.value}</dd>
+							</div>
+						))}
+					</dl>
+				)
+			}
+		</div>
+
+		<div class="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
+			<Toc items={toc} />
+			<div class="flex min-w-0 flex-col gap-y-12 max-sm:gap-y-9">
+				<ContentSections sections={course.sections} />
+
+				{
+					course.instruments && course.instruments.length > 0 && (
+						<section id="organa" aria-labelledby="organa-title" class="flex flex-col gap-y-4 scroll-mt-6">
+							<h2 id="organa-title" class="sub-heading">
+								Όργανα και μαθήματα
+							</h2>
+							<ul class="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))]">
+								{course.instruments.map((i) => (
+									<li class="flex flex-col gap-y-1.5 rounded-xl bg-white p-4 ring-1 ring-red-900/10 shadow-sm shadow-red-950/5">
+										<span class="flex items-center gap-2 font-anaktoria text-lg font-bold text-red-900">
+											<Icon name={look.icon} class="text-[0.85em] text-red-900/60" />
+											{i.name}
+										</span>
+										<span class="text-[0.9375rem] leading-relaxed text-neutral-600">{plainInline(i.description)}</span>
+									</li>
+								))}
+							</ul>
+						</section>
+					)
+				}
+
+				{
+					teachers.length > 0 && (
+						<section id="kathigites" aria-labelledby="kathigites-title" class="flex flex-col gap-y-4 scroll-mt-6">
+							<div class="flex flex-wrap items-end justify-between gap-3">
+								<h2 id="kathigites-title" class="sub-heading">
+									Οι καθηγητές
+								</h2>
+								<a
+									href={"/kathigites/#" + encodeURIComponent(CLASS_NAME[course.classType])}
+									class="inline-flex items-center gap-1.5 font-semibold text-red-900 underline-offset-4 hover:underline">
+									Και οι {teachers.length} καθηγητές <Icon name="arrow-right" />
+								</a>
+							</div>
+							<div class="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))]">
+								{teachers.slice(0, SHOWN_TEACHERS).map((t) => (
+									<TeacherChip teacher={t} />
+								))}
+							</div>
+						</section>
+					)
+				}
+
+				{
+					where.length > 0 && (
+						<section id="spoudastiria" aria-labelledby="spoudastiria-title" class="flex flex-col gap-y-4 scroll-mt-6">
+							<h2 id="spoudastiria-title" class="sub-heading">
+								Τα σπουδαστήρια του τμήματος
+							</h2>
+							<p class="sub-prose">
+								Τα μαθήματα του τμήματος γίνονται στην έδρα της Σχολής στη Μεταμόρφωση και σε σπουδαστήρια σε ναούς της περιοχής.
+							</p>
+							<ul class="grid gap-2.5 sm:grid-cols-2">
+								{where.map((l) => (
+									<li>
+										<a
+											href={l.href}
+											class="group/loc flex h-full items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-red-900/10 shadow-sm shadow-red-950/5 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-950/10">
+											<Icon name="map-pin" class="shrink-0 text-red-900/70" />
+											<span class="flex min-w-0 flex-col">
+												<span class="font-semibold leading-snug text-red-950 [word-break:break-word] group-hover/loc:text-red-900">
+													{l.name}
+												</span>
+												<span class="text-sm text-neutral-600">{l.municipality.trim()}</span>
+											</span>
+											<Icon name="chevron-right" class="ml-auto shrink-0 text-red-900/40" />
+										</a>
+									</li>
+								))}
+							</ul>
+						</section>
+					)
+				}
+
+				<FaqList items={course.faq} />
+			</div>
+		</div>
+
+		{
+			guides.length > 0 && (
+				<section aria-labelledby="guides-title" class="flex flex-col gap-y-4">
+					<h2 id="guides-title" class="sub-heading">
+						Χρήσιμοι οδηγοί
+					</h2>
+					<div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+						{guides.map((g) => (
+							<LinkCard href={guidePath(g.slug)} title={g.title} text={g.description} eyebrow="Οδηγός" icon="book" />
+						))}
+					</div>
+				</section>
+			)
+		}
+
+		<section aria-labelledby="other-title" class="flex flex-col gap-y-4">
+			<h2 id="other-title" class="sub-heading">Τα άλλα τμήματα της Σχολής</h2>
+			<div class="grid gap-4 sm:grid-cols-2">
+				{
+					otherCourses.map((c) => (
+						<LinkCard
+							href={coursePath(c.slug)}
+							title={c.title}
+							text={c.description}
+							eyebrow={COURSE_LOOK[c.slug].short}
+							icon={COURSE_LOOK[c.slug].icon}
+							image={COURSE_LOOK[c.slug].image}
+						/>
+					))
+				}
+			</div>
+		</section>
+
+		<CtaBand title={"Εγγραφή στο τμήμα " + classesPhrase([course.classType])} />
+	</SubpageShell>
+</Layout>

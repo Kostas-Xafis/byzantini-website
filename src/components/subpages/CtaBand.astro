@@ -1,0 +1,33 @@
+---
+// Closing call to action (same look as the /spoudastiria closing panel).
+import Icon from "@components/other/Icon.astro";
+
+export interface Props {
+	title?: string;
+	text?: string;
+}
+const {
+	title = "Ξεκινήστε τα μαθήματα",
+	text = "Η εγγραφή γίνεται ηλεκτρονικά σε λίγα λεπτά. Για οποιαδήποτε απορία, η γραμματεία της Σχολής θα σας κατευθύνει στο κατάλληλο τμήμα και στο πλησιέστερο σπουδαστήριο.",
+} = Astro.props;
+const button =
+	"inline-flex items-center gap-2.5 rounded-full border-2 px-6 py-2.5 text-lg max-sm:text-base font-bold shadow-md shadow-red-950/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl";
+---
+
+<section
+	class="relative shrink-0 flex flex-col items-center gap-y-5 overflow-hidden rounded-2xl border border-ivory-deep/40 bg-[linear-gradient(135deg,#7f1d1d_0%,#450a0a_55%,#2b0606_100%)] px-8 py-10 shadow-xl shadow-red-900/30 max-sm:px-4 max-sm:py-8">
+	<h2 class="text-center text-[clamp(1.6rem,2.25vw,2.25rem)] font-bold font-anaktoria text-red-50 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.3)]">
+		{title}
+	</h2>
+	<p class="max-w-[60ch] text-center text-lg max-sm:text-base leading-relaxed text-red-100/90">{text}</p>
+	<div class="flex flex-row flex-wrap justify-center gap-4 pt-1">
+		<a href="/eggrafes/" class={button + " border-ivory bg-ivory text-red-950 hover:bg-white"}>
+			<Icon name="edit" class="text-red-900" />
+			Εγγραφή
+		</a>
+		<a href="/epikoinonia/" class={button + " border-ivory-deep/70 bg-red-950/60 text-red-50 hover:border-ivory hover:bg-ivory-deep hover:text-red-950"}>
+			<Icon name="phone" class="text-ivory-deep" />
+			Επικοινωνία
+		</a>
+	</div>
+</section>

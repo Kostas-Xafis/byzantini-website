@@ -8,21 +8,14 @@ import Layout from "@layouts/Layout.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { unescapeNewlines } from "@utilities/text";
+import { announcementPath, isLegacyAnnouncementSlug, requestedAnnouncementSlug, announcementSlug } from "@utilities/announcementUrl";
 export const prerender = false;
 
-let url = Astro.url.pathname;
-url = url.endsWith("/") ? url.slice(0, -1) : url;
-let announcement_title = url.split("/").pop() as string;
-// The path is only partially decoded; decodeURIComponent also handles characters like
-// commas in titles (e.g. "%2C") that .replaceAll("%20", " ") would miss.
-try {
-	announcement_title = decodeURIComponent(announcement_title);
-} catch {
-	// Malformed percent-encoding → keep the raw segment and let the 404 redirect handle it
-}
-// Commas are stripped from announcement URLs (the platform router rejects %2C
-// before the app sees it); the lookup below matches by comma-less title.
-announcement_title = announcement_title.replaceAll(",", "");
+// The decoded last path segment (decodeURIComponent also handles characters like commas, "%2C").
+const requestedSlug = requestedAnnouncementSlug(Astro.url.pathname);
+// Older URLs still carry the commas of the title; the lookup matches by comma-less title and the redirect below
+// sends them to the canonical URL.
+const announcement_title = announcementSlug(requestedSlug);
 let announcement: (Announcements & { images: AnnouncementImages[] }) | undefined;
 try {
 	const res_announcement = await useAPI(
@@ -37,6 +30,8 @@ try {
 } catch (e) {
 	return Astro.rewrite("/404");
 }
+// Old URLs (with the commas of the title) are duplicates of the canonical one: send them there for good.
+if (isLegacyAnnouncementSlug(requestedSlug, announcement.title)) return Astro.redirect(announcementPath(announcement.title) + Astro.url.search, 301);
 const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
@@ -114,7 +109,7 @@ const announcementDescription = paragraphs
 const youtubeId = (link: string) => link.match(/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)/)?.[1];
 
 // Structured data: Article + BreadcrumbList for this announcement.
-const canonicalPath = Astro.url.pathname;
+const canonicalPath = announcementPath(announcement.title);
 const articleSchema = {
 	"@context": "https://schema.org",
 	"@type": "Article",
@@ -130,7 +125,7 @@ const articleSchema = {
 };
 const breadcrumbs = breadcrumbsSchema([
 	{ name: "Αρχική", url: "/" },
-	{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis" },
+	{ name: "Ανακοινώσεις", url: "/sxoli/anakoinoseis/" },
 	{ name: announcement.title, url: canonicalPath },
 ]);
 
@@ -157,8 +152,7 @@ const allAnnouncements = await useAPI(API.Announcements.getForPage, undefined, A
 const index = allAnnouncements.findIndex((a) => a.id === announcement.id);
 const newer = index > 0 ? allAnnouncements[index - 1] : undefined;
 const older = index >= 0 ? allAnnouncements[index + 1] : undefined;
-// Kept in sync with the list page, the api lookup and the sitemap generator.
-const detailHref = (a: { title: string }) => `/sxoli/anakoinoseis/${a.title.replaceAll(",", "")}`;
+const detailHref = (a: { title: string }) => announcementPath(a.title);
 const neighbours = [
 	older && { a: older, label: "Παλαιότερη", icon: "arrow-left" as const, align: "" },
 	newer && { a: newer, label: "Νεότερη", icon: "arrow-right" as const, align: "sm:col-start-2 sm:flex-row-reverse sm:text-right" },
@@ -188,7 +182,7 @@ const neighbours = [
 		<div class="flex w-full max-w-5xl flex-col items-center gap-y-10 max-sm:gap-y-7">
 			<header class="flex w-full flex-col items-center gap-y-5 max-sm:gap-y-4">
 				<a
-					href="/sxoli/anakoinoseis"
+					href="/sxoli/anakoinoseis/"
 					class="self-start inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-3 py-1.5 text-lg max-sm:text-sm text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
 					<Icon name="arrow-left" />
 					Οι Ανακοινώσεις
@@ -494,7 +488,7 @@ const neighbours = [
 					)
 				}
 				<a
-					href="/sxoli/anakoinoseis"
+					href="/sxoli/anakoinoseis/"
 					class="inline-flex items-center gap-2 rounded-lg border-2 border-red-900 px-4 py-2 text-lg max-sm:text-base text-red-900 transition-colors duration-300 hover:bg-red-900 hover:text-red-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2">
 					<Icon name="newspaper" />
 					Όλες οι ανακοινώσεις

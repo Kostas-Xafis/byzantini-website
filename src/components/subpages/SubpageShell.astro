@@ -1,0 +1,86 @@
+---
+// Page frame for the sub-pages: the warm page background, a centred column and the
+// shared typography (.sub-heading, .sub-prose) every sub-page uses.
+export interface Props {
+	width?: "default" | "narrow";
+	id?: string;
+}
+const { width = "default", id } = Astro.props;
+---
+
+<main id={id} class="w-full h-full overflow-y-auto font-didact bg-[#fbf6f2]">
+	<div
+		class={"mx-auto w-full flex flex-col gap-y-10 px-10 pt-6 pb-24 max-lg:px-6 max-sm:px-3 max-sm:pt-4 max-sm:gap-y-7 " +
+			(width === "narrow" ? "max-w-5xl" : "max-w-7xl")}>
+		<slot />
+	</div>
+</main>
+
+<style is:global>
+	.sub-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-family: var(--font-anaktoria);
+		font-weight: 700;
+		font-size: clamp(1.5rem, 2vw, 2rem);
+		line-height: 1.2;
+		color: var(--color-red-900);
+	}
+	.sub-heading::before {
+		content: "";
+		flex: none;
+		width: 0.55em;
+		height: 0.55em;
+		rotate: 45deg;
+		border-radius: 2px;
+		background: var(--color-red-900);
+		box-shadow:
+			0 0 0 3px #fbf6f2,
+			0 0 0 4.5px rgb(127 29 29 / 0.35);
+	}
+	.sub-prose {
+		font-size: 1.125rem;
+		line-height: 1.8;
+		color: var(--color-ink);
+	}
+	.sub-prose p,
+	.sub-prose li {
+		color: var(--color-ink);
+	}
+	.sub-prose > * + * {
+		margin-top: 1em;
+	}
+	.sub-prose h3 {
+		margin-top: 1.5em;
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--color-red-950);
+	}
+	.sub-prose ul {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5em;
+	}
+	.sub-prose ul > li {
+		position: relative;
+		padding-left: 1.5em;
+	}
+	.sub-prose ul > li::before {
+		content: "";
+		position: absolute;
+		left: 0.3em;
+		top: 0.72em;
+		width: 0.42em;
+		height: 0.42em;
+		rotate: 45deg;
+		border-radius: 1px;
+		background: rgb(127 29 29 / 0.75);
+	}
+	@media (max-width: 639.98px) {
+		.sub-prose {
+			font-size: 1rem;
+			line-height: 1.7;
+		}
+	}
+</style>
