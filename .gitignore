@@ -62,3 +62,7 @@ worker-*.d.ts
 
 # Playwright (e2e/) output
 /e2e/test-results
+
+
+*.vcf
+/school_registry

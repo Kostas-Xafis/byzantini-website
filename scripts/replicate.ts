@@ -48,13 +48,38 @@ const ROOT = process.cwd();
 
 // ─── DB ────────────────────────────────────────────────────────────────────────
 
+/**
+ * `wrangler d1 export` writes each table's CREATE followed by its rows, in table creation order, so the
+ * rows of a table that references a later one (pupil_enrollments → fee_catalogs, since 0006) fail with
+ * "no such table" on replay. Moves every CREATE TABLE ahead of the other statements, order otherwise kept.
+ */
+function tablesFirst(dump: string): string {
+	const statements: string[] = [];
+	let current: string[] = [];
+	let inString = false;
+	for (const line of dump.split("\n")) {
+		current.push(line);
+		// a '' escape toggles twice, so only a real opening/closing quote changes the state
+		for (const ch of line) if (ch === "'") inString = !inString;
+		if (!inString && line.trimEnd().endsWith(";")) {
+			statements.push(current.join("\n"));
+			current = [];
+		}
+	}
+	if (current.join("").trim()) statements.push(current.join("\n"));
+	const isPragma = (s: string) => /^PRAGMA\b/i.test(s.trim());
+	const isCreateTable = (s: string) => /^CREATE TABLE\b/i.test(s.trim());
+	return [...statements.filter(isPragma), ...statements.filter(isCreateTable), ...statements.filter((s) => !isPragma(s) && !isCreateTable(s))].join("\n");
+}
+
 async function replicateDb() {
 	console.log("▶ Exporting remote D1 → dbSnapshots/dev-snapshot.sql ...");
 	execFileSync("bunx", ["wrangler", "d1", "export", "byzantini-db", "--remote", "--output", join(ROOT, "dbSnapshots/dev-snapshot.sql")], {
 		stdio: "inherit",
 	});
-	const size = (await readFile(join(ROOT, "dbSnapshots/dev-snapshot.sql"), "utf8")).length;
-	console.log(`  exported ok (${(size / 1e6).toFixed(1)} MB)`);
+	const dump = await readFile(join(ROOT, "dbSnapshots/dev-snapshot.sql"), "utf8");
+	console.log(`  exported ok (${(dump.length / 1e6).toFixed(1)} MB)`);
+	await Bun.write(join(ROOT, "dbSnapshots/dev-snapshot.sql"), tablesFirst(dump));
 
 	console.log("▶ Wiping local D1 state (.wrangler/state/v3/d1) ...");
 	await rm(join(ROOT, ".wrangler/state/v3/d1"), { force: true, recursive: true });
