@@ -53,6 +53,49 @@ export function schoolDateParts(now: Date = new Date()): { year: number; month: 
 	return { year: part("year"), month: part("month"), day: part("day") };
 }
 
+let schoolClockFormat: Intl.DateTimeFormat | undefined;
+/**
+ * Epoch ms of 00:00 in the school's time zone on the given calendar day. The day may overflow like
+ * `Date.UTC`'s (day 0 is the last day of the previous month, day 32 runs into the next one).
+ */
+export function schoolDayStart(year: number, month: number, day: number): number {
+	schoolClockFormat ??= new Intl.DateTimeFormat("en-US", {
+		timeZone: SCHOOL_TIME_ZONE,
+		hourCycle: "h23",
+		year: "numeric",
+		month: "numeric",
+		day: "numeric",
+		hour: "numeric",
+		minute: "numeric",
+		second: "numeric",
+	});
+	/** How far the school's wall clock runs ahead of UTC at the instant `t`. */
+	const offsetAt = (t: number) => {
+		const parts = schoolClockFormat!.formatToParts(new Date(t));
+		const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((p) => p.type === type)?.value);
+		return Date.UTC(part("year"), part("month") - 1, part("day"), part("hour"), part("minute"), part("second")) - t;
+	};
+	const wallClock = Date.UTC(year, month - 1, day);
+	// the second pass picks the offset in force at the result itself (the day a DST change happens)
+	return wallClock - offsetAt(wallClock - offsetAt(wallClock));
+}
+
+/** Where this week (from Monday) and this month begin in the school's time zone, as epoch ms. */
+export function schoolWeekAndMonthStart(now: Date = new Date()): { week: number; month: number } {
+	const { year, month, day } = schoolDateParts(now);
+	const sinceMonday = (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
+	return { week: schoolDayStart(year, month, day - sinceMonday), month: schoolDayStart(year, month, 1) };
+}
+
+/**
+ * The end of today's calendar day `yearsBack` years ago (the start of the following day), in the school's
+ * time zone: a past school year's enrollments dated before it are the ones it had "on the same date".
+ */
+export function sameDayCutoff(yearsBack: number, now: Date = new Date()): number {
+	const { year, month, day } = schoolDateParts(now);
+	return schoolDayStart(year - yearsBack, month, day + 1);
+}
+
 /** Start year of the school year being registered for on `now` (see `SCHOOL_YEAR_ROLLOVER_MONTH`). */
 export function currentSchoolYearStart(now: Date = new Date()): number {
 	const { year, month } = schoolDateParts(now);

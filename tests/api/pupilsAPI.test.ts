@@ -194,6 +194,35 @@ function pupilsTest() {
 		expect(res.status).toBe(401);
 	});
 
+	test("--pupils-- #10d dashboardYears matches the local database", async () => {
+		const json = await getJson<APIResponse["Pupils.dashboardYears"]>(await useTestAPI("Pupils.dashboardYears"));
+		const { years } = json.data;
+		expect(json.data.school_year).toBe(currentSchoolYear());
+		expect(years.at(-1)?.school_year).toBe(currentSchoolYear());
+		expect(json.data.week).toBeGreaterThanOrEqual(0);
+		for (const year of years) {
+			expect(year.by_class.reduce((sum, n) => sum + n, 0)).toBe(year.total);
+			expect(year.to_date).toBeLessThanOrEqual(year.total);
+		}
+		// the running year counts everything it has so far
+		expect(years.at(-1)?.to_date).toBe(years.at(-1)?.total);
+
+		const expected = withLocalDb(
+			(db) =>
+				db.query("SELECT registration_year, COUNT(*) AS total FROM pupil_enrollments GROUP BY registration_year").all() as {
+					registration_year: string;
+					total: number;
+				}[],
+		);
+		if (!expected) return; // no local dev DB to compare with
+		for (const year of years) expect(year.total).toBe(expected.find((row) => row.registration_year === year.school_year)?.total ?? 0);
+	});
+
+	test("--pupils-- #10e dashboardYears requires a session", async () => {
+		const res = await rawAPI("GET", "/pupils/dashboard/years");
+		expect(res.status).toBe(401);
+	});
+
 	test("--pupils-- #11 getEnrollmentsByYear returns the joined legacy-compatible row", async () => {
 		const res = await useTestAPI("Pupils.getEnrollmentsByYear", { UrlArgs: { year: "2025" } });
 		const json = await getJson<APIResponse["Pupils.getEnrollmentsByYear"]>(res);

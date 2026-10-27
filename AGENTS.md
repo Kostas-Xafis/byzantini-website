@@ -260,7 +260,13 @@ The person data that used to live on `registrations` is split into two tables
   (`payment_amount < total_payment`), public-form enrollments after `since`.
   `since` is the admin's previous visit, remembered per device in
   `localStorage` (`admin-dashboard-visits`; a new visit starts after 30 min
-  away, the first one counts the last 7 days).
+  away, the first one counts the last 7 days). Below them, «Εγγραφές» reads
+  `Pupils.dashboardYears` (`GET /pupils/dashboard/years`): per school year and
+  music type, plus `to_date` — the enrollments that year had by **today's
+  calendar date** (`sameDayCutoff`, Greek time), so the running year is
+  compared with the same point of the previous one, never with its final
+  total — and this week's / month's enrollments (`schoolWeekAndMonthStart`).
+  The «Βρείτε μαθητή» box opens `/admin/pupils?q=…`.
 
 ## Admin authentication (sign-in, sessions, providers)
 
