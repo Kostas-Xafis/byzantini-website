@@ -1,6 +1,6 @@
 /**
  * The public registration form (/eggrafes, RegistrationForm.solid.tsx): pick a music type → identify
- * (here always "new student", ΑΜ 000) → the form.
+ * (here always "new student": no ΑΜ field, registered with the 000 placeholder) → the form.
  *
  * The happy path writes a real pupil to the dev DB. It is the «Δοκιμαστικός Μαθητής» fixture the API
  * suite uses, with an ΑΜΚΑ no real person has (starts with 99: no day 99) and a
@@ -14,7 +14,7 @@ import { expect, test } from "./support/fixtures";
 const TEST_FIRST_NAME = "Δοκιμαστικός";
 const TEST_LAST_NAME = "Μαθητής";
 
-/** Opens the form of a department as a new student (ΑΜ 000). */
+/** Opens the form of a department as a new student (no ΑΜ field). */
 async function openNewStudentForm(page: Page) {
 	// The form refuses to submit until the teachers list is in; wait for it like a family would.
 	const teachersLoaded = page.waitForResponse((res) => res.url().endsWith("/api/teachers/public") && res.ok());
@@ -58,7 +58,7 @@ test("@phone an empty submit lists the required fields and sends nothing", async
 	for (const label of ["ΑΜΚΑ", "Επώνυμο", "Όνομα", "Πατρώνυμο", "Κινητό", "Email", "Ημερομηνία Γέννησης", "Έτος Φοίτησης"]) {
 		await expect(alert).toContainText(label);
 	}
-	// ΑΜ (000 for a new student) and the school year are already filled in.
+	// A new student has no ΑΜ field, and the school year is already filled in.
 	await expect(alert).not.toContainText("Αριθμός Μητρώου");
 	await expect(alert).not.toContainText("Σχολικό Έτος");
 	// The first missing field gets the focus.
@@ -66,14 +66,14 @@ test("@phone an empty submit lists the required fields and sends nothing", async
 	expect(posted).toEqual([]);
 });
 
-test("@phone a new student (ΑΜ 000) registers successfully", async ({ page }, testInfo) => {
+test("@phone a new student (no ΑΜ field) registers successfully", async ({ page }, testInfo) => {
 	const tag = `${Date.now().toString(36)}${testInfo.project.name}`;
 	const email = `pupils.test.e2e.${tag}@example.com`;
 	const amka = `99${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;
 	try {
 		const form = await openNewStudentForm(page);
-		const formShownAt = Date.now();
-		await expect(form.locator("input[name='am']")).toHaveValue("000");
+		// No ΑΜ field for a new student: the form sends the 000 placeholder itself (checked in the DB below).
+		await expect(form.locator("input[name='am']")).toHaveCount(0);
 
 		// «Υπό Κατάταξη» first: it hides the teacher field (and needs no teacher), which re-renders that part of the form.
 		await form.locator("select[name='class_year']").selectOption("Υπό Κατάταξη");
@@ -90,11 +90,9 @@ test("@phone a new student (ΑΜ 000) registers successfully", async ({ page }, 
 		await form.locator("input[name='tk']").fill("14452");
 		await form.locator("input[name='region']").fill("Μεταμόρφωση");
 
-		// The birth date is a read-only input driven by a date picker (DateInput.solid.tsx), which clears the
-		// value once, 1 s after it mounts — set it (as the picker would) after that.
-		await page.waitForTimeout(Math.max(0, 1_200 - (Date.now() - formShownAt)));
+		// The date field (DateInput.solid.tsx) reads ηη/μμ/εεεε whatever the browser's language.
 		const birthDate = form.locator("input[name='birth_date']");
-		await birthDate.evaluate((input: HTMLInputElement) => (input.value = "15/03/2015"));
+		await birthDate.fill("15/03/2015");
 		await expect(birthDate).toHaveValue("15/03/2015");
 
 		const posted = page.waitForResponse((res) => res.request().method() === "POST" && new URL(res.url()).pathname === "/api/pupils");

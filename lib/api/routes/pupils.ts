@@ -14,7 +14,7 @@ import {
 	type PupilYear,
 } from "@lib/fees/recalculate.server";
 import { ALL_YEARS, currentSchoolYearStart, sameDayCutoff, schoolWeekAndMonthStart, schoolYearOf } from "@lib/pupils/years";
-import { getDb, logQuery } from "@lib/db";
+import { getDb, logQuery, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
 import { executeQuery, questionMarks } from "@lib/utils.server";
 import { z } from "astro/zod";
@@ -108,6 +108,12 @@ const z_PupilUpdate = z.object({
 	registration_url: z.string("Μη έγκυρο registration_url").optional(),
 	needs_review: z.union([z.boolean(), z.literal(0), z.literal(1)]).optional(),
 	review_note: z.string("Μη έγκυρη σημείωση ελέγχου").optional(),
+});
+
+/** A pupil added by hand in the Μαθητολόγιο: the edit form's fields, the names required. */
+const z_PupilCreate = z_PupilUpdate.omit({ id: true, orphan_code: true, split_from_am: true, registration_url: true, needs_review: true }).extend({
+	first_name: z.string("Μη έγκυρο όνομα").trim().min(1, "Συμπληρώστε το όνομα"),
+	last_name: z.string("Μη έγκυρο επώνυμο").trim().min(1, "Συμπληρώστε το επώνυμο"),
 });
 
 /** A single history entry, as edited in the Μαθητολόγιο. */
@@ -315,7 +321,8 @@ async function recalculateAfterInsert(pairs: PupilYear[]) {
  * re-registration link so the form can prefill from either path.
  */
 const z_AmLookup = z.object({
-	am: z.number().int().min(1, "Μη έγκυρος αριθμός μητρώου").max(9999, "Μη έγκυρος αριθμός μητρώου"),
+	/** Omitted: a pupil without ΑΜ (registered as new, ΑΜ not assigned yet), found by ΑΜΚΑ alone. */
+	am: z.number().int().min(1, "Μη έγκυρος αριθμός μητρώου").max(9999, "Μη έγκυρος αριθμός μητρώου").optional(),
 	amka: z.string().length(11, "Ο ΑΜΚΑ αποτελείται από 11 ψηφία"),
 });
 
@@ -335,6 +342,16 @@ function canUpdatePupil(pupil: PupilProof, body: Pick<Pupils, "amka" | "last_nam
 	const sameSurname = normalizeKey(pupil.last_name) === normalizeKey(body.last_name);
 	const sameBirthDate = Math.abs(Number(pupil.birth_date) - Number(body.birth_date)) < 1.5 * DAY_MS;
 	return sameSurname && sameBirthDate;
+}
+
+/**
+ * The next free review code of a pupil without ΑΜ, '<base>-Ο<n>' (base '000' for a new pupil): one above the highest in
+ * use, so a deleted pupil's code is never handed out twice.
+ */
+async function nextOrphanCode(T: Transaction, base: string): Promise<string> {
+	const rows = await T.executeQuery<{ orphan_code: string }>("SELECT orphan_code FROM pupils WHERE orphan_code LIKE ?", [`${base}-Ο%`]);
+	const highest = rows.reduce((max, row) => Math.max(max, Number(row.orphan_code.slice(base.length + 2)) || 0), 0);
+	return `${base}-Ο${highest + 1}`;
 }
 
 type PupilRow = Pupils & { needs_review: 0 | 1 | boolean };
@@ -520,6 +537,67 @@ export const pupilsRoutes = {
 	),
 
 	/**
+	 * A pupil added by hand in the Μαθητολόγιο — by the secretariat, also to fill in the years before the online
+	 * register (their enrollments are then added with `enroll`). Without an ΑΜ the pupil gets the next review code
+	 * and is flagged, like a new pupil from the public form. An ΑΜ or ΑΜΚΑ that another pupil already has is refused
+	 * (409), so the register gets no duplicates.
+	 */
+	create: new APIServer(
+		{ method: "POST", path: "/pupils/create", schema: z_PupilCreate, responseSchema: z.object({ id: z.number().int() }) },
+		[authenticateMiddleware],
+		({ body }) =>
+			handlerResult(async (T) => {
+				const am = body.am ?? null;
+				if (am !== null) {
+					const [holder] = await executeQuery<Pick<Pupils, "id" | "last_name" | "first_name">>(
+						"SELECT id, last_name, first_name FROM pupils WHERE am = ?",
+						[am],
+					);
+					if (holder) throw APIError.conflict(`Ο ΑΜ ${am} ανήκει ήδη στον μαθητή ${holder.last_name} ${holder.first_name}`);
+				}
+				const amka = body.amka ?? "";
+				if (amka) {
+					const [holder] = await executeQuery<Pick<Pupils, "am" | "orphan_code" | "last_name" | "first_name">>(
+						"SELECT am, orphan_code, last_name, first_name FROM pupils WHERE amka = ? LIMIT 1",
+						[amka],
+					);
+					if (holder) {
+						const code = holder.am ?? holder.orphan_code;
+						throw APIError.conflict(`Ο ΑΜΚΑ ανήκει ήδη στον μαθητή ${holder.last_name} ${holder.first_name}${code ? ` (ΑΜ ${code})` : ""}`);
+					}
+				}
+				const now = Date.now();
+				const note = (body.review_note ?? "").trim();
+				const { insertId } = await T.executeQuery(
+					`INSERT INTO pupils (am, orphan_code, first_name, last_name, fathers_name, birth_date, road, number, tk, region, telephone, cellphone, email, amka, registration_url, needs_review, review_note, created_at, updated_at) VALUES (???)`,
+					{
+						am,
+						orphan_code: am === null ? await nextOrphanCode(T, "000") : "",
+						first_name: body.first_name,
+						last_name: body.last_name,
+						fathers_name: body.fathers_name ?? "",
+						birth_date: body.birth_date ?? 0,
+						road: body.road ?? "",
+						number: body.number ?? 0,
+						tk: body.tk ?? 0,
+						region: body.region ?? "",
+						telephone: body.telephone || "-",
+						cellphone: body.cellphone ?? "",
+						email: body.email ?? "",
+						amka,
+						registration_url: R.string(32),
+						// Same rule as `update`: in the review list while it has no ΑΜ or a note.
+						needs_review: am === null || note ? 1 : 0,
+						review_note: am === null && !note ? "χωρίς ΑΜ — καταχώρηση από τη Γραμματεία, εκκρεμεί απονομή ΑΜ" : note,
+						created_at: now,
+						updated_at: now,
+					},
+				);
+				return { id: insertId };
+			}, "Σφάλμα κατά την προσθήκη του μαθητή"),
+	),
+
+	/**
 	 * Deletes a pupil and everything that hangs off them: the enrollment history (fees and payments
 	 * live on those rows), the `total_enrollments` counter share and — with `unsubscribe` — the
 	 * newsletter subscription of their email, unless another pupil still uses that address. One
@@ -593,11 +671,20 @@ export const pupilsRoutes = {
 					// Ownership was checked above.
 					[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ?", [parsed.am]);
 				} else {
-					// No usable ΑΜ: reuse this person's existing orphan row instead of creating
-					// a duplicate every year — never on the name alone (anyone can type a name).
-					const candidates = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND orphan_code <> ''");
-					const nameKey = normalizeKey(`${body.last_name} ${body.first_name}`);
-					pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey && canUpdatePupil(row, body));
+					// No usable ΑΜ: reuse this person's existing pupil without ΑΜ instead of creating a
+					// duplicate every year. Found by ΑΜΚΑ — what the form identifies them by, see
+					// `getByAm` — and only for records kept without an ΑΜΚΑ by name + surname/birth
+					// date; never on the name alone (anyone can type a name).
+					if (body.amka) {
+						[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND amka = ? ORDER BY updated_at DESC LIMIT 1", [
+							body.amka,
+						]);
+					}
+					if (!pupil) {
+						const candidates = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND orphan_code <> '' AND amka = ''");
+						const nameKey = normalizeKey(`${body.last_name} ${body.first_name}`);
+						pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey && canUpdatePupil(row, body));
+					}
 				}
 				let pupilId: number;
 				if (pupil) {
@@ -612,16 +699,12 @@ export const pupilsRoutes = {
 					// secretaries assign the real ΑΜ later (ΑΜ stays NULL, the row is
 					// flagged, and the code is the next free '<base>-Ο<n>').
 					const orphan = parsed.kind !== "valid";
-					const base = parsed.digits || "000";
-					const existingCodes = await T.executeQuery<{ orphan_code: string }>("SELECT orphan_code FROM pupils WHERE orphan_code LIKE ?", [
-						`${base}-Ο%`,
-					]);
-					const nextIndex = existingCodes.length + 1;
+					const orphanCode = orphan ? await nextOrphanCode(T, parsed.digits || "000") : "";
 					const { insertId } = await T.executeQuery(
 						`INSERT INTO pupils (am, orphan_code, first_name, last_name, fathers_name, birth_date, road, number, tk, region, telephone, cellphone, email, amka, registration_url, needs_review, review_note, created_at, updated_at) VALUES (???)`,
 						{
 							am: parsed.kind === "valid" ? parsed.am : null,
-							orphan_code: orphan ? `${base}-Ο${nextIndex}` : "",
+							orphan_code: orphanCode,
 							first_name: body.first_name,
 							last_name: body.last_name,
 							fathers_name: body.fathers_name,
@@ -1081,15 +1164,27 @@ export const pupilsRoutes = {
 
 	/**
 	 * Returning-student lookup for the public form (NO auth): ΑΜ + ΑΜΚΑ must
-	 * both match. 404 when the pair is unknown so the form can tell the user to
-	 * register as a new student instead.
+	 * both match. A pupil who registered as new and has no ΑΜ yet (an orphan,
+	 * `000-Ο…`) cannot know one, so without `am` the ΑΜΚΑ alone finds a pupil
+	 * WITHOUT ΑΜ — never one who has an ΑΜ. 404 when nothing matches so the form
+	 * can tell the user to register as a new student instead.
 	 */
 	getByAm: new APIServer(
 		{ method: "POST", path: "/pupils/lookup", schema: z_AmLookup, responseSchema: z_PupilWithEnrollments },
 		[rateLimitMiddleware("lookup")],
 		async ({ body }) => {
-			const [pupil] = await executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ? AND amka = ?", [body.am, body.amka]);
-			if (!pupil) return APIServer.jsonError("Δεν βρέθηκε μαθητής με αυτόν τον αριθμό μητρώου και ΑΜΚΑ", HTTP.NOT_FOUND);
+			const [pupil] =
+				body.am === undefined
+					? await executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND amka = ? ORDER BY updated_at DESC LIMIT 1", [body.amka])
+					: await executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ? AND amka = ?", [body.am, body.amka]);
+			if (!pupil) {
+				return APIServer.jsonError(
+					body.am === undefined
+						? "Δεν βρέθηκε μαθητής χωρίς αριθμό μητρώου με αυτόν τον ΑΜΚΑ"
+						: "Δεν βρέθηκε μαθητής με αυτόν τον αριθμό μητρώου και ΑΜΚΑ",
+					HTTP.NOT_FOUND,
+				);
+			}
 			const enrollments = await executeQuery<PupilEnrollments>(
 				`SELECT * FROM pupil_enrollments WHERE pupil_id = ? ORDER BY registration_year DESC, class_id ASC, instrument_id ASC`,
 				[pupil.id],

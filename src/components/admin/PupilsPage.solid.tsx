@@ -4,7 +4,7 @@ import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
 import { currentSchoolYear } from "@lib/pupils/years";
-import { API, type APIResponse } from "@routes/index.client";
+import { API, type APIArgs, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
 import Icon from "@components/other/Icon.solid";
 import { createComponent, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, untrack, type JSX } from "solid-js";
@@ -34,7 +34,9 @@ import type { Action } from "./table/TableControls.solid";
  * Typing a new query — or toggling "Μόνο προς έλεγχο" — always returns to the
  * result list, so the field never sits there inertly while a record is open.
  *
- * Actions: edit the pupil's details, or add a (possibly historical) enrollment.
+ * Actions: add a pupil by hand («Νέος μαθητής» — also how the years before the online register are filled in:
+ * create the pupil, then add their old enrollments), edit the pupil's details, or add a (possibly historical)
+ * enrollment.
  * The table system is deliberately NOT used here — `Table` is a fixed grid with
  * a single `#table` id; this page is bespoke, following SettingsPage/TotalsTable.
  */
@@ -42,6 +44,8 @@ import type { Action } from "./table/TableControls.solid";
 const PREFIX = "pupils";
 /** Own modal prefix for the per-row enrollment editor (the pupil editor already uses PREFIX + MODIFY). */
 const ENROLLMENT_PREFIX = "pupils-enrollment";
+/** Own modal prefix for «Νέος μαθητής» (the record's «Νέα εγγραφή» already uses PREFIX + ADD). */
+const CREATE_PREFIX = "pupils-create";
 
 const MUSIC_TYPES = [
 	{
@@ -142,8 +146,8 @@ const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === nul
 const field = (label: string, name: string, type: InputProps["type"], extra: Partial<InputProps> = {}): InputProps =>
 	({ label, name, type, icon: "user", ...extra }) as InputProps;
 
-/** Edit form: the pupil's identity and contact details. */
-function pupilInputs(pupil: Pupils): Record<string, InputProps> {
+/** Edit / create form: the pupil's identity and contact details. */
+function pupilInputs(): Record<string, InputProps> {
 	return {
 		am: {
 			label: "Αριθμός Μητρώου",
@@ -220,6 +224,15 @@ function enrollmentInputs(
 			placeholder: currentSchoolYear(),
 			// Most enrollments added by the secretariat are for the current school year; still editable for past ones.
 			value: defaults.registration_year || currentSchoolYear(),
+		},
+		date: {
+			label: "Ημερομηνία Εγγραφής",
+			name: "date",
+			type: "date",
+			required: true,
+			icon: "calendar",
+			// Today for a new enrollment; a past year's enrollment (entered later) takes the day it really happened.
+			value: defaults.date || Date.now(),
 		},
 		class_id: {
 			label: "Μουσική",
@@ -576,7 +589,7 @@ export default function PupilsPage() {
 	const editAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
 		const data = record();
 		if (!data) return emptyAction(ActionEnum.MODIFY, ActionIcon.MODIFY);
-		const inputs = new InputFields(pupilInputs(data.pupil)).fill((input, key) => {
+		const inputs = new InputFields(pupilInputs()).fill((input, key) => {
 			const value = (data.pupil as unknown as Record<string, unknown>)[key as string];
 			input.value = key === "birth_date" ? (value as number) || undefined : ((value as string | number) ?? "");
 		});
@@ -641,7 +654,7 @@ export default function PupilsPage() {
 						evaluation: placement.evaluation,
 						teacher_id: form.number("teacher_id", -1),
 						instrument_id: classId ? form.number("instrument_id", 0) : 0,
-						date: Date.now(),
+						date: form.date("date").getTime(),
 						pass: form.multiSelect("pass", "boolean", { single: true }),
 					},
 				});
@@ -651,6 +664,63 @@ export default function PupilsPage() {
 			},
 		};
 	});
+
+	/**
+	 * «Νέος μαθητής»: a pupil added by hand, prefilled from the search that found nobody (digits → ΑΜ, words → surname
+	 * and first name). Saving opens the new record, where «Νέα εγγραφή» adds their enrollments — past years too.
+	 */
+	const [createDefaults, setCreateDefaults] = createSignal<Partial<Pupils>>({});
+	const createAction = createMemo<Action>(() => {
+		const defaults = createDefaults();
+		const inputs = new InputFields(pupilInputs()).fill((input, key) => {
+			const value = (defaults as Record<string, unknown>)[key as string];
+			if (value !== undefined) input.value = value as string | number;
+		});
+		return {
+			type: ActionEnum.ADD,
+			icon: ActionIcon.ADD_USER,
+			label: "Νέος μαθητής",
+			headerText: "Νέος Μαθητής",
+			submitText: "Προσθήκη",
+			inputs: inputs.getInputs(),
+			onSubmit: async (form: ExtendedFormData<Pupils>) => {
+				const amRaw = form.string("am", "").trim();
+				const body: APIArgs["Pupils.create"]["RequestObject"] = {
+					am: amRaw === "" ? null : Number(amRaw),
+					amka: form.string("amka", "").trim(),
+					last_name: form.string("last_name").trim(),
+					first_name: form.string("first_name").trim(),
+					fathers_name: form.string("fathers_name", ""),
+					road: form.string("road", ""),
+					number: form.number("number", 0),
+					tk: form.number("tk", 0),
+					region: form.string("region", ""),
+					telephone: form.string("telephone", "-"),
+					cellphone: form.string("cellphone", ""),
+					email: form.string("email", ""),
+					review_note: form.string("review_note", ""),
+				};
+				if (form.string("birth_date", "")) body.birth_date = form.date("birth_date").getTime();
+				const res = await apiHook(API.Pupils.create, { RequestObject: body });
+				if (!("data" in res)) return;
+				pushAlert(createAlert("success", `Προστέθηκε ο μαθητής ${body.last_name} ${body.first_name} — προσθέστε τις εγγραφές του με «Νέα εγγραφή»`));
+				openPupil(res.data.id);
+				void runSearch(page());
+			},
+		};
+	});
+	const openCreate = () => {
+		const text = query().trim();
+		const defaults: Partial<Pupils> = {};
+		if (/^\d{1,4}$/.test(text)) defaults.am = Number(text);
+		else if (text && !/\d/.test(text)) {
+			const [last, ...first] = text.split(/\s+/);
+			defaults.last_name = last;
+			if (first.length) defaults.first_name = first.join(" ");
+		}
+		setCreateDefaults(defaults);
+		setGlobalOpen(CREATE_PREFIX + ActionEnum.ADD, true);
+	};
 
 	/** Deletes the open pupil with their whole history (one batch on the server), then returns to the list. */
 	const deleteAction = createMemo<Action | ReturnType<typeof emptyAction>>(() => {
@@ -727,7 +797,7 @@ export default function PupilsPage() {
 						evaluation: placement.evaluation,
 						teacher_id: form.number("teacher_id", -1),
 						instrument_id: classId ? form.number("instrument_id", 0) : 0,
-						date: enrollment.date,
+						date: form.date("date").getTime(),
 						// Fees and payments belong to the «Δίδακτρα μαθητή» dialog: resend the stored values.
 						...storedPaymentFields(enrollment),
 						pass: form.multiSelect("pass", "boolean", { single: true }),
@@ -763,6 +833,7 @@ export default function PupilsPage() {
 	const editStore = modalStore(editAction);
 	const enrollStore = modalStore(enrollAction);
 	const deleteStore = modalStore(deleteAction);
+	const createStore_ = modalStore(createAction);
 	const openModal = (type: ActionEnum) => setGlobalOpen(PREFIX + type, true);
 
 	/** Fees at a glance: the current school year, or the newest the pupil has (as the fees dialog opens). */
@@ -906,6 +977,12 @@ export default function PupilsPage() {
 						<Icon name={needsReviewOnly() ? "checkbox-checked" : "checkbox"} class="text-amber-600 dark:text-amber-300" />
 						Μόνο προς έλεγχο
 					</label>
+					<Show when={selectedId() === null}>
+						<button type="button" class={BTN_SECONDARY + " ml-auto px-3 py-1 text-sm"} onClick={openCreate}>
+							<Icon name="user-plus" />
+							Νέος μαθητής
+						</button>
+					</Show>
 				</div>
 			</div>
 
@@ -935,6 +1012,12 @@ export default function PupilsPage() {
 											</Show>
 										</p>
 										<p class={"text-base " + MUTED}>Δοκιμάστε τον ΑΜ ή τα πρώτα γράμματα του επωνύμου.</p>
+										<Show when={query().trim()}>
+											<button type="button" class={BTN_PRIMARY + " mt-3"} onClick={openCreate}>
+												<Icon name="user-plus" />
+												Προσθήκη νέου μαθητή
+											</button>
+										</Show>
 									</div>
 								</Show>
 							}>
@@ -1414,6 +1497,9 @@ export default function PupilsPage() {
 			<Show when={"inputs" in deleteAction()}>
 				<Modal prefix={PREFIX} actionStore={deleteStore} />
 			</Show>
+
+			{/* «Νέος μαθητής» (toolbar / the empty result) */}
+			<Modal prefix={CREATE_PREFIX} actionStore={createStore_} />
 
 			{/* per-row enrollment editor (opened from the history rows / the awaiting-placement list) */}
 			<Show when={"inputs" in editEnrollmentAction()}>
