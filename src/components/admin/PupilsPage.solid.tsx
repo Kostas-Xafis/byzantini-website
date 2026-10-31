@@ -3,6 +3,7 @@ import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, TeacherC
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
+import { PUPIL_SEARCH_FIELDS, type PupilSearchField } from "@lib/pupils/search";
 import { currentSchoolYear } from "@lib/pupils/years";
 import { API, type APIArgs, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
@@ -30,6 +31,10 @@ import type { Action } from "./table/TableControls.solid";
  *   right — the pupil's music types as tabs (only the ones they ever enrolled
  *           in), each showing that department's history, with a per-instrument /
  *           per-class breakdown underneath.
+ *
+ * The field picker inside the search box chooses what the query is matched
+ * against (ΑΜ by default — see lib/pupils/search.ts); «Τμήμα» swaps the text
+ * field for a music-type select.
  *
  * Typing a new query — or toggling "Μόνο προς έλεγχο" — always returns to the
  * result list, so the field never sits there inertly while a record is open.
@@ -70,6 +75,19 @@ const MUSIC_TYPES = [
 		dot: "bg-sky-600 dark:bg-sky-400",
 	},
 ] as const;
+
+/** The search box's field picker, in menu order (ΑΜ, the default, first). */
+const SEARCH_FIELDS: Record<PupilSearchField, { label: string; placeholder: string; inputMode?: JSX.HTMLAttributes<HTMLInputElement>["inputMode"] }> = {
+	am: { label: "ΑΜ", placeholder: "Αριθμός Μητρώου…", inputMode: "numeric" },
+	name: { label: "Ονοματεπώνυμο", placeholder: "Επώνυμο ή όνομα…" },
+	amka: { label: "ΑΜΚΑ", placeholder: "ΑΜΚΑ…", inputMode: "numeric" },
+	phone: { label: "Τηλέφωνο", placeholder: "Σταθερό ή κινητό…", inputMode: "tel" },
+	email: { label: "Email", placeholder: "Email…", inputMode: "email" },
+	teacher: { label: "Καθηγητής", placeholder: "Όνομα καθηγητή…" },
+	music_type: { label: "Τμήμα", placeholder: "" },
+	instrument: { label: "Όργανο", placeholder: "Όργανο…" },
+};
+const isSearchField = (value: string | null): value is PupilSearchField => PUPIL_SEARCH_FIELDS.includes(value as PupilSearchField);
 
 const musicType = (classId: number) => MUSIC_TYPES.find((type) => type.id === classId);
 const musicLabel = (classId: number) => musicType(classId)?.label ?? "Άγνωστο";
@@ -321,6 +339,7 @@ export default function PupilsPage() {
 
 	// ---- search state -------------------------------------------------------
 	const [query, setQuery] = createSignal("");
+	const [field, setField] = createSignal<PupilSearchField>("am");
 	const [page, setPage] = createSignal(0);
 	const [needsReviewOnly, setNeedsReviewOnly] = createSignal(false);
 	const [results, setResults] = createSignal<APIResponse["Pupils.search"] | null>(null);
@@ -358,7 +377,7 @@ export default function PupilsPage() {
 
 	/**
 	 * Mirror the shareable state into the URL: `?pupil=<id>` for the open record,
-	 * `?q=<query>` for the search, `?review=1` for «Μόνο προς έλεγχο». The typed query is component state, so without
+	 * `?q=<query>` for the search, `?by=<field>` for a field other than ΑΜ, `?review=1` for «Μόνο προς έλεγχο». The typed query is component state, so without
 	 * this it is lost the moment the page remounts (reload, or a detour to another
 	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
 	 *
@@ -380,6 +399,9 @@ export default function PupilsPage() {
 		else params.set("pupil", String(id));
 		if (text) params.set("q", text);
 		else params.delete("q");
+		const by = untrack(field);
+		if (by !== "am") params.set("by", by);
+		else params.delete("by");
 		if (untrack(needsReviewOnly)) params.set("review", "1");
 		else params.delete("review");
 		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
@@ -399,7 +421,7 @@ export default function PupilsPage() {
 		setSearching(true);
 		try {
 			const res = await apiHook(API.Pupils.search, {
-				RequestObject: { query: query().trim(), needs_review: needsReviewOnly() || undefined, page: nextPage, pageSize: PAGE_SIZE },
+				RequestObject: { query: query().trim(), field: field(), needs_review: needsReviewOnly() || undefined, page: nextPage, pageSize: PAGE_SIZE },
 			});
 			if ("data" in res) {
 				setResults(res.data);
@@ -493,6 +515,43 @@ export default function PupilsPage() {
 		void runSearch(nextPage);
 	};
 
+	/** Search now (Enter, a select, clearing) instead of after the typing debounce. */
+	const searchNow = (text: string) => {
+		setQuery(text);
+		clearTimeout(debounceTimer);
+		startSearch(0);
+	};
+
+	/**
+	 * A new field searches the same text again — typed a name while on ΑΜ? pick «Ονοματεπώνυμο» — except
+	 * into or out of «Τμήμα», whose query is a class_id, not text.
+	 */
+	const changeField = (next: PupilSearchField) => {
+		const crossesMusicType = (field() === "music_type") !== (next === "music_type");
+		setField(next);
+		searchNow(crossesMusicType ? "" : query());
+		if (next !== "music_type") queueMicrotask(() => searchInput?.focus());
+	};
+
+	/** The query as the result count reads it («για «Βυζαντινή Μουσική»»). */
+	const queryLabel = () => {
+		const text = query().trim();
+		return field() === "music_type" && text ? musicLabel(Number(text)) : text;
+	};
+
+	/** Name suggestions for the «Καθηγητής» / «Όργανο» fields (still free text: any word prefix matches). */
+	const suggestions = createMemo(() => {
+		const names =
+			field() === "teacher"
+				? teachers()
+						.filter((teacher) => teacher.id >= 0)
+						.map((teacher) => teacher.fullname)
+				: field() === "instrument"
+					? instruments().map((instrument) => instrument.name)
+					: [];
+		return [...new Set(names)].sort((a, b) => a.localeCompare(b, "el"));
+	});
+
 	/** Music types the pupil has ever enrolled in, in canonical order. */
 	const availableMusicTypes = (enrollments: PupilEnrollments[]): number[] => {
 		const ids = new Set(enrollments.map((enrollment) => enrollment.class_id));
@@ -552,10 +611,13 @@ export default function PupilsPage() {
 			}
 		})();
 
-		// deep link: /admin/pupils?pupil=<id> (and/or ?q=<query>)
+		// deep link: /admin/pupils?pupil=<id> (and/or ?q=<query>&by=<field>)
 		const params = new URLSearchParams(initialSearch);
 		const deepLink = params.get("pupil");
-		const deepQuery = params.get("q");
+		const deepField = params.get("by");
+		if (isSearchField(deepField)) setField(deepField);
+		// «Τμήμα» takes a class_id only; anything else would leave the select on «Όλα» while nothing is found
+		const deepQuery = deepField === "music_type" && !/^[012]$/.test(params.get("q") ?? "") ? null : params.get("q");
 		// ?review=1 opens with «Μόνο προς έλεγχο» on (the «Αρχική» dashboard links here)
 		if (params.get("review") === "1") setNeedsReviewOnly(true);
 		if (deepQuery) {
@@ -666,8 +728,8 @@ export default function PupilsPage() {
 	});
 
 	/**
-	 * «Νέος μαθητής»: a pupil added by hand, prefilled from the search that found nobody (digits → ΑΜ, words → surname
-	 * and first name). Saving opens the new record, where «Νέα εγγραφή» adds their enrollments — past years too.
+	 * «Νέος μαθητής»: a pupil added by hand, prefilled from the search that found nobody (ΑΜ, surname and first
+	 * name, ΑΜΚΑ, mobile or email — whichever field was searched). Saving opens the new record, where «Νέα εγγραφή» adds their enrollments — past years too.
 	 */
 	const [createDefaults, setCreateDefaults] = createSignal<Partial<Pupils>>({});
 	const createAction = createMemo<Action>(() => {
@@ -712,12 +774,14 @@ export default function PupilsPage() {
 	const openCreate = () => {
 		const text = query().trim();
 		const defaults: Partial<Pupils> = {};
-		if (/^\d{1,4}$/.test(text)) defaults.am = Number(text);
-		else if (text && !/\d/.test(text)) {
+		if (field() === "am" && /^\d{1,4}$/.test(text)) defaults.am = Number(text);
+		else if (field() === "name" && text && !/\d/.test(text)) {
 			const [last, ...first] = text.split(/\s+/);
 			defaults.last_name = last;
 			if (first.length) defaults.first_name = first.join(" ");
-		}
+		} else if (field() === "amka" && /^\d{11}$/.test(text)) defaults.amka = text;
+		else if (field() === "phone" && /^69\d{8}$/.test(text.replace(/\D/g, ""))) defaults.cellphone = text.replace(/\D/g, "");
+		else if (field() === "email" && /^\S+@\S+\.\S+$/.test(text)) defaults.email = text;
 		setCreateDefaults(defaults);
 		setGlobalOpen(CREATE_PREFIX + ActionEnum.ADD, true);
 	};
@@ -891,7 +955,7 @@ export default function PupilsPage() {
 						</span>
 						<h1 class="font-anaktoria text-5xl max-sm:text-3xl">Μαθητολόγιο</h1>
 						{/* phones: the search placeholder says the same, the list needs the room */}
-						<p class={"max-w-2xl text-lg max-sm:hidden " + MUTED}>Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το ονοματεπώνυμο.</p>
+						<p class={"max-w-2xl text-lg max-sm:hidden " + MUTED}>Αναζητήστε μαθητή με τον Αριθμό Μητρώου — ή επιλέξτε άλλο πεδίο αναζήτησης.</p>
 					</div>
 				</Show>
 
@@ -899,30 +963,50 @@ export default function PupilsPage() {
 				<div
 					role="search"
 					class="flex items-center gap-x-3 rounded-2xl border border-gray-300 bg-surface px-4 py-3 shadow-sm shadow-gray-200/70 transition-[border-color,box-shadow] focus-within:border-red-800 focus-within:ring-4 focus-within:ring-red-800/10 dark:border-neutral-600 dark:shadow-none dark:focus-within:border-red-400 dark:focus-within:ring-red-400/15">
-					<Icon name="search" class="text-lg text-red-900/70 dark:text-red-200/70" />
-					<input
-						ref={searchInput}
-						type="search"
-						name="pupil-search"
-						autocomplete="off"
-						spellcheck="false"
-						aria-label="Αναζήτηση μαθητή με ΑΜ ή ονοματεπώνυμο"
-						placeholder="ΑΜ ή ονοματεπώνυμο…"
-						class="min-w-0 flex-1 bg-transparent text-xl text-red-950 placeholder:text-gray-400 focus-visible:outline-hidden max-sm:text-lg dark:text-red-50 dark:placeholder:text-gray-500 [&::-webkit-search-cancel-button]:appearance-none"
-						value={query()}
-						onInput={(e) => setQuery(e.currentTarget.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") {
-								clearTimeout(debounceTimer);
-								startSearch(0);
-							}
-							if (e.key === "Escape") {
-								setQuery("");
-								clearTimeout(debounceTimer);
-								startSearch(0);
-							}
-						}}
-					/>
+					<Icon name="search" class="text-lg text-red-900/70 max-sm:hidden dark:text-red-200/70" />
+					<Show
+						when={field() !== "music_type"}
+						fallback={
+							<select
+								name="pupil-search-music-type"
+								aria-label="Τμήμα"
+								class="min-w-0 flex-1 cursor-pointer bg-transparent! text-xl text-red-950 focus-visible:outline-hidden max-sm:text-lg dark:text-red-50"
+								value={query()}
+								onChange={(e) => searchNow(e.currentTarget.value)}>
+								<option value="" class="bg-surface text-ink">
+									Όλα τα τμήματα
+								</option>
+								<For each={MUSIC_TYPES}>
+									{(type) => (
+										<option value={String(type.id)} class="bg-surface text-ink">
+											{type.label}
+										</option>
+									)}
+								</For>
+							</select>
+						}>
+						<input
+							ref={searchInput}
+							type="search"
+							name="pupil-search"
+							autocomplete="off"
+							spellcheck={false}
+							inputMode={SEARCH_FIELDS[field()].inputMode}
+							list={suggestions().length ? "pupil-search-suggestions" : undefined}
+							aria-label={`Αναζήτηση μαθητή με ${SEARCH_FIELDS[field()].label}`}
+							placeholder={SEARCH_FIELDS[field()].placeholder}
+							class="min-w-0 flex-1 bg-transparent text-xl text-red-950 placeholder:text-gray-400 focus-visible:outline-hidden max-sm:text-lg dark:text-red-50 dark:placeholder:text-gray-500 [&::-webkit-search-cancel-button]:appearance-none"
+							value={query()}
+							onInput={(e) => setQuery(e.currentTarget.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") searchNow(query());
+								if (e.key === "Escape") searchNow("");
+							}}
+						/>
+						<datalist id="pupil-search-suggestions">
+							<For each={suggestions()}>{(name) => <option value={name} />}</For>
+						</datalist>
+					</Show>
 					<Show when={searching()}>
 						<Icon name="spinner" class="text-red-900 dark:text-red-200" spin />
 					</Show>
@@ -933,14 +1017,33 @@ export default function PupilsPage() {
 							title="Καθαρισμός"
 							class="grid size-8 shrink-0 place-items-center rounded-full text-red-900 transition-colors hover:bg-red-100 dark:text-red-200 dark:hover:bg-red-900/40"
 							onClick={() => {
-								setQuery("");
-								clearTimeout(debounceTimer);
-								startSearch(0);
-								searchInput?.focus();
+								searchNow("");
+								if (field() !== "music_type") searchInput?.focus();
 							}}>
 							<Icon name="close" class="text-base leading-none" />
 						</button>
 					</Show>
+					{/*
+					  field picker, at the right end: the native select IS the pill (keyboard, screen readers and phones get the
+					  OS menu); the wrapper only places the chevron. Colours carry `!` to beat AdminLayout's `html.dark select`.
+					*/}
+					<div class="relative inline-flex shrink-0 items-center text-red-900 dark:text-red-100">
+						<select
+							name="pupil-search-field"
+							aria-label="Πεδίο αναζήτησης"
+							class="cursor-pointer appearance-none rounded-full border border-red-300 bg-red-50! py-1.5 pr-8 pl-3 text-base font-semibold text-red-900! transition-[border-radius,background-color] hover:bg-red-100! focus:rounded-xl focus:outline-2 focus:outline-offset-1 focus:outline-red-800 max-sm:pr-7 max-sm:pl-2.5 max-sm:text-sm dark:border-red-400/60 dark:bg-red-900/30! dark:text-red-100! dark:hover:bg-red-900/50! dark:focus:outline-red-400"
+							value={field()}
+							onChange={(e) => changeField(e.currentTarget.value as PupilSearchField)}>
+							<For each={PUPIL_SEARCH_FIELDS}>
+								{(key) => (
+									<option value={key} class="bg-surface text-ink">
+										{SEARCH_FIELDS[key].label}
+									</option>
+								)}
+							</For>
+						</select>
+						<Icon name="chevron-down" class="pointer-events-none absolute right-2.5 text-sm max-sm:right-2" />
+					</div>
 				</div>
 
 				{/* ---- toolbar: back / result count + the review filter ---- */}
@@ -951,7 +1054,7 @@ export default function PupilsPage() {
 							<span class={"text-base " + MUTED} aria-live="polite">
 								<Show when={results()}>
 									<Show when={query().trim()} fallback={countLabel(results()!.total, "μαθητής", "μαθητές")}>
-										{countLabel(results()!.total, "αποτέλεσμα", "αποτελέσματα")} για «{query().trim()}»
+										{countLabel(results()!.total, "αποτέλεσμα", "αποτελέσματα")} για «{queryLabel()}»
 									</Show>
 								</Show>
 							</span>

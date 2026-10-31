@@ -1,7 +1,7 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
 import { z_IdArray, z_JoinedEnrollments, z_PupilRegistrationForm, z_PupilSearchResponse, z_PupilWithEnrollments } from "@lib/api/schemas";
 import { normalizeKey, normalizeText, parseAm } from "@lib/pupils/normalize";
-import { rankPupils } from "@lib/pupils/search";
+import { enrolledPupilIds, PUPIL_SEARCH_FIELDS, rankPupils } from "@lib/pupils/search";
 import { classYearsByMusicType, isEvaluationClassYear, MusicTypeArr } from "@lib/classYears";
 import { computeYearFees, orderForFees } from "@lib/fees";
 import {
@@ -74,6 +74,8 @@ function successfulRegistrationTemplate(classId: number, classYear: string): str
 
 const z_Search = z.object({
 	query: z.string("Μη έγκυρο ερώτημα αναζήτησης").max(120, "Πολύ μεγάλο ερώτημα"),
+	/** The field the query is matched against (the Μαθητολόγιο's field picker); ΑΜ by default. */
+	field: z.enum(PUPIL_SEARCH_FIELDS, "Μη έγκυρο πεδίο αναζήτησης").optional(),
 	/** Restrict to one music type (0/1/2) — the Μαθητολόγιο tabs. */
 	class_id: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
 	/** Only rows flagged for human review (the secretaries' worklist). */
@@ -423,16 +425,34 @@ function splitJoined(row: Record<string, unknown>): { enrollment: EnrollmentRow;
 
 export const pupilsRoutes = {
 	// ---------------------------------------------------------------------
-	// Μαθητολόγιο search (server-side, paginated): ΑΜ or name, ranked — see lib/pupils/search.ts
+	// Μαθητολόγιο search (server-side, paginated): one chosen field (ΑΜ by default), ranked — see lib/pupils/search.ts
 	// ---------------------------------------------------------------------
 	search: new APIServer(
 		{ method: "POST", path: "/pupils/search", schema: z_Search, responseSchema: z_PupilSearchResponse },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const { query, class_id, needs_review, page = 0, pageSize = 50 } = body;
+				const { query, field = "am", needs_review, page = 0, pageSize = 50 } = body;
+				let { class_id } = body;
+				const text = query.trim();
+				// «Τμήμα»: the query is the music type's class_id ('0' | '1' | '2'); anything else finds nobody
+				if (field === "music_type" && text) {
+					if (!/^[012]$/.test(text)) return { rows: [], total: 0, page, pageSize };
+					class_id = Number(text) as 0 | 1 | 2;
+				}
 
-				const pupils = await executeQuery<Pupils>(`SELECT * FROM pupils`);
+				let pupils = await executeQuery<Pupils>(`SELECT * FROM pupils`);
+				if ((field === "teacher" || field === "instrument") && text) {
+					const enrollments = await executeQuery<{ pupil_id: number; teacher_id: number; instrument_id: number }>(
+						`SELECT DISTINCT pupil_id, teacher_id, instrument_id FROM pupil_enrollments`,
+					);
+					const names =
+						field === "teacher"
+							? await executeQuery<{ id: number; name: string }>(`SELECT id, fullname AS name FROM teachers`)
+							: await executeQuery<{ id: number; name: string }>(`SELECT id, name FROM instruments`);
+					const ids = enrolledPupilIds(field, text, enrollments, names);
+					if (ids) pupils = pupils.filter((pupil) => ids.has(pupil.id));
+				}
 				const summary = await executeQuery<{ pupil_id: number; enrollment_count: number; last_year: string; music_types: string }>(
 					`SELECT pupil_id, COUNT(*) AS enrollment_count, MAX(registration_year) AS last_year,
 					GROUP_CONCAT(DISTINCT class_id) AS music_types
@@ -440,7 +460,7 @@ export const pupilsRoutes = {
 				);
 				const byPupil = new Map(summary.map((row) => [row.pupil_id, row]));
 
-				let rows = rankPupils(pupils, query).map((pupil) => {
+				let rows = rankPupils(pupils, field === "music_type" ? "" : query, field).map((pupil) => {
 					const stats = byPupil.get(pupil.id);
 					return {
 						id: pupil.id,

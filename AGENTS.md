@@ -279,7 +279,16 @@ The person data that used to live on `registrations` is split into two tables
   calendar date** (`sameDayCutoff`, Greek time), so the running year is
   compared with the same point of the previous one, never with its final
   total — and this week's / month's enrollments (`schoolWeekAndMonthStart`).
-  The «Βρείτε μαθητή» box opens `/admin/pupils?q=…`.
+  The «Βρείτε μαθητή» box opens `/admin/pupils?q=…` (digits by ΑΜ, anything
+  else with `&by=name`).
+- **Μαθητολόγιο search** (`Pupils.search`, matching in `lib/pupils/search.ts`):
+  a field picker in the search box chooses what the query matches — `am`
+  (default), `name`, `amka`, `phone`, `email`, `teacher`, `instrument`
+  (pupils ever enrolled with a matching teacher / instrument; a whole name
+  keeps to that name) or `music_type` (the query is the class_id). Names and
+  queries split into words on anything that is not a letter or digit, so
+  `π. Θεόδωρος`, `(Κακλής)` and `Γεωργίου-Ελένη` match however they are typed.
+  The field is in the URL as `?by=` (left out for ΑΜ).
 
 ## Admin authentication (sign-in, sessions, providers)
 

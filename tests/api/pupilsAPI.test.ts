@@ -75,10 +75,13 @@ function pupilsTest() {
 		}
 	});
 
-	test("--pupils-- #2 search is accent-insensitive for Greek names", async () => {
-		const res = await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", pageSize: 10 } });
+	test("--pupils-- #2 search is accent-insensitive for Greek names (Ονοματεπώνυμο field; ΑΜ is the default)", async () => {
+		const res = await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", field: "name", pageSize: 10 } });
 		const json = await getJson<APIResponse["Pupils.search"]>(res);
 		expect(json.data.total).toBeGreaterThan(0);
+
+		const byAm = await getJson<APIResponse["Pupils.search"]>(await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", pageSize: 10 } }));
+		expect(byAm.data.total).toBe(0);
 	});
 
 	test("--pupils-- #3 search finds a pupil by ΑΜ", async () => {
@@ -106,6 +109,21 @@ function pupilsTest() {
 		const json = await getJson<APIResponse["Pupils.search"]>(res);
 		expect(json.data.total).toBeGreaterThan(0);
 		for (const row of json.data.rows) expect(row.music_types.split(",")).toContain("0");
+
+		// the «Τμήμα» field sends the class_id as the query
+		const byField = await getJson<APIResponse["Pupils.search"]>(
+			await useTestAPI("Pupils.search", { RequestObject: { query: "0", field: "music_type", pageSize: 200 } }),
+		);
+		expect(byField.data.total).toBe(json.data.total);
+		const invalid = await getJson<APIResponse["Pupils.search"]>(await useTestAPI("Pupils.search", { RequestObject: { query: "9", field: "music_type" } }));
+		expect(invalid.data.total).toBe(0);
+
+		// teacher / instrument match through the pupils' enrollments
+		for (const field of ["teacher", "instrument"] as const) {
+			const res = await useTestAPI("Pupils.search", { RequestObject: { query: "α", field, pageSize: 5 } });
+			const json = await getJson<APIResponse["Pupils.search"]>(res);
+			for (const row of json.data.rows) expect(row.enrollment_count).toBeGreaterThan(0);
+		}
 	});
 
 	test("--pupils-- #6 search can list only the rows awaiting human review", async () => {
