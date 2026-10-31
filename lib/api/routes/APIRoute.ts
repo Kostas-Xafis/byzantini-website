@@ -148,9 +148,16 @@ export class APIRoute<
 			Object.defineProperty(constructor, "routes", { value: [], writable: true });
 		}
 		const routes = constructor.routes;
-		if (routes.some((route) => route.method === this.method && route.path === this.path)) {
+		const existing = routes.findIndex((route) => route.method === this.method && route.path === this.path);
+		if (existing === -1) {
+			routes.push(this);
+		} else if (import.meta.env?.DEV) {
+			// Dev HMR re-runs a saved route group (e.g. after a change to a module it shares with the browser)
+			// while this class, and so its registry, stays cached: the new instance replaces the old one.
+			// Throwing here made Astro's dev router skip the API catch-all and answer every /api request 404.
+			routes[existing] = this;
+		} else {
 			throw new Error(`Duplicate API route: ${this.method} ${this.path}`);
 		}
-		routes.push(this);
 	}
 }
