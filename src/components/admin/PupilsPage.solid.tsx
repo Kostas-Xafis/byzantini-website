@@ -33,7 +33,7 @@ import type { Action } from "./table/TableControls.solid";
  *           per-class breakdown underneath.
  *
  * The field picker inside the search box chooses what the query is matched
- * against (ΑΜ by default — see lib/pupils/search.ts); «Τμήμα» swaps the text
+ * against (ΑΜ or name by default — see lib/pupils/search.ts); «Τμήμα» swaps the text
  * field for a music-type select.
  *
  * Typing a new query — or toggling "Μόνο προς έλεγχο" — always returns to the
@@ -76,10 +76,10 @@ const MUSIC_TYPES = [
 	},
 ] as const;
 
-/** The search box's field picker, in menu order (ΑΜ, the default, first). */
+/** The search box's field picker, in menu order (ΑΜ or name, the default, first). */
 const SEARCH_FIELDS: Record<PupilSearchField, { label: string; placeholder: string; inputMode?: JSX.HTMLAttributes<HTMLInputElement>["inputMode"] }> = {
-	am: { label: "ΑΜ", placeholder: "Αριθμός Μητρώου…", inputMode: "numeric" },
-	name: { label: "Ονοματεπώνυμο", placeholder: "Επώνυμο ή όνομα…" },
+	am_name: { label: "ΑΜ ή Όνομα", placeholder: "Αριθμός Μητρώου ή ονοματεπώνυμο…" },
+	all: { label: "Όλα τα πεδία", placeholder: "Αναζήτηση σε όλα τα πεδία…" },
 	amka: { label: "ΑΜΚΑ", placeholder: "ΑΜΚΑ…", inputMode: "numeric" },
 	phone: { label: "Τηλέφωνο", placeholder: "Σταθερό ή κινητό…", inputMode: "tel" },
 	email: { label: "Email", placeholder: "Email…", inputMode: "email" },
@@ -339,7 +339,7 @@ export default function PupilsPage() {
 
 	// ---- search state -------------------------------------------------------
 	const [query, setQuery] = createSignal("");
-	const [field, setField] = createSignal<PupilSearchField>("am");
+	const [field, setField] = createSignal<PupilSearchField>("am_name");
 	const [page, setPage] = createSignal(0);
 	const [needsReviewOnly, setNeedsReviewOnly] = createSignal(false);
 	const [results, setResults] = createSignal<APIResponse["Pupils.search"] | null>(null);
@@ -377,7 +377,7 @@ export default function PupilsPage() {
 
 	/**
 	 * Mirror the shareable state into the URL: `?pupil=<id>` for the open record,
-	 * `?q=<query>` for the search, `?by=<field>` for a field other than ΑΜ, `?review=1` for «Μόνο προς έλεγχο». The typed query is component state, so without
+	 * `?q=<query>` for the search, `?by=<field>` for a field other than the default, `?review=1` for «Μόνο προς έλεγχο». The typed query is component state, so without
 	 * this it is lost the moment the page remounts (reload, or a detour to another
 	 * admin page); with it, "Πίσω στην αναζήτηση" — and everything after — keeps it.
 	 *
@@ -400,7 +400,7 @@ export default function PupilsPage() {
 		if (text) params.set("q", text);
 		else params.delete("q");
 		const by = untrack(field);
-		if (by !== "am") params.set("by", by);
+		if (by !== "am_name") params.set("by", by);
 		else params.delete("by");
 		if (untrack(needsReviewOnly)) params.set("review", "1");
 		else params.delete("review");
@@ -523,7 +523,7 @@ export default function PupilsPage() {
 	};
 
 	/**
-	 * A new field searches the same text again — typed a name while on ΑΜ? pick «Ονοματεπώνυμο» — except
+	 * A new field searches the same text again — found nobody by ΑΜ or name? pick «Όλα τα πεδία» — except
 	 * into or out of «Τμήμα», whose query is a class_id, not text.
 	 */
 	const changeField = (next: PupilSearchField) => {
@@ -729,7 +729,7 @@ export default function PupilsPage() {
 
 	/**
 	 * «Νέος μαθητής»: a pupil added by hand, prefilled from the search that found nobody (ΑΜ, surname and first
-	 * name, ΑΜΚΑ, mobile or email — whichever field was searched). Saving opens the new record, where «Νέα εγγραφή» adds their enrollments — past years too.
+	 * name, ΑΜΚΑ, mobile or email — whichever the query reads as, within the field searched). Saving opens the new record, where «Νέα εγγραφή» adds their enrollments — past years too.
 	 */
 	const [createDefaults, setCreateDefaults] = createSignal<Partial<Pupils>>({});
 	const createAction = createMemo<Action>(() => {
@@ -774,14 +774,15 @@ export default function PupilsPage() {
 	const openCreate = () => {
 		const text = query().trim();
 		const defaults: Partial<Pupils> = {};
-		if (field() === "am" && /^\d{1,4}$/.test(text)) defaults.am = Number(text);
-		else if (field() === "name" && text && !/\d/.test(text)) {
+		const searched = (...fields: PupilSearchField[]) => field() === "all" || fields.includes(field());
+		if (searched("email") && /^\S+@\S+\.\S+$/.test(text)) defaults.email = text;
+		else if (searched("am_name") && /^\d{1,4}$/.test(text)) defaults.am = Number(text);
+		else if (searched("am_name") && text && !/\d/.test(text)) {
 			const [last, ...first] = text.split(/\s+/);
 			defaults.last_name = last;
 			if (first.length) defaults.first_name = first.join(" ");
-		} else if (field() === "amka" && /^\d{11}$/.test(text)) defaults.amka = text;
-		else if (field() === "phone" && /^69\d{8}$/.test(text.replace(/\D/g, ""))) defaults.cellphone = text.replace(/\D/g, "");
-		else if (field() === "email" && /^\S+@\S+\.\S+$/.test(text)) defaults.email = text;
+		} else if (searched("amka") && /^\d{11}$/.test(text)) defaults.amka = text;
+		else if (searched("phone") && /^69\d{8}$/.test(text.replace(/\D/g, ""))) defaults.cellphone = text.replace(/\D/g, "");
 		setCreateDefaults(defaults);
 		setGlobalOpen(CREATE_PREFIX + ActionEnum.ADD, true);
 	};
@@ -955,7 +956,9 @@ export default function PupilsPage() {
 						</span>
 						<h1 class="font-anaktoria text-5xl max-sm:text-3xl">Μαθητολόγιο</h1>
 						{/* phones: the search placeholder says the same, the list needs the room */}
-						<p class={"max-w-2xl text-lg max-sm:hidden " + MUTED}>Αναζητήστε μαθητή με τον Αριθμό Μητρώου — ή επιλέξτε άλλο πεδίο αναζήτησης.</p>
+						<p class={"max-w-2xl text-lg max-sm:hidden " + MUTED}>
+							Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το όνομα — ή επιλέξτε άλλο πεδίο αναζήτησης.
+						</p>
 					</div>
 				</Show>
 

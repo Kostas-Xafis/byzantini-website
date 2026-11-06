@@ -1,7 +1,7 @@
 import type { EmailSubscriptions, JoinedEnrollments, PupilEnrollments, Pupils } from "@_types/entities";
 import { z_IdArray, z_JoinedEnrollments, z_PupilRegistrationForm, z_PupilSearchResponse, z_PupilWithEnrollments } from "@lib/api/schemas";
-import { normalizeKey, normalizeText, parseAm } from "@lib/pupils/normalize";
-import { enrolledPupilIds, PUPIL_SEARCH_FIELDS, rankPupils } from "@lib/pupils/search";
+import { isPlaceholderAmka, normalizeKey, normalizeText, parseAm } from "@lib/pupils/normalize";
+import { enrolledPupilIds, MUSIC_TYPE_NAMES, PUPIL_SEARCH_FIELDS, rankPupils } from "@lib/pupils/search";
 import { classYearsByMusicType, isEvaluationClassYear, MusicTypeArr } from "@lib/classYears";
 import { computeYearFees, orderForFees } from "@lib/fees";
 import {
@@ -74,7 +74,7 @@ function successfulRegistrationTemplate(classId: number, classYear: string): str
 
 const z_Search = z.object({
 	query: z.string("Μη έγκυρο ερώτημα αναζήτησης").max(120, "Πολύ μεγάλο ερώτημα"),
-	/** The field the query is matched against (the Μαθητολόγιο's field picker); ΑΜ by default. */
+	/** The field the query is matched against (the Μαθητολόγιο's field picker); ΑΜ or name by default. */
 	field: z.enum(PUPIL_SEARCH_FIELDS, "Μη έγκυρο πεδίο αναζήτησης").optional(),
 	/** Restrict to one music type (0/1/2) — the Μαθητολόγιο tabs. */
 	class_id: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
@@ -425,14 +425,14 @@ function splitJoined(row: Record<string, unknown>): { enrollment: EnrollmentRow;
 
 export const pupilsRoutes = {
 	// ---------------------------------------------------------------------
-	// Μαθητολόγιο search (server-side, paginated): one chosen field (ΑΜ by default), ranked — see lib/pupils/search.ts
+	// Μαθητολόγιο search (server-side, paginated): one chosen field (ΑΜ or name by default), ranked — see lib/pupils/search.ts
 	// ---------------------------------------------------------------------
 	search: new APIServer(
 		{ method: "POST", path: "/pupils/search", schema: z_Search, responseSchema: z_PupilSearchResponse },
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const { query, field = "am", needs_review, page = 0, pageSize = 50 } = body;
+				const { query, field = "am_name", needs_review, page = 0, pageSize = 50 } = body;
 				let { class_id } = body;
 				const text = query.trim();
 				// «Τμήμα»: the query is the music type's class_id ('0' | '1' | '2'); anything else finds nobody
@@ -442,16 +442,24 @@ export const pupilsRoutes = {
 				}
 
 				let pupils = await executeQuery<Pupils>(`SELECT * FROM pupils`);
-				if ((field === "teacher" || field === "instrument") && text) {
-					const enrollments = await executeQuery<{ pupil_id: number; teacher_id: number; instrument_id: number }>(
-						`SELECT DISTINCT pupil_id, teacher_id, instrument_id FROM pupil_enrollments`,
+				// Pupils matched through an enrollment: a filter for «Καθηγητής» / «Όργανο», a lower-ranked match for «Όλα τα πεδία».
+				let enrolled: Set<number> | undefined;
+				if ((field === "teacher" || field === "instrument" || field === "all") && text) {
+					const enrollments = await executeQuery<{ pupil_id: number; teacher_id: number; instrument_id: number; class_id: number }>(
+						`SELECT DISTINCT pupil_id, teacher_id, instrument_id, class_id FROM pupil_enrollments`,
 					);
-					const names =
-						field === "teacher"
-							? await executeQuery<{ id: number; name: string }>(`SELECT id, fullname AS name FROM teachers`)
-							: await executeQuery<{ id: number; name: string }>(`SELECT id, name FROM instruments`);
-					const ids = enrolledPupilIds(field, text, enrollments, names);
-					if (ids) pupils = pupils.filter((pupil) => ids.has(pupil.id));
+					const teachers = () => executeQuery<{ id: number; name: string }>(`SELECT id, fullname AS name FROM teachers`);
+					const instruments = () => executeQuery<{ id: number; name: string }>(`SELECT id, name FROM instruments`);
+					if (field === "all") {
+						enrolled = new Set([
+							...(enrolledPupilIds("teacher", text, enrollments, await teachers()) ?? []),
+							...(enrolledPupilIds("instrument", text, enrollments, await instruments()) ?? []),
+							...(enrolledPupilIds("music_type", text, enrollments, MUSIC_TYPE_NAMES) ?? []),
+						]);
+					} else {
+						const ids = enrolledPupilIds(field, text, enrollments, field === "teacher" ? await teachers() : await instruments());
+						if (ids) pupils = pupils.filter((pupil) => ids.has(pupil.id));
+					}
 				}
 				const summary = await executeQuery<{ pupil_id: number; enrollment_count: number; last_year: string; music_types: string }>(
 					`SELECT pupil_id, COUNT(*) AS enrollment_count, MAX(registration_year) AS last_year,
@@ -460,7 +468,7 @@ export const pupilsRoutes = {
 				);
 				const byPupil = new Map(summary.map((row) => [row.pupil_id, row]));
 
-				let rows = rankPupils(pupils, field === "music_type" ? "" : query, field).map((pupil) => {
+				let rows = rankPupils(pupils, field === "music_type" ? "" : query, field, enrolled).map((pupil) => {
 					const stats = byPupil.get(pupil.id);
 					return {
 						id: pupil.id,
@@ -690,21 +698,27 @@ export const pupilsRoutes = {
 				if (parsed.kind === "valid") {
 					// Ownership was checked above.
 					[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am = ?", [parsed.am]);
-				} else {
+				} else if (body.amka) {
 					// No usable ΑΜ: reuse this person's existing pupil without ΑΜ instead of creating a
-					// duplicate every year. Found by ΑΜΚΑ — what the form identifies them by, see
-					// `getByAm` — and only for records kept without an ΑΜΚΑ by name + surname/birth
-					// date; never on the name alone (anyone can type a name).
-					if (body.amka) {
-						[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND amka = ? ORDER BY updated_at DESC LIMIT 1", [
-							body.amka,
-						]);
+					// duplicate — a new pupil enrolling in a second class, or again next year. Found by
+					// ΑΜΚΑ, what the form identifies them by, see `getByAm`.
+					[pupil] = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND amka = ? ORDER BY updated_at DESC LIMIT 1", [body.amka]);
+				}
+				// Nobody matched, yet the ΑΜΚΑ is in the register: a pupil who has an ΑΜ, enrolling as new. Refused, or they
+				// would get a second slot. The answer names no one: this route is public.
+				if (!pupil && body.amka && !isPlaceholderAmka(body.amka)) {
+					const [holder] = await T.executeQuery<Pick<Pupils, "id">>("SELECT id FROM pupils WHERE amka = ? LIMIT 1", [body.amka]);
+					if (holder) {
+						throw APIError.conflict(
+							"Ο ΑΜΚΑ που δηλώσατε είναι ήδη καταχωρημένος στο μητρώο της Σχολής, οπότε η εγγραφή δεν μπορεί να γίνει ως νέος μαθητής. Ελέγξτε τον ΑΜΚΑ ή συνεχίστε με τον αριθμό μητρώου σας. Αν δεν τον γνωρίζετε, επικοινωνήστε με τη Γραμματεία της Σχολής.",
+						);
 					}
-					if (!pupil) {
-						const candidates = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND orphan_code <> '' AND amka = ''");
-						const nameKey = normalizeKey(`${body.last_name} ${body.first_name}`);
-						pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey && canUpdatePupil(row, body));
-					}
+				}
+				// Records kept without an ΑΜΚΑ: by name + surname/birth date, never on the name alone (anyone can type a name).
+				if (!pupil && parsed.kind !== "valid") {
+					const candidates = await T.executeQuery<Pupils>("SELECT * FROM pupils WHERE am IS NULL AND orphan_code <> '' AND amka = ''");
+					const nameKey = normalizeKey(`${body.last_name} ${body.first_name}`);
+					pupil = candidates.find((row) => normalizeKey(`${row.last_name} ${row.first_name}`) === nameKey && canUpdatePupil(row, body));
 				}
 				let pupilId: number;
 				if (pupil) {

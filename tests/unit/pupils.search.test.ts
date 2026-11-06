@@ -1,7 +1,7 @@
 /**
- * Unit tests for lib/pupils/search.ts — the Μαθητολόγιο ranking (one chosen field, ΑΜ by default).
+ * Unit tests for lib/pupils/search.ts — the Μαθητολόγιο ranking (one chosen field, ΑΜ or name by default).
  */
-import { enrolledPupilIds, rankPupils, scoreName, tokenizeQuery, type PupilSearchField, type SearchablePupil } from "@lib/pupils/search";
+import { enrolledPupilIds, MUSIC_TYPE_NAMES, rankPupils, scoreName, tokenizeQuery, type PupilSearchField, type SearchablePupil } from "@lib/pupils/search";
 import { describe, expect, test } from "bun:test";
 
 const pupil = (fields: Partial<SearchablePupil> & Pick<SearchablePupil, "last_name" | "first_name">): SearchablePupil => ({
@@ -23,7 +23,7 @@ const orphan = pupil({ orphan_code: "000-Ο1", last_name: "Νέος", first_name
 const split = pupil({ orphan_code: "111-Σ1", split_from_am: 111, last_name: "Σπλιτ", first_name: "Δοκιμή" });
 const all = [peleki, papadopoulos, papadaki, elenis, orphan, split];
 
-const names = (query: string, field: PupilSearchField = "am") => rankPupils(all, query, field).map((row) => row.last_name);
+const names = (query: string, field: PupilSearchField = "am_name") => rankPupils(all, query, field).map((row) => row.last_name);
 
 describe("tokenizeQuery", () => {
 	test("normalises accents, case and final sigma", () => {
@@ -31,7 +31,7 @@ describe("tokenizeQuery", () => {
 	});
 });
 
-describe("ΑΜ (the default field)", () => {
+describe("ΑΜ ή Όνομα (the default field): the ΑΜ", () => {
 	test("an exact ΑΜ ranks before the ΑΜ it prefixes", () => {
 		expect(names("706")).toEqual(["Πελέκη", "Παπαδόπουλος"]);
 	});
@@ -46,38 +46,66 @@ describe("ΑΜ (the default field)", () => {
 		expect(names("000-O1")).toEqual(["Νέος"]);
 		expect(names("111-s1")).toEqual(["Σπλιτ"]);
 	});
-	test("names and ΑΜΚΑ do not match the ΑΜ field", () => {
-		expect(names("παπαδ")).toEqual([]);
+	test("an ΑΜΚΑ does not match it", () => {
 		expect(names("27037202341")).toEqual([]);
+	});
+	test("a query with no letters or digits matches nobody", () => {
+		expect(names("-")).toEqual([]);
 	});
 });
 
-describe("Ονοματεπώνυμο", () => {
+describe("ΑΜ ή Όνομα (the default field): the name", () => {
 	test("accent- and case-insensitive surname prefix", () => {
-		expect(names("παπαδ", "name")).toEqual(["ΠΑΠΑΔΑΚΗ", "Παπαδόπουλος"]);
+		expect(names("παπαδ")).toEqual(["ΠΑΠΑΔΑΚΗ", "Παπαδόπουλος"]);
 	});
 	test("full name in either order, the surname-first reading ranks higher", () => {
-		expect(names("Πελέκη Αικατερίνη", "name")).toEqual(["Πελέκη"]);
-		expect(names("αικατερινη πελεκη", "name")).toEqual(["Πελέκη"]);
+		expect(names("Πελέκη Αικατερίνη")).toEqual(["Πελέκη"]);
+		expect(names("αικατερινη πελεκη")).toEqual(["Πελέκη"]);
 		expect(scoreName(peleki, tokenizeQuery("πελεκη αικ"))).toBeGreaterThan(scoreName(peleki, tokenizeQuery("αικ πελεκη")));
 	});
 	test("a surname match outranks a first-name match", () => {
 		// «Ελένη» is Παπαδάκη's first name and the second part of Γεωργίου-Ελένη's surname
-		expect(names("ελενη", "name")).toEqual(["Γεωργίου-Ελένη", "ΠΑΠΑΔΑΚΗ"]);
+		expect(names("ελενη")).toEqual(["Γεωργίου-Ελένη", "ΠΑΠΑΔΑΚΗ"]);
 	});
 	test("every word must match something", () => {
-		expect(names("παπαδ ζζζ", "name")).toEqual([]);
+		expect(names("παπαδ ζζζ")).toEqual([]);
 	});
 	test("words match from the start only: no mid-word hits", () => {
-		expect(names("λεκη", "name")).toEqual([]);
+		expect(names("λεκη")).toEqual([]);
 	});
 	test("a hyphenated surname matches typed with or without its hyphen", () => {
-		expect(names("Γεωργίου-Ελένη", "name")).toEqual(["Γεωργίου-Ελένη"]);
-		expect(names("γεωργιου - ελενη μαρια", "name")).toEqual(["Γεωργίου-Ελένη"]);
-		expect(names("γεωργιου ελενη", "name")).toEqual(["Γεωργίου-Ελένη"]);
+		expect(names("Γεωργίου-Ελένη")).toEqual(["Γεωργίου-Ελένη"]);
+		expect(names("γεωργιου - ελενη μαρια")).toEqual(["Γεωργίου-Ελένη"]);
+		expect(names("γεωργιου ελενη")).toEqual(["Γεωργίου-Ελένη"]);
 	});
 	test("an ΑΜ does not match the name field", () => {
-		expect(names("706", "name")).toEqual([]);
+		expect(names("παπαδ", "amka")).toEqual([]);
+	});
+});
+
+describe("Όλα τα πεδία", () => {
+	const withIds = all.map((row, index) => ({ ...row, id: index + 1 }));
+	const search = (query: string, enrolled?: Set<number>) => rankPupils(withIds, query, "all", enrolled).map((row) => row.last_name);
+	test("finds the ΑΜ, the name, the ΑΜΚΑ, the phone and the email", () => {
+		expect(search("παπαδ")).toEqual(["ΠΑΠΑΔΑΚΗ", "Παπαδόπουλος"]);
+		expect(search("27037202341")).toEqual(["Πελέκη"]);
+		expect(search("6973490962")).toEqual(["Πελέκη"]);
+		expect(search("k.peleki")).toEqual(["Πελέκη"]);
+	});
+	test("an exact ΑΜ comes first, then the pupils whose other fields hold those digits", () => {
+		expect(search("706")).toEqual(["Πελέκη", "Παπαδόπουλος"]);
+		expect(search("2810")).toEqual(["Παπαδόπουλος"]);
+	});
+	test("a match through an enrollment counts, below a match on the pupil's own details", () => {
+		const enrolled = new Set([withIds.find((row) => row.last_name === "Σπλιτ")!.id]);
+		expect(search("παπαδ", enrolled)).toEqual(["ΠΑΠΑΔΑΚΗ", "Παπαδόπουλος", "Σπλιτ"]);
+	});
+	test("a music type is found by its name", () => {
+		const enrollments = [
+			{ pupil_id: 1, teacher_id: 10, instrument_id: 100, class_id: 0 },
+			{ pupil_id: 2, teacher_id: 10, instrument_id: 100, class_id: 2 },
+		];
+		expect(enrolledPupilIds("music_type", "ευρωπ", enrollments, MUSIC_TYPE_NAMES)).toEqual(new Set([2]));
 	});
 });
 

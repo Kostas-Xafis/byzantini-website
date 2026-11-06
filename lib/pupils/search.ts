@@ -1,14 +1,17 @@
 /**
  * Μαθητολόγιο search — pure ranking, no DB, no env (unit-tested in tests/unit).
  *
- * The secretaries pick the field to search (ΑΜ by default) and the query is matched
+ * The secretaries pick the field to search (ΑΜ or name by default) and the query is matched
  * against that field only:
  *
- *   am          the ΑΜ (exact first, then prefix, in registry order), the ΑΜ a split
- *               row came from, the review codes ('000-Ο1'; typed with a Latin O / S too).
- *   name        a prefix of a word of the surname or the first name,
- *               accent/case-insensitive ('παπαδ' → 'Παπαδόπουλος'). Every word
- *               must match, in any order ('Αικατερίνη Πελέκη' = 'Πελέκη Αικ').
+ *   am_name     the default, either of:
+ *               - the ΑΜ (exact first, then prefix, in registry order), the ΑΜ a split
+ *                 row came from, the review codes ('000-Ο1'; typed with a Latin O / S too);
+ *               - a prefix of a word of the surname or the first name,
+ *                 accent/case-insensitive ('παπαδ' → 'Παπαδόπουλος'). Every word
+ *                 must match, in any order ('Αικατερίνη Πελέκη' = 'Πελέκη Αικ').
+ *   all         every field below as well as am_name; a match on the pupil's own details
+ *               ranks above a match through an enrollment (teacher, instrument, music type).
  *   amka        the ΑΜΚΑ (exact first, then prefix).
  *   phone       the digits anywhere in the landline or the mobile ('349 0962'; a
  *               +30 / 0030 country code in front of a 10-digit number is dropped).
@@ -27,10 +30,11 @@
  */
 import { normalizeDigits, normalizeKey } from "./normalize";
 
-export const PUPIL_SEARCH_FIELDS = ["am", "name", "amka", "phone", "email", "teacher", "music_type", "instrument"] as const;
+export const PUPIL_SEARCH_FIELDS = ["am_name", "all", "amka", "phone", "email", "teacher", "music_type", "instrument"] as const;
 export type PupilSearchField = (typeof PUPIL_SEARCH_FIELDS)[number];
 
 export type SearchablePupil = {
+	id?: number;
 	am: number | null;
 	orphan_code: string;
 	split_from_am: number | null;
@@ -42,7 +46,14 @@ export type SearchablePupil = {
 	email: string;
 };
 
-export type SearchableEnrollment = { pupil_id: number; teacher_id: number; instrument_id: number };
+export type SearchableEnrollment = { pupil_id: number; teacher_id: number; instrument_id: number; class_id?: number };
+
+/** `class_id` → the name the «Όλα τα πεδία» search matches a music type by. */
+export const MUSIC_TYPE_NAMES = [
+	{ id: 0, name: "Βυζαντινή" },
+	{ id: 1, name: "Παραδοσιακή" },
+	{ id: 2, name: "Ευρωπαϊκή" },
+];
 
 /** The normalised words of a name or a query: letters and digits only ('π. Θεόδωρος' → ['π', 'θεοδωροσ']). */
 const nameWords = (value: string) =>
@@ -113,13 +124,29 @@ export function scoreName(pupil: SearchablePupil, tokens: string[]): number {
 	return score;
 }
 
-/** Relevance of a pupil for a non-empty query on one field; 0 = no match. Enrollment fields always match. */
-export function scorePupil(pupil: SearchablePupil, query: string, field: PupilSearchField): number {
+/** The ΑΜ or the name, whichever matches better; a query with no letters or digits ('-') matches nobody. */
+function scoreAmOrName(pupil: SearchablePupil, query: string): number {
+	const tokens = tokenizeQuery(query);
+	return Math.max(scoreAm(pupil, amKey(query)), tokens.length ? scoreName(pupil, tokens) : 0);
+}
+
+/**
+ * Relevance of a pupil for a non-empty query on one field; 0 = no match. The enrollment fields always match (the
+ * caller has filtered them). `enrolled` is for «Όλα τα πεδία»: this pupil matched through an enrollment.
+ */
+export function scorePupil(pupil: SearchablePupil, query: string, field: PupilSearchField, enrolled = false): number {
 	switch (field) {
-		case "am":
-			return scoreAm(pupil, amKey(query));
-		case "name":
-			return scoreName(pupil, tokenizeQuery(query));
+		case "am_name":
+			return scoreAmOrName(pupil, query);
+		case "all": {
+			const own = Math.max(
+				scoreAmOrName(pupil, query),
+				scorePupil(pupil, query, "amka"),
+				scorePupil(pupil, query, "phone"),
+				scorePupil(pupil, query, "email"),
+			);
+			return own > 0 ? own + 1 : enrolled ? 1 : 0;
+		}
 		case "amka": {
 			const digits = normalizeDigits(query);
 			if (!digits) return 0;
@@ -147,7 +174,7 @@ export function scorePupil(pupil: SearchablePupil, query: string, field: PupilSe
  * picking 'Λαούτο' from the suggestions must not bring in 'Πολίτικο Λαούτο'.
  */
 export function enrolledPupilIds(
-	field: "teacher" | "instrument",
+	field: "teacher" | "instrument" | "music_type",
 	query: string,
 	enrollments: SearchableEnrollment[],
 	names: { id: number; name: string }[],
@@ -157,18 +184,19 @@ export function enrolledPupilIds(
 	const exact = names.filter((entry) => sameWords(entry.name, tokens));
 	const matched = exact.length ? exact : names.filter((entry) => matchesWords(entry.name, tokens));
 	const ids = new Set(matched.map((entry) => entry.id));
-	const key = field === "teacher" ? "teacher_id" : "instrument_id";
-	return new Set(enrollments.filter((enrollment) => ids.has(enrollment[key])).map((enrollment) => enrollment.pupil_id));
+	const key = field === "teacher" ? "teacher_id" : field === "instrument" ? "instrument_id" : "class_id";
+	return new Set(enrollments.filter((enrollment) => ids.has(enrollment[key] as number)).map((enrollment) => enrollment.pupil_id));
 }
 
-/** The matching pupils, best first; ties (and an empty query) in alphabetical order. */
-export function rankPupils<T extends SearchablePupil>(pupils: T[], query: string, field: PupilSearchField = "am"): T[] {
+/** The matching pupils, best first; ties (and an empty query) in alphabetical order. `enrolled`: see `scorePupil`. */
+export function rankPupils<T extends SearchablePupil>(pupils: T[], query: string, field: PupilSearchField = "am_name", enrolled?: ReadonlySet<number>): T[] {
 	const byName = (a: T, b: T) => a.last_name.localeCompare(b.last_name, "el") || a.first_name.localeCompare(b.first_name, "el");
 	if (!query.trim()) return [...pupils].sort(byName);
 	// An ΑΜ prefix ('69') reads best in registry order: 69, 690, 691, …
-	const byAm = (a: T, b: T) => (field === "am" ? (a.am ?? Number.MAX_SAFE_INTEGER) - (b.am ?? Number.MAX_SAFE_INTEGER) : 0);
+	const numeric = (field === "am_name" || field === "all") && /^\d+$/.test(query.trim());
+	const byAm = (a: T, b: T) => (numeric ? (a.am ?? Number.MAX_SAFE_INTEGER) - (b.am ?? Number.MAX_SAFE_INTEGER) : 0);
 	return pupils
-		.map((pupil) => ({ pupil, score: scorePupil(pupil, query, field) }))
+		.map((pupil) => ({ pupil, score: scorePupil(pupil, query, field, pupil.id !== undefined && !!enrolled?.has(pupil.id)) }))
 		.filter((entry) => entry.score > 0)
 		.sort((a, b) => b.score - a.score || byAm(a.pupil, b.pupil) || byName(a.pupil, b.pupil))
 		.map((entry) => entry.pupil);

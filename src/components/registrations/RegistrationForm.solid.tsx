@@ -414,6 +414,8 @@ export function RegistrationForm() {
 	const [lookupError, setLookupError] = createSignal("");
 	const [lookupBusy, setLookupBusy] = createSignal(false);
 	const [submitError, setSubmitError] = createSignal("");
+	// Registering as new was refused because the ΑΜΚΑ is already in the register: the error then offers the way back to the ΑΜ + ΑΜΚΑ step.
+	const [amkaTaken, setAmkaTaken] = createSignal(false);
 	// Set once the pupil is found by ΑΜ + ΑΜΚΑ: those two are then locked so the identification cannot be undone by editing them.
 	const [identified, setIdentified] = createSignal(false);
 	// The pupil has no ΑΜ: "new student" was chosen, or a pupil who registered as new before and was not given one
@@ -621,6 +623,18 @@ export function RegistrationForm() {
 		goTo({ step: "form", type: musicType() });
 	};
 
+	/** Refused as new (see `amkaTaken`): back to the identification, which otherwise happens only once, with the ΑΜΚΑ already typed in. */
+	const onHasAm = () => {
+		setLookupAm("");
+		setLookupAmka(registrationData.amka);
+		setSubmitError("");
+		setAmkaTaken(false);
+		setWithoutAm(false);
+		setIdentityResolved(false);
+		setDirty(false);
+		goTo({ step: "lookup", type: musicType() });
+	};
+
 	const onSubmit = async function (e: Event) {
 		e.preventDefault();
 		const teachers = store[API.Teachers.getPublic];
@@ -635,6 +649,7 @@ export function RegistrationForm() {
 
 		const form = e.target as HTMLFormElement;
 		setSubmitError("");
+		setAmkaTaken(false);
 		const missing = emptyRequiredFields(form);
 		if (missing.length) {
 			// Mark them (the inputs style `:invalid` red) and say which ones.
@@ -699,6 +714,7 @@ export function RegistrationForm() {
 			// Our own checks throw plain Errors with a Greek message; request failures (APIRequestError, fetch's TypeError) get described.
 			const isLocalCheck = err instanceof Error && err.name === "Error";
 			setSubmitError(isLocalCheck ? err.message : describeError(err));
+			setAmkaTaken(withoutAm() && err instanceof APIRequestError && err.status === 409);
 			shakeForm();
 		} finally {
 			setSpinner(false);
@@ -849,6 +865,14 @@ export function RegistrationForm() {
 										class="col-span-full justify-self-center max-w-[60ch] rounded-md bg-red-100 px-4 py-3 font-didact text-base text-red-900">
 										<Icon name="alert-circle" class="mr-2" />
 										{submitError()}
+										<Show when={amkaTaken()}>
+											<button
+												type="button"
+												onClick={onHasAm}
+												class="mt-2 block font-semibold underline underline-offset-2 hover:text-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900">
+												Συνέχεια με αριθμό μητρώου
+											</button>
+										</Show>
 									</p>
 								</Show>
 								<Show

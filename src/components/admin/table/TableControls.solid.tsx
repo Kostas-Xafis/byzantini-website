@@ -64,7 +64,9 @@ export function TableControl(props: Props) {
 					aria-disabled="true"
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
-					class={"controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-ink-muted opacity-35 cursor-not-allowed"}>
+					class={
+						"controlBtn flex items-center justify-center py-2.5 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-ink-muted opacity-35 cursor-not-allowed"
+					}>
 					<Icon name={tableAction.action.icon || ActionIcon.ADD} class="text-lg max-sm:text-base" />
 				</button>
 			}>
@@ -74,7 +76,7 @@ export function TableControl(props: Props) {
 					aria-label={actionLabel(tableAction.action)}
 					title={actionLabel(tableAction.action)}
 					class={
-						"group/ctrlBtn controlBtn py-2 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-ink"
+						"group/ctrlBtn controlBtn flex items-center justify-center py-2.5 px-4 first-of-type:rounded-l-xl last-of-type:rounded-r-xl text-accent-ink transition-colors duration-200 hover:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-ink"
 					}
 					onclick={() => onActionClick(prefix + tableAction.action.type)}>
 					<Icon

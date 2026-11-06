@@ -8,7 +8,7 @@
  * Pure functions — no dev server, no DB, no env file required.
  */
 import { expect, test } from "bun:test";
-import { collapseWhitespace, normalizeKey, normalizePhone, normalizeText, parseAm, stripDiacritics } from "@lib/pupils/normalize";
+import { collapseWhitespace, isPlaceholderAmka, normalizeKey, normalizePhone, normalizeText, parseAm, stripDiacritics } from "@lib/pupils/normalize";
 
 // ---------------------------------------------------------------------------
 // Text
@@ -125,4 +125,11 @@ test("normalizePhone ignores the legacy placeholder and short values", () => {
 	expect(normalizePhone("")).toBe("");
 	expect(normalizePhone(null)).toBe("");
 	expect(normalizePhone("12345")).toBe("");
+});
+
+test("isPlaceholderAmka: one repeated digit is a placeholder, anything else is not", () => {
+	expect(isPlaceholderAmka("00000000000")).toBe(true);
+	expect(isPlaceholderAmka("99999999999")).toBe(true);
+	expect(isPlaceholderAmka("12345678901")).toBe(false);
+	expect(isPlaceholderAmka("")).toBe(false);
 });

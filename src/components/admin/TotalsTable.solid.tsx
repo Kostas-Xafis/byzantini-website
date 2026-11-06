@@ -132,8 +132,8 @@ function CurrentYearCard(props: { data: DashboardYears }) {
 }
 
 /**
- * Opens the Μαθητολόγιο with the query already searched (`/admin/pupils?q=`) — digits by ΑΜ (its default field),
- * anything else by Ονοματεπώνυμο (`&by=name`) — plus the pages used daily.
+ * Opens the Μαθητολόγιο with the query already searched (`/admin/pupils?q=`), by ΑΜ or name (its default field),
+ * plus the pages used daily.
  */
 function PupilSearchCard(props: { schoolYear: string }) {
 	const navigate = useNavigate();
@@ -155,8 +155,7 @@ function PupilSearchCard(props: { schoolYear: string }) {
 				onSubmit={(e) => {
 					e.preventDefault();
 					const text = query().trim();
-					const by = /^\d+$/.test(text) ? "" : "&by=name";
-					navigate(text ? `/admin/pupils?q=${encodeURIComponent(text)}${by}` : "/admin/pupils");
+					navigate(text ? `/admin/pupils?q=${encodeURIComponent(text)}` : "/admin/pupils");
 				}}>
 				<label class="flex-1 min-w-0 flex items-center gap-2 rounded-lg border border-line bg-surface-muted px-3 focus-within:ring-2 focus-within:ring-accent-ink/40">
 					<Icon name="search" class="text-ink-muted" />

@@ -1,7 +1,7 @@
 import { afterAll, expect, test } from "bun:test";
 import { Random as R } from "@lib/random.ts";
 import { type APIResponse } from "@lib/routes/index.client.ts";
-import { uniqueTestAm } from "../localDb.ts";
+import { uniqueTestAm, withLocalDb } from "../localDb.ts";
 import { getJson, useTestAPI } from "../testHelpers.ts";
 
 // A pupil who registered as new has no ΑΜ until the secretaries assign one (an orphan, `000-Ο…`). Their next
@@ -69,4 +69,45 @@ test("--pupils without ΑΜ-- the ΑΜΚΑ alone never finds a pupil who has an 
 	expect(alone.status).toBe(404);
 	const pair = await useTestAPI("Pupils.getByAm", { RequestObject: { am, amka } }, false);
 	expect(pair.status).toBe(200);
+});
+
+test("--pupils without ΑΜ-- a new pupil can enroll in several classes the same year, on one pupil", async () => {
+	const amka = fakeAmka();
+	const first = await register("000", amka, "Δοκιμαστικός");
+	const res = await useTestAPI(
+		"Pupils.post",
+		{ RequestObject: { ...registration("000", amka, "Δοκιμαστικός"), class_id: 1, class_year: "Υπό Κατάταξη" } },
+		false,
+	);
+	expect(res.status).toBe(200);
+	expect((await getJson<APIResponse["Pupils.post"]>(res)).data.pupilId).toBe(first);
+});
+
+test("--pupils without ΑΜ-- an ΑΜΚΑ that belongs to a pupil with an ΑΜ cannot enroll as new", async () => {
+	const amka = fakeAmka();
+	const am = uniqueTestAm();
+	const holder = await register(String(am), amka, "Δοκιμαστικός");
+
+	const res = await useTestAPI("Pupils.post", { RequestObject: registration("000", amka, "Άλλος") }, false);
+	expect(res.status).toBe(409);
+	const answer = await res.text();
+	expect(answer).not.toContain(String(am)); // public route: it names nobody
+	expect(answer).not.toContain("Μαθητής");
+
+	// A new ΑΜ does not get around it either, and the pupil's own ΑΜ + ΑΜΚΑ still enrolls them.
+	const otherAm = await useTestAPI("Pupils.post", { RequestObject: registration(String(uniqueTestAm()), amka, "Άλλος") }, false);
+	expect(otherAm.status).toBe(409);
+	expect(await register(String(am), amka, "Δοκιμαστικός")).toBe(holder);
+
+	const slots = withLocalDb((db) => db.query("SELECT COUNT(*) AS c FROM pupils WHERE amka = ?").get(amka) as { c: number });
+	if (slots) expect(slots.c).toBe(1);
+});
+
+test("--pupils without ΑΜ-- a placeholder ΑΜΚΑ held by a pupil with an ΑΜ does not stop a new pupil", async () => {
+	const placeholder = "0".repeat(11);
+	const am = uniqueTestAm();
+	await register(String(am), placeholder, "Δοκιμαστικός");
+	const pupilId = await register("000", placeholder, `Δοκιμαστικός${R.hex(2)}`);
+	const record = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }));
+	expect(record.data.pupil.am).toBeNull();
 });
