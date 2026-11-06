@@ -8,7 +8,7 @@ import { createStore, unwrap, type SetStoreFunction } from "solid-js/store";
 import { SearchTable, type SearchColumn, type SearchSetter } from "../SearchTable.solid";
 import type { Page } from "./Pagination.solid";
 import Pagination from "./Pagination.solid";
-import Row, { toggleCheckbox, toggleCheckboxes, type CellValue, type RowHighlightState } from "./Row.solid";
+import Row, { toggleCheckbox, toggleCheckboxes, type CellLinks, type CellValue, type RowHighlightState } from "./Row.solid";
 import type { EmptyAction } from "./TableControlTypes";
 import { BottomTableGroup, LeftTableGroup, TableControl, TableControlsGroup, TopTableGroup, type Action } from "./TableControls.solid";
 
@@ -51,6 +51,7 @@ export type Props = {
 	prefix?: string; // Prefix for the data- attribute on the table
 	children?: DOMElement | DOMElement[];
 	hasSelectBox?: boolean; // Whether to show the checkbox on the left of each row
+	cellLinks?: CellLinks; // Cells that link somewhere (see Row)
 	pageSize?: number; // Number of items per page
 	structure?: TableStructure;
 };
@@ -179,6 +180,8 @@ export default function Table(props: Props) {
 	const { columnWidths, columns } = computeColumns(columnNames, !!props.hasSelectBox);
 	const onClickRow = (e: MouseEvent) => {
 		if (isDown) return;
+		// A link in a cell opens; it does not select the row.
+		if ((e.target as HTMLElement).closest("a")) return;
 		const row = getParent(e.target as HTMLElement, ".row");
 		if (!row) return;
 
@@ -284,7 +287,15 @@ export default function Table(props: Props) {
 				<div class="data-container relative -z-10 grid auto-rows-auto overflow-y-auto overflow-x-hidden grid-flow-row rounded-b-2xl bg-surface">
 					<For each={readPageData()}>
 						{(item) => {
-							return <Row data={item} columnTypes={columnTypes} hasSelectBox={!!props.hasSelectBox} highlight={searchHighlight()} />;
+							return (
+								<Row
+									data={item}
+									columnTypes={columnTypes}
+									hasSelectBox={!!props.hasSelectBox}
+									highlight={searchHighlight()}
+									cellLinks={props.cellLinks}
+								/>
+							);
 						}}
 					</For>
 				</div>

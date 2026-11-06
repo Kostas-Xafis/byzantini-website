@@ -17,6 +17,14 @@
 /** ΑΜ must be at most 4 digits to be a plausible registry number. */
 const AM_MAX_DIGITS = 4;
 
+/**
+ * An ΑΜΚΑ typed only to fill the field ('00000000000'): one digit repeated is never a real one, and several pupils
+ * hold the same such value, so it says nothing about who the person is.
+ */
+export function isPlaceholderAmka(amka: string): boolean {
+	return /^(\d)\1{10}$/.test(amka);
+}
+
 /** Marks the ΑΜ the public form uses for a brand-new pupil. */
 const NEW_PUPIL_AM = 0;
 

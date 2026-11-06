@@ -4,7 +4,7 @@ import { useCacheMutations } from "@hooks/useCacheMutations.solid";
 import { SelectedRows } from "@hooks/useSelectedRows.solid";
 import { API } from "@routes/index.client";
 import { useSearchParams } from "@solidjs/router";
-import { For, Show, createEffect, createSignal, onCleanup, onMount, untrack } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import Spinner from "../other/Spinner.solid";
 import { type SearchSetter } from "./SearchTable.solid";
@@ -28,7 +28,7 @@ import { PREFIX } from "./controls/Registrations/helpers";
 import type { JoinedEnrollments } from "@_types/entities";
 import { EVALUATION_BADGE } from "@lib/classYears";
 import { createIcon } from "@lib/icons";
-import { toggleCheckbox } from "./table/Row.solid";
+import { toggleCheckbox, type CellLinks } from "./table/Row.solid";
 
 const PAID_LABEL = "Πληρωμένη";
 const PARTIALLY_PAID_LABEL = "Μερική πληρωμή";
@@ -251,6 +251,15 @@ export default function RegistrationsTable() {
 		});
 	});
 
+	// The ΑΜ opens the pupil's record in the Μαθητολόγιο, in a new tab so the table keeps its search and page.
+	const pupilIds = createMemo(() => new Map((store[API.Pupils.getEnrollmentsByYear] ?? []).map((enrollment) => [enrollment.id, enrollment.pupil_id])));
+	const pupilLinks: CellLinks = {
+		[columnIndexOf("am")]: (row) => {
+			const pupilId = pupilIds().get(row[0]);
+			return pupilId === undefined ? undefined : `/admin/pupils?pupil=${pupilId}`;
+		},
+	};
+
 	return (
 		<>
 			<Show when={store[API.Pupils.getEnrollmentsByYear]} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
@@ -258,6 +267,7 @@ export default function RegistrationsTable() {
 					prefix={PREFIX}
 					data={shapedData}
 					columns={columns}
+					cellLinks={pupilLinks}
 					hasSelectBox
 					structure={[
 						{

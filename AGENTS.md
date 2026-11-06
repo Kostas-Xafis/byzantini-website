@@ -246,6 +246,11 @@ The person data that used to live on `registrations` is split into two tables
   (a pupil with an ΑΜ always needs both), and `Pupils.post` reuses the
   ΑΜΚΑ-matched pupil without ΑΜ on their next registration instead of creating
   another orphan (`tests/api/pupilsWithoutAm.test.ts`).
+- **An ΑΜΚΑ already in the register cannot create a new pupil**: when `Pupils.post`
+  finds nobody by ΑΜ or as a pupil without ΑΜ but another pupil holds that ΑΜΚΑ,
+  it answers 409 (naming nobody — public route) and the form offers «Συνέχεια με
+  αριθμό μητρώου», back to the ΑΜ + ΑΜΚΑ step. Placeholders (one repeated digit,
+  `isPlaceholderAmka`) are not checked: several pupils hold `00000000000`.
 - **«Νέος μαθητής»** in the Μαθητολόγιο (`Pupils.create`, every admin): adds a
   pupil by hand (ΑΜ optional — without one it gets the next `000-Ο…` code and
   `needs_review`; a taken ΑΜ or ΑΜΚΑ is a 409), e.g. to fill in the years
@@ -279,16 +284,20 @@ The person data that used to live on `registrations` is split into two tables
   calendar date** (`sameDayCutoff`, Greek time), so the running year is
   compared with the same point of the previous one, never with its final
   total — and this week's / month's enrollments (`schoolWeekAndMonthStart`).
-  The «Βρείτε μαθητή» box opens `/admin/pupils?q=…` (digits by ΑΜ, anything
-  else with `&by=name`).
+  The «Βρείτε μαθητή» box opens `/admin/pupils?q=…` (the default field, ΑΜ or
+  name).
 - **Μαθητολόγιο search** (`Pupils.search`, matching in `lib/pupils/search.ts`):
-  a field picker in the search box chooses what the query matches — `am`
-  (default), `name`, `amka`, `phone`, `email`, `teacher`, `instrument`
-  (pupils ever enrolled with a matching teacher / instrument; a whole name
-  keeps to that name) or `music_type` (the query is the class_id). Names and
+  a field picker in the search box chooses what the query matches — `am_name`
+  (default: the ΑΜ or the name), `all` (every field below too, a match on the
+  pupil's own details ranking above one through an enrollment; a music type by
+  its name), `amka`, `phone`, `email`, `teacher`, `instrument` (pupils ever
+  enrolled with a matching teacher / instrument; a whole name keeps to that
+  name) or `music_type` (the query is the class_id). Names and
   queries split into words on anything that is not a letter or digit, so
   `π. Θεόδωρος`, `(Κακλής)` and `Γεωργίου-Ελένη` match however they are typed.
-  The field is in the URL as `?by=` (left out for ΑΜ).
+  The field is in the URL as `?by=` (left out for the default; an old `?by=am`
+  or `?by=name` link opens on the default). In «Εγγραφές» the ΑΜ of each row
+  opens `/admin/pupils?pupil=<id>` in a new tab (`cellLinks` on `Table`).
 
 ## Admin authentication (sign-in, sessions, providers)
 

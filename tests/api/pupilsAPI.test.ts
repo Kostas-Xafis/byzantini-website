@@ -75,13 +75,28 @@ function pupilsTest() {
 		}
 	});
 
-	test("--pupils-- #2 search is accent-insensitive for Greek names (Ονοματεπώνυμο field; ΑΜ is the default)", async () => {
-		const res = await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", field: "name", pageSize: 10 } });
+	test("--pupils-- #2 search is accent-insensitive for Greek names (the default field, ΑΜ or name)", async () => {
+		const res = await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", pageSize: 10 } });
 		const json = await getJson<APIResponse["Pupils.search"]>(res);
 		expect(json.data.total).toBeGreaterThan(0);
 
-		const byAm = await getJson<APIResponse["Pupils.search"]>(await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", pageSize: 10 } }));
-		expect(byAm.data.total).toBe(0);
+		const byAmka = await getJson<APIResponse["Pupils.search"]>(
+			await useTestAPI("Pupils.search", { RequestObject: { query: "παπαδ", field: "amka", pageSize: 10 } }),
+		);
+		expect(byAmka.data.total).toBe(0);
+	});
+
+	test("--pupils-- #2b «Όλα τα πεδία» also finds what only an enrollment holds", async () => {
+		const [teacher] = (await getJson<APIResponse["Teachers.get"]>(await useTestAPI("Teachers.get"))).data.filter((row) => row.fullname.length > 4);
+		const search = async (field: "all" | "teacher") =>
+			(
+				await getJson<APIResponse["Pupils.search"]>(
+					await useTestAPI("Pupils.search", { RequestObject: { query: teacher!.fullname, field, pageSize: 200 } }),
+				)
+			).data.rows.map((row) => row.id);
+		const byTeacher = await search("teacher");
+		const everywhere = await search("all");
+		for (const id of byTeacher) expect(everywhere).toContain(id);
 	});
 
 	test("--pupils-- #3 search finds a pupil by ΑΜ", async () => {
@@ -507,6 +522,9 @@ function pupilsTest() {
 	let reRegistrationEnrollmentId: number | null = null;
 	let reRegistrationPupilId: number | null = null;
 
+	// Unique per run: an ΑΜΚΑ left in the dev DB by an earlier run would refuse this run's new pupil.
+	const createdAmka = `99${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;
+
 	test("--pupils-- #17 public post creates a pupil + enrollment (new ΑΜ)", async () => {
 		createdAm = uniqueTestAm();
 		const res = await useTestAPI(
@@ -514,7 +532,7 @@ function pupilsTest() {
 			{
 				RequestObject: {
 					am: String(createdAm),
-					amka: "12345678901",
+					amka: createdAmka,
 					first_name: "Δοκιμαστικός",
 					last_name: "Μαθητής",
 					fathers_name: "Δοκιμαστικός",
@@ -576,7 +594,7 @@ function pupilsTest() {
 			{
 				RequestObject: {
 					am: String(createdAm),
-					amka: "12345678901",
+					amka: createdAmka,
 					first_name: "Δοκιμαστικός",
 					last_name: "Μαθητής",
 					fathers_name: "Δοκιμαστικός",

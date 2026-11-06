@@ -22,7 +22,11 @@ interface Props {
 	header?: boolean;
 	sortOnClick?: Setter<[SortDirection, number]>;
 	highlight?: RowHighlightState;
+	/** Row index of a column → where its cell links to (a new tab); no link when it gives undefined. */
+	cellLinks?: CellLinks;
 }
+
+export type CellLinks = Record<number, (row: any[]) => string | undefined>;
 
 export function toggleCheckbox(id: number, force?: boolean) {
 	const cb = document.querySelector(`[data-id="${id}"] > .cb`) as HTMLElement;
@@ -225,6 +229,16 @@ export default function Row(props: Props) {
 								if (cursor < text.length) highlightedParts.push({ text: text.slice(cursor), highlight: false });
 							}
 						}
+						const body = highlightedParts ? (
+							<>
+								{highlightedParts.map((part) =>
+									part.highlight ? <mark class="rounded-xs bg-yellow-300/80 px-px dark:bg-yellow-500/80">{part.text}</mark> : part.text,
+								)}
+							</>
+						) : (
+							item
+						);
+						const href = !header && item !== "-" ? props.cellLinks?.[colIndex()]?.(data) : undefined;
 						return (
 							<p
 								class={
@@ -247,18 +261,17 @@ export default function Row(props: Props) {
 											class="absolute text-sm right-0 top-[50%] translate-x-[-50%] translate-y-[-40%] hidden group-data-desc/head:flex"
 										/>
 									</>
-								) : highlightedParts ? (
-									<>
-										{highlightedParts.map((part) =>
-											part.highlight ? (
-												<mark class="rounded-xs bg-yellow-300/80 px-px dark:bg-yellow-500/80">{part.text}</mark>
-											) : (
-												part.text
-											),
-										)}
-									</>
+								) : href ? (
+									<a
+										href={href}
+										target="_blank"
+										rel="noopener"
+										title="Άνοιγμα στο Μαθητολόγιο σε νέα καρτέλα"
+										class="inline-block rounded-md bg-accent-soft px-1.5 py-0.5 font-semibold text-accent-ink underline underline-offset-2 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-accent-ink">
+										{body}
+									</a>
 								) : (
-									item
+									body
 								)}
 							</p>
 						);
