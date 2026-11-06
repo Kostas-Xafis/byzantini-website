@@ -221,3 +221,9 @@ test("a failing onServerError never changes the answer", async () => {
 	expect(res.status).toBe(500);
 	expect(await res.json()).toEqual({ error: "Σφάλμα κατά τη δοκιμή" });
 });
+
+test("a second route with the same method + path is refused outside dev HMR", () => {
+	expect(() => new APIServer({ method: "GET", path: "/__unit/items/static" }, () => APIServer.jsonData("again"))).toThrow(
+		"Duplicate API route: GET /__unit/items/static",
+	);
+});
