@@ -41,8 +41,6 @@ import { resolve } from "node:path";
 
 const API_BASE = "https://places.googleapis.com/v1";
 
-/** Default: το place της σχολής (βρέθηκε με text search, ★5 — 47 κριτικές). */
-const DEFAULT_PLACE_ID = "ChIJQbVuWBqjoRQR5gEUDJtl4W4";
 const DEFAULT_QUERY = "Σχολή Βυζαντινής & Παραδοσιακής Μουσικής Μεταμόρφωση";
 const DEFAULT_OUT = "google-reviews";
 

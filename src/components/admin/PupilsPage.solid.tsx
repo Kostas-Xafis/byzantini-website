@@ -1,5 +1,5 @@
 import { customEvent } from "@_types/custom-events";
-import type { Instruments, PupilEnrollments, Pupils, PupilSearchResult, TeacherClasses, Teachers } from "@_types/entities";
+import type { Instruments, PupilEnrollments, Pupils, TeacherClasses, Teachers } from "@_types/entities";
 import { useAPIClient } from "@hooks/useAPIClient.solid";
 import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
@@ -580,18 +580,6 @@ export default function PupilsPage() {
 	});
 
 	const teacherName = (id: number) => teachers().find((teacher) => teacher.id === id)?.fullname ?? (id < 0 ? "-" : `#${id}`);
-
-	/** One-line summary of a result row: history size, latest year, departments. */
-	const resultMeta = (row: PupilSearchResult) => {
-		const parts = [countLabel(row.enrollment_count, "εγγραφή", "εγγραφές")];
-		if (row.last_registration_year) parts.push(`τελευταία: ${row.last_registration_year}`);
-		const types = row.music_types
-			.split(",")
-			.filter(Boolean)
-			.map((id) => musicLabel(Number(id)));
-		if (types.length) parts.push(types.join(", "));
-		return parts.join(" · ");
-	};
 
 	// ---- lifecycle ----------------------------------------------------------
 	onMount(() => {

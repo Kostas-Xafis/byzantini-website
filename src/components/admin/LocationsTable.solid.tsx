@@ -239,7 +239,7 @@ export default function LocationsTable() {
 		return {
 			inputs: new InputFields(LocationsInputs())
 				.omit(["id"])
-				.fill((field, key) => {
+				.fill((field) => {
 					if (field.name === "image") {
 						field.metadata = { location_id: 0 };
 						field.filePreview = picturePreview as any;

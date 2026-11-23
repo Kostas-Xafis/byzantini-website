@@ -205,7 +205,7 @@ export default function Table(props: Props) {
 
 	function tablePaginationListener(e: CustomEvent<Page>) {
 		const { page, pageSize, dataSize } = e.detail;
-		setTablePagination((prev) => ({ page, pageSize, dataSize }));
+		setTablePagination(() => ({ page, pageSize, dataSize }));
 	}
 
 	onMount(() => {

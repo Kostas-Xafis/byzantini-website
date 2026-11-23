@@ -9,9 +9,8 @@ import { ADMIN_HOME, isExpiredLogin, readRedirectTarget } from "@utilities/redir
 export const prerender = false;
 
 // Already signed in: straight to the dashboard (or the page that sent them here).
-if (await isSessionValid(Astro.cookies.get("session_id")?.value)) {
-	return Astro.redirect(readRedirectTarget(Astro.url.search) ?? ADMIN_HOME);
-}
+const toDashboard = (await isSessionValid(Astro.cookies.get("session_id")?.value)) ? Astro.redirect(readRedirectTarget(Astro.url.search) ?? ADMIN_HOME) : null;
+if (toDashboard) return toDashboard;
 const providers = enabledProviders();
 // Sent here because the session ended while the dashboard was open (lib/auth/sessionExpiry.client.ts).
 const expired = isExpiredLogin(Astro.url.search);

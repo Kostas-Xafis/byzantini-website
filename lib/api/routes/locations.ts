@@ -88,7 +88,7 @@ export const locationsRoutes = {
 	fileUpload: new APIServer(
 		{ method: "PUT", path: "/locations/file/[id:number]", rawBlob: true, schema: z_BlobUpload },
 		[authenticateMiddleware],
-		({ params, body: rawBody, request }) =>
+		({ params, body: rawBody }) =>
 			handlerResult(async (T) => {
 				const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
 				if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
@@ -108,7 +108,7 @@ export const locationsRoutes = {
 				throw new APIError(HTTP.UNSUPPORTED_MEDIA_TYPE, "Μη υποστηριζόμενος τύπος αρχείου");
 			}, "Σφάλμα κατά το ανέβασμα της εικόνας"),
 	),
-	fileDelete: new APIServer({ method: "DELETE", path: "/locations/file/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
+	fileDelete: new APIServer({ method: "DELETE", path: "/locations/file/[id:number]" }, [authenticateMiddleware], ({ params }) =>
 		handlerResult(async (T) => {
 			const [location] = await T.executeQuery<Locations>("SELECT * FROM locations WHERE id = ?", [Number(params.id)]);
 			if (!location) throw APIError.notFound("Το σπουδαστήριο δεν βρέθηκε");
@@ -118,7 +118,7 @@ export const locationsRoutes = {
 			return "Image deleted successfully";
 		}, "Σφάλμα κατά τη διαγραφή της εικόνας"),
 	),
-	delete: new APIServer({ method: "DELETE", path: "/locations", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
+	delete: new APIServer({ method: "DELETE", path: "/locations", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const ids = body;
 			const files = await T.executeQuery<Pick<Locations, "image">>(`SELECT image FROM locations WHERE id IN (${questionMarks(ids)})`, ids);

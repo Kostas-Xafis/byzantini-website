@@ -72,7 +72,7 @@ export const settingsBackupRoutes = {
 	getFiles: new APIServer(
 		{ method: "GET", path: "/settings/backup/files", responseSchema: z.object({ files: z.array(z.string()) }) },
 		[authenticateMiddleware],
-		({ request }) =>
+		() =>
 			handlerResult(async () => {
 				const files = await Bucket.list();
 				return { files };
@@ -81,7 +81,7 @@ export const settingsBackupRoutes = {
 	getFile: new APIServer(
 		{ method: "POST", path: "/settings/backup/file", schema: getFileReq, responseSchema: z.object({ key: z.string(), dataBase64: z.string() }) },
 		[authenticateMiddleware],
-		({ body, request }) =>
+		({ body }) =>
 			handlerResult(async () => {
 				const { key: rawKey } = body;
 

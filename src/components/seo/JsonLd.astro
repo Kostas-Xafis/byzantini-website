@@ -8,4 +8,4 @@ import { jsonForScript } from "@utilities/safeJson";
 const { data } = Astro.props;
 ---
 
-<script type="application/ld+json" set:html={jsonForScript(data)} />
+<script is:inline type="application/ld+json" set:html={jsonForScript(data)} />

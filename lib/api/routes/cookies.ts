@@ -32,7 +32,6 @@ interface PendingSet {
 }
 
 export class ServerCookies {
-	private requestHeaders: Headers;
 	private pendingSets = new Map<CookieName, PendingSet>();
 	private pendingDeletes = new Map<CookieName, string>();
 	private allCookies: Record<string, string>;
@@ -40,7 +39,6 @@ export class ServerCookies {
 	private secureByDefault: boolean;
 
 	constructor(request: Request) {
-		this.requestHeaders = request.headers;
 		this.allCookies = this.#parseCookies(request);
 		this.secureByDefault = new URL(request.url).protocol === "https:";
 	}

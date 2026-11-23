@@ -76,8 +76,6 @@ export type ReplaceName<T extends Record<any, any>, Replaced extends keyof T, Re
 };
 export type ObjectValuesToUnion<T extends Record<any, any>> = T[keyof T];
 
-type ObjectKeysToUnion<T extends Record<any, any>> = keyof T;
-
 export type NestedObjectKeysToUnion<T extends Record<string, any>, Prefix extends string = ""> = {
 	[K in keyof T]: T[K] extends Record<string, any>
 		? `${Prefix}${Extract<K, string | number>}` | NestedObjectKeysToUnion<T[K], `${Prefix}${Extract<K, string | number>}.`>

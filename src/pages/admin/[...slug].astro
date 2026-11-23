@@ -9,10 +9,11 @@ export const prerender = false;
 // session is redirected before any admin markup is sent, and comes back to the requested admin URL after
 // signing in (`/login?redirect_url=<path+query>`; the hash never reaches the server).
 const sessionCookie = Astro.cookies.get("session_id")?.value;
-if (!(await isSessionValid(sessionCookie))) {
-	// A cookie that no longer opens a session = it expired or was signed out elsewhere: say so on the sign-in screen.
-	return Astro.redirect(buildLoginUrl(`${Astro.url.pathname}${Astro.url.search}`, { expired: !!sessionCookie }));
-}
+// A cookie that no longer opens a session = it expired or was signed out elsewhere: say so on the sign-in screen.
+const toLogin = (await isSessionValid(sessionCookie))
+	? null
+	: Astro.redirect(buildLoginUrl(`${Astro.url.pathname}${Astro.url.search}`, { expired: !!sessionCookie }));
+if (toLogin) return toLogin;
 ---
 
 <AdminLayout title="Διαχείριση Σχολής">

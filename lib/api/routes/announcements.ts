@@ -24,8 +24,6 @@ import { authenticateMiddleware } from "./middleware/authenticate";
 const bucketPrefix = "anakoinoseis/images/";
 
 // ---- Local types & group-specific request/response schemas ----
-export type PageAnnouncement = Announcements & { main_image: string; total_images: number };
-
 const positiveInt = (message = "Μη έγκυρος θετικός ακέραιος") => z.number().int().min(0, message);
 
 // The old postReq merged `links: string()` over the announcement shape (no Greek
@@ -44,6 +42,7 @@ const z_PageAnnouncement = z.object({
 	main_image: z.string().nullable(),
 	total_images: z.number().int(),
 });
+export type PageAnnouncement = z.infer<typeof z_PageAnnouncement>;
 // `getByTitle` images only carry name/is_main (no id/announcement_id).
 const z_ImageOnPage = z.object({
 	name: z.string("Μη έγκυρο όνομα").nullable(),
@@ -148,7 +147,7 @@ export const announcementsRoutes = {
 	postImage: new APIServer(
 		{ method: "POST", path: "/announcements/images", multipart: true, schema: z_AnnouncementImageUpload, responseSchema: insertResponse },
 		[authenticateMiddleware],
-		({ body, request }) =>
+		({ body }) =>
 			handlerResult(async () => {
 				const { announcement_id, fileData, fileType, is_main } = body;
 				if (fileData.size > MAX_UPLOAD_BYTES) throw new APIError(HTTP.PAYLOAD_TOO_LARGE, "Το αρχείο είναι πολύ μεγάλο (έως 10 MB)");
@@ -199,7 +198,7 @@ export const announcementsRoutes = {
 	imagesDelete: new APIServer(
 		{ method: "DELETE", path: "/announcements/images/id/[announcement_id:number]", schema: z_IdArray },
 		[authenticateMiddleware],
-		({ params, body, request }) =>
+		({ body }) =>
 			handlerResult(async () => {
 				const ids = body;
 				const images = await executeQuery<AnnouncementImages>(`SELECT * FROM announcement_images WHERE id IN (???)`, ids);

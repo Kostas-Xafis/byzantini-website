@@ -30,9 +30,10 @@ import { GET as servePublicFile } from "../[...slug].ts";
 export const prerender = false;
 
 const { slug = "" } = Astro.params;
-if (/\.[a-z0-9]{2,5}$/i.test(slug)) {
-	return servePublicFile({ params: { slug: `spoudastiria/${slug}` }, url: Astro.url, rewrite: (p: string) => Astro.rewrite(p) } as unknown as APIContext);
-}
+const publicFile = /\.[a-z0-9]{2,5}$/i.test(slug)
+	? servePublicFile({ params: { slug: `spoudastiria/${slug}` }, url: Astro.url, rewrite: (p: string) => Astro.rewrite(p) } as unknown as APIContext)
+	: null;
+if (publicFile) return publicFile;
 
 const { locations, byId } = await loadDirectory(Astro);
 const location = locations.find((l) => l.slug === slug);

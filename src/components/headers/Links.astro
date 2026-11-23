@@ -40,7 +40,7 @@ const defaultShareImage = {
 	type: "image/jpeg",
 	secureUrl: new URL("/og-image.jpg", SITE_URL).href,
 };
-const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
+const shareImage: { url: string } & Partial<typeof defaultShareImage> = imageURL ? { url: imageURL } : defaultShareImage;
 ---
 
 <>
@@ -116,7 +116,7 @@ const shareImage = imageURL ? { url: imageURL } : defaultShareImage;
 	<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet" />
 	{
 		isProduction() && (
-			<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}' />
+			<script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "ea19263015fb463885a76372d2368d05"}' />
 		)
 	}
 </>

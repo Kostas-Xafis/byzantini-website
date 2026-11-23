@@ -3,7 +3,7 @@ import Icon from "@components/other/Icon.astro";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { useAPI, API } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
-import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import { breadcrumbsSchema, SCHOOL } from "@utilities/schema";
 import { jsonForScript } from "@utilities/safeJson";
 import { locationPath, locationSlugs } from "@utilities/slug";
 import type { Locations, TeacherLocations } from "@_types/entities";
@@ -405,7 +405,7 @@ const placesSchema = {
 	import { AnimTimeline, onElementMount } from "@utilities/dom";
 	import { trapFocus } from "@utilities/focusTrap";
 
-	type LocationRow = Location & {
+	type LocationRow = {
 		id: number;
 		name: string;
 		address: string;
@@ -419,6 +419,7 @@ const placesSchema = {
 		link?: string;
 		youtube?: string;
 		partner: boolean;
+		priority: number;
 		teacherCount?: number;
 	};
 

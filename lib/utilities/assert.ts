@@ -4,4 +4,4 @@
  *
  * No runtime check. Kept in a neutral module (no server imports) so both browser and server code can use it.
  */
-export function assertOwnProp<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): asserts obj is X & Record<Y, unknown> {}
+export function assertOwnProp<X extends {}, Y extends PropertyKey>(_obj: X, _prop: Y): asserts _obj is X & Record<Y, unknown> {}

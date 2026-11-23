@@ -45,7 +45,8 @@ test("admin file input: preview, «Νέο» badge, removal and rejecting a non-i
 	await expect(field.getByText("Νέο", { exact: true })).toHaveCount(0);
 	await expect(dropZone).toBeVisible();
 
-	// Cancel without submitting.
+	// Cancel without submitting. Picking a file made the form dirty, so the modal asks before closing.
+	page.once("dialog", (confirm) => confirm.accept());
 	await dialog.getByRole("button", { name: "Ακύρωση" }).click();
 	await expect(page.getByRole("dialog")).toHaveCount(0);
 });

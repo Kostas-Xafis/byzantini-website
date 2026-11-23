@@ -31,7 +31,6 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 <script>
 	import { apiCall } from "@hooks/apiCall";
 
-	let tid: number | null = null;
 	document.getElementById("subForm")?.addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const form = e.target as HTMLFormElement;
@@ -52,9 +51,9 @@ import SigninLayout from "@layouts/SigninLayout.astro";
 			}
 		} catch (err) {
 			form.classList.add("animate-shake");
-			tid = setTimeout(() => {
+			setTimeout(() => {
 				form.classList.remove("animate-shake");
-			}, 500) as unknown as number;
+			}, 500);
 		}
 	});
 </script>

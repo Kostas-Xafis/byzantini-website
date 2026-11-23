@@ -68,7 +68,7 @@ import Icon from "@components/other/Icon.astro";
 		const p = document.createElement("p");
 		p.className = "col-span-full place-self-center font-didact text-[1.1vw] max-sm:text-base text-gray-500";
 		p.textContent = text;
-		el.append(p);
+		el.appendChild(p);
 	};
 
 	const buildCard = (a: PageAnnouncement) => {
@@ -95,20 +95,20 @@ import Icon from "@components/other/Icon.astro";
 				media.replaceChildren();
 				const icon = createIcon("newspaper", { class: "text-6xl text-red-900/40" });
 				media.classList.add("grid", "place-items-center");
-				media.append(icon);
+				media.appendChild(icon);
 			});
-			media.append(img);
+			media.appendChild(img);
 		} else {
 			media.classList.add("grid", "place-items-center");
-			media.append(createIcon("newspaper", { class: "text-6xl text-red-900/40" }));
+			media.appendChild(createIcon("newspaper", { class: "text-6xl text-red-900/40" }));
 		}
 		if (isRecent(a.date)) {
 			const badge = document.createElement("span");
 			badge.className = "absolute top-2 left-2 rounded-md bg-ivory-deep/95 px-2 py-0.5 text-sm font-bold text-red-900 shadow-sm";
 			badge.textContent = "Νέο";
-			media.append(badge);
+			media.appendChild(badge);
 		}
-		card.append(media);
+		card.appendChild(media);
 
 		// Σώμα κάρτας: ημερομηνία, τίτλος, περίληψη.
 		const body = document.createElement("div");
@@ -123,8 +123,10 @@ import Icon from "@components/other/Icon.astro";
 		const content = document.createElement("p");
 		content.className = "font-didact text-lg text-gray-700 leading-relaxed line-clamp-3";
 		content.textContent = excerpt(a.content);
-		body.append(time, title, content);
-		card.append(body);
+		body.appendChild(time);
+		body.appendChild(title);
+		body.appendChild(content);
+		card.appendChild(body);
 		return card;
 	};
 

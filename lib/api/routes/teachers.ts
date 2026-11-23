@@ -178,7 +178,7 @@ export const teachersRoutes = {
 	fileUpload: new APIServer(
 		{ method: "PUT", path: "/teachers/file/[id:number]", rawBlob: true, schema: z_BlobUpload },
 		[authenticateMiddleware],
-		({ params, body, request }) =>
+		({ params, body }) =>
 			handlerResult(async () => {
 				const { id } = params;
 				const [teacher] = await executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
@@ -204,7 +204,7 @@ export const teachersRoutes = {
 				return column === "cv" ? "Pdf uploaded successfully" : "Image uploaded successfully";
 			}, "Σφάλμα κατά την αποθήκευση του αρχείου"),
 	),
-	fileRename: new APIServer({ method: "PUT", path: "/teachers/file/rename/[id:number]" }, [authenticateMiddleware], ({ params, request }) =>
+	fileRename: new APIServer({ method: "PUT", path: "/teachers/file/rename/[id:number]" }, [authenticateMiddleware], ({ params }) =>
 		handlerResult(async (T) => {
 			const { id } = params;
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [id]);
@@ -229,7 +229,7 @@ export const teachersRoutes = {
 			return "Files renamed successfully";
 		}, "Σφάλμα κατά τη μετονομασία των αρχείων"),
 	),
-	fileDelete: new APIServer({ method: "PUT", path: "/teachers/file", schema: fileDeleteReq }, [authenticateMiddleware], ({ body, request }) =>
+	fileDelete: new APIServer({ method: "PUT", path: "/teachers/file", schema: fileDeleteReq }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const [teacher] = await T.executeQuery<Teachers>("SELECT * FROM teachers WHERE id = ?", [body.id]);
 			if (!teacher) throw APIError.notFound("Ο καθηγητής δεν βρέθηκε");
@@ -246,7 +246,7 @@ export const teachersRoutes = {
 			throw APIError.badRequest("Μη υποστηριζόμενος τύπος αρχείου");
 		}, "Σφάλμα κατά τη διαγραφή του αρχείου"),
 	),
-	delete: new APIServer({ method: "DELETE", path: "/teachers", schema: z_IdArray }, [authenticateMiddleware], ({ body, request }) =>
+	delete: new APIServer({ method: "DELETE", path: "/teachers", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			const ids = body;
 

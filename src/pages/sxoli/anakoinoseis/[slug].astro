@@ -1,6 +1,6 @@
 ---
 import Icon from "@components/other/Icon.astro";
-import type { AnnouncementImages, Announcements } from "@_types/entities";
+import type { APIResponse } from "@lib/routes/index.client";
 import JsonLd from "@components/seo/JsonLd.astro";
 import Spinner from "@components/other/Spinner.astro";
 import PhotoViewer from "@components/other/PhotoViewer.astro";
@@ -16,7 +16,7 @@ const requestedSlug = requestedAnnouncementSlug(Astro.url.pathname);
 // Older URLs still carry the commas of the title; the lookup matches by comma-less title and the redirect below
 // sends them to the canonical URL.
 const announcement_title = announcementSlug(requestedSlug);
-let announcement: (Announcements & { images: AnnouncementImages[] }) | undefined;
+let announcement: APIResponse["Announcements.getByTitle"] | undefined;
 try {
 	const res_announcement = await useAPI(
 		API.Announcements.getByTitle,
@@ -35,8 +35,8 @@ if (isLegacyAnnouncementSlug(requestedSlug, announcement.title)) return Astro.re
 const imgSrc = "/anakoinoseis/images/" + announcement.id + "/";
 const imgThumbSrc = "/anakoinoseis/images/" + announcement.id + "/thumb_";
 
-const mainImg = announcement.images.find((img) => img.is_main) as AnnouncementImages;
-announcement.images = announcement.images.filter((img) => !img.is_main && !img.name.startsWith("thumb_"));
+const mainImg = announcement.images.find((img) => img.is_main);
+announcement.images = announcement.images.filter((img) => !img.is_main && !img.name?.startsWith("thumb_"));
 if (!mainImg) return Astro.rewrite("/404");
 
 const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
@@ -162,7 +162,7 @@ const neighbours = [
 <Layout title={announcement.title} description={announcementDescription} imageUrl={imgThumbSrc + mainImg.name}>
 	<JsonLd data={articleSchema} />
 	<JsonLd data={breadcrumbs} />
-	{videoSchemas.map((video) => <JsonLd data={video} key={video.embedUrl} />)}
+	{videoSchemas.map((video) => <JsonLd data={video} />)}
 	<div
 		id="readingProgressBar"
 		class="pointer-events-none fixed left-0 right-0 z-999 h-0.75"
@@ -377,8 +377,7 @@ const neighbours = [
 											<div class="videoFrame hidden w-full h-full">
 												<iframe
 													title="Βίντεο ανακοίνωσης"
-													class="w-full h-full"
-													frameborder="0"
+													class="w-full h-full border-0"
 													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 													referrerpolicy="strict-origin-when-cross-origin"
 													allowfullscreen
@@ -396,8 +395,7 @@ const neighbours = [
 											<iframe
 												data-src={link}
 												title="Βίντεο ανακοίνωσης"
-												class="w-full h-full"
-												frameborder="0"
+												class="w-full h-full border-0"
 												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 												referrerpolicy="strict-origin-when-cross-origin"
 												allowfullscreen
@@ -647,7 +645,7 @@ const neighbours = [
 			});
 
 			// ------- Video facade: high-res thumbnail, click-to-play embed -------
-			section.querySelectorAll("[data-video-id] img").forEach((img) => {
+			section.querySelectorAll<HTMLImageElement>("[data-video-id] img").forEach((img) => {
 				const id = (img.closest("[data-video-id]") as HTMLElement).dataset.videoId;
 				// Some videos have no HD thumbnail; fall back to 640x480 and then 480x360.
 				const fallbacks = [`https://i.ytimg.com/vi/${id}/sddefault.jpg`, `https://i.ytimg.com/vi/${id}/hqdefault.jpg`];

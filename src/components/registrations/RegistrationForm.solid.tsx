@@ -494,7 +494,6 @@ export function RegistrationForm() {
 		if (!dirty()) return;
 		const guard = (e: BeforeUnloadEvent) => {
 			e.preventDefault();
-			e.returnValue = "";
 		};
 		window.addEventListener("beforeunload", guard);
 		onCleanup(() => window.removeEventListener("beforeunload", guard));

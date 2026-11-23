@@ -64,7 +64,7 @@ Core loop:
 | Build | `bun run build` | production build |
 | Types | `bun run types` | regenerate `worker-configuration.d.ts` after `wrangler.jsonc` changes |
 | Typecheck | `bun run typecheck` | TypeScript 7 native `tsc --noEmit` (~2 s; fast gate for every change) · `bun run typecheck:ts6` runs the same check on TS 6 (~10 s) |
-| Astro check | `bun run astro-check` | `astro check` (slower, more rules; 15 pre-existing errors) |
+| Astro check | `bun run astro-check` | `astro check` (slower, more rules); clean: 0 errors, warnings and hints |
 | Full gate | `bun run check` | contract drift check + typecheck + tests |
 | Unit tests | `bun test tests/unit` | no dev server needed |
 | API contract | `bun run api:contract` · `--check` | regenerate / verify `lib/api/contract.ts` |
@@ -203,10 +203,10 @@ or `bun run cf deploy:preview`. Deployed worker names are adapter-suffixed —
   POSTs without an `Origin` header (403) — `tests/testHelpers.ts` sends `Origin: VITE_URL`.
 - Running `bun run build` while `bun run dev` is up repoints
   `.wrangler/deploy/config.json` at `dist/server`; restart the dev server after.
-- `bun run astro-check` reports 15 pre-existing errors (Links shareImage alt,
-  8 DOM-append errors in `AnnouncementsPreview.astro`, spoudastiria
-  `LocationRow.priority`, anakoinoseis `PageAnnouncement`/`key` prop/`Element.src`).
-  Compare the error list, not just the count, when you touch `.astro` files.
+- `bun run astro-check` is clean (0 errors, warnings and hints): keep it that way. Two of its quirks:
+  - An expression in a frontmatter `return` is not type-checked, so an import used only there reads as unused.
+    Build the response first: `const toLogin = valid ? null : Astro.redirect(...); if (toLogin) return toLogin;`.
+  - In `<script>` blocks the Cloudflare types' `Element` hides the DOM's `append`: use `appendChild`.
 - Reference architecture: `~/Projects/Isokratis` (read-only — never edit it).
 
 ## Pupil register (Μαθητολόγιο)

@@ -1,5 +1,5 @@
 import { createMemo, onMount, type Accessor } from "solid-js";
-import { createStore, type SetStoreFunction } from "solid-js/store";
+import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
 import { ALL_COLUMNS, cellMatches, rowMatchesAny } from "./searchMatch";
 import type { SearchColumn, SearchSetter } from "../SearchTable.solid";

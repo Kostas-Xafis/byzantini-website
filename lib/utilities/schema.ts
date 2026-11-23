@@ -36,7 +36,7 @@ export const SCHOOL_ID = `${SCHOOL.url}/#school`;
 // portfolio URL so the visible credit, the `rel="author"` link and the
 // `<meta name="author">` tag can never drift apart.
 export const DEVELOPER = {
-	name: "Κωνσταντίνος Χάφης",
+	name: "Κωνσταντίνος Χαφής",
 	portfolio: "https://kostas-portfolio.pages.dev/",
 	role: "μαθητής της Σχολής",
 } as const;

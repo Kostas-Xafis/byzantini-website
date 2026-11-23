@@ -9,7 +9,7 @@ const LINK_CLASS = "font-semibold text-red-900 underline decoration-red-900/30 u
 export function renderInline(text: string): string {
 	return escapeHtml(text)
 		.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-red-950">$1</strong>')
-		.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (match, label: string, href: string) => {
+		.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_match, label: string, href: string) => {
 			const external = href.startsWith("https://");
 			if (!external && !href.startsWith("/")) return label;
 			return `<a href="${href}" class="${LINK_CLASS}"${external ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;

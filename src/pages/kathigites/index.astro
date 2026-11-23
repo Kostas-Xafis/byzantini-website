@@ -42,7 +42,7 @@ const teachers = [
 	[eur_teachers, MusicType.European],
 ] as const;
 const teacher_classes = teachers
-	.map(([teachersArr, type], index) => {
+	.map(([teachersArr], index) => {
 		return teachersArr
 			.map((teacher) => {
 				return {

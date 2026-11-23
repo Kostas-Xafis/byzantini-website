@@ -13,7 +13,7 @@ import Spinner from "../other/Spinner.solid";
 import { type SearchColumn, type SearchSetter } from "./SearchTable.solid";
 import { ALL_COLUMNS } from "./table/searchMatch";
 import { onAddInstrumentMemo, onAddMemo, onDeleteInstrumentMemo, onDeleteMemo, onDownloadExcelMemo, onModifyMemo } from "./controls/Teachers/all";
-import { INSTRUMENTS_PREFIX, PREFIX, type TeacherJoins } from "./controls/Teachers/helpers";
+import { INSTRUMENTS_PREFIX, PREFIX } from "./controls/Teachers/helpers";
 import { toggleCheckboxes } from "./table/Row.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 
