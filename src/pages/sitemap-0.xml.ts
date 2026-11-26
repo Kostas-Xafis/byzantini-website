@@ -22,6 +22,7 @@ const PUBLIC_PAGES = [
 	"/sxoli/anakoinoseis/",
 	"/sxoli/dioikitiko-symvoulio/",
 	"/sxoli/xorodia/",
+	"/politiki-aporritou/",
 ];
 
 // The department pages and the guides (lib/content); a guide's `updated` is a real review date, so it is its lastmod.

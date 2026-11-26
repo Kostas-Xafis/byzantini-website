@@ -874,6 +874,18 @@ export function RegistrationForm() {
 										</Show>
 									</p>
 								</Show>
+								<p class="col-span-full justify-self-center max-w-[60ch] text-center font-didact text-sm text-gray-600">
+									Για μαθητή κάτω των 18 ετών την αίτηση υποβάλλει γονέας ή κηδεμόνας. Με την εγγραφή, το email της αίτησης λαμβάνει και
+									ενημερώσεις της Σχολής· μπορείτε να διαγραφείτε οποτεδήποτε. Δείτε την{" "}
+									<a
+										href="/politiki-aporritou/#eggrafes"
+										target="_blank"
+										rel="noopener"
+										class="font-semibold text-red-900 underline underline-offset-[3px] hover:text-red-950">
+										Πολιτική Απορρήτου
+									</a>
+									.
+								</p>
 								<Show
 									when={!spinner()}
 									fallback={
