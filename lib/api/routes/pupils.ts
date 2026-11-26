@@ -110,6 +110,11 @@ const z_PupilUpdate = z.object({
 	registration_url: z.string("Μη έγκυρο registration_url").optional(),
 	needs_review: z.union([z.boolean(), z.literal(0), z.literal(1)]).optional(),
 	review_note: z.string("Μη έγκυρη σημείωση ελέγχου").optional(),
+	/** The parent's photo/video answer, as the secretariat records a change (null = not asked). */
+	media_consent: z
+		.union([z.literal(0), z.literal(1)])
+		.nullable()
+		.optional(),
 });
 
 /** A pupil added by hand in the Μαθητολόγιο: the edit form's fields, the names required. */
@@ -549,6 +554,11 @@ export const pupilsRoutes = {
 			// The edit form sends no needs_review: re-derive it from the new ΑΜ and note, so a
 			// pupil who got a ΑΜ and an emptied «Σημείωση ελέγχου» leaves the review list.
 			const assignments = columns.map((column) => `${column} = ?`);
+			// A changed photo/video answer is dated (the old value is what the SET expressions read).
+			if (fields.media_consent !== undefined) {
+				assignments.push("media_consent_at = CASE WHEN media_consent IS ? THEN media_consent_at WHEN ? IS NULL THEN NULL ELSE ? END");
+				values.push(fields.media_consent, fields.media_consent, Date.now());
+			}
 			if (fields.needs_review === undefined && (fields.am !== undefined || fields.review_note !== undefined)) {
 				const am = fields.am !== undefined ? "?" : "am";
 				const note = fields.review_note !== undefined ? "?" : "review_note";
@@ -597,7 +607,7 @@ export const pupilsRoutes = {
 				const now = Date.now();
 				const note = (body.review_note ?? "").trim();
 				const { insertId } = await T.executeQuery(
-					`INSERT INTO pupils (am, orphan_code, first_name, last_name, fathers_name, birth_date, road, number, tk, region, telephone, cellphone, email, amka, registration_url, needs_review, review_note, created_at, updated_at) VALUES (???)`,
+					`INSERT INTO pupils (am, orphan_code, first_name, last_name, fathers_name, birth_date, road, number, tk, region, telephone, cellphone, email, amka, registration_url, needs_review, review_note, created_at, updated_at, media_consent, media_consent_at) VALUES (???)`,
 					{
 						am,
 						orphan_code: am === null ? await nextOrphanCode(T, "000") : "",
@@ -619,6 +629,8 @@ export const pupilsRoutes = {
 						review_note: am === null && !note ? "χωρίς ΑΜ — καταχώρηση από τη Γραμματεία, εκκρεμεί απονομή ΑΜ" : note,
 						created_at: now,
 						updated_at: now,
+						media_consent: body.media_consent ?? null,
+						media_consent_at: body.media_consent == null ? null : now,
 					},
 				);
 				return { id: insertId };
@@ -693,6 +705,9 @@ export const pupilsRoutes = {
 				// The catalog active NOW is pinned on the enrollment (a later catalog edit never changes it).
 				const catalog = await getActiveCatalog(year);
 
+				// The photo/video answer the form asks a minor's parent (adults are not asked: null).
+				const mediaConsent = typeof body.media_consent === "boolean" ? (body.media_consent ? 1 : 0) : null;
+
 				// 1. Find or create the pupil.
 				let pupil: Pupils | undefined;
 				if (parsed.kind === "valid") {
@@ -728,6 +743,10 @@ export const pupilsRoutes = {
 						`UPDATE pupils SET fathers_name=?, telephone=?, cellphone=?, email=?, road=?, number=?, tk=?, region=?, amka=?, updated_at=? WHERE id=?`,
 						[body.fathers_name, body.telephone, body.cellphone, body.email, body.road, body.number, body.tk, body.region, body.amka, now, pupilId],
 					);
+					// A minor's parent answered the photo/video question again: this year's answer replaces the last one.
+					if (mediaConsent !== null) {
+						await T.executeQuery("UPDATE pupils SET media_consent = ?, media_consent_at = ? WHERE id = ?", [mediaConsent, now, pupilId]);
+					}
 				} else {
 					// A registration with no usable ΑΜ creates an orphan pupil: the
 					// secretaries assign the real ΑΜ later (ΑΜ stays NULL, the row is
@@ -735,7 +754,7 @@ export const pupilsRoutes = {
 					const orphan = parsed.kind !== "valid";
 					const orphanCode = orphan ? await nextOrphanCode(T, parsed.digits || "000") : "";
 					const { insertId } = await T.executeQuery(
-						`INSERT INTO pupils (am, orphan_code, first_name, last_name, fathers_name, birth_date, road, number, tk, region, telephone, cellphone, email, amka, registration_url, needs_review, review_note, created_at, updated_at) VALUES (???)`,
+						`INSERT INTO pupils (am, orphan_code, first_name, last_name, fathers_name, birth_date, road, number, tk, region, telephone, cellphone, email, amka, registration_url, needs_review, review_note, created_at, updated_at, media_consent, media_consent_at) VALUES (???)`,
 						{
 							am: parsed.kind === "valid" ? parsed.am : null,
 							orphan_code: orphanCode,
@@ -756,6 +775,8 @@ export const pupilsRoutes = {
 							review_note: orphan ? "χωρίς ΑΜ — νέα εγγραφή, εκκρεμεί απονομή ΑΜ" : "",
 							created_at: now,
 							updated_at: now,
+							media_consent: mediaConsent,
+							media_consent_at: mediaConsent === null ? null : now,
 						},
 					);
 					pupilId = insertId;

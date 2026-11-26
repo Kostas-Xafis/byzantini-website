@@ -187,8 +187,21 @@ function pupilInputs(): Record<string, InputProps> {
 		cellphone: { label: "Κινητό", name: "cellphone", type: "tel", icon: "smartphone" },
 		email: { label: "Email", name: "email", type: "email", icon: "mail" },
 		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "text", icon: "note" },
+		media_consent: {
+			label: "Φωτογραφίες/βίντεο",
+			name: "media_consent",
+			type: "select",
+			icon: "images",
+			selectList: [...MEDIA_CONSENT_LABELS.slice(1)],
+			valueList: [1, 0],
+			tooltip: { message: ["Η απάντηση του γονέα για ανήλικο μαθητή. Κενό = δεν έχει ερωτηθεί."], position: "bottom" },
+		},
 	};
 }
+
+/** The parent's photo/video answer (`pupils.media_consent`, asked for minors): null, 1 or 0. */
+const MEDIA_CONSENT_LABELS = ["Δεν έχει ερωτηθεί", "Επιτρέπεται", "Δεν επιτρέπεται"] as const;
+const mediaConsentLabel = (value: number | null | undefined) => MEDIA_CONSENT_LABELS[value == null ? 0 : value === 1 ? 1 : 2];
 
 /** The instruments a music type is taught with (Βυζαντινή has none). */
 const instrumentsForClassId = (instruments: Instruments[], classId: number) => instruments.filter((instrument) => instrument.type === MusicTypeArr[classId]);
@@ -641,7 +654,12 @@ export default function PupilsPage() {
 		if (!data) return emptyAction(ActionEnum.MODIFY, ActionIcon.MODIFY);
 		const inputs = new InputFields(pupilInputs()).fill((input, key) => {
 			const value = (data.pupil as unknown as Record<string, unknown>)[key as string];
-			input.value = key === "birth_date" ? (value as number) || undefined : ((value as string | number) ?? "");
+			input.value =
+				key === "birth_date"
+					? (value as number) || undefined
+					: key === "media_consent"
+						? ((value as number | null) ?? undefined)
+						: ((value as string | number) ?? "");
 		});
 
 		return {
@@ -668,6 +686,9 @@ export default function PupilsPage() {
 					email: form.string("email"),
 					review_note: form.string("review_note", ""),
 				};
+				const consent = form.string("media_consent", "undefined");
+				const nextConsent = consent === "1" ? 1 : consent === "0" ? 0 : null;
+				if (nextConsent !== (data.pupil.media_consent ?? null)) body.media_consent = nextConsent;
 				const birth = form.string("birth_date", "");
 				if (birth) body.birth_date = form.date("birth_date").getTime();
 				await apiHook(API.Pupils.update, { RequestObject: body as never });
@@ -751,6 +772,8 @@ export default function PupilsPage() {
 					review_note: form.string("review_note", ""),
 				};
 				if (form.string("birth_date", "")) body.birth_date = form.date("birth_date").getTime();
+				const consent = form.string("media_consent", "undefined");
+				if (consent === "1" || consent === "0") body.media_consent = consent === "1" ? 1 : 0;
 				const res = await apiHook(API.Pupils.create, { RequestObject: body });
 				if (!("data" in res)) return;
 				pushAlert(createAlert("success", `Προστέθηκε ο μαθητής ${body.last_name} ${body.first_name} — προσθέστε τις εγγραφές του με «Νέα εγγραφή»`));
@@ -1283,6 +1306,14 @@ export default function PupilsPage() {
 												</Detail>
 												<Detail label="Πατρώνυμο">{data().pupil.fathers_name || "—"}</Detail>
 												<Detail label="Γέννηση">{formatDate(data().pupil.birth_date)}</Detail>
+												<Detail label="Φωτογραφίες">
+													<span
+														title={
+															data().pupil.media_consent_at ? "Δηλώθηκε " + formatDate(data().pupil.media_consent_at!) : undefined
+														}>
+														{mediaConsentLabel(data().pupil.media_consent)}
+													</span>
+												</Detail>
 											</DetailGroup>
 											<DetailGroup title="ΕΠΙΚΟΙΝΩΝΙΑ">
 												<Detail label="Κινητό">

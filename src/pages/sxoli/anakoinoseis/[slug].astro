@@ -440,6 +440,20 @@ const neighbours = [
 				)
 			}
 
+			{
+				(photos.length > 0 || mainImg) && (
+					<p class="w-full text-center text-sm text-red-950/70">
+						Εμφανίζεστε σε κάποια φωτογραφία και θέλετε να αφαιρεθεί ή να θολωθεί;{" "}
+						<a
+							href="/politiki-aporritou/#fotografies"
+							class="font-semibold text-red-900 underline decoration-red-900/30 underline-offset-[3px] transition-colors hover:decoration-red-900">
+							Ζητήστε το εδώ
+						</a>
+						.
+					</p>
+				)
+			}
+
 			<footer class="flex w-full max-w-4xl flex-col items-center gap-y-6 border-t border-red-900/15 pt-8 max-sm:pt-6">
 				{
 					neighbours.length > 0 && (
