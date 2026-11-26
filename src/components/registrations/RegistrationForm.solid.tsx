@@ -4,10 +4,11 @@ import { APIRequestError, validationMessages } from "@hooks/apiCall";
 import type { APIResourceStore } from "@hooks/createAPIResource.solid";
 import { useAPIClient, type APIClient } from "@hooks/useAPIClient.solid";
 import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
+import { isMinor } from "@lib/pupils/age";
 import { currentSchoolYear, currentSchoolYearShort, isRegistrationWindowOpen, REGISTRATION_WINDOW_LABEL } from "@lib/pupils/years";
 import { API } from "@routes/index.client";
 import { AnimTimeline } from "@utilities/dom";
-import { ExtendedFormData } from "@utilities/forms";
+import { ExtendedFormData, parseDayMonthYear } from "@utilities/forms";
 import { sleep } from "@utilities/sleep";
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -19,7 +20,7 @@ import Icon from "@components/other/Icon.solid";
 const PREFIX = "RegForm";
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
-	keyof Omit<PupilRegistrationForm, "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id" | "registration_url" | "pass">,
+	keyof Omit<PupilRegistrationForm, "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id" | "registration_url" | "pass" | "media_consent">,
 	InputProps
 > = {
 	am: {
@@ -427,6 +428,10 @@ export function RegistrationForm() {
 	const [identityResolved, setIdentityResolved] = createSignal(false);
 	// Something was typed into the form that has not been submitted yet — guards against leaving the page.
 	const [dirty, setDirty] = createSignal(false);
+	// The birth date as typed (null while incomplete or invalid); undefined until typed, when the identified
+	// pupil's stored date counts. A pupil under 18 makes the form ask the parent about photos and videos.
+	const [typedBirth, setTypedBirth] = createSignal<number | null | undefined>(undefined);
+	const minor = () => isMinor(typedBirth() !== undefined ? typedBirth() : registrationData.birth_date);
 	// Display-only: the form stays open all year, it just says so outside the official period.
 	const windowOpen = isRegistrationWindowOpen();
 	const schoolYearShort = currentSchoolYearShort();
@@ -571,11 +576,14 @@ export function RegistrationForm() {
 				...pupil,
 				am: String(pupil.am ?? ""),
 				amka: pupil.amka,
+				// Last year's answer is pre-selected; the parent can change it.
+				media_consent: pupil.media_consent == null ? null : pupil.media_consent === 1,
 				registration_year: genericInputs.registration_year.value as string,
 				class_year: "",
 				teacher_id: -1,
 				instrument_id: -1,
 			}));
+			setTypedBirth(undefined);
 			// Keep the department the family picked — they may be enrolling in a different one this year.
 			setWithoutAm(pupil.am === null);
 			setIdentified(true);
@@ -614,7 +622,9 @@ export function RegistrationForm() {
 			class_year: "",
 			teacher_id: -1,
 			instrument_id: -1,
+			media_consent: null,
 		}));
+		setTypedBirth(undefined);
 		setLookupError("");
 		setIdentified(false);
 		setWithoutAm(true);
@@ -660,6 +670,17 @@ export function RegistrationForm() {
 			return;
 		}
 		const formData = new ExtendedFormData<PupilRegistrationForm>(form);
+		// A minor's parent must answer the photo/video question (shown as soon as the birth date makes the pupil a minor).
+		const birthTime = formData.date("birth_date").getTime();
+		setTypedBirth(birthTime);
+		const askConsent = isMinor(birthTime);
+		const consentAnswer = (form.elements.namedItem("media_consent") as RadioNodeList | null)?.value ?? "";
+		if (askConsent && consentAnswer === "") {
+			setSubmitError("Απαντήστε αν επιτρέπετε να εμφανίζεται ο μαθητής σε φωτογραφίες και βίντεο από εκδηλώσεις της Σχολής.");
+			queueMicrotask(() => form.querySelector<HTMLElement>("#mediaConsent")?.scrollIntoView({ block: "center", behavior: "smooth" }));
+			shakeForm();
+			return;
+		}
 		const data: PupilRegistrationForm = {
 			last_name: formData.string("last_name"),
 			first_name: formData.string("first_name"),
@@ -669,7 +690,7 @@ export function RegistrationForm() {
 			telephone: formData.string("telephone", "-"),
 			cellphone: formData.string("cellphone"),
 			email: formData.string("email"),
-			birth_date: formData.date("birth_date").getTime(),
+			birth_date: birthTime,
 			road: formData.string("road"),
 			number: formData.number("number"),
 			tk: formData.number("tk"),
@@ -681,6 +702,7 @@ export function RegistrationForm() {
 			instrument_id: formData.multiSelect("instruments" as any, "number", { single: true }) || formData.number("instruments-all" as any, 0),
 			date: Date.now(),
 			pass: false,
+			media_consent: askConsent ? consentAnswer === "1" : null,
 		};
 		setRegistrationData(data);
 		try {
@@ -830,7 +852,11 @@ export function RegistrationForm() {
 									" [&_:is(input,select,textarea,button)]:scroll-mb-28" +
 									(step() === "form" ? "" : " hidden")
 								}
-								onInput={markDirty}
+								onInput={(e) => {
+									markDirty(e);
+									const el = e.target as HTMLInputElement;
+									if (el.name === "birth_date") setTypedBirth(parseDayMonthYear(el.value)?.getTime() ?? null);
+								}}
 								onChange={markDirty}
 								onSubmit={onSubmit}>
 								<h1 class="col-span-full text-5xl max-sm:text-3xl max-sm:text-center max-sm:py-2 text-red-900 font-anaktoria font-bold w-[75%] justify-self-center text-center drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
@@ -874,6 +900,55 @@ export function RegistrationForm() {
 										</Show>
 									</p>
 								</Show>
+								<Show when={minor()}>
+									<fieldset
+										id="mediaConsent"
+										class="col-span-full justify-self-center w-full max-w-[60ch] max-sm:w-[calc(100%-2rem)] rounded-md border border-red-900/30 bg-white px-5 py-4 font-didact shadow-sm">
+										<legend class="px-2 text-lg font-semibold text-red-900">Φωτογραφίες και βίντεο από εκδηλώσεις</legend>
+										<p class="text-base leading-relaxed text-gray-700">
+											Ο μαθητής είναι ανήλικος. Στις δημόσιες εκδηλώσεις της Σχολής τραβιούνται φωτογραφίες και βίντεο, που μπορεί να
+											δημοσιευτούν στον ιστότοπο και στα μέσα κοινωνικής δικτύωσης της Σχολής. Επιτρέπετε να εμφανίζεται ο μαθητής σε
+											αυτά;
+										</p>
+										<div class="mt-3 flex flex-wrap gap-x-8 gap-y-2">
+											<label class="inline-flex cursor-pointer items-center gap-2 text-lg">
+												<input
+													type="radio"
+													name="media_consent"
+													value="1"
+													checked={registrationData.media_consent === true}
+													class="size-5 accent-red-900"
+												/>
+												Ναι, επιτρέπω
+											</label>
+											<label class="inline-flex cursor-pointer items-center gap-2 text-lg">
+												<input
+													type="radio"
+													name="media_consent"
+													value="0"
+													checked={registrationData.media_consent === false}
+													class="size-5 accent-red-900"
+												/>
+												Όχι, δεν επιτρέπω
+											</label>
+										</div>
+										<p class="mt-2 text-sm text-gray-600">
+											Μπορείτε να αλλάξετε την επιλογή σας οποτεδήποτε, επικοινωνώντας με τη Γραμματεία.
+										</p>
+									</fieldset>
+								</Show>
+								<p class="col-span-full justify-self-center max-w-[60ch] text-center font-didact text-sm text-gray-600">
+									Για μαθητή κάτω των 18 ετών την αίτηση υποβάλλει γονέας ή κηδεμόνας. Με την εγγραφή, το email της αίτησης λαμβάνει και
+									ενημερώσεις της Σχολής· μπορείτε να διαγραφείτε οποτεδήποτε. Δείτε την{" "}
+									<a
+										href="/politiki-aporritou/#eggrafes"
+										target="_blank"
+										rel="noopener"
+										class="font-semibold text-red-900 underline underline-offset-[3px] hover:text-red-950">
+										Πολιτική Απορρήτου
+									</a>
+									.
+								</p>
 								<Show
 									when={!spinner()}
 									fallback={

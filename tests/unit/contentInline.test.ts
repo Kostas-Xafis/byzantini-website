@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { plainInline, renderInline } from "../../lib/content/inline";
+import { REMOVAL_MAILTO } from "../../lib/content/privacy";
 import { slugify, teacherSlugs } from "../../lib/utilities/slug";
 
 describe("renderInline", () => {
@@ -17,6 +18,19 @@ describe("renderInline", () => {
 		expect(html).not.toContain("<img");
 		expect(html).not.toContain("javascript:");
 		expect(html).not.toContain('href="http://');
+	});
+	test("mailto links stay in the page", () => {
+		const html = renderInline("[γράψτε μας](mailto:music@inmm.gr)");
+		expect(html).toContain('href="mailto:music@inmm.gr"');
+		expect(html).not.toContain("target=");
+	});
+	test("the photo removal email is one whole link", () => {
+		const html = renderInline(`[στείλτε μας email](${REMOVAL_MAILTO}) στο σχολείο`);
+		const href = html.match(/href="([^"]+)"/)?.[1].replaceAll("&amp;", "&") ?? "";
+		expect(href).toBe(REMOVAL_MAILTO);
+		const url = new URL(href);
+		expect(url.searchParams.get("subject")).toBe("Αίτημα αφαίρεσης ή θόλωσης φωτογραφίας");
+		expect(url.searchParams.get("body")).toContain("(π.χ. γονέας)");
 	});
 	test("plainInline strips the marks", () => {
 		expect(plainInline("Η **Σχολή** στη [Μεταμόρφωση](/epikoinonia/)")).toBe("Η Σχολή στη Μεταμόρφωση");

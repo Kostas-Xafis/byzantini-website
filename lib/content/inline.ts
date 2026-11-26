@@ -1,6 +1,6 @@
 // Renders the two inline marks the editorial content may use — **bold** and
-// [label](/path/) — to HTML. Everything else is escaped, and only site-relative
-// or https links survive, so the copy can never inject markup.
+// [label](/path/) — to HTML. Everything else is escaped, and only site-relative,
+// https or mailto: links survive, so the copy can never inject markup.
 
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
@@ -11,6 +11,7 @@ export function renderInline(text: string): string {
 		.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-red-950">$1</strong>')
 		.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_match, label: string, href: string) => {
 			const external = href.startsWith("https://");
+			if (href.startsWith("mailto:")) return `<a href="${href}" class="${LINK_CLASS}">${label}</a>`;
 			if (!external && !href.startsWith("/")) return label;
 			return `<a href="${href}" class="${LINK_CLASS}"${external ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;
 		});

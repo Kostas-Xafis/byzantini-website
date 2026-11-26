@@ -234,6 +234,8 @@ export const z_PupilRegistrationForm = z.object({
 	date: positiveInt("Μη έγκυρη ημερομηνία"),
 	registration_url: z.string("Μη έγκυρο registration_url").optional(),
 	pass: looseBoolean("Μη έγκυρη προαγωγή"),
+	/** Pupil under 18: the parent's answer on photos/videos from events (`pupils.media_consent`); left out for adults. */
+	media_consent: z.boolean("Μη έγκυρη απάντηση για φωτογραφίες").nullable().optional(),
 });
 
 export const z_EmailSubscriptions = z.object({
@@ -274,6 +276,9 @@ export const z_Pupils = z.object({
 	review_note: z.string("Μη έγκυρη σημείωση ελέγχου"),
 	created_at: positiveInt("Μη έγκυρη ημερομηνία δημιουργίας"),
 	updated_at: positiveInt("Μη έγκυρη ημερομηνία ενημέρωσης"),
+	/** Photos/videos from events, answered by the parent of a minor (migration 0010): null = not asked, 1 = allowed, 0 = not. */
+	media_consent: z.number().int().min(0).max(1).nullable().optional(),
+	media_consent_at: z.number().int().nullable().optional(),
 });
 
 export const z_PupilEnrollments = z.object({

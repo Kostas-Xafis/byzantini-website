@@ -1,0 +1,58 @@
+---
+// /politiki-aporritou/: the privacy policy (copy in lib/content/privacy.ts). Linked from the homepage's closing band,
+// the contact page, the registration form and the newsletter page; its URL is also the privacy policy URL of the
+// Google OAuth consent screen, so keep the path stable.
+import Icon from "@components/other/Icon.astro";
+import Breadcrumbs from "@components/subpages/Breadcrumbs.astro";
+import ContentSections from "@components/subpages/ContentSections.astro";
+import PageHero from "@components/subpages/PageHero.astro";
+import SubpageShell from "@components/subpages/SubpageShell.astro";
+import Toc from "@components/subpages/Toc.astro";
+import Layout from "@layouts/Layout.astro";
+import { PLACEHOLDER_MARK, PRIVACY_LEAD, PRIVACY_SECTIONS, PRIVACY_UPDATED } from "@lib/content/privacy";
+
+export const prerender = true;
+
+const updatedLabel = new Date(PRIVACY_UPDATED).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
+const toc = PRIVACY_SECTIONS.map((s) => ({ id: s.id, label: s.heading }));
+// Facts only the school can give are marked in the copy; until they are all filled in, the page says so.
+const unfinished = JSON.stringify(PRIVACY_SECTIONS).includes(PLACEHOLDER_MARK);
+---
+
+<Layout
+	title="Πολιτική Απορρήτου"
+	description="Πώς η Σχολή Βυζαντινής & Παραδοσιακής Μουσικής του Ι.Ν. Μεταμορφώσεως του Σωτήρος επεξεργάζεται και προστατεύει τα προσωπικά δεδομένα μαθητών, γονέων και επισκεπτών.">
+	<SubpageShell>
+		{
+			unfinished && (
+				<aside
+					role="note"
+					class="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3.5 text-amber-950 shadow-sm max-sm:px-4 max-sm:text-sm">
+					<Icon name="warning" class="mt-0.5 shrink-0 text-lg text-amber-600" />
+					<p class="leading-relaxed text-amber-950">
+						<strong class="font-semibold">Το κείμενο ολοκληρώνεται.</strong> Ορισμένα στοιχεία, σημειωμένα «ΠΡΟΣ ΣΥΜΠΛΗΡΩΣΗ», θα συμπληρωθούν από τη
+						Σχολή.
+					</p>
+				</aside>
+			)
+		}
+		<Breadcrumbs
+			items={[
+				{ name: "Αρχική", url: "/" },
+				{ name: "Πολιτική Απορρήτου", url: "/politiki-aporritou/" },
+			]}
+		/>
+		<PageHero eyebrow="Προσωπικά δεδομένα" title="Πολιτική Απορρήτου" lead={PRIVACY_LEAD} image="/church_low.jpg">
+			<p class="flex items-center gap-1.5 pt-1 text-sm text-red-100/80">
+				<Icon name="calendar" /> Τελευταία ενημέρωση: <time datetime={PRIVACY_UPDATED}>{updatedLabel}</time>
+			</p>
+		</PageHero>
+
+		<div class="grid gap-10 lg:grid-cols-[17rem_minmax(0,1fr)]">
+			<Toc items={toc} />
+			<div class="flex min-w-0 flex-col">
+				<ContentSections sections={PRIVACY_SECTIONS} />
+			</div>
+		</div>
+	</SubpageShell>
+</Layout>
