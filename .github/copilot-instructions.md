@@ -110,6 +110,10 @@
   `/admin/errors`, sysadmin) via `APIServer.onServerError`; the emails worker's
   cron emails the sysadmins a digest (`services/emailWorker/src/errorDigest.ts`).
   `GET /api/health` is the uptime-monitor target.
+- «Επαφές Google» (`/admin/contacts`, `lib/contacts/`, `GoogleContacts.*`)
+  syncs the school Google account's contacts from the pupil register and the
+  teachers via the People API (one contact per phone number; preview, then apply
+  after an R2 backup). Never reintroduce `.vcf` exports.
 - A 401 in the dashboard sends the admin to `/login?…&expired=1` and back
   (`lib/auth/sessionExpiry.client.ts`); password reset is
   `/login/forgot` → `/login/reset/<token>` (`Authentication.*PasswordReset`).

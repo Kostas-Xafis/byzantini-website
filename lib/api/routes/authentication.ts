@@ -5,6 +5,7 @@ import { PERMISSIONS, ROLES, permissionsOf } from "@lib/auth/roles";
 import { hasPassword, hashPassword, sha256Hex, timingSafeEqual, verifyPassword } from "@lib/auth/passwords";
 import { enabledProviders, getProvider, isProviderId, providerInfo, type ProviderId, type ProviderProfile } from "@lib/auth/providers";
 import { listSessions, revokeSession, revokeUserSessions } from "@lib/auth/sessions";
+import { CONTACTS_PATH, completeContactsConnect } from "@lib/contacts/link.server";
 import { z_LoginCredentials, z_NewPassword } from "@lib/api/schemas";
 import { getDb, type Transaction } from "@lib/db";
 import { Random as R } from "@lib/random";
@@ -94,7 +95,7 @@ const z_SessionsRes = z.array(
 	}),
 );
 
-const flowSecret = () => {
+export const flowSecret = () => {
 	const { SECRET } = getEnv();
 	if (!SECRET) throw new Error("SECRET is not set");
 	return SECRET;
@@ -104,7 +105,7 @@ const flowSecret = () => {
  * Apple returns with a cross-site POST, which only carries `SameSite=None` cookies (and those must be
  * `Secure`). The others return with a top-level GET redirect, for which `Lax` is enough.
  */
-const flowCookieOptions = (formPost: boolean): CookieOptions => ({
+export const flowCookieOptions = (formPost: boolean): CookieOptions => ({
 	httpOnly: true,
 	maxAge: OAUTH_FLOW_TTL_MS / 1000,
 	sameSite: formPost ? "None" : "Lax",
@@ -336,7 +337,14 @@ export const authenticationRoutes = {
 			handlerResult(async (T) => {
 				const flow = await openOAuthFlow(cookies.get(COOKIE.oauthFlow), flowSecret());
 				cookies.delete(COOKIE.oauthFlow);
-				const back = flow?.intent === "link" ? ACCOUNT_PATH : flow?.intent === "signup" && flow.link ? `/admin/signup/${flow.link}` : LOGIN_PATH;
+				const back =
+					flow?.intent === "link"
+						? ACCOUNT_PATH
+						: flow?.intent === "contacts"
+							? CONTACTS_PATH
+							: flow?.intent === "signup" && flow.link
+								? `/admin/signup/${flow.link}`
+								: LOGIN_PATH;
 				const fail = (error: string) => ({ ok: false as const, error, back });
 
 				if (body.error) {
@@ -345,6 +353,15 @@ export const authenticationRoutes = {
 				}
 				if (!flow || flow.provider !== params.provider || !body.code || !body.state || !timingSafeEqual(body.state, flow.state)) {
 					return fail("Η σύνδεση έληξε ή ξεκίνησε σε άλλο παράθυρο. Δοκιμάστε ξανά.");
+				}
+				// «Επαφές Google»: not a sign-in — store the school account's token (lib/contacts/link.server.ts).
+				if (flow.intent === "contacts") {
+					try {
+						return { ok: true as const, redirect: await completeContactsConnect(flow, body.code, new URL(request.url).origin) };
+					} catch (error) {
+						if (error instanceof APIError) return fail(error.message);
+						throw error;
+					}
 				}
 				const provider = getProvider(flow.provider);
 				if (!provider) return fail("Ο πάροχος σύνδεσης δεν είναι διαθέσιμος.");

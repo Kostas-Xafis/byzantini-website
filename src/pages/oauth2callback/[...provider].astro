@@ -48,9 +48,11 @@ const backLabel = result.ok
 	? ""
 	: result.back.startsWith("/admin/account")
 		? "Επιστροφή στον λογαριασμό"
-		: result.back.startsWith("/admin/signup")
-			? "Επιστροφή στην εγγραφή"
-			: "Επιστροφή στη σύνδεση";
+		: result.back.startsWith("/admin/contacts")
+			? "Επιστροφή στις επαφές"
+			: result.back.startsWith("/admin/signup")
+				? "Επιστροφή στην εγγραφή"
+				: "Επιστροφή στη σύνδεση";
 ---
 
 <!doctype html>

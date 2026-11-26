@@ -22,6 +22,8 @@ export const PERMISSIONS = {
 	manageRoles: ["sysadmin"],
 	/** «Ιστορικό ενεργειών» — who changed what (Activity.*). */
 	activityLog: ["sysadmin", "owner"],
+	/** «Επαφές Google» — the school account's contacts synced from the register (GoogleContacts.*). */
+	googleContacts: ["sysadmin", "owner"],
 } as const satisfies Record<string, readonly Role[]>;
 export type Permission = keyof typeof PERMISSIONS;
 

@@ -15,17 +15,25 @@ import { timingSafeEqual } from "./passwords";
 
 export const OAUTH_FLOW_TTL_MS = 1000 * 60 * 10;
 
+/** What `Authentication.oauthStart` may start: sign-in, invite signup, connecting a provider. */
 export const z_OAuthIntent = z.enum(["login", "signup", "link"]);
 export type OAuthIntent = z.infer<typeof z_OAuthIntent>;
+
+/**
+ * Every round trip the callback finishes: the sign-in intents plus `contacts` — connecting the school's
+ * Google account for the contacts sync, started only by `GoogleContacts.connect` (lib/contacts/link.server.ts).
+ */
+export const z_OAuthFlowIntent = z.enum([...z_OAuthIntent.options, "contacts"]);
+export type OAuthFlowIntent = z.infer<typeof z_OAuthFlowIntent>;
 
 const z_OAuthFlow = z.object({
 	provider: z.string(),
 	state: z.string().min(16),
 	codeVerifier: z.string(),
-	intent: z_OAuthIntent,
+	intent: z_OAuthFlowIntent,
 	/** Invite link (signup). */
 	link: z.string().optional(),
-	/** The signed-in admin (link). */
+	/** The signed-in admin (link, contacts). */
 	userId: z.number().int().optional(),
 	/** Validated `/admin…` path to land on after sign-in. */
 	redirect: z.string().optional(),

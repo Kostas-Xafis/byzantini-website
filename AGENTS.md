@@ -372,7 +372,7 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - **Roles** (`lib/auth/roles.ts`, client-safe; `sys_users.role` in 0008):
   `sysadmin` (the maintainer) · `owner` (the school's owner) · `secretary`
   (the secretariat). `PERMISSIONS` lists the only restricted features —
-  `queryLogs` (sysadmin), `feeCatalog`, `activityLog` and `deleteAdmins` (sysadmin + owner),
+  `queryLogs` (sysadmin), `feeCatalog`, `activityLog`, `deleteAdmins` and `googleContacts` (sysadmin + owner),
   `manageRoles` (sysadmin); **everything else is open to every signed-in
   admin**. Routes enforce them with `requirePermission("…")` after
   `authenticateMiddleware`; the UI reads `Authentication.me().permissions` to
@@ -404,6 +404,20 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   production `byzantini-db`) emails the **sysadmins** what is new, marks it
   notified and prunes rows after 90 days. `GET /api/health` (public) is for the
   external uptime monitor. Routes: `Errors.list`/`Errors.delete`, `Health.get`.
+- **«Επαφές Google»** (`/admin/contacts`, sysadmin + owner; migration 0011,
+  `lib/contacts/`, routes `GoogleContacts.*`): keeps the contacts of the school's
+  Google account (the secretariat's phone) in sync with the Μαθητολόγιο and the
+  teachers through the People API — replaces the yearly `.vcf` imports. One
+  contact per **phone number** (siblings on one number = one contact; a teacher's
+  number is named after the teacher), labels «Σχολή · …», a `clientData` key so
+  re-runs update instead of duplicating; numbers on more than 3 pupils (and no
+  teacher) are left out and reported. The pure plan is `lib/contacts/plan.ts`
+  (unit-tested); `GoogleContacts.connect` starts an OAuth round trip with intent
+  `contacts` (same `/oauth2callback`, `contacts` scope, offline) and the refresh
+  token is stored AES-GCM-encrypted (key from `SECRET` — rotating it means
+  reconnecting). `preview` writes nothing; `apply` re-checks the plan hash, backs
+  every contact up to R2 (`contacts_backups/`, not public), then writes. While the
+  Google consent screen is in "Testing" Google expires the token after 7 days.
 - **Provider setup** (secrets in `.env` for dev, `wrangler secret put` for
   production; redirect URIs `https://<host>/oauth2callback[/<id>]`):
   `GOOGLE_CLIENT_ID/SECRET`; `APPLE_CLIENT_ID` (Services ID), `APPLE_TEAM_ID`,
