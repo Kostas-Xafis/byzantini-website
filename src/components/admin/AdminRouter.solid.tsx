@@ -4,6 +4,7 @@ import { Show, type Component } from "solid-js";
 import { useCurrentUser } from "./currentUser";
 import AccountPage from "./AccountPage.solid.tsx";
 import ActivityPage from "./ActivityPage.solid.tsx";
+import ContactsPage from "./ContactsPage.solid.tsx";
 import ErrorsPage from "./ErrorsPage.solid.tsx";
 import AdminPage from "./AdminPage.solid.tsx";
 import AnnouncementsTable from "./AnnouncementsTable.solid.tsx";
@@ -59,6 +60,7 @@ export default function AdminRouter() {
 				<Route path="/admin/announcements" component={AnnouncementsTable} />
 				<Route path="/admin/account" component={AccountPage} />
 				<Route path="/admin/sysusers" component={SysUsersTable} />
+				<Route path="/admin/contacts" component={restricted("googleContacts", ContactsPage)} />
 				<Route path="/admin/activity" component={restricted("activityLog", ActivityPage)} />
 				<Route path="/admin/query-logs" component={restricted("queryLogs", QueryLogsTable)} />
 				<Route path="/admin/errors" component={restricted("queryLogs", ErrorsPage)} />

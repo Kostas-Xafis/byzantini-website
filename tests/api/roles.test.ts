@@ -40,7 +40,7 @@ afterAll(async () => {
 test("--roles-- the harness admin is the sysadmin and may do everything", async () => {
 	const me = (await getJson<APIResponse["Authentication.me"]>(await useTestAPI("Authentication.me"))).data;
 	expect(me.role).toBe("sysadmin");
-	expect(me.permissions).toEqual({ queryLogs: true, feeCatalog: true, deleteAdmins: true, manageRoles: true, activityLog: true });
+	expect(me.permissions).toEqual({ queryLogs: true, feeCatalog: true, deleteAdmins: true, manageRoles: true, activityLog: true, googleContacts: true });
 	await getJson(await useTestAPI("QueryLogs.get"));
 	await getJson(await useTestAPI("FeeCatalog.getYears"));
 });
@@ -49,7 +49,7 @@ test("--roles-- an invited admin is a secretary: no query logs, fee catalog, del
 	const secretary = await newAdmin();
 	const me = (await getJson<APIResponse["Authentication.me"]>(await rawAPI("GET", "/auth/me", undefined, secretary.cookie))).data;
 	expect(me.role).toBe("secretary");
-	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: false, deleteAdmins: false, manageRoles: false, activityLog: false });
+	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: false, deleteAdmins: false, manageRoles: false, activityLog: false, googleContacts: false });
 
 	await expectStatus("GET", "/query-logs", secretary.cookie, 403);
 	await expectStatus("POST", "/activity", secretary.cookie, 403, {});
@@ -58,6 +58,10 @@ test("--roles-- an invited admin is a secretary: no query logs, fee catalog, del
 	// Not even their own account.
 	await expectStatus("DELETE", "/sys", secretary.cookie, 403, [secretary.id]);
 	await expectStatus("PUT", "/sys/role", secretary.cookie, 403, { id: secretary.id, role: "owner" });
+	// «Επαφές Google»: the school account's contacts.
+	await expectStatus("GET", "/google-contacts", secretary.cookie, 403);
+	await expectStatus("POST", "/google-contacts/connect", secretary.cookie, 403);
+	await expectStatus("POST", "/google-contacts/apply", secretary.cookie, 403, { hash: "0".repeat(64), deleteDuplicates: false });
 
 	// Everything else stays open.
 	await expectStatus("GET", "/sys", secretary.cookie, 200);
@@ -74,7 +78,7 @@ test("--roles-- the sysadmin promotes a secretary to owner; the owner gets the f
 	expect(promoted.data.role).toBe("owner");
 
 	const me = (await getJson<APIResponse["Authentication.me"]>(await rawAPI("GET", "/auth/me", undefined, owner.cookie))).data;
-	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: true, deleteAdmins: true, manageRoles: false, activityLog: true });
+	expect(me.permissions).toEqual({ queryLogs: false, feeCatalog: true, deleteAdmins: true, manageRoles: false, activityLog: true, googleContacts: true });
 	await expectStatus("GET", "/fee-catalogs", owner.cookie, 200);
 	await expectStatus("GET", "/query-logs", owner.cookie, 403);
 	await expectStatus("POST", "/activity", owner.cookie, 200, {});

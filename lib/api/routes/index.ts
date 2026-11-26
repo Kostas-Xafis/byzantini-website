@@ -7,6 +7,7 @@ import { booksRoutes } from "./books";
 import { emailSubscriptionsRoutes } from "./emailSubscriptions";
 import { errorsRoutes, healthRoutes } from "./errors";
 import { feeCatalogRoutes } from "./feeCatalog";
+import { googleContactsRoutes } from "./googleContacts";
 import { instrumentsRoutes } from "./instruments";
 import { locationsRoutes } from "./locations";
 import { paymentsRoutes } from "./payments";
@@ -52,6 +53,7 @@ export const routeGroups = {
 	Authentication: authenticationRoutes,
 	Activity: activityRoutes,
 	Errors: errorsRoutes,
+	GoogleContacts: googleContactsRoutes,
 	Health: healthRoutes,
 } as const;
 

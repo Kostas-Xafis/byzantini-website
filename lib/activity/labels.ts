@@ -59,6 +59,10 @@ export const ACTIVITY_LABELS: Record<string, string> = {
 	"Errors.delete": "Διαγραφή καταγεγραμμένων σφαλμάτων",
 	"Authentication.changePassword": "Αλλαγή κωδικού",
 	"Authentication.unlinkProvider": "Αποσύνδεση λογαριασμού εισόδου",
+
+	"GoogleContacts.connect": "Σύνδεση λογαριασμού Google για τις επαφές",
+	"GoogleContacts.disconnect": "Αποσύνδεση λογαριασμού Google των επαφών",
+	"GoogleContacts.apply": "Συγχρονισμός επαφών Google",
 };
 
 /** The page's category filter: endpoint group → Greek name. */
@@ -76,6 +80,7 @@ export const ACTIVITY_GROUPS: Record<string, string> = {
 	SysUsers: "Διαχειριστές",
 	Authentication: "Διαχειριστές",
 	Errors: "Σφάλματα",
+	GoogleContacts: "Επαφές Google",
 };
 
 /** Endpoint groups behind one category name (e.g. «Βιβλία» → Books, Wholesalers). */

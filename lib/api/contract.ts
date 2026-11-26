@@ -134,5 +134,10 @@ export const APIEndpoints = {
 	"Activity.admins": { method: "GET", path: "/activity/admins", multipart: false, rawBlob: false },
 	"Errors.list": { method: "GET", path: "/sys/errors", multipart: false, rawBlob: false },
 	"Errors.delete": { method: "DELETE", path: "/sys/errors", multipart: false, rawBlob: false },
+	"GoogleContacts.status": { method: "GET", path: "/google-contacts", multipart: false, rawBlob: false },
+	"GoogleContacts.connect": { method: "POST", path: "/google-contacts/connect", multipart: false, rawBlob: false },
+	"GoogleContacts.disconnect": { method: "DELETE", path: "/google-contacts", multipart: false, rawBlob: false },
+	"GoogleContacts.preview": { method: "GET", path: "/google-contacts/preview", multipart: false, rawBlob: false },
+	"GoogleContacts.apply": { method: "POST", path: "/google-contacts/apply", multipart: false, rawBlob: false },
 	"Health.get": { method: "GET", path: "/health", multipart: false, rawBlob: false },
 } as const satisfies Record<APIEndpointNames, APIContractEntry>;
