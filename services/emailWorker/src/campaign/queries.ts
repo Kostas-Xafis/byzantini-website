@@ -270,3 +270,42 @@ export async function getTeacherRecipients(db: DBKind = "sqlite-prod"): Promise<
 		},
 	}));
 }
+
+/**
+ * Audience of the December 2026 Byzantine-music seminar: every pupil ever enrolled in Βυζαντινή Μουσική
+ * (class_id 0, any school year) plus every pupil enrolled in the last three school years (any department).
+ * Same filters as the other student invitations: subscribed (email_subscriptions), no teachers or admins,
+ * pupils without an ΑΜ included (the copy is not personalised). The runner dedupes shared family addresses.
+ */
+export async function getSeminarRecipients(db: DBKind = "sqlite-prod"): Promise<CampaignRecipient[]> {
+	const conn = createDbConnection(db);
+	const years = LAST_THREE_YEAR_STUDENT_YEARS;
+	const result = await conn.execute({
+		sql: `SELECT p.email, p.first_name, p.cellphone, p.telephone, es.unsubscribe_token
+			FROM pupils p
+			JOIN email_subscriptions es ON es.email = p.email COLLATE NOCASE
+			WHERE p.email IS NOT NULL AND TRIM(p.email) <> ''
+				AND EXISTS (
+					SELECT 1 FROM pupil_enrollments e
+					WHERE e.pupil_id = p.id
+						AND (e.class_id = 0 OR e.registration_year IN (${years.map(() => "?").join(", ")}))
+				)
+				AND NOT EXISTS (
+					SELECT 1 FROM teachers t
+					WHERE t.email IS NOT NULL AND TRIM(t.email) <> ''
+						AND t.email = p.email COLLATE NOCASE
+				)
+				AND NOT EXISTS (
+					SELECT 1 FROM sys_users s
+					WHERE s.email = p.email COLLATE NOCASE
+				)
+			ORDER BY p.am`,
+		args: [...years],
+	});
+	const rows = result.rows as unknown as RecentStudentRow[];
+	return rows.map((r) => ({
+		email: r.email.trim(),
+		phone: smsPhone(r.cellphone, r.telephone),
+		templateData: { token: r.unsubscribe_token ?? "" },
+	}));
+}

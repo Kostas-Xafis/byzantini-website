@@ -1,14 +1,12 @@
 import type { ReactElement } from "react";
-import {
-	SuccessfulRegistration,
-	type SuccessfulRegistrationLevel,
-} from "./emails/SuccessfulRegistration";
+import { SuccessfulRegistration, type SuccessfulRegistrationLevel } from "./emails/SuccessfulRegistration";
 import { SysuserPasswordReset } from "./emails/SysuserPasswordReset";
 import { SysuserRegisterLink } from "./emails/SysuserRegisterLink";
 import { UpenthimisiEggrafis } from "./emails/UpenthimisiEggrafis";
 import { EpistrofiMathiton } from "./emails/EpistrofiMathiton";
 import { AgiasmosAponomi } from "./emails/AgiasmosAponomi";
 import { AgiasmosAponomiKathigites } from "./emails/AgiasmosAponomiKathigites";
+import { SeminarioVyzantinis } from "./emails/SeminarioVyzantinis";
 import { GoogleReview } from "./emails/GoogleReview";
 import { UpenthimisiEggrafisKathigites } from "./emails/UpenthimisiEggrafisKathigites";
 
@@ -50,14 +48,7 @@ export type TemplateDef = {
 export const templates: TemplateDef[] = [
 	...successfulRegistrationTemplates.map(({ name, level }) => ({
 		name,
-		build: () => (
-			<SuccessfulRegistration
-				level={level}
-				classYear={"{{class_year}}"}
-				classType={"{{class_type}}"}
-				schoolYear={"{{registration_year}}"}
-			/>
-		),
+		build: () => <SuccessfulRegistration level={level} classYear={"{{class_year}}"} classType={"{{class_type}}"} schoolYear={"{{registration_year}}"} />,
 	})),
 	{
 		name: "sysuser_register_link.html",
@@ -69,15 +60,7 @@ export const templates: TemplateDef[] = [
 	},
 	{
 		name: "2026/upenthimisi_eggrafis.html",
-		build: () => (
-			<UpenthimisiEggrafis
-				token={"{{token}}"}
-				regid={"{{regid}}"}
-				am={"{{am}}"}
-				first_name={"{{first_name}}"}
-				last_name={"{{last_name}}"}
-			/>
-		),
+		build: () => <UpenthimisiEggrafis token={"{{token}}"} regid={"{{regid}}"} am={"{{am}}"} first_name={"{{first_name}}"} last_name={"{{last_name}}"} />,
 	},
 	{
 		name: "2026/epistrofi_mathiton.html",
@@ -98,5 +81,9 @@ export const templates: TemplateDef[] = [
 	{
 		name: "2026/agiasmos_aponomi_kathigites.html",
 		build: () => <AgiasmosAponomiKathigites />,
+	},
+	{
+		name: "2026/seminario_vyzantinis.html",
+		build: () => <SeminarioVyzantinis token={"{{token}}"} />,
 	},
 ];

@@ -1,9 +1,17 @@
-import { EVENT_ANNOUNCEMENT_FILENAME, EVENT_ANNOUNCEMENT_URL, POSTER_FILENAME, POSTER_URL } from "../../render/assets";
+import {
+	EVENT_ANNOUNCEMENT_FILENAME,
+	EVENT_ANNOUNCEMENT_URL,
+	POSTER_FILENAME,
+	POSTER_URL,
+	SEMINAR_POSTER_FILENAME,
+	SEMINAR_POSTER_URL,
+} from "../../render/assets";
 import { urlAttachment } from "./attachments";
 import {
 	getLastThreeYearsStudentRecipients,
 	getRecentStudentsRecipients,
 	getRenewalRecipients,
+	getSeminarRecipients,
 	getReturningStudentsRecipients,
 	getTeacherRecipients,
 } from "./queries";
@@ -135,6 +143,19 @@ export const campaigns: Record<string, CampaignConfig> = {
 		getRecipients: (db) => getTeacherRecipients(db),
 		// The same ανακοίνωση PDF the student invitation attaches, from the site's R2.
 		getAttachments: async () => [await urlAttachment(EVENT_ANNOUNCEMENT_URL, EVENT_ANNOUNCEMENT_FILENAME)],
+		paceMs: 800,
+		dailyCap: 900,
+	},
+	"seminario-vyzantinis-2026": {
+		id: "seminario-vyzantinis-2026",
+		title: "Πρόσκληση – Σεμινάριο Βυζαντινής Μουσικής 2/12/2026 (βυζαντινή όλων των ετών + όλοι οι σπουδαστές 2024-today)",
+		subject: "Πρόσκληση: Σεμινάριο Βυζαντινής Μουσικής – Τετάρτη 2 Δεκεμβρίου 2026",
+		htmlTemplateName: "2026/seminario_vyzantinis.html",
+		plainTextTemplateName: "2026/seminario_vyzantinis.txt",
+		// Email only: an invitation with a poster, far beyond an SMS budget.
+		getRecipients: (db) => getSeminarRecipients(db),
+		// The poster is embedded in the template AND attached, like the other 2026 invitations.
+		getAttachments: async () => [await urlAttachment(SEMINAR_POSTER_URL, SEMINAR_POSTER_FILENAME)],
 		paceMs: 800,
 		dailyCap: 900,
 	},
