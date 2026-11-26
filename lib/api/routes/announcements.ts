@@ -104,9 +104,10 @@ export const announcementsRoutes = {
 			return { ...announcement, images };
 		}, "Η ανακοίνωση δεν βρέθηκε"),
 	),
+	// `content` is stored as typed: the text format (lib/announcements/format.ts) links bare addresses when it
+	// renders. (The old handlers wrapped them in <a href='…'> here — re-wrapping them on every edit.)
 	post: new APIServer({ method: "POST", path: "/announcements", schema: postReq, responseSchema: insertResponse }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
-			body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 			body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
 			const { insertId } = await T.executeQuery(`INSERT INTO announcements (title, content, date, links) VALUES (???)`, body);
 			return { insertId };
@@ -116,7 +117,6 @@ export const announcementsRoutes = {
 		handlerResult(async (T) => {
 			const [existing] = await T.executeQuery<Pick<Announcements, "title">>("SELECT title FROM announcements WHERE id = ?", [body.id]);
 			if (!existing) throw APIError.notFound("Η ανακοίνωση δεν βρέθηκε");
-			body.content = body.content.replaceAll(/https:\/\/[^\s\/$.?#].[^\s]*/g, "<a href='$&'>$&</a>");
 			body.links = body.links.replaceAll("youtu.be/", "www.youtube.com/embed/").replaceAll("watch?v=", "embed/");
 			await T.executeQuery(`UPDATE announcements SET title = ?, content = ?, date = ?, links = ? WHERE id = ?`, body);
 			return "Announcement updated successfully";

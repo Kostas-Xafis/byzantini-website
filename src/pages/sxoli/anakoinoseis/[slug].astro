@@ -8,6 +8,7 @@ import Layout from "@layouts/Layout.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import { breadcrumbsSchema, SCHOOL, SCHOOL_ID } from "@utilities/schema";
 import { unescapeNewlines } from "@utilities/text";
+import { announcementExcerpt, blocksToHtml, parseAnnouncement } from "@lib/announcements/format";
 import { announcementPath, isLegacyAnnouncementSlug, requestedAnnouncementSlug, announcementSlug } from "@utilities/announcementUrl";
 export const prerender = false;
 
@@ -42,13 +43,6 @@ if (!mainImg) return Astro.rewrite("/404");
 const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
 const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
 
-// Dev/replication snapshots store newlines as the two characters "\n";
-// unescapeNewlines is a no-op on production data and makes paragraphs split
-// correctly in both worlds.
-const paragraphs = unescapeNewlines(announcement.content)
-	.split("\n")
-	.map((p) => p.trim())
-	.filter(Boolean);
 const links = announcement.links
 	? unescapeNewlines(announcement.links)
 			.split("|")
@@ -56,37 +50,14 @@ const links = announcement.links
 			.filter(Boolean)
 	: [];
 
-// The server wraps bare URLs in <a href='...'>...</a> when saving; render them as
-// real links without using set:html (content stays text, only links become anchors).
-const contentAnchorPattern = /<a href='([^']+)'>([^<]*)<\/a>/g;
-type Segment = { text: string; href?: string };
-const toSegments = (line: string): Segment[] => {
-	const parts = line.split(contentAnchorPattern); // [text, href, label, text, ...]
-	const segments: Segment[] = [];
-	for (let i = 0; i < parts.length; i += 3) {
-		if (parts[i]) segments.push({ text: parts[i] });
-		if (i + 1 < parts.length) segments.push({ href: parts[i + 1], text: parts[i + 2] });
-	}
-	return segments;
-};
-
-// The editor is plain text: consecutive lines starting with a dash ("- Νίκη Κεραμέως…")
-// are the secretaries' lists, so they render as one <ul> instead of dashed paragraphs.
-const LIST_ITEM = /^[-–•]\s*/;
-type Block = { kind: "p"; segments: Segment[] } | { kind: "ul"; items: Segment[][] };
-const blocks: Block[] = [];
-for (const p of paragraphs) {
-	if (LIST_ITEM.test(p)) {
-		const item = toSegments(p.replace(LIST_ITEM, ""));
-		const last = blocks.at(-1);
-		if (last?.kind === "ul") last.items.push(item);
-		else blocks.push({ kind: "ul", items: [item] });
-	} else {
-		blocks.push({ kind: "p", segments: toSegments(p) });
-	}
-}
-// A drop cap only suits a real opening paragraph, not a one-line note or a link.
-const leadHasDropCap = blocks[0]?.kind === "p" && !blocks[0].segments[0]?.href && paragraphs[0].length >= 100;
+// The text format (headings, lists, bold/italic, links) lives in lib/announcements/format.ts: every block comes
+// out as escaped, safe HTML, so it is rendered with set:html.
+const blocks = parseAnnouncement(announcement.content);
+const leadHtml = blocksToHtml(blocks.slice(0, 1));
+const restHtml = blocksToHtml(blocks.slice(1));
+// A drop cap only suits a real opening paragraph, not a one-line note, a heading or a link.
+const lead = blocks[0];
+const leadHasDropCap = lead?.kind === "p" && !lead.html.startsWith("<") && lead.text.length >= 100;
 
 // Photos: a strip right after the lead breaks up the text; the full gallery follows
 // the article. Up to 4 photos the strip is the whole gallery, so it isn't repeated.
@@ -99,11 +70,7 @@ const morePhotos = photos.length - STRIP_SIZE + 1; // shown on the last strip ti
 const stripAspect = stripPhotos.length === 1 ? "aspect-video" : stripPhotos.length === 2 ? "aspect-4/3" : "aspect-square sm:aspect-4/3";
 
 // Meta description: first ~155 characters of the announcement text.
-const announcementDescription = paragraphs
-	.join(" ")
-	.replace(/<[^>]*>/g, "")
-	.slice(0, 155)
-	.trim();
+const announcementDescription = announcementExcerpt(announcement.content, 155);
 
 // Extract a YouTube video id from an embed link (e.g. "https://www.youtube.com/embed/ZI5ocBAaHEc").
 const youtubeId = (link: string) => link.match(/www\.youtube\.com\/embed\/([A-Za-z0-9_-]+)/)?.[1];
@@ -248,86 +215,38 @@ const neighbours = [
 			{
 				blocks.length > 0 && (
 					<article class="w-full max-w-3xl rounded-2xl bg-white px-14 pt-12 pb-10 max-md:px-8 max-sm:px-5 max-sm:pt-7 max-sm:pb-6 text-lg max-sm:text-base leading-[1.8] max-sm:leading-relaxed text-ink shadow-[0_18px_50px_-20px_rgba(69,10,10,0.35)] ring-1 ring-red-900/10">
-						{blocks.map((block, bi) => (
-							<Fragment>
-								{block.kind === "p" ? (
-									<p
-										class:list={[
-											"mb-5 last:mb-0",
-											bi === 0 && "text-xl max-sm:text-lg leading-[1.7] text-red-950",
-											bi === 0 &&
-												leadHasDropCap &&
-												"first-letter:float-left first-letter:mt-1.5 first-letter:mr-2.5 first-letter:font-anaktoria first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:font-bold first-letter:text-red-900",
-										]}>
-										{block.segments.map((s) =>
-											s.href ? (
-												<a
-													href={s.href}
-													target="_blank"
-													rel="noopener noreferrer"
-													class="text-red-800 underline decoration-1 underline-offset-2 hover:text-red-950 wrap-anywhere">
-													{s.text}
-												</a>
-											) : (
-												s.text
-											),
-										)}
-									</p>
-								) : (
-									<ul class="mb-5 last:mb-0 flex flex-col gap-y-1.5">
-										{block.items.map((item) => (
-											<li class="relative pl-7 before:absolute before:left-1.5 before:top-[0.72em] before:size-1.75 before:rotate-45 before:bg-red-900/80">
-												{item.map((s) =>
-													s.href ? (
-														<a
-															href={s.href}
-															target="_blank"
-															rel="noopener noreferrer"
-															class="text-red-800 underline decoration-1 underline-offset-2 hover:text-red-950 wrap-anywhere">
-															{s.text}
-														</a>
-													) : (
-														s.text
-													),
-												)}
-											</li>
-										))}
-									</ul>
-								)}
-								{bi === 0 && showStrip && (
-									<div
-										id={showGallery ? undefined : "announcementPhotos"}
-										class="photoStrip my-8 max-sm:my-6 grid gap-2 sm:gap-3"
-										style={`grid-template-columns: repeat(${stripPhotos.length}, minmax(0, 1fr))`}>
-										{stripPhotos.map((image, i) => {
-											const isMore = showGallery && i === stripPhotos.length - 1;
-											return (
-												<button
-													type="button"
-													data-img-index={isMore ? undefined : i}
-													data-more={isMore ? "" : undefined}
-													aria-label={
-														isMore ? `Όλες οι φωτογραφίες (${photos.length})` : `Προβολή φωτογραφίας ${i + 1} από ${photos.length}`
-													}
-													class={`imgLoader photoTile group/img relative ${stripAspect} overflow-hidden rounded-lg bg-red-900/8 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2`}>
-													<img
-														data-src={imgThumbSrc + image.name}
-														alt=""
-														class="absolute inset-0 size-full object-cover opacity-0 transition-[opacity,transform] duration-500 group-[.loaded]/img:opacity-100 group-hover/img:scale-105"
-													/>
-													{isMore && (
-														<span class="absolute inset-0 grid place-content-center bg-red-950/60 text-center text-red-50 transition-colors group-hover/img:bg-red-950/50">
-															<span class="text-2xl max-sm:text-lg font-bold leading-none">+{morePhotos}</span>
-															<span class="mt-1 text-sm max-sm:hidden">φωτογραφίες</span>
-														</span>
-													)}
-												</button>
-											);
-										})}
-									</div>
-								)}
-							</Fragment>
-						))}
+						<div class:list={["announcement-text announcement-lead", leadHasDropCap && "has-drop-cap"]} set:html={leadHtml} />
+						{showStrip && (
+							<div
+								id={showGallery ? undefined : "announcementPhotos"}
+								class="photoStrip my-8 max-sm:my-6 grid gap-2 sm:gap-3"
+								style={`grid-template-columns: repeat(${stripPhotos.length}, minmax(0, 1fr))`}>
+								{stripPhotos.map((image, i) => {
+									const isMore = showGallery && i === stripPhotos.length - 1;
+									return (
+										<button
+											type="button"
+											data-img-index={isMore ? undefined : i}
+											data-more={isMore ? "" : undefined}
+											aria-label={isMore ? `Όλες οι φωτογραφίες (${photos.length})` : `Προβολή φωτογραφίας ${i + 1} από ${photos.length}`}
+											class={`imgLoader photoTile group/img relative ${stripAspect} overflow-hidden rounded-lg bg-red-900/8 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-900/70 focus-visible:ring-offset-2`}>
+											<img
+												data-src={imgThumbSrc + image.name}
+												alt=""
+												class="absolute inset-0 size-full object-cover opacity-0 transition-[opacity,transform] duration-500 group-[.loaded]/img:opacity-100 group-hover/img:scale-105"
+											/>
+											{isMore && (
+												<span class="absolute inset-0 grid place-content-center bg-red-950/60 text-center text-red-50 transition-colors group-hover/img:bg-red-950/50">
+													<span class="text-2xl max-sm:text-lg font-bold leading-none">+{morePhotos}</span>
+													<span class="mt-1 text-sm max-sm:hidden">φωτογραφίες</span>
+												</span>
+											)}
+										</button>
+									);
+								})}
+							</div>
+						)}
+						<div class="announcement-text" set:html={restHtml} />
 					</article>
 				)
 			}

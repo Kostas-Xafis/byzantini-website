@@ -474,6 +474,16 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
   `**bold**` and `[label](/path/)` only, rendered by `lib/content/inline.ts`).
   School-specific claims are listed for the school to verify in
   `docs/SEO_CONTENT_REVIEW.md` — keep it in step when the copy changes.
+- **Announcement text** (`announcements.content`) is a line-based Markdown subset —
+  one block per line: `## ` heading, `- ` / `1. ` lists, `**bold**`, `*italic*`,
+  `[label](https://…)`, bare URLs/emails auto-linked — rendered to escaped HTML by
+  `lib/announcements/format.ts` (client-safe; also `announcementExcerpt`/`PlainText` for
+  excerpts and meta) and styled by `.announcement-text` in `global.css`. The admin
+  «Περιεχόμενο» field is `AnnouncementTextEditor.solid.tsx` (toolbar + preview, edits in
+  `lib/announcements/editing.ts`). Content is stored as typed — the routes no longer wrap
+  URLs in `<a>` (old rows that have them still render). The one-off reformat of the
+  pre-format announcements is `scripts/announcementsFormat.ts` (+ `scripts/data/announcementsFormatted.json`;
+  dry run / `--apply` local / `--remote-sql <file>` for the owner).
 
 ## Env, storage and external services
 

@@ -5,7 +5,7 @@ import { type PageAnnouncement } from "@lib/api/routes/announcements";
 import JsonLd from "@components/seo/JsonLd.astro";
 import Layout from "@layouts/Layout.astro";
 import { breadcrumbsSchema } from "@utilities/schema";
-import { unescapeNewlines } from "@utilities/text";
+import { announcementExcerpt } from "@lib/announcements/format";
 import { announcementPath } from "@utilities/announcementUrl";
 export const prerender = false;
 
@@ -16,15 +16,8 @@ const detailHref = (a: PageAnnouncement) => announcementPath(a.title);
 const formatDate = (d: number) => new Date(d).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" });
 const isRecent = (d: number) => Date.now() - d < 7 * 24 * 60 * 60 * 1000;
 
-// Safe, word-boundary excerpt. (The old slice(0, indexOf(" ")) trick broke when the content
-// had no space at/after the cut point and silently dropped the last character.)
-const excerpt = (content: string, max = 220) => {
-	const clean = unescapeNewlines(content).replace(/\s+/g, " ").trim();
-	if (clean.length <= max) return clean;
-	const cut = clean.slice(0, max);
-	const lastSpace = cut.lastIndexOf(" ");
-	return cut.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…";
-};
+// Word-boundary excerpt of the text without its marks (lib/announcements/format.ts).
+const excerpt = (content: string) => announcementExcerpt(content, 220);
 ---
 
 <Layout

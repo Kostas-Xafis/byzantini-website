@@ -15,6 +15,7 @@ import { Show, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { InputFields, type Props as InputProps } from "../input/Input.solid";
 import Spinner from "../other/Spinner.solid";
+import AnnouncementTextEditor from "./AnnouncementTextEditor.solid";
 import { createAlert, pushAlert, toast } from "./Alert.solid";
 import Table, { type ColumnType } from "./table/Table.solid";
 import { ActionEnum, ActionIcon, type EmptyAction } from "./table/TableControlTypes";
@@ -24,6 +25,14 @@ import { useTableSearch } from "./table/useTableSearch.solid";
 const PREFIX = "announcements";
 
 type AnnouncementTable = Omit<Announcements, "content" | "links"> & { link: string };
+
+// The text with its formatting toolbar and preview (it renders and names its own textarea).
+const contentField = (value?: string): InputProps => ({
+	type: "custom",
+	name: "content",
+	label: "Περιεχόμενο",
+	render: () => <AnnouncementTextEditor name="content" label="Περιεχόμενο" value={value} />,
+});
 
 const AnnouncementsInputs = (): Omit<Record<keyof Announcements | "images" | "mainImage" | "links", InputProps>, "views"> => {
 	return {
@@ -45,12 +54,7 @@ const AnnouncementsInputs = (): Omit<Record<keyof Announcements | "images" | "ma
 			type: "date",
 			icon: "calendar",
 		},
-		content: {
-			type: "textarea",
-			name: "content",
-			label: "Περιεχόμενο",
-			icon: "paragraph",
-		},
+		content: contentField(),
 		mainImage: {
 			type: "file",
 			name: "mainImage",
@@ -328,6 +332,8 @@ export default function AnnouncementsTable() {
 						};
 					} else if (key === "links") {
 						field.value = announcement.links.replaceAll("|", "\n");
+					} else if (key === "content") {
+						Object.assign(field, contentField(announcement.content));
 					} else field.value = announcement[key];
 					if (key === "mainImage" || key === "images") {
 						field.filePreview = imagePreview as any;
