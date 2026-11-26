@@ -580,12 +580,24 @@ const neighbours = [
 			// ------- Video facade: high-res thumbnail, click-to-play embed -------
 			section.querySelectorAll<HTMLImageElement>("[data-video-id] img").forEach((img) => {
 				const id = (img.closest("[data-video-id]") as HTMLElement).dataset.videoId;
-				// Some videos have no HD thumbnail; fall back to 640x480 and then 480x360.
+				// Some videos have no HD thumbnail; fall back to 640x480 and then 480x360 (which every video has).
+				// YouTube answers a missing size with a 404 whose body is a grey 120x90 placeholder: the browser shows
+				// it and fires `load`, not `error`, so the placeholder is recognised by its width.
 				const fallbacks = [`https://i.ytimg.com/vi/${id}/sddefault.jpg`, `https://i.ytimg.com/vi/${id}/hqdefault.jpg`];
 				let fallbackIdx = 0;
-				img.addEventListener("error", () => {
+				const next = () => {
 					if (fallbackIdx < fallbacks.length) img.src = fallbacks[fallbackIdx++];
-				});
+				};
+				const check = () => {
+					if (img.naturalWidth > 0 && img.naturalWidth <= 120) next();
+				};
+				img.addEventListener("error", next);
+				img.addEventListener("load", check);
+				// It may have loaded (or failed) before this script ran.
+				if (img.complete) {
+					if (img.naturalWidth === 0 && img.currentSrc) next();
+					else check();
+				}
 			});
 			section.querySelectorAll(".videoPoster").forEach((poster) => {
 				poster.addEventListener("click", () => {
