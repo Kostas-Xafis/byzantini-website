@@ -38,8 +38,9 @@ export const RegistrationsInputs = (
 	teachers: Teachers[],
 	instruments: Instruments[],
 ): Record<keyof EnrollmentEditFields, InputProps> => {
+	// A former teacher («Πρώην διδάσκων») is offered only on the enrollment that already has them.
 	let sortTeachers = teachers
-		.map((t) => t)
+		.filter((t) => !t.former || t.id === student.teacher_id)
 		.sort((a, b) => {
 			if (a.fullname < b.fullname) return -1;
 			if (a.fullname > b.fullname) return 1;

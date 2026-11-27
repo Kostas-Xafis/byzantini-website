@@ -122,7 +122,7 @@ export const teachersRoutes = {
 		({ body }) =>
 			handlerResult(async (T) => {
 				const { insertId } = await T.executeQuery(
-					`INSERT INTO teachers (fullname, amka, email, telephone, linktree, bio, gender, title, visible, online) VALUES (???)`,
+					`INSERT INTO teachers (fullname, amka, email, telephone, linktree, bio, gender, title, visible, online, former) VALUES (???)`,
 					body,
 				);
 				for (const class_id of body.teacherClasses) {
@@ -147,7 +147,7 @@ export const teachersRoutes = {
 	update: new APIServer({ method: "PUT", path: "/teachers", schema: updateReq }, [authenticateMiddleware], ({ body }) =>
 		handlerResult(async (T) => {
 			await T.executeQuery(
-				`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, bio=?, gender=?, title=?, visible=?, online=? WHERE id=?`,
+				`UPDATE teachers SET fullname=?, amka=?, email=?, telephone=?, linktree=?, bio=?, gender=?, title=?, visible=?, online=?, former=? WHERE id=?`,
 				body,
 			);
 

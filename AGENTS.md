@@ -87,6 +87,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Reset dev DB | `bun run db:reset` | wipes local D1, rebuilds it from `dbSnapshots/dev-snapshot.sql`, then applies any pending migrations |
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins, activity-log rows of throwaway `@example.com` admins / test fixtures) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
+| Registry backfill | `bun run registry:backfill` · `-- --apply` | the school's history before the online register: pupils of «Γενικό Μητρώο» + enrollments 2015-2016 … 2022-2023 from the owner's Excel (`school_registry/`, gitignored; `scripts/registryBackfill.ts`, parsing in `scripts/registry/parse.ts`); dry run + report by default, idempotent, `--sql <file>` saves the SQL; `--remote` targets production — never as routine work |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this
@@ -272,6 +273,16 @@ The person data that used to live on `registrations` is split into two tables
   Μαθητολόγιο page (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου»;
   deep link `/admin/pupils?review=1`); `bun run dev:clean` removes the
   fixtures the API suite writes to the local dev DB.
+- **History before 2023-24** comes from the school's Excel register through
+  `bun run registry:backfill` (enrollments `source = 'registry'`, unpriced, no
+  payments). It infers what the sheets do not say — «Κατάταξη» (`evaluation`)
+  on a first enrollment above the starting class, «Προήχθη» (`pass`) when the
+  next enrollment is a higher class — and writes a «Σημείωση ελέγχου» for the
+  inferred placements (no review flag) and for duplicate / shared ΑΜs (flagged).
+  Backfilled pupils have no ΑΜΚΑ and only a birth year (stored as 1 January).
+  Teachers of those years who left are **«Πρώην διδάσκων»** (`teachers.former`,
+  migration 0012): hidden, no classes, never offered in the enrollment forms
+  except on the enrollment that already has them.
 - **«Αρχική» dashboard** (`TotalsTable.solid.tsx`): «Χρειάζονται προσοχή»
   tiles from `Pupils.dashboardSummary` (`GET /pupils/dashboard/<since>`, one
   statement): pupils to review, unpaid fees of the current school year
@@ -283,7 +294,8 @@ The person data that used to live on `registrations` is split into two tables
   music type, plus `to_date` — the enrollments that year had by **today's
   calendar date** (`sameDayCutoff`, Greek time), so the running year is
   compared with the same point of the previous one, never with its final
-  total — and this week's / month's enrollments (`schoolWeekAndMonthStart`).
+  total (the chart shows the last five years; the rest fold under
+  «Παλαιότερα έτη», open/closed remembered per device) — and this week's / month's enrollments (`schoolWeekAndMonthStart`).
   The «Βρείτε μαθητή» box opens `/admin/pupils?q=…` (the default field, ΑΜ or
   name).
 - **Μαθητολόγιο search** (`Pupils.search`, matching in `lib/pupils/search.ts`):

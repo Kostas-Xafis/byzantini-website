@@ -180,6 +180,17 @@ function teachersTest() {
 		const json = await getJson<APIResponse["Teachers.update"]>(res);
 		expectBody(json, "Teacher added successfully");
 	});
+	test("--teachers-- #6b «Πρώην διδάσκων» is off by default and saved by an update", async () => {
+		const formerOf = async () => {
+			const json = await getJson<APIResponse["Teachers.getById"]>(await useTestAPI("Teachers.getById", { RequestObject: [newTeacherId as number] }));
+			expectBody(json, z_Teachers);
+			return Boolean(json.data.former);
+		};
+		expect(await formerOf()).toBe(false);
+		const update = await useTestAPI("Teachers.update", { RequestObject: { ...teacher, id: newTeacherId as number, fullname: "Jane Doe", former: true } });
+		expect(update.status).toBe(200);
+		expect(await formerOf()).toBe(true);
+	});
 	test("--teachers-- #7", async () => {
 		const res = await useTestAPI("Teachers.delete", {
 			RequestObject: [newTeacherId as number],

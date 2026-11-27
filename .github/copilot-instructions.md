@@ -206,6 +206,10 @@
   computed by the pure `lib/fees` and recalculated per pupil-year after every
   enrollment write. `bun run fees:backfill` (dry run by default, `--apply`)
   fills the 2026-2027 fees.
+- History before 2023-24 (pupils + enrollments 2015-2023) comes from the
+  school's Excel register via `bun run registry:backfill` (dry run by default,
+  `--apply`; enrollments `source = 'registry'`). Teachers who left are
+  «Πρώην διδάσκων» (`teachers.former`, migration 0012): hidden, no classes.
 - Pupils that still need attention are reviewed in the admin Μαθητολόγιο page
   (the «Μόνο προς έλεγχο» filter + «Σημείωση ελέγχου», deep link
   `/admin/pupils?review=1`). The «Αρχική» dashboard's attention tiles come from

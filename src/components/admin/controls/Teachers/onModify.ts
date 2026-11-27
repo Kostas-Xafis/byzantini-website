@@ -53,6 +53,7 @@ export const onModify = function (hydrate: CacheMutationsReturnType, store: Part
 				title: fd.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
 				visible: fd.multiSelect("visible", "boolean", { single: true }),
 				online: fd.multiSelect("online", "boolean", { single: true }),
+				former: fd.multiSelect("former", "boolean", { single: true }),
 				teacherClasses: classes,
 				teacherInstruments: classes
 					.map((c) => {

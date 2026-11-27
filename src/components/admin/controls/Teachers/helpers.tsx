@@ -225,6 +225,17 @@ export const TeachersInputs = (
 			],
 			multiselectOnce: true,
 		},
+		former: {
+			name: "former",
+			label: "Πρώην διδάσκων",
+			type: "multiselect",
+			icon: "history",
+			multiselectList: [
+				{ value: 1, label: "Ναι", selected: !!teacher?.former },
+				{ value: 0, label: "Όχι", selected: !teacher?.former },
+			],
+			multiselectOnce: true,
+		},
 		teacherLocations: {
 			name: "teacherLocations",
 			label: "Τοποθεσίες",

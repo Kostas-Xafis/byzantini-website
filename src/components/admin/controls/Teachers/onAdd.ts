@@ -33,6 +33,7 @@ export const onAdd = function (hydrate: CacheMutationsReturnType, store: Partial
 				title: fd.multiSelect("title", "number", { single: true }) as 0 | 1 | 2,
 				visible: fd.multiSelect("visible", "boolean", { single: true }),
 				online: fd.multiSelect("online", "boolean", { single: true }),
+				former: fd.multiSelect("former", "boolean", { single: true }),
 				teacherClasses: fd.multiSelect("teacherClasses", "number", { single: false }),
 				teacherLocations: fd.multiSelect("teacherLocations", "number", { single: false }),
 				teacherInstruments: fd.getByName("teacherInstruments", "number", {

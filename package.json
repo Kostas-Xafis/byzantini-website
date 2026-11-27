@@ -23,6 +23,7 @@
 		"types": "bunx wrangler types",
 		"dev:clean": "bun scripts/cleanDevTestData.ts --apply",
 		"fees:backfill": "bun scripts/feesBackfill.ts",
+		"registry:backfill": "bun scripts/registryBackfill.ts",
 		"worker-secrets": "bun scripts/workerSecrets.ts",
 		"cf": "bun scripts/cf.ts",
 		"dev": "bunx --bun astro dev",

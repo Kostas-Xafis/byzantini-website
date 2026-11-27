@@ -145,13 +145,13 @@ function PupilSearchCard(props: { schoolYear: string }) {
 		{ href: "/admin/teachers", icon: "teacher", label: "Καθηγητές" },
 	];
 	return (
-		<section class={`${cardClass} p-4 grid content-start gap-3`} aria-labelledby="dashboard-pupil-search">
+		<section class={`${cardClass} min-w-0 p-4 grid content-start gap-3`} aria-labelledby="dashboard-pupil-search">
 			<h2 id="dashboard-pupil-search" class="text-lg font-bold">
 				Βρείτε μαθητή
 			</h2>
 			<form
 				role="search"
-				class="flex gap-2"
+				class="flex min-w-0 gap-2"
 				onSubmit={(e) => {
 					e.preventDefault();
 					const text = query().trim();
@@ -176,7 +176,7 @@ function PupilSearchCard(props: { schoolYear: string }) {
 					<span class="max-sm:hidden">Αναζήτηση</span>
 				</button>
 			</form>
-			<nav aria-label="Συντομεύσεις" class="mt-1 pt-3 border-t border-line grid grid-cols-2 gap-2">
+			<nav aria-label="Συντομεύσεις" class="mt-1 pt-3 border-t border-line grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2">
 				<For each={links}>
 					{(link) => (
 						<a
@@ -191,6 +191,25 @@ function PupilSearchCard(props: { schoolYear: string }) {
 		</section>
 	);
 }
+
+/** School years shown on the chart before «Παλαιότερα έτη»: the running year and the four before it. */
+const RECENT_YEARS = 5;
+/** Per device: whether «Παλαιότερα έτη» was left open (localStorage may be unavailable — then it starts closed). */
+const OLDER_YEARS_KEY = "admin-dashboard-older-years";
+const readOlderOpen = () => {
+	try {
+		return localStorage.getItem(OLDER_YEARS_KEY) === "1";
+	} catch {
+		return false;
+	}
+};
+const saveOlderOpen = (open: boolean) => {
+	try {
+		localStorage.setItem(OLDER_YEARS_KEY, open ? "1" : "0");
+	} catch {
+		// private mode / blocked storage: the choice just is not remembered
+	}
+};
 
 /**
  * Enrollments per school year as horizontal bars stacked by music type, newest first. The running year
@@ -212,6 +231,73 @@ function YearsChart(props: { data: DashboardYears }) {
 	const percentOf = (n: number) => `${(n / scale()) * 100}%`;
 	const comparison = () => rows()[0]?.previous;
 	const [hovered, setHovered] = createSignal<{ year: string; classId: number } | null>(null);
+	// The latest years stay on the chart; the rest fold away under «Παλαιότερα έτη» (the history goes back to 2015).
+	const recentRows = () => rows().slice(0, RECENT_YEARS);
+	const olderRows = () => rows().slice(RECENT_YEARS);
+
+	const yearRow = (row: ReturnType<typeof rows>[number]) => {
+		const segments = MUSIC_TYPES.map((type, classId) => ({ ...type, classId, count: row.by_class[classId] ?? 0 })).filter((s) => s.count > 0);
+		const offsetOf = (index: number) => segments.slice(0, index).reduce((sum, s) => sum + s.count, 0);
+		const description =
+			`${shortYear(row.school_year)}: ${formatCount(row.total)} εγγραφές — ` + segments.map((s) => `${s.label} ${formatCount(s.count)}`).join(", ");
+		return (
+			<div class="min-h-9 grid grid-cols-[3.75rem_1fr_6.5rem] max-sm:grid-cols-[4rem_1fr_4.5rem] items-center gap-x-3">
+				<div class="leading-tight">
+					<p class="font-semibold tabular-nums">{shortYear(row.school_year)}</p>
+					<Show when={row.running}>
+						<p class="text-xs text-ink-muted whitespace-nowrap">σε εξέλιξη</p>
+					</Show>
+				</div>
+				<div class="relative h-5" role="img" aria-label={description}>
+					<div class="flex h-full gap-0.5" style={{ width: percentOf(row.total) }}>
+						<For each={segments}>
+							{(segment) => (
+								<div
+									class={`h-full min-w-0.5 last:rounded-e transition-opacity ${segment.bar}`}
+									classList={{
+										"opacity-40": !!hovered() && !(hovered()?.year === row.school_year && hovered()?.classId === segment.classId),
+									}}
+									style={{ "flex-grow": segment.count, "flex-basis": 0 }}
+									onPointerEnter={() => setHovered({ year: row.school_year, classId: segment.classId })}
+									onPointerLeave={() => setHovered(null)}
+								/>
+							)}
+						</For>
+					</div>
+					<Show when={row.running && row.previous}>
+						{(prev) => (
+							<span
+								class="pointer-events-none absolute -top-1 -bottom-1 w-0.5 -translate-x-1/2 rounded-full bg-ink ring-2 ring-surface"
+								style={{ left: percentOf(prev().to_date) }}
+								aria-hidden="true"
+							/>
+						)}
+					</Show>
+					<For each={segments}>
+						{(segment, index) => (
+							<Show when={hovered()?.year === row.school_year && hovered()?.classId === segment.classId}>
+								<div
+									class="pointer-events-none absolute bottom-full z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink shadow-md shadow-shade"
+									style={{ left: percentOf(offsetOf(index()) + segment.count / 2) }}
+									aria-hidden="true">
+									<span class="font-semibold">{segment.label}</span> · {formatCount(segment.count)} (
+									{Math.round((segment.count / row.total) * 100)}%)
+								</div>
+							</Show>
+						)}
+					</For>
+				</div>
+				<p class="text-end leading-tight">
+					<span class="font-semibold tabular-nums">{formatCount(row.total)}</span>
+					<Show when={row.yoy !== null}>
+						<span class="block text-xs" title="Σε σχέση με το προηγούμενο σχολικό έτος">
+							<Change percent={row.yoy!} />
+						</span>
+					</Show>
+				</p>
+			</div>
+		);
+	};
 
 	return (
 		<section class={`${cardClass} p-4`} aria-labelledby="dashboard-years">
@@ -237,78 +323,24 @@ function YearsChart(props: { data: DashboardYears }) {
 				</ul>
 			</div>
 			<div class="mt-5 grid gap-4">
-				<For each={rows()}>
-					{(row) => {
-						const segments = MUSIC_TYPES.map((type, classId) => ({ ...type, classId, count: row.by_class[classId] ?? 0 })).filter(
-							(s) => s.count > 0,
-						);
-						const offsetOf = (index: number) => segments.slice(0, index).reduce((sum, s) => sum + s.count, 0);
-						const description =
-							`${shortYear(row.school_year)}: ${formatCount(row.total)} εγγραφές — ` +
-							segments.map((s) => `${s.label} ${formatCount(s.count)}`).join(", ");
-						return (
-							<div class="min-h-9 grid grid-cols-[3.75rem_1fr_6.5rem] max-sm:grid-cols-[4rem_1fr_4.5rem] items-center gap-x-3">
-								<div class="leading-tight">
-									<p class="font-semibold tabular-nums">{shortYear(row.school_year)}</p>
-									<Show when={row.running}>
-										<p class="text-xs text-ink-muted whitespace-nowrap">σε εξέλιξη</p>
-									</Show>
-								</div>
-								<div class="relative h-5" role="img" aria-label={description}>
-									<div class="flex h-full gap-0.5" style={{ width: percentOf(row.total) }}>
-										<For each={segments}>
-											{(segment) => (
-												<div
-													class={`h-full min-w-0.5 last:rounded-e transition-opacity ${segment.bar}`}
-													classList={{
-														"opacity-40":
-															!!hovered() && !(hovered()?.year === row.school_year && hovered()?.classId === segment.classId),
-													}}
-													style={{ "flex-grow": segment.count, "flex-basis": 0 }}
-													onPointerEnter={() => setHovered({ year: row.school_year, classId: segment.classId })}
-													onPointerLeave={() => setHovered(null)}
-												/>
-											)}
-										</For>
-									</div>
-									<Show when={row.running && row.previous}>
-										{(prev) => (
-											<span
-												class="pointer-events-none absolute -top-1 -bottom-1 w-0.5 -translate-x-1/2 rounded-full bg-ink ring-2 ring-surface"
-												style={{ left: percentOf(prev().to_date) }}
-												aria-hidden="true"
-											/>
-										)}
-									</Show>
-									<For each={segments}>
-										{(segment, index) => (
-											<Show when={hovered()?.year === row.school_year && hovered()?.classId === segment.classId}>
-												<div
-													class="pointer-events-none absolute bottom-full z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink shadow-md shadow-shade"
-													style={{ left: percentOf(offsetOf(index()) + segment.count / 2) }}
-													aria-hidden="true">
-													<span class="font-semibold">{segment.label}</span> · {formatCount(segment.count)} (
-													{Math.round((segment.count / row.total) * 100)}%)
-												</div>
-											</Show>
-										)}
-									</For>
-								</div>
-								<p class="text-end leading-tight">
-									<span class="font-semibold tabular-nums">{formatCount(row.total)}</span>
-									<Show when={row.yoy !== null}>
-										<span class="block text-xs" title="Σε σχέση με το προηγούμενο σχολικό έτος">
-											<Change percent={row.yoy!} />
-										</span>
-									</Show>
-								</p>
-							</div>
-						);
-					}}
-				</For>
+				<For each={recentRows()}>{yearRow}</For>
 			</div>
-			<details class="mt-5 text-sm">
-				<summary class="cursor-pointer w-fit text-ink-muted hover:text-ink">Προβολή ως πίνακας</summary>
+			<Show when={olderRows().length > 0}>
+				<details class="group/older mt-4" open={readOlderOpen()} onToggle={(event) => saveOlderOpen(event.currentTarget.open)}>
+					<summary class="flex w-fit cursor-pointer list-none items-center gap-1.5 text-sm text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
+						<Icon name="chevron-right" class="transition-transform group-open/older:rotate-90 motion-reduce:transition-none" />
+						Παλαιότερα έτη ({shortYear(olderRows()[olderRows().length - 1].school_year)} – {shortYear(olderRows()[0].school_year)})
+					</summary>
+					<div class="mt-4 grid gap-4">
+						<For each={olderRows()}>{yearRow}</For>
+					</div>
+				</details>
+			</Show>
+			<details class="group/table mt-4 text-sm">
+				<summary class="flex w-fit cursor-pointer list-none items-center gap-1.5 text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
+					<Icon name="chevron-right" class="transition-transform group-open/table:rotate-90 motion-reduce:transition-none" />
+					Προβολή ως πίνακας
+				</summary>
 				<div class="mt-3 overflow-x-auto">
 					<table class="w-full text-end tabular-nums">
 						<thead class="text-ink-muted">
@@ -362,60 +394,63 @@ export default function TotalsTable() {
 	return (
 		<Show when={!yearStats.error && yearStats()} fallback={<Spinner classes="max-sm:h-[100svh]" />}>
 			{(stats) => (
-				<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-ink">
-					<Show when={!attention.error && attention()}>
-						{(data) => {
-							const yearStart = data().school_year.slice(0, 4);
-							const shortYear = `${yearStart}-${data().school_year.slice(-2)}`;
-							return (
-								<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Χρειάζονται προσοχή">
-									<h2 class="font-anaktoria text-2xl text-ink">Χρειάζονται προσοχή</h2>
-									<div class="grid grid-cols-3 max-lg:grid-cols-1 gap-4">
-										<AttentionTile
-											href="/admin/pupils?review=1"
-											icon="clipboard-check"
-											title="Προς έλεγχο"
-											value={data().needs_review}
-											detail={data().needs_review === 1 ? "μαθητής στο Μαθητολόγιο" : "μαθητές στο Μαθητολόγιο"}
-											calm={data().needs_review === 0}
-										/>
-										<AttentionTile
-											href={`/admin/registrations?year=${yearStart}`}
-											icon="euro"
-											title={`Οφειλές ${shortYear}`}
-											value={formatEuro(data().owing.amount)}
-											detail={
-												data().owing.enrollments === 0
-													? "Δεν υπάρχουν ανεξόφλητες εγγραφές"
-													: `${data().owing.enrollments} ${data().owing.enrollments === 1 ? "εγγραφή" : "εγγραφές"} · ${data().owing.pupils} ${data().owing.pupils === 1 ? "μαθητής" : "μαθητές"}`
-											}
-											calm={data().owing.enrollments === 0}
-										/>
-										<AttentionTile
-											href={`/admin/registrations?year=${yearStart}`}
-											icon="globe"
-											title="Νέες online εγγραφές"
-											value={data().new_online}
-											detail={
-												previousVisit === null
-													? "τις τελευταίες 7 ημέρες"
-													: `από την τελευταία σας επίσκεψη (${formatVisit(previousVisit)})`
-											}
-											calm={data().new_online === 0}
-										/>
-									</div>
-								</section>
-							);
-						}}
-					</Show>
-					<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Εγγραφές">
-						<h2 class="font-anaktoria text-2xl text-ink">Εγγραφές</h2>
-						<div class="grid grid-cols-2 max-md:grid-cols-1 gap-4">
-							<CurrentYearCard data={stats()} />
-							<PupilSearchCard schoolYear={stats().school_year} />
-						</div>
-						<YearsChart data={stats()} />
-					</section>
+				// The admin shell clips its content (`#AdminPage` is `overflow-y-hidden`): the page scrolls in here, like PanelPage.
+				<div class="w-full h-full min-h-0 overflow-y-auto">
+					<div class="w-full h-min p-6 max-sm:p-3 grid grid-cols-1 gap-y-8 text-ink">
+						<Show when={!attention.error && attention()}>
+							{(data) => {
+								const yearStart = data().school_year.slice(0, 4);
+								const shortYear = `${yearStart}-${data().school_year.slice(-2)}`;
+								return (
+									<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Χρειάζονται προσοχή">
+										<h2 class="font-anaktoria text-2xl text-ink">Χρειάζονται προσοχή</h2>
+										<div class="grid grid-cols-3 max-lg:grid-cols-1 gap-4">
+											<AttentionTile
+												href="/admin/pupils?review=1"
+												icon="clipboard-check"
+												title="Προς έλεγχο"
+												value={data().needs_review}
+												detail={data().needs_review === 1 ? "μαθητής στο Μαθητολόγιο" : "μαθητές στο Μαθητολόγιο"}
+												calm={data().needs_review === 0}
+											/>
+											<AttentionTile
+												href={`/admin/registrations?year=${yearStart}`}
+												icon="euro"
+												title={`Οφειλές ${shortYear}`}
+												value={formatEuro(data().owing.amount)}
+												detail={
+													data().owing.enrollments === 0
+														? "Δεν υπάρχουν ανεξόφλητες εγγραφές"
+														: `${data().owing.enrollments} ${data().owing.enrollments === 1 ? "εγγραφή" : "εγγραφές"} · ${data().owing.pupils} ${data().owing.pupils === 1 ? "μαθητής" : "μαθητές"}`
+												}
+												calm={data().owing.enrollments === 0}
+											/>
+											<AttentionTile
+												href={`/admin/registrations?year=${yearStart}`}
+												icon="globe"
+												title="Νέες online εγγραφές"
+												value={data().new_online}
+												detail={
+													previousVisit === null
+														? "τις τελευταίες 7 ημέρες"
+														: `από την τελευταία σας επίσκεψη (${formatVisit(previousVisit)})`
+												}
+												calm={data().new_online === 0}
+											/>
+										</div>
+									</section>
+								);
+							}}
+						</Show>
+						<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Εγγραφές">
+							<h2 class="font-anaktoria text-2xl text-ink">Εγγραφές</h2>
+							<div class="grid grid-cols-2 max-md:grid-cols-1 gap-4">
+								<CurrentYearCard data={stats()} />
+								<PupilSearchCard schoolYear={stats().school_year} />
+							</div>
+							<YearsChart data={stats()} />
+						</section>
+					</div>
 				</div>
 			)}
 		</Show>

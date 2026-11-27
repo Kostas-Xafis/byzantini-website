@@ -152,6 +152,8 @@ export const z_Teachers = z.object({
 	title: z.union([z.literal(0), z.literal(1), z.literal(2)], { message: "Μη έγκυρος τίτλος δασκάλου" }), // 0: Καθηγητής, 1: Δάσκαλος, 2: Επιμελητής
 	visible: looseBoolean("Μη έγκυρη ορατότητα"),
 	online: looseBoolean("Μη έγκυρη σύνδεση"),
+	/** «Πρώην διδάσκων»: no longer teaches at the school; kept for the enrollment history (migration 0012). */
+	former: looseBoolean("Μη έγκυρη τιμή «Πρώην διδάσκων»").default(false),
 	amka: z.union([z.string().length(11), z.literal("")], { message: "Μη έγκυρο ΑΜΚΑ" }),
 });
 // Public shape: what the website and the registration form need — no ΑΜΚΑ, phone or email.

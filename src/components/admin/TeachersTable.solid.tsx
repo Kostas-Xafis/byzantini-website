@@ -27,7 +27,7 @@ const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]) 
 	return teachers.map((t) => {
 		const classes = classList.filter((c) => c.teacher_id === t.id);
 		// const columns = Object.values(t) as any[];
-		const columns = Array(14).fill(null) as any[];
+		const columns = Array(16).fill(null) as any[];
 
 		columns[0] = t.id;
 		columns[1] = t.fullname;
@@ -47,6 +47,7 @@ const teachersToTable = (teachers: FullTeachers[], classList: TeacherClasses[]) 
 
 		columns[13] = t.visible;
 		columns[14] = t.online;
+		columns[15] = t.former;
 		return columns as unknown as TeachersTableType;
 	});
 };
@@ -110,6 +111,7 @@ const columnNames: ColumnType<TeachersTableType> = {
 	title: { type: "string", name: "Τίτλος", size: 10 },
 	visible: { type: "boolean", name: "Εμφάνιση" },
 	online: { type: "boolean", name: "Ηλεκτρ. Μάθημα", size: 10 },
+	former: { type: "boolean", name: "Πρώην", size: 7 },
 };
 
 export default function TeachersTable() {
@@ -275,7 +277,7 @@ export default function TeachersTable() {
 								totalCount,
 								onQueryChange,
 								// Row layout: 0 id, 1 fullname, 2 picture, 3 cv, 4 email, 5 telephone,
-								// 6 amka, 7 linktree, 8-10 priorities, 11 gender, 12 title, 13 visible, 14 online
+								// 6 amka, 7 linktree, 8-10 priorities, 11 gender, 12 title, 13 visible, 14 online, 15 former
 								searchToIndex: (columnName) => {
 									if (columnName === ALL_COLUMNS) return "all";
 									switch (columnName) {
