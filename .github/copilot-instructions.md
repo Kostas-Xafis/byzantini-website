@@ -233,6 +233,9 @@
   `services/pdfWorker`), after inspecting `tests/__output__/`.
 - Preserve existing Greek user-facing messages and labels when editing related
   flows.
+- No em dashes (—) in text people read (pages, admin UI, messages, emails, SMS,
+  `public/llms*.txt`): use a comma, colon, parentheses or a full stop, and `-` for
+  an empty value. Code comments and docs are not covered.
 - Keep TS path aliases from `tsconfig.json` (`@routes/*`, `@utilities/*`,
   `@hooks/*`, `@env/*`, etc.).
 - Extend existing route groups/utilities instead of introducing a new

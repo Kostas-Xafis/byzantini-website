@@ -292,7 +292,7 @@ export default function SettingsPage() {
 								/>
 							</div>
 							<p class={`${hintClass} tabular-nums`}>
-								{downloadPct() ?? 0}% — μπορείτε να συνεχίσετε τη δουλειά σας, η πρόοδος φαίνεται και στην ειδοποίηση.
+								{downloadPct() ?? 0}%. Μπορείτε να συνεχίσετε τη δουλειά σας, η πρόοδος φαίνεται και στην ειδοποίηση.
 							</p>
 						</div>
 					</Show>

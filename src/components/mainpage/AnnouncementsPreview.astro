@@ -147,7 +147,7 @@ import Icon from "@components/other/Icon.astro";
 				const el = list();
 				if (!el) return;
 				if (announcements.length === 0) {
-					showMessage("Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή — δείτε σύντομα ξανά για νέα της Σχολής.");
+					showMessage("Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή. Δείτε σύντομα ξανά για νέα της Σχολής.");
 					return;
 				}
 				el.replaceChildren(...announcements.map(buildCard));

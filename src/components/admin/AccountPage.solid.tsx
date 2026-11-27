@@ -113,9 +113,7 @@ export default function AccountPage() {
 
 	const disconnect = async (provider: string, label: string) => {
 		const warning =
-			user()?.identities.length === 1 && user()?.hasPassword
-				? "\n\nΘα μπορείτε να συνδέεστε μόνο με τον κωδικό σας — βεβαιωθείτε ότι τον γνωρίζετε."
-				: "";
+			user()?.identities.length === 1 && user()?.hasPassword ? "\n\nΘα μπορείτε να συνδέεστε μόνο με τον κωδικό σας. Βεβαιωθείτε ότι τον γνωρίζετε." : "";
 		if (!window.confirm(`Αποσύνδεση του λογαριασμού ${label}; Δεν θα μπορείτε πλέον να συνδέεστε με αυτόν.${warning}`)) return;
 		setBusy(`unlink:${provider}`);
 		try {

@@ -69,7 +69,7 @@ export const interestDeclarationsRoutes = {
 					last_name: row.last_name,
 					email: row.email,
 					phone: row.phone,
-					message: row.message || "—",
+					message: row.message || "(χωρίς μήνυμα)",
 					page: body.page ? PAGE_LABELS[body.page] : "Ιστοσελίδα",
 					date: formatDate(now),
 					admin_url: `${new URL(request.url).origin}/admin/interest`,

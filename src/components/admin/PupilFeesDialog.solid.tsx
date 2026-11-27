@@ -173,7 +173,7 @@ export default function PupilFeesDialog(props: Props) {
 		);
 	};
 
-	const rowTitle = (enrollment: PupilEnrollments) => `${DEPARTMENTS[enrollment.class_id] ?? "-"} — ${instrumentName(enrollment.instrument_id)}`;
+	const rowTitle = (enrollment: PupilEnrollments) => `${DEPARTMENTS[enrollment.class_id] ?? "-"}, ${instrumentName(enrollment.instrument_id)}`;
 
 	const settleAll = () => {
 		const list = owing();
@@ -306,11 +306,11 @@ export default function PupilFeesDialog(props: Props) {
 													</td>
 													<td>{teacherName(enrollment.teacher_id)}</td>
 													<td class="text-right tabular-nums">
-														{pinned && fee ? (fee.fee_base === null ? "—" : euro(fee.fee_base)) : "—"}
+														{pinned && fee ? (fee.fee_base === null ? "-" : euro(fee.fee_base)) : "-"}
 													</td>
-													<td class="whitespace-nowrap">{pinned && fee ? discountLabel(fee) : "—"}</td>
+													<td class="whitespace-nowrap">{pinned && fee ? discountLabel(fee) : "-"}</td>
 													<td class="text-right tabular-nums">
-														{enrollment.evaluation_fee > 0 ? euro(enrollment.evaluation_fee) : "—"}
+														{enrollment.evaluation_fee > 0 ? euro(enrollment.evaluation_fee) : "-"}
 													</td>
 													<td class="whitespace-nowrap text-right font-semibold tabular-nums">
 														{euro(enrollment.total_payment)}

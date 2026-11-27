@@ -35,7 +35,7 @@ const linkStyle = {
 export function UpenthimisiEggrafisKathigites({ greeting }: UpenthimisiEggrafisKathigitesProps) {
 	return (
 		<EmailLayout
-			preview={`Εγγραφές ${REGISTRATION_YEAR}: ${REGISTRATION_WINDOW} — παρακαλούμε να ενθαρρύνετε τους σπουδαστές σας να ολοκληρώσουν την εγγραφή.`}
+			preview={`Εγγραφές ${REGISTRATION_YEAR}: ${REGISTRATION_WINDOW}. Παρακαλούμε να ενθαρρύνετε τους σπουδαστές σας να ολοκληρώσουν την εγγραφή.`}
 			badge={`Σχολικό Έτος ${REGISTRATION_YEAR}`}>
 			<MailText>{greeting}</MailText>
 			<MailText>Καλή, ευλογημένη και καρποφόρα σχολική χρονιά! 🎶</MailText>
@@ -45,7 +45,7 @@ export function UpenthimisiEggrafisKathigites({ greeting }: UpenthimisiEggrafisK
 			</MailText>
 			<MailText>
 				Κάθε σπουδαστής λαμβάνει ατομικό e-mail με τον προσωπικό του σύνδεσμο εγγραφής. Ωστόσο,
-				η δική σας υπενθύμιση — μέσα στο μάθημα ή με ένα σύντομο μήνυμα — είναι καθοριστική:
+				η δική σας υπενθύμιση, μέσα στο μάθημα ή με ένα σύντομο μήνυμα, είναι καθοριστική:
 				παρακαλούμε να ενθαρρύνετε τους σπουδαστές σας να ολοκληρώσουν{" "}
 				<b>έγκαιρα την ηλεκτρονική τους εγγραφή</b>.
 			</MailText>

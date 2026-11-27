@@ -15,7 +15,7 @@ export type SysuserRegisterLinkProps = {
  */
 export function SysuserRegisterLink({ token }: SysuserRegisterLinkProps) {
 	return (
-		<EmailLayout preview="Πρόσκληση για δημιουργία λογαριασμού διαχειριστή — ο σύνδεσμος ισχύει για 24 ώρες.">
+		<EmailLayout preview="Πρόσκληση για δημιουργία λογαριασμού διαχειριστή: ο σύνδεσμος ισχύει για 24 ώρες.">
 			<MailText>Χαίρετε,</MailText>
 			<MailText>
 				σας έχει σταλεί πρόσκληση για δημιουργία λογαριασμού διαχειριστή στη Σχολή Βυζαντινής και

@@ -145,7 +145,7 @@ export default function ContactsPage() {
 	const link = () => status()?.link ?? null;
 
 	return (
-		<PanelPage title="Επαφές Google" subtitle="Οι επαφές του κινητού της σχολής, ενημερωμένες από το Μαθητολόγιο και τους καθηγητές — χωρίς αρχεία .vcf.">
+		<PanelPage title="Επαφές Google" subtitle="Οι επαφές του κινητού της σχολής, ενημερωμένες από το Μαθητολόγιο και τους καθηγητές, χωρίς αρχεία .vcf.">
 			<Show when={status()} fallback={<p class={hintClass}>Φόρτωση…</p>}>
 				<PanelCard
 					icon="link"
@@ -217,7 +217,7 @@ export default function ContactsPage() {
 									{(s) => (
 										<>
 											{" "}
-											— {s().created} νέες, {s().updated} ενημερώσεις, {s().removed + s().duplicatesRemoved} διαγραφές
+											({s().created} νέες, {s().updated} ενημερώσεις, {s().removed + s().duplicatesRemoved} διαγραφές)
 											<Show when={s().error}> (διακόπηκε: {s().error})</Show>
 										</>
 									)}
@@ -254,7 +254,7 @@ export default function ContactsPage() {
 							{(p) => (
 								<div class="grid gap-4">
 									<p class={hintClass}>
-										Λογαριασμός {p().account_email} — {p().contactsTotal} επαφές σήμερα.
+										Λογαριασμός {p().account_email}: {p().contactsTotal} επαφές σήμερα.
 										<Show when={p().newLabels.length > 0}> Θα δημιουργηθούν οι ετικέτες: {p().newLabels.join(", ")}.</Show>
 									</p>
 									<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -274,7 +274,7 @@ export default function ContactsPage() {
 												<>
 													<b>{c.name}</b> · {c.phone}
 													<Show when={c.people.length > 1}>
-														<span class="text-ink-muted"> — {c.people.join(", ")}</span>
+														<span class="text-ink-muted">: {c.people.join(", ")}</span>
 													</Show>
 												</>
 											)}
@@ -282,7 +282,7 @@ export default function ContactsPage() {
 										<Items
 											title="Ενημερώσεις"
 											items={p().update}
-											hint="«Παλιά εισαγωγή»: επαφή από προηγούμενο .vcf που αναλαμβάνει πλέον ο συγχρονισμός — το όνομά της αλλάζει όπως φαίνεται.">
+											hint="«Παλιά εισαγωγή»: επαφή από προηγούμενο .vcf που αναλαμβάνει πλέον ο συγχρονισμός. Το όνομά της αλλάζει όπως φαίνεται.">
 											{(u) => (
 												<>
 													<Show when={u.from !== u.to} fallback={<b>{u.to}</b>}>
@@ -317,12 +317,12 @@ export default function ContactsPage() {
 											)}
 										</Items>
 										<Items
-											title="Κοινοί αριθμοί — εκτός συγχρονισμού"
+											title="Κοινοί αριθμοί (εκτός συγχρονισμού)"
 											items={p().excluded}
 											hint="Αριθμοί δηλωμένοι σε πάρα πολλούς μαθητές: δεν είναι οικογένεια (π.χ. αριθμός καθηγητή ή της σχολής). Διορθώστε τα τηλέφωνα στο Μαθητολόγιο.">
 											{(e) => (
 												<>
-													<b>{e.phone}</b> <span class="text-ink-muted">— {e.pupils.join(", ")}</span>
+													<b>{e.phone}</b>: <span class="text-ink-muted">{e.pupils.join(", ")}</span>
 												</>
 											)}
 										</Items>

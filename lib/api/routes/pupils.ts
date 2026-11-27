@@ -628,7 +628,7 @@ export const pupilsRoutes = {
 						registration_url: R.string(32),
 						// Same rule as `update`: in the review list while it has no ΑΜ or a note.
 						needs_review: am === null || note ? 1 : 0,
-						review_note: am === null && !note ? "χωρίς ΑΜ — καταχώρηση από τη Γραμματεία, εκκρεμεί απονομή ΑΜ" : note,
+						review_note: am === null && !note ? "χωρίς ΑΜ: καταχώρηση από τη Γραμματεία, εκκρεμεί απονομή ΑΜ" : note,
 						created_at: now,
 						updated_at: now,
 						media_consent: body.media_consent ?? null,
@@ -774,7 +774,7 @@ export const pupilsRoutes = {
 							amka: body.amka,
 							registration_url: R.string(32),
 							needs_review: orphan ? 1 : 0,
-							review_note: orphan ? "χωρίς ΑΜ — νέα εγγραφή, εκκρεμεί απονομή ΑΜ" : "",
+							review_note: orphan ? "χωρίς ΑΜ: νέα εγγραφή, εκκρεμεί απονομή ΑΜ" : "",
 							created_at: now,
 							updated_at: now,
 							media_consent: mediaConsent,

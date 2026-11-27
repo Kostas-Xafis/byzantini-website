@@ -92,7 +92,7 @@ export default function ActivityPage() {
 	});
 
 	return (
-		<PanelPage title="Ιστορικό ενεργειών" subtitle="Ποιος διαχειριστής άλλαξε τι — οι πιο πρόσφατες αλλαγές πρώτα.">
+		<PanelPage title="Ιστορικό ενεργειών" subtitle="Ποιος διαχειριστής άλλαξε τι, με τις πιο πρόσφατες αλλαγές πρώτα.">
 			<section class={`${cardClass} flex flex-wrap items-end gap-4 p-4 sm:p-5`} aria-label="Φίλτρα">
 				<label class="grid gap-1 min-w-56 flex-1">
 					<span class="text-sm font-bold">Διαχειριστής</span>
@@ -155,7 +155,7 @@ export default function ActivityPage() {
 														<p class="font-bold">
 															{row.label}
 															<Show when={row.summary}>
-																<span class="font-normal text-ink-muted"> — {row.summary}</span>
+																<span class="font-normal text-ink-muted">: {row.summary}</span>
 															</Show>
 														</p>
 														<p class="text-sm text-ink-muted break-all">

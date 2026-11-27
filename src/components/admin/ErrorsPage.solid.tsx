@@ -47,7 +47,7 @@ export default function ErrorsPage() {
 	};
 
 	return (
-		<PanelPage title="Σφάλματα" subtitle="Απρόσμενα σφάλματα του διακομιστή — κάθε διαφορετικό σφάλμα μία φορά, με το πόσες φορές συνέβη.">
+		<PanelPage title="Σφάλματα" subtitle="Απρόσμενα σφάλματα του διακομιστή. Κάθε διαφορετικό σφάλμα εμφανίζεται μία φορά, με το πόσες φορές συνέβη.">
 			<Show when={!loading() || rows().length > 0} fallback={<p class={hintClass}>Φόρτωση…</p>}>
 				<Show
 					when={rows().length > 0}

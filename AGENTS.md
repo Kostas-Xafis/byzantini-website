@@ -645,6 +645,11 @@ except `oauth.client.ts`) and `lib/api/routes/authentication.ts`.
 - Do not touch `dist/`, `.astro/`, `.cache/`, `.wrangler/` — generated.
 - User-facing text is Greek — preserve existing Greek labels and wording; add
   Greek for new UI strings, do not translate existing ones.
+- **No em dashes (—) in text people read** (owner's rule): website pages, the admin
+  dashboard, error and toast messages, emails (React Email templates and
+  `text_templates`), SMS, `public/llms*.txt`, alt/title texts. Write a comma, a colon,
+  parentheses or a full stop instead, and `-` for an empty value. Code comments and
+  docs are not covered.
 - Solid components use `.solid.tsx`, Astro components use `.astro`.
 - **Date fields** (`type: "date"` → `src/components/input/DateInput.solid.tsx`)
   are a ηη/μμ/εεεε text field (auto slashes, impossible dates refused through

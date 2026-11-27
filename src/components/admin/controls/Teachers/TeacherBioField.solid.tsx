@@ -27,7 +27,7 @@ export function TeacherBioField(props: { value?: string | null }) {
 				class="w-full resize-y rounded-md border-2 border-ink-muted bg-surface px-3 py-2 text-lg text-ink shadow-md shadow-shade focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
 			/>
 			<p id={`bio-hint-${id}`} class="flex flex-wrap justify-between gap-x-4 text-sm text-ink-muted">
-				<span>Εμφανίζεται στη σελίδα του καθηγητή — 150 έως 200 λέξεις, μόνο επαγγελματικά στοιχεία.</span>
+				<span>Εμφανίζεται στη σελίδα του καθηγητή: 150 έως 200 λέξεις, μόνο επαγγελματικά στοιχεία.</span>
 				<span aria-live="polite" class={words() > 200 ? "text-danger" : undefined}>
 					{words()} λέξεις
 				</span>

@@ -23,7 +23,7 @@ export function AgiasmosAponomi({ token }: AgiasmosAponomiProps) {
 	return (
 		<EmailLayout
 			token={token}
-			preview={`Αγιασμός & Απονομή Πτυχίων — Κυριακή 27 Σεπτεμβρίου 2026, 18:00, Κεντρική Πλατεία Μεταμόρφωσης.`}
+			preview={`Αγιασμός & Απονομή Πτυχίων: Κυριακή 27 Σεπτεμβρίου 2026, 18:00, Κεντρική Πλατεία Μεταμόρφωσης.`}
 			badge={`Σχολικό Έτος ${SCHOOL_YEAR}`}>
 			<MailText>Αγαπητοί μαθητές,</MailText>
 			<MailText>

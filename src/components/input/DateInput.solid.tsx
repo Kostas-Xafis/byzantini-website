@@ -28,7 +28,7 @@ type DateInputProps = {
 	minmax?: [number, number];
 };
 
-const INVALID_MESSAGE = "Μη έγκυρη ημερομηνία — συμπληρώστε ηη/μμ/εεεε, π.χ. 15/03/2015.";
+const INVALID_MESSAGE = "Μη έγκυρη ημερομηνία. Συμπληρώστε ηη/μμ/εεεε, π.χ. 15/03/2015.";
 
 /** `yyyy-mm-dd` of a timestamp in local time (the hidden picker's value). */
 const isoDay = (stamp: number) => {

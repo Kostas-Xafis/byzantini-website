@@ -22,7 +22,7 @@ export function EpistrofiMathiton({ token }: EpistrofiMathitonProps) {
 	return (
 		<EmailLayout
 			token={token}
-			preview={`Η Σχολή ανοίγει και πάλι τις πόρτες της — επανεγγραφές για το σχολικό έτος ${WELCOME_YEAR}.`}
+			preview={`Η Σχολή ανοίγει και πάλι τις πόρτες της: επανεγγραφές για το σχολικό έτος ${WELCOME_YEAR}.`}
 			badge={`Σχολικό Έτος ${WELCOME_YEAR}`}>
 			<MailText>Αγαπητοί μας μαθητές,</MailText>
 			<MailText>Χαίρετε!</MailText>

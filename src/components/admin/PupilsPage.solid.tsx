@@ -159,7 +159,7 @@ const formatDate = (value: number | null | undefined) => (value ? new Date(value
 const countLabel = (count: number, singular: string, plural: string) => `${count} ${count === 1 ? singular : plural}`;
 
 /** ΑΜ display: the real number, or the review code for orphans/splits. */
-const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === null ? pupil.orphan_code || "—" : String(pupil.am));
+const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === null ? pupil.orphan_code || "-" : String(pupil.am));
 
 const field = (label: string, name: string, type: InputProps["type"], extra: Partial<InputProps> = {}): InputProps =>
 	({ label, name, type, icon: "user", ...extra }) as InputProps;
@@ -776,7 +776,7 @@ export default function PupilsPage() {
 				if (consent === "1" || consent === "0") body.media_consent = consent === "1" ? 1 : 0;
 				const res = await apiHook(API.Pupils.create, { RequestObject: body });
 				if (!("data" in res)) return;
-				pushAlert(createAlert("success", `Προστέθηκε ο μαθητής ${body.last_name} ${body.first_name} — προσθέστε τις εγγραφές του με «Νέα εγγραφή»`));
+				pushAlert(createAlert("success", `Προστέθηκε ο μαθητής ${body.last_name} ${body.first_name}. Προσθέστε τις εγγραφές του με «Νέα εγγραφή»`));
 				openPupil(res.data.id);
 				void runSearch(page());
 			},
@@ -805,7 +805,7 @@ export default function PupilsPage() {
 		const { pupil, enrollments } = data;
 		const paid = enrollments.reduce((sum, enrollment) => sum + (enrollment.payment_amount || 0), 0);
 		const summary = [
-			`${pupil.last_name} ${pupil.first_name} — ΑΜ ${amLabel(pupil)}`,
+			`${pupil.last_name} ${pupil.first_name}, ΑΜ ${amLabel(pupil)}`,
 			`Θα διαγραφούν ${countLabel(enrollments.length, "εγγραφή", "εγγραφές")} του ιστορικού, μαζί με τα δίδακτρα και τις πληρωμές τους.`,
 		];
 		if (paid > 0) summary.push(`Καταχωρημένες πληρωμές που θα χαθούν: ${paid} €`);
@@ -936,7 +936,7 @@ export default function PupilsPage() {
 
 	/** Paid / total of one history row, coloured by what is still owed. */
 	const paymentCell = (row: PupilEnrollments) => (
-		<Show when={row.total_payment > 0 || row.payment_amount > 0} fallback={<span class={MUTED}>—</span>}>
+		<Show when={row.total_payment > 0 || row.payment_amount > 0} fallback={<span class={MUTED}>-</span>}>
 			<span
 				class={
 					"font-semibold " +
@@ -968,7 +968,7 @@ export default function PupilsPage() {
 						<h1 class="font-anaktoria text-5xl max-sm:text-3xl">Μαθητολόγιο</h1>
 						{/* phones: the search placeholder says the same, the list needs the room */}
 						<p class={"max-w-2xl text-lg max-sm:hidden " + MUTED}>
-							Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το όνομα — ή επιλέξτε άλλο πεδίο αναζήτησης.
+							Αναζητήστε μαθητή με τον Αριθμό Μητρώου ή το όνομα, ή επιλέξτε άλλο πεδίο αναζήτησης.
 						</p>
 					</div>
 				</Show>
@@ -1277,7 +1277,7 @@ export default function PupilsPage() {
 															Ορισμός έτους φοίτησης
 															<span class="sr-only">
 																{" "}
-																— {enrollment.registration_year}, {musicLabel(enrollment.class_id)}
+																({enrollment.registration_year}, {musicLabel(enrollment.class_id)})
 															</span>
 														</button>
 													</li>
@@ -1302,9 +1302,9 @@ export default function PupilsPage() {
 													<span class="font-semibold tabular-nums">{amLabel(data().pupil)}</span>
 												</Detail>
 												<Detail label="ΑΜΚΑ">
-													<span class="tabular-nums">{data().pupil.amka || "—"}</span>
+													<span class="tabular-nums">{data().pupil.amka || "-"}</span>
 												</Detail>
-												<Detail label="Πατρώνυμο">{data().pupil.fathers_name || "—"}</Detail>
+												<Detail label="Πατρώνυμο">{data().pupil.fathers_name || "-"}</Detail>
 												<Detail label="Γέννηση">{formatDate(data().pupil.birth_date)}</Detail>
 												<Detail label="Φωτογραφίες">
 													<span
@@ -1317,28 +1317,28 @@ export default function PupilsPage() {
 											</DetailGroup>
 											<DetailGroup title="ΕΠΙΚΟΙΝΩΝΙΑ">
 												<Detail label="Κινητό">
-													<Show when={data().pupil.cellphone} fallback="—">
+													<Show when={data().pupil.cellphone} fallback="-">
 														<a class="tabular-nums hover:underline" href={`tel:${data().pupil.cellphone}`}>
 															{data().pupil.cellphone}
 														</a>
 													</Show>
 												</Detail>
 												<Detail label="Τηλέφωνο">
-													<Show when={data().pupil.telephone && data().pupil.telephone !== "-"} fallback="—">
+													<Show when={data().pupil.telephone && data().pupil.telephone !== "-"} fallback="-">
 														<a class="tabular-nums hover:underline" href={`tel:${data().pupil.telephone}`}>
 															{data().pupil.telephone}
 														</a>
 													</Show>
 												</Detail>
 												<Detail label="Email">
-													<Show when={data().pupil.email} fallback="—">
+													<Show when={data().pupil.email} fallback="-">
 														<a class="break-all hover:underline" href={`mailto:${data().pupil.email}`}>
 															{data().pupil.email}
 														</a>
 													</Show>
 												</Detail>
 												<Detail label="Διεύθυνση">
-													<Show when={data().pupil.road || data().pupil.region} fallback="—">
+													<Show when={data().pupil.road || data().pupil.region} fallback="-">
 														{data().pupil.road} {data().pupil.number || ""}
 														<Show when={data().pupil.region}>
 															<br />
@@ -1538,7 +1538,7 @@ export default function PupilsPage() {
 																							when={row.evaluation && !row.class_year}
 																							fallback={
 																								<>
-																									{classYearLabel(row.class_year, row.evaluation) || "—"}
+																									{classYearLabel(row.class_year, row.evaluation) || "-"}
 																									<Show when={row.evaluation}>
 																										<EvaluationBadge />
 																									</Show>

@@ -623,7 +623,7 @@ export default function FeeCatalogEditor() {
 					when={active()}
 					fallback={
 						<p class="text-sm rounded-md bg-accent-soft p-3">
-							Το σχολικό έτος {year()} δεν έχει κατάλογο διδάκτρων. Η φόρμα ξεκινά από τις τιμές της πιο πρόσφατης έκδοσης — αποθηκεύστε για να
+							Το σχολικό έτος {year()} δεν έχει κατάλογο διδάκτρων. Η φόρμα ξεκινά από τις τιμές της πιο πρόσφατης έκδοσης. Αποθηκεύστε για να
 							δημιουργήσετε την πρώτη έκδοση.
 						</p>
 					}>
@@ -722,7 +722,7 @@ export default function FeeCatalogEditor() {
 													{i() === 0 ? " · ενεργή" : ""}
 												</summary>
 												<p class={`mt-2 ${hintClass}`}>
-													{previous() ? `Αλλαγές σε σχέση με την έκδοση #${previous()!.id}` : "Αρχική έκδοση — τιμές"}
+													{previous() ? `Αλλαγές σε σχέση με την έκδοση #${previous()!.id}` : "Αρχική έκδοση: τιμές"}
 												</p>
 												<ul class="mt-1 list-disc pl-5 text-sm grid gap-0.5">
 													<For each={lines()} fallback={<li>Καμία αλλαγή.</li>}>

@@ -51,7 +51,7 @@ const infoRowStyle = {
 export function SuccessfulRegistration({ level = "default", classYear, classType, schoolYear }: SuccessfulRegistrationProps) {
 	const type = level.startsWith("byzantine") ? "byzantine" : "traditional";
 	return (
-		<EmailLayout preview="Η ηλεκτρονική αίτησή σας υποβλήθηκε επιτυχώς — ολοκληρώστε την εγγραφή σας στη Γραμματεία.">
+		<EmailLayout preview="Η ηλεκτρονική αίτησή σας υποβλήθηκε επιτυχώς. Ολοκληρώστε την εγγραφή σας στη Γραμματεία.">
 			<HighlightBox tone="success" style={{ textAlign: "center" }} title="✅ Η αίτησή σας υποβλήθηκε επιτυχώς">
 				<Text
 					style={{

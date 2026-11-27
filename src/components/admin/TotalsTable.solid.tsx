@@ -239,7 +239,7 @@ function YearsChart(props: { data: DashboardYears }) {
 		const segments = MUSIC_TYPES.map((type, classId) => ({ ...type, classId, count: row.by_class[classId] ?? 0 })).filter((s) => s.count > 0);
 		const offsetOf = (index: number) => segments.slice(0, index).reduce((sum, s) => sum + s.count, 0);
 		const description =
-			`${shortYear(row.school_year)}: ${formatCount(row.total)} εγγραφές — ` + segments.map((s) => `${s.label} ${formatCount(s.count)}`).join(", ");
+			`${shortYear(row.school_year)}: ${formatCount(row.total)} εγγραφές (` + segments.map((s) => `${s.label} ${formatCount(s.count)}`).join(", ") + ")";
 		return (
 			<div class="min-h-9 grid grid-cols-[3.75rem_1fr_6.5rem] max-sm:grid-cols-[4rem_1fr_4.5rem] items-center gap-x-3">
 				<div class="leading-tight">

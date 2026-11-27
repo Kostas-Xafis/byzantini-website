@@ -39,7 +39,7 @@ const CLASS_GROUP: Record<number, GroupKey> = { 0: "byz", 1: "par", 2: "eur" };
 const CLASS_LABEL: Record<number, string> = { 0: "Βυζαντινή", 1: "Παραδοσιακή", 2: "Ευρωπαϊκή" };
 
 /** First line of a managed contact's note. */
-export const NOTE_HEADER = "Μαθητολόγιο Σχολής — ενημερώνεται αυτόματα, οι αλλαγές εδώ θα αντικατασταθούν.";
+export const NOTE_HEADER = "Μαθητολόγιο Σχολής: ενημερώνεται αυτόματα, οι αλλαγές εδώ θα αντικατασταθούν.";
 
 // ---------------------------------------------------------------------------
 // Phones
@@ -150,7 +150,7 @@ export type DesiredResult = {
 };
 
 const clean = (value: string | null | undefined) => (value ?? "").replace(/\s+/g, " ").trim();
-const pupilLabel = (p: RegisterPupil) => `${clean(p.last_name)} ${clean(p.first_name)} (ΑΜ ${p.am || "—"})`;
+const pupilLabel = (p: RegisterPupil) => `${clean(p.last_name)} ${clean(p.first_name)} (ΑΜ ${p.am || "-"})`;
 
 /** «Καθηγητής», «Καθηγήτρια», «Δάσκαλος», «Δασκάλα», «Επιμελητής», «Επιμελήτρια». */
 export function teacherTitle(t: Pick<RegisterTeacher, "title" | "gender">): string {
@@ -195,11 +195,11 @@ const classList = (classes: number[]) =>
 function noteFor(teachers: RegisterTeacher[], pupils: RegisterPupil[]): string {
 	const teacherLines = teachers.map((t) => {
 		const classes = classList(t.classes);
-		return `• ${teacherTitle(t)}: ${clean(t.fullname)}${classes ? ` — ${classes}` : ""}`;
+		return `• ${teacherTitle(t)}: ${clean(t.fullname)}${classes ? `, ${classes}` : ""}`;
 	});
 	const pupilLines = pupils.map((p) => {
 		const classes = classList(p.classes);
-		return `• ${clean(p.last_name)} ${clean(p.first_name)} — ΑΜ ${p.am || "—"}${classes ? ` — ${classes}` : ""}${p.last_year ? ` — τελευταία εγγραφή ${p.last_year}` : ""}`;
+		return `• ${clean(p.last_name)} ${clean(p.first_name)}, ΑΜ ${p.am || "-"}${classes ? `, ${classes}` : ""}${p.last_year ? `, τελευταία εγγραφή ${p.last_year}` : ""}`;
 	});
 	return [NOTE_HEADER, ...teacherLines, ...(teacherLines.length && pupilLines.length ? ["Μαθητές:"] : []), ...pupilLines].join("\n");
 }

@@ -14,7 +14,7 @@ export type SysuserPasswordResetProps = {
  */
 export function SysuserPasswordReset({ token }: SysuserPasswordResetProps) {
 	return (
-		<EmailLayout preview="Επαναφορά κωδικού διαχειριστή — ο σύνδεσμος ισχύει για 1 ώρα.">
+		<EmailLayout preview="Επαναφορά κωδικού διαχειριστή: ο σύνδεσμος ισχύει για 1 ώρα.">
 			<MailText>Χαίρετε,</MailText>
 			<MailText>
 				λάβαμε αίτημα επαναφοράς του κωδικού του λογαριασμού διαχειριστή σας στη Σχολή Βυζαντινής και
@@ -34,7 +34,7 @@ export function SysuserPasswordReset({ token }: SysuserPasswordResetProps) {
 			</MailText>
 			<MailText style={{ fontSize: 15, color: COLORS.textMuted }}>
 				Ο σύνδεσμος ισχύει για 1 ώρα και μόνο μία φορά. Αν δεν ζητήσατε εσείς την επαναφορά, αγνοήστε αυτό
-				το μήνυμα — ο κωδικός σας δεν αλλάζει.
+				το μήνυμα. Ο κωδικός σας δεν αλλάζει.
 			</MailText>
 			<MailText>Εκ της Γραμματείας.</MailText>
 		</EmailLayout>

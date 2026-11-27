@@ -109,7 +109,7 @@ describe("buildDesiredContacts", () => {
 		]);
 		expect(family.emails).toEqual(["parent@example.com"]);
 		expect(family.groups).toEqual(["managed", "byz", "par", "current"]);
-		expect(family.note).toContain("Παπαδόπουλος Μαρία — ΑΜ 1 — Παραδοσιακή — τελευταία εγγραφή 2024-2025");
+		expect(family.note).toContain("Παπαδόπουλος Μαρία, ΑΜ 1, Παραδοσιακή, τελευταία εγγραφή 2024-2025");
 		const landlineOnly = contacts.find((c) => c.key === "+302107654321")!;
 		expect(landlineOnly.groups).toEqual(["managed", "eur", "current"]);
 	});
@@ -154,8 +154,8 @@ describe("teachers", () => {
 		expect([own.givenName, own.familyName]).toEqual(["Ιωάννης", "Χρυσάφης"]);
 		expect(own.groups).toEqual(["managed", "byz", "current", "teachers"]);
 		expect(own.emails).toEqual(["t@school.gr"]);
-		expect(own.note).toContain("• Καθηγητής: Ιωάννης Χρυσάφης — Βυζαντινή");
-		expect(own.note).toContain("Μαθητές:\n• Χρυσάφης Ιωάννης — ΑΜ 9");
+		expect(own.note).toContain("• Καθηγητής: Ιωάννης Χρυσάφης, Βυζαντινή");
+		expect(own.note).toContain("Μαθητές:\n• Χρυσάφης Ιωάννης, ΑΜ 9");
 		expect(own.people).toEqual(["Καθηγητής: Ιωάννης Χρυσάφης", "Χρυσάφης Ιωάννης (ΑΜ 9)"]);
 		const shared = contacts.find((c) => c.key === "+306900000000")!;
 		expect([shared.givenName, shared.familyName]).toEqual(["Ελένη", "Παππά"]);

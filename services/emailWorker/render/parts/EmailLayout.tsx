@@ -13,7 +13,7 @@ export const BRAND_RED = COLORS.brand;
  * Default inbox preview (preheader) text — the school name, so an email with
  * no explicit preview still shows something meaningful instead of raw HTML.
  */
-const DEFAULT_PREVIEW = `${SCHOOL_CONTACT.name} — ${SCHOOL_CONTACT.church}`;
+const DEFAULT_PREVIEW = `${SCHOOL_CONTACT.name}, ${SCHOOL_CONTACT.church}`;
 
 export function MailText({ children, style }: { children: ReactNode; style?: CSSProperties }) {
 	return <Text style={{ ...TYPO.body, ...style }}>{children}</Text>;

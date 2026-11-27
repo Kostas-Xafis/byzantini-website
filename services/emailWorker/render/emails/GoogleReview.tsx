@@ -21,7 +21,7 @@ export function GoogleReview({ token, first_name }: GoogleReviewProps) {
 	return (
 		<EmailLayout
 			token={token}
-			preview="Μία μικρή χάρη: η γνώμη σας στους Χάρτες Google — δεν θα χρειαστεί πάνω από ένα λεπτό."
+			preview="Μία μικρή χάρη: η γνώμη σας στους Χάρτες Google. Δεν θα χρειαστεί πάνω από ένα λεπτό."
 			badge="Χάρτες Google">
 			<MailText>Χαίρετε, {first_name}! 🎶</MailText>
 			<MailText>
@@ -37,8 +37,8 @@ export function GoogleReview({ token, first_name }: GoogleReviewProps) {
 			</MailText>
 			<MailText>
 				Μία σύντομη αξιολόγηση βοηθά νέους ενδιαφερόμενους να ανακαλύψουν τη Σχολή μας και να
-				γνωρίσουν τον κόσμο της βυζαντινής και παραδοσιακής μας μουσικής. Κάθε σχόλιο — ακόμη
-				και μία μόνο φράση — είναι για εμάς ανεκτίμητο, γιατί προέρχεται από ανθρώπους σαν
+				γνωρίσουν τον κόσμο της βυζαντινής και παραδοσιακής μας μουσικής. Κάθε σχόλιο, ακόμη
+				και μία μόνο φράση, είναι για εμάς ανεκτίμητο, γιατί προέρχεται από ανθρώπους σαν
 				εσάς, που ζουν καθημερινά τη ζωή της Σχολής.
 			</MailText>
 			<HighlightBox tone="gold" style={{ textAlign: "center", borderLeft: `4px solid ${COLORS.gold}` }}>
@@ -74,7 +74,7 @@ export function GoogleReview({ token, first_name }: GoogleReviewProps) {
 			</MailText>
 			<MailText>
 				Αν ο παραπάνω σύνδεσμος δεν λειτουργεί, μπορείτε να μας βρείτε στους Χάρτες Google
-				αναζητώντας «Σχολή Βυζαντινής και Παραδοσιακής Μουσικής — Μεταμόρφωση» ή ακολουθώντας{" "}
+				αναζητώντας «Σχολή Βυζαντινής και Παραδοσιακής Μουσικής Μεταμόρφωση» ή ακολουθώντας{" "}
 				<Link href={SCHOOL_CONTACT.googleMaps.placeUrl} style={{ color: COLORS.brand, fontWeight: "bold" }}>
 					αυτόν τον σύνδεσμο
 				</Link>

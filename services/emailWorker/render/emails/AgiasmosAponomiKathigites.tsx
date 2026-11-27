@@ -21,7 +21,7 @@ const SCHOOL_YEAR = "2026–2027";
 export function AgiasmosAponomiKathigites() {
 	return (
 		<EmailLayout
-			preview={`Αγιασμός & Απονομή Πτυχίων — Κυριακή 27 Σεπτεμβρίου 2026, 18:00 — παρακαλούμε ενημερώστε έγκαιρα τους μαθητές σας.`}
+			preview={`Αγιασμός & Απονομή Πτυχίων: Κυριακή 27 Σεπτεμβρίου 2026, 18:00. Παρακαλούμε ενημερώστε έγκαιρα τους μαθητές σας.`}
 			badge={`Σχολικό Έτος ${SCHOOL_YEAR}`}>
 			<MailText>Αγαπητοί Καθηγητές,</MailText>
 			<MailText>

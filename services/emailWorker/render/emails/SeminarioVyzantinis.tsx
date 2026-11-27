@@ -21,7 +21,7 @@ export function SeminarioVyzantinis({ token }: SeminarioVyzantinisProps) {
 	return (
 		<EmailLayout
 			token={token}
-			preview="Σεμινάριο Βυζαντινής Μουσικής με τον Άρχοντα Διδάσκαλο κ. Δημήτριο Νεραντζή — Τετάρτη 2 Δεκεμβρίου 2026, 19:00."
+			preview="Σεμινάριο Βυζαντινής Μουσικής με τον Άρχοντα Διδάσκαλο κ. Δημήτριο Νεραντζή, Τετάρτη 2 Δεκεμβρίου 2026, 19:00."
 			badge="Σεμινάριο Βυζαντινής Μουσικής">
 			<MailText>Αγαπητοί σπουδαστές και αγαπητές σπουδάστριες,</MailText>
 			<MailText>
@@ -93,7 +93,7 @@ export function SeminarioVyzantinis({ token }: SeminarioVyzantinisProps) {
 			</HighlightBox>
 			<CenteredImage
 				src={SEMINAR_POSTER_URL}
-				alt="Αφίσα — Σεμινάριο Βυζαντινής Μουσικής, Τετάρτη 2 Δεκεμβρίου 2026"
+				alt="Αφίσα: Σεμινάριο Βυζαντινής Μουσικής, Τετάρτη 2 Δεκεμβρίου 2026"
 				width={420}
 				href={SEMINAR_POSTER_URL}
 			/>

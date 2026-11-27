@@ -46,7 +46,7 @@ export function UpenthimisiEggrafis({
 	return (
 		<EmailLayout
 			token={token}
-			preview={`Εγγραφές ${WELCOME_YEAR} — συμπληρώστε την αίτηση εγγραφής με τον προσωπικό σας σύνδεσμο.`}
+			preview={`Εγγραφές ${WELCOME_YEAR}: συμπληρώστε την αίτηση εγγραφής με τον προσωπικό σας σύνδεσμο.`}
 			badge={`Σχολικό Έτος ${WELCOME_YEAR}`}>
 			<MailText>Αγαπητοί σπουδαστές,</MailText>
 			<MailText>

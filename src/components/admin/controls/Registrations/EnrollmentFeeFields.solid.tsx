@@ -20,7 +20,7 @@ export const euro = (value: number) => `${value} €`;
 
 /** «-50% (2η εγγραφή)» for a discounted position, '—' for the first enrollment. */
 export const discountLabel = (row: Pick<PreviewRow, "factor" | "position">) => {
-	if (row.factor === null || row.factor >= 1) return "—";
+	if (row.factor === null || row.factor >= 1) return "-";
 	return `-${Math.round((1 - row.factor) * 100)}% (${row.position + 1}η εγγραφή)`;
 };
 
@@ -140,7 +140,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 						aria-describedby={`${uid}-hint`}
 						onChange={(e) => setClassYear(e.currentTarget.value)}>
 						<option value="" selected={!classYear()}>
-							{evaluation() ? "— εκκρεμεί κατάταξη —" : "— επιλέξτε —"}
+							{evaluation() ? "(εκκρεμεί κατάταξη)" : "(επιλέξτε)"}
 						</option>
 						<Index each={classYears()}>
 							{(year) => (
@@ -152,7 +152,7 @@ export function EnrollmentPlacementFields(props: EnrollmentPlacementFieldsProps)
 					</select>
 					<span id={`${uid}-hint`} class="text-sm text-ink-muted">
 						<Show when={!classYear()} fallback={evaluation() ? `Τοποθετήθηκε μετά από κατάταξη (${EVALUATION_BADGE})` : ""}>
-							{evaluation() ? "Αναμένει κατάταξη — επιλέξτε έτος για να τοποθετηθεί" : "Απαιτείται έτος φοίτησης"}
+							{evaluation() ? "Αναμένει κατάταξη: επιλέξτε έτος για να τοποθετηθεί" : "Απαιτείται έτος φοίτησης"}
 						</Show>
 					</span>
 				</label>
