@@ -499,3 +499,42 @@ export const z_Id = z.number("Μη έγκυρο id").int("Μη έγκυρο id")
  * misleading "not found"), so it is rejected with a 400 instead.
  */
 export const z_IdArray = z.array(z_Id, "Μη έγκυρη λίστα id").min(1, "Δεν επιλέχθηκε καμία εγγραφή");
+
+/** Where a «Δήλωση Ενδιαφέροντος» was filled in (migration 0013). */
+export const INTEREST_PAGES = ["home", "contact"] as const;
+
+/** A greek or international phone number: 10–15 digits, spaces, dashes, dots, brackets and a leading + allowed. */
+const z_InterestPhone = z
+	.string("Μη έγκυρο τηλέφωνο")
+	.trim()
+	.regex(/^\+?[\d\s\-.()]+$/, "Μη έγκυρο τηλέφωνο")
+	.refine((value) => {
+		const digits = value.replace(/\D/g, "").length;
+		return digits >= 10 && digits <= 15;
+	}, "Το τηλέφωνο πρέπει να έχει 10 έως 15 ψηφία");
+
+/**
+ * Public «Δήλωση Ενδιαφέροντος» form (InterestDeclarations.post): the bare minimum to call or write back.
+ * `website` is a honeypot — hidden from people, filled in only by bots (the route then stores nothing).
+ */
+export const z_InterestDeclarationInput = z.object({
+	first_name: z.string("Μη έγκυρο όνομα").trim().min(1, "Συμπληρώστε το όνομα").max(80, "Το όνομα είναι πολύ μεγάλο"),
+	last_name: z.string("Μη έγκυρο επώνυμο").trim().min(1, "Συμπληρώστε το επώνυμο").max(80, "Το επώνυμο είναι πολύ μεγάλο"),
+	email: z.string().trim().pipe(z.email("Μη έγκυρο email").max(254, "Το email είναι πολύ μεγάλο")),
+	phone: z_InterestPhone,
+	message: z.string("Μη έγκυρο μήνυμα").trim().max(2000, "Το μήνυμα είναι πολύ μεγάλο (έως 2000 χαρακτήρες)").default(""),
+	page: z.enum(INTEREST_PAGES).optional(),
+	website: z.string().optional(),
+});
+
+/** A stored «Δήλωση Ενδιαφέροντος» as the admin page lists it. */
+export const z_InterestDeclaration = z.object({
+	id: positiveInt(),
+	first_name: z.string(),
+	last_name: z.string(),
+	email: z.string(),
+	phone: z.string(),
+	message: z.string(),
+	page: z.string(),
+	created_at: positiveInt(),
+});

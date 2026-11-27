@@ -28,6 +28,8 @@ export type EnvTypes = {
 	PDF_SERVICE_AUTH_TOKEN?: string;
 	/** "1" on the preview worker (set by `scripts/cf.ts deploy:preview`): serve the draft pages (lib/content/drafts.server.ts). Never set in production. */
 	DRAFT_PAGES?: string;
+	/** Comma-separated inboxes for the «Δήλωση Ενδιαφέροντος» emails (lib/api/routes/interestDeclarations.ts); unset → both departments' addresses. */
+	INTEREST_NOTIFY_EMAILS?: string;
 };
 
 /** `getEnv()` under `bun test` (tests/testHelpers.ts `testEnv`): `process.env` with tests/.env.test loaded, all strings. */

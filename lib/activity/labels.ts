@@ -57,6 +57,7 @@ export const ACTIVITY_LABELS: Record<string, string> = {
 	"SysUsers.setRole": "Αλλαγή ρόλου διαχειριστή",
 	"SysUsers.delete": "Διαγραφή διαχειριστών",
 	"Errors.delete": "Διαγραφή καταγεγραμμένων σφαλμάτων",
+	"InterestDeclarations.delete": "Διαγραφή δηλώσεων ενδιαφέροντος",
 	"Authentication.changePassword": "Αλλαγή κωδικού",
 	"Authentication.unlinkProvider": "Αποσύνδεση λογαριασμού εισόδου",
 
@@ -81,6 +82,7 @@ export const ACTIVITY_GROUPS: Record<string, string> = {
 	Authentication: "Διαχειριστές",
 	Errors: "Σφάλματα",
 	GoogleContacts: "Επαφές Google",
+	InterestDeclarations: "Δηλώσεις ενδιαφέροντος",
 };
 
 /** Endpoint groups behind one category name (e.g. «Βιβλία» → Books, Wholesalers). */

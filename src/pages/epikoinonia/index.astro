@@ -3,6 +3,7 @@ import Icon from "@components/other/Icon.astro";
 import type { IconName } from "@lib/icons";
 import DeveloperCredit from "@components/other/DeveloperCredit.astro";
 import GMap from "@components/other/GMap.astro";
+import InterestForm from "@components/interest/InterestForm.solid";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
@@ -213,6 +214,19 @@ const contactPageSchema = {
 						</article>
 					))
 				}
+			</div>
+		</section>
+
+		<!-- Δήλωση ενδιαφέροντος (InterestForm.solid.tsx): η μόνη φόρμα· το hero της αρχικής οδηγεί εδώ -->
+		<section id="dilosi-endiaferontos" class="flex flex-col items-center gap-y-6">
+			<h2 class="text-[2.25vw] max-sm:text-2xl text-center font-bold font-anaktoria text-red-900 drop-shadow-[-1px_1px_1px_rgba(0,0,0,0.15)]">
+				Δήλωση ενδιαφέροντος
+			</h2>
+			<p class="max-w-[72ch] text-center text-lg max-sm:text-base leading-relaxed text-red-950/80">
+				Σκέφτεστε να γραφτείτε και έχετε απορίες; Αφήστε μας τα στοιχεία σας και, αν θέλετε, την ερώτησή σας — η Γραμματεία θα επικοινωνήσει μαζί σας.
+			</p>
+			<div class="w-full max-w-225">
+				<InterestForm page="contact" client:visible />
 			</div>
 		</section>
 
@@ -526,6 +540,21 @@ const contactPageSchema = {
 	import { AnimTimeline, onElementMount } from "@utilities/dom";
 
 	onElementMount("#epikoinonia", () => {
+		// The page scrolls inside <main> (smooth), so the browser's own #hash jump (e.g. the home page's link to
+		// #dilosi-endiaferontos) scrolls the outer page instead, sliding <main> under the navbar. After the page has
+		// loaded (the browser jumps before that), undo the outer scroll and scroll <main> to the target at once.
+		const main = document.getElementById("epikoinonia");
+		const target = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+		if (main && target) {
+			const jump = () => {
+				window.scrollTo({ top: 0, behavior: "instant" });
+				const top = main.scrollTop + target.getBoundingClientRect().top - main.getBoundingClientRect().top - 24;
+				main.scrollTo({ top, behavior: "instant" });
+			};
+			if (document.readyState === "complete") requestAnimationFrame(jump);
+			else window.addEventListener("load", () => requestAnimationFrame(jump), { once: true });
+		}
+
 		document.querySelectorAll<HTMLButtonElement>("#epikoinonia .copy").forEach((btn) => {
 			btn.addEventListener("click", () => {
 				const text = btn.dataset.copy;

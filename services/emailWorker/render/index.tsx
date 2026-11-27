@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { SuccessfulRegistration, type SuccessfulRegistrationLevel } from "./emails/SuccessfulRegistration";
 import { SysuserPasswordReset } from "./emails/SysuserPasswordReset";
 import { SysuserRegisterLink } from "./emails/SysuserRegisterLink";
+import { InterestDeclaration } from "./emails/InterestDeclaration";
 import { UpenthimisiEggrafis } from "./emails/UpenthimisiEggrafis";
 import { EpistrofiMathiton } from "./emails/EpistrofiMathiton";
 import { AgiasmosAponomi } from "./emails/AgiasmosAponomi";
@@ -57,6 +58,21 @@ export const templates: TemplateDef[] = [
 	{
 		name: "sysuser_password_reset.html",
 		build: () => <SysuserPasswordReset token={"{{token}}"} />,
+	},
+	{
+		name: "interest_declaration.html",
+		build: () => (
+			<InterestDeclaration
+				first_name={"{{first_name}}"}
+				last_name={"{{last_name}}"}
+				email={"{{email}}"}
+				phone={"{{phone}}"}
+				message={"{{message}}"}
+				page={"{{page}}"}
+				date={"{{date}}"}
+				admin_url={"{{admin_url}}"}
+			/>
+		),
 	},
 	{
 		name: "2026/upenthimisi_eggrafis.html",

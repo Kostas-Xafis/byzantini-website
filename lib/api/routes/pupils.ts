@@ -244,6 +244,8 @@ const z_DashboardSummary = z.object({
 	needs_review: z.number().int(),
 	owing: z.object({ enrollments: z.number().int(), pupils: z.number().int(), amount: z.number() }),
 	new_online: z.number().int(),
+	/** «Δηλώσεις ενδιαφέροντος» still stored (nobody has deleted them yet). */
+	interest: z.number().int(),
 });
 const z_DashboardYears = z.object({
 	/** The current school year ("2026-2027"), the last entry of `years`. */
@@ -1149,13 +1151,15 @@ export const pupilsRoutes = {
 					owing_pupils: number;
 					owing_amount: number | null;
 					new_online: number;
+					interest: number;
 				}>(
 					`SELECT
 						(SELECT COUNT(*) FROM pupils WHERE needs_review = 1) AS needs_review,
 						COUNT(*) AS owing_enrollments,
 						COUNT(DISTINCT pupil_id) AS owing_pupils,
 						SUM(total_payment - payment_amount) AS owing_amount,
-						(SELECT COUNT(*) FROM pupil_enrollments WHERE source = 'form' AND date > ?) AS new_online
+						(SELECT COUNT(*) FROM pupil_enrollments WHERE source = 'form' AND date > ?) AS new_online,
+						(SELECT COUNT(*) FROM interest_declarations) AS interest
 					FROM pupil_enrollments WHERE registration_year = ? AND payment_amount < total_payment`,
 					[params.since, schoolYear],
 				);
@@ -1164,6 +1168,7 @@ export const pupilsRoutes = {
 					needs_review: row?.needs_review ?? 0,
 					owing: { enrollments: row?.owing_enrollments ?? 0, pupils: row?.owing_pupils ?? 0, amount: row?.owing_amount ?? 0 },
 					new_online: row?.new_online ?? 0,
+					interest: row?.interest ?? 0,
 				};
 			}, "Σφάλμα κατά την ανάκτηση της σύνοψης"),
 	),

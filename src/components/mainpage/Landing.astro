@@ -13,13 +13,14 @@ const schoolYear = currentSchoolYearShort();
 	<link rel="preload" as="image" href="/church-1545.avif" type="image/avif" media="(min-width: 801px)" fetchpriority="high" />
 	<!--
 		One grid for the three hero blocks: the title (with the state-recognition strip under it) on the left, the
-		registrations card on the right, both sitting on the same baseline above the «Χαιρετισμός» link. Below lg
+		registrations card on the right, from lg both columns as tall as the taller one (tops and bottoms level), above the «Χαιρετισμός» link. Below lg
 		they stack (title → card) and the page grows instead of letting the blocks overlap.
 	-->
 	<div
-		class="flex-1 w-full max-w-400 mx-auto grid content-end items-end gap-x-[4vw] gap-y-8 px-[clamp(1rem,5vw,6rem)] pt-[calc(var(--nav-h)+2rem)] pb-[clamp(5.5rem,11vh,9rem)] lg:grid-cols-[minmax(0,1fr)_auto] max-sm:content-center max-sm:gap-y-6 max-sm:pb-10">
+		id="hero-grid"
+		class="flex-1 w-full max-w-400 mx-auto grid content-end items-end lg:items-stretch gap-x-[4vw] gap-y-8 px-[clamp(1rem,5vw,6rem)] pt-[calc(var(--nav-h)+2rem)] pb-[clamp(7.5rem,17vh,13rem)] lg:grid-cols-[minmax(0,1fr)_auto] max-sm:content-center max-sm:gap-y-6 max-sm:pb-10">
 		<div id="hero-title" class="flex flex-col min-w-0">
-			<h1 class="text-[clamp(2rem,4.2vw,5rem)] font-anaktoria font-bold text-red-50 tracking-wider leading-[1.35] max-2xs:text-[1.6rem]">
+			<h1 class="text-[clamp(2rem,4.2vw,5rem)] font-anaktoria font-bold text-red-50 tracking-wider leading-[1.35] max-2xs:text-[1.6rem] lg:-mt-[0.175em]">
 				Σχολή Βυζαντινής &<br /><span class="pl-[0.75ch]">Παραδοσιακής Μουσικής</span>
 			</h1>
 			<h3
@@ -27,12 +28,14 @@ const schoolYear = currentSchoolYearShort();
 				Ι.Ν. Μεταμορφώσεως του Σωτήρος
 			</h3>
 			<h3
-				class="ml-[clamp(1.75rem,4.5vw,5rem)] text-[clamp(1rem,1.4vw,1.75rem)] font-anaktoria font-bold text-ivory/90 tracking-wider leading-snug max-2xs:text-sm">
+				class="ml-[clamp(1rem,3.5vw,4rem)] text-[clamp(1rem,1.4vw,1.75rem)] font-anaktoria font-bold text-ivory/90 tracking-wider leading-snug max-2xs:text-sm">
 				ομωνύμου Δήμου
 			</h3>
+			<!-- (lg:-mt on the h1 drops its half-leading, so the letters, not the line box, meet the card's top.) Space above the ΦΕΚ strip: its old margin at least, and on lg it grows so the strip ends level with the right column. -->
+			<div aria-hidden="true" class="grow shrink-0 basis-[clamp(1.5rem,4vh,3rem)]"></div>
 			<div
 				id="fek"
-				class="glass mt-[clamp(1.5rem,4vh,3rem)] w-max max-w-full flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl px-[clamp(0.875rem,1.2vw,1.5rem)] py-[clamp(0.5rem,0.7vw,0.875rem)]">
+				class="glass w-max max-w-full flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl px-[clamp(0.875rem,1.2vw,1.5rem)] py-[clamp(0.5rem,0.7vw,0.875rem)]">
 				<p class="flex items-center gap-x-2.5 font-anaktoria font-bold text-red-50 text-[clamp(1rem,1.3vw,1.6rem)] leading-tight">
 					<Icon name="certificate" class="text-ivory text-[1.1em]" />Ανεγνωρισμένη υπό του Κράτους
 				</p>
@@ -46,27 +49,47 @@ const schoolYear = currentSchoolYearShort();
 				</div>
 			</div>
 		</div>
-		<aside
-			id="eggrafesLink"
-			aria-labelledby="eggrafesTitle"
-			class="glass-dark w-[clamp(17rem,25vw,26rem)] max-w-full justify-self-end rounded-2xl font-anaktoria shadow-2xl shadow-black/40 px-[clamp(1.25rem,2vw,2.25rem)] py-[clamp(1.25rem,2.2vw,2.5rem)] flex flex-col items-center text-center gap-y-1 max-lg:justify-self-start max-sm:justify-self-stretch max-sm:w-auto">
-			<h2 id="eggrafesTitle" class="text-[clamp(1.875rem,2.6vw,3.25rem)] font-bold text-red-50 leading-tight">Εγγραφές</h2>
-			<p class="text-[clamp(1.125rem,1.6vw,2rem)] font-bold text-red-50 leading-snug">
-				Σχολικού Έτους <span data-school-year-short>{schoolYear}</span>
-			</p>
-			<p
-				class="mt-1 inline-flex items-center gap-x-2 rounded-full border border-ivory/30 bg-black/20 px-3 py-0.5 font-didact text-[clamp(0.875rem,1vw,1.125rem)] text-ivory">
-				<Icon name="calendar" class="text-[0.9em]" />{REGISTRATION_WINDOW_LABEL}
-			</p>
-			<div class="mt-[clamp(0.875rem,1.4vw,1.5rem)] w-full flex flex-col gap-y-2.5 max-sm:flex-row max-sm:gap-x-3">
-				<a class="hero-btn hero-btn-primary" href="/eggrafes/">
-					Εγγραφές <Icon name="chevron-right" class="hero-btn-icon" />
-				</a>
-				<a class="hero-btn hero-btn-secondary" href="/sxoli/anakoinoseis/">
-					Ανακοινώσεις <Icon name="chevron-right" class="hero-btn-icon" />
-				</a>
-			</div>
-		</aside>
+		<!-- Right column: the registrations card and, under it, the link to the «Δήλωση ενδιαφέροντος» form of /epikoinonia/. -->
+		<div
+			class="w-[clamp(17rem,25vw,26rem)] max-w-full justify-self-end flex flex-col justify-between gap-y-3 max-lg:justify-self-start max-sm:justify-self-stretch max-sm:w-auto">
+			<aside
+				id="eggrafesLink"
+				aria-labelledby="eggrafesTitle"
+				class="glass-dark w-full rounded-2xl font-anaktoria shadow-2xl shadow-black/40 px-[clamp(1.25rem,2vw,2.25rem)] py-[clamp(1.25rem,2.2vw,2.5rem)] flex flex-col items-center text-center gap-y-1">
+				<h2 id="eggrafesTitle" class="text-[clamp(1.875rem,2.6vw,3.25rem)] font-bold text-red-50 leading-tight">Εγγραφές</h2>
+				<p class="text-[clamp(1.125rem,1.6vw,2rem)] font-bold text-red-50 leading-snug">
+					Σχολικού Έτους <span data-school-year-short>{schoolYear}</span>
+				</p>
+				<p
+					class="mt-1 inline-flex items-center gap-x-2 rounded-full border border-ivory/30 bg-black/20 px-3 py-0.5 font-didact text-[clamp(0.875rem,1vw,1.125rem)] text-ivory">
+					<Icon name="calendar" class="text-[0.9em]" />{REGISTRATION_WINDOW_LABEL}
+				</p>
+				<div class="mt-[clamp(0.875rem,1.4vw,1.5rem)] w-full flex flex-col gap-y-2.5 max-sm:flex-row max-sm:gap-x-3">
+					<a class="hero-btn hero-btn-primary" href="/eggrafes/">
+						Εγγραφές <Icon name="chevron-right" class="hero-btn-icon" />
+					</a>
+					<a class="hero-btn hero-btn-secondary" href="/sxoli/anakoinoseis/">
+						Ανακοινώσεις <Icon name="chevron-right" class="hero-btn-icon" />
+					</a>
+				</div>
+			</aside>
+			<a
+				id="dilosiLink"
+				href="/epikoinonia/#dilosi-endiaferontos"
+				class="glass-dark group/dilosi w-full rounded-2xl shadow-2xl shadow-black/40 px-[clamp(1rem,1.5vw,1.75rem)] py-[clamp(0.75rem,1.1vw,1.25rem)] flex items-center gap-x-[clamp(0.75rem,1vw,1.25rem)]">
+				<span class="grid size-[clamp(2.25rem,2.6vw,3rem)] shrink-0 place-items-center rounded-full bg-ivory text-red-900 shadow-md">
+					<Icon name="mail-open" class="text-[clamp(1rem,1.2vw,1.375rem)]" />
+				</span>
+				<span class="flex min-w-0 flex-col">
+					<span class="font-anaktoria font-bold text-[clamp(1.125rem,1.5vw,1.75rem)] leading-tight text-red-50">Έχετε απορίες;</span>
+					<span class="font-didact text-[clamp(0.875rem,0.95vw,1.0625rem)] leading-snug text-ivory/90">Δήλωση ενδιαφέροντος — σας καλούμε εμείς</span>
+				</span>
+				<Icon
+					name="chevron-right"
+					class="ml-auto shrink-0 text-ivory text-[clamp(0.875rem,1vw,1.125rem)] transition-transform duration-250 group-hover/dilosi:translate-x-0.75"
+				/>
+			</a>
+		</div>
 	</div>
 	<a
 		id="xairetismos-btn"
@@ -119,7 +142,7 @@ const schoolYear = currentSchoolYearShort();
 
 		#fek {
 			opacity: 0.0001;
-			animation: fadeIn 0.5s ease-in-out forwards 1s;
+			animation: fadeIn 0.5s ease-in-out forwards 0.5s;
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
 		}
 		#fek .fek-link {
@@ -146,7 +169,7 @@ const schoolYear = currentSchoolYearShort();
 
 		#eggrafesLink {
 			opacity: 0.0001;
-			animation: fadeIn 0.5s ease-in-out forwards 1.25s;
+			animation: fadeIn 0.5s ease-in-out forwards 0.35s;
 			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
 			border-color: rgb(247 236 225 / 0.18);
 		}
@@ -198,6 +221,36 @@ const schoolYear = currentSchoolYearShort();
 			outline: 2px solid var(--color-ivory);
 			outline-offset: 2px;
 		}
+		#dilosiLink {
+			opacity: 0.0001;
+			animation: fadeIn 0.5s ease-in-out forwards 0.5s;
+			text-shadow: -1px 3px 3px rgba(12 10 9 / 0.4);
+			border-color: rgb(247 236 225 / 0.18);
+			transition: border-color 0.25s;
+		}
+		#dilosiLink:hover,
+		#dilosiLink:focus-visible {
+			border-color: rgb(247 236 225 / 0.55);
+		}
+		#dilosiLink:focus-visible {
+			outline: 2px solid var(--color-ivory);
+			outline-offset: 2px;
+		}
+		/* Short desktop windows: tighter card and bottom space, so both blocks and «Χαιρετισμός» stay on the first screen. */
+		@media (min-width: 1024px) and (max-height: 760px) {
+			#hero-grid {
+				padding-bottom: 5.5rem;
+			}
+			#eggrafesLink {
+				padding-block: 1.25rem;
+			}
+			#eggrafesLink > div {
+				margin-top: 0.75rem;
+			}
+			#dilosiLink {
+				padding-block: 0.625rem;
+			}
+		}
 		#xairetismos-btn {
 			background: radial-gradient(ellipse at 50% 200%, rgb(69 10 10 / 1), transparent);
 		}
@@ -210,8 +263,8 @@ const schoolYear = currentSchoolYearShort();
 	</style>
 </main>
 <script>
-	import { iOS, onElementMount } from "@utilities/dom";
 	import { currentSchoolYearShort } from "@lib/pupils/years";
+	import { iOS, onElementMount } from "@utilities/dom";
 	// Prerendered page: keep the school year current in the browser (see the frontmatter).
 	document.querySelectorAll("[data-school-year-short]").forEach((el) => (el.textContent = currentSchoolYearShort()));
 	onElementMount("#hero-title > h1", () => {

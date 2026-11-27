@@ -139,5 +139,8 @@ export const APIEndpoints = {
 	"GoogleContacts.disconnect": { method: "DELETE", path: "/google-contacts", multipart: false, rawBlob: false },
 	"GoogleContacts.preview": { method: "GET", path: "/google-contacts/preview", multipart: false, rawBlob: false },
 	"GoogleContacts.apply": { method: "POST", path: "/google-contacts/apply", multipart: false, rawBlob: false },
+	"InterestDeclarations.post": { method: "POST", path: "/interest-declarations", multipart: false, rawBlob: false },
+	"InterestDeclarations.list": { method: "GET", path: "/interest-declarations", multipart: false, rawBlob: false },
+	"InterestDeclarations.delete": { method: "DELETE", path: "/interest-declarations", multipart: false, rawBlob: false },
 	"Health.get": { method: "GET", path: "/health", multipart: false, rawBlob: false },
 } as const satisfies Record<APIEndpointNames, APIContractEntry>;

@@ -34,6 +34,8 @@ interface MailRequest {
 	subject?: string;
 	htmlTemplateName?: string;
 	templateData?: Record<string, string | number | undefined>;
+	/** Optional reply address (e.g. the family that filled in the site's «Δήλωση Ενδιαφέροντος»); default: the sender. */
+	replyTo?: { email?: string; name?: string };
 }
 
 interface TemplateUpload {
@@ -117,11 +119,7 @@ export default {
 		// No request to judge by: a dry run only when the environment says so or there is no API key
 		// (`wrangler dev` reads ENVIRONMENT=development from .dev.vars).
 		const dryRun = decideDryRun(env);
-		ctx.waitUntil(
-			runErrorDigest(env.DB, (email) => deliverEmail(env, email, dryRun)).catch((error) =>
-				console.error("[errors] digest failed", error),
-			),
-		);
+		ctx.waitUntil(runErrorDigest(env.DB, (email) => deliverEmail(env, email, dryRun)).catch((error) => console.error("[errors] digest failed", error)));
 	},
 } satisfies ExportedHandler<Env>;
 
@@ -210,12 +208,7 @@ async function handleTemplateUpload(env: Env, body: TemplateUpload): Promise<Res
 	if (files.length > MAX_TEMPLATE_FILES) return new Response("Too many files", { status: 400 });
 
 	for (const file of files) {
-		if (
-			!file.key ||
-			!TEMPLATE_FILE_KEY_PATTERN.test(file.key) ||
-			file.key.includes("..") ||
-			typeof file.content !== "string"
-		) {
+		if (!file.key || !TEMPLATE_FILE_KEY_PATTERN.test(file.key) || file.key.includes("..") || typeof file.content !== "string") {
 			return new Response(`Invalid file entry: ${file.key}`, { status: 400 });
 		}
 		const bytes = new TextEncoder().encode(file.content).byteLength;
@@ -238,7 +231,7 @@ async function handleTemplateUpload(env: Env, body: TemplateUpload): Promise<Res
 
 /** Renders the template and sends the email (mirrors email/src/mailserend.ts mailService). */
 export async function mailService(body: MailRequest, env: Env, request?: Request): Promise<void> {
-	const { authToken, to, subject, htmlTemplateName, templateData = {} } = body;
+	const { authToken, to, subject, htmlTemplateName, templateData = {}, replyTo } = body;
 
 	if (!env.SERVICE_AUTH_TOKEN) throw new Error("No service auth token configured");
 	const valid = await constantTimeEqual(authToken ?? "", env.SERVICE_AUTH_TOKEN);
@@ -247,15 +240,17 @@ export async function mailService(body: MailRequest, env: Env, request?: Request
 	if (!to) throw new Error("No recipient provided");
 	if (!subject) throw new Error("No subject provided");
 	if (!htmlTemplateName) throw new Error("No HTML template name provided");
-	if (!TEMPLATE_NAME_PATTERN.test(htmlTemplateName) || htmlTemplateName.includes(".."))
-		throw new Error(`Invalid HTML template name: ${htmlTemplateName}`);
+	if (!TEMPLATE_NAME_PATTERN.test(htmlTemplateName) || htmlTemplateName.includes("..")) throw new Error(`Invalid HTML template name: ${htmlTemplateName}`);
 
 	// Templates live in the same R2 bucket this worker publishes to
 	// (`POST /html-templates`, keys `html_templates/<name>`). Read them from
 	// the binding directly — no HTTP fetch from the website's file proxy.
 	const html = await getHTMLTemplate(env, htmlTemplateName, templateData);
 
-	await deliverEmail(env, { to, subject, html, label: htmlTemplateName }, decideDryRun(env, request));
+	// A reply address must look like one; anything else falls back to the sender (never fails the send).
+	const reply = replyTo?.email && REPLY_TO_PATTERN.test(replyTo.email) ? { email: replyTo.email, name: replyTo.name?.slice(0, 120) } : undefined;
+
+	await deliverEmail(env, { to, subject, html, label: htmlTemplateName, replyTo: reply }, decideDryRun(env, request));
 }
 
 /**
@@ -264,7 +259,7 @@ export async function mailService(body: MailRequest, env: Env, request?: Request
  */
 export async function deliverEmail(
 	env: Env,
-	{ to, subject, html, label }: { to: string; subject: string; html: string; label: string },
+	{ to, subject, html, label, replyTo }: { to: string; subject: string; html: string; label: string; replyTo?: { email: string; name?: string } },
 	dryRun: { on: boolean; reason: string },
 ): Promise<void> {
 	if (dryRun.on) {
@@ -287,7 +282,7 @@ export async function deliverEmail(
 		body: JSON.stringify({
 			from: { email: SENDER_EMAIL, name: SENDER_NAME },
 			to: [{ email: to }],
-			reply_to: { email: SENDER_EMAIL, name: SENDER_NAME },
+			reply_to: replyTo ? { email: replyTo.email, ...(replyTo.name ? { name: replyTo.name } : {}) } : { email: SENDER_EMAIL, name: SENDER_NAME },
 			subject,
 			html,
 		}),
@@ -318,8 +313,7 @@ export async function deliverEmail(
 export function decideDryRun(env: Env, request?: Request): { on: boolean; reason: string } {
 	if (env.DRY_RUN === "true") return { on: true, reason: "dry_run_var" };
 	if (env.DRY_RUN === "false") return { on: false, reason: "dry_run_var" };
-	if (env.DRY_RUN && env.DRY_RUN !== "true" && env.DRY_RUN !== "false")
-		return { on: true, reason: "dry_run_unrecognised" };
+	if (env.DRY_RUN && env.DRY_RUN !== "true" && env.DRY_RUN !== "false") return { on: true, reason: "dry_run_unrecognised" };
 
 	const declared = (env.ENVIRONMENT ?? "").toLowerCase();
 	if (declared === "dev" || declared === "development" || declared === "local") return { on: true, reason: "declared_dev" };
@@ -330,8 +324,7 @@ export function decideDryRun(env: Env, request?: Request): { on: boolean; reason
 	if (request) {
 		if (!request.headers.get("CF-Connecting-IP")) return { on: true, reason: "not_edge_request" };
 		const host = new URL(request.url).hostname;
-		if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost"))
-			return { on: true, reason: "localhost_host" };
+		if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost")) return { on: true, reason: "localhost_host" };
 	}
 
 	return { on: false, reason: "production" };
@@ -350,19 +343,17 @@ export function maskEmail(value: string): string {
 	return `${shown}***${domain}`;
 }
 
-const getHTMLTemplate = async (
-	env: Env,
-	name: string,
-	data: Record<string, string | number | undefined>,
-) => {
+const getHTMLTemplate = async (env: Env, name: string, data: Record<string, string | number | undefined>) => {
 	const template = await env.BUCKET.get(`html_templates/${name}`);
 	if (!template) throw new Error(`Could not find the HTML template (${name}) in the bucket.`);
 	return applyToTemplate(await template.text(), data);
 };
 
+/** A plausible single email address (no spaces, one @, a dot in the domain). */
+const REPLY_TO_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /** Template values are text, never markup: a submitted form field must not be able to inject HTML/links into a school email. */
-const escapeHtml = (value: string) =>
-	value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const escapeHtml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 const applyToTemplate = (template: string, data: Record<string, string | number | undefined>) => {
 	const regex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
@@ -372,10 +363,7 @@ const applyToTemplate = (template: string, data: Record<string, string | number 
 /** Constant-time-ish secret comparison via SHA-256 (no early exit on length/content). */
 const constantTimeEqual = async (a: string, b: string): Promise<boolean> => {
 	const enc = new TextEncoder();
-	const [da, db] = await Promise.all([
-		crypto.subtle.digest("SHA-256", enc.encode(a)),
-		crypto.subtle.digest("SHA-256", enc.encode(b)),
-	]);
+	const [da, db] = await Promise.all([crypto.subtle.digest("SHA-256", enc.encode(a)), crypto.subtle.digest("SHA-256", enc.encode(b))]);
 	const ua = new Uint8Array(da);
 	const ub = new Uint8Array(db);
 	if (ua.length !== ub.length) return false;

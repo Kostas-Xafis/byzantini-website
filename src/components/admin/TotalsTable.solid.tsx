@@ -404,7 +404,7 @@ export default function TotalsTable() {
 								return (
 									<section class="w-full max-w-5xl justify-self-center grid gap-3" aria-label="Χρειάζονται προσοχή">
 										<h2 class="font-anaktoria text-2xl text-ink">Χρειάζονται προσοχή</h2>
-										<div class="grid grid-cols-3 max-lg:grid-cols-1 gap-4">
+										<div class="grid grid-cols-4 max-xl:grid-cols-2 max-sm:grid-cols-1 gap-4">
 											<AttentionTile
 												href="/admin/pupils?review=1"
 												icon="clipboard-check"
@@ -436,6 +436,14 @@ export default function TotalsTable() {
 														: `από την τελευταία σας επίσκεψη (${formatVisit(previousVisit)})`
 												}
 												calm={data().new_online === 0}
+											/>
+											<AttentionTile
+												href="/admin/interest"
+												icon="mail-open"
+												title="Δηλώσεις ενδιαφέροντος"
+												value={data().interest}
+												detail={data().interest === 1 ? "περιμένει απάντηση" : "περιμένουν απάντηση"}
+												calm={data().interest === 0}
 											/>
 										</div>
 									</section>

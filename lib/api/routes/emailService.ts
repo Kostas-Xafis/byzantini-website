@@ -25,6 +25,8 @@ export interface AutomatedEmailPayload {
 	subject: string;
 	htmlTemplateName: string;
 	templateData?: Record<string, string | number | undefined>;
+	/** Where a reply goes (default: the school's sender address) — e.g. the family that filled in a form. */
+	replyTo?: { email: string; name?: string };
 }
 
 export function sendAutomatedEmail(env: Record<string, any> | undefined, payload: AutomatedEmailPayload): Promise<Response> {

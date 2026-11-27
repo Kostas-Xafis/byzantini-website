@@ -20,6 +20,7 @@ const sections: NavSection[] = [
 		links: [
 			{ name: "Εγγραφές", url: "/admin/registrations", force: false, icon: "clipboard-list" },
 			{ name: "Μαθητολόγιο", url: "/admin/pupils", force: false, icon: "address-book" },
+			{ name: "Δηλώσεις ενδιαφέροντος", url: "/admin/interest", force: false, icon: "mail-open" },
 			{ name: "Επαφές Google", url: "/admin/contacts", force: false, icon: "smartphone", permission: "googleContacts" },
 			{ name: "Καθηγητές", url: "/admin/teachers", force: false, icon: "teacher" },
 			{ name: "Παραρτήματα", url: "/admin/locations", force: false, icon: "map-pin" },

@@ -33,6 +33,8 @@ const TEST_PUPIL_WHERE =
 const TEST_EMAIL_LIKE = ["pupils.test.%@example.com", "test.%example.com"];
 /** The e2e suite's throwaway admins (e2e/support/fixtures.ts). */
 const TEST_ADMIN_EMAIL_LIKE = "e2e.%@example.com";
+/** «Δηλώσεις ενδιαφέροντος» the API suite posts (tests/api/interestDeclarations.test.ts). */
+const TEST_INTEREST_EMAIL_LIKE = "interest.test.%@example.com";
 /**
  * Activity rows of test runs: made by a throwaway `@example.com` admin, or naming a test fixture (an invite to /
  * pupil with an `@example.com` address, a «Δοκιμαστικός Μαθητής»). Not every row of the harness admin — once the
@@ -67,6 +69,7 @@ const counts = {
 	admins: (db.query("SELECT COUNT(*) AS c FROM sys_users WHERE email LIKE ?").get(TEST_ADMIN_EMAIL_LIKE) as { c: number }).c,
 	invites: (db.query("SELECT COUNT(*) AS c FROM sys_user_register_links WHERE email LIKE ?").get(TEST_ADMIN_EMAIL_LIKE) as { c: number }).c,
 	activity: (db.query(`SELECT COUNT(*) AS c FROM sys_activity WHERE ${TEST_ACTIVITY_WHERE}`).get() as { c: number }).c,
+	interest: (db.query("SELECT COUNT(*) AS c FROM interest_declarations WHERE email LIKE ?").get(TEST_INTEREST_EMAIL_LIKE) as { c: number }).c,
 };
 
 console.log(`Database: ${dbFile}`);
@@ -77,6 +80,7 @@ console.log(`  test subscriptions : ${counts.subscriptions}`);
 console.log(`  test admins        : ${counts.admins}`);
 console.log(`  test invites       : ${counts.invites}`);
 console.log(`  test activity rows : ${counts.activity}`);
+console.log(`  test interest rows : ${counts.interest}`);
 
 if (!apply) {
 	console.log("\nDRY RUN — nothing removed. Re-run with --apply.");
@@ -95,6 +99,7 @@ const tx = db.transaction(() => {
 	db.run("DELETE FROM sys_users WHERE email LIKE ?", [TEST_ADMIN_EMAIL_LIKE]);
 	db.run("DELETE FROM sys_user_register_links WHERE email LIKE ?", [TEST_ADMIN_EMAIL_LIKE]);
 	db.run(`DELETE FROM sys_activity WHERE ${TEST_ACTIVITY_WHERE}`);
+	db.run("DELETE FROM interest_declarations WHERE email LIKE ?", [TEST_INTEREST_EMAIL_LIKE]);
 	db.run("UPDATE total_enrollments SET amount = (SELECT COUNT(*) FROM pupil_enrollments)");
 });
 tx();

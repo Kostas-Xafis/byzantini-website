@@ -311,6 +311,25 @@ The person data that used to live on `registrations` is split into two tables
   or `?by=name` link opens on the default). In «Εγγραφές» the ΑΜ of each row
   opens `/admin/pupils?pupil=<id>` in a new tab (`cellLinks` on `Table`).
 
+## Δήλωση Ενδιαφέροντος (interest declarations)
+
+- A short public form for families with questions before they register: first name, surname, email, phone and an
+  optional message (`src/components/interest/InterestForm.solid.tsx`) — once, on `/epikoinonia/`
+  (`#dilosi-endiaferontos`, after «Στοιχεία τμημάτων»); the home page's hero links to it with the «Έχετε απορίες;»
+  box under the registrations card (`Landing.astro`, `#dilosiLink`). Hidden `website` field = honeypot (a filled one answers success and stores nothing).
+- `InterestDeclarations.post` (public, `rateLimitMiddleware("interest")`, migration 0013 `interest_declarations`)
+  stores the row, then emails each secretariat inbox the `interest_declaration.html` template
+  (`services/emailWorker/render/emails/InterestDeclaration.tsx`) with **reply-to = the family** (`replyTo` on
+  `sendAutomatedEmail` → the worker's `reply_to`). Inboxes: both departments' addresses
+  (`DEFAULT_INTEREST_RECIPIENTS`), or `INTEREST_NOTIFY_EMAILS` (comma-separated var) to override. A mail failure is
+  logged, never fails the request (the row is already saved). Rows older than 12 months are pruned on each insert
+  (privacy policy «Δήλωση ενδιαφέροντος» / «Πόσο χρόνο κρατάμε τα δεδομένα»).
+- Admin page «Δηλώσεις ενδιαφέροντος» (`/admin/interest`, `InterestPage.solid.tsx`, every admin): read and delete
+  (`InterestDeclarations.list` / `delete`). Deleting = handled; the «Αρχική» tile counts what is still stored
+  (`interest` in `Pupils.dashboardSummary`). Test rows use `interest.test.*@example.com` (`bun run dev:clean`).
+- Release: apply 0013 remotely, `templates:build --prod`, deploy the emails worker (for `replyTo`; an older worker
+  ignores it and replies go to the school's sender), then the site.
+
 ## Admin authentication (sign-in, sessions, providers)
 
 Migration `0008_auth_identities_sessions.sql`; code in `lib/auth/` (server-only

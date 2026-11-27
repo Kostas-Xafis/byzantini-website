@@ -6,6 +6,7 @@ import AccountPage from "./AccountPage.solid.tsx";
 import ActivityPage from "./ActivityPage.solid.tsx";
 import ContactsPage from "./ContactsPage.solid.tsx";
 import ErrorsPage from "./ErrorsPage.solid.tsx";
+import InterestPage from "./InterestPage.solid.tsx";
 import AdminPage from "./AdminPage.solid.tsx";
 import AnnouncementsTable from "./AnnouncementsTable.solid.tsx";
 import BooksTable from "./BooksTable.solid.tsx";
@@ -52,6 +53,7 @@ export default function AdminRouter() {
 				<Route path="/admin" component={TotalsTable} />
 				<Route path="/admin/registrations" component={RegistrationsTable} />
 				<Route path="/admin/pupils" component={PupilsPage} />
+				<Route path="/admin/interest" component={InterestPage} />
 				<Route path="/admin/books" component={BooksTable} />
 				<Route path="/admin/payments" component={PaymentsTable} />
 				<Route path="/admin/payoffs" component={PayoffsTable} />
