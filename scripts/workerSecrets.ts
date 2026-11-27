@@ -91,6 +91,15 @@ export const ENV_MIRRORS: Record<Pair, { file: string; key: string }[]> = {
 	],
 };
 
+/** Adds `KEY=value` to a local env file only when the file has no `KEY=` line yet (never changes an existing value). */
+export function ensureEnvLine(filePath: string, key: string, value: string): void {
+	const absolute = resolve(ROOT, filePath);
+	const content = existsSync(absolute) ? readFileSync(absolute, "utf8") : "";
+	if (new RegExp(`^${key}=`, "m").test(content)) return;
+	upsertEnvFile(filePath, key, value);
+	console.log(`✓ ${key}=${value}  →  ${filePath} (local dev must not send real emails)`);
+}
+
 /** Upsert `KEY=value` into a local env file, preserving the rest of the file and its mode. */
 export function upsertEnvFile(filePath: string, key: string, value: string): void {
 	const absolute = resolve(ROOT, filePath);
@@ -368,6 +377,9 @@ async function main(): Promise<void> {
 			if (opts.noEnvFiles) {
 				// skip mirroring
 			} else if (failed === pairFailedBefore) {
+				// The emails worker's wrangler.jsonc sets ENVIRONMENT=production; local `wrangler dev` must override it
+				// from .dev.vars, or a local run with a MailerSend key would really send.
+				if (pair === "email") ensureEnvLine("services/emailWorker/.dev.vars", "ENVIRONMENT", "development");
 				for (const { file, key } of ENV_MIRRORS[pair]) {
 					try {
 						upsertEnvFile(file, key, value);

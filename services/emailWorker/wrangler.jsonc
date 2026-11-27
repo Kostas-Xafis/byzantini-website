@@ -25,8 +25,12 @@
 	// Test locally: `bunx wrangler dev --config wrangler.jsonc --test-scheduled` then GET /__scheduled.
 	"triggers": { "crons": ["*/15 * * * *"] },
 
-	// No vars any more — SITE_URL is gone: per-send template reads come from
-	// the BUCKET binding above, not from the website's HTTP file proxy.
+	// ENVIRONMENT=production makes `decideDryRun` really send. It must live here: the site calls this worker
+	// through a service binding (no CF-Connecting-IP), so without it every email would be a silent dry run,
+	// and a dashboard-only var is wiped by a plain `wrangler deploy`. Local `wrangler dev` overrides it with
+	// ENVIRONMENT=development from `.dev.vars` (`bun run worker-secrets` adds that line when it is missing).
+	// (SITE_URL is gone: per-send template reads come from the BUCKET binding above.)
+	"vars": { "ENVIRONMENT": "production" },
 
 	// Lite request telemetry: one Analytics Engine data point per request
 	// (outcome, endpoint, template, duration, status, count) plus a structured
