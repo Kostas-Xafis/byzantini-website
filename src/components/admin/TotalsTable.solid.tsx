@@ -49,6 +49,39 @@ const MUSIC_TYPES = [
 	{ label: "Ευρωπαϊκή", bar: "bg-sky-600" },
 ] as const;
 
+/**
+ * A money amount behind a blur, with a button that shows or hides it (outside the tile's link: a button may not sit inside an `<a>`).
+ * Always hidden when the page opens (owner's decision): showing it is never remembered.
+ */
+function BlurredAmountTile(props: Parameters<typeof AttentionTile>[0]) {
+	const [shown, setShown] = createSignal(false);
+	const toggle = () => setShown(!shown());
+	return (
+		<div class="relative grid">
+			<AttentionTile
+				{...props}
+				value={
+					<span
+						class="inline-block transition-[filter] motion-reduce:transition-none"
+						classList={{ "blur-md select-none": !shown() }}
+						aria-hidden={!shown()}>
+						{props.value}
+					</span>
+				}
+			/>
+			<button
+				type="button"
+				class="absolute right-3 top-14 grid h-9 w-9 place-items-center rounded-lg text-ink-muted hover:bg-surface-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
+				aria-pressed={shown()}
+				aria-label={shown() ? "Απόκρυψη ποσού" : "Εμφάνιση ποσού"}
+				title={shown() ? "Απόκρυψη ποσού" : "Εμφάνιση ποσού"}
+				onClick={toggle}>
+				<Icon name={shown() ? "eye-off" : "eye"} class="text-lg" />
+			</button>
+		</div>
+	);
+}
+
 /** A dashboard tile that opens the list behind its number. */
 function AttentionTile(props: { href: string; icon: IconName; title: string; value: JSX.Element; detail: JSX.Element; calm: boolean }) {
 	return (
@@ -413,7 +446,7 @@ export default function TotalsTable() {
 												detail={data().needs_review === 1 ? "μαθητής στο Μαθητολόγιο" : "μαθητές στο Μαθητολόγιο"}
 												calm={data().needs_review === 0}
 											/>
-											<AttentionTile
+											<BlurredAmountTile
 												href={`/admin/registrations?year=${yearStart}`}
 												icon="euro"
 												title={`Οφειλές ${shortYear}`}
