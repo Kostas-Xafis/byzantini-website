@@ -245,7 +245,7 @@ export function planReconcile({ register, pupils, enrollments, currentYear, isTe
 			if (am === null || am === undefined || decided.has(p.id)) continue;
 			const own = regByAm.get(am);
 			if (!own || samePerson({ surname: p.last_name, name: p.first_name }, { surname: own.surname, name: own.name })) continue;
-			const matches = register.filter((r) => !holderOf(r.am) && strictlySamePerson(p, r));
+			const matches = register.filter((r) => !holderOf(r.am) && !decisions.freed.includes(r.am) && strictlySamePerson(p, r));
 			if (matches.length !== 1) continue;
 			assign(p, matches[0].am, `το ΑΜ ${am} στο Γενικό Μητρώο είναι άλλου· το δικό του/της είναι ${matches[0].am}`);
 			decided.add(p.id);
@@ -256,7 +256,7 @@ export function planReconcile({ register, pupils, enrollments, currentYear, isTe
 	// 2. Register numbers for pupils without ΑΜ.
 	for (const p of pupils) {
 		if (amOf.get(p.id) !== null || mergedAway.has(p.id) || needNumber.has(p.id)) continue;
-		const matches = register.filter((r) => !holderOf(r.am) && strictlySamePerson(p, r));
+		const matches = register.filter((r) => !holderOf(r.am) && !decisions.freed.includes(r.am) && strictlySamePerson(p, r));
 		if (matches.length === 1) assign(p, matches[0].am, "βρέθηκε στο Γενικό Μητρώο");
 		else if (matches.length > 1)
 			plan.skipped.push({ pupilId: p.id, why: `ταιριάζει με περισσότερα ΑΜ του Γενικού Μητρώου (${matches.map((r) => r.am).join(", ")})` });

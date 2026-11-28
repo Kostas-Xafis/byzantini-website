@@ -196,6 +196,24 @@ describe("plan", () => {
 		]);
 	});
 
+	test("a number the principal freed is never a match (a duplicate entry of the same person)", () => {
+		const register = [reg(1, "Κάππα", "Κική"), reg(2, "Κάππα", "Κική")];
+		const result = plan(
+			register,
+			[pupil(60, null, "Κάππα", "Κική"), pupil(61, null, "Νέα", "Νίκη")],
+			[enr(60, "2020-2021", "2020-09-01"), enr(61, YEAR, "2026-09-01")],
+			{
+				...NONE,
+				freed: [2],
+			},
+		);
+		expect(result.assignments.map((a) => [a.pupilId, a.to])).toEqual([
+			[60, 1],
+			[61, 2],
+		]);
+		expect(result.skipped).toEqual([]);
+	});
+
 	test("a second run finds the decisions done", () => {
 		const register = [reg(1, "Αλφάκη", "Γεωργία")];
 		const result = plan(register, [pupil(30, 1, "Αλφάκη", "Γεωργία")], [], {
