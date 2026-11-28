@@ -51,7 +51,7 @@ any assertion. A failure there is a finding about the page or the policy — nev
   `SysUsers.setRole` for an owner) and deleted when the test ends, passed or failed, together with the
   «Ιστορικό ενεργειών» rows about them (`support/fixtures.ts`).
   The owner's own account is never used in the browser.
-- **Pupil:** the registration happy path writes a «Δοκιμαστικός Μαθητής» without ΑΜ (an orphan `000-Ο<n>` row),
+- **Pupil:** the registration happy path writes a «Δοκιμαστικός Μαθητής» with the next ΑΜ (given automatically and shown in the success message),
   an ΑΜΚΑ starting with 99 (no real ΑΜΚΑ does) and a `pupils.test.e2e.*@example.com` email; the test deletes the
   pupil, its enrollment and the newsletter row afterwards.
 - `bun run dev:clean` also removes both kinds of fixture, in case a run was killed half-way.

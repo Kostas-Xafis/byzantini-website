@@ -7,7 +7,7 @@ import InterestForm from "@components/interest/InterestForm.solid";
 import JsonLd from "@components/seo/JsonLd.astro";
 import { API, useAPI } from "@hooks/useAPI.server";
 import Layout from "@layouts/Layout.astro";
-import { breadcrumbsSchema, DEVELOPER, SCHOOL, SCHOOL_ID } from "@utilities/schema";
+import { breadcrumbsSchema, DEVELOPER, SCHOOL, SCHOOL_HOURS, SCHOOL_ID } from "@utilities/schema";
 import type { Locations } from "@_types/entities";
 
 export const prerender = false;
@@ -30,12 +30,7 @@ const departments = [
 	},
 ] as const;
 
-const hoursRanges = [
-	{
-		days: "Καθημερινά (Δευτέρα – Κυριακή)",
-		range: "9:00 π.μ. – 2:00 μ.μ. & 4:30 μ.μ. – 9:00 μ.μ.",
-	},
-];
+const hoursRanges = SCHOOL_HOURS;
 
 const socials: { name: string; icon: IconName; url: string }[] = [
 	{

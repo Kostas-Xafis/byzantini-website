@@ -23,16 +23,17 @@ afterAll(async () => {
 
 const create = async (body: Record<string, unknown>) => useTestAPI("Pupils.create", { RequestObject: body as never });
 
-test("--pupils create-- without ΑΜ: a review code, flagged, and old enrollments can be added", async () => {
+test("--pupils create-- without ΑΜ: the next ΑΜ, not flagged, and old enrollments can be added", async () => {
 	const res = await create(pupil({ amka: fakeAmka(), birth_date: Date.UTC(2005, 2, 1) }));
 	expect(res.status).toBe(200);
-	const { id } = (await getJson<APIResponse["Pupils.create"]>(res)).data;
+	const { id, am } = (await getJson<APIResponse["Pupils.create"]>(res)).data;
 	created.push(id);
 
 	const record = (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id } }))).data;
-	expect(record.pupil.am).toBeNull();
-	expect(record.pupil.orphan_code).toMatch(/^000-Ο\d+$/);
-	expect(record.pupil.needs_review).toBe(true);
+	expect(record.pupil.am).toBe(am);
+	expect(am).toBeLessThan(9000);
+	expect(record.pupil.orphan_code).toBe("");
+	expect(record.pupil.needs_review).toBe(false);
 	expect(record.pupil.registration_url).toHaveLength(32);
 
 	// A year before the online register.

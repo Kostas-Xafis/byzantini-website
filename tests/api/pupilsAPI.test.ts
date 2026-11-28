@@ -571,8 +571,10 @@ function pupilsTest() {
 
 		const res = await useTestAPI("Pupils.getByReregistrationUrl", { UrlArgs: { url } }, false);
 		const json = await getJson<APIResponse["Pupils.getByReregistrationUrl"]>(res);
-		expect(json.data.pupil.id).toBe(pupilId!);
-		expect(Array.isArray(json.data.enrollments)).toBe(true);
+		expect(json.data.am).toBe(String(createdAm));
+		expect(json.data.token.length).toBeGreaterThan(20);
+		// only what the form pre-fills: no internal fields
+		expect(Object.keys(json.data.pupil)).not.toContain("review_note");
 	});
 
 	test("--pupils-- #19 public re-registration lookup 404s on an unknown link", async () => {
@@ -790,9 +792,9 @@ function pupilsTest() {
 	});
 
 	// ------------------------------------------------------------------
-	// Public returning-student lookup (ΑΜ + ΑΜΚΑ)
+	// Public returning-student lookup (ΑΜ + ΑΜΚΑ; ΑΜ/name + phone in pupilsIdentify.test.ts)
 	// ------------------------------------------------------------------
-	test("--pupils-- #22 lookup by ΑΜ + ΑΜΚΑ returns the pupil and history", async () => {
+	test("--pupils-- #22 lookup by ΑΜ + ΑΜΚΑ returns the pre-fill fields and a token", async () => {
 		// ΑΜ 706 is the fixture pupil; its ΑΜΚΑ comes from the record itself so the
 		// test does not hardcode personal data.
 		const known = await useTestAPI("Pupils.get", { UrlArgs: { id: 159 } });
@@ -800,27 +802,26 @@ function pupilsTest() {
 		const am = knownJson.data.pupil.am!;
 		const amka = knownJson.data.pupil.amka;
 
-		const res = await useTestAPI("Pupils.getByAm", { RequestObject: { am, amka } }, false);
-		const json = await getJson<APIResponse["Pupils.getByAm"]>(res);
-		expectBody(json, z.object({ pupil: z_Pupils, enrollments: z.array(z_PupilEnrollments) }));
-		expect(json.data.pupil.am).toBe(am);
-		expect(json.data.pupil.amka).toBe(amka);
+		const res = await useTestAPI("Pupils.identify", { RequestObject: { by: "am", am, proof: amka } }, false);
+		const json = await getJson<APIResponse["Pupils.identify"]>(res);
+		expectBody(json, z.object({ token: z.string(), am: z.string(), amka: z.string(), pupil: z_Pupils.pick({ first_name: true, last_name: true }) }));
+		expect(json.data.am).toBe(String(am));
+		expect(json.data.amka).toBe(amka);
 	});
 
 	test("--pupils-- #23 lookup rejects an ΑΜΚΑ that does not match the ΑΜ", async () => {
-		const res = await useTestAPI("Pupils.getByAm", { RequestObject: { am: 706, amka: "00000000000" } }, false);
+		const res = await useTestAPI("Pupils.identify", { RequestObject: { by: "am", am: 706, proof: "00000000000" } }, false);
 		expect(res.status).toBe(404);
 		const json = await res.json();
 		expect(typeof json.error).toBe("string");
 	});
 
-	test("--pupils-- #24 lookup rejects a malformed ΑΜΚΑ", async () => {
-		await expect(useTestAPI("Pupils.getByAm", { RequestObject: { am: 706, amka: "123" } }, false)).rejects.toThrow("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
-
-		// …and the server rejects it too, independently of the client
-		const res = await rawAPI("POST", "/pupils/lookup", { am: 706, amka: "123" });
+	test("--pupils-- #24 lookup rejects a malformed ΑΜΚΑ or phone", async () => {
+		const res = await rawAPI("POST", "/pupils/lookup", { by: "am", am: 706, proof: "123" });
 		expect(res.status).toBe(400);
-		expect(JSON.stringify((await res.json()).details)).toContain("Ο ΑΜΚΑ αποτελείται από 11 ψηφία");
+		expect((await res.json()).error).toContain("Ο ΑΜΚΑ έχει 11 ψηφία");
+		const missing = await rawAPI("POST", "/pupils/lookup", { by: "am", am: 706 });
+		expect(missing.status).toBe(400);
 	});
 
 	// ------------------------------------------------------------------

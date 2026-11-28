@@ -66,7 +66,7 @@ export function UpenthimisiEggrafis({
 					🎓 Σπουδαστής/-στρια: <b>{`{{first_name}} {{last_name}}`}</b>
 				</Text>
 				<Text style={{ margin: "8px 0 0", fontFamily: FONT_FAMILY, fontSize: 17, lineHeight: 1.6, color: COLORS.text }}>
-					🪪 Αριθμός Μητρώου (Α.Μ.): <b>{`{{am}}`}</b>
+					🪪 Αριθμός Μητρώου Μαθητού (Α.Μ.): <b>{`{{am}}`}</b>
 				</Text>
 				<Text style={{ margin: "10px 0 0", fontFamily: FONT_FAMILY, fontSize: 15, lineHeight: 1.55, color: COLORS.textMuted }}>
 					Παρακαλείστε να συμπληρώσετε τα παραπάνω στοιχεία στην ηλεκτρονική αίτηση εγγραφής.

@@ -34,6 +34,7 @@ export const ACTIVITY_LABELS: Record<string, string> = {
 	"Teachers.fileRename": "Μετονομασία αρχείου καθηγητή",
 	"Teachers.fileDelete": "Διαγραφή αρχείου καθηγητή",
 	"Teachers.delete": "Διαγραφή καθηγητών",
+	"Teachers.markFormer": "Ορισμός καθηγητών ως πρώην",
 	"Instruments.post": "Νέο όργανο",
 	"Instruments.delete": "Διαγραφή οργάνων",
 

@@ -49,7 +49,15 @@ export type TemplateDef = {
 export const templates: TemplateDef[] = [
 	...successfulRegistrationTemplates.map(({ name, level }) => ({
 		name,
-		build: () => <SuccessfulRegistration level={level} classYear={"{{class_year}}"} classType={"{{class_type}}"} schoolYear={"{{registration_year}}"} />,
+		build: () => (
+			<SuccessfulRegistration
+				level={level}
+				classYear={"{{class_year}}"}
+				classType={"{{class_type}}"}
+				schoolYear={"{{registration_year}}"}
+				am={"{{am}}"}
+			/>
+		),
 	})),
 	{
 		name: "sysuser_register_link.html",

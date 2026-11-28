@@ -7,8 +7,8 @@
  * with ΑΜ 9000-9999 ("Δοκιμαστικός Μαθητής"), a couple of test payments and
  * `pupils.test.*@example.com` newsletter subscriptions, plus the «Ιστορικό
  * ενεργειών» entries those runs write (`sys_activity`). The e2e smoke suite
- * (e2e/) registers a «Δοκιμαστικός Μαθητής» without ΑΜ (an orphan row with a
- * `pupils.test.e2e.*@example.com` email) and creates throwaway
+ * (e2e/) and the API suites register «Δοκιμαστικός Μαθητής» pupils (a real-range ΑΜ, given automatically, with a
+ * `pupils.test.*@example.com` email) and the e2e suite creates throwaway
  * `e2e.*@example.com` admins; it deletes them itself, these are the safety
  * net for a run that was killed half-way. They pollute the admin UI and the
  * counts, so this script removes them and re-derives the `total_enrollments`
@@ -28,8 +28,7 @@ const REPO_ROOT = path.resolve(import.meta.dir, "..");
 const D1_STATE_DIR = path.join(REPO_ROOT, ".wrangler/state/v3/d1/miniflare-D1DatabaseObject");
 
 /** Fixtures the test suites create. Keep in sync with tests/api/*.test.ts and e2e/*.spec.ts. */
-const TEST_PUPIL_WHERE =
-	"last_name = 'Μαθητής' AND first_name = 'Δοκιμαστικός' AND (am BETWEEN 9000 AND 9999 OR (am IS NULL AND email LIKE 'pupils.test.e2e.%@example.com'))";
+const TEST_PUPIL_WHERE = "last_name = 'Μαθητής' AND first_name = 'Δοκιμαστικός' AND (am BETWEEN 9000 AND 9999 OR email LIKE 'pupils.test.%@example.com')";
 const TEST_EMAIL_LIKE = ["pupils.test.%@example.com", "test.%example.com"];
 /** The e2e suite's throwaway admins (e2e/support/fixtures.ts). */
 const TEST_ADMIN_EMAIL_LIKE = "e2e.%@example.com";

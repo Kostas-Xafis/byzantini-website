@@ -191,6 +191,21 @@ function teachersTest() {
 		expect(update.status).toBe(200);
 		expect(await formerOf()).toBe(true);
 	});
+	test("--teachers-- #6b «Ορισμός ως πρώην» hides the teacher and removes their classes; last years list everyone", async () => {
+		const marked = await useTestAPI("Teachers.markFormer", { RequestObject: [newTeacherId as number] });
+		expect(marked.status).toBe(200);
+		const json = await getJson<APIResponse["Teachers.getById"]>(await useTestAPI("Teachers.getById", { RequestObject: [newTeacherId as number] }));
+		expect(Boolean(json.data.former)).toBe(true);
+		expect(Boolean(json.data.visible)).toBe(false);
+		const classes = await getJson<APIResponse["Teachers.getClassesById"]>(
+			await useTestAPI("Teachers.getClassesById", { RequestObject: [newTeacherId as number] }),
+		);
+		expect(classes.data).toHaveLength(0);
+
+		const years = await getJson<APIResponse["Teachers.lastYears"]>(await useTestAPI("Teachers.lastYears"));
+		const mine = years.data.find((row) => row.teacher_id === newTeacherId);
+		expect(mine).toEqual({ teacher_id: newTeacherId as number, last_year: null });
+	});
 	test("--teachers-- #7", async () => {
 		const res = await useTestAPI("Teachers.delete", {
 			RequestObject: [newTeacherId as number],

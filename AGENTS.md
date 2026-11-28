@@ -88,6 +88,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins, activity-log rows of throwaway `@example.com` admins / test fixtures) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
 | Registry backfill | `bun run registry:backfill` · `-- --apply` | the school's history before the online register: pupils of «Γενικό Μητρώο» + enrollments 2015-2016 … 2022-2023 from the owner's Excel (`school_registry/`, gitignored; `scripts/registryBackfill.ts`, parsing in `scripts/registry/parse.ts`); dry run + report by default, idempotent, `--sql <file>` saves the SQL; `--remote` targets production — never as routine work |
+| Register matching | `bun scripts/registryReconcile.ts` · `--apply` | after the backfill: gives every pupil the ΑΜ of the principal's «Γενικό Μητρώο», numbers the rest, applies his decisions (see «Matching the register»); dry run + report + Excel for the principal; idempotent; `--remote` targets production — never as routine work |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
 Aux services (separate Cloudflare Workers in `services/`, **part of this
@@ -237,24 +238,55 @@ The person data that used to live on `registrations` is split into two tables
   (`lib/api/routes/emailSubscriptions.ts`) but keep their public paths
   (`/registrations/email-*`) — those URLs are inside already-sent emails.
 - The public form (`RegistrationForm.solid.tsx`) is a three-step flow: pick a
-  music type → identify (ΑΜ + ΑΜΚΑ via `Pupils.getByAm`, or "new student") → the
-  form. A new student's form has NO ΑΜ field (it confused families and the
-  secretariat); the form sends the `000` placeholder, so the server creates a
-  pupil without ΑΜ, flagged for review. The identification happens ONCE;
-  switching department afterwards must not send the user back through it.
-- **Pupils without ΑΜ** (`am IS NULL`, `000-Ο…`) are identified by **ΑΜΚΑ
-  alone**: `Pupils.getByAm` without `am` matches only `am IS NULL AND amka = ?`
-  (a pupil with an ΑΜ always needs both), and `Pupils.post` reuses the
-  ΑΜΚΑ-matched pupil without ΑΜ on their next registration instead of creating
-  another orphan (`tests/api/pupilsWithoutAm.test.ts`).
+  music type → identify → the form. The identification card offers three equal
+  choices: «Γνωρίζω τον Αριθμό Μητρώου Μαθητού» (ΑΜ + «ΑΜΚΑ ή τηλέφωνο»),
+  «Δεν θυμάμαι…» (first name + surname + «ΑΜΚΑ ή τηλέφωνο») and «Νέος μαθητής»,
+  with the department's secretariat phone + hours under them. **Public text says
+  «Αριθμός Μητρώου Μαθητού», never a bare «Αριθμός Μητρώου»** (families took it
+  for their ID-card number — owner's decision). A new student's form has NO ΑΜ
+  field (it confused families and the secretariat); the form sends the `000`
+  placeholder and the server gives the pupil the next ΑΜ, which the success popup
+  shows (see «Automatic ΑΜ» below). The identification happens ONCE; switching department afterwards must not send the
+  user back through it.
+- **Identification** (`Pupils.identify`, `POST /pupils/lookup`, rate-limited;
+  rules in `lib/pupils/identify.ts`): the proof is the ΑΜΚΑ when the pupil has a
+  real one on file, otherwise a phone on file (landline or mobile, digits only) —
+  for the pupils from before ΑΜΚΑ was required (the backfill has none). The name
+  path needs exactly one match (same words, any order, never a prefix) and never
+  says whether a name exists. The answer holds only the pre-fill fields plus a
+  one-hour HMAC **identity token** (`lib/pupils/identityToken.server.ts`, key from
+  `SECRET`); `Pupils.post` with `identity` writes to that pupil without the
+  ΑΜ + ΑΜΚΑ check (expired/forged → 410, the form goes back to the
+  identification). The `?regid` link (`Pupils.getByReregistrationUrl`) answers
+  the same shape. An identified pupil's ΑΜΚΑ on file is never replaced from the
+  form; one without gives it now, and if another pupil already holds it both are
+  flagged `needs_review` with a «πιθανό διπλότυπο» note instead of refusing
+  (`tests/api/pupilsIdentify.test.ts`).
+- **Automatic ΑΜ** (owner's decision, 2026-11, approved by the school's
+  principal): the ΑΜ is never assigned by hand. Every new pupil, from the public
+  form or «Νέος μαθητής», gets the next ΑΜ at once (`insertWithNextAm` in
+  `pupils.ts`): the **lowest free number** (`NEXT_AM_SQL`), so a gap is always
+  filled by the next new pupil; with no gap, one above the highest. 9000+ are
+  test fixtures (`TEST_AM_FLOOR`). `Pupils.post` answers the `am`; the success
+  popup and the confirmation email (`{{am}}` in the `epitixis_*` templates) show
+  it. **A registration that is not completed gives its ΑΜ back**: when the
+  secretariat deletes a pupil's enrollments and none is left, and all of them
+  were of the current school year or later, the ΑΜ is freed and the pupil
+  flagged with a note (`releaseAmOfUnfinished`; a pupil with an earlier year
+  keeps it). A pupil without ΑΜ (given back, or an old record) is numbered again
+  when enrolled by the form or «Νέα εγγραφή» (`assignNextAm`). The principal adds
+  the numbers to his register from the Excel `registryReconcile.ts` writes.
+  (`tests/api/pupilsWithoutAm.test.ts`)
 - **An ΑΜΚΑ already in the register cannot create a new pupil**: when `Pupils.post`
-  finds nobody by ΑΜ or as a pupil without ΑΜ but another pupil holds that ΑΜΚΑ,
-  it answers 409 (naming nobody — public route) and the form offers «Συνέχεια με
-  αριθμό μητρώου», back to the ΑΜ + ΑΜΚΑ step. Placeholders (one repeated digit,
-  `isPlaceholderAmka`) are not checked: several pupils hold `00000000000`.
+  («Νέος μαθητής») finds the ΑΜΚΑ on a pupil with the same surname and birth date,
+  the enrollment goes to that pupil (a second department, or a family who chose
+  «Νέος μαθητής» again); anyone else gets 409 (naming nobody — public route) and
+  the form offers «Συνέχεια με Αριθμό Μητρώου Μαθητού», back to the
+  identification (by ΑΜ). Placeholders (one repeated digit, `isPlaceholderAmka`)
+  are not checked: several pupils hold `00000000000`.
 - **«Νέος μαθητής»** in the Μαθητολόγιο (`Pupils.create`, every admin): adds a
-  pupil by hand (ΑΜ optional — without one it gets the next `000-Ο…` code and
-  `needs_review`; a taken ΑΜ or ΑΜΚΑ is a 409), e.g. to fill in the years
+  pupil by hand (ΑΜ optional — without one it gets the next ΑΜ; a taken ΑΜ or
+  ΑΜΚΑ is a 409), e.g. to fill in the years
   before the online register. Their enrollments are added with «Νέα εγγραφή»,
   whose «Ημερομηνία Εγγραφής» defaults to today and takes the real day for a
   past year (years without a fee catalog are not priced).
@@ -280,9 +312,28 @@ The person data that used to live on `registrations` is split into two tables
   next enrollment is a higher class — and writes a «Σημείωση ελέγχου» for the
   inferred placements (no review flag) and for duplicate / shared ΑΜs (flagged).
   Backfilled pupils have no ΑΜΚΑ and only a birth year (stored as 1 January).
+- **Matching the register** (`scripts/registryReconcile.ts`, plan in
+  `scripts/registry/reconcile.ts`, run after the backfill): the principal's
+  «Γενικό Μητρώο» (ΑΜ 1 … N, no gaps) decides who holds which ΑΜ. A pupil without
+  ΑΜ who strictly matches a free register entry (spelling-tolerant names + same
+  father's name + birth year) gets that ΑΜ; every other pupil without ΑΜ gets
+  N+1, N+2 … in the order they first enrolled; the principal's decisions on the
+  cases the data cannot settle are in the gitignored
+  `school_registry/reconcile-decisions.json` (they name pupils: never in code;
+  each checked against the names it expects); any register number nobody holds goes to the current year's first
+  new pupils, so the register keeps no gaps. It clears
+  the `000-Ο…` codes and "ΑΜ pending" notes, writes an Excel for the principal
+  (`school_registry/Νέοι αριθμοί μητρώου <date>.xlsx`: the new numbers + the
+  corrections his register needs) and is idempotent. Dry run by default; `--apply`;
+  `--remote` is production (back up first).
   Teachers of those years who left are **«Πρώην διδάσκων»** (`teachers.former`,
   migration 0012): hidden, no classes, never offered in the enrollment forms
-  except on the enrollment that already has them.
+  except on the enrollment that already has them. The teachers page lists the
+  current teachers by default; «Πρώην διδάσκοντες» (`?former=1`) shows only the
+  former ones. «Χωρίς μαθητές 3 έτη» (`?idle=1`, `lib/teachers/activity.ts`,
+  from `Teachers.lastYears`) is only a hint — nobody is marked automatically
+  (owner's decision); «Ορισμός ως πρώην» (`Teachers.markFormer`) does it for the
+  selected teachers (former, hidden, classes removed).
 - **«Αρχική» dashboard** (`TotalsTable.solid.tsx`): «Χρειάζονται προσοχή»
   tiles from `Pupils.dashboardSummary` (`GET /pupils/dashboard/<since>`, one
   statement): pupils to review, unpaid fees of the current school year

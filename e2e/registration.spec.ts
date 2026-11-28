@@ -21,7 +21,7 @@ async function openNewStudentForm(page: Page) {
 	await page.goto("/eggrafes");
 	await page.getByRole("button", { name: "Βυζαντινή Μουσική" }).click();
 	await expect(page.getByRole("heading", { name: "Φόρμα Εγγραφής Βυζαντινής Μουσικής" })).toBeVisible();
-	await page.getByRole("button", { name: "Πατήστε εδώ" }).click();
+	await page.getByRole("button", { name: /^Νέος μαθητής/ }).click();
 	const form = page.locator("#registrationForm");
 	await expect(form).toBeVisible();
 	await teachersLoaded;
@@ -105,7 +105,11 @@ test("@phone a new student (no ΑΜ field) registers successfully", async ({ pag
 		await expect(page.getByText("Επιτυχής Εγγραφή")).toBeVisible();
 		await expect(form.getByRole("alert")).toHaveCount(0);
 
-		// What was written: a pupil without ΑΜ, flagged for the secretaries, with this year's enrollment from the form.
+		// The new pupil's ΑΜ is in the success message.
+		expect(data.am).toBeGreaterThan(0);
+		await expect(page.getByText(String(data.am), { exact: true })).toBeVisible();
+
+		// What was written: a pupil with the next ΑΜ, not flagged, with this year's enrollment from the form.
 		const row = withLocalDb(
 			(db) =>
 				db
@@ -116,8 +120,7 @@ test("@phone a new student (no ΑΜ field) registers successfully", async ({ pag
 					.get(data.pupilId) as Record<string, unknown> | null,
 		);
 		if (row !== null) {
-			expect(row).toMatchObject({ am: null, needs_review: 1, class_id: 0, class_year: "", evaluation: 1, source: "form" });
-			expect(String(row.orphan_code)).toMatch(/^000-Ο\d+$/);
+			expect(row).toMatchObject({ am: data.am, orphan_code: "", needs_review: 0, class_id: 0, class_year: "", evaluation: 1, source: "form" });
 		}
 	} finally {
 		deleteTestPupil(email);

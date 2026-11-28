@@ -4,9 +4,9 @@ import { type APIResponse } from "@lib/routes/index.client.ts";
 import { uniqueTestAm, withLocalDb } from "../localDb.ts";
 import { getJson, useTestAPI } from "../testHelpers.ts";
 
-// A pupil who registered as new has no ΑΜ until the secretaries assign one (an orphan, `000-Ο…`). Their next
-// registration must still find them: by ΑΜΚΑ alone in the lookup, and by ΑΜΚΑ in the public post — never by ΑΜΚΑ
-// alone for a pupil who has an ΑΜ (Pupils.getByAm / Pupils.post, lib/api/routes/pupils.ts).
+// New pupils (Pupils.post, lib/api/routes/pupils.ts): a "new student" gets the next ΑΜ at once; registering as new
+// again with the same ΑΜΚΑ, surname and birth date lands on the same record; anyone else's ΑΜΚΑ is refused; an old
+// record still without ΑΜ is numbered when it registers again.
 
 const fakeAmka = () => `99${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`; // day 99: no real person
 const registration = (am: string, amka: string, firstName: string) => ({
@@ -45,33 +45,36 @@ const register = async (am: string, amka: string, firstName: string) => {
 	return pupilId;
 };
 
-test("--pupils without ΑΜ-- found by ΑΜΚΑ alone, and re-registering reuses the same pupil", async () => {
+/** The highest real ΑΜ in the local dev database (test fixtures sit at 9000+). */
+const maxRealAm = () => withLocalDb((db) => (db.query("SELECT COALESCE(MAX(am), 0) AS m FROM pupils WHERE am < 9000").get() as { m: number }).m);
+
+test("--new pupils-- a new student gets the next ΑΜ; registering as new again lands on the same pupil", async () => {
+	const before = maxRealAm();
 	const amka = fakeAmka();
-	const pupilId = await register("000", amka, "Δοκιμαστικός");
+	const res = await useTestAPI("Pupils.post", { RequestObject: registration("000", amka, "Δοκιμαστικός") }, false);
+	expect(res.status).toBe(200);
+	const { pupilId, am } = (await getJson<APIResponse["Pupils.post"]>(res)).data;
+	created.push(pupilId);
+	expect(am).not.toBeNull();
+	if (before !== null) expect(am!).toBeGreaterThan(before);
+	const record = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }));
+	expect(record.data.pupil).toMatchObject({ am, orphan_code: "", needs_review: false });
 
-	// Lookup without ΑΜ: the ΑΜΚΑ alone finds the pupil without ΑΜ.
-	const found = await getJson<APIResponse["Pupils.getByAm"]>(await useTestAPI("Pupils.getByAm", { RequestObject: { amka } }, false));
-	expect(found.data.pupil.id).toBe(pupilId);
-	expect(found.data.pupil.am).toBeNull();
+	// Found by ΑΜ + ΑΜΚΑ, and by name + ΑΜΚΑ.
+	expect((await useTestAPI("Pupils.identify", { RequestObject: { by: "am", am: am!, proof: amka } }, false)).status).toBe(200);
+	const byName = await getJson<APIResponse["Pupils.identify"]>(
+		await useTestAPI("Pupils.identify", { RequestObject: { by: "name", first_name: "Δοκιμαστικός", last_name: "Μαθητής", proof: amka } }, false),
+	);
+	expect(byName.data.am).toBe(String(am));
 
-	// Next year's registration (again without ΑΜ, the first name typed differently) lands on the same pupil.
+	// «Νέος μαθητής» again next year (the first name typed differently): the same pupil, no second ΑΜ.
 	const again = await register("000", amka, "Δοκιμαστικος");
 	expect(again).toBe(pupilId);
-	const record = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }));
-	expect(record.data.enrollments).toHaveLength(2);
+	const after = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }));
+	expect(after.data.enrollments).toHaveLength(2);
 });
 
-test("--pupils without ΑΜ-- the ΑΜΚΑ alone never finds a pupil who has an ΑΜ", async () => {
-	const amka = fakeAmka();
-	const am = uniqueTestAm();
-	await register(String(am), amka, "Δοκιμαστικός");
-	const alone = await useTestAPI("Pupils.getByAm", { RequestObject: { amka } }, false);
-	expect(alone.status).toBe(404);
-	const pair = await useTestAPI("Pupils.getByAm", { RequestObject: { am, amka } }, false);
-	expect(pair.status).toBe(200);
-});
-
-test("--pupils without ΑΜ-- a new pupil can enroll in several classes the same year, on one pupil", async () => {
+test("--new pupils-- a new pupil can enroll in several classes the same year, on one pupil", async () => {
 	const amka = fakeAmka();
 	const first = await register("000", amka, "Δοκιμαστικός");
 	const res = await useTestAPI(
@@ -83,19 +86,20 @@ test("--pupils without ΑΜ-- a new pupil can enroll in several classes the same
 	expect((await getJson<APIResponse["Pupils.post"]>(res)).data.pupilId).toBe(first);
 });
 
-test("--pupils without ΑΜ-- an ΑΜΚΑ that belongs to a pupil with an ΑΜ cannot enroll as new", async () => {
+test("--new pupils-- someone else's ΑΜΚΑ cannot enroll as new", async () => {
 	const amka = fakeAmka();
 	const am = uniqueTestAm();
 	const holder = await register(String(am), amka, "Δοκιμαστικός");
 
-	const res = await useTestAPI("Pupils.post", { RequestObject: registration("000", amka, "Άλλος") }, false);
+	const other = { ...registration("000", amka, "Άλλος"), last_name: "Άλλος" };
+	const res = await useTestAPI("Pupils.post", { RequestObject: other }, false);
 	expect(res.status).toBe(409);
 	const answer = await res.text();
 	expect(answer).not.toContain(String(am)); // public route: it names nobody
 	expect(answer).not.toContain("Μαθητής");
 
-	// A new ΑΜ does not get around it either, and the pupil's own ΑΜ + ΑΜΚΑ still enrolls them.
-	const otherAm = await useTestAPI("Pupils.post", { RequestObject: registration(String(uniqueTestAm()), amka, "Άλλος") }, false);
+	// A typed ΑΜ nobody holds does not get around it either, and the pupil's own ΑΜ + ΑΜΚΑ still enrolls them.
+	const otherAm = await useTestAPI("Pupils.post", { RequestObject: { ...other, am: String(uniqueTestAm()) } }, false);
 	expect(otherAm.status).toBe(409);
 	expect(await register(String(am), amka, "Δοκιμαστικός")).toBe(holder);
 
@@ -103,11 +107,91 @@ test("--pupils without ΑΜ-- an ΑΜΚΑ that belongs to a pupil with an ΑΜ c
 	if (slots) expect(slots.c).toBe(1);
 });
 
-test("--pupils without ΑΜ-- a placeholder ΑΜΚΑ held by a pupil with an ΑΜ does not stop a new pupil", async () => {
+test("--new pupils-- a placeholder ΑΜΚΑ held by another pupil does not stop a new pupil", async () => {
 	const placeholder = "0".repeat(11);
 	const am = uniqueTestAm();
-	await register(String(am), placeholder, "Δοκιμαστικός");
+	const holder = await register(String(am), placeholder, "Δοκιμαστικός");
 	const pupilId = await register("000", placeholder, `Δοκιμαστικός${R.hex(2)}`);
+	expect(pupilId).not.toBe(holder);
 	const record = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }));
-	expect(record.data.pupil.am).toBeNull();
+	expect(record.data.pupil.am).not.toBeNull();
+});
+
+test("--new pupils-- an old record without ΑΜ is numbered when it registers again", async () => {
+	const amka = fakeAmka();
+	const pupilId = await register("000", amka, "Δοκιμαστικός");
+	// As before automatic numbering: no ΑΜ.
+	expect((await useTestAPI("Pupils.update", { RequestObject: { id: pupilId, am: null } })).status).toBe(200);
+
+	const found = await getJson<APIResponse["Pupils.identify"]>(
+		await useTestAPI("Pupils.identify", { RequestObject: { by: "name", first_name: "Δοκιμαστικός", last_name: "Μαθητής", proof: amka } }, false),
+	);
+	expect(found.data.am).toBe("");
+	const res = await useTestAPI("Pupils.post", { RequestObject: { ...registration("000", amka, "Δοκιμαστικός"), identity: found.data.token } }, false);
+	expect(res.status).toBe(200);
+	const { am } = (await getJson<APIResponse["Pupils.post"]>(res)).data;
+	expect(am).not.toBeNull();
+	const record = await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }));
+	expect(record.data.pupil).toMatchObject({ am, orphan_code: "" });
+});
+
+const enrollmentIdsOf = async (pupilId: number) =>
+	(await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }))).data.enrollments.map((e) => e.id);
+const amOf = async (pupilId: number) => (await getJson<APIResponse["Pupils.get"]>(await useTestAPI("Pupils.get", { UrlArgs: { id: pupilId } }))).data.pupil;
+
+test("--new pupils-- an unfinished registration gives its ΑΜ back, and the next new pupil fills the gap", async () => {
+	const first = await register("000", fakeAmka(), "Δοκιμαστικός");
+	const second = await register("000", fakeAmka(), "Δοκιμαστικός");
+	const freed = (await amOf(first)).am!;
+	expect((await amOf(second)).am).toBe(freed + 1);
+
+	// The secretariat deletes the first pupil's only registration (this school year): the ΑΜ is given back.
+	const del = await useTestAPI("Pupils.deleteEnrollments", { RequestObject: await enrollmentIdsOf(first) });
+	expect(del.status).toBe(200);
+	const released = await amOf(first);
+	expect(released.am).toBeNull();
+	expect(released.needs_review).toBe(true);
+	expect(released.review_note).toContain(`Το ΑΜ ${freed} δόθηκε πίσω`);
+
+	// The next new pupil gets that number, not one after the last.
+	const third = await register("000", fakeAmka(), "Δοκιμαστικός");
+	expect((await amOf(third)).am).toBe(freed);
+
+	// «Νέα εγγραφή» for the pupil who gave the ΑΜ back numbers them again.
+	const enroll = await useTestAPI("Pupils.enroll", {
+		RequestObject: {
+			pupil_id: first,
+			registration_year: "2026-2027",
+			class_id: 0,
+			class_year: "Α' Έτος",
+			teacher_id: -1,
+			instrument_id: 0,
+			date: Date.now(),
+			pass: false,
+		},
+	});
+	expect(enroll.status).toBe(200);
+	expect((await amOf(first)).am).not.toBeNull();
+});
+
+test("--new pupils-- a pupil with earlier years keeps the ΑΜ when this year's registration is deleted", async () => {
+	const pupilId = await register("000", fakeAmka(), "Δοκιμαστικός");
+	const am = (await amOf(pupilId)).am;
+	const old = await useTestAPI("Pupils.enroll", {
+		RequestObject: {
+			pupil_id: pupilId,
+			registration_year: "2019-2020",
+			class_id: 0,
+			class_year: "Α' Έτος",
+			teacher_id: -1,
+			instrument_id: 0,
+			date: Date.UTC(2019, 8, 15),
+			pass: true,
+		},
+	});
+	expect(old.status).toBe(200);
+	const ids = await enrollmentIdsOf(pupilId);
+	// Both go: the older year shows the pupil has a history the register already lists.
+	expect((await useTestAPI("Pupils.deleteEnrollments", { RequestObject: ids })).status).toBe(200);
+	expect((await amOf(pupilId)).am).toBe(am);
 });

@@ -328,7 +328,7 @@ const GIVEN_NAME_FORMS: Record<string, string> = {
 	ηλιασ: "ηλιασ",
 	στεφανια: "στεφανια",
 };
-const formalGivenName = (key: string) => GIVEN_NAME_FORMS[key] ?? key;
+export const formalGivenName = (key: string) => GIVEN_NAME_FORMS[key] ?? key;
 
 export type Identity = { surname: string; name: string; father?: string; born?: number | null };
 

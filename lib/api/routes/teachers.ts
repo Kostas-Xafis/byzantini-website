@@ -264,4 +264,33 @@ export const teachersRoutes = {
 			return "Teacher/s deleted successfully";
 		}, "Σφάλμα κατά τη διαγραφή του δασκάλου/δασκάλων"),
 	),
+	/**
+	 * The latest school year (`registration_year`, "2025-2026") in which each teacher had a pupil — null when never.
+	 * The admin teachers page uses it for the «Χωρίς μαθητές 3 έτη» hint (`lib/teachers/activity.ts`).
+	 */
+	lastYears: new APIServer(
+		{ method: "GET", path: "/teachers/last-years", responseSchema: z.array(z.object({ teacher_id: z.number(), last_year: z.string().nullable() })) },
+		[authenticateMiddleware],
+		() =>
+			handlerResult(() =>
+				executeQuery<{ teacher_id: number; last_year: string | null }>(
+					`SELECT t.id AS teacher_id, MAX(e.registration_year) AS last_year
+					 FROM teachers t LEFT JOIN pupil_enrollments e ON e.teacher_id = t.id
+					 GROUP BY t.id`,
+				),
+			),
+	),
+	/**
+	 * «Ορισμός ως πρώην»: the teachers stop working for the school. Like the backfill's former teachers
+	 * (migration 0012) they are hidden and lose their classes, so the public site and the enrollment forms
+	 * no longer offer them; their enrollments keep their name. Undo: edit the teacher (untick «Πρώην»,
+	 * re-add the classes).
+	 */
+	markFormer: new APIServer({ method: "PUT", path: "/teachers/former", schema: z_IdArray }, [authenticateMiddleware], ({ body }) =>
+		handlerResult(async (T) => {
+			await T.executeQuery(`UPDATE teachers SET former = 1, visible = 0 WHERE id IN (???)`, body);
+			await T.executeQuery(`DELETE FROM teacher_classes WHERE teacher_id IN (???)`, body);
+			return "Teacher/s marked as former";
+		}, "Σφάλμα κατά τον ορισμό ως πρώην"),
+	),
 };

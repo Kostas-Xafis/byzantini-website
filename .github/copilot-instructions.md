@@ -59,9 +59,17 @@
   `registrations` table was dropped.
 - `pupils.am` is an INTEGER and NULL for review cases (`orphan_code` `000-Ο1`…,
   `split_from_am` `111-Σ1`…); `registration_url` on the pupil is permanent.
-- A pupil without ΑΜ is identified by ΑΜΚΑ alone (`Pupils.getByAm` without
-  `am`); one with an ΑΜ always needs both. The public form has no ΑΜ field for
-  new students. Admins add pupils by hand with `Pupils.create` («Νέος μαθητής»).
+- The public form identifies a returning pupil with `Pupils.identify`: ΑΜ (or
+  first name + surname) plus the ΑΜΚΑ, or a phone on file when the pupil has no
+  ΑΜΚΑ (`lib/pupils/identify.ts`); it returns only pre-fill fields and a one-hour
+  identity token that `Pupils.post` takes (`identity`). Public text says
+  «Αριθμός Μητρώου Μαθητού», never a bare «Αριθμός Μητρώου». The public form has
+  no ΑΜ field for new students: every new pupil (form or `Pupils.create`,
+  «Νέος μαθητής») gets the lowest free ΑΜ at once (`insertWithNextAm`, `NEXT_AM_SQL`;
+  9000+ are test fixtures); a registration the secretariat deletes before it is
+  completed gives its ΑΜ back (`releaseAmOfUnfinished`), and the next new pupil
+  fills the gap. The ΑΜ is in the success popup and the confirmation email. `scripts/registryReconcile.ts` matches the database to the
+  principal's «Γενικό Μητρώο».
 - Routes are `Pupils.*`; enrollment listings return the JOINED row
   (`z_JoinedEnrollments`) which keeps the old `registrations` wire shape (with
   `am` as a string) for the admin table and the PDF/Excel exports.

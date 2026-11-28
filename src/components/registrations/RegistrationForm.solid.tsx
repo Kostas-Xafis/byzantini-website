@@ -6,7 +6,7 @@ import { useAPIClient, type APIClient } from "@hooks/useAPIClient.solid";
 import { classYearsByMusicType, MusicType, MusicTypeArr } from "@lib/classYears";
 import { isMinor } from "@lib/pupils/age";
 import { currentSchoolYear, currentSchoolYearShort, isRegistrationWindowOpen, REGISTRATION_WINDOW_LABEL } from "@lib/pupils/years";
-import { API } from "@routes/index.client";
+import { API, type APIArgs, type APIResponse } from "@routes/index.client";
 import { AnimTimeline } from "@utilities/dom";
 import { ExtendedFormData, parseDayMonthYear } from "@utilities/forms";
 import { sleep } from "@utilities/sleep";
@@ -16,15 +16,18 @@ import Input, { type Props as InputProps } from "../input/Input.solid";
 import Popup, { PopupShow } from "../other/Popup.solid";
 import Spinner from "../other/Spinner.solid";
 import Icon from "@components/other/Icon.solid";
+import type { IconName } from "@lib/icons";
+import { SCHOOL_HOURS, secretariatPhones } from "@utilities/schema";
 
 const PREFIX = "RegForm";
+type PupilIdentity = APIResponse["Pupils.identify"];
 const isPhone = window.matchMedia("(max-width: 640px)").matches;
 const genericInputs: Record<
 	keyof Omit<PupilRegistrationForm, "date" | "class_id" | "class_year" | "teacher_id" | "instrument_id" | "registration_url" | "pass" | "media_consent">,
 	InputProps
 > = {
 	am: {
-		label: "Αριθμός Μητρώου",
+		label: "Αριθμός Μητρώου Μαθητού",
 		name: "am",
 		autocomplete: "off",
 		inputMode: "numeric",
@@ -33,7 +36,10 @@ const genericInputs: Record<
 		required: true,
 		icon: "id-card",
 		tooltip: {
-			message: ["Αναζητήστε τον αριθμό μητρώου στην περσινή αίτηση, η οποία θα σας αποσταλεί με email ή συμβουλευτείτε τη Γραμματεία της Σχολής."],
+			message: [
+				"Ο αριθμός που σας έδωσε η Σχολή στην πρώτη σας εγγραφή, όχι ο αριθμός της αστυνομικής ταυτότητας.",
+				"Αν δεν τον γνωρίζετε, συμβουλευτείτε τη Γραμματεία της Σχολής.",
+			],
 			position: isPhone ? "top" : "left",
 		},
 	},
@@ -277,11 +283,14 @@ function fadeInForm(type: MusicType) {
 /**
  * Three-step flow:
  *  - "type"   — pick a music type
- *  - "lookup" — ΑΜ + ΑΜΚΑ only, so a returning student can be identified and
- *               the form prefilled (or the "new student" path chosen)
+ *  - "lookup" — identification: «Γνωρίζω τον Αριθμό Μητρώου Μαθητού» (ΑΜ + ΑΜΚΑ or phone), «Δεν θυμάμαι…»
+ *               (first name + surname + ΑΜΚΑ or phone) or «Νέος μαθητής» (`LookupMode`); a returning pupil is
+ *               found by `Pupils.identify` and the form prefilled
  *  - "form"   — the full registration form
  */
 type Step = "type" | "lookup" | "form";
+/** The screens of the identification step (not in the browser history: «Πίσω» inside the card returns to «choose»). */
+type LookupMode = "choose" | "am" | "name";
 type Route = { step: Step; type: MusicType };
 /** Our slot in `history.state`: the step shown by that entry and its depth (0 = the picker, 1 = a department). */
 type HistoryEntry = Route & { depth: 0 | 1 };
@@ -342,31 +351,11 @@ async function loadRegistrationId(apiHook: APIClient) {
 				UrlArgs: { url: reg_url },
 			});
 			if (!("data" in res) || !res.data) return;
-			// The pupil's permanent registration_url resolves to the pupil plus
-			// their history. The form edits a flat row, so merge the identity
-			// fields with the most recent enrollment.
-			const { pupil, enrollments } = res.data;
-			const latest = [...enrollments].sort(
-				(a, b) => (b.registration_year || "").localeCompare(a.registration_year || "") || (b.date || 0) - (a.date || 0),
-			)[0];
-			return {
-				...pupil,
-				am: pupil.am === null ? "" : String(pupil.am),
-				registration_year: genericInputs.registration_year.value as string,
-				class_year: "",
-				class_id: latest?.class_id ?? 0,
-				teacher_id: -1,
-				instrument_id: -1,
-			} as unknown as PupilRegistrationForm;
+			// The pupil's permanent registration_url identifies them like the identification step does (with a token).
+			return res.data;
 		} catch (err) {}
 	}
 }
-
-/** The lookup found nobody: with an ΑΜ, the pair did not match; without one, no pupil without ΑΜ has that ΑΜΚΑ. */
-const notFoundMessage = (am: number | undefined) =>
-	am === undefined
-		? "Δεν βρέθηκε μαθητής χωρίς αριθμό μητρώου με αυτόν τον ΑΜΚΑ. Αν έχετε αριθμό μητρώου, συμπληρώστε τον· αλλιώς δηλώστε νέα εγγραφή."
-		: "Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Ελέγξτε τον ΑΜ και τον ΑΜΚΑ ή δηλώστε νέα εγγραφή.";
 
 /**
  * Turns a failed request into a message for the family filling the form: invalid fields (the server's
@@ -401,6 +390,55 @@ function OutOfWindowNotice(props: { schoolYear: string; class?: string }) {
 	);
 }
 
+const LOOKUP_INPUT =
+	"w-full rounded-md border border-red-900/40 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-inner focus:outline-hidden focus:ring-2 focus:ring-red-900";
+
+/** One of the three equal choices of the identification step. */
+function LookupChoice(props: { icon: IconName; title: string; description: string; onClick: () => void }) {
+	return (
+		<button
+			type="button"
+			onClick={props.onClick}
+			class="group/choice flex w-full items-center gap-x-4 rounded-lg border-2 border-red-900/70 bg-white px-5 py-4 text-left font-didact transition-colors duration-200 hover:border-red-900 hover:bg-red-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-900 max-sm:px-4">
+			<Icon name={props.icon} class="shrink-0 text-3xl text-red-900 transition-colors group-hover/choice:text-red-50" />
+			<span class="grid gap-y-0.5">
+				<span class="text-xl font-semibold text-red-900 transition-colors group-hover/choice:text-red-50 max-sm:text-lg">{props.title}</span>
+				<span class="text-[0.95rem] text-red-950 transition-colors group-hover/choice:text-red-50">{props.description}</span>
+			</span>
+			<Icon name="chevron-right" class="ml-auto shrink-0 text-xl text-red-900/60 transition-colors group-hover/choice:text-red-50" />
+		</button>
+	);
+}
+
+/** «Χρειάζεστε βοήθεια;»: the department's secretariat phone (tap to call) and hours, on every identification screen. */
+function SecretariatContact(props: { byzantine: boolean }) {
+	return (
+		<div class="grid gap-y-1 rounded-md border border-red-900/25 bg-red-50 px-4 py-3 text-center font-didact text-base text-red-950">
+			<p class="font-semibold">
+				<Icon name="phone" class="mr-1.5 text-red-900" />
+				Χρειάζεστε βοήθεια; Καλέστε τη Γραμματεία:{" "}
+				<For each={secretariatPhones(props.byzantine)}>
+					{(phone, i) => (
+						<>
+							{i() > 0 ? " ή " : ""}
+							<a href={`tel:${phone}`} class="font-semibold whitespace-nowrap text-red-900 underline underline-offset-2 hover:text-red-950">
+								{phone.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3")}
+							</a>
+						</>
+					)}
+				</For>
+			</p>
+			<For each={SCHOOL_HOURS}>
+				{(h) => (
+					<p class="text-[0.95rem] text-red-950">
+						{h.days}: {h.range}
+					</p>
+				)}
+			</For>
+		</div>
+	);
+}
+
 export function RegistrationForm() {
 	const [store, setStore] = createStore<APIResourceStore>({});
 	const [registrationData, setRegistrationData] = createStore<PupilRegistrationForm>({} as any);
@@ -410,18 +448,29 @@ export function RegistrationForm() {
 	const [musicType, setMusicType] = createSignal<MusicType>(MusicType.None);
 	const [spinner, setSpinner] = createSignal(false, { equals: false });
 	const [step, setStep] = createSignal<Step>("type");
+	const [lookupMode, setLookupMode] = createSignal<LookupMode>("choose");
 	const [lookupAm, setLookupAm] = createSignal("");
-	const [lookupAmka, setLookupAmka] = createSignal("");
+	const [lookupProof, setLookupProof] = createSignal("");
+	const [lookupFirstName, setLookupFirstName] = createSignal("");
+	const [lookupLastName, setLookupLastName] = createSignal("");
 	const [lookupError, setLookupError] = createSignal("");
 	const [lookupBusy, setLookupBusy] = createSignal(false);
 	const [submitError, setSubmitError] = createSignal("");
 	// Registering as new was refused because the ΑΜΚΑ is already in the register: the error then offers the way back to the ΑΜ + ΑΜΚΑ step.
 	const [amkaTaken, setAmkaTaken] = createSignal(false);
-	// Set once the pupil is found by ΑΜ + ΑΜΚΑ: those two are then locked so the identification cannot be undone by editing them.
+	// Set once the pupil is found (`Pupils.identify` or the ?regid link): the ΑΜ is then locked, and so is the ΑΜΚΑ when
+	// it is known (`amkaKnown`); a pupil identified by phone has none on file and must type it. `identity` is the token
+	// the submission carries instead of ΑΜ + ΑΜΚΑ.
 	const [identified, setIdentified] = createSignal(false);
-	// The pupil has no ΑΜ: "new student" was chosen, or a pupil who registered as new before and was not given one
-	// yet was found by ΑΜΚΑ (or their ?regid link). The form then shows no ΑΜ field and sends the '000' placeholder:
-	// the server matches such a pupil by ΑΜΚΑ, or creates one without ΑΜ, flagged for the secretaries to assign it.
+	const [identity, setIdentity] = createSignal<string | null>(null);
+	const [amkaKnown, setAmkaKnown] = createSignal(false);
+	// Found by name: the form reminds them of their ΑΜ ("" for a pupil not given one yet).
+	const [foundByName, setFoundByName] = createSignal(false);
+	// The pupil's ΑΜ as the registration returned it (a new pupil's is given then): the success popup shows it.
+	const [registeredAm, setRegisteredAm] = createSignal<number | null>(null);
+	// The pupil has no ΑΜ yet: "new student" was chosen, or an old record without one was identified. The form then
+	// shows no ΑΜ field and sends the '000' placeholder: the server gives the next ΑΜ (a returning new student with the
+	// same ΑΜΚΑ, surname and birth date lands on their record) and the success popup shows it.
 	const [withoutAm, setWithoutAm] = createSignal(false);
 	// Set once the identification step is done — by ΑΜ + ΑΜΚΑ, "new student" or the permanent ?regid link. From
 	// then on the form is mounted (and keeps what was typed while hidden) and every department goes straight to it.
@@ -522,15 +571,11 @@ export function RegistrationForm() {
 
 	// Load registration data from URL on mount if any
 	onMount(async () => {
-		const regData = await loadRegistrationId(apiHook);
-		if (!regData) return;
-		setRegistrationData((prev) => {
-			return { ...prev, ...regData };
-		});
+		const found = await loadRegistrationId(apiHook);
+		if (!found) return;
 		// The permanent link already identifies the pupil — skip the lookup step.
-		setWithoutAm(!regData.am);
-		setIdentityResolved(true);
-		goTo({ step: "form", type: MusicTypeArr[regData.class_id] });
+		applyIdentity(found, false);
+		goTo({ step: "form", type: MusicTypeArr[found.last_class_id ?? 0] });
 	});
 
 	const onMusicTypeChange = (type: MusicType) => {
@@ -541,67 +586,91 @@ export function RegistrationForm() {
 		goTo({ step: "form", type });
 	};
 
+	/** Prefill the form from an identified pupil; the enrollment fields reset so they register for the current year. */
+	const applyIdentity = (found: PupilIdentity, byName: boolean) => {
+		const { pupil } = found;
+		setRegistrationData((prev) => ({
+			...prev,
+			...pupil,
+			am: found.am,
+			amka: found.amka,
+			// Last year's answer is pre-selected; the parent can change it.
+			media_consent: pupil.media_consent == null ? null : pupil.media_consent === 1,
+			registration_year: genericInputs.registration_year.value as string,
+			class_year: "",
+			teacher_id: -1,
+			instrument_id: -1,
+		}));
+		setTypedBirth(undefined);
+		setIdentity(found.token);
+		setAmkaKnown(found.amka.length === 11);
+		setFoundByName(byName);
+		setWithoutAm(found.am === "");
+		setIdentified(true);
+		setIdentityResolved(true);
+	};
+
+	/** Opens one screen of the identification step (the choice, by ΑΜ or by name), clearing the last error. */
+	const showLookup = (mode: LookupMode) => {
+		setLookupError("");
+		setLookupMode(mode);
+		queueMicrotask(() => document.querySelector<HTMLElement>("#registrationLookup input, #registrationLookup button")?.focus());
+	};
+
 	/**
-	 * Returning student: ΑΜ + ΑΜΚΑ must both match, then prefill from the record. A pupil who registered as new and
-	 * has no ΑΜ yet leaves it empty (or types the '000' they registered with): the ΑΜΚΑ alone then finds them.
+	 * Returning student: the ΑΜ (or first name + surname) and ONE proof — the ΑΜΚΑ, or the phone on file for a pupil
+	 * who never gave an ΑΜΚΑ (`Pupils.identify`). Every miss explains itself and points to the secretariat.
 	 */
 	const onLookup = async (e: Event) => {
 		e.preventDefault();
-		const typedAm = lookupAm().trim();
-		// The first run of digits ('000-Ο12' → '000'); none typed, or only zeros, means "no ΑΜ".
-		const amDigits = typedAm.match(/\d+/)?.[0] ?? "";
-		const am = Number(amDigits) > 0 ? Number(amDigits) : undefined;
-		const amka = lookupAmka().trim();
-		if (typedAm && !amDigits) {
-			setLookupError("Ο αριθμός μητρώου αποτελείται μόνο από ψηφία. Αν δεν έχετε αριθμό μητρώου, αφήστε το πεδίο κενό.");
-			return;
+		const byName = lookupMode() === "name";
+		const proof = lookupProof().trim();
+		const proofDigits = proof.replace(/\D/g, "");
+		let request: APIArgs["Pupils.identify"]["RequestObject"];
+		if (byName) {
+			const first_name = lookupFirstName().trim();
+			const last_name = lookupLastName().trim();
+			if (!first_name || !last_name) {
+				setLookupError("Συμπληρώστε το όνομα και το επώνυμο του μαθητή.");
+				return;
+			}
+			request = { by: "name", first_name, last_name, proof };
+		} else {
+			const typedAm = lookupAm().trim();
+			const am = Number(typedAm);
+			if (!/^\d{1,4}$/.test(typedAm) || am < 1) {
+				setLookupError(
+					"Ο Αριθμός Μητρώου Μαθητού έχει έως 4 ψηφία και τον δίνει η Σχολή: δεν είναι ο αριθμός της αστυνομικής ταυτότητας. Αν δεν τον θυμάστε, επιλέξτε «Δεν θυμάμαι τον Αριθμό Μητρώου Μαθητού».",
+				);
+				return;
+			}
+			request = { by: "am", am, proof };
 		}
-		if (amka.length !== 11) {
-			setLookupError("Ο ΑΜΚΑ αποτελείται από 11 ψηφία.");
+		if (proofDigits.length !== 11 && proofDigits.length < 10) {
+			setLookupError("Συμπληρώστε τον ΑΜΚΑ του μαθητή (11 ψηφία) ή, αν δεν έχετε δηλώσει ΑΜΚΑ στη Σχολή, το τηλέφωνό σας (10 ψηφία).");
 			return;
 		}
 		setLookupError("");
 		setLookupBusy(true);
 		try {
-			const res = await apiHook(API.Pupils.getByAm, { RequestObject: { am, amka } });
+			const res = await apiHook(API.Pupils.identify, { RequestObject: request });
 			if (!("data" in res) || !res.data) {
-				setLookupError(notFoundMessage(am));
+				setLookupError("Δεν βρέθηκε μαθητής με αυτά τα στοιχεία. Επικοινωνήστε με τη Γραμματεία της Σχολής.");
 				return;
 			}
-			const { pupil } = res.data;
-			// Identity comes from the record; the enrollment fields reset so the
-			// student re-registers for the current year.
-			setRegistrationData((prev) => ({
-				...prev,
-				...pupil,
-				am: String(pupil.am ?? ""),
-				amka: pupil.amka,
-				// Last year's answer is pre-selected; the parent can change it.
-				media_consent: pupil.media_consent == null ? null : pupil.media_consent === 1,
-				registration_year: genericInputs.registration_year.value as string,
-				class_year: "",
-				teacher_id: -1,
-				instrument_id: -1,
-			}));
-			setTypedBirth(undefined);
+			applyIdentity(res.data, byName);
 			// Keep the department the family picked — they may be enrolling in a different one this year.
-			setWithoutAm(pupil.am === null);
-			setIdentified(true);
-			setIdentityResolved(true);
 			goTo({ step: "form", type: musicType() });
+			// The form starts at its top, not where the (longer, on a phone) identification card was scrolled to.
+			window.scrollTo({ top: 0 });
 		} catch (err) {
-			// Only a 404 means "no such pupil" — anything else must not push the family onto the new-student path.
-			if (err instanceof APIRequestError && err.status === 404) {
-				setLookupError(notFoundMessage(am));
-			} else {
-				setLookupError(describeError(err));
-			}
+			setLookupError(describeError(err));
 		} finally {
 			setLookupBusy(false);
 		}
 	};
 
-	/** New student: blank form without an ΑΜ field; they are registered with the '000' placeholder. */
+	/** New student: blank form without an ΑΜ field; the server gives the next ΑΜ, which the success popup shows. */
 	const onNewStudent = () => {
 		setRegistrationData((prev) => ({
 			...prev,
@@ -627,15 +696,20 @@ export function RegistrationForm() {
 		setTypedBirth(undefined);
 		setLookupError("");
 		setIdentified(false);
+		setIdentity(null);
+		setAmkaKnown(false);
+		setFoundByName(false);
 		setWithoutAm(true);
 		setIdentityResolved(true);
 		goTo({ step: "form", type: musicType() });
+		window.scrollTo({ top: 0 });
 	};
 
 	/** Refused as new (see `amkaTaken`): back to the identification, which otherwise happens only once, with the ΑΜΚΑ already typed in. */
 	const onHasAm = () => {
 		setLookupAm("");
-		setLookupAmka(registrationData.amka);
+		setLookupProof(registrationData.amka);
+		setLookupMode("am");
 		setSubmitError("");
 		setAmkaTaken(false);
 		setWithoutAm(false);
@@ -719,9 +793,12 @@ export function RegistrationForm() {
 				throw Error("Παρακαλώ επιλέξτε έτος φοίτησης.");
 			}
 			setSpinner(true);
-			const res = await apiHook(API.Pupils.post, { RequestObject: { ...data, class_id: data.class_id as 0 | 1 | 2 } });
+			const res = await apiHook(API.Pupils.post, {
+				RequestObject: { ...data, class_id: data.class_id as 0 | 1 | 2, ...(identity() ? { identity: identity()! } : {}) },
+			});
 			if ("data" in res && res.data) {
 				setDirty(false);
+				setRegisteredAm(res.data.am);
 				PopupShow();
 				setRegistrationData((prevReg) => {
 					return {
@@ -735,7 +812,17 @@ export function RegistrationForm() {
 			// Our own checks throw plain Errors with a Greek message; request failures (APIRequestError, fetch's TypeError) get described.
 			const isLocalCheck = err instanceof Error && err.name === "Error";
 			setSubmitError(isLocalCheck ? err.message : describeError(err));
-			setAmkaTaken(withoutAm() && err instanceof APIRequestError && err.status === 409);
+			setAmkaTaken(!identified() && withoutAm() && err instanceof APIRequestError && err.status === 409);
+			// The identification expired (an hour): back to it, with what was typed kept in the hidden form.
+			if (err instanceof APIRequestError && err.status === 410) {
+				setIdentityResolved(false);
+				setIdentified(false);
+				setIdentity(null);
+				setLookupError(err.message);
+				setLookupMode("choose");
+				goTo({ step: "lookup", type: musicType() });
+				return;
+			}
 			shakeForm();
 		} finally {
 			setSpinner(false);
@@ -865,11 +952,31 @@ export function RegistrationForm() {
 								<Show when={!windowOpen}>
 									<OutOfWindowNotice schoolYear={schoolYearShort} class="col-span-full justify-self-center max-w-[60ch]" />
 								</Show>
+								<Show when={identified() && (foundByName() || !amkaKnown())}>
+									<div class="col-span-full justify-self-center grid gap-y-2 max-w-[60ch] max-sm:w-[calc(100%-2rem)]">
+										<Show when={foundByName()}>
+											<p role="status" class="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-base text-emerald-950">
+												<Icon name="check-circle" class="mr-2 text-emerald-700" />
+												Βρέθηκαν τα στοιχεία σας.{" "}
+												<Show when={!withoutAm()} fallback={<>Ο Αριθμός Μητρώου Μαθητού σας δίνεται μόλις ολοκληρωθεί η εγγραφή.</>}>
+													Ο <b>Αριθμός Μητρώου Μαθητού</b> είναι <b class="text-lg tabular-nums">{registrationData.am}</b>: σημειώστε
+													τον για τις επόμενες εγγραφές.
+												</Show>
+											</p>
+										</Show>
+										<Show when={!amkaKnown()}>
+											<p role="note" class="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-base text-amber-950">
+												<Icon name="info" class="mr-2" />
+												Δεν έχει δηλωθεί ΑΜΚΑ για τον μαθητή. Συμπληρώστε τον παρακάτω: από φέτος είναι υποχρεωτικός.
+											</p>
+										</Show>
+									</div>
+								</Show>
 								{Object.values(genericInputs).map((input) => {
 									// A pupil without ΑΜ (new, or not given one yet) has nothing to fill in: the field is not shown at all.
 									if (input.name === "am" && withoutAm()) return null;
-									// After the ΑΜ + ΑΜΚΑ lookup those two are read-only (still submitted).
-									const locked = identified() && (input.name === "am" || input.name === "amka");
+									// An identified pupil's ΑΜ is read-only, and so is the ΑΜΚΑ when it is known (both still submitted).
+									const locked = identified() && (input.name === "am" || (input.name === "amka" && amkaKnown()));
 									return (
 										<Input
 											{...input}
@@ -895,7 +1002,7 @@ export function RegistrationForm() {
 												type="button"
 												onClick={onHasAm}
 												class="mt-2 block font-semibold underline underline-offset-2 hover:text-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900">
-												Συνέχεια με αριθμό μητρώου
+												Συνέχεια με Αριθμό Μητρώου Μαθητού
 											</button>
 										</Show>
 									</p>
@@ -965,90 +1072,161 @@ export function RegistrationForm() {
 							</form>
 						</Show>
 						<Show when={step() === "lookup"}>
-							{/* ---- returning student: ΑΜ + ΑΜΚΑ only ---- */}
+							{/* ---- identification: returning (by ΑΜ or by name) or new ---- */}
 							<div
 								id="registrationLookup"
-								class="relative z-10 w-[min(92vw,34rem)] px-10 max-sm:px-5 py-10 grid gap-y-6 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm">
+								class="relative z-10 w-[min(92vw,38rem)] px-10 max-sm:px-5 py-10 grid gap-y-6 shadow-lg shadow-gray-800/60 rounded-md border-solid border-2 border-red-900 bg-white/90 backdrop-blur-sm">
 								<div class="grid gap-y-1 text-center">
 									<h1 class="text-4xl max-sm:text-3xl text-red-900 font-anaktoria font-bold drop-shadow-[-2px_1px_1px_rgba(0,0,0,0.15)]">
 										{heading[musicType()]}
 									</h1>
-									<p class="font-didact text-base text-red-950/80">
-										Συμπληρώστε τον αριθμό μητρώου και τον ΑΜΚΑ σας για να ανακτήσουμε τα στοιχεία σας.
+									<p class="font-didact text-base text-red-950">
+										{lookupMode() === "choose"
+											? "Έχετε ξαναγραφτεί στη Σχολή ή είναι η πρώτη σας εγγραφή;"
+											: lookupMode() === "am"
+												? "Συμπληρώστε τον Αριθμό Μητρώου Μαθητού για να ανακτήσουμε τα στοιχεία σας."
+												: "Συμπληρώστε το ονοματεπώνυμο του μαθητή όπως στην προηγούμενη εγγραφή."}
 									</p>
 								</div>
 								<Show when={!windowOpen}>
 									<OutOfWindowNotice schoolYear={schoolYearShort} />
 								</Show>
 
-								<form class="grid gap-y-5" onSubmit={onLookup}>
-									<label class="grid gap-y-1">
-										<span class="font-didact text-sm font-semibold text-red-950">Αριθμός Μητρώου</span>
-										<input
-											name="lookup-am"
-											aria-describedby="lookup-am-hint"
-											type="text"
-											inputmode="numeric"
-											autocomplete="off"
-											class="rounded-md border border-red-900/40 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-inner focus:outline-hidden focus:ring-2 focus:ring-red-900"
-											value={lookupAm()}
-											onInput={(e) => setLookupAm(e.currentTarget.value)}
+								<Show when={lookupMode() === "choose"}>
+									<div class="grid gap-y-3" role="group" aria-label="Τρόπος εγγραφής">
+										<LookupChoice
+											icon="id-card"
+											title="Γνωρίζω τον Αριθμό Μητρώου Μαθητού"
+											description="Τον αριθμό που σας έδωσε η Σχολή στην πρώτη εγγραφή σας (όχι τον αριθμό της ταυτότητάς σας)."
+											onClick={() => showLookup("am")}
 										/>
-										<span id="lookup-am-hint" class="font-didact text-sm text-red-950/70">
-											Αν εγγραφήκατε ως νέος μαθητής και δεν σας έχει δοθεί ακόμη αριθμός μητρώου, αφήστε το κενό.
-										</span>
-									</label>
-									<label class="grid gap-y-1">
-										<span class="font-didact text-sm font-semibold text-red-950">ΑΜΚΑ</span>
-										<input
-											name="lookup-amka"
-											type="text"
-											inputmode="numeric"
-											maxlength={11}
-											autocomplete="off"
-											class="rounded-md border border-red-900/40 bg-white px-3 py-2 font-didact text-lg text-red-950 shadow-inner focus:outline-hidden focus:ring-2 focus:ring-red-900"
-											value={lookupAmka()}
-											onInput={(e) => setLookupAmka(e.currentTarget.value)}
+										<LookupChoice
+											icon="search"
+											title="Δεν θυμάμαι τον Αριθμό Μητρώου Μαθητού"
+											description="Βρείτε τα στοιχεία σας με το ονοματεπώνυμο. Και αν δεν σας έχει δοθεί ακόμη Αριθμός Μητρώου Μαθητού."
+											onClick={() => showLookup("name")}
 										/>
-									</label>
-
+										<LookupChoice
+											icon="user-plus"
+											title="Νέος μαθητής"
+											description="Πρώτη εγγραφή στη Σχολή: ο Αριθμός Μητρώου Μαθητού σας δίνεται μόλις ολοκληρωθεί η εγγραφή."
+											onClick={onNewStudent}
+										/>
+									</div>
 									<Show when={lookupError()}>
 										<p role="alert" class="rounded-md bg-red-100 px-3 py-2 font-didact text-sm text-red-900">
 											<Icon name="alert-circle" class="mr-2" />
 											{lookupError()}
 										</p>
 									</Show>
+								</Show>
 
-									<Show
-										when={!lookupBusy()}
-										fallback={
-											<div class="w-max place-self-center p-2">
-												<Spinner />
-											</div>
-										}>
-										<button
-											type="submit"
-											class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
-											Ανάκτηση στοιχείων
-										</button>
-									</Show>
-								</form>
+								<Show when={lookupMode() !== "choose"}>
+									<form class="grid gap-y-5" onSubmit={onLookup}>
+										<Show
+											when={lookupMode() === "am"}
+											fallback={
+												<div class="grid grid-cols-2 gap-x-4 gap-y-5 max-sm:grid-cols-1">
+													<label class="grid gap-y-1">
+														<span class="font-didact text-sm font-semibold text-red-950">Όνομα μαθητή</span>
+														<input
+															name="lookup-first-name"
+															type="text"
+															autocomplete="given-name"
+															class={LOOKUP_INPUT}
+															value={lookupFirstName()}
+															onInput={(e) => setLookupFirstName(e.currentTarget.value)}
+														/>
+													</label>
+													<label class="grid gap-y-1">
+														<span class="font-didact text-sm font-semibold text-red-950">Επώνυμο μαθητή</span>
+														<input
+															name="lookup-last-name"
+															type="text"
+															autocomplete="family-name"
+															class={LOOKUP_INPUT}
+															value={lookupLastName()}
+															onInput={(e) => setLookupLastName(e.currentTarget.value)}
+														/>
+													</label>
+												</div>
+											}>
+											<label class="grid gap-y-1">
+												<span class="font-didact text-sm font-semibold text-red-950">Αριθμός Μητρώου Μαθητού</span>
+												<input
+													name="lookup-am"
+													aria-describedby="lookup-am-hint"
+													type="text"
+													inputmode="numeric"
+													maxlength={4}
+													autocomplete="off"
+													class={LOOKUP_INPUT}
+													value={lookupAm()}
+													onInput={(e) => setLookupAm(e.currentTarget.value)}
+												/>
+												<span id="lookup-am-hint" class="font-didact text-sm text-red-950">
+													Ο αριθμός (έως 4 ψηφία) που σας έδωσε η Σχολή. <b>Δεν</b> είναι ο αριθμός της αστυνομικής ταυτότητας.
+												</span>
+											</label>
+										</Show>
+										<label class="grid gap-y-1">
+											<span class="font-didact text-sm font-semibold text-red-950">ΑΜΚΑ ή τηλέφωνο</span>
+											<input
+												name="lookup-proof"
+												aria-describedby="lookup-proof-hint"
+												type="text"
+												inputmode="numeric"
+												maxlength={20}
+												autocomplete="off"
+												class={LOOKUP_INPUT}
+												value={lookupProof()}
+												onInput={(e) => setLookupProof(e.currentTarget.value)}
+											/>
+											<span id="lookup-proof-hint" class="font-didact text-sm text-red-950">
+												Ο ΑΜΚΑ του μαθητή. Αν δεν είχατε δηλώσει ΑΜΚΑ σε προηγούμενη εγγραφή, το τηλέφωνο (κινητό ή σταθερό) που είχατε
+												δηλώσει τότε.
+											</span>
+										</label>
 
-								<div class="grid gap-y-3 border-t border-red-900/15 pt-5">
-									<p class="text-center font-didact text-base text-red-950/80">Είστε νέος μαθητής;</p>
-									<button
-										type="button"
-										onClick={onNewStudent}
-										class="w-max place-self-center rounded-xl border-2 border-red-900 px-6 py-2 text-xl font-semibold text-red-900 transition-colors hover:bg-red-900 hover:text-red-50 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2">
-										Πατήστε εδώ
-									</button>
-								</div>
+										<Show when={lookupError()}>
+											<p role="alert" class="rounded-md bg-red-100 px-3 py-2 font-didact text-sm text-red-900">
+												<Icon name="alert-circle" class="mr-2" />
+												{lookupError()}
+											</p>
+										</Show>
+
+										<Show
+											when={!lookupBusy()}
+											fallback={
+												<div class="w-max place-self-center p-2">
+													<Spinner />
+												</div>
+											}>
+											<button
+												type="submit"
+												class="w-max place-self-center text-2xl font-semibold p-2 px-7 rounded-xl text-red-50 bg-linear-to-r from-red-800 to-red-900 shadow-lg shadow-red-950/30 ring-1 ring-red-950/20 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-red-950/40 hover:from-red-900 hover:to-red-950 focus:outline-hidden focus:ring-2 focus:ring-red-900 focus:ring-offset-2 active:shadow-lg">
+												{lookupMode() === "am" ? "Ανάκτηση στοιχείων" : "Αναζήτηση"}
+											</button>
+										</Show>
+										<Show when={lookupMode() === "am"}>
+											<button
+												type="button"
+												onClick={() => showLookup("name")}
+												class="w-max place-self-center font-didact text-base font-semibold text-red-900 underline underline-offset-2 hover:text-red-950">
+												Δεν θυμάμαι τον Αριθμό Μητρώου Μαθητού
+											</button>
+										</Show>
+									</form>
+								</Show>
+
+								<SecretariatContact byzantine={musicType() === MusicType.Byzantine} />
 
 								<button
 									type="button"
-									onClick={() => goTo(PICKER)}
-									class="w-max place-self-center font-didact text-sm text-red-900/70 underline underline-offset-2 hover:text-red-900">
-									Πίσω στην επιλογή μουσικής
+									onClick={() => (lookupMode() === "choose" ? goTo(PICKER) : showLookup("choose"))}
+									class="inline-flex w-max items-center gap-x-1.5 place-self-center font-didact text-sm text-red-900/80 underline underline-offset-2 hover:text-red-900">
+									<Icon name="arrow-left" />
+									{lookupMode() === "choose" ? "Πίσω στην επιλογή μουσικής" : "Πίσω"}
 								</button>
 							</div>
 						</Show>
@@ -1084,26 +1262,46 @@ export function RegistrationForm() {
 			<Popup
 				title="Επιτυχής Εγγραφή"
 				content={
-					!DiplomaClasses.includes(registrationData["class_year"])
-						? "Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."
-						: registrationData["class_year"] === "Β' Ανωτέρα"
-							? [
-									"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας.",
-									" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
-								]
-							: [
-									"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας και το Πτυχίο σας.",
-									" Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
-								]
+					<>
+						<Show when={registeredAm() !== null}>
+							<p class="text-2xl font-didact">
+								Ο <b>Αριθμός Μητρώου Μαθητού</b> είναι <b class="tabular-nums">{registeredAm()}</b>. Σημειώστε τον: θα τον χρειαστείτε στις
+								επόμενες εγγραφές.
+							</p>
+						</Show>
+						<For
+							each={
+								!DiplomaClasses.includes(registrationData["class_year"])
+									? ["Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες."]
+									: registrationData["class_year"] === "Β' Ανωτέρα"
+										? [
+												"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας.",
+												"Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
+											]
+										: [
+												"Για την ολοκλήρωση της εγγραφής θα χρειαστεί να στείλετε ηλεκτρονικά το Απολυτήριο λυκείου σας και το Πτυχίο σας.",
+												"Επικοινωνήστε με τη Γραμματεία της Σχολής για ερωτήσεις ή περαιτέρω πληροφορίες.",
+											]
+							}>
+							{(line) => <p class="text-2xl font-didact">{line}</p>}
+						</For>
+					</>
 				}
 				onClose={() => {
 					// The registration is done: the next one (another department, a sibling) starts from the
 					// picker and goes through the identification again.
 					setIdentityResolved(false);
 					setIdentified(false);
+					setIdentity(null);
+					setAmkaKnown(false);
+					setFoundByName(false);
+					setRegisteredAm(null);
 					setWithoutAm(false);
+					setLookupMode("choose");
 					setLookupAm("");
-					setLookupAmka("");
+					setLookupProof("");
+					setLookupFirstName("");
+					setLookupLastName("");
 					setMusicType(MusicType.None);
 					goTo(PICKER);
 				}}

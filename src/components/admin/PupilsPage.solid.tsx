@@ -172,7 +172,7 @@ function pupilInputs(): Record<string, InputProps> {
 			name: "am",
 			type: "number",
 			icon: "id-card",
-			tooltip: { message: ["Κενό = χωρίς ΑΜ (εκκρεμεί απονομή)."], position: "bottom" },
+			tooltip: { message: ["Σε νέο μαθητή, κενό = το επόμενο ελεύθερο ΑΜ."], position: "bottom" },
 		},
 		amka: { label: "ΑΜΚΑ", name: "amka", type: "text", icon: "id-card" },
 		last_name: field("Επώνυμο", "last_name", "text", { required: true }),
@@ -776,7 +776,12 @@ export default function PupilsPage() {
 				if (consent === "1" || consent === "0") body.media_consent = consent === "1" ? 1 : 0;
 				const res = await apiHook(API.Pupils.create, { RequestObject: body });
 				if (!("data" in res)) return;
-				pushAlert(createAlert("success", `Προστέθηκε ο μαθητής ${body.last_name} ${body.first_name}. Προσθέστε τις εγγραφές του με «Νέα εγγραφή»`));
+				pushAlert(
+					createAlert(
+						"success",
+						`Προστέθηκε ο μαθητής ${body.last_name} ${body.first_name} με ΑΜ ${res.data.am}. Προσθέστε τις εγγραφές του με «Νέα εγγραφή»`,
+					),
+				);
 				openPupil(res.data.id);
 				void runSearch(page());
 			},

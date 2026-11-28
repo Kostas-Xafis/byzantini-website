@@ -33,6 +33,8 @@ export type SuccessfulRegistrationProps = {
 	classType?: string;
 	/** Placeholder "{{registration_year}}" or the school year (e.g. "2026-2027"). */
 	schoolYear?: string;
+	/** Placeholder "{{am}}" or the pupil's Αριθμός Μητρώου Μαθητού (a new pupil's is given at registration). */
+	am?: string;
 };
 
 const linkStyle = {
@@ -48,7 +50,7 @@ const infoRowStyle = {
 	color: COLORS.text,
 } as const;
 
-export function SuccessfulRegistration({ level = "default", classYear, classType, schoolYear }: SuccessfulRegistrationProps) {
+export function SuccessfulRegistration({ level = "default", classYear, classType, schoolYear, am }: SuccessfulRegistrationProps) {
 	const type = level.startsWith("byzantine") ? "byzantine" : "traditional";
 	return (
 		<EmailLayout preview="Η ηλεκτρονική αίτησή σας υποβλήθηκε επιτυχώς. Ολοκληρώστε την εγγραφή σας στη Γραμματεία.">
@@ -66,11 +68,17 @@ export function SuccessfulRegistration({ level = "default", classYear, classType
 				</Text>
 			</HighlightBox>
 
-			{(classYear || classType || schoolYear) && (
+			{(classYear || classType || schoolYear || am) && (
 				<HighlightBox
 					tone="neutral"
 					title="Πληροφορίες εγγραφής"
 					style={{ margin: "8px 0 20px", borderLeft: `4px solid ${COLORS.brand}` }}>
+					{am && (
+						<Text style={infoRowStyle}>
+							<span style={{ color: COLORS.textMuted }}>Αριθμός Μητρώου Μαθητού:</span> <b>{am}</b> (σημειώστε τον για τις επόμενες
+							εγγραφές)
+						</Text>
+					)}
 					<Text style={infoRowStyle}>
 						<span style={{ color: COLORS.textMuted }}>Τμήμα:</span> <b>{classType}</b>
 					</Text>

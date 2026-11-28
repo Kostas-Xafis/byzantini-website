@@ -31,6 +31,12 @@ export const SCHOOL = {
 // Unique identifier of the school entity, referenced by other schemas.
 export const SCHOOL_ID = `${SCHOOL.url}/#school`;
 
+/** When the secretariat answers the phone (the contact page and the registration form show it). */
+export const SCHOOL_HOURS = [{ days: "Καθημερινά (Δευτέρα – Κυριακή)", range: "9:00 π.μ. – 2:00 μ.μ. & 4:30 μ.μ. – 9:00 μ.μ." }] as const;
+
+/** The secretariat's phone numbers per department: Βυζαντινή has its own, Παραδοσιακή & Ευρωπαϊκή share the rest. */
+export const secretariatPhones = (byzantine: boolean): readonly string[] => (byzantine ? [SCHOOL.telephone[0]] : SCHOOL.telephone.slice(1));
+
 // The site's developer, credited as a student of the school (see
 // components/other/DeveloperCredit.astro). Single source for the name and the
 // portfolio URL so the visible credit, the `rel="author"` link and the
