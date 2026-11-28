@@ -70,6 +70,9 @@
   completed gives its ΑΜ back (`releaseAmOfUnfinished`), and the next new pupil
   fills the gap. The ΑΜ is in the success popup and the confirmation email. `scripts/registryReconcile.ts` matches the database to the
   principal's «Γενικό Μητρώο».
+- «Διέκοψε» / «Μετεγγραφή» are pupil fields (migration 0014: `stopped_year`, `transfer_year`, `transfer_from`) with
+  badges and filters in the Μαθητολόγιο (`?status=stopped|transfer`); a stopped pupil who enrolls in a later year
+  loses the mark. `scripts/registryStatus.ts` fills them from the owner's Excel register.
 - Routes are `Pupils.*`; enrollment listings return the JOINED row
   (`z_JoinedEnrollments`) which keeps the old `registrations` wire shape (with
   `am` as a string) for the admin table and the PDF/Excel exports.

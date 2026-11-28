@@ -281,6 +281,11 @@ export const z_Pupils = z.object({
 	/** Photos/videos from events, answered by the parent of a minor (migration 0010): null = not asked, 1 = allowed, 0 = not. */
 	media_consent: z.number().int().min(0).max(1).nullable().optional(),
 	media_consent_at: z.number().int().nullable().optional(),
+	/** «Διέκοψε»: the last school year attended before stopping ('' = not stopped; migration 0014). */
+	stopped_year: z.string().optional(),
+	/** «Μετεγγραφή»: the school year the pupil came by transfer ('' = not a transfer), and from where. */
+	transfer_year: z.string().optional(),
+	transfer_from: z.string().optional(),
 });
 
 export const z_PupilEnrollments = z.object({
@@ -376,6 +381,8 @@ export const z_PupilSearchResult = z.object({
 	email: z.string(),
 	amka: z.string(),
 	needs_review: looseBoolean(),
+	stopped_year: z.string(),
+	transfer_year: z.string(),
 	enrollment_count: positiveInt("Μη έγκυρο πλήθος εγγραφών"),
 	last_registration_year: z.string(),
 	/** Comma-separated class_ids the pupil has ever enrolled in ('0,1'). */

@@ -5,6 +5,7 @@ import { useLocation } from "@solidjs/router";
 import { classYearLabel, EVALUATION_LABEL, MusicTypeArr } from "@lib/classYears";
 import { PUPIL_SEARCH_FIELDS, type PupilSearchField } from "@lib/pupils/search";
 import { currentSchoolYear } from "@lib/pupils/years";
+import { shortSchoolYear } from "@lib/teachers/activity";
 import { API, type APIArgs, type APIResponse } from "@routes/index.client";
 import { ExtendedFormData } from "@utilities/forms";
 import Icon from "@components/other/Icon.solid";
@@ -135,6 +136,31 @@ const ReviewChip = (props: { long?: boolean }) => (
 	</span>
 );
 
+/** «Διέκοψε» (`pupils.stopped_year`): the last year the pupil attended. */
+const StoppedChip = (props: { year: string; long?: boolean }) => (
+	<span
+		title={`Διέκοψε μετά το σχολικό έτος ${props.year}`}
+		class="inline-flex items-center gap-x-1.5 whitespace-nowrap rounded-full bg-gray-200 px-2.5 py-0.5 text-sm font-semibold text-gray-800 ring-1 ring-gray-300 dark:bg-white/10 dark:text-gray-100 dark:ring-white/15">
+		<Icon name="user-minus" class="text-xs" />
+		{props.long ? `Διέκοψε μετά το ${shortSchoolYear(props.year)}` : `διέκοψε ${shortSchoolYear(props.year)}`}
+	</span>
+);
+
+/** «Μετεγγραφή» (`pupils.transfer_year` / `transfer_from`): came from another school. */
+const TransferChip = (props: { year: string; from?: string; long?: boolean }) => (
+	<span
+		title={`Μετεγγραφή ${props.year}${props.from ? ` από ${props.from}` : ""}`}
+		class="inline-flex items-center gap-x-1.5 whitespace-nowrap rounded-full bg-violet-100 px-2.5 py-0.5 text-sm font-semibold text-violet-900 ring-1 ring-violet-300 dark:bg-violet-900/40 dark:text-violet-100 dark:ring-violet-500/40">
+		<Icon name="school" class="text-xs" />
+		{props.long ? `Μετεγγραφή ${shortSchoolYear(props.year)}` : `μετεγγραφή ${shortSchoolYear(props.year)}`}
+	</span>
+);
+
+/** «Μόνο προς έλεγχο» / «Διέκοψαν» / «Μετεγγραφές»: the list's filter chips. */
+const FILTER_CHIP =
+	"inline-flex cursor-pointer items-center gap-x-2 rounded-full border border-gray-300 px-3 py-1 text-sm font-semibold transition-colors select-none focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-red-800 dark:border-neutral-600 ";
+type StatusFilter = "" | "stopped" | "transfer";
+
 /** One «label: value» line of the details card. */
 const Detail = (props: { label: string; children: JSX.Element }) => (
 	<div class="grid grid-cols-[7rem_1fr] items-baseline gap-x-3 py-1">
@@ -157,6 +183,13 @@ const formatDate = (value: number | null | undefined) => (value ? new Date(value
 
 /** Greek needs the singular for exactly one ('1 μαθητής' / '2 μαθητές'). */
 const countLabel = (count: number, singular: string, plural: string) => `${count} ${count === 1 ? singular : plural}`;
+
+/** «Διέκοψε» / «Μετεγγραφή» from the pupil form: a school year typed as '2018-2019' (or empty), the school as typed. */
+const statusFields = (form: ExtendedFormData<Pupils>) => ({
+	stopped_year: form.string("stopped_year", "").trim(),
+	transfer_year: form.string("transfer_year", "").trim(),
+	transfer_from: form.string("transfer_from", "").trim(),
+});
 
 /** ΑΜ display: the real number, or the review code for orphans/splits. */
 const amLabel = (pupil: Pick<Pupils, "am" | "orphan_code">) => (pupil.am === null ? pupil.orphan_code || "-" : String(pupil.am));
@@ -186,7 +219,27 @@ function pupilInputs(): Record<string, InputProps> {
 		telephone: { label: "Τηλέφωνο", name: "telephone", type: "tel", icon: "phone" },
 		cellphone: { label: "Κινητό", name: "cellphone", type: "tel", icon: "smartphone" },
 		email: { label: "Email", name: "email", type: "email", icon: "mail" },
-		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "text", icon: "note" },
+		stopped_year: {
+			label: "Διέκοψε μετά το έτος",
+			name: "stopped_year",
+			type: "text",
+			icon: "user-minus",
+			placeholder: "π.χ. 2018-2019",
+			tooltip: {
+				message: ["Το τελευταίο σχολικό έτος που φοίτησε. Κενό = δεν διέκοψε.", "Αν εγγραφεί σε επόμενο έτος, φεύγει μόνο του."],
+				position: "bottom",
+			},
+		},
+		transfer_year: {
+			label: "Μετεγγραφή το έτος",
+			name: "transfer_year",
+			type: "text",
+			icon: "school",
+			placeholder: "π.χ. 2022-2023",
+			tooltip: { message: ["Το σχολικό έτος που ήρθε με μετεγγραφή από άλλη σχολή. Κενό = όχι μετεγγραφή."], position: "bottom" },
+		},
+		transfer_from: { label: "Μετεγγραφή από (σχολή)", name: "transfer_from", type: "text", icon: "school" },
+		review_note: { label: "Σημείωση ελέγχου", name: "review_note", type: "textarea", icon: "note" },
 		media_consent: {
 			label: "Φωτογραφίες/βίντεο",
 			name: "media_consent",
@@ -355,6 +408,7 @@ export default function PupilsPage() {
 	const [field, setField] = createSignal<PupilSearchField>("am_name");
 	const [page, setPage] = createSignal(0);
 	const [needsReviewOnly, setNeedsReviewOnly] = createSignal(false);
+	const [statusFilter, setStatusFilter] = createSignal<StatusFilter>("");
 	const [results, setResults] = createSignal<APIResponse["Pupils.search"] | null>(null);
 	const [searching, setSearching] = createSignal(false);
 
@@ -417,6 +471,9 @@ export default function PupilsPage() {
 		else params.delete("by");
 		if (untrack(needsReviewOnly)) params.set("review", "1");
 		else params.delete("review");
+		const status = untrack(statusFilter);
+		if (status) params.set("status", status);
+		else params.delete("status");
 		const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
 		if (next === `${window.location.pathname}${window.location.search}`) return;
 		const state = window.history.state as { _depth?: number; pupilRecord?: number } | null;
@@ -434,7 +491,14 @@ export default function PupilsPage() {
 		setSearching(true);
 		try {
 			const res = await apiHook(API.Pupils.search, {
-				RequestObject: { query: query().trim(), field: field(), needs_review: needsReviewOnly() || undefined, page: nextPage, pageSize: PAGE_SIZE },
+				RequestObject: {
+					query: query().trim(),
+					field: field(),
+					needs_review: needsReviewOnly() || undefined,
+					status: statusFilter() || undefined,
+					page: nextPage,
+					pageSize: PAGE_SIZE,
+				},
 			});
 			if ("data" in res) {
 				setResults(res.data);
@@ -621,6 +685,8 @@ export default function PupilsPage() {
 		const deepQuery = deepField === "music_type" && !/^[012]$/.test(params.get("q") ?? "") ? null : params.get("q");
 		// ?review=1 opens with «Μόνο προς έλεγχο» on (the «Αρχική» dashboard links here)
 		if (params.get("review") === "1") setNeedsReviewOnly(true);
+		const deepStatus = params.get("status");
+		if (deepStatus === "stopped" || deepStatus === "transfer") setStatusFilter(deepStatus);
 		if (deepQuery) {
 			setQuery(deepQuery);
 			// the search below already covers the seeded query, so drop the debounce
@@ -684,6 +750,7 @@ export default function PupilsPage() {
 					telephone: form.string("telephone", "-"),
 					cellphone: form.string("cellphone"),
 					email: form.string("email"),
+					...statusFields(form),
 					review_note: form.string("review_note", ""),
 				};
 				const consent = form.string("media_consent", "undefined");
@@ -769,6 +836,7 @@ export default function PupilsPage() {
 					telephone: form.string("telephone", "-"),
 					cellphone: form.string("cellphone", ""),
 					email: form.string("email", ""),
+					...statusFields(form),
 					review_note: form.string("review_note", ""),
 				};
 				if (form.string("birth_date", "")) body.birth_date = form.date("birth_date").getTime();
@@ -1099,6 +1167,37 @@ export default function PupilsPage() {
 						<Icon name={needsReviewOnly() ? "checkbox-checked" : "checkbox"} class="text-amber-600 dark:text-amber-300" />
 						Μόνο προς έλεγχο
 					</label>
+					<For
+						each={
+							[
+								{
+									value: "stopped",
+									label: "Διέκοψαν",
+									on: "has-[:checked]:border-gray-400 has-[:checked]:bg-gray-200 dark:has-[:checked]:bg-white/10",
+								},
+								{
+									value: "transfer",
+									label: "Μετεγγραφές",
+									on: "has-[:checked]:border-violet-400 has-[:checked]:bg-violet-100 has-[:checked]:text-violet-900 dark:has-[:checked]:bg-violet-900/40 dark:has-[:checked]:text-violet-100",
+								},
+							] as const
+						}>
+						{(chip) => (
+							<label class={FILTER_CHIP + chip.on}>
+								<input
+									type="checkbox"
+									class="sr-only"
+									checked={statusFilter() === chip.value}
+									onChange={(e) => {
+										setStatusFilter(e.currentTarget.checked ? chip.value : "");
+										startSearch(0);
+									}}
+								/>
+								<Icon name={statusFilter() === chip.value ? "checkbox-checked" : "checkbox"} />
+								{chip.label}
+							</label>
+						)}
+					</For>
 					<Show when={selectedId() === null}>
 						<button type="button" class={BTN_SECONDARY + " ml-auto px-3 py-1 text-sm"} onClick={openCreate}>
 							<Icon name="user-plus" />
@@ -1179,6 +1278,14 @@ export default function PupilsPage() {
 													</span>
 												</span>
 												<span class="flex items-center gap-x-3">
+													<Show when={row.transfer_year}>
+														<span class="max-sm:hidden">
+															<TransferChip year={row.transfer_year} />
+														</span>
+													</Show>
+													<Show when={row.stopped_year}>
+														<StoppedChip year={row.stopped_year} />
+													</Show>
 													<Show when={row.needs_review}>
 														<ReviewChip />
 													</Show>
@@ -1225,6 +1332,12 @@ export default function PupilsPage() {
 												ΑΜ {amLabel(data().pupil)}
 											</span>
 											<For each={availableMusicTypes(data().enrollments)}>{(classId) => <MusicChip classId={classId} />}</For>
+											<Show when={data().pupil.stopped_year}>
+												<StoppedChip year={data().pupil.stopped_year!} long />
+											</Show>
+											<Show when={data().pupil.transfer_year}>
+												<TransferChip year={data().pupil.transfer_year!} from={data().pupil.transfer_from} long />
+											</Show>
 											<Show when={data().pupil.needs_review}>
 												<ReviewChip long />
 											</Show>
@@ -1254,7 +1367,7 @@ export default function PupilsPage() {
 								<Show when={data().pupil.review_note}>
 									<p class={CALLOUT_WARN + " flex items-start gap-x-3"}>
 										<Icon name="warning" class="mt-1 text-amber-600 dark:text-amber-300" />
-										<span>
+										<span class="whitespace-pre-line">
 											<span class="font-semibold">Σημείωση ελέγχου: </span>
 											{data().pupil.review_note}
 										</span>
@@ -1319,6 +1432,15 @@ export default function PupilsPage() {
 														{mediaConsentLabel(data().pupil.media_consent)}
 													</span>
 												</Detail>
+												<Show when={data().pupil.transfer_year}>
+													<Detail label="Μετεγγραφή">
+														{data().pupil.transfer_year}
+														<Show when={data().pupil.transfer_from}> από {data().pupil.transfer_from}</Show>
+													</Detail>
+												</Show>
+												<Show when={data().pupil.stopped_year}>
+													<Detail label="Διέκοψε">μετά το {data().pupil.stopped_year}</Detail>
+												</Show>
 											</DetailGroup>
 											<DetailGroup title="ΕΠΙΚΟΙΝΩΝΙΑ">
 												<Detail label="Κινητό">

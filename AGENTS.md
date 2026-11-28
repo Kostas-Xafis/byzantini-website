@@ -88,6 +88,7 @@ SQLite at `.wrangler/state/v3/d1`):
 | Apply migrations | `bunx wrangler d1 migrations apply DB --local` | fresh checkouts after `bun install` |
 | Clean test fixtures | `bun run dev:clean` | removes the rows `bun run test` and `bun run e2e` write to the local dev DB (test pupils, their enrollments, `pupils.test.*` subscriptions, `e2e.*@example.com` admins, activity-log rows of throwaway `@example.com` admins / test fixtures) and re-derives `total_enrollments`; **applies** (the script alone, `bun scripts/cleanDevTestData.ts`, is a dry run). The pupils/fees suites already delete their own pupils and pick test ΑΜs with `uniqueTestAm()` (`tests/localDb.ts`) |
 | Registry backfill | `bun run registry:backfill` · `-- --apply` | the school's history before the online register: pupils of «Γενικό Μητρώο» + enrollments 2015-2016 … 2022-2023 from the owner's Excel (`school_registry/`, gitignored; `scripts/registryBackfill.ts`, parsing in `scripts/registry/parse.ts`); dry run + report by default, idempotent, `--sql <file>` saves the SQL; `--remote` targets production — never as routine work |
+| Stopped / transfers | `bun scripts/registryStatus.ts` · `--apply` | after the register matching: «Διέκοψε» and «Μετεγγραφή» from the owner's Excel onto the pupils (see «Διέκοψε / Μετεγγραφή»); dry run + report (`--verbose` lists every pupil); idempotent; `--remote` targets production — never as routine work |
 | Register matching | `bun scripts/registryReconcile.ts` · `--apply` | after the backfill: gives every pupil the ΑΜ of the principal's «Γενικό Μητρώο», numbers the rest, applies his decisions (see «Matching the register»); dry run + report + Excel for the principal; idempotent; `--remote` targets production — never as routine work |
 | Fees backfill | `bun run fees:backfill` · `-- --apply` | pins the 2026-2027 fee catalog on that year's enrollments and computes their fees (`scripts/feesBackfill.ts`, docs/FEES.md §4); dry run + per-pupil report by default; `--remote` targets production — never as routine work |
 
@@ -320,12 +321,22 @@ The person data that used to live on `registrations` is split into two tables
   N+1, N+2 … in the order they first enrolled; the principal's decisions on the
   cases the data cannot settle are in the gitignored
   `school_registry/reconcile-decisions.json` (they name pupils: never in code;
-  each checked against the names it expects); any register number nobody holds goes to the current year's first
-  new pupils, so the register keeps no gaps. It clears
+  each checked against the names it expects); the numbers he freed, and any number without a register entry, go to
+  the current year's first new pupils, so the register keeps no gaps (a register number whose person is not in the
+  database is reported, never given away; new numbers continue after the register's last). It clears
   the `000-Ο…` codes and "ΑΜ pending" notes, writes an Excel for the principal
   (`school_registry/Νέοι αριθμοί μητρώου <date>.xlsx`: the new numbers + the
   corrections his register needs) and is idempotent. Dry run by default; `--apply`;
   `--remote` is production (back up first).
+- **«Διέκοψε» / «Μετεγγραφή»** (migration 0014, `pupils.stopped_year`, `transfer_year`, `transfer_from`): a pupil
+  who stopped (the last school year attended) or came from another school (the year, and the school when known).
+  Badges in the Μαθητολόγιο list and card, filters «Διέκοψαν» / «Μετεγγραφές» (`?status=stopped|transfer`,
+  `Pupils.search` `status`), fields in «Επεξεργασία». The secretariat no longer writes them into «Σημείωση ελέγχου»
+  (a multi-line field now). A stopped pupil who enrolls in a later year loses the mark (`clearStoppedOnReturn`).
+  Filled from the Excel by `scripts/registryStatus.ts` (rules in `scripts/registry/status.ts`: «ΔΙΕΚΟΨΕ» in the
+  «Γενικό Μητρώο»; «Μετεγγραφή …» / «ΒΕΒΑΙΩΣΗ <ωδείο>» in the yearly sheets, by ΑΜ, and the 2025-2026 ministry export
+  by ΑΜΚΑ; the secretariat's «Μεταγραφή» notes move into the field); run after the register matching, dry run by
+  default, idempotent, never overwrites a different value; `--remote` is production (back up first).
   Teachers of those years who left are **«Πρώην διδάσκων»** (`teachers.former`,
   migration 0012): hidden, no classes, never offered in the enrollment forms
   except on the enrollment that already has them. The teachers page lists the

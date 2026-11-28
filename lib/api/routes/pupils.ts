@@ -75,6 +75,12 @@ function successfulRegistrationTemplate(classId: number, classYear: string): str
 
 // ---- Request schemas (group-local, as in the other route groups) ----
 
+/** A school year as the register writes it: '2018-2019' (two consecutive years). */
+const z_SchoolYear = z
+	.string()
+	.regex(/^\d{4}-\d{4}$/, "Μη έγκυρο σχολικό έτος")
+	.refine((y) => Number(y.slice(5)) === Number(y.slice(0, 4)) + 1, "Μη έγκυρο σχολικό έτος");
+
 const z_Search = z.object({
 	query: z.string("Μη έγκυρο ερώτημα αναζήτησης").max(120, "Πολύ μεγάλο ερώτημα"),
 	/** The field the query is matched against (the Μαθητολόγιο's field picker); ΑΜ or name by default. */
@@ -83,6 +89,8 @@ const z_Search = z.object({
 	class_id: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
 	/** Only rows flagged for human review (the secretaries' worklist). */
 	needs_review: z.boolean().optional(),
+	/** Only pupils marked «Διέκοψε» / «Μετεγγραφή» (the Μαθητολόγιο's filters). */
+	status: z.enum(["stopped", "transfer"], "Μη έγκυρο φίλτρο").optional(),
 	page: z.number().int().min(0).optional(),
 	pageSize: z.number().int().min(1).max(200).optional(),
 });
@@ -118,6 +126,9 @@ const z_PupilUpdate = z.object({
 		.union([z.literal(0), z.literal(1)])
 		.nullable()
 		.optional(),
+	stopped_year: z.union([z_SchoolYear, z.literal("")], { message: "Μη έγκυρο έτος διακοπής" }).optional(),
+	transfer_year: z.union([z_SchoolYear, z.literal("")], { message: "Μη έγκυρο έτος μετεγγραφής" }).optional(),
+	transfer_from: z.string("Μη έγκυρη σχολή προέλευσης").trim().max(200, "Πολύ μεγάλο όνομα σχολής").optional(),
 });
 
 /** A pupil added by hand in the Μαθητολόγιο: the edit form's fields, the names required. */
@@ -451,6 +462,14 @@ async function insertWithNextAm(T: Transaction, values: (am: number) => Record<s
 }
 
 /**
+ * A pupil marked «Διέκοψε» who enrolls in a later year came back: the mark goes. (An enrollment added for an earlier
+ * year, e.g. filling in history, leaves it.)
+ */
+async function clearStoppedOnReturn(T: Transaction, pupilId: number, year: string): Promise<void> {
+	await T.executeQuery("UPDATE pupils SET stopped_year = '' WHERE id = ? AND stopped_year <> '' AND stopped_year < ?", [pupilId, year]);
+}
+
+/**
  * Gives an existing pupil without ΑΜ the next ΑΜ when they enroll (the form or «Νέα εγγραφή»): a record from before
  * automatic numbering, or a pupil whose ΑΜ was given back. Clears the «000-Ο…» code. One statement, so the number is
  * read and written together.
@@ -576,7 +595,7 @@ export const pupilsRoutes = {
 		[authenticateMiddleware],
 		({ body }) =>
 			handlerResult(async () => {
-				const { query, field = "am_name", needs_review, page = 0, pageSize = 50 } = body;
+				const { query, field = "am_name", needs_review, status, page = 0, pageSize = 50 } = body;
 				let { class_id } = body;
 				const text = query.trim();
 				// «Τμήμα»: the query is the music type's class_id ('0' | '1' | '2'); anything else finds nobody
@@ -628,6 +647,8 @@ export const pupilsRoutes = {
 						email: pupil.email,
 						amka: pupil.amka,
 						needs_review: pupil.needs_review ? true : false,
+						stopped_year: pupil.stopped_year ?? "",
+						transfer_year: pupil.transfer_year ?? "",
 						enrollment_count: stats?.enrollment_count ?? 0,
 						last_registration_year: stats?.last_year ?? "",
 						music_types: stats?.music_types ?? "",
@@ -638,6 +659,8 @@ export const pupilsRoutes = {
 					rows = rows.filter((row) => row.music_types.split(",").includes(String(class_id)));
 				}
 				if (needs_review) rows = rows.filter((row) => row.needs_review);
+				if (status === "stopped") rows = rows.filter((row) => row.stopped_year);
+				if (status === "transfer") rows = rows.filter((row) => row.transfer_year);
 
 				const total = rows.length;
 				const start = page * pageSize;
@@ -781,6 +804,14 @@ export const pupilsRoutes = {
 								am,
 							}
 						: await insertWithNextAm(T, row);
+				if (body.stopped_year || body.transfer_year || body.transfer_from) {
+					await T.executeQuery("UPDATE pupils SET stopped_year = ?, transfer_year = ?, transfer_from = ? WHERE id = ?", [
+						body.stopped_year ?? "",
+						body.transfer_year ?? "",
+						body.transfer_from ?? "",
+						insertId,
+					]);
+				}
 				return { id: insertId, am: given };
 			}, "Σφάλμα κατά την προσθήκη του μαθητή"),
 	),
@@ -1013,6 +1044,7 @@ export const pupilsRoutes = {
 					},
 				);
 				await T.executeQuery("UPDATE total_enrollments SET amount = amount + 1");
+				await clearStoppedOnReturn(T, pupilId, year);
 				// 2b. Fees of the pupil's whole year (a second enrollment may re-order the discount).
 				await recalculateAfterInsert([{ pupil_id: pupilId, registration_year: year }]);
 
@@ -1087,6 +1119,7 @@ export const pupilsRoutes = {
 					},
 				);
 				await T.executeQuery("UPDATE total_enrollments SET amount = amount + 1");
+				await clearStoppedOnReturn(T, body.pupil_id, body.registration_year);
 				const pair = { pupil_id: body.pupil_id, registration_year: body.registration_year };
 				// A typed price equal to the catalog price is not a manual price.
 				if (manualTotal && body.fee_manual === undefined) {
