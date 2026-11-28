@@ -132,7 +132,9 @@ const who = (id: number) => {
 const fromLabel = (id: number, am: number | null) => (am !== null ? `ΑΜ ${am}` : byId.get(id)!.orphan_code || "χωρίς ΑΜ");
 
 console.log(`Αρχείο    : ${path.relative(REPO_ROOT, FILE)} (Γενικό Μητρώο: ΑΜ 1 έως ${Math.max(...register.map((r) => r.am))}, ${register.length} γραμμές)`);
-console.log(`Βάση      : ${remote ? "ΠΑΡΑΓΩΓΗ (--remote)" : "τοπική (--local)"}`);
+console.log(
+	`Βάση      : ${remote ? (ENV && ENV !== "production" ? `${ENV.toUpperCase()} (--remote --env ${ENV})` : "ΠΑΡΑΓΩΓΗ (--remote)") : "τοπική (--local)"}`,
+);
 console.log(`Λειτουργία: ${apply ? "APPLY" : "DRY RUN"}\n`);
 
 const groups = new Map<string, typeof plan.assignments>();
@@ -205,7 +207,10 @@ if (SQL_OUT) {
 // ---- The Excel for the principal ----
 
 const day = new Date().toISOString().slice(0, 10);
-const excelFile = path.resolve(REPO_ROOT, `school_registry/Νέοι αριθμοί μητρώου ${day}${apply ? "" : " (πρόχειρο)"}${remote ? "" : " (τοπική βάση)"}.xlsx`);
+const excelFile = path.resolve(
+	REPO_ROOT,
+	`school_registry/Νέοι αριθμοί μητρώου ${day}${apply ? "" : " (πρόχειρο)"}${remote ? (ENV && ENV !== "production" ? ` (${ENV})` : "") : " (τοπική βάση)"}.xlsx`,
+);
 const latestOf = (id: number) =>
 	enrollments.filter((e) => e.pupil_id === id).sort((a, b) => b.registration_year.localeCompare(a.registration_year) || b.date - a.date)[0];
 const firstDateOf = (id: number) => {

@@ -106,6 +106,17 @@ describe("plan", () => {
 		expect(result.cleanups.map((c) => c.pupilId).sort()).toEqual([11, 12, 13]);
 	});
 
+	test("a pupil on someone else's ΑΜ moves to their own, and the freed number goes to its register person", () => {
+		const register = [reg(1, "Όμικρον", "Όλγα"), reg(2, "Πι", "Πέτρος")];
+		// Όλγα sits on 2 (Πέτρος's in the register); Πέτρος is still without ΑΜ.
+		const pupils = [pupil(40, 2, "Όμικρον", "Όλγα"), pupil(41, null, "Πι", "Πέτρος")];
+		const result = plan(register, pupils, [enr(41, YEAR, "2026-09-01")]);
+		expect(result.assignments.map((a) => [a.pupilId, a.from, a.to])).toEqual([
+			[40, 2, 1],
+			[41, null, 2],
+		]);
+	});
+
 	test("test fixtures and pupils without enrollments get no number", () => {
 		const result = plan(
 			[reg(1, "Άλφα", "Άννα")],
@@ -162,6 +173,27 @@ describe("plan", () => {
 			{ pupilId: 34, childAm: 4, child: register[3], moveEnrollmentIds: [enrollments[2].id], parentAm: 8, amkaToParent: true },
 		]);
 		expect(result.merges).toEqual([{ fromId: 36, intoId: 35, surname: "Εψιλόπουλος", name: "Κωνσταντίνος", enrollmentIds: [enrollments[3].id] }]);
+	});
+
+	test("a register person missing from the database keeps their number; a number with no register entry is filled", () => {
+		const register = [reg(1, "Άλφα", "Άννα"), reg(2, "Βήτα", "Βασίλης"), reg(4, "Δέλτα", "Δήμος")];
+		const pupils = [
+			pupil(50, 1, "Άλφα", "Άννα"),
+			pupil(51, 4, "Δέλτα", "Δήμος"),
+			pupil(52, 8888, "Ρο", "Ρένα"),
+			pupil(53, null, "Νέα", "Νίκη"),
+			pupil(54, null, "Νέος", "Νίκος"),
+		];
+		const result = plan(register, pupils, [enr(53, YEAR, "2026-09-01"), enr(54, YEAR, "2026-09-02")]);
+		expect(result.assignments.map((a) => [a.pupilId, a.to])).toEqual([
+			[53, 3],
+			[54, 5],
+		]);
+		expect(result.nextAm).toBe(6);
+		expect(result.problems).toEqual([
+			"Το ΑΜ 2 του Γενικού Μητρώου (Βήτα Βασίλης) δεν το έχει κανείς μαθητής της βάσης",
+			"Το ΑΜ 8888 είναι εκτός της σειράς (το επόμενο ελεύθερο είναι 6): ελέγξτε τον μαθητή",
+		]);
 	});
 
 	test("a second run finds the decisions done", () => {

@@ -234,6 +234,25 @@ export function planReconcile({ register, pupils, enrollments, currentYear, isTe
 	}
 	const mergedAway = new Set(plan.merges.map((m) => m.fromId));
 
+	// 1b. A pupil on someone else's ΑΜ (e.g. the second number of a duplicate, which the register gave to a new pupil)
+	// moves to their own: the one register entry they strictly match that nobody holds. Repeated, since a move frees a
+	// number another pupil may be waiting for.
+	const decided = new Set([...plan.assignments.map((a) => a.pupilId), ...needNumber.keys(), ...splitParents.map((s) => s.pupilId), ...mergedAway]);
+	for (let moved = true; moved;) {
+		moved = false;
+		for (const p of pupils) {
+			const am = amOf.get(p.id);
+			if (am === null || am === undefined || decided.has(p.id)) continue;
+			const own = regByAm.get(am);
+			if (!own || samePerson({ surname: p.last_name, name: p.first_name }, { surname: own.surname, name: own.name })) continue;
+			const matches = register.filter((r) => !holderOf(r.am) && strictlySamePerson(p, r));
+			if (matches.length !== 1) continue;
+			assign(p, matches[0].am, `το ΑΜ ${am} στο Γενικό Μητρώο είναι άλλου· το δικό του/της είναι ${matches[0].am}`);
+			decided.add(p.id);
+			moved = true;
+		}
+	}
+
 	// 2. Register numbers for pupils without ΑΜ.
 	for (const p of pupils) {
 		if (amOf.get(p.id) !== null || mergedAway.has(p.id) || needNumber.has(p.id)) continue;
@@ -264,17 +283,28 @@ export function planReconcile({ register, pupils, enrollments, currentYear, isTe
 			why: `χωρίστηκε από το ΑΜ ${s.childAm}`,
 		})),
 	].sort((a, b) => a.firstDate - b.firstDate || a.id - b.id);
-	// Every number up to the register's last that nobody holds now (the ones the principal freed among them) goes to
-	// the current year's new pupils first, like `NEXT_AM_SQL` does for every new pupil: the register keeps no gaps.
+	// The numbers the principal freed, and any number up to the register's last that has no register entry, go to the
+	// current year's new pupils first, like `NEXT_AM_SQL` does for every new pupil: the register keeps no gaps. A register
+	// number of a real register person that nobody holds is never given away (that person may not be in the database
+	// yet): it is reported instead.
 	const registerMax = Math.max(0, ...register.map((r) => r.am));
 	const gaps = new Set<number>(decisions.freed);
-	for (let am = 1; am <= registerMax; am++) gaps.add(am);
+	for (let am = 1; am <= registerMax; am++) if (!regByAm.has(am)) gaps.add(am);
 	const freed = [...gaps].filter((am) => !holderOf(am)).sort((a, b) => a - b);
-	const used = [...amOf.values()].filter((am): am is number => am !== null && am < 9000);
-	let next = Math.max(0, ...register.map((r) => r.am), ...used) + 1;
+	for (const r of register)
+		if (!holderOf(r.am) && !gaps.has(r.am))
+			plan.problems.push(`Το ΑΜ ${r.am} του Γενικού Μητρώου (${r.surname} ${r.name}) δεν το έχει κανείς μαθητής της βάσης`);
+	// New numbers continue the register's sequence, skipping numbers already held above it (an earlier run's).
+	const held = new Set([...amOf.values()].filter((am): am is number => am !== null));
+	let next = registerMax + 1;
+	const takeNext = () => {
+		while (held.has(next)) next++;
+		held.add(next);
+		return next++;
+	};
 	const numbers = new Map<(typeof queue)[number], number>();
 	for (const item of queue) if (freed.length && item.firstYear === currentYear) numbers.set(item, freed.shift()!);
-	for (const item of queue) if (!numbers.has(item)) numbers.set(item, next++);
+	for (const item of queue) if (!numbers.has(item)) numbers.set(item, takeNext());
 	for (const item of queue) {
 		const am = numbers.get(item)!;
 		if (item.kind === "pupil")
@@ -295,7 +325,10 @@ export function planReconcile({ register, pupils, enrollments, currentYear, isTe
 			});
 		}
 	}
+	while (held.has(next)) next++;
 	plan.nextAm = next;
+	for (const am of [...held].filter((am) => am > next && am < 9000).sort((a, b) => a - b))
+		plan.problems.push(`Το ΑΜ ${am} είναι εκτός της σειράς (το επόμενο ελεύθερο είναι ${next}): ελέγξτε τον μαθητή`);
 	for (const am of freed) plan.problems.push(`Το ελεύθερο ΑΜ ${am} δεν δόθηκε (δεν υπάρχει νέος μαθητής της χρονιάς ${currentYear})`);
 
 	// 4. Clean-up of every pupil that holds (or now gets) an ΑΜ.
